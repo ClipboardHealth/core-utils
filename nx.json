@@ -1,9 +1,5 @@
 {
-  "pluginsConfig": {
-    "@nx/js": {
-      "analyzeSourceFiles": true
-    }
-  },
+  "pluginsConfig": { "@nx/js": { "analyzeSourceFiles": true } },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "extends": "nx/presets/npm.json",
   "namedInputs": {
@@ -27,54 +23,28 @@
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
   "plugins": [
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      }
-    }
+    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
+    { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" } }
   ],
   "release": {
-    "changelog": {
-      "projectChangelogs": {
-        "createRelease": "github",
-        "file": false
-      }
-    },
-    "git": {
-      "commitMessage": "chore(release): publish {version} [skip actions]"
-    },
+    "changelog": { "projectChangelogs": { "createRelease": "github", "file": false } },
+    "git": { "commitMessage": "chore(release): publish {version} [skip actions]" },
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
-    "version": {
-      "conventionalCommits": true,
-      "preVersionCommand": "npx nx run-many -t build"
-    }
+    "version": { "conventionalCommits": true, "preVersionCommand": "npx nx run-many -t build" }
   },
   "targetDefaults": {
     "@nx/jest:jest": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "cache": true,
-      "options": {
-        "passWithNoTests": false
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
+      "options": { "passWithNoTests": false },
+      "configurations": { "ci": { "ci": true, "codeCoverage": true } }
     },
     "@nx/js:tsc": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     }
-  }
+  },
+  "nxCloudAccessToken": "ZWRlZTQ5NmYtNDlhZi00ZTk2LTkxZTgtZWNiNDY5ZWNmY2ZkfHJlYWQtd3JpdGU="
 }
