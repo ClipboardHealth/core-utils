@@ -1,0 +1,34 @@
+# name: CI
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+#   cancel-in-progress: true
+
+# jobs:
+#   main:
+#     secrets:
+#       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+#     uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.14.0
+#     with:
+#       # https://nx.dev/nx-cloud/set-up/record-commands#recording-non-nx-commands
+#       parallel-commands: |
+#         npx nx-cloud record -- npx nx format:check
+#         npx nx-cloud record -- npm run cspell:ci
+#       # TODO: add `--base last-release`
+#       parallel-commands-on-agents: |
+#         npx nx affected --configuration ci --parallel 3 --target=build
+#         npx nx affected --configuration ci --parallel 3 --target=lint
+#         npx nx affected --configuration ci --parallel 3 --target=test --runInBand
+
+#   agents:
+#     secrets:
+#       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+#     uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.14.0
+#     with:
+#       number-of-agents: 3

@@ -1,0 +1,23 @@
+name: Pull request title
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - labeled
+      - unlabeled
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+  pull-request-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pull request title for semantic version key
+        uses: amannn/action-semantic-pull-request@v5
+        timeout-minutes: 5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

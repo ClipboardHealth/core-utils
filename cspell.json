@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "ignorePaths": [
+    "coverage",
+    "dist",
+    "node_modules",
+    ".github/CODEOWNERS",
+    ".vscode",
+    "default.json",
+    "tmp"
+  ],
+  "words": [
+    "amannn",
+    "buildable",
+    "CODEOWNERS",
+    "devkit",
+    "embedme",
+    "gitleaks",
+    "lcov",
+    "maxage",
+    "npmjs",
+    "nrwl",
+    "Nx's",
+    "syncpack",
+    "toplevel",
+    "typedoc",
+    "unpublish",
+    "zricethezav"
+  ]
+}

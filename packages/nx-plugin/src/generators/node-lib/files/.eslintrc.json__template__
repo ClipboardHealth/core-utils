@@ -1,0 +1,8 @@
+{
+  "extends": ["<%= offsetFromRoot %>.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "parserOptions": {
+    "project": "tsconfig.lint.json",
+    "tsconfigRootDir": "packages/<%= projectName %>"
+  }
+}

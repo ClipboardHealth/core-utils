@@ -1,0 +1,29 @@
+{
+  "name": "@clipboard-health/nx-plugin",
+  "description": "Clipboard Health's Nx plugin contains generators to manage applications within an Nx workspace.",
+  "version": "0.0.1",
+  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
+  "dependencies": {
+    "@nx/devkit": "19.5.6",
+    "@nx/js": "19.5.6",
+    "tslib": "2.6.3"
+  },
+  "generators": "./generators.json",
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Nx"
+  ],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clipboardhealth/core-utils.git",
+    "directory": "packages/nx-plugin"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}

@@ -1,0 +1,10 @@
+# Alphabetical directories
+/.nx/cache
+/.nx/workspace-data
+coverage/
+dist/
+docs/
+
+# Alphabetical files
+.github/CODEOWNERS
+*.toml
