@@ -1,0 +1,26 @@
+{
+  "name": "@clipboard-health/rules-engine",
+  "description": "",
+  "version": "1.0.3",
+  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
+  "dependencies": {
+    "tslib": "2.6.3",
+    "type-fest": "4.23.0"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clipboardhealth/core-utils.git",
+    "directory": "packages/rules-engine"
+  },
+  "scripts": {
+    "embed": "embedme README.md"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}

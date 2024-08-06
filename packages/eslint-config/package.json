@@ -25,7 +25,6 @@
     "eslint-plugin-no-only-tests": ">=3",
     "eslint-plugin-no-use-extend-native": "^0.5",
     "eslint-plugin-react": ">=7",
-    "eslint-plugin-react-hooks": ">=4",
     "eslint-plugin-security": ">=1",
     "eslint-plugin-simple-import-sort": ">=10",
     "eslint-plugin-sonarjs": "^0.23",

@@ -35,7 +35,16 @@
     },
     {
       "enabled": false,
-      "matchPackagePatterns": ["^@nx", "@types/jest", "jest", "nx", "ts-jest", "tslib"]
+      "matchPackagePatterns": [
+        "^@nx",
+        "^@typescript-eslint",
+        "^eslint",
+        "@types/jest",
+        "jest",
+        "nx",
+        "ts-jest",
+        "tslib"
+      ]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",

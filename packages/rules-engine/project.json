@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "rules-engine",
+  "projectType": "library",
+  "sourceRoot": "packages/rules-engine/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/rules-engine/*.md"],
+        "main": "packages/rules-engine/src/index.js",
+        "outputPath": "dist/packages/rules-engine",
+        "tsConfig": "packages/rules-engine/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/rules-engine/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/rules-engine/jest.config.ts"
+      }
+    }
+  }
+}
