@@ -2,15 +2,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "<%= projectName %>",
   "projectType": "library",
-  "sourceRoot": "packages/<%= projectName %>/src",<% if (publishable) { %>
-  "release": {
-    "version": {
-      "generatorOptions": {
-        "packageRoot": "dist/{projectRoot}",
-        "currentVersionResolver": "git-tag"
-      }
-    }
-  },<% } %>
+  "sourceRoot": "packages/<%= projectName %>/src",
   "tags": [],
   "targets": {
     "build": {
@@ -30,12 +22,7 @@
         "maxWarnings": 0
       },
       "outputs": ["{options.outputFile}"]
-    },<% if (publishable) { %>
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "dist/{projectRoot}"
-      }
-    },<% } %>
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "options": {

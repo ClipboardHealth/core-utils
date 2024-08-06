@@ -44,7 +44,7 @@ To keep the same project name while avoiding publishing version conflicts, creat
 git checkout main
 
 # Where [VERSION] is the current version of the project
-git tag --annotate [PROJECT_NAME]-[VERSION] --message "Port from [OLD_LOCATION]"
+git tag --annotate [PROJECT_NAME]@[VERSION] --message "Port from [OLD_LOCATION]"
 
-git push origin [PROJECT_NAME]-[VERSION]
+git push origin [PROJECT_NAME]@[VERSION]
 ```

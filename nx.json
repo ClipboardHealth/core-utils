@@ -27,11 +27,20 @@
     { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" } }
   ],
   "release": {
-    "changelog": { "projectChangelogs": { "createRelease": "github", "file": false } },
-    "git": { "commitMessage": "chore(release): publish {version} [skip actions]" },
+    "changelog": {
+      "automaticFromRef": true,
+      "projectChangelogs": { "createRelease": "github", "file": false }
+    },
+    "git": {
+      "commit": true,
+      "commitMessage": "chore({projectName}): publish {version} [skip actions]"
+    },
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
-    "version": { "conventionalCommits": true, "generatorOptions": { "updateDependents": "auto" } }
+    "version": {
+      "conventionalCommits": true,
+      "generatorOptions": { "fallbackCurrentVersionResolver": "disk" }
+    }
   },
   "targetDefaults": {
     "@nx/eslint:lint": { "cache": true },
