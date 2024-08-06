@@ -1,7 +1,7 @@
 import { type Rule, type RuleContext } from "../rule";
 
 /**
- * Runs all rules that return true for `runIf`.
+ * Run all rules that return true for `runIf`.
  *
  * @param rules The rules to run.
  */

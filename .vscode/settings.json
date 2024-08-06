@@ -10,5 +10,6 @@
     "**/coverage": true,
     "**/node_modules": true,
     "**/tmp": true
-  }
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
