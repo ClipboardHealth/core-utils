@@ -4,5 +4,14 @@
   "parserOptions": {
     "project": "tsconfig.lint.json",
     "tsconfigRootDir": "packages/eslint-config"
-  }
+  },
+  "overrides": [
+    {
+      "files": "*.json",
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": "off"
+      }
+    }
+  ]
 }

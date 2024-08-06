@@ -6,22 +6,6 @@
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"]
     },
     {
-      "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nx/typescript"],
-      "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
-        "no-extra-semi": "off"
-      }
-    },
-    {
-      "files": ["*.js", "*.jsx"],
-      "extends": ["plugin:@nx/javascript"],
-      "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
-        "no-extra-semi": "off"
-      }
-    },
-    {
       "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
       "env": {
         "jest": true
@@ -35,9 +19,11 @@
       }
     },
     {
-      "files": "*.json",
+      "files": "package.json",
       "parser": "jsonc-eslint-parser",
-      "rules": {}
+      "rules": {
+        "@nx/dependency-checks": "error"
+      }
     }
   ],
   "plugins": ["@nx"],

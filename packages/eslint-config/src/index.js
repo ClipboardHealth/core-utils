@@ -1,5 +1,8 @@
 module.exports = {
   extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
     "airbnb-base",
     "plugin:eslint-comments/recommended",
     "plugin:jest/recommended",
@@ -10,16 +13,16 @@ module.exports = {
     "plugin:security/recommended",
     "plugin:sonarjs/recommended",
     "plugin:unicorn/recommended",
-    "prettier",
     "xo",
     "xo-typescript/space",
+    "prettier",
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: ["tsconfig.json"],
     tsconfigRootDir: __dirname,
   },
-  plugins: ["jest", "no-only-tests", "simple-import-sort", "sonarjs"],
+  plugins: ["jest", "no-only-tests", "simple-import-sort", "sonarjs", "@typescript-eslint"],
   rules: {
     /**
      * Disable the capitalization of comments
