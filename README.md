@@ -12,7 +12,7 @@
 Clipboard Health's core libraries and utilities. See individual package `README`s for specific library details.
 
 - [Local development commands](#local-development-commands)
-- [Adding new or porting existing libraries](#adding-new-or-porting-existing-libraries)
+- [Adding or porting libraries](#adding-or-porting-libraries)
 - [Contributing](#contributing)
 
 ## Local development commands

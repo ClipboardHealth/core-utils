@@ -7,8 +7,6 @@ Clipboard Health's Nx plugin contains generators to manage libraries within an N
 - [Table of Contents](#table-of-contents)
 - [Install](#install)
 - [Usage](#usage)
-  - [Adding new libraries](#adding-new-libraries)
-  - [Porting existing libraries](#porting-existing-libraries)
 
 ## Install
 
