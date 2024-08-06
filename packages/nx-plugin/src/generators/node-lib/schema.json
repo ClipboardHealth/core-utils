@@ -14,10 +14,10 @@
       "x-prompt": "Library name?",
       "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
     },
-    "publishable": {
+    "publishConfigPublicAccess": {
       "type": "boolean",
       "default": false,
-      "description": "Create a publishable library.",
+      "description": "Publish the NPM package publicly.",
       "x-priority": "important"
     }
   },

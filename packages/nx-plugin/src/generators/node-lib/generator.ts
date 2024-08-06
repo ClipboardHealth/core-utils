@@ -21,6 +21,7 @@ type NormalizedSchema = NxPluginGeneratorSchema & {
   projectName: string;
   projectRoot: string;
   projectDirectory: string;
+  publishConfigAccess: string;
 };
 
 function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): NormalizedSchema {
@@ -28,7 +29,7 @@ function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): Normali
   const projectDirectory = name;
   return {
     ...options,
-    publishable: options.publishable ?? false,
+    publishConfigAccess: options.publishConfigPublicAccess ? "public" : "restricted",
     importPath: getImportPath(tree, projectDirectory),
     projectName: name.replaceAll("/", "-"),
     projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,

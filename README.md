@@ -43,9 +43,9 @@ npx nx migrate latest && \
   npx nx migrate --run-migrations --if-exists
 ```
 
-## Adding new or porting existing libraries
+## Adding or porting libraries
 
-See our Nx generator plugin to [add new libraries](./packages/nx-plugin/README.md#adding-new-libraries) or [port existing libraries](./packages/nx-plugin/README.md#porting-existing-libraries).
+See our [Nx generator plugin](https://github.com/ClipboardHealth/core-utils/tree/main/packages/nx-plugin).
 
 ## Contributing
 

@@ -10,7 +10,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "publishConfig": {
-    "access": "public"
+    "access": "<%= publishConfigAccess %>"
   },
   "repository": {
     "type": "git",

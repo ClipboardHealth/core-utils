@@ -1,5 +1,4 @@
 {
-  "pluginsConfig": { "@nx/js": { "analyzeSourceFiles": true } },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "extends": "nx/presets/npm.json",
   "namedInputs": {
@@ -22,10 +21,12 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
+  "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
   "plugins": [
     { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
     { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" } }
   ],
+  "pluginsConfig": { "@nx/js": { "analyzeSourceFiles": true } },
   "release": {
     "changelog": {
       "automaticFromRef": true,
@@ -63,6 +64,5 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     }
-  },
-  "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ="
+  }
 }
