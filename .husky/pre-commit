@@ -1,0 +1,4 @@
+
+npx lint-staged
+
+docker run --rm --volume "$(git rev-parse --show-toplevel)":/src ghcr.io/zricethezav/gitleaks:latest protect --source /src --verbose --redact --staged

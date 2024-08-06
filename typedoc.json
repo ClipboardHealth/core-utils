@@ -1,0 +1,6 @@
+{
+  "extends": ["./typedoc.base.json"],
+  "entryPoints": ["packages/*"],
+  "entryPointStrategy": "packages",
+  "name": "core-lib"
+}

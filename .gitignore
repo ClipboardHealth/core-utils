@@ -1,0 +1,21 @@
+# Alphabetical directories
+.idea/
+.nx/cache
+.nx/workspace-data
+.vscode/*
+coverage/
+dist/
+docs/
+gen/
+node_modules/
+out-tsc
+tmp/
+
+# Alphabetical files
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.DS_Store
+npm-debug.log
+.tool-versions

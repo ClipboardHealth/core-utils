@@ -1,0 +1,20 @@
+{
+  "extends": ["@tsconfig/node22", "@tsconfig/strictest"],
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "paths": {
+      "@clipboard-health/nx-plugin": ["packages/nx-plugin/src/index.ts"]
+    },
+    "rootDir": ".",
+    "skipDefaultLibCheck": true,
+    "sourceMap": true
+  },
+  "exclude": ["node_modules", "tmp"]
+}

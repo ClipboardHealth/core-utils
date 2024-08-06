@@ -1,0 +1,14 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.renderFinalNewline": "on",
+  "eslint.validate": ["typescript", "json"],
+  "files.watcherExclude": {
+    "**/dist": true,
+    "**/coverage": true,
+    "**/node_modules": true,
+    "**/tmp": true
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    ":combinePatchMinorReleases",
+    ":enableVulnerabilityAlertsWithLabel(SECURITY)",
+    ":preserveSemverRanges",
+    "config:js-lib",
+    "docker:enableMajor",
+    "group:monorepos",
+    "group:recommended",
+    "npm:unpublishSafe",
+    "schedule:monthly"
+  ],
+  "packageRules": [
+    {
+      "groupName": "Non-major non-dev NPM dependencies",
+      "matchDepTypes": [
+        "dependencies",
+        "optionalDependencies",
+        "peerDependencies",
+        "engines",
+        "volta",
+        "packageManager"
+      ],
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "Dev NPM dependencies",
+      "matchDepTypes": ["devDependencies"]
+    },
+    {
+      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
+      "rangeStrategy": "widen"
+    },
+    {
+      "enabled": false,
+      "matchPackagePatterns": ["^@nx", "@types/jest", "jest", "nx", "ts-jest", "tslib"]
+    }
+  ],
+  "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
+  "prConcurrentLimit": 15,
+  "prHourlyLimit": 5
+}

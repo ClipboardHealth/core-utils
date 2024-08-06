@@ -1,0 +1,50 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "nx-plugin",
+  "projectType": "library",
+  "sourceRoot": "packages/nx-plugin/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          "packages/nx-plugin/*.md",
+          {
+            "input": "./packages/nx-plugin/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/nx-plugin/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/nx-plugin",
+            "glob": "generators.json",
+            "output": "."
+          }
+        ],
+        "main": "packages/nx-plugin/src/index.ts",
+        "outputPath": "dist/packages/nx-plugin",
+        "tsConfig": "packages/nx-plugin/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "maxWarnings": 0
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/nx-plugin/jest.config.ts",
+        "passWithNoTests": false
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+    }
+  }
+}

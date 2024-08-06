@@ -1,0 +1,10 @@
+{
+  "name": "<%= importPath %>",
+  "version": "0.0.1",
+  "dependencies": {
+    "tslib": "2.6.3"
+  },
+  "main": "./src/index.js",
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}

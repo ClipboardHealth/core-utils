@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+# Adapted from https://github.com/nrwl/ci/blob/v0.14.0/.github/workflows/nx-cloud-main.yml
+env:
+  NX_BRANCH: ${{ github.event.number || github.ref_name }}
+
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "nvmrc=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+        id: nvm
+    outputs:
+      node-version: ${{ steps.nvm.outputs.nvmrc }}
+
+  pull-request:
+    if: github.event_name == 'pull_request'
+    needs: [initialize]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # GitHub checks PRs out based on the merge commit; we want the branch HEAD.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: nrwl/nx-set-shas@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.initialize.outputs.node-version }}
+      - run: npm run install:ci
+      - run: npm run check:ci
+      # Don't use the read-write NX_CLOUD_ACCESS_TOKEN for PRs, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
+      - run: npx nx affected --base main --configuration ci --parallel 3 --targets build,lint,test
+
+  main:
+    if: github.event_name != 'pull_request'
+    needs: [initialize]
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - id: token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.token.outputs.token }}
+      - uses: nrwl/nx-set-shas@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.initialize.outputs.node-version }}
+          registry-url: https://registry.npmjs.org
+      - run: npm run install:ci
+      - run: npm run check:ci
+      # Skip the cache on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
+      - run: npx nx affected --configuration ci --parallel 3 --skip-nx-cache --target build
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+      - run: |
+          git config user.name "GitHub Bot"
+          git config user.email "open-source@clipboardhealth.com"
+      - env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: npx nx release --first-release --skip-publish
+      - env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx nx release publish
+    timeout-minutes: 10

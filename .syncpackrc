@@ -1,0 +1,19 @@
+{
+  "semverGroups": [
+    {
+      "range": "",
+      "dependencyTypes": [
+        "dev",
+        "local",
+        "prod",
+        "resolutions"
+      ],
+      "dependencies": [
+        "**"
+      ],
+      "packages": [
+        "**"
+      ]
+    }
+  ]
+}

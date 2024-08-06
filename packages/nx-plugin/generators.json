@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "node-lib": {
+      "factory": "./src/generators/node-lib/generator",
+      "schema": "./src/generators/node-lib/schema.json",
+      "description": "Create a Node.js library."
+    }
+  }
+}
