@@ -1,10 +1,22 @@
 {
   "name": "<%= importPath %>",
+  "description": "",
   "version": "0.0.0",
+  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.6.3"
   },
+  "keywords": [],
+  "license": "MIT",
   "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clipboardhealth/core-utils.git",
+    "directory": "packages/<%= projectName %>"
+  },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
 }

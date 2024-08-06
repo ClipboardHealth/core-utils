@@ -1,5 +1,5 @@
 export default {
-  coverageDirectory: "../../coverage/packages/nx-plugin",
+  coverageDirectory: "../../coverage/packages/eslint-config",
   coveragePathIgnorePatterns: [],
   coverageThreshold: {
     global: {
@@ -9,7 +9,7 @@ export default {
       statements: 100,
     },
   },
-  displayName: "nx-plugin",
+  displayName: "eslint-config",
   moduleFileExtensions: ["ts", "js"],
   preset: "../../jest.preset.js",
   testEnvironment: "node",

@@ -1,40 +1,25 @@
 {
-  "root": true,
   "ignorePatterns": ["**/*"],
-  "plugins": ["@nx"],
   "overrides": [
     {
-      "files": "*.json",
-      "parser": "jsonc-eslint-parser",
-      "rules": {}
-    },
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              }
-            ]
-          }
-        ]
-      }
+      "extends": ["./packages/eslint-config/src/index.js"],
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"]
     },
     {
       "files": ["*.ts", "*.tsx"],
       "extends": ["plugin:@nx/typescript"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/no-extra-semi": "error",
+        "no-extra-semi": "off"
+      }
     },
     {
       "files": ["*.js", "*.jsx"],
       "extends": ["plugin:@nx/javascript"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/no-extra-semi": "error",
+        "no-extra-semi": "off"
+      }
     },
     {
       "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
@@ -42,6 +27,37 @@
         "jest": true
       },
       "rules": {}
+    },
+    {
+      "files": ["./examples/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": "*.json",
+      "parser": "jsonc-eslint-parser",
+      "rules": {}
     }
-  ]
+  ],
+  "plugins": ["@nx"],
+  "root": true,
+  "rules": {
+    // See https://nx.dev/packages/eslint-plugin/documents/enforce-module-boundaries
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": [],
+        "allowCircularSelfDependency": true,
+        "banTransitiveDependencies": true,
+        "depConstraints": [
+          {
+            "sourceTag": "*",
+            "onlyDependOnLibsWithTags": ["*"]
+          }
+        ],
+        "enforceBuildableLibDependency": true
+      }
+    ]
+  }
 }

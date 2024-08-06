@@ -43,7 +43,15 @@
     }
   },
   "targetDefaults": {
-    "@nx/eslint:lint": { "cache": true },
+    "@nx/eslint:lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/packages/eslint-config/src/index.js"
+      ]
+    },
     "@nx/jest:jest": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "cache": true,

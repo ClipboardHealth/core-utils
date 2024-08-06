@@ -1,4 +1,12 @@
 {
+  "versionGroups": [
+    {
+      "dependencyTypes": [
+        "peer"
+      ],
+      "specifierTypes": "range"
+    }
+  ],
   "semverGroups": [
     {
       "range": "",

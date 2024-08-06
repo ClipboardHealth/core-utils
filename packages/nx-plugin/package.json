@@ -10,12 +10,12 @@
   },
   "generators": "./generators.json",
   "keywords": [
-    "Generator",
-    "Library",
-    "Node",
-    "Nx",
-    "Plugin",
-    "TypeScript"
+    "generator",
+    "library",
+    "node",
+    "nx",
+    "plugin",
+    "typescript"
   ],
   "license": "MIT",
   "main": "./src/index.js",

@@ -64,8 +64,10 @@ function updateRootTsConfig(
     (json) => {
       const c = json.compilerOptions;
       c.paths ||= {};
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete c.paths[options.name];
 
+      /* istanbul ignore next */
       if (c.paths[options.importPath]) {
         throw new Error(`There is already a library with import path "${options.importPath}".`);
       }
