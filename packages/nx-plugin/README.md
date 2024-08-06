@@ -37,14 +37,3 @@ npx nx generate @nx/workspace:move --projectName [PROJECT_NAME] --destination [N
 ### Porting existing libraries
 
 Follow [Adding new libraries](#adding-new-libraries) to generate a new package and copy the code from the existing library into it.
-
-To keep the same project name while avoiding publishing version conflicts, create a `git tag` from the last commit on `main` with the project name and version:
-
-```bash
-git checkout main
-
-# Where [VERSION] is the current version of the project
-git tag --annotate [PROJECT_NAME]@[VERSION] --message "Port from [OLD_LOCATION]"
-
-git push origin [PROJECT_NAME]@[VERSION]
-```

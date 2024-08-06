@@ -13,6 +13,7 @@ Clipboard Health's core libraries and utilities. See individual package `README`
 
 - [Local development commands](#local-development-commands)
 - [Adding new or porting existing libraries](#adding-new-or-porting-existing-libraries)
+- [Contributing](#contributing)
 
 ## Local development commands
 
@@ -45,3 +46,7 @@ npx nx migrate latest && \
 ## Adding new or porting existing libraries
 
 See our Nx generator plugin to [add new libraries](./packages/nx-plugin/README.md#adding-new-libraries) or [port existing libraries](./packages/nx-plugin/README.md#porting-existing-libraries).
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). If editing `README`s, conform to [standard-readme](https://github.com/RichardLitt/standard-readme).
