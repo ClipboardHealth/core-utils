@@ -119,7 +119,7 @@ describe("eslint-config", () => {
         // Allow common, well understood abbreviations
         "unicorn/prevent-abbreviations": [
           "error",
-          { ignore: [/config/i, /ctx/i, /params/i, /props/i, /ref/i] },
+          { ignore: [/config/i, /params/i, /props/i, /ref/i] },
         ],
 
         // Polarizing naming convention that isn't followed by us

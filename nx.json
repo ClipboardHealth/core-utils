@@ -33,7 +33,7 @@
     },
     "git": {
       "commit": true,
-      "commitMessage": "chore({projectName}): publish {version} [skip actions]"
+      "commitMessage": "chore(release): publish {projectName} {version} [skip actions]"
     },
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
