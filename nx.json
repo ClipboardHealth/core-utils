@@ -44,7 +44,8 @@
         "fallbackCurrentVersionResolver": "disk",
         "packageRoot": "dist/packages/{projectName}",
         "specifierSource": "conventional-commits"
-      }
+      },
+      "preVersionCommand": "npx nx run-many --targets build"
     }
   },
   "targetDefaults": {
