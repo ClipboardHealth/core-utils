@@ -40,7 +40,6 @@
     "projectsRelationship": "independent",
     "version": {
       "generatorOptions": {
-        "currentVersionResolver": "git-tag",
         "fallbackCurrentVersionResolver": "disk",
         "packageRoot": "dist/packages/{projectName}",
         "specifierSource": "conventional-commits"
