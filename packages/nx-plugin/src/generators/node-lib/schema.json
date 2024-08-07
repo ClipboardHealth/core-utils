@@ -14,7 +14,7 @@
       "x-prompt": "Library name?",
       "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
     },
-    "publishConfigPublicAccess": {
+    "publishPublicly": {
       "type": "boolean",
       "default": false,
       "description": "Publish the NPM package publicly.",

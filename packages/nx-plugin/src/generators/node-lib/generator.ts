@@ -29,7 +29,7 @@ function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): Normali
   const projectDirectory = name;
   return {
     ...options,
-    publishConfigAccess: options.publishConfigPublicAccess ? "public" : "restricted",
+    publishConfigAccess: options.publishPublicly ? "public" : "restricted",
     importPath: getImportPath(tree, projectDirectory),
     projectName: name.replaceAll("/", "-"),
     projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,

@@ -39,8 +39,12 @@
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
     "version": {
-      "conventionalCommits": true,
-      "generatorOptions": { "fallbackCurrentVersionResolver": "disk" }
+      "generatorOptions": {
+        "currentVersionResolver": "git-tag",
+        "fallbackCurrentVersionResolver": "disk",
+        "packageRoot": "dist/packages/{projectName}",
+        "specifierSource": "conventional-commits"
+      }
     }
   },
   "targetDefaults": {
