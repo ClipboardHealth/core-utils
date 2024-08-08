@@ -1,11 +1,11 @@
 {
   "name": "@clipboard-health/rules-engine",
   "description": "",
-  "version": "1.1.2",
+  "version": "1.1.5",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.6.3",
-    "type-fest": "4.23.0"
+    "type-fest": "4.24.0"
   },
   "keywords": [],
   "license": "MIT",

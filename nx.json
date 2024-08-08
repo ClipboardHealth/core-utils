@@ -43,6 +43,7 @@
         "currentVersionResolver": "git-tag",
         "fallbackCurrentVersionResolver": "disk",
         "packageRoot": "dist/packages/{projectName}",
+        "skipLockFileUpdate": true,
         "specifierSource": "conventional-commits"
       },
       "preVersionCommand": "npx nx run-many --targets build"
