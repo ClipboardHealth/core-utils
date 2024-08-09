@@ -3,5 +3,11 @@
   "compilerOptions": {
     "types": ["jest", "node"]
   },
-  "include": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"]
+  "include": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "src/generators/node-lib/files/src/lib/delete-me.spec.ts__template__"
+  ]
 }

@@ -1,4 +1,4 @@
-import { deleteMe } from "./rename-me";
+import { deleteMe } from "./delete-me";
 
 describe("deleteMe", () => {
   it("works", () => {

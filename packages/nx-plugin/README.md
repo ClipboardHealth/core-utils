@@ -16,10 +16,10 @@ npm install @clipboard-health/nx-plugin
 
 ## Usage
 
-Libraries version and publish separately. We use [Nx Local Generators](https://nx.dev/recipes/generators/local-generators) to generate library stubs that successfully build, lint, and test. The `--publishConfigPublicAccess` flag publishes the NPM package publicly.
+Libraries version and publish separately. We use [Nx Local Generators](https://nx.dev/recipes/generators/local-generators) to generate library stubs that successfully build, lint, and test. The `--publishPublicly` flag publishes the NPM package publicly.
 
 ```bash
-# Optionally, include the --publishConfigPublicAccess flag.
+# Optionally, include the --publishPublicly flag.
 npx nx generate @clipboard-health/nx-plugin:node-lib [PROJECT_NAME]
 
 # Change your mind? Remove it just as easily...
