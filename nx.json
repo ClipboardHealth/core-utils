@@ -44,7 +44,8 @@
         "fallbackCurrentVersionResolver": "disk",
         "packageRoot": "dist/packages/{projectName}",
         "skipLockFileUpdate": true,
-        "specifierSource": "conventional-commits"
+        "specifierSource": "conventional-commits",
+        "updateDependents": "auto"
       },
       "preVersionCommand": "npx nx run-many --targets build"
     }
