@@ -13,5 +13,17 @@
         "@nx/dependency-checks": "off"
       }
     }
-  ]
+  ],
+  "rules": {
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "null": false
+        },
+        "extendDefaults": true
+      }
+    ],
+    "capitalized-comments": "off"
+  }
 }
