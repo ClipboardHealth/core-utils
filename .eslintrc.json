@@ -44,6 +44,16 @@
         ],
         "enforceBuildableLibDependency": true
       }
-    ]
+    ],
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "null": false
+        },
+        "extendDefaults": true
+      }
+    ],
+    "capitalized-comments": "off"
   }
 }
