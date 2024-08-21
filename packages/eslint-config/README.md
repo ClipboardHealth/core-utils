@@ -9,6 +9,8 @@ Shared [ESLint](https://eslint.org/) configuration.
 
 ## Install
 
+Use the following command to install this package as a dependency in another package.
+
 ```bash
 npm install -D @clipboard-health/eslint-config eslint-config-prettier prettier
 ```
@@ -36,7 +38,3 @@ module.exports = {
   root: true,
 };
 ```
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.
