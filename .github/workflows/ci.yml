@@ -33,6 +33,7 @@ jobs:
           # GitHub checks PRs out based on the merge commit; we want the branch HEAD.
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+      - run: git fetch origin main:main
       - uses: nrwl/nx-set-shas@v4
       - uses: actions/cache@v4
         with:
