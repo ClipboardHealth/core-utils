@@ -10,10 +10,10 @@ describe("generator", () => {
     appTree = createTreeWithEmptyWorkspace({ layout: "apps-libs" });
   });
 
-  it("uses restricted package access by default", async () => {
+  it("generates", async () => {
     const name = "test";
 
-    await generator(appTree, { name });
+    await generator(appTree, { name, publishPublicly: false });
 
     const config = readProjectConfiguration(appTree, name);
     expect(config.name).toBe(name);
