@@ -36,7 +36,3 @@ module.exports = {
   root: true,
 };
 ```
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.

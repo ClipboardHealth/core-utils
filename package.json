@@ -5,6 +5,7 @@
     "tslib": "2.6.3"
   },
   "devDependencies": {
+    "@clipboard-health/eslint-config": "4.3.4",
     "@nx/devkit": "19.5.6",
     "@nx/eslint": "19.5.6",
     "@nx/eslint-plugin": "19.5.6",
