@@ -128,6 +128,9 @@ describe("eslint-config", () => {
         // Polarizing naming convention that isn't followed by us
         "no-underscore-dangle": "off",
 
+        // We use TypeScript where these are caught by the compiler
+        "no-use-before-define": ["error", { functions: false, classes: false }],
+
         "no-restricted-imports": [
           "error",
           {
