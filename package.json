@@ -5,11 +5,9 @@
     "tslib": "2.6.3"
   },
   "devDependencies": {
-    "@nx/devkit": "19.6.2",
     "@nx/eslint": "19.6.2",
     "@nx/eslint-plugin": "19.6.2",
     "@nx/jest": "19.6.2",
-    "@nx/js": "19.6.2",
     "@nx/plugin": "19.6.2",
     "@swc-node/register": "1.10.9",
     "@swc/cli": "0.4.0",

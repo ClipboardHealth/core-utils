@@ -1,5 +1,5 @@
 import { type Rule, type RuleContext } from "../..";
-import { appendOutput } from "../append-output";
+import { appendOutput } from "../appendOutput";
 import { all } from "./all";
 
 interface Input {

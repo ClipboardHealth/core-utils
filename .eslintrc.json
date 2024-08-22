@@ -3,7 +3,10 @@
   "overrides": [
     {
       "extends": ["./packages/eslint-config/src/index.js"],
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"]
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "unicorn/filename-case": ["error", { "case": "camelCase" }]
+      }
     },
     {
       "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],

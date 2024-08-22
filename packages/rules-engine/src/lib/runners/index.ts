@@ -1,2 +1,2 @@
 export * from "./all";
-export * from "./first-match";
+export * from "./firstMatch";

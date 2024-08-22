@@ -1,3 +1,3 @@
-export * from "./lib/append-output";
+export * from "./lib/appendOutput";
 export * from "./lib/rule";
 export * from "./lib/runners";

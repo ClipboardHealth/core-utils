@@ -1,6 +1,6 @@
 import { type Rule, type RuleContext } from "../..";
-import { appendOutput } from "../append-output";
-import { firstMatch } from "./first-match";
+import { appendOutput } from "../appendOutput";
+import { firstMatch } from "./firstMatch";
 
 interface Input {
   a: number;
