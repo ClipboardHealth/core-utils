@@ -2,13 +2,16 @@
   "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
   "version": "0.2",
   "ignorePaths": [
-    "coverage",
-    "dist",
-    "node_modules",
     ".github/CODEOWNERS",
     ".vscode",
+    "coverage",
     "default.json",
-    "tmp"
+    "dist",
+    "node_modules",
+    "tmp",
+    "packages/json-api/examples/toJsonApiQuery.ts",
+    "packages/json-api/README.md",
+    "packages/json-api/src/lib/toSearchParams.spec.ts"
   ],
   "words": [
     "amannn",
@@ -17,6 +20,7 @@
     "CODEOWNERS",
     "devkit",
     "embedme",
+    "fieldsets",
     "gitleaks",
     "lcov",
     "maxage",
