@@ -1,12 +1,12 @@
 /**
  * Filter operators to build complex filter queries.
  * - gt: Greater than
- * - ge: Greater than or equal to
+ * - gte: Greater than or equal to
  * - lt: Less than
- * - le: Less than or equal to
+ * - lte: Less than or equal to
  * - not: Not equal to
  */
-type FieldType = "gt" | "ge" | "lt" | "le" | "not";
+type FieldType = "gt" | "gte" | "lt" | "lte" | "not";
 
 /**
  * A JSON:API URL query string.

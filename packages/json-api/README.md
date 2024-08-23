@@ -1,6 +1,6 @@
 # @clipboard-health/json-api
 
-TODO
+Utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
 
 ## Table of Contents
 
