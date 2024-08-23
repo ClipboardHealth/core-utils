@@ -18,50 +18,63 @@ npm install @clipboard-health/json-api
 
 ### Query helpers
 
-From the client, call `toSearchParams` to convert from `JsonApiQuery` to `URLSearchParams`:
+From the client, call `toSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
 
 <!-- prettier-ignore -->
 ```ts
 // ./examples/toSearchParams.ts
 
+import { deepEqual } from "node:assert/strict";
+
 import { toSearchParams } from "@clipboard-health/json-api";
 
-import { type JsonApiQuery } from "../src/lib/types";
+import { type ClientJsonApiQuery } from "../src/lib/types";
 
-const query: JsonApiQuery = {
-  fields: { dog: ["age", "name"] },
-  filter: { age: ["2", "5"] },
-  include: ["vet"],
-  page: { size: "10" },
+const isoDate = "2024-01-01T15:00:00.000Z";
+const query: ClientJsonApiQuery = {
+  fields: { dog: ["age"] },
+  filter: { age: [2], createdAt: { gte: new Date(isoDate) }, isGoodDog: true },
+  include: ["owner"],
+  page: { size: 10 },
   sort: ["-age"],
 };
 
-console.log(toSearchParams(query).toString());
-// Note: actual result is URL-encoded, but unencoded below for readability
-// => fields[dog]=age,name&filter[age]=2,5&include=vet&page[size]=10&sort=-age
+deepEqual(
+  toSearchParams(query).toString(),
+  new URLSearchParams(
+    "fields[dog]=age&filter[age]=2&filter[createdAt][gte]=2024-01-01T15:00:00.000Z&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age",
+  ).toString(),
+);
 
 ```
 
-From the server, call `toJsonApiQuery` to convert from `URLSearchParams` to `JsonApiQuery`:
+From the server, call `toJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
 
 <!-- prettier-ignore -->
 ```ts
 // ./examples/toJsonApiQuery.ts
 
-import { toJsonApiQuery } from "@clipboard-health/json-api";
+import { deepEqual } from "node:assert/strict";
 
+import { type ServerJsonApiQuery, toJsonApiQuery } from "@clipboard-health/json-api";
+
+const isoDate = "2024-01-01T15:00:00.000Z";
+// The URLSearchParams constructor also supports URL-encoded strings
 const searchParams = new URLSearchParams(
-  "fields%5Bdog%5D=age%2Cname&filter%5Bage%5D=2%2C5&include=vet&page%5Bsize%5D=10&sort=-age",
+  `fields[dog]=age&filter[age]=2&filter[createdAt][gte]=${isoDate}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
 );
 
-console.log(toJsonApiQuery(searchParams));
-// => {
-//   fields: { dog: ["age", "name"] },
-//   filter: { age: ["2", "5"] },
-//   include: ["vet"],
-//   page: { size: "10" },
-//   sort: ["-age"],
-// }
+const query: ServerJsonApiQuery = toJsonApiQuery(searchParams);
+
+deepEqual(query, {
+  fields: { dog: ["age"] },
+  filter: { age: ["2"], createdAt: { gte: isoDate }, isGoodDog: ["true"] },
+  include: ["owner"],
+  page: {
+    size: "10",
+  },
+  sort: ["-age"],
+});
 
 ```
 

@@ -13,6 +13,14 @@ describe("toJsonApiQuery", () => {
     });
   });
 
+  it("parses multiple fields", () => {
+    expect(
+      toJsonApiQuery(new URL(`${BASE_URL}?fields[dog]=age&fields[vet]=name`).searchParams),
+    ).toEqual({
+      fields: { dog: ["age"], vet: ["name"] },
+    });
+  });
+
   it("parses fields with multiple values", () => {
     expect(toJsonApiQuery(new URL(`${BASE_URL}?fields[dog]=age,name`).searchParams)).toEqual({
       fields: { dog: ["age", "name"] },
@@ -39,9 +47,15 @@ describe("toJsonApiQuery", () => {
     });
   });
 
-  it("parses filter type gte", () => {
-    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[age][gte]=2`).searchParams)).toEqual({
-      filter: { age: { gte: "2" } },
+  it("parses multiple filter types", () => {
+    expect(
+      toJsonApiQuery(
+        new URL(
+          `${BASE_URL}?filter[age][gt]=2&filter[age][gte]=3&filter[age][lt]=6&filter[age][lte]=5&filter[age][not]=4`,
+        ).searchParams,
+      ),
+    ).toEqual({
+      filter: { age: { gt: "2", gte: "3", lt: "6", lte: "5", not: "4" } },
     });
   });
 
@@ -68,6 +82,20 @@ describe("toJsonApiQuery", () => {
     });
   });
 
+  it("parses limit/offset page", () => {
+    expect(
+      toJsonApiQuery(
+        new URL(`${BASE_URL}?page[limit]=10&page[number]=2&page[offset]=20`).searchParams,
+      ),
+    ).toEqual({
+      page: {
+        limit: "10",
+        number: "2",
+        offset: "20",
+      },
+    });
+  });
+
   it("parses sort", () => {
     expect(toJsonApiQuery(new URL(`${BASE_URL}?sort=age`).searchParams)).toEqual({
       sort: ["age"],
@@ -81,19 +109,21 @@ describe("toJsonApiQuery", () => {
   });
 
   it("parses combinations", () => {
+    const isoDate = "2024-01-01T15:00:00.000Z";
     expect(
       toJsonApiQuery(
-        new URL(`${BASE_URL}?filter[age]=2&include=vet&sort=age&fields[dog]=age&page[size]=10`)
-          .searchParams,
+        new URL(
+          `${BASE_URL}?fields[dog]=age&filter[age]=2&filter[createdAt][gte]=${isoDate}&include=owner&page[size]=10&sort=-age`,
+        ).searchParams,
       ),
     ).toEqual({
       fields: { dog: ["age"] },
-      filter: { age: ["2"] },
-      include: ["vet"],
+      filter: { age: ["2"], createdAt: { gte: isoDate } },
+      include: ["owner"],
       page: {
         size: "10",
       },
-      sort: ["age"],
+      sort: ["-age"],
     });
   });
 });
