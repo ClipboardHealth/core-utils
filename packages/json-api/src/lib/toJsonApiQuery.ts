@@ -15,7 +15,6 @@ const REGEX = {
  * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toJsonApiQuery.ts)
  */
 export function toJsonApiQuery(searchParams: URLSearchParams): JsonApiQuery {
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   return [...searchParams].reduce<JsonApiQuery>((accumulator, [key, value]) => {
     const match = Object.entries(REGEX).find(([, regex]) => regex.test(key));
     if (!match) {
@@ -42,11 +41,7 @@ export function toJsonApiQuery(searchParams: URLSearchParams): JsonApiQuery {
           filter: {
             ...accumulator.filter,
             [field]: subfield
-              ? {
-                  // eslint-disable-next-line unicorn/no-useless-fallback-in-spread
-                  ...(accumulator.filter?.[field] ?? {}),
-                  [subfield]: value,
-                }
+              ? { ...accumulator.filter?.[field], [subfield]: value }
               : value.split(","),
           },
         };
