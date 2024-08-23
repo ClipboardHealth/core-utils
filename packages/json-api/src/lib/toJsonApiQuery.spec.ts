@@ -113,12 +113,12 @@ describe("toJsonApiQuery", () => {
     expect(
       toJsonApiQuery(
         new URL(
-          `${BASE_URL}?fields[dog]=age&filter[age]=2&filter[createdAt][gte]=${isoDate}&include=owner&page[size]=10&sort=-age`,
+          `${BASE_URL}?fields[dog]=age&filter[age]=2&filter[createdAt][gte]=${isoDate}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
         ).searchParams,
       ),
     ).toEqual({
       fields: { dog: ["age"] },
-      filter: { age: ["2"], createdAt: { gte: isoDate } },
+      filter: { age: ["2"], createdAt: { gte: isoDate }, isGoodDog: ["true"] },
       include: ["owner"],
       page: {
         size: "10",

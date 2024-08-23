@@ -29,7 +29,7 @@ describe("toSearchParams", () => {
     expect([...actual.values()]).toHaveLength(1);
   });
 
-  it("converts simple filter", () => {
+  it("converts filter", () => {
     const actual = toSearchParams({ filter: { name: ["snoopy"] } });
 
     expect(actual.get("filter[name]")).toBe("snoopy");
@@ -44,10 +44,10 @@ describe("toSearchParams", () => {
     expect([...actual.values()]).toHaveLength(2);
   });
 
-  it("converts number filter", () => {
-    const actual = toSearchParams({ filter: { age: [2, 4] } });
+  it("converts boolean filter", () => {
+    const actual = toSearchParams({ filter: { isGoodDog: true } });
 
-    expect(actual.get("filter[age]")).toBe("2,4");
+    expect(actual.get("filter[isGoodDog]")).toBe("true");
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -61,24 +61,17 @@ describe("toSearchParams", () => {
     expect([...actual.values()]).toHaveLength(1);
   });
 
+  it("converts number filter", () => {
+    const actual = toSearchParams({ filter: { age: [2, 4] } });
+
+    expect(actual.get("filter[age]")).toBe("2,4");
+    expect([...actual.values()]).toHaveLength(1);
+  });
+
   it("converts filters with multiple values", () => {
     const actual = toSearchParams({ filter: { name: ["snoopy", "lassie"] } });
 
     expect(actual.get("filter[name]")).toBe("snoopy,lassie");
-    expect([...actual.values()]).toHaveLength(1);
-  });
-
-  it("converts number filter type", () => {
-    const actual = toSearchParams({ filter: { age: { gte: 2 } } });
-
-    expect(actual.get("filter[age][gte]")).toBe("2");
-    expect([...actual.values()]).toHaveLength(1);
-  });
-
-  it("converts boolean filter type", () => {
-    const actual = toSearchParams({ filter: { isGoodDog: true } });
-
-    expect(actual.get("filter[isGoodDog]")).toBe("true");
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -87,6 +80,13 @@ describe("toSearchParams", () => {
     const actual = toSearchParams({ filter: { createdAt: { gte: new Date(isoDate) } } });
 
     expect(actual.get("filter[createdAt][gte]")).toBe(isoDate);
+    expect([...actual.values()]).toHaveLength(1);
+  });
+
+  it("converts number filter type", () => {
+    const actual = toSearchParams({ filter: { age: { gte: 2 } } });
+
+    expect(actual.get("filter[age][gte]")).toBe("2");
     expect([...actual.values()]).toHaveLength(1);
   });
 
