@@ -26,16 +26,14 @@ export function toSearchParams(query: ClientJsonApiQuery): URLSearchParams {
 
   if (query.filter) {
     Object.entries(query.filter).forEach(([field, values]) => {
+      const filterField = `filter[${field}]`;
       if (Array.isArray(values)) {
-        searchParams.append(
-          `filter[${field}]`,
-          join(values.map((value) => filterValueString(value))),
-        );
+        searchParams.append(filterField, join(values.map((value) => filterValueString(value))));
       } else if (typeof values === "boolean") {
-        searchParams.append(`filter[${field}]`, String(values));
+        searchParams.append(filterField, String(values));
       } else if (typeof values === "object") {
         Object.entries(values).forEach(([fieldType, value]) => {
-          searchParams.append(`filter[${field}][${fieldType}]`, filterValueString(value));
+          searchParams.append(`${filterField}[${fieldType}]`, filterValueString(value));
         });
       }
     });
