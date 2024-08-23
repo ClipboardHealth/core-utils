@@ -11,6 +11,7 @@
     "moduleResolution": "Node10",
     "paths": {
       "@clipboard-health/eslint-config": ["packages/eslint-config/src/index.js"],
+      "@clipboard-health/json-api": ["packages/json-api/src/index.ts"],
       "@clipboard-health/nx-plugin": ["packages/nx-plugin/src/index.ts"],
       "@clipboard-health/rules-engine": ["packages/rules-engine/src/index.ts"]
     },
