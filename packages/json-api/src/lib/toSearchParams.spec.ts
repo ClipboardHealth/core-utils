@@ -44,10 +44,10 @@ describe("toSearchParams", () => {
   });
 
   it("converts complex filter", () => {
-    const actual = toSearchParams({ filter: { age: { ge: "2" } } });
+    const actual = toSearchParams({ filter: { age: { gte: "2" } } });
 
-    expect(actual.get("filter[age][ge]")).toBe("2");
-    expect(actual.toString()).toBe("filter%5Bage%5D%5Bge%5D=2");
+    expect(actual.get("filter[age][gte]")).toBe("2");
+    expect(actual.toString()).toBe("filter%5Bage%5D%5Bgte%5D=2");
   });
 
   it("converts include", () => {

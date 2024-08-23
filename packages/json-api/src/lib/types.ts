@@ -25,11 +25,7 @@ export interface JsonApiQuery {
    * @see {@link https://jsonapi.org/recommendations/#filtering Filtering}
    * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 Filtering strategy}
    */
-  filter?: Record<
-    string,
-    // Provides IntelliSense
-    string[] | { [K in FieldType]?: string }
-  >;
+  filter?: Record<string, string[] | { [K in FieldType]?: string }>;
 
   /**
    * Relationships to include in the response.
@@ -44,10 +40,7 @@ export interface JsonApiQuery {
    * @see {@link https://jsonapi.org/format/#fetching-pagination Pagination}
    * @see {@link https://jsonapi.org/examples/#pagination Pagination examples}
    */
-  page?:
-    | Record<string, string>
-    // Provides IntelliSense
-    | { [K in "cursor" | "number" | "size"]?: string };
+  page?: { [K in "cursor" | "limit" | "number" | "offset" | "size"]?: string };
 
   /**
    * Sorting data. Include the "-" prefix for descending order.

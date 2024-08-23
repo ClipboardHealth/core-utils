@@ -39,9 +39,9 @@ describe("toJsonApiQuery", () => {
     });
   });
 
-  it("parses filter type ge", () => {
-    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[age][ge]=2`).searchParams)).toEqual({
-      filter: { age: { ge: "2" } },
+  it("parses filter type gte", () => {
+    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[age][gte]=2`).searchParams)).toEqual({
+      filter: { age: { gte: "2" } },
     });
   });
 
