@@ -1,14 +1,21 @@
-import { toJsonApiQuery } from "@clipboard-health/json-api";
+import { deepEqual } from "node:assert/strict";
 
+import { type ServerJsonApiQuery, toJsonApiQuery } from "@clipboard-health/json-api";
+
+const isoDate = "2024-01-01T15:00:00.000Z";
+// The URLSearchParams constructor also supports URL-encoded strings
 const searchParams = new URLSearchParams(
-  "fields%5Bdog%5D=age%2Cname&filter%5Bage%5D=2%2C5&include=vet&page%5Bsize%5D=10&sort=-age",
+  `fields[dog]=age&filter[age]=2&filter[createdAt][gte]=${isoDate}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
 );
 
-console.log(toJsonApiQuery(searchParams));
-// => {
-//   fields: { dog: ["age", "name"] },
-//   filter: { age: ["2", "5"] },
-//   include: ["vet"],
-//   page: { size: "10" },
-//   sort: ["-age"],
-// }
+const query: ServerJsonApiQuery = toJsonApiQuery(searchParams);
+
+deepEqual(query, {
+  fields: { dog: ["age"] },
+  filter: { age: ["2"], createdAt: { gte: isoDate }, isGoodDog: ["true"] },
+  include: ["owner"],
+  page: {
+    size: "10",
+  },
+  sort: ["-age"],
+});

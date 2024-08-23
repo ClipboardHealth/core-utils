@@ -1,4 +1,4 @@
-import { type JsonApiQuery } from "./types";
+import { type ServerJsonApiQuery } from "./types";
 
 const REGEX = {
   fields: /^fields\[(.*?)]$/i,
@@ -10,12 +10,12 @@ const REGEX = {
 } as const;
 
 /**
- * Call this function from clients to convert from {@link URLSearchParams} to {@link JsonApiQuery}.
+ * Call this function from clients to convert from {@link URLSearchParams} to {@link ServerJsonApiQuery}.
  *
  * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toJsonApiQuery.ts)
  */
-export function toJsonApiQuery(searchParams: URLSearchParams): JsonApiQuery {
-  return [...searchParams].reduce<JsonApiQuery>((accumulator, [key, value]) => {
+export function toJsonApiQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
+  return [...searchParams].reduce<ServerJsonApiQuery>((accumulator, [key, value]) => {
     const match = Object.entries(REGEX).find(([, regex]) => regex.test(key));
     if (!match) {
       return accumulator;
