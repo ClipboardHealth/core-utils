@@ -28,22 +28,22 @@ describe("toJsonApiQuery", () => {
   });
 
   it("parses filter", () => {
-    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[name]=alice`).searchParams)).toEqual({
-      filter: { name: ["alice"] },
+    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[name]=snoopy`).searchParams)).toEqual({
+      filter: { name: ["snoopy"] },
     });
   });
 
   it("parses multiple filters", () => {
     expect(
-      toJsonApiQuery(new URL(`${BASE_URL}?filter[name]=alice&filter[age]=2`).searchParams),
+      toJsonApiQuery(new URL(`${BASE_URL}?filter[name]=snoopy&filter[age]=2`).searchParams),
     ).toEqual({
-      filter: { age: ["2"], name: ["alice"] },
+      filter: { age: ["2"], name: ["snoopy"] },
     });
   });
 
   it("parses filters with multiple values", () => {
-    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[name]=alice,bob`).searchParams)).toEqual({
-      filter: { name: ["alice", "bob"] },
+    expect(toJsonApiQuery(new URL(`${BASE_URL}?filter[name]=snoopy,lassie`).searchParams)).toEqual({
+      filter: { name: ["snoopy", "lassie"] },
     });
   });
 

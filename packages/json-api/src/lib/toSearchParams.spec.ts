@@ -30,16 +30,16 @@ describe("toSearchParams", () => {
   });
 
   it("converts simple filter", () => {
-    const actual = toSearchParams({ filter: { name: ["alice"] } });
+    const actual = toSearchParams({ filter: { name: ["snoopy"] } });
 
-    expect(actual.get("filter[name]")).toBe("alice");
+    expect(actual.get("filter[name]")).toBe("snoopy");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts multiple filters", () => {
-    const actual = toSearchParams({ filter: { name: ["alice"], age: ["2"] } });
+    const actual = toSearchParams({ filter: { name: ["snoopy"], age: ["2"] } });
 
-    expect(actual.get("filter[name]")).toBe("alice");
+    expect(actual.get("filter[name]")).toBe("snoopy");
     expect(actual.get("filter[age]")).toBe("2");
     expect([...actual.values()]).toHaveLength(2);
   });
@@ -62,9 +62,9 @@ describe("toSearchParams", () => {
   });
 
   it("converts filters with multiple values", () => {
-    const actual = toSearchParams({ filter: { name: ["alice", "bob"] } });
+    const actual = toSearchParams({ filter: { name: ["snoopy", "lassie"] } });
 
-    expect(actual.get("filter[name]")).toBe("alice,bob");
+    expect(actual.get("filter[name]")).toBe("snoopy,lassie");
     expect([...actual.values()]).toHaveLength(1);
   });
 
