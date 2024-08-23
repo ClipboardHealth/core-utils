@@ -16,7 +16,17 @@ export function toSearchParams(query: JsonApiQuery): URLSearchParams {
     });
   }
 
-  handleFilter(query, searchParams);
+  if (query.filter) {
+    Object.entries(query.filter).forEach(([field, values]) => {
+      if (Array.isArray(values)) {
+        searchParams.append(`filter[${field}]`, values.join(","));
+      } else if (typeof values === "object") {
+        Object.entries(values).forEach(([fieldType, value]) => {
+          searchParams.append(`filter[${field}][${fieldType}]`, value);
+        });
+      }
+    });
+  }
 
   if (query.include) {
     searchParams.append("include", query.include.join(","));
@@ -33,18 +43,4 @@ export function toSearchParams(query: JsonApiQuery): URLSearchParams {
   }
 
   return searchParams;
-}
-
-function handleFilter(query: JsonApiQuery, searchParams: URLSearchParams) {
-  if (query.filter) {
-    Object.entries(query.filter).forEach(([field, values]) => {
-      if (Array.isArray(values)) {
-        searchParams.append(`filter[${field}]`, values.join(","));
-      } else if (typeof values === "object") {
-        Object.entries(values).forEach(([fieldType, value]) => {
-          searchParams.append(`filter[${field}][${fieldType}]`, value);
-        });
-      }
-    });
-  }
 }
