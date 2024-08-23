@@ -21,7 +21,7 @@ export function toJsonApiQuery(searchParams: URLSearchParams): JsonApiQuery {
       return accumulator;
     }
 
-    const [type, regex] = match;
+    const [type, regex] = match as [keyof typeof REGEX, RegExp];
     const groups = regex.exec(key)?.slice(1);
     if (type === "fields" && groups?.[0]) {
       return {
@@ -34,14 +34,14 @@ export function toJsonApiQuery(searchParams: URLSearchParams): JsonApiQuery {
     }
 
     if ((type === "filter" || type === "filterType") && groups?.length) {
-      const [field, subfield] = groups;
+      const [field, fieldType] = groups;
       if (field) {
         return {
           ...accumulator,
           filter: {
             ...accumulator.filter,
-            [field]: subfield
-              ? { ...accumulator.filter?.[field], [subfield]: value }
+            [field]: fieldType
+              ? { ...accumulator.filter?.[field], [fieldType]: value }
               : value.split(","),
           },
         };

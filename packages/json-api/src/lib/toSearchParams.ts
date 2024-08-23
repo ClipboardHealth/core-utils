@@ -37,12 +37,12 @@ export function toSearchParams(query: JsonApiQuery): URLSearchParams {
 
 function handleFilter(query: JsonApiQuery, searchParams: URLSearchParams) {
   if (query.filter) {
-    Object.entries(query.filter).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        searchParams.append(`filter[${key}]`, value.join(","));
-      } else if (typeof value === "object") {
-        Object.entries(value).forEach(([subKey, subValue]) => {
-          searchParams.append(`filter[${key}][${subKey}]`, String(subValue));
+    Object.entries(query.filter).forEach(([field, values]) => {
+      if (Array.isArray(values)) {
+        searchParams.append(`filter[${field}]`, values.join(","));
+      } else if (typeof values === "object") {
+        Object.entries(values).forEach(([fieldType, value]) => {
+          searchParams.append(`filter[${field}][${fieldType}]`, value);
         });
       }
     });
