@@ -3,7 +3,7 @@ import { URLSearchParams } from "node:url";
 import { type JsonApiQuery } from "./types";
 
 /**
- * Call this function from clients to converts from {@link JsonApiQuery} to {@link URLSearchParams}.
+ * Call this function from clients to convert from {@link JsonApiQuery} to {@link URLSearchParams}.
  *
  * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toSearchParams.ts)
  */

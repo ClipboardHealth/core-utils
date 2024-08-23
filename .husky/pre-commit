@@ -1,3 +1,5 @@
+#!/bin/sh
+
 npx lint-staged
 
 if command -v gitleaks >/dev/null; then

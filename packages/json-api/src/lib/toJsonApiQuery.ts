@@ -10,7 +10,7 @@ const REGEX = {
 } as const;
 
 /**
- * Call this function from clients to converts from {@link URLSearchParams} to {@link JsonApiQuery}.
+ * Call this function from clients to convert from {@link URLSearchParams} to {@link JsonApiQuery}.
  *
  * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toJsonApiQuery.ts)
  */
