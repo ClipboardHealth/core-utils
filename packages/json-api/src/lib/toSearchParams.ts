@@ -1,5 +1,3 @@
-import { URLSearchParams } from "node:url";
-
 import { type ClientJsonApiQuery, type ClientTypes } from "./types";
 
 function filterValueString(value: ClientTypes["filterTypeValue"]): string {
