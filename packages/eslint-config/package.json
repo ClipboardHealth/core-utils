@@ -17,7 +17,7 @@
     "eslint-config-prettier": ">=9",
     "eslint-config-xo": "<=0.45",
     "eslint-config-xo-react": ">=0.27",
-    "eslint-config-xo-typescript": ">=1",
+    "eslint-config-xo-typescript": "<=1",
     "eslint-plugin-eslint-comments": ">=3",
     "eslint-plugin-import": ">=2",
     "eslint-plugin-jest": "^27.7",
