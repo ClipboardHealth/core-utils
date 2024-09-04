@@ -1,6 +1,6 @@
 # @clipboard-health/rules-engine
 
-Exposes a functional rules engine with two rule runners:
+A pure functional rules engine with two rule runners:
 
 - `firstMatch`: Runs the first rule that matches the criteria
 - `all`: Runs all the rules that matches the criteria
