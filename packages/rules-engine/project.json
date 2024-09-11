@@ -11,6 +11,7 @@
         "assets": ["packages/rules-engine/*.md"],
         "main": "packages/rules-engine/src/index.js",
         "outputPath": "dist/packages/rules-engine",
+        "packageJson": "packages/rules-engine/package.json",
         "tsConfig": "packages/rules-engine/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

@@ -1,18 +1,9 @@
 {
-  "versionGroups": [
-    {
-      "dependencyTypes": [
-        "peer"
-      ],
-      "specifierTypes": "range"
-    }
-  ],
   "semverGroups": [
     {
       "range": "",
       "dependencyTypes": [
         "dev",
-        "local",
         "prod",
         "resolutions"
       ],
@@ -22,6 +13,15 @@
       "packages": [
         "**"
       ]
+    }
+  ],
+  "lintSemverRanges": false,
+  "versionGroups": [
+    {
+      "dependencyTypes": [
+        "peer"
+      ],
+      "specifierTypes": "range"
     }
   ]
 }

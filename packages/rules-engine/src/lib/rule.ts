@@ -7,9 +7,7 @@ export interface RuleContext<TInput, TOutput> {
   input: ReadonlyDeep<TInput>;
 
   /**
-   * Output is immutable, do not modify existing items, only append.
-   *
-   * @see {@link appendOutput}
+   * Output is immutable, do not modify existing items, only append using {@link appendOutput}.
    */
   output: ReadonlyArray<ReadonlyDeep<TOutput>>;
 }

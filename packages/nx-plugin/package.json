@@ -1,12 +1,11 @@
 {
   "name": "@clipboard-health/nx-plugin",
   "description": "Clipboard Health's Nx plugin contains generators to manage applications within an Nx workspace.",
-  "version": "0.0.0",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
     "@nx/devkit": "19.6.2",
     "@nx/js": "19.6.2",
-    "tslib": "2.6.3"
+    "tslib": "2.7.0"
   },
   "generators": "./generators.json",
   "keywords": [
