@@ -30,22 +30,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           # GitHub checks PRs out based on the merge commit; we want the branch HEAD.
           ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
       - run: git fetch origin main:main
-      - uses: nrwl/nx-set-shas@v4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
-      - run: npm run install:ci
-      - run: npm run check:ci
+      - run: npm run ci
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN for PRs, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: npx nx affected --base main --configuration ci --parallel 3 --targets build,lint,test
 
@@ -68,26 +60,14 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
-      - uses: nrwl/nx-set-shas@v4
-      - uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ needs.initialize.outputs.node-version }}-
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
-          registry-url: https://registry.npmjs.org
-      - run: npm run install:ci
-      - run: npm run check:ci
-      # Skip the cache on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
+      - run: npm run ci
+      # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
       - run: npx nx affected --configuration ci --parallel 3 --skip-nx-cache --target build
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-      - run: |
-          git config user.name "GitHub Bot"
-          git config user.email "open-source@clipboardhealth.com"
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

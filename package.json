@@ -58,13 +58,14 @@
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "nx run-many --configuration ci --parallel 8 --targets build,lint,test",
-    "check:ci": "nx format:check && prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check",
+    "ci": "npm run ci:install && npm run ci:check",
+    "ci:check": "nx format:check && prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check",
+    "ci:install": "npm install --audit false --fund false",
     "cspell": "npx cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
     "embed": "nx run-many --targets embed",
     "embed:check": "npm run embed -- --verify",
     "format": "prettier --write .",
-    "install:ci": "npm install --audit false --fund false",
     "prepare": "husky"
   },
   "workspaces": [
