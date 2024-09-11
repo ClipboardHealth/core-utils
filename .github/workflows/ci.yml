@@ -37,7 +37,8 @@ jobs:
       - uses: ./.github/actions/setup-node
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
-      - run: npm run ci
+      - run: npm run ci:install
+      - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN for PRs, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: npx nx affected --base main --configuration ci --parallel 3 --targets build,lint,test
 
@@ -63,7 +64,8 @@ jobs:
       - uses: ./.github/actions/setup-node
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
-      - run: npm run ci
+      - run: npm run ci:install
+      - run: npm run ci:check
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
       - run: npx nx affected --configuration ci --parallel 3 --skip-nx-cache --target build
         env:
@@ -71,7 +73,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx nx release
+        run: npx nx release --yes
       - run: npm run docs
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
