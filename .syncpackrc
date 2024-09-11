@@ -1,4 +1,7 @@
 {
+  "dependencyTypes": [
+    "!local"
+  ],
   "semverGroups": [
     {
       "range": "",
@@ -15,7 +18,6 @@
       ]
     }
   ],
-  "lintSemverRanges": false,
   "versionGroups": [
     {
       "dependencyTypes": [
