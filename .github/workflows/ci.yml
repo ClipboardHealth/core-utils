@@ -90,10 +90,8 @@ jobs:
           git config user.email "open-source@clipboardhealth.com"
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: npx nx release --skip-publish
-      - env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx nx release publish
+        run: npx nx release
       - run: npm run docs
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
