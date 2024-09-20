@@ -28,11 +28,7 @@ describe("eslint-config", () => {
       },
       plugins: ["jest", "no-only-tests", "simple-import-sort", "sonarjs", "@typescript-eslint"],
       rules: {
-        /**
-         * Disable the capitalization of comments
-         * It makes code "not build" when just commented temporarily, which we've
-         * found to add more friction than the value from having consistent capitalization.
-         */
+        // Breaks code when temporarily commented, adding more friction than the value provided.
         "capitalized-comments": "off",
 
         // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
