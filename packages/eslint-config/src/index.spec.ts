@@ -71,10 +71,8 @@ describe("eslint-config", () => {
         "new-cap": ["warn", { newIsCap: true, capIsNew: false }],
 
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
-        /*
-         * Don't allow `.only` in tests to prevent it from making it
-         * into `main` and circumventing our tests.
-         */
+
+        // Disallow `.only` in tests to prevent it from making it into `main`.
         "no-only-tests/no-only-tests": "error",
 
         // Adapter from Airbnb's config, but allows ForOfStatement.
