@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/rules-engine",
   "description": "A pure functional rules engine.",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.7.0",
