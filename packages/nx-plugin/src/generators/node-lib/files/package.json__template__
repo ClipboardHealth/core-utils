@@ -8,7 +8,7 @@
   },
   "keywords": [],
   "license": "MIT",
-  "main": "./src/index.js",
+  "main": "./dist/src/index.js",
   "publishConfig": {
     "access": "<%= publishConfigAccess %>"
   },<% if (publishPublicly) { %>
