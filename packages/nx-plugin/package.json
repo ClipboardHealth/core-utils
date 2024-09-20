@@ -8,9 +8,6 @@
     "@nx/js": "19.6.2",
     "tslib": "2.7.0"
   },
-  "files": [
-    "dist/src"
-  ],
   "generators": "./generators.json",
   "keywords": [
     "generator",
@@ -21,7 +18,7 @@
     "typescript"
   ],
   "license": "MIT",
-  "main": "./dist/src/index.js",
+  "main": "./src/index.js",
   "publishConfig": {
     "access": "public"
   },

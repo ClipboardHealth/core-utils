@@ -7,12 +7,9 @@
     "tslib": "2.7.0",
     "type-fest": "4.26.1"
   },
-  "files": [
-    "dist/src"
-  ],
   "keywords": [],
   "license": "MIT",
-  "main": "./dist/src/index.js",
+  "main": "./src/index.js",
   "publishConfig": {
     "access": "public"
   },

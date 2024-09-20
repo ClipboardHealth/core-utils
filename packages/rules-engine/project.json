@@ -9,8 +9,8 @@
       "executor": "@nx/js:tsc",
       "options": {
         "assets": ["packages/rules-engine/*.md"],
-        "main": "packages/rules-engine/src/index.ts",
-        "outputPath": "packages/rules-engine/dist",
+        "main": "packages/rules-engine/src/index.js",
+        "outputPath": "dist/packages/rules-engine",
         "tsConfig": "packages/rules-engine/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

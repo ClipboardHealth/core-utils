@@ -9,8 +9,8 @@
       "executor": "@nx/js:tsc",
       "options": {
         "assets": ["packages/json-api/*.md"],
-        "main": "packages/json-api/src/index.ts",
-        "outputPath": "packages/json-api/dist",
+        "main": "packages/json-api/src/index.js",
+        "outputPath": "dist/packages/json-api",
         "tsConfig": "packages/json-api/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

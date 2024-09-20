@@ -10,7 +10,7 @@
       "options": {
         "assets": ["packages/eslint-config/*.md"],
         "main": "packages/eslint-config/src/index.js",
-        "outputPath": "packages/eslint-config/dist",
+        "outputPath": "dist/packages/eslint-config",
         "tsConfig": "packages/eslint-config/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

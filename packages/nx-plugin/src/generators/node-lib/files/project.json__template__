@@ -9,8 +9,8 @@
       "executor": "@nx/js:tsc",
       "options": {
         "assets": ["packages/<%= projectName %>/*.md"],
-        "main": "packages/<%= projectName %>/src/index.ts",
-        "outputPath": "packages/<%= projectName %>/dist",
+        "main": "packages/<%= projectName %>/src/index.js",
+        "outputPath": "dist/packages/<%= projectName %>",
         "tsConfig": "packages/<%= projectName %>/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

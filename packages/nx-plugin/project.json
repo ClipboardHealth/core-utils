@@ -26,8 +26,8 @@
             "output": "."
           }
         ],
-        "main": "packages/nx-plugin/src/index.ts",
-        "outputPath": "packages/nx-plugin/dist",
+        "main": "packages/nx-plugin/src/index.js",
+        "outputPath": "dist/packages/nx-plugin",
         "tsConfig": "packages/nx-plugin/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]
