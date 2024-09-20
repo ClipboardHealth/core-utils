@@ -1,10 +1,14 @@
 {
   "name": "@clipboard-health/json-api",
   "description": "Utilities for adhering to the JSON:API specification.",
+  "version": "0.2.4",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.7.0"
   },
+  "files": [
+    "dist"
+  ],
   "keywords": [],
   "license": "MIT",
   "main": "./src/index.js",
