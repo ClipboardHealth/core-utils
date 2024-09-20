@@ -10,7 +10,7 @@
       "options": {
         "assets": ["packages/<%= projectName %>/*.md"],
         "main": "packages/<%= projectName %>/src/index.js",
-        "outputPath": "dist/packages/<%= projectName %>",
+        "outputPath": "packages/<%= projectName %>/dist",
         "tsConfig": "packages/<%= projectName %>/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

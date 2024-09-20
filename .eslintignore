@@ -1,5 +1,6 @@
 # Alphabetical directories
 coverage/
+dist/
 node_modules/
 
 # Alphabetical files

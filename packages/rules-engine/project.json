@@ -10,7 +10,7 @@
       "options": {
         "assets": ["packages/rules-engine/*.md"],
         "main": "packages/rules-engine/src/index.js",
-        "outputPath": "dist/packages/rules-engine",
+        "outputPath": "packages/rules-engine/dist",
         "tsConfig": "packages/rules-engine/tsconfig.lib.json"
       },
       "outputs": ["{options.outputPath}"]

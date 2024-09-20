@@ -40,7 +40,7 @@ jobs:
       - run: npm run ci:install
       - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN for PRs, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
-      - run: npx nx affected --base main --configuration ci --parallel 3 --targets build,lint,test
+      - run: npx nx affected --configuration ci --parallel 3 --targets build,lint,test
 
   main:
     if: github.event_name != 'pull_request'
@@ -70,10 +70,18 @@ jobs:
       - run: npx nx affected --configuration ci --parallel 3 --skip-nx-cache --target build
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+      - run: |
+          git config user.name "GitHub Bot"
+          git config user.email "open-source@clipboardhealth.com"
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
+        # Versions package.json files at project roots
+        run: npx nx release --skip-publish
+        # Version package.json files in dist directories
+      - run: npx nx run-many --target=build
+      - env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx nx release --yes
+        run: npx nx release publish
       - run: npm run docs
       - uses: JamesIves/github-pages-deploy-action@v4
         with:

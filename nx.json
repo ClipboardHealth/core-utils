@@ -42,12 +42,10 @@
       "generatorOptions": {
         "currentVersionResolver": "git-tag",
         "fallbackCurrentVersionResolver": "disk",
-        "packageRoot": "dist/packages/{projectName}",
         "skipLockFileUpdate": true,
         "specifierSource": "conventional-commits",
         "updateDependents": "auto"
-      },
-      "preVersionCommand": "npx nx run-many --targets build"
+      }
     }
   },
   "targetDefaults": {
@@ -70,7 +68,6 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
-    },
-    "nx-release-publish": { "options": { "packageRoot": "dist/packages/{projectName}" } }
+    }
   }
 }
