@@ -11,7 +11,7 @@
     "eslint"
   ],
   "license": "MIT",
-  "main": "./src/index.js",
+  "main": "./dist/src/index.js",
   "peerDependencies": {
     "@typescript-eslint/eslint-plugin": "^7",
     "@typescript-eslint/parser": "^7",
@@ -39,7 +39,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clipboardhealth/core-utils.git",
-    "directory": "packages/nx-plugin"
+    "directory": "packages/eslint-config"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
