@@ -4,7 +4,7 @@
   "version": "0.0.0",<% if (publishPublicly) { %>
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",<% } %>
   "dependencies": {
-    "tslib": "2.6.3"
+    "tslib": "2.7.0"
   },
   "keywords": [],
   "license": "MIT",

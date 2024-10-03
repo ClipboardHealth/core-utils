@@ -39,11 +39,10 @@
     "projects": ["packages/*"],
     "projectsRelationship": "independent",
     "version": {
+      "conventionalCommits": true,
       "generatorOptions": {
-        "currentVersionResolver": "git-tag",
         "fallbackCurrentVersionResolver": "disk",
         "skipLockFileUpdate": true,
-        "specifierSource": "conventional-commits",
         "updateDependents": "auto"
       }
     }
