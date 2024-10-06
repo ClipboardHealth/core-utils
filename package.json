@@ -48,7 +48,7 @@
     "ts-jest": "29.2.5",
     "ts-node": "10.9.2",
     "type-fest": "4.26.1",
-    "typedoc": "0.26.7",
+    "typedoc": "0.26.8",
     "typescript": "5.6.2"
   },
   "license": "MIT",
