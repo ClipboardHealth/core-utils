@@ -9,6 +9,7 @@ describe("eslint-config", () => {
         "plugin:@typescript-eslint/recommended",
         "airbnb-base",
         "plugin:eslint-comments/recommended",
+        "plugin:expect-type/recommended",
         "plugin:jest/recommended",
         "plugin:jest/style",
         "plugin:import/recommended",
@@ -26,7 +27,14 @@ describe("eslint-config", () => {
         project: ["tsconfig.json"],
         tsconfigRootDir: __dirname,
       },
-      plugins: ["jest", "no-only-tests", "simple-import-sort", "sonarjs", "@typescript-eslint"],
+      plugins: [
+        "expect-type",
+        "jest",
+        "no-only-tests",
+        "simple-import-sort",
+        "sonarjs",
+        "@typescript-eslint",
+      ],
       rules: {
         // Breaks code when temporarily commented, adding more friction than the value provided.
         "capitalized-comments": "off",
@@ -63,6 +71,19 @@ describe("eslint-config", () => {
 
         // Doesn't play well with NX/monorepos
         "import/no-unresolved": "off",
+
+        "jest/expect-expect": [
+          "error",
+          {
+            assertFunctionNames: [
+              "expect",
+              "expectToBeDefined",
+              "expectToBeError",
+              "expectToBeSuccess",
+              "expectTypeOf",
+            ],
+          },
+        ],
 
         // Prefer named exports
         "import/prefer-default-export": "off",

@@ -6,6 +6,7 @@ Utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
 
 - [Install](#install)
 - [Usage](#usage)
+  - [Query helpers](#query-helpers)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -18,57 +19,67 @@ npm install @clipboard-health/json-api
 
 ### Query helpers
 
-From the client, call `toSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
+From the client, call `toClientSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/toSearchParams.ts
+// ./examples/toClientSearchParams.ts
 
 import { deepEqual } from "node:assert/strict";
 
-import { toSearchParams } from "@clipboard-health/json-api";
+import { toClientSearchParams } from "@clipboard-health/json-api";
 
 import { type ClientJsonApiQuery } from "../src/lib/types";
 
-const isoDate = "2024-01-01T15:00:00.000Z";
+const [date1, date2] = ["2024-01-01", "2024-01-02"];
 const query: ClientJsonApiQuery = {
-  fields: { dog: ["age"] },
-  filter: { age: [2], createdAt: { gte: new Date(isoDate) }, isGoodDog: true },
+  fields: { dog: ["name", "age"] },
+  filter: {
+    age: { eq: ["2"] },
+    createdAt: { gt: [date1], lt: [date2] },
+    isGoodDog: { eq: ["true"] },
+  },
   include: ["owner"],
-  page: { size: 10 },
+  page: {
+    size: "10",
+  },
   sort: ["-age"],
 };
 
 deepEqual(
-  toSearchParams(query).toString(),
+  toClientSearchParams(query).toString(),
   new URLSearchParams(
-    "fields[dog]=age&filter[age]=2&filter[createdAt][gte]=2024-01-01T15:00:00.000Z&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age",
+    `fields[dog]=name,age&filter[age]=2&filter[createdAt][gt]=${date1}&filter[createdAt][lt]=${date2}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
   ).toString(),
 );
 
 ```
 
-From the server, call `toJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
+From the server, call `toServerJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/toJsonApiQuery.ts
+// ./examples/toServerJsonApiQuery.ts
 
 import { deepEqual } from "node:assert/strict";
 
-import { type ServerJsonApiQuery, toJsonApiQuery } from "@clipboard-health/json-api";
+import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
 
-const isoDate = "2024-01-01T15:00:00.000Z";
+const [date1, date2] = ["2024-01-01", "2024-01-02"];
 // The URLSearchParams constructor also supports URL-encoded strings
 const searchParams = new URLSearchParams(
-  `fields[dog]=age&filter[age]=2&filter[createdAt][gte]=${isoDate}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
+  `fields[dog]=name,age&filter[age]=2&filter[createdAt][gt]=${date1}&filter[createdAt][lt]=${date2}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
 );
 
-const query: ServerJsonApiQuery = toJsonApiQuery(searchParams);
+const query: ServerJsonApiQuery = toServerJsonApiQuery(searchParams);
 
 deepEqual(query, {
-  fields: { dog: ["age"] },
-  filter: { age: ["2"], createdAt: { gte: isoDate }, isGoodDog: ["true"] },
+  fields: { dog: ["name", "age"] },
+  filter: {
+    age: { eq: ["2"] },
+    createdAt: { gt: [date1], lt: [date2] },
+    isGoodDog: { eq: ["true"] },
+  },
   include: ["owner"],
   page: {
     size: "10",

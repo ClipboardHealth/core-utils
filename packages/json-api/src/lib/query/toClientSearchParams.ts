@@ -1,6 +1,6 @@
-import { type ClientJsonApiQuery, type ClientTypes } from "./types";
+import { type ClientJsonApiQuery, type ClientTypes } from "../types";
 
-function filterValueString(value: ClientTypes["filterTypeValue"]): string {
+function filterValueString(value: ClientTypes["filterValue"][number]): string {
   return value instanceof Date ? value.toISOString() : String(value);
 }
 
@@ -13,7 +13,7 @@ function join(values: string[]): string {
  *
  * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toSearchParams.ts)
  */
-export function toSearchParams(query: ClientJsonApiQuery): URLSearchParams {
+export function toClientSearchParams(query: ClientJsonApiQuery): URLSearchParams {
   const searchParams = new URLSearchParams();
 
   if (query.fields) {
@@ -25,15 +25,12 @@ export function toSearchParams(query: ClientJsonApiQuery): URLSearchParams {
   if (query.filter) {
     Object.entries(query.filter).forEach(([field, values]) => {
       const filterField = `filter[${field}]`;
-      if (Array.isArray(values)) {
-        searchParams.append(filterField, join(values.map((value) => filterValueString(value))));
-      } else if (typeof values === "boolean") {
-        searchParams.append(filterField, String(values));
-      } else if (typeof values === "object") {
-        Object.entries(values).forEach(([fieldType, value]) => {
-          searchParams.append(`${filterField}[${fieldType}]`, filterValueString(value));
-        });
-      }
+      Object.entries(values).forEach(([fieldType, value]) => {
+        searchParams.append(
+          fieldType === "eq" ? filterField : `${filterField}[${fieldType}]`,
+          join(value.map((value) => filterValueString(value))),
+        );
+      });
     });
   }
 

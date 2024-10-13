@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "json-api-nestjs",
+  "projectType": "library",
+  "sourceRoot": "packages/json-api-nestjs/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/json-api-nestjs/*.md"],
+        "main": "packages/json-api-nestjs/src/index.js",
+        "outputPath": "dist/packages/json-api-nestjs",
+        "tsConfig": "packages/json-api-nestjs/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/json-api-nestjs/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/json-api-nestjs/jest.config.ts"
+      }
+    }
+  }
+}

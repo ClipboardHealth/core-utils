@@ -24,6 +24,7 @@
     "gitleaks",
     "lcov",
     "maxage",
+    "nestjs",
     "npmjs",
     "nrwl",
     "nvmrc",

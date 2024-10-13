@@ -5,6 +5,7 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "airbnb-base",
     "plugin:eslint-comments/recommended",
+    "plugin:expect-type/recommended",
     "plugin:jest/recommended",
     "plugin:jest/style",
     "plugin:import/recommended",
@@ -22,7 +23,14 @@ module.exports = {
     project: ["tsconfig.json"],
     tsconfigRootDir: __dirname,
   },
-  plugins: ["jest", "no-only-tests", "simple-import-sort", "sonarjs", "@typescript-eslint"],
+  plugins: [
+    "expect-type",
+    "jest",
+    "no-only-tests",
+    "simple-import-sort",
+    "sonarjs",
+    "@typescript-eslint",
+  ],
   rules: {
     // Breaks code when temporarily commented, adding more friction than the value provided.
     "capitalized-comments": "off",
@@ -62,6 +70,19 @@ module.exports = {
 
     // Prefer named exports
     "import/prefer-default-export": "off",
+
+    "jest/expect-expect": [
+      "error",
+      {
+        assertFunctionNames: [
+          "expect",
+          "expectToBeDefined",
+          "expectToBeError",
+          "expectToBeSuccess",
+          "expectTypeOf",
+        ],
+      },
+    ],
 
     // Allow PascalCase for Decorators
     "new-cap": ["warn", { newIsCap: true, capIsNew: false }],

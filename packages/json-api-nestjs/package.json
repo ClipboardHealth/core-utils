@@ -1,0 +1,17 @@
+{
+  "name": "@clipboard-health/json-api-nestjs",
+  "description": "Utilities for adhering to the JSON:API specification with NestJS.",
+  "version": "0.0.0",
+  "dependencies": {
+    "tslib": "2.7.0",
+    "zod": "3.23.8"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}
