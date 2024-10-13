@@ -1,10 +1,11 @@
 {
-  "name": "@clipboard-health/json-api",
-  "description": "Utilities for adhering to the JSON:API specification.",
-  "version": "0.3.0",
+  "name": "@clipboard-health/rules-engine",
+  "description": "A pure functional rules engine.",
+  "version": "1.2.9",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
-    "tslib": "2.7.0"
+    "tslib": "2.7.0",
+    "type-fest": "4.26.1"
   },
   "keywords": [],
   "license": "MIT",
@@ -15,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clipboardhealth/core-utils.git",
-    "directory": "packages/json-api"
+    "directory": "packages/rules-engine"
   },
   "scripts": {
     "embed": "embedme README.md"
