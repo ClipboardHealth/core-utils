@@ -11,7 +11,7 @@ import { nonEmptyString } from "../schemas";
  * @see {@link https://jsonapi.org/format/#fetching-pagination JSON:API pagination}
  * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
  */
-export function createCursorPagination(
+export function cursorPaginationQuery(
   parameters?: Readonly<{ maximumSize?: number; defaultSize?: number }>,
 ) {
   const { maximumSize = 200, defaultSize = 20 } = parameters ?? {};

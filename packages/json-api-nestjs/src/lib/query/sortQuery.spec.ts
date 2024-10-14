@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 import { expectToBeError, expectToBeSuccess } from "../../test";
-import { createSort } from "./createSort";
+import { sortQuery } from "./sortQuery";
 
-describe("createSort", () => {
+describe("sortQuery", () => {
   const sortSchema = z.object(
-    createSort(["name", "age", "createdAt", "title", "publishedAt"] as const),
+    sortQuery(["name", "age", "createdAt", "title", "publishedAt"] as const),
   );
 
   it("accepts valid sort parameters", () => {

@@ -37,7 +37,7 @@ export type FilterSchema<MapT extends FilterMap> = {
  * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
  * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
  */
-export function createFilter<const MapT extends FilterMap>(parameters: Readonly<MapT>) {
+export function filterQuery<const MapT extends FilterMap>(parameters: Readonly<MapT>) {
   return {
     filter: z
       .object(

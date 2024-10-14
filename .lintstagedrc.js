@@ -8,7 +8,11 @@ const esLintIgnored = async (files) => {
 };
 
 module.exports = {
-  "**/*": async (files) => [`npm run cspell -- ${files.join(" ")}`, `npm run embed:check`],
+  "**/*": async (files) => [
+    `npm run cspell -- ${files.join(" ")}`,
+    `npm run embed:check`,
+    `npm run knip`,
+  ],
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
   ],

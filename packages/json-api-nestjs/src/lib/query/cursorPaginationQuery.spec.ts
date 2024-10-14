@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 import { expectToBeError, expectToBeSuccess } from "../../test";
-import { createCursorPagination } from "./createCursorPagination";
+import { cursorPaginationQuery } from "./cursorPaginationQuery";
 
-const cursorPaginationSchema = z.object(createCursorPagination());
+const cursorPaginationSchema = z.object(cursorPaginationQuery());
 
-describe("createCursorPagination", () => {
+describe("cursorPaginationQuery", () => {
   it("parses size", () => {
     const input = {
       page: {
@@ -99,7 +99,7 @@ describe("createCursorPagination", () => {
   });
 
   describe("with custom defaults", () => {
-    const schema = z.object(createCursorPagination({ defaultSize: 10, maximumSize: 100 }));
+    const schema = z.object(cursorPaginationQuery({ defaultSize: 10, maximumSize: 100 }));
 
     it("defaults custom size", () => {
       const input = {};

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@2/schema.json",
+  "ignore": [
+    "**/jest.config.ts",
+    "jest.preset.js",
+    "**/examples/**",
+    "**/*.spec.ts",
+    "**/test/**",
+    "**/react.js",
+    "**/generators/**/generator.ts",
+    "**/generators/**/schema.d.ts",
+  ],
+  "ignoreBinaries": [],
+  "ignoreDependencies": [
+    "@nx/devkit",
+    "jest-environment-node",
+    "ts-jest",
+    "ts-node",
+    "typedoc-plugin-include-example",
+  ],
+  // https://github.com/webpro-nl/knip/issues/727
+  "jest": false,
+}

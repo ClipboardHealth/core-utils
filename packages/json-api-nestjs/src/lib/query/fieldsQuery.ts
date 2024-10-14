@@ -21,7 +21,7 @@ export type FieldsSchema<MapT extends FieldsMap> = {
  * @see [Usage example](../../../examples/query.ts)
  * @see {@link https://jsonapi.org/format/#fetching-sparse-fieldsets JSON:API sparse fieldsets}
  */
-export function createFields<const MapT extends FieldsMap>(parameters: Readonly<MapT>) {
+export function fieldsQuery<const MapT extends FieldsMap>(parameters: Readonly<MapT>) {
   const fieldSchemas = Object.fromEntries(
     Object.entries(parameters).map(([apiType, fields]: [keyof MapT, MapT[keyof MapT]]) => [
       apiType,

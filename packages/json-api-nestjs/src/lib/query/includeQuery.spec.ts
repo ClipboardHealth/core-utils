@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 import { expectToBeError, expectToBeSuccess } from "../../test";
-import { createInclude } from "./createInclude";
+import { includeQuery } from "./includeQuery";
 
-describe("createInclude", () => {
-  const includeSchema = z.object(createInclude(["articles", "articles.comments"]));
+describe("includeQuery", () => {
+  const includeSchema = z.object(includeQuery(["articles", "articles.comments"]));
 
   it("accepts valid include parameters", () => {
     const input = {

@@ -2,11 +2,11 @@ import { z } from "zod";
 
 import { expectToBeError, expectToBeSuccess } from "../../test";
 import { booleanString } from "../schemas";
-import { createFilter } from "./createFilter";
+import { filterQuery } from "./filterQuery";
 
-describe("createFilter", () => {
+describe("filterQuery", () => {
   const filterSchema = z.object(
-    createFilter({
+    filterQuery({
       age: {
         filters: ["eq", "ne", "gt", "gte", "lt", "lte"],
         schema: z.coerce.number().int().positive(),

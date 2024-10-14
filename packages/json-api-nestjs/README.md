@@ -27,19 +27,19 @@ Create Zod schemas for your API's queries:
 
 import {
   booleanString,
-  createCursorPagination,
-  createFields,
-  createFilter,
-  createInclude,
-  createSort,
+  cursorPaginationQuery,
+  fieldsQuery,
+  filterQuery,
+  includeQuery,
+  sortQuery,
 } from "@clipboard-health/json-api-nestjs";
 import { z } from "zod";
 
 export const query = z
   .object({
-    ...createCursorPagination(),
-    ...createFields({ user: ["age", "name"], article: ["title"] }),
-    ...createFilter({
+    ...cursorPaginationQuery(),
+    ...fieldsQuery({ user: ["age", "name"], article: ["title"] }),
+    ...filterQuery({
       age: {
         filters: ["eq", "gt"],
         schema: z.coerce.number().int().positive().max(125),
@@ -50,11 +50,11 @@ export const query = z
       },
       dateOfBirth: {
         filters: ["gte"],
-        schema: z.coerce.date().min(new Date("1900-01-01")),
+        schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
       },
     }),
-    ...createSort(["age", "name"]),
-    ...createInclude(["articles", "articles.comments"]),
+    ...sortQuery(["age", "name"]),
+    ...includeQuery(["articles", "articles.comments"]),
   })
   .strict();
 

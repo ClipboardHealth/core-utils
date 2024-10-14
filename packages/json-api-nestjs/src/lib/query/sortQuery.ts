@@ -11,7 +11,7 @@ import { type Field } from "../types";
  * @see [Usage example](../../../examples/query.ts)
  * @see {@link https://jsonapi.org/format/#fetching-sorting JSON:API sorting}
  */
-export function createSort<const FieldT extends readonly [Field, ...Field[]]>(fields: FieldT) {
+export function sortQuery<const FieldT extends readonly [Field, ...Field[]]>(fields: FieldT) {
   const fieldSet = new Set(fields);
   return {
     sort: z

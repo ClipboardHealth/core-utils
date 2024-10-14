@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 import { expectToBeError, expectToBeSuccess } from "../../test";
-import { createFields } from "./createFields";
+import { fieldsQuery } from "./fieldsQuery";
 
-describe("createFields", () => {
+describe("fieldsQuery", () => {
   const fieldsSchema = z.object(
-    createFields({
+    fieldsQuery({
       user: ["name", "email"],
       article: ["title"],
     }),

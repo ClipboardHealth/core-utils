@@ -10,7 +10,7 @@ import { splitString } from "../internal/splitString";
  *
  * @see {@link https://jsonapi.org/format/#fetching-includes JSON:API includes}
  */
-export function createInclude<const FieldT extends readonly string[]>(fields: FieldT) {
+export function includeQuery<const FieldT extends readonly string[]>(fields: FieldT) {
   const fieldSet = new Set(fields);
 
   return {
