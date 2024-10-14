@@ -3,6 +3,7 @@ import {
   createCursorPagination,
   createFields,
   createFilter,
+  createInclude,
   createSort,
 } from "@clipboard-health/json-api-nestjs";
 import { z } from "zod";
@@ -34,9 +35,12 @@ export const filterQuery = z
 
 export const sortQuery = z.object(createSort(["age", "name"])).strict();
 
+export const includeQuery = z.object(createInclude(["articles", "articles.comments"])).strict();
+
 export const compoundQuery = z.object({
   ...createCursorPagination(),
   ...createFields({ user: ["age", "name"] }),
   ...createFilter({ isActive: { filters: ["eq"], schema: booleanString } }),
   ...createSort(["age"]),
+  ...createInclude(["articles"]),
 });

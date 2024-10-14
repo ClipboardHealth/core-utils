@@ -3,14 +3,6 @@ import { z } from "zod";
 import { splitString } from "../internal/splitString";
 import { type Field } from "../types";
 
-export type SortSchema<T extends readonly Field[]> = z.ZodEffects<
-  z.ZodEffects<
-    z.ZodOptional<z.ZodArray<z.ZodEffects<z.ZodString>>>,
-    Array<`-${T[number]}` | T[number]> | undefined,
-    unknown
-  >
->;
-
 /**
  * Creates a Zod schema for JSON:API sort parameters.
  *
@@ -34,7 +26,9 @@ export function createSort<const FieldT extends readonly [Field, ...Field[]]>(fi
             context.addIssue({
               code: z.ZodIssueCode.custom,
               message: `Invalid sort field: '${field}'`,
+              path: ["sort", field],
             });
+            break;
           }
         }
       })
