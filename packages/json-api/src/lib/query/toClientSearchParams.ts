@@ -11,7 +11,9 @@ function join(values: string[]): string {
 /**
  * Call this function from clients to convert from {@link ClientJsonApiQuery} to {@link URLSearchParams}.
  *
- * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toSearchParams.ts)
+ * @includeExample ./packages/json-api/examples/toClientSearchParams.ts
+ *
+ * @see [Usage example](../../../examples/toClientSearchParams.ts)
  */
 export function toClientSearchParams(query: ClientJsonApiQuery): URLSearchParams {
   const searchParams = new URLSearchParams();

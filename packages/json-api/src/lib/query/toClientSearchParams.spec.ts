@@ -93,7 +93,7 @@ describe("toClientSearchParams", () => {
   it("converts multiple filter types", () => {
     const actual = toClientSearchParams({
       filter: {
-        age: { eq: ["1"], ne: ["2"], gt: ["3"], gte: ["4"], lt: ["5"], lte: ["6"], not: ["7"] },
+        age: { eq: ["1"], ne: ["2"], gt: ["3"], gte: ["4"], lt: ["5"], lte: ["6"] },
       },
     });
 
@@ -103,8 +103,7 @@ describe("toClientSearchParams", () => {
     expect(actual.get("filter[age][gte]")).toBe("4");
     expect(actual.get("filter[age][lt]")).toBe("5");
     expect(actual.get("filter[age][lte]")).toBe("6");
-    expect(actual.get("filter[age][not]")).toBe("7");
-    expect([...actual.values()]).toHaveLength(7);
+    expect([...actual.values()]).toHaveLength(6);
   });
 
   it("converts include", () => {

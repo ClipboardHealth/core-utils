@@ -4,7 +4,7 @@ import { queryFilterPreprocessor } from "../internal/queryFilterPreprocessor";
 import { splitString } from "../internal/splitString";
 import { type ApiType } from "../types";
 
-export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "not";
+export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
 
 export type FilterMap = Record<
   ApiType,
@@ -28,6 +28,15 @@ export type FilterObject<MapT extends FilterMap> = {
   >;
 };
 
+/**
+ * Creates a Zod schema for JSON:API filters.
+ *
+ * @includeExample ./packages/json-api-nestjs/examples/query.ts
+ *
+ * @see [Usage example](../../../examples/query.ts)
+ * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
+ * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
+ */
 export function createFilter<const MapT extends FilterMap>(parameters: Readonly<MapT>) {
   return {
     filter: z

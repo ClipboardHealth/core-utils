@@ -12,7 +12,9 @@ const REGEX = {
 /**
  * Call this function from servers to convert from {@link URLSearchParams} to {@link ServerJsonApiQuery}.
  *
- * @see [Example](https://github.com/ClipboardHealth/core-utils/blob/main/packages/json-api/examples/toJsonApiQuery.ts)
+ * @includeExample packages/json-api/examples/toServerJsonApiQuery.ts
+ *
+ * @see [Usage example](../../../examples/toServerJsonApiQuery.ts)
  */
 export function toServerJsonApiQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
   return [...searchParams].reduce<ServerJsonApiQuery>((accumulator, [key, value]) => {

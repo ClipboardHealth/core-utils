@@ -8,7 +8,7 @@ describe("createFilter", () => {
   const filterSchema = z.object(
     createFilter({
       age: {
-        filters: ["eq", "ne", "gt", "gte", "lt", "lte", "not"],
+        filters: ["eq", "ne", "gt", "gte", "lt", "lte"],
         schema: z.coerce.number().int().positive(),
       },
       dateOfBirth: {
