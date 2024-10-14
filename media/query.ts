@@ -3,13 +3,14 @@ import {
   createCursorPagination,
   createFields,
   createFilter,
+  createSort,
 } from "@clipboard-health/json-api-nestjs";
 import { z } from "zod";
 
 export const paginationQuery = z.object(createCursorPagination()).strict();
 
 export const fieldsQuery = z
-  .object(createFields({ user: ["name", "age"], post: ["title"] }))
+  .object(createFields({ user: ["age", "name"], article: ["title"] }))
   .strict();
 
 export const filterQuery = z
@@ -31,8 +32,11 @@ export const filterQuery = z
   )
   .strict();
 
-export const complexQuery = z.object({
+export const sortQuery = z.object(createSort(["age", "name"])).strict();
+
+export const compoundQuery = z.object({
   ...createCursorPagination(),
-  ...createFields({ user: ["name", "age"] }),
+  ...createFields({ user: ["age", "name"] }),
   ...createFilter({ isActive: { filters: ["eq"], schema: booleanString } }),
+  ...createSort(["age"]),
 });
