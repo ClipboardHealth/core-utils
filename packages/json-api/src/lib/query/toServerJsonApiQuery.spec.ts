@@ -9,23 +9,25 @@ describe("toJsonApiQuery", () => {
   });
 
   it("parses fields", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?fields[dog]=age`).searchParams)).toEqual({
-      fields: { dog: ["age"] },
+    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?fields[user]=age`).searchParams)).toEqual({
+      fields: { user: ["age"] },
     });
   });
 
   it("parses multiple fields", () => {
     expect(
-      toServerJsonApiQuery(new URL(`${BASE_URL}?fields[dog]=age&fields[vet]=name`).searchParams),
+      toServerJsonApiQuery(new URL(`${BASE_URL}?fields[user]=age&fields[vet]=name`).searchParams),
     ).toEqual({
-      fields: { dog: ["age"], vet: ["name"] },
+      fields: { user: ["age"], vet: ["name"] },
     });
   });
 
   it("parses fields with multiple values", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?fields[dog]=age,name`).searchParams)).toEqual({
-      fields: { dog: ["age", "name"] },
-    });
+    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?fields[user]=age,name`).searchParams)).toEqual(
+      {
+        fields: { user: ["age", "name"] },
+      },
+    );
   });
 
   it("parses filter", () => {
@@ -114,11 +116,11 @@ describe("toJsonApiQuery", () => {
   it("parses combinations", () => {
     const [date1, date2] = ["2024-01-01", "2024-01-02"];
     const expected: ServerJsonApiQuery = {
-      fields: { dog: ["name", "age"] },
+      fields: { user: ["age", "name"] },
       filter: {
         age: { eq: ["2"] },
-        createdAt: { gt: [date1], lt: [date2] },
-        isGoodDog: { eq: ["true"] },
+        dateOfBirth: { gt: [date1], lt: [date2] },
+        isActive: { eq: ["true"] },
       },
       include: ["owner"],
       page: {
@@ -130,7 +132,7 @@ describe("toJsonApiQuery", () => {
     expect(
       toServerJsonApiQuery(
         new URL(
-          `${BASE_URL}?fields[dog]=name,age&filter[age]=2&filter[createdAt][gt]=${date1}&filter[createdAt][lt]=${date2}&filter[isGoodDog]=true&include=owner&page[size]=10&sort=-age`,
+          `${BASE_URL}?fields[user]=age,name&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=owner&page[size]=10&sort=-age`,
         ).searchParams,
       ),
     ).toEqual(expected);

@@ -9,23 +9,23 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts fields", () => {
-    const actual = toClientSearchParams({ fields: { dog: ["age"] } });
+    const actual = toClientSearchParams({ fields: { user: ["age"] } });
 
-    expect(actual.get("fields[dog]")).toBe("age");
+    expect(actual.get("fields[user]")).toBe("age");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts multiple fields", () => {
-    const actual = toClientSearchParams({ fields: { dog: ["age", "name"] } });
+    const actual = toClientSearchParams({ fields: { user: ["age", "name"] } });
 
-    expect(actual.get("fields[dog]")).toBe("age,name");
+    expect(actual.get("fields[user]")).toBe("age,name");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts fields with multiple values", () => {
-    const actual = toClientSearchParams({ fields: { dog: ["age", "name"] } });
+    const actual = toClientSearchParams({ fields: { user: ["age", "name"] } });
 
-    expect(actual.get("fields[dog]")).toBe("age,name");
+    expect(actual.get("fields[user]")).toBe("age,name");
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -47,17 +47,17 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts boolean filter", () => {
-    const actual = toClientSearchParams({ filter: { isGoodDog: { eq: ["true"] } } });
+    const actual = toClientSearchParams({ filter: { isActive: { eq: ["true"] } } });
 
-    expect(actual.get("filter[isGoodDog]")).toBe("true");
+    expect(actual.get("filter[isActive]")).toBe("true");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts Date filter", () => {
     const isoDate = "2024-01-01T15:00:00.000Z";
-    const actual = toClientSearchParams({ filter: { createdAt: { eq: [new Date(isoDate)] } } });
+    const actual = toClientSearchParams({ filter: { dateOfBirth: { eq: [new Date(isoDate)] } } });
 
-    expect(actual.get("filter[createdAt]")).toBe(isoDate);
+    expect(actual.get("filter[dateOfBirth]")).toBe(isoDate);
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -77,9 +77,9 @@ describe("toClientSearchParams", () => {
 
   it("converts Date filter type", () => {
     const isoDate = "2024-01-01T15:00:00.000Z";
-    const actual = toClientSearchParams({ filter: { createdAt: { gte: [new Date(isoDate)] } } });
+    const actual = toClientSearchParams({ filter: { dateOfBirth: { gte: [new Date(isoDate)] } } });
 
-    expect(actual.get("filter[createdAt][gte]")).toBe(isoDate);
+    expect(actual.get("filter[dateOfBirth][gte]")).toBe(isoDate);
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -107,16 +107,16 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts include", () => {
-    const actual = toClientSearchParams({ include: ["owner"] });
+    const actual = toClientSearchParams({ include: ["article"] });
 
-    expect(actual.get("include")).toBe("owner");
+    expect(actual.get("include")).toBe("article");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts include with multiple values", () => {
-    const actual = toClientSearchParams({ include: ["owner", "vet"] });
+    const actual = toClientSearchParams({ include: ["article", "vet"] });
 
-    expect(actual.get("include")).toBe("owner,vet");
+    expect(actual.get("include")).toBe("article,vet");
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -154,25 +154,25 @@ describe("toClientSearchParams", () => {
   it("converts combinations", () => {
     const [date1, date2] = [new Date("2024-01-01"), new Date("2024-01-02")];
     const actual = toClientSearchParams({
-      fields: { dog: ["name", "age"] },
+      fields: { user: ["age", "name"] },
       filter: {
         age: { eq: ["2"] },
-        createdAt: { gt: [date1], lt: [date2] },
-        isGoodDog: { eq: ["true"] },
+        dateOfBirth: { gt: [date1], lt: [date2] },
+        isActive: { eq: ["true"] },
       },
-      include: ["owner"],
+      include: ["article"],
       page: {
         size: "10",
       },
       sort: ["-age"],
     });
 
-    expect(actual.get("fields[dog]")).toBe("name,age");
+    expect(actual.get("fields[user]")).toBe("age,name");
     expect(actual.get("filter[age]")).toBe("2");
-    expect(actual.get("filter[createdAt][gt]")).toBe(date1.toISOString());
-    expect(actual.get("filter[createdAt][lt]")).toBe(date2.toISOString());
-    expect(actual.get("filter[isGoodDog]")).toBe("true");
-    expect(actual.get("include")).toBe("owner");
+    expect(actual.get("filter[dateOfBirth][gt]")).toBe(date1.toISOString());
+    expect(actual.get("filter[dateOfBirth][lt]")).toBe(date2.toISOString());
+    expect(actual.get("filter[isActive]")).toBe("true");
+    expect(actual.get("include")).toBe("article");
     expect(actual.get("page[size]")).toBe("10");
     expect(actual.get("sort")).toBe("-age");
     expect([...actual.values()]).toHaveLength(8);

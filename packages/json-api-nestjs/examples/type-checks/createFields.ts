@@ -7,8 +7,8 @@ type Query = z.infer<typeof fieldsQuery>;
 let _queryTypeCheck: Query | undefined;
 //  ^? let _queryTypeCheck: {
 //         fields?: {
-//             user?: ("name" | "age")[] | undefined;
-//             post?: "title"[] | undefined;
+//             user?: ("age" | "name")[] | undefined;
+//             article?: "title"[] | undefined;
 //         } | undefined;
 //     } | undefined
 
@@ -17,7 +17,7 @@ const _validSingleField: Query = {
 };
 
 const _validMultipleFields: Query = {
-  fields: { user: ["name", "age"] },
+  fields: { user: ["age", "name"] },
 };
 
 const _invalidField: Query = {
@@ -27,7 +27,7 @@ const _invalidField: Query = {
 
 const _invalidApiType: Query = {
   // @ts-expect-error: invalid
-  fields: { post: ["name"] },
+  fields: { invalid: ["name"] },
 };
 
 const _invalidFieldDataType: Query = {

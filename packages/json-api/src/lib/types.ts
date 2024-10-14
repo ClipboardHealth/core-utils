@@ -11,7 +11,7 @@ type FilterType = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
 
 type PageKey = "cursor" | "limit" | "number" | "offset" | "size";
 
-export { URLSearchParams } from "node:url";
+export { type URLSearchParams } from "node:url";
 
 export interface JsonApiQueryTypes {
   filterValue: unknown;

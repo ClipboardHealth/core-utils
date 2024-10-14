@@ -7,7 +7,7 @@ describe("createFields", () => {
   const fieldsSchema = z.object(
     createFields({
       user: ["name", "email"],
-      post: ["title"],
+      article: ["title"],
     }),
   );
 
@@ -15,7 +15,7 @@ describe("createFields", () => {
     const input = {
       fields: {
         user: ["name", "email"],
-        post: ["title"],
+        article: ["title"],
       },
     };
 
@@ -28,7 +28,7 @@ describe("createFields", () => {
     const input = {
       fields: {
         user: ["name", "invalid"],
-        post: ["content"],
+        article: ["content"],
       },
     };
 
@@ -69,7 +69,7 @@ describe("createFields", () => {
     const input = {
       fields: {
         user: "name,email",
-        post: "title",
+        article: "title",
       },
     };
 
@@ -79,7 +79,7 @@ describe("createFields", () => {
     expect(actual.data).toEqual({
       fields: {
         user: ["name", "email"],
-        post: ["title"],
+        article: ["title"],
       },
     });
   });

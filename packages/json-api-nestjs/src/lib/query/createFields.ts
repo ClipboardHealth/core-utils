@@ -1,9 +1,7 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type ApiType } from "../types";
-
-export type Field = string;
+import { type ApiType, type Field } from "../types";
 
 export type FieldsMap = Record<ApiType, readonly [Field, ...Field[]]>;
 

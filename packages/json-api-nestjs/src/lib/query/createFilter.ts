@@ -14,7 +14,7 @@ export type FilterMap = Record<
   }
 >;
 
-export type FilterObject<MapT extends FilterMap> = {
+export type FilterSchema<MapT extends FilterMap> = {
   [K in keyof MapT]: z.ZodOptional<
     z.ZodEffects<
       z.ZodOptional<
@@ -64,7 +64,7 @@ export function createFilter<const MapT extends FilterMap>(parameters: Readonly<
             ],
           ),
           // Type assertion to narrow types.
-        ) as FilterObject<MapT>,
+        ) as FilterSchema<MapT>,
       )
       .strict()
       .optional(),
