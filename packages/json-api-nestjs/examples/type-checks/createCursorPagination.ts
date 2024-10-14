@@ -1,37 +1,36 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
-import { type paginationQuery } from "../query";
+import { type query } from "../query";
 
-type Query = z.infer<typeof paginationQuery>;
-let _queryTypeCheck: Query | undefined;
-//  ^? let _queryTypeCheck: {
-//         page: {
-//             size: number;
-//             cursor?: string | undefined;
-//         };
+type Page = z.infer<typeof query.shape.page>;
+let _typeCheck: Page | undefined;
+//  ^? let _typeCheck: {
+//         size: number;
+//         cursor?: string | undefined;
 //     } | undefined
 
-const _validSingleField: Query = {
-  page: { size: 10 },
+const _validSingleField: Page = {
+  size: 10,
 };
 
-const _validMultipleFields: Query = {
-  page: { size: 10, cursor: "1" },
+const _validMultipleFields: Page = {
+  size: 10,
+  cursor: "1",
 };
 
-const _invalidField: Query = {
+const _invalidField: Page = {
   // @ts-expect-error: invalid
-  page: { number: 1 },
+  number: 1,
 };
 
-const _invalidApiType: Query = {
+const _invalidKey: Page = {
   // @ts-expect-error: invalid
-  invalid: { size: 10 },
+  invalid: 10,
 };
 
-const _invalidFieldDataType: Query = {
+const _invalidFieldDataType: Page = {
   // @ts-expect-error: invalid
-  page: { size: "10" },
+  size: "10",
 };
 /* eslint-enable @typescript-eslint/no-unused-vars */

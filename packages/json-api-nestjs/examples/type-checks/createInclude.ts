@@ -1,29 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
-import { type includeQuery } from "../query";
+import { type query } from "../query";
 
-type Query = z.infer<typeof includeQuery>;
-let _queryTypeCheck: Query;
-//  ^? let _queryTypeCheck: {
-//         include?: ("articles" | "articles.comments")[] | undefined;
-//     }
+type Include = z.infer<typeof query.shape.include>;
+let _typeCheck: Include | undefined;
+//  ^? let _typeCheck: ("articles" | "articles.comments")[] | undefined
 
-const _validSingleInclude: Query = {
-  include: ["articles"],
-};
+const _validSingleInclude: Include = ["articles"];
 
-const _validMultipleInclude: Query = {
-  include: ["articles", "articles.comments"],
-};
+const _validMultipleIncludes: Include = ["articles", "articles.comments"];
 
-const _invalidIncludeField: Query = {
-  // @ts-expect-error: invalid
-  include: ["invalid"],
-};
+// @ts-expect-error: invalid
+const _invalidIncludeField: Include = ["invalid"];
 
-const _invalidIncludeDataType: Query = {
-  // @ts-expect-error: invalid
-  include: "articles",
-};
+// @ts-expect-error: invalid
+const _invalidIncludeDataType: Include = "articles";
 /* eslint-enable @typescript-eslint/no-unused-vars */

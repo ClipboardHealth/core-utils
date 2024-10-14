@@ -28,7 +28,6 @@ export function createInclude<const FieldT extends readonly string[]>(fields: Fi
               message: `Invalid include field: '${field}'`,
               path: ["include", field],
             });
-            break;
           }
         }
       })

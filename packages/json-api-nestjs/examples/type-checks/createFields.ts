@@ -1,37 +1,35 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
-import { type fieldsQuery } from "../query";
+import { type query } from "../query";
 
-type Query = z.infer<typeof fieldsQuery>;
-let _queryTypeCheck: Query | undefined;
-//  ^? let _queryTypeCheck: {
-//         fields?: {
-//             user?: ("age" | "name")[] | undefined;
-//             article?: "title"[] | undefined;
-//         } | undefined;
+type Fields = z.infer<typeof query.shape.fields>;
+let _typeCheck: Fields | undefined;
+//  ^? let _typeCheck: {
+//         user?: ("age" | "name")[] | undefined;
+//         article?: "title"[] | undefined;
 //     } | undefined
 
-const _validSingleField: Query = {
-  fields: { user: ["name"] },
+const _validSingleField: Fields = {
+  user: ["name"],
 };
 
-const _validMultipleFields: Query = {
-  fields: { user: ["age", "name"] },
+const _validMultipleFields: Fields = {
+  user: ["age", "name"],
 };
 
-const _invalidField: Query = {
+const _invalidField: Fields = {
   // @ts-expect-error: invalid
-  fields: { user: ["email"] },
+  user: ["email"],
 };
 
-const _invalidApiType: Query = {
+const _invalidApiType: Fields = {
   // @ts-expect-error: invalid
-  fields: { invalid: ["name"] },
+  invalid: ["name"],
 };
 
-const _invalidFieldDataType: Query = {
+const _invalidFieldDataType: Fields = {
   // @ts-expect-error: invalid
-  fields: { user: "name" },
+  user: "name",
 };
 /* eslint-enable @typescript-eslint/no-unused-vars */

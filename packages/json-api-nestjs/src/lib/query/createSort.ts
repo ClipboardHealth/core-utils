@@ -28,7 +28,6 @@ export function createSort<const FieldT extends readonly [Field, ...Field[]]>(fi
               message: `Invalid sort field: '${field}'`,
               path: ["sort", field],
             });
-            break;
           }
         }
       })

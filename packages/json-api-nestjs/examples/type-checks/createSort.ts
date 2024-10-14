@@ -1,29 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
-import { type sortQuery } from "../query";
+import { type query } from "../query";
 
-type Query = z.infer<typeof sortQuery>;
-let _queryTypeCheck: Query;
-//  ^? let _queryTypeCheck: {
-//         sort?: ("age" | "name" | "-age" | "-name")[] | undefined;
-//     }
+type Sort = z.infer<typeof query.shape.sort>;
+let _typeCheck: Sort;
+//  ^? let _typeCheck: ("age" | "name" | "-age" | "-name")[] | undefined
 
-const _validSingleSort: Query = {
-  sort: ["age"],
-};
+const _validSingleSort: Sort = ["age"];
 
-const _validMultipleSort: Query = {
-  sort: ["-age", "name"],
-};
+const _validMultipleSort: Sort = ["-age", "name"];
 
-const _invalidSortField: Query = {
-  // @ts-expect-error: invalid
-  sort: ["invalid"],
-};
+// @ts-expect-error: invalid
+const _invalidSortField: Sort = ["invalid"];
 
-const _invalidSortDataType: Query = {
-  // @ts-expect-error: invalid
-  sort: "name",
-};
+// @ts-expect-error: invalid
+const _invalidSortDataType: Sort = "name";
 /* eslint-enable @typescript-eslint/no-unused-vars */
