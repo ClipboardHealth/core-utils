@@ -6,8 +6,8 @@ import { type query } from "../query";
 type Fields = z.infer<typeof query.shape.fields>;
 let _typeCheck: Fields | undefined;
 //  ^? let _typeCheck: {
-//         user?: ("age" | "name")[] | undefined;
 //         article?: "title"[] | undefined;
+//         user?: ("age" | "name")[] | undefined;
 //     } | undefined
 
 const _validSingleField: Fields = {
