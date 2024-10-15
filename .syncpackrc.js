@@ -5,10 +5,10 @@ module.exports = {
   dependencyTypes: ["!local"],
   semverGroups: [
     {
-      range: "",
       dependencyTypes: ["dev", "prod", "resolutions"],
       dependencies: ["**"],
       packages: ["**"],
+      range: "",
     },
   ],
   versionGroups: [
@@ -20,6 +20,7 @@ module.exports = {
     {
       dependencyTypes: ["peer"],
       specifierTypes: "range",
+      label: "Allow for flexible peer dependency versions.",
     },
     {
       dependencies: ["@types/**"],

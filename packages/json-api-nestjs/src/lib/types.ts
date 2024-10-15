@@ -1,22 +1,36 @@
+import { type Arrayable } from "type-fest";
+
 export type ApiType = string;
 
 export type Field = string;
 
 export interface Relationship {
-  data?: { type?: ApiType; id?: string };
+  data: Arrayable<{ type: ApiType; id: string }>;
 }
 
+export type Meta = Record<string, unknown>;
+
+export type ApiLinks = Record<string, string | undefined>;
+
 /**
- * The shape of a JSON:API document.
+ * The JSON:API document shape.
  */
 export interface JsonApiDocument {
   data: {
-    attributes: Record<Field, unknown>;
-    id?: string;
+    attributes: Record<string, unknown>;
+    id: string;
     included?: JsonApiDocument[];
-    links?: Record<string, string>;
-    meta?: Record<string, unknown>;
-    relationships?: Record<string, Relationship | Relationship[]>;
+    links?: ApiLinks;
+    meta?: Meta;
+    relationships?: Record<string, Relationship>;
     type: ApiType;
+  };
+  meta?: Meta;
+  links?: ApiLinks;
+  jsonapi?: {
+    ext?: Record<string, unknown>;
+    profile?: string;
+    version?: string;
+    meta?: Meta;
   };
 }

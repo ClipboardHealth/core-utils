@@ -19,24 +19,28 @@ export type RelationshipPaths<
   Prefix extends string = "",
 > = RecursiveDepth extends infer Depth extends number
   ? GreaterThan<Depth, 0> extends true
-    ? DocumentT["data"] extends { relationships?: infer R }
-      ? R extends Record<string, Relationship>
-        ? {
-            [K in keyof R]: K extends string
-              ? R[K]["data"] extends { type?: infer RelationT }
-                ? RelationT extends keyof MapT
-                  ?
-                      | `${Prefix}${K}`
-                      | RelationshipPaths<
-                          MapT,
-                          z.infer<MapT[RelationT]>,
-                          Subtract<Depth, 1>,
-                          `${Prefix}${K}.`
-                        >
+    ? DocumentT["data"] extends Array<infer SingleOrArray> | infer SingleOrArray
+      ? SingleOrArray extends { relationships?: infer R }
+        ? R extends Record<string, Relationship>
+          ? {
+              [K in keyof R]: K extends string
+                ? R[K]["data"] extends
+                    | { type?: infer RelationT }
+                    | Array<{ type?: infer RelationT }>
+                  ? RelationT extends keyof MapT
+                    ?
+                        | `${Prefix}${K}`
+                        | RelationshipPaths<
+                            MapT,
+                            z.infer<MapT[RelationT]>,
+                            Subtract<Depth, 1>,
+                            `${Prefix}${K}.`
+                          >
+                    : never
                   : never
-                : never
-              : never;
-          }[keyof R]
+                : never;
+            }[keyof R]
+          : never
         : never
       : never
     : never

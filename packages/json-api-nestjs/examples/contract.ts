@@ -19,10 +19,12 @@ const article = z.object({
     id: z.string(),
     relationships: z.object({
       comments: z.object({
-        data: z.object({
-          id: z.string(),
-          type: z.literal(API_TYPES.comment),
-        }),
+        data: z.array(
+          z.object({
+            id: z.string(),
+            type: z.literal(API_TYPES.comment),
+          }),
+        ),
       }),
     }),
     type: z.literal(API_TYPES.article),
@@ -38,10 +40,12 @@ const user = z.object({
     id: z.string(),
     relationships: z.object({
       articles: z.object({
-        data: z.object({
-          id: z.string(),
-          type: z.literal(API_TYPES.article),
-        }),
+        data: z.array(
+          z.object({
+            id: z.string(),
+            type: z.literal(API_TYPES.article),
+          }),
+        ),
       }),
     }),
     type: z.literal(API_TYPES.user),
@@ -51,7 +55,7 @@ const user = z.object({
 const comment = z.object({
   data: z.object({
     attributes: z.object({
-      createdAt: z.coerce.date(),
+      createdAt: z.string().datetime(),
     }),
     id: z.string(),
     relationships: z.object({
@@ -65,8 +69,6 @@ const comment = z.object({
     type: z.literal(API_TYPES.comment),
   }),
 });
-
-export type CommentDto = z.infer<typeof comment>;
 
 const API_SCHEMAS = {
   [API_TYPES.article]: article,
@@ -84,3 +86,7 @@ export type ArticleIncludeFields = IncludeFields<ArticleDto>;
 export type UserDto = z.infer<typeof user>;
 export type UserAttributeFields = AttributeFields<UserDto>;
 export type UserIncludeFields = IncludeFields<UserDto>;
+
+export type CommentDto = z.infer<typeof comment>;
+export type CommentAttributeFields = AttributeFields<CommentDto>;
+export type CommentIncludeFields = IncludeFields<CommentDto>;
