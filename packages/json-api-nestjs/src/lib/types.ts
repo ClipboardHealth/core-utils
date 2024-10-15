@@ -28,7 +28,7 @@ export interface Data {
  */
 export interface JsonApiDocument {
   data: Arrayable<Data>;
-  included?: JsonApiDocument[];
+  included?: Data[];
   jsonapi?: {
     ext?: Record<string, unknown>;
     meta?: Meta;
