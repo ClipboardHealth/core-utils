@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type ApiType, type Field } from "../types";
+import { type ApiType, type Data, type Field, type JsonApiDocument } from "../types";
 
 export type FieldsMap = Record<ApiType, readonly [Field, ...Field[]]>;
 
@@ -12,6 +12,18 @@ export type FieldsSchema<MapT extends FieldsMap> = {
     unknown
   >;
 };
+
+/**
+ * JSON:API attribute fields for use in fields queries.
+ *
+ * @template DocumentT - The JSON:API document.
+ */
+export type AttributeFields<DocumentT extends JsonApiDocument> =
+  DocumentT["data"] extends Array<infer R extends Data>
+    ? keyof R["attributes"]
+    : DocumentT["data"] extends Data
+      ? keyof DocumentT["data"]["attributes"]
+      : never;
 
 /**
  * Creates a Zod schema for JSON:API sparse fieldsets.

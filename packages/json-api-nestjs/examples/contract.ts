@@ -1,4 +1,5 @@
 import {
+  type AttributeFields,
   type JsonApiDocument,
   nonEmptyString,
   type RelationshipPaths,
@@ -77,7 +78,6 @@ const API_SCHEMAS = {
 } as const;
 
 type IncludeFields<T extends JsonApiDocument> = RelationshipPaths<typeof API_SCHEMAS, T, 2>;
-type AttributeFields<T extends JsonApiDocument> = keyof T["data"]["attributes"];
 
 export type ArticleDto = z.infer<typeof article>;
 export type ArticleAttributeFields = AttributeFields<ArticleDto>;
