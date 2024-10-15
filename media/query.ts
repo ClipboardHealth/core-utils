@@ -1,18 +1,31 @@
 import {
   booleanString,
-  createCursorPagination,
-  createFields,
-  createFilter,
-  createInclude,
-  createSort,
+  cursorPaginationQuery,
+  fieldsQuery,
+  filterQuery,
+  includeQuery,
+  sortQuery,
 } from "@clipboard-health/json-api-nestjs";
 import { z } from "zod";
 
+import {
+  type ArticleAttributeFields,
+  type UserAttributeFields,
+  type UserIncludeFields,
+} from "./contract";
+
+const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
+const userFields = ["age", "name"] as const satisfies readonly UserAttributeFields[];
+const includeFields = [
+  "articles",
+  "articles.comments",
+] as const satisfies readonly UserIncludeFields[];
+
 export const query = z
   .object({
-    ...createCursorPagination(),
-    ...createFields({ user: ["age", "name"], article: ["title"] }),
-    ...createFilter({
+    ...cursorPaginationQuery(),
+    ...fieldsQuery({ user: userFields, article: articleFields }),
+    ...filterQuery({
       age: {
         filters: ["eq", "gt"],
         schema: z.coerce.number().int().positive().max(125),
@@ -23,10 +36,10 @@ export const query = z
       },
       dateOfBirth: {
         filters: ["gte"],
-        schema: z.coerce.date().min(new Date("1900-01-01")),
+        schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
       },
     }),
-    ...createSort(["age", "name"]),
-    ...createInclude(["articles", "articles.comments"]),
+    ...sortQuery(userFields),
+    ...includeQuery(includeFields),
   })
   .strict();
