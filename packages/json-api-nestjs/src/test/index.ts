@@ -13,7 +13,7 @@ function isDefined<T>(value: T | NullOrUndefined): value is T {
   return !isNullOrUndefined(value);
 }
 
-export function expectToBeDefined<T>(value: T | undefined): asserts value is T {
+function expectToBeDefined<T>(value: T | undefined): asserts value is T {
   ok(isDefined(value));
 }
 
