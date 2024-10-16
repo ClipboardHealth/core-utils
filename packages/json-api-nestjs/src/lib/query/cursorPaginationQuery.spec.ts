@@ -99,7 +99,7 @@ describe("cursorPaginationQuery", () => {
   });
 
   describe("with custom defaults", () => {
-    const schema = z.object(cursorPaginationQuery({ defaultSize: 10, maximumSize: 100 }));
+    const schema = z.object(cursorPaginationQuery({ size: { default: 10, maximum: 100 } }));
 
     it("defaults custom size", () => {
       const input = {};

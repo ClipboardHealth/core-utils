@@ -2,6 +2,7 @@ import {
   type AttributeFields,
   type JsonApiDocument,
   nonEmptyString,
+  PAGINATION,
   type RelationshipPaths,
 } from "@clipboard-health/json-api-nestjs";
 import { z } from "zod";
@@ -20,12 +21,13 @@ const article = z.object({
     id: z.string(),
     relationships: z.object({
       comments: z.object({
-        data: z.array(
-          z.object({
+        data: z
+          .object({
             id: z.string(),
             type: z.literal(API_TYPES.comment),
-          }),
-        ),
+          })
+          .array()
+          .max(PAGINATION.size.maximum),
       }),
     }),
     type: z.literal(API_TYPES.article),
@@ -41,12 +43,13 @@ const user = z.object({
     id: z.string(),
     relationships: z.object({
       articles: z.object({
-        data: z.array(
-          z.object({
+        data: z
+          .object({
             id: z.string(),
             type: z.literal(API_TYPES.article),
-          }),
-        ),
+          })
+          .array()
+          .max(PAGINATION.size.maximum),
       }),
     }),
     type: z.literal(API_TYPES.user),

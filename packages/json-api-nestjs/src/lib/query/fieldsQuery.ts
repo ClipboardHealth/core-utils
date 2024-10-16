@@ -37,7 +37,7 @@ export function fieldsQuery<const MapT extends FieldsMap>(parameters: Readonly<M
   const fieldSchemas = Object.fromEntries(
     Object.entries(parameters).map(([apiType, fields]: [keyof MapT, MapT[keyof MapT]]) => [
       apiType,
-      z.preprocess(splitString, z.array(z.enum(fields)).min(1).optional()),
+      z.preprocess(splitString, z.enum(fields).array().min(1).max(100).optional()),
     ]),
     // Type assertion to narrow types.
   ) as FieldsSchema<MapT>;

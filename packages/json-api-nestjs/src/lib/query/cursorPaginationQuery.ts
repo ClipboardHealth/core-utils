@@ -2,6 +2,13 @@ import { z } from "zod";
 
 import { nonEmptyString } from "../schemas";
 
+export const PAGINATION = {
+  size: {
+    maximum: 200,
+    default: 20,
+  },
+} as const;
+
 /**
  * Creates a Zod schema for JSON:API cursor pagination.
  *
@@ -12,14 +19,15 @@ import { nonEmptyString } from "../schemas";
  * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
  */
 export function cursorPaginationQuery(
-  parameters?: Readonly<{ maximumSize?: number; defaultSize?: number }>,
+  parameters?: Readonly<{ size: { maximum?: number; default?: number } }>,
 ) {
-  const { maximumSize = 200, defaultSize = 20 } = parameters ?? {};
+  const { size } = PAGINATION;
+  const { maximum = size.maximum, default: defaultSize = size.default } = parameters?.size ?? {};
 
   return {
     page: z
       .object({
-        size: z.coerce.number().int().positive().max(maximumSize).default(defaultSize),
+        size: z.coerce.number().int().positive().max(maximum).default(defaultSize),
         cursor: nonEmptyString.optional(),
       })
       .strict()

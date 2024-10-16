@@ -59,7 +59,7 @@ export function includeQuery<const FieldT extends readonly string[]>(fields: Fie
 
   return {
     include: z
-      .preprocess(splitString, z.array(z.string()).optional())
+      .preprocess(splitString, z.string().array().min(1).max(100).optional())
       .superRefine((value, context) => {
         if (!value) {
           return;

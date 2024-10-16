@@ -11,7 +11,6 @@
  * 5. For `?filter[age][gt]=5&filter[age]=10&filter[age]=20`, `value` is `{'0': '10', '1': '20', gt:
  *    '5'}`, which we transform to `{eq: "10,20", gt: "5"}`.
  */
-
 export function queryFilterPreprocessor(value: unknown): Record<string, string> {
   if (!isObject(value)) {
     // Cases 1 and 2.

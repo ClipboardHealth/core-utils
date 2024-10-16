@@ -53,7 +53,9 @@ export function filterQuery<const MapT extends FilterMap>(parameters: Readonly<M
                       Object.fromEntries(
                         filters.map((filter: Filter) => [
                           filter,
-                          z.preprocess(splitString, z.array(schema).optional()).optional(),
+                          z
+                            .preprocess(splitString, schema.array().min(1).max(10_000).optional())
+                            .optional(),
                         ]),
                       ),
                     )

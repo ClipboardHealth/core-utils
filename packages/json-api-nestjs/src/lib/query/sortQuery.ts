@@ -15,7 +15,7 @@ export function sortQuery<const FieldT extends readonly [Field, ...Field[]]>(fie
   const fieldSet = new Set(fields);
   return {
     sort: z
-      .preprocess(splitString, z.array(z.string()).optional())
+      .preprocess(splitString, z.string().array().min(1).max(100).optional())
       .superRefine((value, context) => {
         if (!value) {
           return;

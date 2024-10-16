@@ -21,6 +21,14 @@ const includeFields = [
   "articles.comments",
 ] as const satisfies readonly UserIncludeFields[];
 
+/**
+ * Disclaimer: Just because JSON:API supports robust querying doesn’t mean your service should
+ * implement them as they may require database indexes, which have a cost. **Implement only access
+ * patterns required by clients.**
+ *
+ * The spec says that if clients provide fields the server doesn’t support, it **MUST** return 400
+ * Bad Request, hence the `.strict()`.
+ */
 export const query = z
   .object({
     ...cursorPaginationQuery(),
