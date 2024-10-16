@@ -31,9 +31,9 @@ export type FilterSchema<MapT extends FilterMap> = {
 /**
  * Creates a Zod schema for JSON:API filters.
  *
- * @includeExample ./packages/json-api-nestjs/examples/query.ts
+ * @includeExample ./packages/example-nestjs/examples/query.ts
  *
- * @see [Usage example](../../../examples/query.ts)
+ * @see [Usage example](../../../../example-nestjs/examples/query.ts)
  * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
  * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
  */

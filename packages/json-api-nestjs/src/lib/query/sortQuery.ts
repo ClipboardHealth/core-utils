@@ -6,9 +6,9 @@ import { type Field } from "../types";
 /**
  * Creates a Zod schema for JSON:API sort parameters.
  *
- * @includeExample ./packages/json-api-nestjs/examples/query.ts
+ * @includeExample ./packages/example-nestjs/examples/query.ts
  *
- * @see [Usage example](../../../examples/query.ts)
+ * @see [Usage example](../../../../example-nestjs/examples/query.ts)
  * @see {@link https://jsonapi.org/format/#fetching-sorting JSON:API sorting}
  */
 export function sortQuery<const FieldT extends readonly [Field, ...Field[]]>(fields: FieldT) {

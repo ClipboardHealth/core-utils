@@ -1,8 +1,8 @@
-# @clipboard-health/eslint-config
+# @clipboard-health/eslint-config <!-- omit from toc -->
 
 Shared [ESLint](https://eslint.org/) configuration.
 
-## Table of Contents
+## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Local development commands](#local-development-commands)

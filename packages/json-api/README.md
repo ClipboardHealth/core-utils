@@ -1,8 +1,8 @@
-# @clipboard-health/json-api
+# @clipboard-health/json-api <!-- omit from toc -->
 
 Utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
 
-## Table of Contents
+## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)

@@ -5,7 +5,7 @@ import {
   type ArticleIncludeFields,
   type CommentIncludeFields,
   type UserIncludeFields,
-} from "../contract";
+} from "../../src/contract";
 import { type query } from "../query";
 
 type Include = z.infer<typeof query.shape.include>;
@@ -30,5 +30,4 @@ let _includeArticleFieldsTypeCheck: ArticleIncludeFields | undefined;
 
 let _includeCommentFieldsTypeCheck: CommentIncludeFields | undefined;
 //  ^? let _includeCommentFieldsTypeCheck: "user" | "user.articles" | undefined
-
 /* eslint-enable @typescript-eslint/no-unused-vars */

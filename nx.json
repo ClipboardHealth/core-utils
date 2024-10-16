@@ -36,7 +36,7 @@
       "commit": true,
       "commitMessage": "chore(release): publish {projectName} {version} [skip actions]"
     },
-    "projects": ["packages/*"],
+    "projects": ["packages/*", "!packages/example-*"],
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,

@@ -1,6 +1,6 @@
-# <%= importPath %> <!-- omit from toc -->
+# @clipboard-health/example-nestjs <!-- omit from toc -->
 
-TODO
+An example NestJS application using our libraries.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -11,7 +11,7 @@ TODO
 ## Install
 
 ```bash
-npm install <%= importPath %>
+npm install @clipboard-health/example-nestjs
 ```
 
 ## Usage

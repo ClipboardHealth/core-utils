@@ -1,10 +1,9 @@
-# @clipboard-health/nx-plugin
+# @clipboard-health/nx-plugin <!-- omit from toc -->
 
 Clipboard Health's Nx plugin contains generators to manage libraries within an Nx workspace.
 
-## Table of Contents
+## Table of contents <!-- omit from toc -->
 
-- [Table of Contents](#table-of-contents)
 - [Install](#install)
 - [Usage](#usage)
 

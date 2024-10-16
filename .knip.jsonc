@@ -1,6 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@2/schema.json",
-  "ignore": ["**/jest.config.ts", "**/examples/**", "**/generators/**/schema.d.ts"],
+  "entry": [
+    "packages/example-nestjs/examples/**/*.ts",
+    "packages/rules-engine/examples/**/*.ts",
+    "packages/json-api/examples/**/*.ts",
+  ],
+  "ignore": ["**/jest.config.ts", "**/generators/**/schema.d.ts"],
   "ignoreBinaries": [],
   "ignoreDependencies": ["typedoc-plugin-include-example"],
 }

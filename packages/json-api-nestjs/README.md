@@ -1,8 +1,8 @@
-# @clipboard-health/json-api-nestjs
+# @clipboard-health/json-api-nestjs <!-- omit from toc -->
 
 Utilities for adhering to the [JSON:API](https://jsonapi.org/) specification with [NestJS](https://nestjs.com/).
 
-## Table of Contents
+## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
@@ -23,7 +23,7 @@ Create Zod schemas for your API's queries:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/query.ts
+// ../example-nestjs/examples/query.ts
 
 import {
   booleanString,
@@ -39,7 +39,7 @@ import {
   type ArticleAttributeFields,
   type UserAttributeFields,
   type UserIncludeFields,
-} from "./contract";
+} from "../src/contract";
 
 const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
 const userFields = ["age", "name"] as const satisfies readonly UserAttributeFields[];
