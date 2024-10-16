@@ -2,8 +2,9 @@ import { initClient } from "@ts-rest/core";
 
 import { contract } from "../src/contract";
 
+const port = process.env["PORT"] ?? 3000;
 export const client = initClient(contract, {
-  baseUrl: "http://localhost:3000",
+  baseUrl: `http://localhost:${port}`,
 });
 
 async function main() {
@@ -29,7 +30,7 @@ async function main() {
   } as const;
 
   try {
-    const { status, body } = await client.tests({ query });
+    const { status, body } = await client.list({ query });
     console.debug(status, JSON.stringify(body, undefined, 2));
   } catch (error) {
     console.error("Error occurred:", error);

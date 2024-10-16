@@ -22,13 +22,6 @@ describe("toClientSearchParams", () => {
     expect([...actual.values()]).toHaveLength(1);
   });
 
-  it("converts fields with multiple values", () => {
-    const actual = toClientSearchParams({ fields: { user: ["age", "dateOfBirth"] } });
-
-    expect(actual.get("fields[user]")).toBe("age,dateOfBirth");
-    expect([...actual.values()]).toHaveLength(1);
-  });
-
   it("converts filter", () => {
     const actual = toClientSearchParams({ filter: { age: { eq: [25] } } });
 

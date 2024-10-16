@@ -22,7 +22,7 @@ export class AppController {
           body: { data: item },
         };
       },
-      tests: async ({ query }) => {
+      list: async ({ query }) => {
         this.logger.log({ query });
         return { status: 200, body: query };
       },

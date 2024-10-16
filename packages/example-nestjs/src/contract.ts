@@ -155,12 +155,13 @@ export const contract = initContract().router({
       201: user,
     },
   },
-  tests: {
-    description: "Test query parsing.",
+  list: {
+    description: "List users.",
     method: "GET",
-    path: "/tests",
+    path: "/users",
     query,
     responses: {
+      // Return the query object to easily test query parsing.
       200: query,
     },
   },

@@ -2,4 +2,4 @@
 
 ### Test query
 
-GET {{url}}/tests?fields[user]=age,name&fields[article]=title
+GET {{url}}/users?fields[user]=age,dateOfBirth&fields[article]=title
