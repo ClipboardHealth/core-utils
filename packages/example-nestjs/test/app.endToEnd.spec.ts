@@ -36,21 +36,21 @@ describe("/tests", () => {
 
   it("parses single field value", () =>
     request(app.getHttpServer())
-      .get("/tests?fields[user]=name")
+      .get("/tests?fields[user]=age")
       .expect(200)
-      .expect({ ...defaultQuery, fields: { user: ["name"] } }));
+      .expect({ ...defaultQuery, fields: { user: ["age"] } }));
 
   it("parses multiple field values", () =>
     request(app.getHttpServer())
-      .get("/tests?fields[user]=name,age")
+      .get("/tests?fields[user]=age,dateOfBirth")
       .expect(200)
-      .expect({ ...defaultQuery, fields: { user: ["name", "age"] } }));
+      .expect({ ...defaultQuery, fields: { user: ["age", "dateOfBirth"] } }));
 
   it("parses multiple api type fields", () =>
     request(app.getHttpServer())
-      .get("/tests?fields[user]=age,name&fields[article]=title")
+      .get("/tests?fields[user]=age,dateOfBirth&fields[article]=title")
       .expect(200)
-      .expect({ ...defaultQuery, fields: { user: ["age", "name"], article: ["title"] } }));
+      .expect({ ...defaultQuery, fields: { user: ["age", "dateOfBirth"], article: ["title"] } }));
 
   it("parses boolean filter", () =>
     request(app.getHttpServer())
@@ -123,7 +123,7 @@ describe("/tests", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.queryResult.issues[0]).toMatchObject({
-      message: "Invalid enum value. Expected 'age' | 'name', received 'height'",
+      message: "Invalid enum value. Expected 'age' | 'dateOfBirth', received 'height'",
       path: ["fields", "user", 0],
     });
   });

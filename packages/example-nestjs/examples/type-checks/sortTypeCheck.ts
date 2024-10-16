@@ -15,5 +15,5 @@ const _validMultipleSort: Sort = ["-age", "dateOfBirth"];
 const _invalidSortField: Sort = ["invalid"];
 
 // @ts-expect-error: invalid
-const _invalidSortDataType: Sort = "name";
+const _invalidSortDataType: Sort = "age";
 /* eslint-enable @typescript-eslint/no-unused-vars */

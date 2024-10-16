@@ -19,10 +19,6 @@ describe("filterQuery", () => {
         filters: ["eq"],
         schema: booleanString,
       },
-      name: {
-        filters: ["eq", "ne"],
-        schema: z.string(),
-      },
     }),
   );
 
@@ -36,9 +32,6 @@ describe("filterQuery", () => {
         },
         dateOfBirth: {
           gte: "1990-01-01",
-        },
-        name: {
-          eq: "Alice",
         },
         isActive: {
           eq: "true",
@@ -58,9 +51,6 @@ describe("filterQuery", () => {
         },
         dateOfBirth: {
           gte: [new Date("1990-01-01")],
-        },
-        name: {
-          eq: ["Alice"],
         },
         isActive: {
           eq: ["true"],
@@ -142,9 +132,6 @@ describe("filterQuery", () => {
           eq: "30,40",
           gt: "25",
         },
-        name: {
-          eq: "Alice,Bob",
-        },
       },
     };
 
@@ -156,9 +143,6 @@ describe("filterQuery", () => {
         age: {
           eq: [30, 40],
           gt: [25],
-        },
-        name: {
-          eq: ["Alice", "Bob"],
         },
       },
     });

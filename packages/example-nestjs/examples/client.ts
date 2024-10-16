@@ -13,7 +13,7 @@ async function main() {
       size: 10,
     },
     fields: {
-      user: "age,name",
+      user: "age,dateOfBirth",
     },
     filter: {
       age: {

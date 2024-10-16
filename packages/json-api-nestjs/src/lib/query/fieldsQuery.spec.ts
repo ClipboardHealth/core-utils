@@ -6,7 +6,7 @@ import { fieldsQuery } from "./fieldsQuery";
 describe("fieldsQuery", () => {
   const fieldsSchema = z.object(
     fieldsQuery({
-      user: ["name", "email"],
+      user: ["age", "dateOfBirth"],
       article: ["title"],
     }),
   );
@@ -14,7 +14,7 @@ describe("fieldsQuery", () => {
   it("accepts valid fields", () => {
     const input = {
       fields: {
-        user: ["name", "email"],
+        user: ["age", "dateOfBirth"],
         article: ["title"],
       },
     };
@@ -27,8 +27,8 @@ describe("fieldsQuery", () => {
   it("rejects invalid fields", () => {
     const input = {
       fields: {
-        user: ["name", "invalid"],
-        article: ["content"],
+        user: ["age", "invalid"],
+        article: ["title"],
       },
     };
 
@@ -36,7 +36,7 @@ describe("fieldsQuery", () => {
 
     expectToBeError(actual);
     expect(actual.error.message).toContain(
-      "Invalid enum value. Expected 'name' | 'email', received 'invalid'",
+      "Invalid enum value. Expected 'age' | 'dateOfBirth', received 'invalid'",
     );
   });
 
@@ -56,7 +56,7 @@ describe("fieldsQuery", () => {
   it("allows omitting fields and API types", () => {
     const input = {
       fields: {
-        user: ["name"],
+        user: ["age"],
       },
     };
 
@@ -68,7 +68,7 @@ describe("fieldsQuery", () => {
   it("parses comma-separated string input", () => {
     const input = {
       fields: {
-        user: "name,email",
+        user: "age,dateOfBirth",
         article: "title",
       },
     };
@@ -78,7 +78,7 @@ describe("fieldsQuery", () => {
     expectToBeSuccess(actual);
     expect(actual.data).toEqual({
       fields: {
-        user: ["name", "email"],
+        user: ["age", "dateOfBirth"],
         article: ["title"],
       },
     });

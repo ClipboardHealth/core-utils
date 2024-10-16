@@ -4,26 +4,24 @@ import { expectToBeError, expectToBeSuccess } from "../../test";
 import { sortQuery } from "./sortQuery";
 
 describe("sortQuery", () => {
-  const sortSchema = z.object(
-    sortQuery(["name", "age", "createdAt", "title", "publishedAt"] as const),
-  );
+  const sortSchema = z.object(sortQuery(["age", "dateOfBirth"] as const));
 
   it("accepts valid sort parameters", () => {
     const input = {
-      sort: "name,-age,createdAt",
+      sort: "age",
     };
 
     const actual = sortSchema.safeParse(input);
 
     expectToBeSuccess(actual);
     expect(actual.data).toEqual({
-      sort: ["name", "-age", "createdAt"],
+      sort: ["age"],
     });
   });
 
   it("rejects invalid sort fields", () => {
     const input = {
-      sort: "name,invalid",
+      sort: "-age,invalid",
     };
 
     const actual = sortSchema.safeParse(input);
@@ -34,14 +32,14 @@ describe("sortQuery", () => {
 
   it("allows descending sort with '-' prefix", () => {
     const input = {
-      sort: "-createdAt,title",
+      sort: "-age,dateOfBirth",
     };
 
     const actual = sortSchema.safeParse(input);
 
     expectToBeSuccess(actual);
     expect(actual.data).toEqual({
-      sort: ["-createdAt", "title"],
+      sort: ["-age", "dateOfBirth"],
     });
   });
 

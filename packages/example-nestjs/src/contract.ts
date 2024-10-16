@@ -115,10 +115,17 @@ export type ArticleIncludeFields = IncludeFields<ArticleDto>;
 type CommentDto = z.infer<typeof comment>;
 export type CommentIncludeFields = IncludeFields<CommentDto>;
 
+const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
+const userFields = ["age", "dateOfBirth"] as const satisfies readonly UserAttributeFields[];
+const includeFields = [
+  "articles",
+  "articles.comments",
+] as const satisfies readonly UserIncludeFields[];
+
 const query = z
   .object({
     ...cursorPaginationQuery(),
-    ...fieldsQuery({ user: ["age", "name"], article: ["title"] }),
+    ...fieldsQuery({ user: userFields, article: articleFields }),
     ...filterQuery({
       age: {
         filters: ["eq", "gt"],
@@ -133,8 +140,8 @@ const query = z
         schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
       },
     }),
-    ...sortQuery(["age", "name"]),
-    ...includeQuery(["articles", "articles.comments"]),
+    ...sortQuery(userFields),
+    ...includeQuery(includeFields),
   })
   .strict();
 
