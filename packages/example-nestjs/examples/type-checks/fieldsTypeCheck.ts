@@ -7,15 +7,15 @@ type Fields = z.infer<typeof query.shape.fields>;
 let _typeCheck: Fields | undefined;
 //  ^? let _typeCheck: {
 //         article?: "title"[] | undefined;
-//         user?: ("age" | "name")[] | undefined;
+//         user?: ("age" | "dateOfBirth")[] | undefined;
 //     } | undefined
 
 const _validSingleField: Fields = {
-  user: ["name"],
+  user: ["dateOfBirth"],
 };
 
 const _validMultipleFields: Fields = {
-  user: ["age", "name"],
+  user: ["age", "dateOfBirth"],
 };
 
 const _invalidField: Fields = {

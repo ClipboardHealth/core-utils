@@ -4,8 +4,8 @@
   "version": "0.5.0",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
-    "@nx/devkit": "20.0.0",
-    "@nx/js": "20.0.0",
+    "@nx/devkit": "20.0.1",
+    "@nx/js": "20.0.1",
     "tslib": "2.7.0"
   },
   "generators": "./generators.json",

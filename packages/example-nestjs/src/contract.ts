@@ -36,7 +36,8 @@ const userRelationships = z.object({
 
 const userAttributes = z.object({
   age: z.coerce.number().int().positive().max(125),
-  name: nonEmptyString,
+  isActive: booleanString,
+  dateOfBirth: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
 });
 
 const createUser = z.object({
@@ -55,8 +56,6 @@ const user = z.object({
     type: z.literal(API_TYPES.user),
   }),
 });
-
-const users = user.array().max(PAGINATION.size.maximum);
 
 const article = z.object({
   data: z.object({
@@ -155,7 +154,7 @@ export const contract = initContract().router({
     path: "/tests",
     query,
     responses: {
-      200: users,
+      200: query,
     },
   },
 });

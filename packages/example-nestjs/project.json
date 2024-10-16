@@ -1,20 +1,10 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "example-nestjs",
-  "projectType": "library",
+  "projectType": "application",
   "sourceRoot": "packages/example-nestjs/src",
   "tags": [],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "assets": ["packages/example-nestjs/*.md"],
-        "main": "packages/example-nestjs/src/main.js",
-        "outputPath": "dist/packages/example-nestjs",
-        "tsConfig": "packages/example-nestjs/tsconfig.build.json"
-      },
-      "outputs": ["{options.outputPath}"]
-    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
@@ -23,10 +13,27 @@
       },
       "outputs": ["{options.outputFile}"]
     },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "example-nestjs:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "example-nestjs:build:development"
+        },
+        "production": {
+          "buildTarget": "example-nestjs:build:production"
+        }
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "packages/json-api-nestjs/jest.config.ts"
+        "jestConfig": "packages/example-nestjs/jest.config.ts"
       }
     }
   }

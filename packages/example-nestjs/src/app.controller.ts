@@ -13,7 +13,8 @@ export class AppController {
   async handler() {
     return tsRestHandler(contract, {
       create: async ({ body }) => {
-        const item = { id: String((this.id += 1)), ...body.data };
+        this.id += 1;
+        const item = { id: String(this.id), ...body.data };
         this.items.set(item.id, item);
 
         return {
@@ -21,7 +22,6 @@ export class AppController {
           body: { data: item },
         };
       },
-      // @ts-expect-error: boolean type not inferred correctly
       tests: async ({ query }) => {
         this.logger.log({ query });
         return { status: 200, body: query };

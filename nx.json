@@ -1,4 +1,9 @@
 {
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": true
+    }
+  },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "extends": "nx/presets/npm.json",
   "namedInputs": {
@@ -23,14 +28,34 @@
   },
   "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
   "plugins": [
-    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
-    { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" } }
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview"
+      }
+    }
   ],
-  "pluginsConfig": { "@nx/js": { "analyzeSourceFiles": true } },
   "release": {
     "changelog": {
       "automaticFromRef": true,
-      "projectChangelogs": { "createRelease": "github", "file": false }
+      "projectChangelogs": {
+        "createRelease": "github",
+        "file": false
+      }
     },
     "git": {
       "commit": true,
@@ -60,14 +85,26 @@
     "@nx/jest:jest": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "cache": true,
-      "options": { "passWithNoTests": false },
-      "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      "options": {
+        "passWithNoTests": false
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
     },
     "@nx/js:tsc": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "nx-release-publish": { "options": { "packageRoot": "dist/packages/{projectName}" } }
-  }
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/packages/{projectName}"
+      }
+    }
+  },
+  "useLegacyCache": true
 }

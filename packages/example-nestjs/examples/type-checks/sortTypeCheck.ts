@@ -5,11 +5,11 @@ import { type query } from "../query";
 
 type Sort = z.infer<typeof query.shape.sort>;
 let _typeCheck: Sort;
-//  ^? let _typeCheck: ("age" | "name" | "-age" | "-name")[] | undefined
+//  ^? let _typeCheck: ("age" | "dateOfBirth" | "-age" | "-dateOfBirth")[] | undefined
 
 const _validSingleSort: Sort = ["age"];
 
-const _validMultipleSort: Sort = ["-age", "name"];
+const _validMultipleSort: Sort = ["-age", "dateOfBirth"];
 
 // @ts-expect-error: invalid
 const _invalidSortField: Sort = ["invalid"];

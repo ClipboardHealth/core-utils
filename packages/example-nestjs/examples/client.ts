@@ -7,30 +7,33 @@ export const client = initClient(contract, {
 });
 
 async function main() {
-  const { status, body } = await client.tests({
-    query: {
-      page: {
-        cursor: "1",
-        size: 10,
+  const query = {
+    page: {
+      cursor: "1",
+      size: 10,
+    },
+    fields: {
+      user: "age,name",
+    },
+    filter: {
+      age: {
+        gt: [2],
       },
-      fields: {
-        user: "age,name",
+      dateOfBirth: {
+        gte: [new Date("2016-01-01")],
       },
-      filter: {
-        age: {
-          gt: [2],
-        },
-        dateOfBirth: {
-          gte: [new Date("2016-01-01")],
-        },
-        isActive: {
-          eq: ["true"],
-        },
+      isActive: {
+        eq: ["true"],
       },
     },
-  });
+  } as const;
 
-  console.log(status, body);
+  try {
+    const { status, body } = await client.tests({ query });
+    console.debug(status, JSON.stringify(body, undefined, 2));
+  } catch (error) {
+    console.error("Error occurred:", error);
+  }
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

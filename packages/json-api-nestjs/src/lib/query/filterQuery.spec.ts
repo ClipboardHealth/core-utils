@@ -63,7 +63,7 @@ describe("filterQuery", () => {
           eq: ["Alice"],
         },
         isActive: {
-          eq: [true],
+          eq: ["true"],
         },
       },
     });

@@ -56,7 +56,7 @@ describe("/tests", () => {
     request(app.getHttpServer())
       .get("/tests?filter[isActive]=true")
       .expect(200)
-      .expect({ ...defaultQuery, filter: { isActive: { eq: [true] } } }));
+      .expect({ ...defaultQuery, filter: { isActive: { eq: ["true"] } } }));
 
   it("parses date filter", () =>
     request(app.getHttpServer())

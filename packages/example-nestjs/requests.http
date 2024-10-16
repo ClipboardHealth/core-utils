@@ -1,0 +1,5 @@
+@url = http://localhost:3000
+
+### Test query
+
+GET {{url}}/tests?fields[user]=age,name&fields[article]=title

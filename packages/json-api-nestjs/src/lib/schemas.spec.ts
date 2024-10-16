@@ -1,5 +1,5 @@
 import { expectToBeError, expectToBeSuccess } from "../test";
-import { booleanString, nonEmptyString } from "./schemas";
+import { booleanString, nonEmptyString, toBoolean } from "./schemas";
 
 describe("nonEmptyString", () => {
   it("accepts non-empty string", () => {
@@ -37,7 +37,7 @@ describe("booleanString", () => {
     const actual = booleanString.safeParse(input);
 
     expectToBeSuccess(actual);
-    expect(actual.data).toBe(true);
+    expect(actual.data).toBe("true");
   });
 
   it("transforms 'false' to boolean false", () => {
@@ -46,7 +46,7 @@ describe("booleanString", () => {
     const actual = booleanString.safeParse(input);
 
     expectToBeSuccess(actual);
-    expect(actual.data).toBe(false);
+    expect(actual.data).toBe("false");
   });
 
   it("rejects invalid string input", () => {
@@ -67,5 +67,19 @@ describe("booleanString", () => {
 
     expectToBeError(actual);
     expect(actual.error.message).toContain("Expected 'true' | 'false', received boolean");
+  });
+});
+
+describe("toBoolean", () => {
+  it("converts 'true' to boolean true", () => {
+    const actual = toBoolean("true");
+
+    expect(actual).toBe(true);
+  });
+
+  it("converts 'false' to boolean false", () => {
+    const actual = toBoolean("false");
+
+    expect(actual).toBe(false);
   });
 });

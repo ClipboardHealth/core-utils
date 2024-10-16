@@ -5,7 +5,8 @@
     "packages/rules-engine/examples/**/*.ts",
     "packages/json-api/examples/**/*.ts",
   ],
-  "ignore": ["**/jest.config.ts", "**/generators/**/schema.d.ts"],
+  "ignore": ["**/jest.config.ts", "**/generators/**/schema.d.ts", "**/webpack.*.js"],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["typedoc-plugin-include-example"],
+  "ignoreDependencies": ["@nx/webpack", "typedoc-plugin-include-example", "webpack-cli"],
+  "webpack": false,
 }
