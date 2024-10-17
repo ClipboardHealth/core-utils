@@ -6,82 +6,58 @@ import { includeQuery } from "./includeQuery";
 describe("includeQuery", () => {
   const includeSchema = z.object(includeQuery(["articles", "articles.comments"]));
 
-  it("accepts valid include parameters", () => {
-    const input = {
-      include: "articles",
-    };
+  describe("success cases", () => {
+    it.each<{ name: string; input: { include?: string }; expected: { include?: string[] } }>([
+      {
+        name: "accepts valid include parameters",
+        input: { include: "articles" },
+        expected: { include: ["articles"] },
+      },
+      {
+        name: "accepts nested include parameters",
+        input: { include: "articles.comments" },
+        expected: { include: ["articles.comments"] },
+      },
+      {
+        name: "allows omitting include parameter",
+        input: {},
+        expected: {},
+      },
+    ])("$name", ({ input, expected }) => {
+      const actual = includeSchema.safeParse(input);
 
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      include: ["articles"],
+      expectToBeSuccess(actual);
+      expect(actual.data).toEqual(expected);
     });
   });
 
-  it("accepts nested include parameters", () => {
-    const input = {
-      include: "articles.comments",
-    };
+  describe("error cases", () => {
+    it.each<{ name: string; input: unknown; expectedError: string }>([
+      {
+        name: "rejects invalid include fields",
+        input: { include: "invalid" },
+        expectedError: "Invalid include field: 'invalid'",
+      },
+      {
+        name: "rejects invalid nested include fields",
+        input: { include: "articles.invalid" },
+        expectedError: "Invalid include field: 'articles.invalid'",
+      },
+      {
+        name: "rejects on empty include parameter",
+        input: { include: "" },
+        expectedError: "Invalid include field: ''",
+      },
+      {
+        name: "rejects non-string include parameter",
+        input: { include: 123 },
+        expectedError: "Expected array, received number",
+      },
+    ])("$name", ({ input, expectedError }) => {
+      const actual = includeSchema.safeParse(input);
 
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      include: ["articles.comments"],
+      expectToBeError(actual);
+      expect(actual.error.message).toContain(expectedError);
     });
-  });
-
-  it("rejects invalid include fields", () => {
-    const input = {
-      include: "invalid",
-    };
-
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Invalid include field: 'invalid'");
-  });
-
-  it("rejects invalid nested include fields", () => {
-    const input = {
-      include: "articles.invalid",
-    };
-
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Invalid include field: 'articles.invalid'");
-  });
-
-  it("allows omitting include parameter", () => {
-    const input = {};
-
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({});
-  });
-
-  it("rejects on empty include parameter", () => {
-    const input = {
-      include: "",
-    };
-
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Invalid include field: ''");
-  });
-
-  it("rejects non-string include parameter", () => {
-    const input = {
-      include: 123,
-    };
-
-    const actual = includeSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Expected array, received number");
   });
 });

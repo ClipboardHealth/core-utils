@@ -1,85 +1,96 @@
 import { expectToBeError, expectToBeSuccess } from "../test";
-import { booleanString, nonEmptyString, toBoolean } from "./schemas";
+import { type BooleanString, booleanString, nonEmptyString, toBoolean } from "./schemas";
 
 describe("nonEmptyString", () => {
-  it("accepts non-empty string", () => {
-    const input = "hi";
+  describe("success cases", () => {
+    it.each<{ name: string; input: string }>([
+      { name: "accepts non-empty string", input: "hi" },
+      { name: "accepts string with spaces", input: "  hi  " },
+      { name: "accepts string with special characters", input: "!@#$%" },
+    ])("$name", ({ input }) => {
+      const actual = nonEmptyString.safeParse(input);
 
-    const actual = nonEmptyString.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toBe(input);
+      expectToBeSuccess(actual);
+      expect(actual.data).toBe(input);
+    });
   });
 
-  it("rejects empty string", () => {
-    const input = "";
+  describe("error cases", () => {
+    it.each<{ name: string; input: unknown; expectedError: string }>([
+      {
+        name: "rejects empty string",
+        input: "",
+        expectedError: "String must contain at least 1 character(s)",
+      },
+      {
+        name: "rejects non-string input (number)",
+        input: 123,
+        expectedError: "Expected string, received number",
+      },
+      {
+        name: "rejects non-string input (boolean)",
+        input: true,
+        expectedError: "Expected string, received boolean",
+      },
+      {
+        name: "rejects non-string input (undefined)",
+        input: undefined,
+        expectedError: "Required",
+      },
+    ])("$name", ({ input, expectedError }) => {
+      const actual = nonEmptyString.safeParse(input);
 
-    const actual = nonEmptyString.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("String must contain at least 1 character(s)");
-  });
-
-  it("rejects non-string input", () => {
-    const input = 123;
-
-    const actual = nonEmptyString.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Expected string, received number");
+      expectToBeError(actual);
+      expect(actual.error.message).toContain(expectedError);
+    });
   });
 });
 
 describe("booleanString", () => {
-  it("transforms 'true' to boolean true", () => {
-    const input = "true";
+  describe("success cases", () => {
+    it.each<{ name: string; input: string; expected: string }>([
+      { name: "transforms 'true' to boolean true", input: "true", expected: "true" },
+      { name: "transforms 'false' to boolean false", input: "false", expected: "false" },
+    ])("$name", ({ input, expected }) => {
+      const actual = booleanString.safeParse(input);
 
-    const actual = booleanString.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toBe("true");
+      expectToBeSuccess(actual);
+      expect(actual.data).toBe(expected);
+    });
   });
 
-  it("transforms 'false' to boolean false", () => {
-    const input = "false";
+  describe("error cases", () => {
+    it.each<{ name: string; input: unknown; expectedError: string }>([
+      {
+        name: "rejects invalid string input",
+        input: "invalid",
+        expectedError: "Invalid enum value. Expected 'true' | 'false', received 'invalid'",
+      },
+      {
+        name: "rejects non-string input",
+        input: true,
+        expectedError: "Expected 'true' | 'false', received boolean",
+      },
+      {
+        name: "rejects non-string input",
+        input: "True",
+        expectedError: "Invalid enum value. Expected 'true' | 'false', received 'True'",
+      },
+    ])("$name", ({ input, expectedError }) => {
+      const actual = booleanString.safeParse(input);
 
-    const actual = booleanString.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toBe("false");
-  });
-
-  it("rejects invalid string input", () => {
-    const input = "invalid";
-
-    const actual = booleanString.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain(
-      "Invalid enum value. Expected 'true' | 'false', received 'invalid'",
-    );
-  });
-
-  it("rejects non-string input", () => {
-    const input = true;
-
-    const actual = booleanString.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Expected 'true' | 'false', received boolean");
+      expectToBeError(actual);
+      expect(actual.error.message).toContain(expectedError);
+    });
   });
 });
 
 describe("toBoolean", () => {
-  it("converts 'true' to boolean true", () => {
-    const actual = toBoolean("true");
-
-    expect(actual).toBe(true);
-  });
-
-  it("converts 'false' to boolean false", () => {
-    const actual = toBoolean("false");
-
-    expect(actual).toBe(false);
+  it.each<{ input: BooleanString; expected: boolean }>([
+    { input: "true", expected: true },
+    { input: "false", expected: false },
+    { input: "True" as BooleanString, expected: false },
+  ])("converts '$input' to boolean $expected", ({ input, expected }) => {
+    expect(toBoolean(input)).toBe(expected);
   });
 });

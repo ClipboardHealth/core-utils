@@ -3,124 +3,89 @@ import { toServerJsonApiQuery } from "./toServerJsonApiQuery";
 
 const BASE_URL = "https://google.com";
 
-describe("toJsonApiQuery", () => {
-  it("returns empty object if no matches", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?hi=there`).searchParams)).toEqual({});
-  });
+describe("toServerJsonApiQuery", () => {
+  it.each<{ name: string; input: string; expected: ServerJsonApiQuery }>([
+    {
+      name: "returns empty object if no matches",
+      input: "hi=there",
+      expected: {},
+    },
+    {
+      name: "parses fields",
+      input: "fields[user]=age",
+      expected: { fields: { user: ["age"] } },
+    },
+    {
+      name: "parses multiple fields",
+      input: "fields[user]=age&fields[article]=title",
+      expected: { fields: { user: ["age"], article: ["title"] } },
+    },
+    {
+      name: "parses fields with multiple values",
+      input: "fields[user]=age,dateOfBirth",
+      expected: { fields: { user: ["age", "dateOfBirth"] } },
+    },
+    {
+      name: "parses filter",
+      input: "filter[age]=25",
+      expected: { filter: { age: { eq: ["25"] } } },
+    },
+    {
+      name: "parses multiple filters",
+      input: "filter[age]=25&filter[dateOfBirth]=2024-01-01",
+      expected: { filter: { age: { eq: ["25"] }, dateOfBirth: { eq: ["2024-01-01"] } } },
+    },
+    {
+      name: "parses filters with multiple values",
+      input: "filter[age]=25,30",
+      expected: { filter: { age: { eq: ["25", "30"] } } },
+    },
+    {
+      name: "parses multiple filter types",
+      input: "filter[age][gt]=2&filter[age][gte]=3&filter[age][lt]=6&filter[age][lte]=5",
+      expected: { filter: { age: { gt: ["2"], gte: ["3"], lt: ["6"], lte: ["5"] } } },
+    },
+    {
+      name: "parses include",
+      input: "include=articles",
+      expected: { include: ["articles"] },
+    },
+    {
+      name: "parses include with multiple values",
+      input: "include=articles,articles.comments",
+      expected: { include: ["articles", "articles.comments"] },
+    },
+    {
+      name: "parses page",
+      input: "page[size]=10&page[cursor]=a2c12",
+      expected: { page: { cursor: "a2c12", size: "10" } },
+    },
+    {
+      name: "parses limit/offset page",
+      input: "page[limit]=10&page[number]=2&page[offset]=20",
+      expected: { page: { limit: "10", number: "2", offset: "20" } },
+    },
+    {
+      name: "parses sort",
+      input: "sort=age",
+      expected: { sort: ["age"] },
+    },
+    {
+      name: "parses sort with multiple values",
+      input: "sort=age,-dateOfBirth",
+      expected: { sort: ["age", "-dateOfBirth"] },
+    },
+  ])("$name", ({ input, expected }) => {
+    const url = new URL(`${BASE_URL}?${input}`);
 
-  it("parses fields", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?fields[user]=age`).searchParams)).toEqual({
-      fields: { user: ["age"] },
-    });
-  });
+    const actual = toServerJsonApiQuery(url.searchParams);
 
-  it("parses multiple fields", () => {
-    expect(
-      toServerJsonApiQuery(
-        new URL(`${BASE_URL}?fields[user]=age&fields[article]=title`).searchParams,
-      ),
-    ).toEqual({
-      fields: { user: ["age"], article: ["title"] },
-    });
-  });
-
-  it("parses fields with multiple values", () => {
-    expect(
-      toServerJsonApiQuery(new URL(`${BASE_URL}?fields[user]=age,dateOfBirth`).searchParams),
-    ).toEqual({
-      fields: { user: ["age", "dateOfBirth"] },
-    });
-  });
-
-  it("parses filter", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?filter[age]=25`).searchParams)).toEqual({
-      filter: { age: { eq: ["25"] } },
-    });
-  });
-
-  it("parses multiple filters", () => {
-    expect(
-      toServerJsonApiQuery(
-        new URL(`${BASE_URL}?filter[age]=25&filter[dateOfBirth]=2024-01-01`).searchParams,
-      ),
-    ).toEqual({
-      filter: { age: { eq: ["25"] }, dateOfBirth: { eq: ["2024-01-01"] } },
-    });
-  });
-
-  it("parses filters with multiple values", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?filter[age]=25,30`).searchParams)).toEqual({
-      filter: { age: { eq: ["25", "30"] } },
-    });
-  });
-
-  it("parses multiple filter types", () => {
-    expect(
-      toServerJsonApiQuery(
-        new URL(
-          `${BASE_URL}?filter[age][gt]=2&filter[age][gte]=3&filter[age][lt]=6&filter[age][lte]=5&filter[age][not]=4`,
-        ).searchParams,
-      ),
-    ).toEqual({
-      filter: { age: { gt: ["2"], gte: ["3"], lt: ["6"], lte: ["5"], not: ["4"] } },
-    });
-  });
-
-  it("parses include", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?include=articles`).searchParams)).toEqual({
-      include: ["articles"],
-    });
-  });
-
-  it("parses include with multiple values", () => {
-    expect(
-      toServerJsonApiQuery(new URL(`${BASE_URL}?include=articles,articles.comments`).searchParams),
-    ).toEqual({
-      include: ["articles", "articles.comments"],
-    });
-  });
-
-  it("parses page", () => {
-    expect(
-      toServerJsonApiQuery(new URL(`${BASE_URL}?page[size]=10&page[cursor]=a2c12`).searchParams),
-    ).toEqual({
-      page: {
-        cursor: "a2c12",
-        size: "10",
-      },
-    });
-  });
-
-  it("parses limit/offset page", () => {
-    expect(
-      toServerJsonApiQuery(
-        new URL(`${BASE_URL}?page[limit]=10&page[number]=2&page[offset]=20`).searchParams,
-      ),
-    ).toEqual({
-      page: {
-        limit: "10",
-        number: "2",
-        offset: "20",
-      },
-    });
-  });
-
-  it("parses sort", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?sort=age`).searchParams)).toEqual({
-      sort: ["age"],
-    });
-  });
-
-  it("parses sort with multiple values", () => {
-    expect(toServerJsonApiQuery(new URL(`${BASE_URL}?sort=age,-dateOfBirth`).searchParams)).toEqual(
-      {
-        sort: ["age", "-dateOfBirth"],
-      },
-    );
+    expect(actual).toEqual(expected);
   });
 
   it("parses combinations", () => {
     const [date1, date2] = ["2024-01-01", "2024-01-02"];
+    const input = `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=articles&page[size]=10&sort=-age`;
     const expected: ServerJsonApiQuery = {
       fields: { user: ["age", "dateOfBirth"] },
       filter: {
@@ -129,18 +94,13 @@ describe("toJsonApiQuery", () => {
         isActive: { eq: ["true"] },
       },
       include: ["articles"],
-      page: {
-        size: "10",
-      },
+      page: { size: "10" },
       sort: ["-age"],
     };
 
-    expect(
-      toServerJsonApiQuery(
-        new URL(
-          `${BASE_URL}?fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=articles&page[size]=10&sort=-age`,
-        ).searchParams,
-      ),
-    ).toEqual(expected);
+    const url = new URL(`${BASE_URL}?${input}`);
+    const actual = toServerJsonApiQuery(url.searchParams);
+
+    expect(actual).toEqual(expected);
   });
 });

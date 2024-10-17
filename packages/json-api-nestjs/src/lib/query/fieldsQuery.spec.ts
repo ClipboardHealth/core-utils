@@ -1,7 +1,10 @@
+import { type Arrayable } from "type-fest";
 import { z } from "zod";
 
 import { expectToBeError, expectToBeSuccess } from "../../test";
 import { fieldsQuery } from "./fieldsQuery";
+
+type Fields = Record<string, Arrayable<string>>;
 
 describe("fieldsQuery", () => {
   const fieldsSchema = z.object(
@@ -11,95 +14,99 @@ describe("fieldsQuery", () => {
     }),
   );
 
-  it("accepts valid fields", () => {
-    const input = {
-      fields: {
-        user: ["age", "dateOfBirth"],
-        article: ["title"],
+  describe("success cases", () => {
+    it.each<{ name: string; input: { fields?: Fields }; expected: { fields?: Fields } }>([
+      {
+        name: "accepts valid fields",
+        input: {
+          fields: {
+            user: ["age", "dateOfBirth"],
+            article: ["title"],
+          },
+        },
+        expected: {
+          fields: {
+            user: ["age", "dateOfBirth"],
+            article: ["title"],
+          },
+        },
       },
-    };
-
-    const actual = fieldsSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-  });
-
-  it("rejects invalid fields", () => {
-    const input = {
-      fields: {
-        user: ["age", "invalid"],
-        article: ["title"],
+      {
+        name: "allows omitting fields and API types",
+        input: {
+          fields: {
+            user: ["age"],
+          },
+        },
+        expected: {
+          fields: {
+            user: ["age"],
+          },
+        },
       },
-    };
-
-    const actual = fieldsSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain(
-      "Invalid enum value. Expected 'age' | 'dateOfBirth', received 'invalid'",
-    );
-  });
-
-  it("rejects unknown API type", () => {
-    const input = {
-      fields: {
-        invalid: ["field"],
+      {
+        name: "parses comma-separated string input",
+        input: {
+          fields: {
+            user: "age,dateOfBirth",
+            article: "title",
+          },
+        },
+        expected: {
+          fields: {
+            user: ["age", "dateOfBirth"],
+            article: ["title"],
+          },
+        },
       },
-    };
-
-    const actual = fieldsSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Unrecognized key(s) in object: 'invalid'");
-  });
-
-  it("allows omitting fields and API types", () => {
-    const input = {
-      fields: {
-        user: ["age"],
+      {
+        name: "allows empty object",
+        input: {},
+        expected: {},
       },
-    };
+    ])("$name", ({ input, expected }) => {
+      const actual = fieldsSchema.safeParse(input);
 
-    const actual = fieldsSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-  });
-
-  it("parses comma-separated string input", () => {
-    const input = {
-      fields: {
-        user: "age,dateOfBirth",
-        article: "title",
-      },
-    };
-
-    const actual = fieldsSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      fields: {
-        user: ["age", "dateOfBirth"],
-        article: ["title"],
-      },
+      expectToBeSuccess(actual);
+      expect(actual.data).toEqual(expected);
     });
   });
 
-  it("rejects empty array for fields", () => {
-    const input = {
-      fields: {
-        user: [],
+  describe("error cases", () => {
+    it.each<{ name: string; input: unknown; expectedError: string }>([
+      {
+        name: "rejects invalid fields",
+        input: {
+          fields: {
+            user: ["age", "invalid"],
+            article: ["title"],
+          },
+        },
+        expectedError: "Invalid enum value. Expected 'age' | 'dateOfBirth', received 'invalid'",
       },
-    };
+      {
+        name: "rejects unknown API type",
+        input: {
+          fields: {
+            invalid: ["field"],
+          },
+        },
+        expectedError: "Unrecognized key(s) in object: 'invalid'",
+      },
+      {
+        name: "rejects empty array for fields",
+        input: {
+          fields: {
+            user: [],
+          },
+        },
+        expectedError: "Array must contain at least 1 element(s)",
+      },
+    ])("$name", ({ input, expectedError }) => {
+      const actual = fieldsSchema.safeParse(input);
 
-    const actual = fieldsSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Array must contain at least 1 element(s)");
-  });
-
-  it("allows empty object", () => {
-    const actual = fieldsSchema.safeParse({});
-
-    expectToBeSuccess(actual);
+      expectToBeError(actual);
+      expect(actual.error.message).toContain(expectedError);
+    });
   });
 });
