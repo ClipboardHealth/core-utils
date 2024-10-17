@@ -7,14 +7,14 @@ import { contract, UserDto } from "./contract";
 export class AppController {
   private readonly logger = new Logger(AppController.name);
   private readonly items = new Map<string, UserDto["data"]>();
-  private id = 0;
+  private nextId = 0;
 
   @TsRestHandler(contract)
   async handler() {
     return tsRestHandler(contract, {
       create: async ({ body }) => {
-        this.id += 1;
-        const item = { id: String(this.id), ...body.data };
+        this.nextId += 1;
+        const item = { id: String(this.nextId), ...body.data };
         this.items.set(item.id, item);
 
         return {
