@@ -6,7 +6,7 @@
   "dependencies": {
     "@nx/devkit": "20.0.1",
     "@nx/js": "20.0.1",
-    "tslib": "2.7.0"
+    "tslib": "2.8.0"
   },
   "generators": "./generators.json",
   "keywords": [
