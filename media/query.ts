@@ -2,6 +2,7 @@ import {
   booleanString,
   cursorPaginationQuery,
   fieldsQuery,
+  type FilterMap,
   filterQuery,
   includeQuery,
   sortQuery,
@@ -16,10 +17,24 @@ import {
 
 const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
 const userFields = ["age", "dateOfBirth"] as const satisfies readonly UserAttributeFields[];
-const includeFields = [
+const userIncludeFields = [
   "articles",
   "articles.comments",
 ] as const satisfies readonly UserIncludeFields[];
+const userFilterMap = {
+  age: {
+    filters: ["eq", "gt"],
+    schema: z.coerce.number().int().positive().max(125),
+  },
+  isActive: {
+    filters: ["eq"],
+    schema: booleanString,
+  },
+  dateOfBirth: {
+    filters: ["gte"],
+    schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
+  },
+} as const satisfies FilterMap<UserAttributeFields>;
 
 /**
  * Disclaimer: Just because JSON:API supports robust querying doesn’t mean your service should
@@ -33,21 +48,8 @@ export const query = z
   .object({
     ...cursorPaginationQuery(),
     ...fieldsQuery({ user: userFields, article: articleFields }),
-    ...filterQuery({
-      age: {
-        filters: ["eq", "gt"],
-        schema: z.coerce.number().int().positive().max(125),
-      },
-      isActive: {
-        filters: ["eq"],
-        schema: booleanString,
-      },
-      dateOfBirth: {
-        filters: ["gte"],
-        schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
-      },
-    }),
+    ...filterQuery(userFilterMap),
     ...sortQuery(userFields),
-    ...includeQuery(includeFields),
+    ...includeQuery(userIncludeFields),
   })
   .strict();
