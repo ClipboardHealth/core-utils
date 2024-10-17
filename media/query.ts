@@ -12,10 +12,10 @@ import {
   type ArticleAttributeFields,
   type UserAttributeFields,
   type UserIncludeFields,
-} from "./contract";
+} from "../src/contract";
 
 const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
-const userFields = ["age", "name"] as const satisfies readonly UserAttributeFields[];
+const userFields = ["age", "dateOfBirth"] as const satisfies readonly UserAttributeFields[];
 const includeFields = [
   "articles",
   "articles.comments",
