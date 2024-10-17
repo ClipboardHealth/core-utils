@@ -22,177 +22,168 @@ describe("filterQuery", () => {
     }),
   );
 
-  it("accepts valid filters", () => {
-    const input = {
-      filter: {
-        age: {
-          eq: "30",
-          gt: "25",
-          lte: "40",
+  describe("success cases", () => {
+    it.each<{
+      name: string;
+      input: { filter?: Record<string, unknown> };
+      expected: { filter?: Record<string, unknown> };
+    }>([
+      {
+        name: "accepts valid filters",
+        input: {
+          filter: {
+            age: {
+              eq: "30",
+              gt: "25",
+              lte: "40",
+            },
+            dateOfBirth: {
+              gte: "1990-01-01",
+            },
+            isActive: {
+              eq: "true",
+            },
+          },
         },
-        dateOfBirth: {
-          gte: "1990-01-01",
-        },
-        isActive: {
-          eq: "true",
+        expected: {
+          filter: {
+            age: {
+              eq: [30],
+              gt: [25],
+              lte: [40],
+            },
+            dateOfBirth: {
+              gte: [new Date("1990-01-01")],
+            },
+            isActive: {
+              eq: ["true"],
+            },
+          },
         },
       },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      filter: {
-        age: {
-          eq: [30],
-          gt: [25],
-          lte: [40],
+      {
+        name: "allows omitting filters and API types",
+        input: {
+          filter: {
+            age: {
+              eq: "30",
+            },
+          },
         },
-        dateOfBirth: {
-          gte: [new Date("1990-01-01")],
-        },
-        isActive: {
-          eq: ["true"],
+        expected: {
+          filter: {
+            age: {
+              eq: [30],
+            },
+          },
         },
       },
+      {
+        name: "parses comma-separated string input",
+        input: {
+          filter: {
+            age: {
+              eq: "30,40",
+              gt: "25",
+            },
+          },
+        },
+        expected: {
+          filter: {
+            age: {
+              eq: [30, 40],
+              gt: [25],
+            },
+          },
+        },
+      },
+      {
+        name: "handles single value as eq filter",
+        input: {
+          filter: {
+            age: "30",
+          },
+        },
+        expected: {
+          filter: {
+            age: {
+              eq: [30],
+            },
+          },
+        },
+      },
+      {
+        name: "handles mixed single value and object filters",
+        input: {
+          filter: {
+            age: {
+              "30": true,
+              gt: "25",
+            },
+          },
+        },
+        expected: {
+          filter: {
+            age: {
+              eq: [30],
+              gt: [25],
+            },
+          },
+        },
+      },
+      {
+        name: "allows empty object",
+        input: {},
+        expected: {},
+      },
+    ])("$name", ({ input, expected }) => {
+      const actual = filterSchema.safeParse(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.data).toEqual(expected);
     });
   });
 
-  it("rejects invalid filter types", () => {
-    const input = {
-      filter: {
-        age: {
-          eq: "invalid",
+  describe("error cases", () => {
+    it.each<{ name: string; input: unknown; expectedError: string }>([
+      {
+        name: "rejects invalid filter types",
+        input: {
+          filter: {
+            age: {
+              eq: "invalid",
+            },
+          },
         },
+        expectedError: "Expected number, received nan",
       },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Expected number, received nan");
-  });
-
-  it("rejects invalid filter type", () => {
-    const input = {
-      filter: {
-        age: {
-          invalid: "30",
+      {
+        name: "rejects invalid filter type",
+        input: {
+          filter: {
+            age: {
+              invalid: "30",
+            },
+          },
         },
+        expectedError: "Unrecognized key(s) in object: 'invalid'",
       },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Unrecognized key(s) in object: 'invalid'");
-  });
-
-  it("rejects unknown API type", () => {
-    const input = {
-      filter: {
-        invalid: {
-          eq: "30",
+      {
+        name: "rejects unknown API type",
+        input: {
+          filter: {
+            invalid: {
+              eq: "30",
+            },
+          },
         },
+        expectedError: "Unrecognized key(s) in object: 'invalid'",
       },
-    };
+    ])("$name", ({ input, expectedError }) => {
+      const actual = filterSchema.safeParse(input);
 
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Unrecognized key(s) in object: 'invalid'");
-  });
-
-  it("allows omitting filters and API types", () => {
-    const input = {
-      filter: {
-        age: {
-          eq: "30",
-        },
-      },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      filter: {
-        age: {
-          eq: [30],
-        },
-      },
+      expectToBeError(actual);
+      expect(actual.error.message).toContain(expectedError);
     });
-  });
-
-  it("parses comma-separated string input", () => {
-    const input = {
-      filter: {
-        age: {
-          eq: "30,40",
-          gt: "25",
-        },
-      },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      filter: {
-        age: {
-          eq: [30, 40],
-          gt: [25],
-        },
-      },
-    });
-  });
-
-  it("handles single value as eq filter", () => {
-    const input = {
-      filter: {
-        age: "30",
-      },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      filter: {
-        age: {
-          eq: [30],
-        },
-      },
-    });
-  });
-
-  it("handles mixed single value and object filters", () => {
-    const input = {
-      filter: {
-        age: {
-          "30": true,
-          gt: "25",
-        },
-      },
-    };
-
-    const actual = filterSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      filter: {
-        age: {
-          eq: [30],
-          gt: [25],
-        },
-      },
-    });
-  });
-
-  it("allows empty object", () => {
-    const actual = filterSchema.safeParse({});
-
-    expectToBeSuccess(actual);
   });
 });

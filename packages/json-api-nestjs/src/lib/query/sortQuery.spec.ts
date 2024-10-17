@@ -4,73 +4,60 @@ import { expectToBeError, expectToBeSuccess } from "../../test";
 import { sortQuery } from "./sortQuery";
 
 describe("sortQuery", () => {
-  const sortSchema = z.object(sortQuery(["age", "dateOfBirth"] as const));
+  const sortSchema = z.object(sortQuery(["age", "dateOfBirth"])).strict();
 
-  it("accepts valid sort parameters", () => {
-    const input = {
-      sort: "age",
-    };
+  describe("success cases", () => {
+    it.each<{ name: string; input: { sort?: string }; expected: { sort?: string[] } }>([
+      {
+        name: "accepts valid sort parameters",
+        input: { sort: "age" },
+        expected: { sort: ["age"] },
+      },
+      {
+        name: "allows descending sort with '-' prefix",
+        input: { sort: "-age,dateOfBirth" },
+        expected: { sort: ["-age", "dateOfBirth"] },
+      },
+      {
+        name: "allows omitting sort parameter",
+        input: {},
+        expected: {},
+      },
+    ])("$name", ({ input, expected }) => {
+      const actual = sortSchema.safeParse(input);
 
-    const actual = sortSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      sort: ["age"],
+      expectToBeSuccess(actual);
+      expect(actual.data).toEqual(expected);
     });
   });
 
-  it("rejects invalid sort fields", () => {
-    const input = {
-      sort: "-age,invalid",
-    };
+  describe("error cases", () => {
+    it.each<{ name: string; input: unknown; expectedError: string }>([
+      {
+        name: "rejects invalid sort fields",
+        input: { sort: "-age,invalid" },
+        expectedError: "Invalid sort field: 'invalid'",
+      },
+      {
+        name: "rejects on empty sort parameter",
+        input: { sort: "" },
+        expectedError: "Invalid sort field: ''",
+      },
+      {
+        name: "rejects non-string sort parameter",
+        input: { sort: 123 },
+        expectedError: "Expected array, received number",
+      },
+      {
+        name: "rejects invalid API type",
+        input: { invalid: "age" },
+        expectedError: "Unrecognized key(s) in object: 'invalid'",
+      },
+    ])("$name", ({ input, expectedError }) => {
+      const actual = sortSchema.safeParse(input);
 
-    const actual = sortSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Invalid sort field: 'invalid'");
-  });
-
-  it("allows descending sort with '-' prefix", () => {
-    const input = {
-      sort: "-age,dateOfBirth",
-    };
-
-    const actual = sortSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({
-      sort: ["-age", "dateOfBirth"],
+      expectToBeError(actual);
+      expect(actual.error.message).toContain(expectedError);
     });
-  });
-
-  it("allows omitting sort parameter", () => {
-    const input = {};
-
-    const actual = sortSchema.safeParse(input);
-
-    expectToBeSuccess(actual);
-    expect(actual.data).toEqual({});
-  });
-
-  it("rejects on empty sort parameter", () => {
-    const input = {
-      sort: "",
-    };
-
-    const actual = sortSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Invalid sort field: ''");
-  });
-
-  it("rejects non-string sort parameter", () => {
-    const input = {
-      sort: 123,
-    };
-
-    const actual = sortSchema.safeParse(input);
-
-    expectToBeError(actual);
-    expect(actual.error.message).toContain("Expected array, received number");
   });
 });
