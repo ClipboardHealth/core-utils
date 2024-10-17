@@ -9,25 +9,25 @@ export type Meta = Record<string, unknown>;
 export type ApiLinks = Record<string, string | undefined>;
 
 export interface Relationship {
-  data: Arrayable<{ id: string; type: ApiType }>;
+  data?: Arrayable<{ id?: string; type?: ApiType }>;
   links?: ApiLinks;
   meta?: Meta;
 }
 
 export interface Data {
-  attributes: Record<string, unknown>;
-  id: string;
+  attributes?: Record<string, unknown>;
+  id?: string;
   links?: ApiLinks;
   meta?: Meta;
   relationships?: Record<string, Relationship>;
-  type: ApiType;
+  type?: ApiType;
 }
 
 /**
  * The JSON:API document shape.
  */
 export interface JsonApiDocument {
-  data: Arrayable<Data>;
+  data?: Arrayable<Data>;
   included?: Data[];
   jsonapi?: {
     ext?: Record<string, unknown>;

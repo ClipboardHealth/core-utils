@@ -1,11 +1,11 @@
-# @clipboard-health/rules-engine
+# @clipboard-health/rules-engine <!-- omit from toc -->
 
 A pure functional rules engine with two rule runners:
 
 - `firstMatch`: Runs the first rule that matches the criteria
 - `all`: Runs all the rules that matches the criteria
 
-## Table of Contents
+## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)

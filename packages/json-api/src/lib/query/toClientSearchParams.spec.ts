@@ -16,33 +16,27 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts multiple fields", () => {
-    const actual = toClientSearchParams({ fields: { user: ["age", "name"] } });
+    const actual = toClientSearchParams({ fields: { user: ["age", "dateOfBirth"] } });
 
-    expect(actual.get("fields[user]")).toBe("age,name");
-    expect([...actual.values()]).toHaveLength(1);
-  });
-
-  it("converts fields with multiple values", () => {
-    const actual = toClientSearchParams({ fields: { user: ["age", "name"] } });
-
-    expect(actual.get("fields[user]")).toBe("age,name");
+    expect(actual.get("fields[user]")).toBe("age,dateOfBirth");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts filter", () => {
-    const actual = toClientSearchParams({ filter: { name: { eq: ["snoopy"] } } });
+    const actual = toClientSearchParams({ filter: { age: { eq: [25] } } });
 
-    expect(actual.get("filter[name]")).toBe("snoopy");
+    expect(actual.get("filter[age]")).toBe("25");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts multiple filters", () => {
+    const date1 = new Date("2024-01-01");
     const actual = toClientSearchParams({
-      filter: { name: { eq: ["snoopy"] }, age: { eq: ["2"] } },
+      filter: { age: { eq: [25] }, dateOfBirth: { gt: [date1] } },
     });
 
-    expect(actual.get("filter[name]")).toBe("snoopy");
-    expect(actual.get("filter[age]")).toBe("2");
+    expect(actual.get("filter[age]")).toBe("25");
+    expect(actual.get("filter[dateOfBirth][gt]")).toBe(date1.toISOString());
     expect([...actual.values()]).toHaveLength(2);
   });
 
@@ -69,9 +63,9 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts filters with multiple values", () => {
-    const actual = toClientSearchParams({ filter: { name: { eq: ["snoopy", "lassie"] } } });
+    const actual = toClientSearchParams({ filter: { age: { eq: [25, 30] } } });
 
-    expect(actual.get("filter[name]")).toBe("snoopy,lassie");
+    expect(actual.get("filter[age]")).toBe("25,30");
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -114,9 +108,9 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts include with multiple values", () => {
-    const actual = toClientSearchParams({ include: ["article", "vet"] });
+    const actual = toClientSearchParams({ include: ["articles", "articles.comments"] });
 
-    expect(actual.get("include")).toBe("article,vet");
+    expect(actual.get("include")).toBe("articles,articles.comments");
     expect([...actual.values()]).toHaveLength(1);
   });
 
@@ -145,16 +139,16 @@ describe("toClientSearchParams", () => {
   });
 
   it("converts sort with multiple values", () => {
-    const actual = toClientSearchParams({ sort: ["age", "-name"] });
+    const actual = toClientSearchParams({ sort: ["age", "-dateOfBirth"] });
 
-    expect(actual.get("sort")).toBe("age,-name");
+    expect(actual.get("sort")).toBe("age,-dateOfBirth");
     expect([...actual.values()]).toHaveLength(1);
   });
 
   it("converts combinations", () => {
     const [date1, date2] = [new Date("2024-01-01"), new Date("2024-01-02")];
     const actual = toClientSearchParams({
-      fields: { user: ["age", "name"] },
+      fields: { user: ["age", "dateOfBirth"] },
       filter: {
         age: { eq: ["2"] },
         dateOfBirth: { gt: [date1], lt: [date2] },
@@ -167,7 +161,7 @@ describe("toClientSearchParams", () => {
       sort: ["-age"],
     });
 
-    expect(actual.get("fields[user]")).toBe("age,name");
+    expect(actual.get("fields[user]")).toBe("age,dateOfBirth");
     expect(actual.get("filter[age]")).toBe("2");
     expect(actual.get("filter[dateOfBirth][gt]")).toBe(date1.toISOString());
     expect(actual.get("filter[dateOfBirth][lt]")).toBe(date2.toISOString());

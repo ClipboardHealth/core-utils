@@ -20,7 +20,7 @@ export type FilterSchema<MapT extends FilterMap> = {
       z.ZodOptional<
         z.ZodObject<{
           [F in MapT[K]["filters"][number]]: z.ZodOptional<
-            z.ZodEffects<z.ZodOptional<z.ZodArray<MapT[K]["schema"]>>>
+            z.ZodEffects<z.ZodOptional<z.ZodReadonly<z.ZodArray<MapT[K]["schema"]>>>>
           >;
         }>
       >
@@ -31,9 +31,9 @@ export type FilterSchema<MapT extends FilterMap> = {
 /**
  * Creates a Zod schema for JSON:API filters.
  *
- * @includeExample ./packages/json-api-nestjs/examples/query.ts
+ * @includeExample ./packages/example-nestjs/examples/query.ts
  *
- * @see [Usage example](../../../examples/query.ts)
+ * @see [Usage example](../../../../example-nestjs/examples/query.ts)
  * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
  * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
  */
@@ -54,7 +54,10 @@ export function filterQuery<const MapT extends FilterMap>(parameters: Readonly<M
                         filters.map((filter: Filter) => [
                           filter,
                           z
-                            .preprocess(splitString, schema.array().min(1).max(10_000).optional())
+                            .preprocess(
+                              splitString,
+                              schema.array().min(1).max(10_000).readonly().optional(),
+                            )
                             .optional(),
                         ]),
                       ),

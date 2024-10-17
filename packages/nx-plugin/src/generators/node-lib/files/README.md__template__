@@ -1,8 +1,8 @@
-# <%= importPath %>
+# <%= importPath %> <!-- omit from toc -->
 
 TODO
 
-## Table of Contents
+## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)

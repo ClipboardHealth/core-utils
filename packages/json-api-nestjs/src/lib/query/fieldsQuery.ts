@@ -28,9 +28,9 @@ export type AttributeFields<DocumentT extends JsonApiDocument> =
 /**
  * Creates a Zod schema for JSON:API sparse fieldsets.
  *
- * @includeExample ./packages/json-api-nestjs/examples/query.ts
+ * @includeExample ./packages/example-nestjs/examples/query.ts
  *
- * @see [Usage example](../../../examples/query.ts)
+ * @see [Usage example](../../../../example-nestjs/examples/query.ts)
  * @see {@link https://jsonapi.org/format/#fetching-sparse-fieldsets JSON:API sparse fieldsets}
  */
 export function fieldsQuery<const MapT extends FieldsMap>(parameters: Readonly<MapT>) {

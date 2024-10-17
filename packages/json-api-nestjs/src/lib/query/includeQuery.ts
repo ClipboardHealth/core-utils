@@ -49,9 +49,9 @@ export type RelationshipPaths<
 /**
  * Creates a Zod schema for JSON:API include parameters.
  *
- * @includeExample ./packages/json-api-nestjs/examples/query.ts
+ * @includeExample ./packages/example-nestjs/examples/query.ts
  *
- * @see [Usage example](../../../examples/query.ts)
+ * @see [Usage example](../../../../example-nestjs/examples/query.ts)
  * @see {@link https://jsonapi.org/format/#fetching-includes JSON:API includes}
  */
 export function includeQuery<const FieldT extends readonly string[]>(fields: FieldT) {
