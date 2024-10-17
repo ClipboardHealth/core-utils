@@ -6,13 +6,14 @@ import { type Field } from "../types";
 
 export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
 
-export type FilterMap<FieldT extends Field = Field> = Record<
-  FieldT,
-  {
-    filters: readonly [Filter, ...Filter[]];
-    schema: z.ZodTypeAny;
-  }
->;
+export type FilterTuple = readonly [Filter, ...Filter[]];
+
+export interface FilterValue {
+  filters: FilterTuple;
+  schema: z.ZodTypeAny;
+}
+
+export type FilterMap<FieldT extends Field = Field> = Record<FieldT, FilterValue>;
 
 export type FilterSchema<MapT extends FilterMap> = {
   [K in keyof MapT]: z.ZodOptional<
@@ -42,36 +43,31 @@ export function filterQuery<const MapT extends FilterMap>(parameters: Readonly<M
     filter: z
       .object(
         Object.fromEntries(
-          Object.entries(parameters).map(
-            ([apiType, { filters, schema }]: [keyof MapT, MapT[keyof MapT]]) => [
-              apiType,
-              z
-                .preprocess(
-                  queryFilterPreprocessor,
-                  z
-                    .object(
-                      Object.fromEntries(
-                        filters.map((filter: Filter) => [
-                          filter,
-                          z
-                            .preprocess(
-                              splitString,
-                              schema.array().min(1).max(10_000).readonly().optional(),
-                            )
-                            .optional(),
-                        ]),
-                      ),
-                    )
-                    .strict()
-                    .optional(),
-                )
-                .optional(),
-            ],
-          ),
-          // Type assertion to narrow types.
+          Object.entries(parameters).map(([apiType, value]: [keyof MapT, MapT[keyof MapT]]) => [
+            apiType,
+            z.preprocess(queryFilterPreprocessor, filterSchema(value)).optional(),
+          ]),
         ) as FilterSchema<MapT>,
       )
       .strict()
       .optional(),
   };
+}
+
+function filterSchema(parameters: FilterValue) {
+  const { filters, schema } = parameters;
+
+  return z
+    .object(
+      Object.fromEntries(
+        filters.map((filter) => [
+          filter,
+          z
+            .preprocess(splitString, schema.array().min(1).max(10_000).readonly().optional())
+            .optional(),
+        ]),
+      ),
+    )
+    .strict()
+    .optional();
 }
