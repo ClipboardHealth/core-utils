@@ -2,12 +2,12 @@ import { z } from "zod";
 
 import { queryFilterPreprocessor } from "../internal/queryFilterPreprocessor";
 import { splitString } from "../internal/splitString";
-import { type ApiType } from "../types";
+import { type Field } from "../types";
 
 export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
 
-export type FilterMap = Record<
-  ApiType,
+export type FilterMap<FieldT extends Field = Field> = Record<
+  FieldT,
   {
     filters: readonly [Filter, ...Filter[]];
     schema: z.ZodTypeAny;
