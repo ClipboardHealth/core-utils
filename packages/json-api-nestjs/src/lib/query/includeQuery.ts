@@ -5,26 +5,28 @@ import { splitString } from "../internal/splitString";
 import { type JsonApiDocument, type Relationship } from "../types";
 
 /**
- * JSON:API relationship paths for use in include queries.
+ * Recursively traverse the JSON:API document to build a list of all possible relationship paths up
+ * to the specified depth, which prevents stack overflow for circular relationships. Use the result
+ * in `include` queries
  *
  * @template MapT - A map of ApiType to Zod schemas.
  * @template DocumentT - The JSON:API document.
- * @template RecursiveDepth - The maximum depth for recursive relationship traversal.
+ * @template Depth - The maximum depth for recursive relationship traversal.
  * @template Prefix - The prefix for nested relationship paths.
  */
 export type RelationshipPaths<
   MapT extends Record<string, z.ZodTypeAny>,
   DocumentT extends JsonApiDocument,
-  RecursiveDepth extends number = 5,
+  Depth extends number = 5,
   Prefix extends string = "",
-> = RecursiveDepth extends infer Depth extends number
-  ? GreaterThan<Depth, 0> extends true
-    ? DocumentT["data"] extends Array<infer SingleOrArray> | infer SingleOrArray
-      ? SingleOrArray extends { relationships?: infer R }
-        ? R extends Record<string, Relationship>
+> =
+  GreaterThan<Depth, 0> extends true
+    ? DocumentT["data"] extends Array<infer Data> | infer Data
+      ? Data extends { relationships?: infer Relation }
+        ? Relation extends Record<string, Relationship>
           ? {
-              [K in keyof R]: K extends string
-                ? R[K]["data"] extends
+              [K in keyof Relation]: K extends string
+                ? Relation[K]["data"] extends
                     | { type?: infer RelationT }
                     | Array<{ type?: infer RelationT }>
                   ? RelationT extends keyof MapT
@@ -39,12 +41,11 @@ export type RelationshipPaths<
                     : never
                   : never
                 : never;
-            }[keyof R]
+            }[keyof Relation]
           : never
         : never
       : never
-    : never
-  : never;
+    : never;
 
 /**
  * Creates a Zod schema for JSON:API include parameters.
