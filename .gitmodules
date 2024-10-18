@@ -1,0 +1,3 @@
+[submodule "prompts"]
+	path = prompts
+	url = git@github.com:ClipboardHealth/prompts.git

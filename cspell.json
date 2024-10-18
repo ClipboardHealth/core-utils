@@ -8,10 +8,8 @@
     "default.json",
     "dist",
     "node_modules",
-    "tmp",
-    "packages/json-api/examples/toJsonApiQuery.ts",
-    "packages/json-api/README.md",
-    "packages/json-api/src/lib/toSearchParams.spec.ts"
+    "prompts",
+    "tmp"
   ],
   "words": [
     "amannn",

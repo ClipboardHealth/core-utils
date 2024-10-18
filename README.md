@@ -3,13 +3,9 @@
   <a href="https://www.clipboardhealth.com/"><img alt="Clipboard Health logo." src="./static/logo.png"></a>
 </p>
 
-<h4 align="center">
-   <a href="https://github.com/RichardLitt/standard-readme">
-    <img src="https://img.shields.io/badge/readme%20style-standard-brightgreen.svg" alt="Standard README compliant">
-  </a>
-</h4>
-
 Clipboard Health's core libraries and utilities. See individual package `README`s for specific library details.
+
+## Table of contents <!-- omit from toc -->
 
 - [Local development commands](#local-development-commands)
 - [Adding or porting libraries](#adding-or-porting-libraries)
@@ -49,4 +45,4 @@ See our [Nx generator plugin](https://github.com/ClipboardHealth/core-utils/tree
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). If editing `README`s, conform to [standard-readme](https://github.com/RichardLitt/standard-readme).
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
