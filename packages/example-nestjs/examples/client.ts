@@ -1,6 +1,8 @@
-import { initClient } from "@ts-rest/core";
+import { initClient, type ServerInferRequest } from "@ts-rest/core";
 
 import { contract } from "../src/contract";
+
+type ListUsersRequest = ServerInferRequest<typeof contract.list>;
 
 const port = process.env["PORT"] ?? 3000;
 export const client = initClient(contract, {
@@ -8,13 +10,13 @@ export const client = initClient(contract, {
 });
 
 async function main() {
-  const query = {
+  const query: ListUsersRequest["query"] = {
     page: {
-      cursor: "1",
+      cursor: "eyJpZCI6IjQ2MDJCNjI5LTg3N0QtNEVCNC1CQzhELTREM0NGNzkzQkM2NSJ9",
       size: 10,
     },
     fields: {
-      user: "age,dateOfBirth",
+      user: ["age", "dateOfBirth"],
     },
     filter: {
       age: {
@@ -27,7 +29,7 @@ async function main() {
         eq: ["true"],
       },
     },
-  } as const;
+  };
 
   try {
     const { status, body } = await client.list({ query });
