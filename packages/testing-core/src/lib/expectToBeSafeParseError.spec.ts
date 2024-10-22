@@ -37,12 +37,12 @@ describe("expectToBeSafeParseError", () => {
   });
 
   it("narrows type", () => {
-    const result = schema.safeParse(123);
+    const actual = schema.safeParse(123);
 
-    expectToBeSafeParseError(result);
+    expectToBeSafeParseError(actual);
 
     // Narrowed to SafeParseError
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    expect(actual.success).toBe(false);
+    expect(actual.error).toBeDefined();
   });
 });

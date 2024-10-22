@@ -37,12 +37,15 @@ describe("expectToBeSafeParseSuccess", () => {
   });
 
   it("narrows type", () => {
-    const result = schema.safeParse("valid string");
+    const input = "valid string";
 
-    expectToBeSafeParseSuccess(result);
+    const actual = schema.safeParse(input);
+
+    expectToBeSafeParseSuccess(actual);
 
     // Narrowed to SafeParseSuccess
-    expect(result.success).toBe(true);
-    expect(result.data).toBeDefined();
+    expect(actual.success).toBe(true);
+    expect(actual.data).toBe(input);
+    expect(typeof actual.data).toBe("string");
   });
 });

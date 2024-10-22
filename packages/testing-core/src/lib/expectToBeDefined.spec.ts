@@ -19,6 +19,22 @@ describe("expectToBeDefined", () => {
       name: "passes for defined false",
       input: false,
     },
+    {
+      name: "passes for empty string",
+      input: "",
+    },
+    {
+      name: "passes for empty array",
+      input: [],
+    },
+    {
+      name: "passes for empty object",
+      input: {},
+    },
+    {
+      name: "passes for negative number",
+      input: -1,
+    },
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeDefined(input);
