@@ -24,7 +24,7 @@ export interface Data {
 }
 
 /**
- * The JSON:API document shape.
+ * The JSON:API document shape for use by more specific types.
  */
 export interface JsonApiDocument {
   data?: Arrayable<Data>;
