@@ -25,8 +25,8 @@ Create Zod schemas for your API's queries:
 ```ts
 // ../example-nestjs/examples/query.ts
 
+import { booleanString } from "@clipboard-health/contract-core";
 import {
-  booleanString,
   cursorPaginationQuery,
   fieldsQuery,
   type FilterMap,

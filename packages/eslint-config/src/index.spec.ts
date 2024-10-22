@@ -78,8 +78,8 @@ describe("eslint-config", () => {
             assertFunctionNames: [
               "expect",
               "expectToBeDefined",
-              "expectToBeError",
-              "expectToBeSuccess",
+              "expectToBeSafeParseError",
+              "expectToBeSafeParseSuccess",
               "expectTypeOf",
             ],
           },

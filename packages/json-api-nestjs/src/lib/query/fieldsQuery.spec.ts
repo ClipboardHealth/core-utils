@@ -1,7 +1,10 @@
+import {
+  expectToBeSafeParseError,
+  expectToBeSafeParseSuccess,
+} from "@clipboard-health/testing-core";
 import { type Arrayable } from "type-fest";
 import { z } from "zod";
 
-import { expectToBeError, expectToBeSuccess } from "../../test";
 import { fieldsQuery } from "./fieldsQuery";
 
 type Fields = Record<string, Arrayable<string>>;
@@ -67,7 +70,7 @@ describe("fieldsQuery", () => {
     ])("$name", ({ input, expected }) => {
       const actual = fieldsSchema.safeParse(input);
 
-      expectToBeSuccess(actual);
+      expectToBeSafeParseSuccess(actual);
       expect(actual.data).toEqual(expected);
     });
   });
@@ -105,7 +108,7 @@ describe("fieldsQuery", () => {
     ])("$name", ({ input, expectedError }) => {
       const actual = fieldsSchema.safeParse(input);
 
-      expectToBeError(actual);
+      expectToBeSafeParseError(actual);
       expect(actual.error.message).toContain(expectedError);
     });
   });

@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "contract-core",
+  "projectType": "library",
+  "sourceRoot": "packages/contract-core/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/contract-core/*.md"],
+        "main": "packages/contract-core/src/index.js",
+        "outputPath": "dist/packages/contract-core",
+        "tsConfig": "packages/contract-core/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/contract-core/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/contract-core/jest.config.ts"
+      }
+    }
+  }
+}

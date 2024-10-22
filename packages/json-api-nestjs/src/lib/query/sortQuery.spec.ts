@@ -1,6 +1,9 @@
+import {
+  expectToBeSafeParseError,
+  expectToBeSafeParseSuccess,
+} from "@clipboard-health/testing-core";
 import { z } from "zod";
 
-import { expectToBeError, expectToBeSuccess } from "../../test";
 import { sortQuery } from "./sortQuery";
 
 describe("sortQuery", () => {
@@ -26,7 +29,7 @@ describe("sortQuery", () => {
     ])("$name", ({ input, expected }) => {
       const actual = sortSchema.safeParse(input);
 
-      expectToBeSuccess(actual);
+      expectToBeSafeParseSuccess(actual);
       expect(actual.data).toEqual(expected);
     });
   });
@@ -56,7 +59,7 @@ describe("sortQuery", () => {
     ])("$name", ({ input, expectedError }) => {
       const actual = sortSchema.safeParse(input);
 
-      expectToBeError(actual);
+      expectToBeSafeParseError(actual);
       expect(actual.error.message).toContain(expectedError);
     });
   });

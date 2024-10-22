@@ -1,6 +1,9 @@
+import {
+  expectToBeSafeParseError,
+  expectToBeSafeParseSuccess,
+} from "@clipboard-health/testing-core";
 import { z } from "zod";
 
-import { expectToBeError, expectToBeSuccess } from "../../test";
 import { cursorPaginationQuery } from "./cursorPaginationQuery";
 
 describe("cursorPaginationQuery", () => {
@@ -30,7 +33,7 @@ describe("cursorPaginationQuery", () => {
   ])("$name", ({ input, expected }) => {
     const actual = cursorPaginationSchema.safeParse(input);
 
-    expectToBeSuccess(actual);
+    expectToBeSafeParseSuccess(actual);
     expect(actual.data).toEqual(expected);
   });
 
@@ -58,7 +61,7 @@ describe("cursorPaginationQuery", () => {
   ])("$name", ({ input, errorMessage }) => {
     const actual = cursorPaginationSchema.safeParse(input);
 
-    expectToBeError(actual);
+    expectToBeSafeParseError(actual);
     expect(actual.error.message).toContain(errorMessage);
   });
 
@@ -70,7 +73,7 @@ describe("cursorPaginationQuery", () => {
 
       const actual = schema.safeParse(input);
 
-      expectToBeSuccess(actual);
+      expectToBeSafeParseSuccess(actual);
       expect(actual.data).toEqual({
         page: {
           size: 10,
@@ -87,7 +90,7 @@ describe("cursorPaginationQuery", () => {
 
       const actual = schema.safeParse(input);
 
-      expectToBeError(actual);
+      expectToBeSafeParseError(actual);
       expect(actual.error.message).toContain("Number must be less than or equal to 100");
     });
   });
