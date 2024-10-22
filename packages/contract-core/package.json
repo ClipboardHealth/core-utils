@@ -3,15 +3,17 @@
   "description": "Core schemas for Clipboard Health's API contracts.",
   "version": "0.0.0",
   "dependencies": {
-    "@clipboard-health/testing-core": "*",
     "tslib": "2.8.0",
     "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@clipboard-health/testing-core": "*"
   },
   "keywords": [],
   "license": "MIT",
   "main": "./src/index.js",
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
