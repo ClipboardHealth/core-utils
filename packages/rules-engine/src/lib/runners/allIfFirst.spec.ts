@@ -47,6 +47,10 @@ describe("allIfFirst", () => {
     it("returns false if the first rule is false", () => {
       expect(allIfFirst(testRule1, testRule2).runIf(context.input)).toBe(false);
     });
+
+    it("returns false if the array is empty", () => {
+      expect(allIfFirst().runIf(context.input)).toBe(false);
+    });
   });
 
   describe("run", () => {
