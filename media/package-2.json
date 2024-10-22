@@ -1,25 +1,44 @@
 {
-  "name": "@clipboard-health/example-nestjs",
-  "description": "An example NestJS application using our libraries.",
-  "version": "0.0.2",
-  "dependencies": {
-    "@clipboard-health/json-api-nestjs": "0.4.1",
-    "@nestjs/common": "10.4.5",
-    "@nestjs/core": "10.4.5",
-    "@nx/webpack": "20.0.1",
-    "@ts-rest/core": "3.51.0",
-    "@ts-rest/nest": "3.51.0",
-    "zod": "3.23.8"
+  "name": "@clipboard-health/eslint-config",
+  "description": "Clipboard Health's ESLint configuration.",
+  "version": "4.8.1",
+  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
+  "keywords": [
+    "config",
+    "eslint"
+  ],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "peerDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "eslint": "^8",
+    "eslint-config-airbnb-base": "^15",
+    "eslint-config-prettier": "^9",
+    "eslint-config-xo": "^0.45",
+    "eslint-config-xo-react": "^0.27",
+    "eslint-config-xo-typescript": "^1",
+    "eslint-plugin-eslint-comments": "^3",
+    "eslint-plugin-expect-type": "^0.4",
+    "eslint-plugin-import": "^2",
+    "eslint-plugin-jest": "^27.7",
+    "eslint-plugin-n": "^16",
+    "eslint-plugin-no-only-tests": "^3",
+    "eslint-plugin-no-use-extend-native": "^0.5",
+    "eslint-plugin-react": "^7",
+    "eslint-plugin-security": "^1",
+    "eslint-plugin-simple-import-sort": "^10",
+    "eslint-plugin-sonarjs": "^0.23",
+    "eslint-plugin-unicorn": "^48"
   },
-  "devDependencies": {
-    "@nestjs/platform-express": "10.4.5",
-    "@nestjs/testing": "10.4.5",
-    "@types/supertest": "6.0.2",
-    "express": "4.21.1",
-    "supertest": "7.0.0",
-    "webpack-cli": "5.1.4"
+  "publishConfig": {
+    "access": "public"
   },
-  "scripts": {
-    "embed": "embedme README.md"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clipboardhealth/core-utils.git",
+    "directory": "packages/eslint-config"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
 }

@@ -1,13 +1,10 @@
 {
-  "name": "@clipboard-health/contract-core",
-  "description": "Core schemas for Clipboard Health's API contracts.",
+  "name": "@clipboard-health/testing-core",
+  "description": "Core utilities for testing Clipboard Health's software.",
   "version": "0.1.1",
   "dependencies": {
     "tslib": "2.8.0",
     "zod": "3.23.8"
-  },
-  "devDependencies": {
-    "@clipboard-health/testing-core": "0.1.1"
   },
   "keywords": [],
   "license": "MIT",
