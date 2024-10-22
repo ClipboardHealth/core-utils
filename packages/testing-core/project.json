@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "testing-core",
+  "projectType": "library",
+  "sourceRoot": "packages/testing-core/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/testing-core/*.md"],
+        "main": "packages/testing-core/src/index.js",
+        "outputPath": "dist/packages/testing-core",
+        "tsConfig": "packages/testing-core/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/testing-core/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/testing-core/jest.config.ts"
+      }
+    }
+  }
+}

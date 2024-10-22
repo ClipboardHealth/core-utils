@@ -1,6 +1,5 @@
+import { nonEmptyString } from "@clipboard-health/contract-core";
 import { z } from "zod";
-
-import { nonEmptyString } from "../schemas";
 
 export const PAGINATION = {
   size: {
