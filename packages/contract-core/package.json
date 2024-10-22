@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/contract-core",
-  "description": "",
+  "description": "Core schemas for Clipboard Health's API contracts.",
   "version": "0.0.0",
   "dependencies": {
     "@clipboard-health/testing-core": "*",

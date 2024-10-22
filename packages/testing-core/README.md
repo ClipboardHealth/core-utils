@@ -1,6 +1,6 @@
 # @clipboard-health/testing-core <!-- omit from toc -->
 
-TODO
+Core utilities for testing Clipboard Health's software.
 
 ## Table of contents <!-- omit from toc -->
 

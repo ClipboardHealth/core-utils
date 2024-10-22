@@ -1,6 +1,6 @@
 # @clipboard-health/contract-core <!-- omit from toc -->
 
-TODO
+Core schemas for Clipboard Health's API contracts.
 
 ## Table of contents <!-- omit from toc -->
 
