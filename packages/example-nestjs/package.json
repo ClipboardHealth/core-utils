@@ -1,8 +1,9 @@
 {
   "name": "@clipboard-health/example-nestjs",
   "description": "An example NestJS application using our libraries.",
-  "version": "0.0.2",
+  "version": "0.0.7",
   "dependencies": {
+    "@clipboard-health/contract-core": "0.1.1",
     "@clipboard-health/json-api-nestjs": "0.4.1",
     "@nestjs/common": "10.4.5",
     "@nestjs/core": "10.4.5",

@@ -77,8 +77,8 @@ module.exports = {
         assertFunctionNames: [
           "expect",
           "expectToBeDefined",
-          "expectToBeError",
-          "expectToBeSuccess",
+          "expectToBeSafeParseError",
+          "expectToBeSafeParseSuccess",
           "expectTypeOf",
         ],
       },

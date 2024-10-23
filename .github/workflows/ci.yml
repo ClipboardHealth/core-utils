@@ -6,8 +6,8 @@ on:
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
 
 # Adapted from https://github.com/nrwl/ci/blob/v0.14.0/.github/workflows/nx-cloud-main.yml
 env:

@@ -1,7 +1,10 @@
+import { booleanString } from "@clipboard-health/contract-core";
+import {
+  expectToBeSafeParseError,
+  expectToBeSafeParseSuccess,
+} from "@clipboard-health/testing-core";
 import { z } from "zod";
 
-import { expectToBeError, expectToBeSuccess } from "../../test";
-import { booleanString } from "../schemas";
 import { filterQuery } from "./filterQuery";
 
 describe("filterQuery", () => {
@@ -139,7 +142,7 @@ describe("filterQuery", () => {
     ])("$name", ({ input, expected }) => {
       const actual = filterSchema.safeParse(input);
 
-      expectToBeSuccess(actual);
+      expectToBeSafeParseSuccess(actual);
       expect(actual.data).toEqual(expected);
     });
   });
@@ -182,7 +185,7 @@ describe("filterQuery", () => {
     ])("$name", ({ input, expectedError }) => {
       const actual = filterSchema.safeParse(input);
 
-      expectToBeError(actual);
+      expectToBeSafeParseError(actual);
       expect(actual.error.message).toContain(expectedError);
     });
   });
