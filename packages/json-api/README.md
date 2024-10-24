@@ -1,6 +1,6 @@
 # @clipboard-health/json-api <!-- omit from toc -->
 
-Utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
+TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
 
 ## Table of contents <!-- omit from toc -->
 

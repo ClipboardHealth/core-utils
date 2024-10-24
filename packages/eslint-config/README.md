@@ -1,6 +1,6 @@
 # @clipboard-health/eslint-config <!-- omit from toc -->
 
-Shared [ESLint](https://eslint.org/) configuration.
+Our [ESLint](https://eslint.org/) configuration.
 
 ## Table of contents <!-- omit from toc -->
 

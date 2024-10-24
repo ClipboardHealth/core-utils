@@ -1,9 +1,11 @@
 {
   "$schema": "https://unpkg.com/knip@2/schema.json",
   "entry": [
+    "packages/contract-core/examples/**/*.ts",
     "packages/example-nestjs/examples/**/*.ts",
-    "packages/rules-engine/examples/**/*.ts",
     "packages/json-api/examples/**/*.ts",
+    "packages/rules-engine/examples/**/*.ts",
+    "packages/testing-core/examples/**/*.ts",
   ],
   "ignore": ["**/jest.config.ts", "**/generators/**/schema.d.ts", "**/webpack.*.js"],
   "ignoreBinaries": [],

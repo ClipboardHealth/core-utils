@@ -1,6 +1,6 @@
 # @clipboard-health/nx-plugin <!-- omit from toc -->
 
-Clipboard Health's Nx plugin contains generators to manage libraries within an Nx workspace.
+An [Nx](https://nx.dev/) plugin with generators to manage libraries and applications.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -26,7 +26,7 @@ npx nx generate @nx/workspace:remove --projectName [PROJECT_NAME]
 
 # ...or rename it. Note: after running this command, perform a find/replace for remaining references
 # to the old name.
-npx nx generate @nx/workspace:move --projectName [PROJECT_NAME] --destination [NEW_PROJECT_NAME]
+npx nx generate @nx/workspace:move --projectName [PROJECT_NAME] --newProjectName [NEW_PROJECT_NAME] --destination [DESTINATION_FOLDER]
 ```
 
 To porting an existing library, follow the above to generate a new package and copy the code from the existing library into it.
