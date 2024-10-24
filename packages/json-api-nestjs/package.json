@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/json-api-nestjs",
-  "description": "Utilities for adhering to the JSON:API specification with NestJS.",
+  "description": "TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.",
   "version": "0.5.1",
   "dependencies": {
     "@clipboard-health/contract-core": "0.1.1",

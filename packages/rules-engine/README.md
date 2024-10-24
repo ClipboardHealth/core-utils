@@ -1,9 +1,8 @@
 # @clipboard-health/rules-engine <!-- omit from toc -->
 
-A pure functional rules engine with two rule runners:
+A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 
-- `firstMatch`: Runs the first rule that matches the criteria
-- `all`: Runs all the rules that matches the criteria
+The engine uses static rules created in code instead of dynamic rules serialized to a database since we haven't needed the latter yet.
 
 ## Table of contents <!-- omit from toc -->
 

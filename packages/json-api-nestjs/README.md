@@ -1,6 +1,6 @@
 # @clipboard-health/json-api-nestjs <!-- omit from toc -->
 
-Utilities for adhering to the [JSON:API](https://jsonapi.org/) specification with [NestJS](https://nestjs.com/).
+TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org/) specification with [NestJS](https://nestjs.com/).
 
 ## Table of contents <!-- omit from toc -->
 

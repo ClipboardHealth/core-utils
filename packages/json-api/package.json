@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/json-api",
-  "description": "Utilities for adhering to the JSON:API specification.",
+  "description": "TypeScript-friendly utilities for adhering to the JSON:API specification.",
   "version": "0.7.1",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {

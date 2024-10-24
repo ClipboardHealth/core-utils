@@ -1,6 +1,6 @@
 # @clipboard-health/example-nestjs <!-- omit from toc -->
 
-An example NestJS application using our libraries.
+A NestJS application using our libraries, primarily for end-to-end testing.
 
 ## Table of contents <!-- omit from toc -->
 

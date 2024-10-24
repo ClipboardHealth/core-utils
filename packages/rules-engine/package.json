@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/rules-engine",
-  "description": "A pure functional rules engine.",
+  "description": "A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.",
   "version": "1.6.0",
   "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
