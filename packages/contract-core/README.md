@@ -24,6 +24,11 @@ npm install @clipboard-health/contract-core
 // ./examples/schemas.ts
 
 import { apiErrors, booleanString, nonEmptyString, uuid } from "@clipboard-health/contract-core";
+import { type ZodError } from "zod";
+
+function logError(error: unknown) {
+  console.error((error as ZodError).issues[0]!.message);
+}
 
 apiErrors.parse({
   errors: [
@@ -39,9 +44,29 @@ apiErrors.parse({
 
 booleanString.parse("true");
 
-nonEmptyString.parse("hello");
+try {
+  booleanString.parse("invalid");
+} catch (error) {
+  logError(error);
+  // => Invalid enum value. Expected 'true' | 'false', received 'invalid'
+}
 
+nonEmptyString.parse("hello");
+try {
+  nonEmptyString.parse("");
+} catch (error) {
+  logError(error);
+  // => String must contain at least 1 character(s)
+}
+
+// UUID validation examples
 uuid.parse("b8d617bb-edef-4262-a6e3-6cc807fa1b26");
+try {
+  uuid.parse("invalid");
+} catch (error) {
+  logError(error);
+  // => Invalid UUID format
+}
 
 ```
 

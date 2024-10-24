@@ -8,4 +8,6 @@ export const uuid = z
   .string()
   .trim()
   // eslint-disable-next-line unicorn/better-regex
-  .regex(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i);
+  .regex(/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i, {
+    message: "Invalid UUID format",
+  });

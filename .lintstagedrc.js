@@ -19,5 +19,5 @@ module.exports = {
   "**/*.{css,scss,graphql,js,json,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
     `prettier --write ${files.join(" ")}`,
   ],
-  "**/package.json": async () => [`syncpack lint`, "tsx populateLibraries.ts"],
+  "**/package.json": async () => [`syncpack lint`, "tsx ./populateLibraries.ts"],
 };
