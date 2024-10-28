@@ -21,15 +21,15 @@ type ResolveConfigValueParams = Pick<
 export function resolve<SchemaT extends Record<string, unknown>>(
   params: Readonly<ResolveParams<SchemaT>>,
 ): Record<string, unknown> {
-  const { config, environment, path, schema } = params;
+  const { config, path, ...rest } = params;
 
   return Object.fromEntries(
     Object.entries(config).map<[string, unknown]>(
       ([key, value]: [string, ConfigValueMap<SchemaT, readonly string[]>]) => [
         key,
         isConfigValue(value)
-          ? resolveConfigValue({ environment, path: [...path, key], schema, value })
-          : resolve({ ...params, config: value, path: [...path, key] }),
+          ? resolveConfigValue({ ...rest, path: [...path, key], value })
+          : resolve({ ...rest, config: value, path: [...path, key] }),
       ],
     ),
   );

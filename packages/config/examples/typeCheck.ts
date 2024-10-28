@@ -20,6 +20,10 @@ const config = createConfig({
         development: [new Date("2024-01-01")],
       },
     },
+    enum: {
+      defaultValue: "a",
+      description: "An enum.",
+    },
     literal: {
       defaultValue: "my-literal",
       description: "A literal string.",
@@ -50,6 +54,7 @@ const config = createConfig({
     bigint: z.coerce.bigint(),
     bool: booleanString,
     dateArray: z.array(z.coerce.date()),
+    enum: z.enum(["a", "b"]),
     literal: z.literal("my-literal"),
     number: z.coerce.number().min(80).max(65_535),
     object: z.object({
