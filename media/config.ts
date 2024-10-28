@@ -1,30 +1,3 @@
-# @clipboard-health/config <!-- omit from toc -->
-
-Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.
-
-## Table of contents <!-- omit from toc -->
-
-- [Install](#install)
-- [Usage](#usage)
-  - [Type-safe configuration](#type-safe-configuration)
-- [Local development commands](#local-development-commands)
-
-## Install
-
-```bash
-npm install @clipboard-health/config
-```
-
-## Usage
-
-### Type-safe configuration
-
-For additional detail, see the `createConfig` documentation.
-
-<!-- prettier-ignore -->
-```ts
-// ./examples/config.ts
-
 import { ok } from "node:assert/strict";
 
 import { createConfig } from "@clipboard-health/config";
@@ -88,9 +61,3 @@ try {
 } finally {
   process.env = { ...original };
 }
-
-```
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.

@@ -1,91 +1,76 @@
-# @clipboard-health/json-api <!-- omit from toc -->
+# @clipboard-health/example-nestjs <!-- omit from toc -->
 
-TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
+A NestJS application using our libraries, primarily for end-to-end testing.
 
 ## Table of contents <!-- omit from toc -->
 
-- [Install](#install)
 - [Usage](#usage)
-  - [Query helpers](#query-helpers)
+  - [Send requests](#send-requests)
+  - [`ts-rest` client](#ts-rest-client)
 - [Local development commands](#local-development-commands)
-
-## Install
-
-```bash
-npm install @clipboard-health/json-api
-```
 
 ## Usage
 
-### Query helpers
-
-From the client, call `toClientSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
-
-<!-- prettier-ignore -->
-```ts
-// ./examples/toClientSearchParams.ts
-
-import { deepEqual } from "node:assert/strict";
-
-import { toClientSearchParams } from "@clipboard-health/json-api";
-
-import { type ClientJsonApiQuery } from "../src/lib/types";
-
-const [date1, date2] = ["2024-01-01", "2024-01-02"];
-const query: ClientJsonApiQuery = {
-  fields: { user: ["age", "dateOfBirth"] },
-  filter: {
-    age: { eq: ["2"] },
-    dateOfBirth: { gt: [date1], lt: [date2] },
-    isActive: { eq: ["true"] },
-  },
-  include: ["article"],
-  page: {
-    size: "10",
-  },
-  sort: ["-age"],
-};
-
-deepEqual(
-  toClientSearchParams(query).toString(),
-  new URLSearchParams(
-    `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
-  ).toString(),
-);
-
+```bash
+# Start NestJS application
+npx nx serve example-nestjs
 ```
 
-From the server, call `toServerJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
+### Send requests
+
+Install the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) VSCode extension and open [`requests.http`](./requests.http) to send requests.
+
+### `ts-rest` client
+
+The following makes requests to the example application using the `ts-rest` client.
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/toServerJsonApiQuery.ts
+// ./examples/client.ts
 
-import { deepEqual } from "node:assert/strict";
+import { initClient, type ServerInferRequest } from "@ts-rest/core";
 
-import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
+import { contract } from "../src/contract";
 
-const [date1, date2] = ["2024-01-01", "2024-01-02"];
-// The URLSearchParams constructor also supports URL-encoded strings
-const searchParams = new URLSearchParams(
-  `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
-);
+type ListUsersRequest = ServerInferRequest<typeof contract.list>;
 
-const query: ServerJsonApiQuery = toServerJsonApiQuery(searchParams);
-
-deepEqual(query, {
-  fields: { user: ["age", "dateOfBirth"] },
-  filter: {
-    age: { eq: ["2"] },
-    dateOfBirth: { gt: [date1], lt: [date2] },
-    isActive: { eq: ["true"] },
-  },
-  include: ["article"],
-  page: {
-    size: "10",
-  },
-  sort: ["-age"],
+const port = process.env["PORT"] ?? 3000;
+export const client = initClient(contract, {
+  baseUrl: `http://localhost:${port}`,
 });
+
+async function main() {
+  const query: ListUsersRequest["query"] = {
+    page: {
+      cursor: "eyJpZCI6IjQ2MDJCNjI5LTg3N0QtNEVCNC1CQzhELTREM0NGNzkzQkM2NSJ9",
+      size: 10,
+    },
+    fields: {
+      user: ["age", "dateOfBirth"],
+    },
+    filter: {
+      age: {
+        gt: [2],
+      },
+      dateOfBirth: {
+        gte: [new Date("2016-01-01")],
+      },
+      isActive: {
+        eq: ["true"],
+      },
+    },
+  };
+
+  try {
+    const { status, body } = await client.list({ query });
+    console.debug(status, JSON.stringify(body, undefined, 2));
+  } catch (error) {
+    console.error("Error occurred:", error);
+  }
+}
+
+// eslint-disable-next-line unicorn/prefer-top-level-await
+void main();
 
 ```
 
