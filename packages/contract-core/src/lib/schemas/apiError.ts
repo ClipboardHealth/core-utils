@@ -5,7 +5,7 @@ import { nonEmptyString } from "./nonEmptyString";
 /**
  * @see {@link https://jsonapi.org/format/#error-objects Error Objects}
  */
-const apiError = z.object({
+export const apiError = z.object({
   code: nonEmptyString,
   detail: z.string().optional(),
   id: nonEmptyString,

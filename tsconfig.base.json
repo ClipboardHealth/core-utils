@@ -10,6 +10,7 @@
     "module": "CommonJS",
     "moduleResolution": "Node10",
     "paths": {
+      "@clipboard-health/config": ["packages/config/src/index.ts"],
       "@clipboard-health/contract-core": ["packages/contract-core/src/index.ts"],
       "@clipboard-health/eslint-config": ["packages/eslint-config/src/index.js"],
       "@clipboard-health/json-api": ["packages/json-api/src/index.ts"],
