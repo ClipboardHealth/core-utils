@@ -29,10 +29,11 @@
     {
       "enabled": false,
       "matchPackagePatterns": [
+        "@types/jest",
         "^@nx",
         "^@typescript-eslint",
         "^eslint",
-        "@types/jest",
+        "decamelize",
         "jest",
         "nx",
         "ts-jest",
