@@ -13,21 +13,13 @@
   ],
   "packageRules": [
     {
-      "groupName": "Non-major non-dev NPM dependencies",
-      "matchDepTypes": [
-        "dependencies",
-        "optionalDependencies",
-        "peerDependencies",
-        "engines",
-        "volta",
-        "packageManager"
-      ],
-      "matchPackagePatterns": ["*"],
-      "matchUpdateTypes": ["minor", "patch"]
+      "automerge": true,
+      "automergeType": "branch",
+      "matchDepTypes": ["devDependencies"]
     },
     {
-      "groupName": "Dev NPM dependencies",
-      "matchDepTypes": ["devDependencies"]
+      "groupName": "Clipboard Health",
+      "matchPackagePatterns": ["^@clipboard-health/"]
     },
     {
       "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
