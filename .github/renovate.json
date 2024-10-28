@@ -9,6 +9,7 @@
     "group:monorepos",
     "group:recommended",
     "npm:unpublishSafe",
+    "schedule:automergeDaily",
     "schedule:monthly"
   ],
   "packageRules": [
