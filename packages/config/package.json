@@ -3,7 +3,7 @@
   "description": "Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.",
   "version": "0.1.0",
   "dependencies": {
-    "decamelize": "5.0.1",
+    "decamelize": "6.0.0",
     "tslib": "2.8.0",
     "zod": "3.23.8",
     "zod-validation-error": "3.4.0"
