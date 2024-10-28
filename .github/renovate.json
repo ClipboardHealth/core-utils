@@ -20,24 +20,29 @@
     },
     {
       "groupName": "Clipboard Health",
-      "matchPackagePatterns": ["^@clipboard-health/"]
+      "matchPackageNames": ["/^@clipboard-health//"]
     },
     {
-      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
+      "matchDepTypes": [
+        "peerDependencies",
+        "provider",
+        "required_provider",
+        "required_version"
+      ],
       "rangeStrategy": "widen"
     },
     {
       "enabled": false,
-      "matchPackagePatterns": [
-        "@types/jest",
-        "^@nx",
-        "^@typescript-eslint",
-        "^eslint",
-        "decamelize",
-        "jest",
-        "nx",
-        "ts-jest",
-        "tslib"
+      "matchPackageNames": [
+        "/@types/jest/",
+        "/^@nx/",
+        "/^@typescript-eslint/",
+        "/^eslint/",
+        "/decamelize/",
+        "/jest/",
+        "/nx/",
+        "/ts-jest/",
+        "/tslib/"
       ]
     }
   ],
