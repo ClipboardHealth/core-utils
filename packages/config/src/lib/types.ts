@@ -21,18 +21,21 @@ export interface ConfigValue<SchemaT, EnvironmentT extends string> {
  * Maps configuration schema to configuration values with metadata.
  */
 export type ConfigValueMap<SchemaT, EnvironmentT extends string> = {
-  [K in keyof SchemaT]: SchemaT[K] extends unknown[]
-    ? ConfigValue<SchemaT[K], EnvironmentT>
-    : SchemaT[K] extends Record<string, unknown>
-      ? SchemaT[K] extends Date
-        ? ConfigValue<Date, EnvironmentT>
-        : ConfigValueMap<SchemaT[K], EnvironmentT>
-      : SchemaT[K] extends bigint
-        ? ConfigValue<bigint, EnvironmentT>
-        : SchemaT[K] extends z.EnumValues
-          ? ConfigValue<SchemaT[K], EnvironmentT>
-          : ConfigValue<SchemaT[K], EnvironmentT>;
+  // eslint-disable-next-line no-use-before-define
+  [K in keyof SchemaT]: ConfigValueForType<SchemaT[K], EnvironmentT>;
 };
+
+type ConfigValueForType<T, E extends string> = T extends unknown[]
+  ? ConfigValue<T, E>
+  : T extends Date
+    ? ConfigValue<Date, E>
+    : T extends bigint
+      ? ConfigValue<bigint, E>
+      : T extends z.EnumValues
+        ? ConfigValue<T, E>
+        : T extends Record<string, unknown>
+          ? ConfigValueMap<T, E>
+          : ConfigValue<T, E>;
 
 /**
  * Parameters for creating a configuration instance.

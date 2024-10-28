@@ -1,8 +1,15 @@
-export function deepFreeze<T extends Record<string, unknown>>(value: T): Readonly<T> {
-  Object.keys(value).forEach((key) => {
-    const v = value[key as keyof T];
-    if (v && typeof v === "object" && !Object.isFrozen(v)) {
-      deepFreeze(v as Record<string, unknown>);
+export function deepFreeze<T extends Record<string, unknown>>(
+  value: T,
+  seen = new WeakSet(),
+): Readonly<T> {
+  if (!value || typeof value !== "object" || seen.has(value)) {
+    return value;
+  }
+
+  seen.add(value);
+  Object.values(value).forEach((property) => {
+    if (property && typeof property === "object" && !Object.isFrozen(property)) {
+      deepFreeze(property as Record<string, unknown>, seen);
     }
   });
 

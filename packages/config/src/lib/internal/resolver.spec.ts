@@ -115,9 +115,9 @@ describe("resolver", () => {
       holidays: ["2024-01-01"],
     });
 
-    delete process.env["HOLIDAYS"];
-    delete process.env["DATABASE_HOST"];
-    delete process.env["DATABASE_PORT"];
+    process.env["HOLIDAYS"] = undefined;
+    process.env["DATABASE_HOST"] = undefined;
+    process.env["DATABASE_PORT"] = undefined;
   });
 
   it("handles non-object schemas", () => {
@@ -136,7 +136,7 @@ describe("resolver", () => {
       items: ["override1", "override2"],
     });
 
-    delete process.env["ITEMS"];
+    process.env["ITEMS"] = undefined;
   });
 
   describe("array parsing", () => {
@@ -160,7 +160,7 @@ describe("resolver", () => {
         items: ["a", "b", "c"],
       });
 
-      delete process.env["ITEMS"];
+      process.env["ITEMS"] = undefined;
     });
 
     it("returns original string when JSON parsing fails", () => {
@@ -183,7 +183,7 @@ describe("resolver", () => {
         items: "not-json",
       });
 
-      delete process.env["ITEMS"];
+      process.env["ITEMS"] = undefined;
     });
 
     it("returns original value for non-array schemas", () => {
@@ -202,7 +202,7 @@ describe("resolver", () => {
         value: "123",
       });
 
-      delete process.env["VALUE"];
+      process.env["VALUE"] = undefined;
     });
   });
 
@@ -256,10 +256,10 @@ describe("resolver", () => {
         maxRetryCount: "5",
       });
 
-      delete process.env["DATE_ARRAY"];
-      delete process.env["MAX_RETRY_COUNT"];
-      delete process.env["DATABASE_HOST_NAME"];
-      delete process.env["DATABASE_MAX_CONNECTIONS"];
+      process.env["DATE_ARRAY"] = undefined;
+      process.env["MAX_RETRY_COUNT"] = undefined;
+      process.env["DATABASE_HOST_NAME"] = undefined;
+      process.env["DATABASE_MAX_CONNECTIONS"] = undefined;
     });
 
     it("handles environment variables without prefix", () => {
@@ -281,7 +281,7 @@ describe("resolver", () => {
         dateArray: ["2024-01-01"],
       });
 
-      delete process.env["DATE_ARRAY"];
+      process.env["DATE_ARRAY"] = undefined;
     });
   });
 });

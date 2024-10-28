@@ -28,7 +28,8 @@ function createEnvironmentConfig(current: Allowed) {
     schema: z.object({
       baseUrl: z.string().url(),
       database: z.object({
-        port: z.coerce.number(), // Use `z.coerce` to override with environment variables.
+        // Use `z.coerce` to override with environment variables.
+        port: z.coerce.number().min(1024).max(65_535),
       }),
     }),
   });
@@ -48,15 +49,15 @@ function createEnvironmentConfig(current: Allowed) {
   ok(config.database.port === 5432);
 }
 
-{
-  // Uses environment variable overrides.
-  const original = process.env;
+// Uses environment variable overrides.
+const original = process.env;
+try {
   process.env["BASE_URL"] = "https://staging.example.com";
   process.env["DATABASE_PORT"] = "54320";
 
   const config = createEnvironmentConfig("local");
   ok(config.baseUrl === "https://staging.example.com");
   ok(config.database.port === 54_320);
-
+} finally {
   process.env = original;
 }
