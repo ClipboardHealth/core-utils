@@ -50,7 +50,7 @@ function createEnvironmentConfig(current: Allowed) {
 }
 
 // Uses environment variable overrides.
-const original = process.env;
+const original = { ...process.env };
 try {
   process.env["BASE_URL"] = "https://staging.example.com";
   process.env["DATABASE_PORT"] = "54320";
@@ -59,5 +59,5 @@ try {
   ok(config.baseUrl === "https://staging.example.com");
   ok(config.database.port === 54_320);
 } finally {
-  process.env = original;
+  process.env = { ...original };
 }

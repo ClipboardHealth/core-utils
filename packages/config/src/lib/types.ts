@@ -3,7 +3,7 @@ import { type z } from "zod";
 /**
  * Represents a single configuration value with metadata.
  */
-export interface ConfigValue<SchemaT, EnvironmentT extends string> {
+export interface ConfigValue<SchemaT, EnvironmentT extends readonly string[]> {
   /** Default value used when no override or environment variable is present */
   defaultValue: SchemaT;
 
@@ -14,28 +14,28 @@ export interface ConfigValue<SchemaT, EnvironmentT extends string> {
    * Optional environment-specific overrides.
    * @example { development: "dev-host", production: "prod-host" }
    */
-  overrides?: Readonly<Partial<Record<EnvironmentT, SchemaT>>>;
+  overrides?: Readonly<Partial<Record<EnvironmentT[number], SchemaT>>>;
 }
 
 /**
  * Maps configuration schema to configuration values with metadata.
  */
-export type ConfigValueMap<SchemaT, EnvironmentT extends string> = {
+export type ConfigValueMap<SchemaT, EnvironmentT extends readonly string[]> = {
   // eslint-disable-next-line no-use-before-define
   [K in keyof SchemaT]: ConfigValueForType<SchemaT[K], EnvironmentT>;
 };
 
-type ConfigValueForType<T, E extends string> = T extends unknown[]
-  ? ConfigValue<T, E>
+type ConfigValueForType<T, EnvironmentT extends readonly string[]> = T extends unknown[]
+  ? ConfigValue<T, EnvironmentT>
   : T extends Date
-    ? ConfigValue<Date, E>
+    ? ConfigValue<Date, EnvironmentT>
     : T extends bigint
-      ? ConfigValue<bigint, E>
+      ? ConfigValue<bigint, EnvironmentT>
       : T extends z.EnumValues
-        ? ConfigValue<T, E>
+        ? ConfigValue<T, EnvironmentT>
         : T extends Record<string, unknown>
-          ? ConfigValueMap<T, E>
-          : ConfigValue<T, E>;
+          ? ConfigValueMap<T, EnvironmentT>
+          : ConfigValue<T, EnvironmentT>;
 
 /**
  * Parameters for creating a configuration instance.
@@ -47,7 +47,7 @@ export interface ConfigParams<
   /**
    * Configuration values resolved in order of precedence. @see {@link createConfig}.
    */
-  config: Readonly<ConfigValueMap<SchemaT, EnvironmentT[number]>>;
+  config: Readonly<ConfigValueMap<SchemaT, EnvironmentT>>;
 
   /**
    * The current environment and list of allowed environments.

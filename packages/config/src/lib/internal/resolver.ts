@@ -1,11 +1,11 @@
+import decamelize from "decamelize";
 import { z } from "zod";
 
 import { type ConfigValue, type ConfigValueMap } from "../types";
-import { camelToUpperSnake } from "./camelToUpperSnake";
 import { isDefined } from "./isDefined";
 
 interface ResolveParams<SchemaT extends Record<string, unknown>> {
-  config: Readonly<ConfigValueMap<SchemaT, string>>;
+  config: Readonly<ConfigValueMap<SchemaT, readonly string[]>>;
   environment: string;
   path: readonly string[];
   schema: z.ZodType<SchemaT>;
@@ -15,7 +15,7 @@ type ResolveConfigValueParams = Pick<
   ResolveParams<Record<string, unknown>>,
   "environment" | "path" | "schema"
 > & {
-  value: Readonly<ConfigValue<unknown, string>>;
+  value: Readonly<ConfigValue<unknown, readonly string[]>>;
 };
 
 export function resolve<SchemaT extends Record<string, unknown>>(
@@ -25,7 +25,7 @@ export function resolve<SchemaT extends Record<string, unknown>>(
 
   return Object.fromEntries(
     Object.entries(config).map<[string, unknown]>(
-      ([key, value]: [string, ConfigValueMap<SchemaT, string>]) => [
+      ([key, value]: [string, ConfigValueMap<SchemaT, readonly string[]>]) => [
         key,
         isConfigValue(value)
           ? resolveConfigValue({ environment, path: [...path, key], schema, value })
@@ -35,7 +35,7 @@ export function resolve<SchemaT extends Record<string, unknown>>(
   );
 }
 
-function isConfigValue(value: unknown): value is ConfigValue<unknown, string> {
+function isConfigValue(value: unknown): value is ConfigValue<unknown, readonly string[]> {
   return (
     typeof value === "object" &&
     isDefined(value) &&
@@ -47,7 +47,7 @@ function isConfigValue(value: unknown): value is ConfigValue<unknown, string> {
 function resolveConfigValue(params: ResolveConfigValueParams): unknown {
   const { environment, path, schema, value } = params;
 
-  const variable = process.env[camelToUpperSnake(path)];
+  const variable = process.env[decamelize(path.join("_")).toUpperCase()];
   if (isDefined(variable)) {
     return parseEnvironmentVariable(variable, getSchema(path, schema));
   }

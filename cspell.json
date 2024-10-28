@@ -18,6 +18,7 @@
     "clipboardhealth",
     "CODEOWNERS",
     "datetime",
+    "decamelize",
     "devkit",
     "embedme",
     "fieldsets",

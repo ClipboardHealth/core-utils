@@ -1,15 +1,15 @@
-export function deepFreeze<T extends Record<string, unknown>>(
-  value: T,
-  seen = new WeakSet(),
-): Readonly<T> {
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function deepFreeze<T extends object>(value: T, seen = new WeakSet()): Readonly<T> {
   if (!value || typeof value !== "object" || seen.has(value)) {
     return value;
   }
 
   seen.add(value);
-  Object.values(value).forEach((property) => {
+  (Reflect.ownKeys(value) as Array<keyof T>).forEach((key) => {
+    const property = value[key];
     if (property && typeof property === "object" && !Object.isFrozen(property)) {
-      deepFreeze(property as Record<string, unknown>, seen);
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      deepFreeze(property as object, seen);
     }
   });
 
