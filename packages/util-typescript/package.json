@@ -1,0 +1,16 @@
+{
+  "name": "@clipboard-health/util-typescript",
+  "description": "",
+  "version": "0.0.0",
+  "dependencies": {
+    "tslib": "2.8.0"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}

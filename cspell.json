@@ -7,6 +7,7 @@
     "coverage",
     "default.json",
     "dist",
+    "docs",
     "node_modules",
     "prompts",
     "tmp"
