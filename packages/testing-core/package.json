@@ -1,9 +1,9 @@
 {
   "name": "@clipboard-health/testing-core",
   "description": "TypeScript-friendly testing utilities.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "dependencies": {
-    "@clipboard-health/util-typescript": "*",
+    "@clipboard-health/util-typescript": "0.1.0",
     "tslib": "2.8.0",
     "zod": "3.23.8"
   },
