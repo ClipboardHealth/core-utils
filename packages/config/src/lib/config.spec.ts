@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createConfig } from "./config";
+import { createConfig } from "./createConfig";
 
 describe("Config", () => {
   const environment = {

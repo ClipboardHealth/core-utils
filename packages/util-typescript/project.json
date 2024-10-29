@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "util-typescript",
+  "projectType": "library",
+  "sourceRoot": "packages/util-typescript/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/util-typescript/*.md"],
+        "main": "packages/util-typescript/src/index.js",
+        "outputPath": "dist/packages/util-typescript",
+        "tsConfig": "packages/util-typescript/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/util-typescript/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/util-typescript/jest.config.ts"
+      }
+    }
+  }
+}
