@@ -9,7 +9,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
