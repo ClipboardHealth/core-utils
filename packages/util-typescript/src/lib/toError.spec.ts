@@ -35,13 +35,16 @@ describe("toError", () => {
     expect(actual.message).toBe("[object Object]");
   });
 
-  it("correctly identifies and preserves existing Error objects using isError", () => {
-    const originalError = new Error("original");
-    originalError.stack = "custom stack";
+  it("preserves stack trace for error-like objects", () => {
+    const errorLike = {
+      message: "custom error",
+      stack: "custom stack trace",
+    };
 
-    const result = toError(originalError);
+    const actual = toError(errorLike);
 
-    expect(result).toBe(originalError);
-    expect(result.stack).toBe("custom stack");
+    expect(actual).toBeInstanceOf(Error);
+    expect(actual.message).toBe("custom error");
+    expect(actual.stack).toBe("custom stack trace");
   });
 });
