@@ -1,8 +1,11 @@
+import dotenv from "dotenv";
 import { fromZodError } from "zod-validation-error";
 
 import { deepFreeze } from "./internal/deepFreeze";
 import { resolve } from "./internal/resolver";
 import { type ConfigParams } from "./types";
+
+dotenv.config();
 
 /**
  * Type-safe static configuration management: a pure function to resolve, validate against a Zod
