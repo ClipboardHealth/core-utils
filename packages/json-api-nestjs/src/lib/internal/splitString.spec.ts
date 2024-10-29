@@ -1,7 +1,7 @@
 import { splitString } from "./splitString";
 
 describe("splitString", () => {
-  it.each<{ name: string; input: unknown; expected: unknown }>([
+  it.each<{ expected: unknown; input: unknown; name: string }>([
     {
       name: "handles empty string",
       input: "",

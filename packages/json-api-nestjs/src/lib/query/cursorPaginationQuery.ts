@@ -3,8 +3,8 @@ import { z } from "zod";
 
 export const PAGINATION = {
   size: {
-    maximum: 200,
     default: 20,
+    maximum: 200,
   },
 } as const;
 
@@ -18,16 +18,16 @@ export const PAGINATION = {
  * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
  */
 export function cursorPaginationQuery(
-  parameters?: Readonly<{ size: { maximum?: number; default?: number } }>,
+  parameters?: Readonly<{ size: { default?: number; maximum?: number } }>,
 ) {
   const { size } = PAGINATION;
-  const { maximum = size.maximum, default: defaultSize = size.default } = parameters?.size ?? {};
+  const { default: defaultSize = size.default, maximum = size.maximum } = parameters?.size ?? {};
 
   return {
     page: z
       .object({
-        size: z.coerce.number().int().positive().max(maximum).default(defaultSize),
         cursor: nonEmptyString.optional(),
+        size: z.coerce.number().int().positive().max(maximum).default(defaultSize),
       })
       .strict()
       .default({ size: defaultSize }),

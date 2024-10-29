@@ -8,13 +8,13 @@ import { cursorPaginationQuery } from "./cursorPaginationQuery";
 
 describe("cursorPaginationQuery", () => {
   interface Page {
-    size?: number;
     cursor?: string;
+    size?: number;
   }
 
   const cursorPaginationSchema = z.object(cursorPaginationQuery());
 
-  it.each<{ name: string; input: { page?: Page }; expected: { page?: Page } }>([
+  it.each<{ expected: { page?: Page }; input: { page?: Page }; name: string }>([
     {
       name: "parses size",
       input: { page: { size: 30 } },
@@ -37,7 +37,7 @@ describe("cursorPaginationQuery", () => {
     expect(actual.data).toEqual(expected);
   });
 
-  it.each<{ name: string; input: unknown; errorMessage: string }>([
+  it.each<{ errorMessage: string; input: unknown; name: string }>([
     {
       name: "rejects size under minimum",
       input: { page: { size: 0 } },

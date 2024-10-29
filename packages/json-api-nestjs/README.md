@@ -53,13 +53,13 @@ const userFilterMap = {
     filters: ["eq", "gt"],
     schema: z.coerce.number().int().positive().max(125),
   },
-  isActive: {
-    filters: ["eq"],
-    schema: booleanString,
-  },
   dateOfBirth: {
     filters: ["gte"],
     schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
+  },
+  isActive: {
+    filters: ["eq"],
+    schema: booleanString,
   },
 } as const satisfies FilterMap<UserAttributeFields>;
 
@@ -74,7 +74,7 @@ const userFilterMap = {
 export const query = z
   .object({
     ...cursorPaginationQuery(),
-    ...fieldsQuery({ user: userFields, article: articleFields }),
+    ...fieldsQuery({ article: articleFields, user: userFields }),
     ...filterQuery(userFilterMap),
     ...sortQuery(userFields),
     ...includeQuery(userIncludeFields),

@@ -11,12 +11,9 @@ interface ResolveParams<SchemaT extends Record<string, unknown>> {
   schema: z.ZodType<SchemaT>;
 }
 
-type ResolveConfigValueParams = Pick<
-  ResolveParams<Record<string, unknown>>,
-  "environment" | "path" | "schema"
-> & {
+type ResolveConfigValueParams = {
   value: Readonly<ConfigValue<unknown, readonly string[]>>;
-};
+} & Pick<ResolveParams<Record<string, unknown>>, "environment" | "path" | "schema">;
 
 export function resolve<SchemaT extends Record<string, unknown>>(
   params: Readonly<ResolveParams<SchemaT>>,

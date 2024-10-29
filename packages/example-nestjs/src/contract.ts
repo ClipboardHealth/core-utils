@@ -36,8 +36,8 @@ const userRelationships = z.object({
 
 const userAttributes = z.object({
   age: z.coerce.number().int().positive().max(125),
-  isActive: booleanString,
   dateOfBirth: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
+  isActive: booleanString,
 });
 
 const createUser = z.object({
@@ -126,20 +126,20 @@ const userFilterMap = {
     filters: ["eq", "gt"],
     schema: z.coerce.number().int().positive().max(125),
   },
-  isActive: {
-    filters: ["eq"],
-    schema: booleanString,
-  },
   dateOfBirth: {
     filters: ["gte"],
     schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
+  },
+  isActive: {
+    filters: ["eq"],
+    schema: booleanString,
   },
 } as const satisfies FilterMap<UserAttributeFields>;
 
 const query = z
   .object({
     ...cursorPaginationQuery(),
-    ...fieldsQuery({ user: userFields, article: articleFields }),
+    ...fieldsQuery({ article: articleFields, user: userFields }),
     ...filterQuery(userFilterMap),
     ...sortQuery(userFields),
     ...includeQuery(userIncludeFields),

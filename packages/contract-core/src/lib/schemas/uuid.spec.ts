@@ -6,7 +6,7 @@ import {
 import { uuid } from "./uuid";
 
 describe("uuid", () => {
-  it.each<{ name: string; input: string }>([
+  it.each<{ input: string; name: string }>([
     {
       name: "accepts valid UUID v4",
       input: "2a1e3d7e-f068-4db8-8337-ddae8b67447d",
@@ -26,7 +26,7 @@ describe("uuid", () => {
     expect(actual.data).toBe(input);
   });
 
-  it.each<{ name: string; input: unknown; errorMessage: string }>([
+  it.each<{ errorMessage: string; input: unknown; name: string }>([
     {
       name: "rejects non-string input",
       input: 123,

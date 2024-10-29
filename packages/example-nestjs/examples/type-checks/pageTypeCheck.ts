@@ -15,8 +15,8 @@ const _validSingleField: Page = {
 };
 
 const _validMultipleFields: Page = {
-  size: 10,
   cursor: "1",
+  size: 10,
 };
 
 const _invalidField: Page = {

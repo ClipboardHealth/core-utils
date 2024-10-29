@@ -18,7 +18,7 @@ describe("fieldsQuery", () => {
   );
 
   describe("success cases", () => {
-    it.each<{ name: string; input: { fields?: Fields }; expected: { fields?: Fields } }>([
+    it.each<{ expected: { fields?: Fields }; input: { fields?: Fields }; name: string }>([
       {
         name: "accepts valid fields",
         input: {
@@ -76,7 +76,7 @@ describe("fieldsQuery", () => {
   });
 
   describe("error cases", () => {
-    it.each<{ name: string; input: unknown; expectedError: string }>([
+    it.each<{ expectedError: string; input: unknown; name: string }>([
       {
         name: "rejects invalid fields",
         input: {

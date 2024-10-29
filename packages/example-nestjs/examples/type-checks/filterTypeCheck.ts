@@ -10,11 +10,11 @@ let _typeCheck: Filter | undefined;
 //             eq?: readonly number[] | undefined;
 //             gt?: readonly number[] | undefined;
 //         } | undefined;
-//         isActive?: {
-//             eq?: readonly ("true" | "false")[] | undefined;
-//         } | undefined;
 //         dateOfBirth?: {
 //             gte?: readonly Date[] | undefined;
+//         } | undefined;
+//         isActive?: {
+//             eq?: readonly ("true" | "false")[] | undefined;
 //         } | undefined;
 //     } | undefined
 

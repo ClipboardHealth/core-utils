@@ -7,7 +7,7 @@ import { type BooleanString, booleanString, toBoolean } from "./booleanString";
 
 describe("booleanString", () => {
   describe("success cases", () => {
-    it.each<{ name: string; input: string; expected: string }>([
+    it.each<{ expected: string; input: string; name: string }>([
       { name: "transforms 'true' to boolean true", input: "true", expected: "true" },
       { name: "transforms 'false' to boolean false", input: "false", expected: "false" },
     ])("$name", ({ input, expected }) => {
@@ -19,7 +19,7 @@ describe("booleanString", () => {
   });
 
   describe("error cases", () => {
-    it.each<{ name: string; input: unknown; expectedError: string }>([
+    it.each<{ expectedError: string; input: unknown; name: string }>([
       {
         name: "rejects invalid string input",
         input: "invalid",
@@ -45,7 +45,7 @@ describe("booleanString", () => {
 });
 
 describe("toBoolean", () => {
-  it.each<{ input: BooleanString; expected: boolean }>([
+  it.each<{ expected: boolean; input: BooleanString }>([
     { input: "true", expected: true },
     { input: "false", expected: false },
     { input: "True" as BooleanString, expected: false },

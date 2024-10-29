@@ -2,8 +2,8 @@ import { expectToBeDefined } from "./expectToBeDefined";
 
 describe("expectToBeDefined", () => {
   interface TestCase {
-    name: string;
     input: unknown;
+    name: string;
   }
 
   it.each<TestCase>([

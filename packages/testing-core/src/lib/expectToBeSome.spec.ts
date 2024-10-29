@@ -4,8 +4,8 @@ import { expectToBeSome } from "./expectToBeSome";
 
 describe("expectToBeSome", () => {
   interface TestCase {
-    name: string;
     input: Option<number> | undefined;
+    name: string;
   }
 
   it.each<TestCase>([

@@ -16,26 +16,26 @@ import type { NxPluginGeneratorSchema } from "./schema";
 
 const ROOT_TS_CONFIG = "tsconfig.base.json";
 
-type NormalizedSchema = NxPluginGeneratorSchema & {
+type NormalizedSchema = {
   importPath: string;
+  projectDirectory: string;
   projectName: string;
   projectRoot: string;
-  projectDirectory: string;
   publishConfigAccess: string;
-};
+} & NxPluginGeneratorSchema;
 
 function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): NormalizedSchema {
   const name = names(options.name).fileName;
   const projectDirectory = name;
   return {
     ...options,
+    importPath: getImportPath(tree, projectDirectory),
+    projectDirectory,
+    projectName: name.replaceAll("/", "-"),
+    projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,
     publishConfigAccess: /* istanbul ignore next */ options.publishPublicly
       ? "public"
       : "restricted",
-    importPath: getImportPath(tree, projectDirectory),
-    projectName: name.replaceAll("/", "-"),
-    projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,
-    projectDirectory,
   };
 }
 
@@ -56,8 +56,8 @@ function addFiles(tree: Tree, options: NormalizedSchema) {
 function updateRootTsConfig(
   host: Tree,
   options: {
-    name: string;
     importPath: string;
+    name: string;
     projectRoot: string;
   },
 ) {

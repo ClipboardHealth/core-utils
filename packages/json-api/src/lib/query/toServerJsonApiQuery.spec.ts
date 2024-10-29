@@ -4,7 +4,7 @@ import { toServerJsonApiQuery } from "./toServerJsonApiQuery";
 const BASE_URL = "https://google.com";
 
 describe("toServerJsonApiQuery", () => {
-  it.each<{ name: string; input: string; expected: ServerJsonApiQuery }>([
+  it.each<{ expected: ServerJsonApiQuery; input: string; name: string }>([
     {
       name: "returns empty object if no matches",
       input: "hi=there",

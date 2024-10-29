@@ -7,7 +7,7 @@ import { nonEmptyString } from "./nonEmptyString";
 
 describe("nonEmptyString", () => {
   describe("success cases", () => {
-    it.each<{ name: string; input: string }>([
+    it.each<{ input: string; name: string }>([
       { name: "accepts non-empty string", input: "hi" },
       { name: "accepts string with spaces", input: "  hi  " },
       { name: "accepts string with special characters", input: "!@#$%" },
@@ -20,7 +20,7 @@ describe("nonEmptyString", () => {
   });
 
   describe("error cases", () => {
-    it.each<{ name: string; input: unknown; expectedError: string }>([
+    it.each<{ expectedError: string; input: unknown; name: string }>([
       {
         name: "rejects empty string",
         input: "",

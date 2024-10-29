@@ -17,7 +17,7 @@ export function deepFreeze<T extends object>(value: T, seen = new WeakSet()): Re
     const property = value[key];
     if (property && typeof property === "object" && !Object.isFrozen(property)) {
       // eslint-disable-next-line @typescript-eslint/ban-types
-      deepFreeze<typeof property & object>(property, seen);
+      deepFreeze<object & typeof property>(property, seen);
     }
   });
 

@@ -10,7 +10,7 @@ describe("sortQuery", () => {
   const sortSchema = z.object(sortQuery(["age", "dateOfBirth"])).strict();
 
   describe("success cases", () => {
-    it.each<{ name: string; input: { sort?: string }; expected: { sort?: string[] } }>([
+    it.each<{ expected: { sort?: string[] }; input: { sort?: string }; name: string }>([
       {
         name: "accepts valid sort parameters",
         input: { sort: "age" },
@@ -35,7 +35,7 @@ describe("sortQuery", () => {
   });
 
   describe("error cases", () => {
-    it.each<{ name: string; input: unknown; expectedError: string }>([
+    it.each<{ expectedError: string; input: unknown; name: string }>([
       {
         name: "rejects invalid sort fields",
         input: { sort: "-age,invalid" },

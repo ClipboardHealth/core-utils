@@ -10,7 +10,7 @@ describe("includeQuery", () => {
   const includeSchema = z.object(includeQuery(["articles", "articles.comments"]));
 
   describe("success cases", () => {
-    it.each<{ name: string; input: { include?: string }; expected: { include?: string[] } }>([
+    it.each<{ expected: { include?: string[] }; input: { include?: string }; name: string }>([
       {
         name: "accepts valid include parameters",
         input: { include: "articles" },
@@ -35,7 +35,7 @@ describe("includeQuery", () => {
   });
 
   describe("error cases", () => {
-    it.each<{ name: string; input: unknown; expectedError: string }>([
+    it.each<{ expectedError: string; input: unknown; name: string }>([
       {
         name: "rejects invalid include fields",
         input: { include: "invalid" },

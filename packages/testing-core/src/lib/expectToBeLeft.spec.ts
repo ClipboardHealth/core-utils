@@ -4,8 +4,8 @@ import { expectToBeLeft } from "./expectToBeLeft";
 
 describe("expectToBeLeft", () => {
   interface TestCase {
-    name: string;
     input: Either<string, number> | undefined;
+    name: string;
   }
 
   it.each<TestCase>([

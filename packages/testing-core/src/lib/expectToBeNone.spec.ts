@@ -4,8 +4,8 @@ import { expectToBeNone } from "./expectToBeNone";
 
 describe("expectToBeNone", () => {
   interface TestCase {
-    name: string;
     input: Option<number> | undefined;
+    name: string;
   }
 
   it.each<TestCase>([

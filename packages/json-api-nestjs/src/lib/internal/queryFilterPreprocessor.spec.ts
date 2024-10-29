@@ -1,7 +1,7 @@
 import { queryFilterPreprocessor } from "./queryFilterPreprocessor";
 
 describe("queryFilterPreprocessor", () => {
-  it.each<{ name: string; input: unknown; expected: unknown }>([
+  it.each<{ expected: unknown; input: unknown; name: string }>([
     {
       name: "handles empty input",
       input: {},

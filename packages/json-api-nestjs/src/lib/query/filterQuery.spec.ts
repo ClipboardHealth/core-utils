@@ -27,9 +27,9 @@ describe("filterQuery", () => {
 
   describe("success cases", () => {
     it.each<{
-      name: string;
-      input: { filter?: Record<string, unknown> };
       expected: { filter?: Record<string, unknown> };
+      input: { filter?: Record<string, unknown> };
+      name: string;
     }>([
       {
         name: "accepts valid filters",
@@ -148,7 +148,7 @@ describe("filterQuery", () => {
   });
 
   describe("error cases", () => {
-    it.each<{ name: string; input: unknown; expectedError: string }>([
+    it.each<{ expectedError: string; input: unknown; name: string }>([
       {
         name: "rejects invalid filter types",
         input: {

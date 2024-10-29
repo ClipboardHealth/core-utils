@@ -4,8 +4,8 @@ import { expectToBeSafeParseError } from "./expectToBeSafeParseError";
 
 describe("expectToBeSafeParseError", () => {
   interface TestCase {
-    name: string;
     input: z.SafeParseReturnType<unknown, unknown>;
+    name: string;
   }
 
   const schema = z.string();

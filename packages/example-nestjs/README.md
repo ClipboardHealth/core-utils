@@ -41,10 +41,6 @@ export const client = initClient(contract, {
 
 async function main() {
   const query: ListUsersRequest["query"] = {
-    page: {
-      cursor: "eyJpZCI6IjQ2MDJCNjI5LTg3N0QtNEVCNC1CQzhELTREM0NGNzkzQkM2NSJ9",
-      size: 10,
-    },
     fields: {
       user: ["age", "dateOfBirth"],
     },
@@ -59,10 +55,14 @@ async function main() {
         eq: ["true"],
       },
     },
+    page: {
+      cursor: "eyJpZCI6IjQ2MDJCNjI5LTg3N0QtNEVCNC1CQzhELTREM0NGNzkzQkM2NSJ9",
+      size: 10,
+    },
   };
 
   try {
-    const { status, body } = await client.list({ query });
+    const { body, status } = await client.list({ query });
     console.debug(status, JSON.stringify(body, undefined, 2));
   } catch (error) {
     console.error("Error occurred:", error);

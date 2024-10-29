@@ -22,7 +22,7 @@ describe("GET /users", () => {
   });
 
   const defaultQuery = { page: { size: 20 } };
-  it.each<{ name: string; input: string; expected: Record<string, unknown> }>([
+  it.each<{ expected: Record<string, unknown>; input: string; name: string }>([
     {
       name: "defaults page size if no query string",
       input: "/users",
@@ -101,9 +101,9 @@ describe("GET /users", () => {
   });
 
   it.each<{
-    name: string;
-    input: string;
     error: { message: string; path: Array<string | number> };
+    input: string;
+    name: string;
   }>([
     {
       name: "fails if page size below minimum",

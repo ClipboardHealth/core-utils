@@ -4,8 +4,8 @@ import { expectToBeRight } from "./expectToBeRight";
 
 describe("expectToBeRight", () => {
   interface TestCase {
-    name: string;
     input: Either<string, number> | undefined;
+    name: string;
   }
 
   it.each<TestCase>([

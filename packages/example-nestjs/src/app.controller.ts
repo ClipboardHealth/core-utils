@@ -5,8 +5,8 @@ import { contract, UserDto } from "./contract";
 
 @Controller()
 export class AppController {
-  private readonly logger = new Logger(AppController.name);
   private readonly items = new Map<string, UserDto["data"]>();
+  private readonly logger = new Logger(AppController.name);
   private nextId = 0;
 
   @TsRestHandler(contract)
@@ -18,13 +18,13 @@ export class AppController {
         this.items.set(item.id, item);
 
         return {
-          status: 201,
           body: { data: item },
+          status: 201,
         };
       },
       list: async ({ query }) => {
         this.logger.log({ query });
-        return { status: 200, body: query };
+        return { body: query, status: 200 };
       },
     });
   }

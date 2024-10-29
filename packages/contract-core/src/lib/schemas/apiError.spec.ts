@@ -6,7 +6,7 @@ import {
 import { type ApiError, apiErrors } from "./apiError";
 
 describe("apiErrors", () => {
-  it.each<{ name: string; input: { errors: ApiError[] } }>([
+  it.each<{ input: { errors: ApiError[] }; name: string }>([
     {
       name: "parses empty errors array",
       input: { errors: [] },
@@ -51,7 +51,7 @@ describe("apiErrors", () => {
     expect(actual.data).toEqual(input);
   });
 
-  it.each<{ name: string; input: unknown; errorMessage: string }>([
+  it.each<{ errorMessage: string; input: unknown; name: string }>([
     {
       name: "rejects missing required fields",
       input: {
