@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/util-typescript",
-  "description": "",
+  "description": "TypeScript utilities.",
   "version": "0.1.0",
   "dependencies": {
     "tslib": "2.8.0"

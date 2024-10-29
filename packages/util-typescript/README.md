@@ -1,6 +1,6 @@
 # @clipboard-health/util-typescript <!-- omit from toc -->
 
-TODO
+TypeScript utilities.
 
 ## Table of contents <!-- omit from toc -->
 
