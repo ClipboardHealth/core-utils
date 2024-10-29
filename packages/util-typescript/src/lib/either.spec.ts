@@ -1,22 +1,22 @@
-import * as E from "./either";
+import { isLeft, isRight, type Left, left, type Right, right } from "./either";
 
 describe("Either", () => {
   it("left works", () => {
     const error = new Error("boom");
-    const either = E.left(error) as E.Left<Error>;
+    const either = left(error) as Left<Error>;
 
-    expect(E.isLeft(either)).toBe(true);
-    expect(E.isRight(either)).toBe(false);
+    expect(isLeft(either)).toBe(true);
+    expect(isRight(either)).toBe(false);
     expect(either.isRight).toBe(false);
     expect(either.left).toBe(error);
   });
 
   it("right works", () => {
     const value = "my-value";
-    const either = E.right(value) as E.Right<string>;
+    const either = right(value) as Right<string>;
 
-    expect(E.isRight(either)).toBe(true);
-    expect(E.isLeft(either)).toBe(false);
+    expect(isRight(either)).toBe(true);
+    expect(isLeft(either)).toBe(false);
     expect(either.isRight).toBe(true);
     expect(either.right).toBe(value);
   });

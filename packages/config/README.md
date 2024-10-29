@@ -78,7 +78,9 @@ export function createConfig<
 
   const result = schema.safeParse(resolve({ config, environment: current, path: [], schema }));
   if (!result.success) {
-    throw new Error(fromZodError(result.error).toString(), { cause: result.error });
+    throw new Error(`Configuration validation failed: ${fromZodError(result.error).toString()}`, {
+      cause: result.error,
+    });
   }
 
   return deepFreeze(result.data);

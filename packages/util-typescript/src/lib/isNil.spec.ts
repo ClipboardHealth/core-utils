@@ -10,6 +10,11 @@ describe("isNil", () => {
     { input: false, expected: false },
     { input: {}, expected: false },
     { input: [], expected: false },
+    { input: Number.NaN, expected: false },
+    { input: Number.POSITIVE_INFINITY, expected: false },
+    { input: Number.NEGATIVE_INFINITY, expected: false },
+    { input: Symbol("test"), expected: false },
+    { input: new Date(), expected: false },
   ])("returns $expected for $input", ({ input, expected }) => {
     const actual = isNil(input);
 

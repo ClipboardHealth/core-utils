@@ -6,6 +6,10 @@ describe("isString", () => {
     { input: String("hello"), expected: true },
     // eslint-disable-next-line no-new-wrappers, unicorn/new-for-builtins
     { input: new String("hello"), expected: true },
+    { input: "", expected: true },
+    { input: "   ", expected: true },
+    { input: `template`, expected: true },
+    { input: "🚀\n\t", expected: true },
     { input: 123, expected: false },
     { input: true, expected: false },
     { input: {}, expected: false },

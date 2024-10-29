@@ -11,9 +11,19 @@ describe("stringify", () => {
     // eslint-disable-next-line unicorn/no-null
     { input: null, expected: "null" },
     { input: undefined, expected: undefined },
+    { input: { nested: { array: [1, { x: 2 }] } }, expected: '{"nested":{"array":[1,{"x":2}]}}' },
+    { input: "Hello\nWorld", expected: '"Hello\\nWorld"' },
+    { input: "🚀", expected: '"🚀"' },
+    { input: Number.MAX_SAFE_INTEGER, expected: "9007199254740991" },
   ])("returns $expected for $input", ({ input, expected }) => {
     const actual = stringify(input);
 
     expect(actual).toBe(expected);
+  });
+
+  it("throws on circular references", () => {
+    const circular = { self: {} };
+    circular.self = circular;
+    expect(() => stringify(circular)).toThrow();
   });
 });

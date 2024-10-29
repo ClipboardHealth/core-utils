@@ -1,10 +1,9 @@
 import * as O from "./option";
-
-const { none, some } = O;
+import { some } from "./option";
 
 describe("Option", () => {
   it("none is not some", () => {
-    const option = none;
+    const option = O.none;
 
     expect(O.isNone(option)).toBe(true);
     expect(O.isSome(option)).toBe(false);
