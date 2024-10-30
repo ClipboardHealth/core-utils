@@ -15,7 +15,7 @@ describe("ServiceResult", () => {
     expect(actual.right).toEqual(input);
   });
 
-  it("creates failure result", () => {
+  it("creates failure result from ServiceErrorParams", () => {
     const input = {
       issues: [{ code: ERROR_CODES.notFound }],
     };
@@ -26,6 +26,18 @@ describe("ServiceResult", () => {
     expect(actual.left).toBeInstanceOf(ServiceError);
     expect(actual.left.issues).toEqual([
       { code: ERROR_CODES.notFound, title: "Resource not found" },
+    ]);
+  });
+
+  it("creates failure result from ServiceError", () => {
+    const input = new ServiceError("test error");
+
+    const actual = failure(input);
+
+    ok(E.isLeft(actual));
+    expect(actual.left).toBe(input);
+    expect(actual.left.issues).toEqual([
+      { code: ERROR_CODES.internal, title: "Internal server error", message: "test error" },
     ]);
   });
 });

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { deepFreeze } from "../deepFreeze";
+import { isDefined } from "../isDefined";
 import { toError } from "./toError";
 
 /**
@@ -24,7 +25,7 @@ export interface ServiceIssue {
   code?: ErrorCode;
 
   /** Details about what caused the issue */
-  message?: string;
+  message?: string | undefined;
 
   /** Path to issue location */
   path?: Array<string | number>;
@@ -35,6 +36,13 @@ export type ServiceErrorParams =
   | string
   // Array of issues with optional cause
   | { cause?: Readonly<unknown>; issues: readonly ServiceIssue[] };
+
+export interface ZodLike {
+  issues: ReadonlyArray<{
+    message?: string | undefined;
+    path: Array<string | number>;
+  }>;
+}
 
 const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
   badRequest: {
@@ -76,10 +84,71 @@ interface Issue extends ServiceIssue {
   title: string;
 }
 
+function isZodLike(value: unknown): value is ZodLike {
+  const zodLike = value as ZodLike | undefined;
+
+  return (
+    isDefined(zodLike) &&
+    "issues" in zodLike &&
+    Array.isArray(zodLike.issues) &&
+    zodLike.issues.every(
+      (issue) =>
+        typeof issue === "object" &&
+        isDefined(issue) &&
+        "path" in issue &&
+        Array.isArray(issue.path),
+    )
+  );
+}
+
 /**
  * Error class for service-level errors, convertible to JSON:API errors.
  */
 export class ServiceError extends Error {
+  /**
+   * Converts an error to a `ServiceError`.
+   *
+   * @param value - The value to convert, which can be any type
+   * @returns If the value is already a `ServiceError`, returns it unchanged. Otherwise, convert it
+   *          to a `ServiceError`.
+   */
+  static fromError(value: unknown): ServiceError {
+    if (value instanceof ServiceError) {
+      return value;
+    }
+
+    const error = toError(value);
+    return new ServiceError({
+      issues: [{ code: ERROR_CODES.internal, message: error.message }],
+      cause: error,
+    });
+  }
+
+  /**
+   * Converts a Zod-like error to a `ServiceError`.
+   *
+   * @param value - An object with a Zod-like error structure containing issues
+   * @returns The converted `ServiceError`
+   * @throws {ServiceError} If the provided value does not match the expected Zod-like structure
+   */
+  static fromZodLike(value: ZodLike): ServiceError {
+    if (!isZodLike(value)) {
+      throw new ServiceError({
+        issues: [{ code: ERROR_CODES.internal, message: "Invalid ZodLike" }],
+        cause: value,
+      });
+    }
+
+    return new ServiceError({
+      issues: value.issues.map((issue) => ({
+        code: ERROR_CODES.unprocessableEntity,
+        message: issue.message,
+        path: issue.path,
+      })),
+      cause: value,
+    });
+  }
+
   readonly id: string;
   readonly issues: readonly Issue[];
 

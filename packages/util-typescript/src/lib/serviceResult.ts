@@ -26,6 +26,6 @@ export function success<A>(value: A): ServiceResult<A> {
  * @param params The parameters to create the `ServiceError`
  * @returns A `ServiceResult` containing the error
  */
-export function failure<A = never>(params: ServiceErrorParams): ServiceResult<A> {
-  return E.left(new ServiceError(params));
+export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
+  return E.left(params instanceof ServiceError ? params : new ServiceError(params));
 }

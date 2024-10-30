@@ -8,6 +8,15 @@ import { ERROR_CODES, ServiceError } from "@clipboard-health/util-typescript";
 }
 
 {
+  const error = new Error("boom");
+  const serviceError = ServiceError.fromError(error);
+  equal(
+    serviceError.toString(),
+    `ServiceError[${serviceError.id}]: [internal]: boom; [cause]: Error: boom`,
+  );
+}
+
+{
   const errorWithCause = new ServiceError({
     issues: [{ message: "boom" }],
     cause: new Error("Original error"),

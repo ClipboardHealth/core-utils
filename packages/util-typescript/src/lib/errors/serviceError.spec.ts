@@ -1,6 +1,99 @@
-import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
+import { ERROR_CODES, ServiceError, type ServiceErrorParams, type ZodLike } from "./serviceError";
 
 describe("ServiceError", () => {
+  describe("fromZodLike", () => {
+    it("converts ZodLike to ServiceError", () => {
+      const input = {
+        issues: [
+          {
+            message: "Invalid email format",
+            path: ["email"],
+          },
+          {
+            message: "Invalid phone number",
+            path: ["phoneNumber"],
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromZodLike(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.unprocessableEntity,
+          message: "Invalid email format",
+          path: ["email"],
+          title: "Request failed validation",
+        },
+        {
+          code: ERROR_CODES.unprocessableEntity,
+          message: "Invalid phone number",
+          path: ["phoneNumber"],
+          title: "Request failed validation",
+        },
+      ]);
+      expect(actual.cause).toBe(input);
+    });
+
+    it("throws ServiceError for invalid ZodLike structure", () => {
+      const input = { foo: "bar" };
+
+      const casted = input as unknown as ZodLike;
+      expect(() => ServiceError.fromZodLike(casted)).toThrow(ServiceError);
+      expect(() => ServiceError.fromZodLike(casted)).toThrow("Invalid ZodLike");
+    });
+  });
+
+  describe("fromError", () => {
+    it("converts Error to ServiceError", () => {
+      const input = new Error("Something went wrong");
+
+      const actual = ServiceError.fromError(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.internal,
+          message: "Something went wrong",
+          title: "Internal server error",
+        },
+      ]);
+      expect(actual.cause).toBe(input);
+    });
+
+    it("converts non-Error to ServiceError", () => {
+      const input = "Something went wrong";
+
+      const actual = ServiceError.fromError(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.internal,
+          message: "Something went wrong",
+          title: "Internal server error",
+        },
+      ]);
+      expect(actual.cause).toBeInstanceOf(Error);
+    });
+
+    it("preserves existing ServiceError", () => {
+      const input = new ServiceError({
+        issues: [
+          {
+            code: ERROR_CODES.notFound,
+            message: "Resource not found",
+          },
+        ],
+      });
+
+      const actual = ServiceError.fromError(input);
+
+      expect(actual).toBe(input);
+    });
+  });
+
   it("creates error with single issue", () => {
     const input: ServiceErrorParams = {
       issues: [
