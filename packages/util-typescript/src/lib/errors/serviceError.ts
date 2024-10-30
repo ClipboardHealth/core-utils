@@ -35,7 +35,7 @@ export interface ServiceIssue {
 
 export interface ServiceErrorParams {
   issues: readonly ServiceIssue[];
-  cause?: Readonly<Error>;
+  cause?: Readonly<unknown>;
 }
 
 const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
