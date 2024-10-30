@@ -1,8 +1,8 @@
+import { isDefined } from "@clipboard-health/util-typescript";
 import decamelize from "decamelize";
 import { z } from "zod";
 
 import { type ConfigValue, type ConfigValueMap } from "../types";
-import { isDefined } from "./isDefined";
 
 interface ResolveParams<SchemaT extends Record<string, unknown>> {
   config: Readonly<ConfigValueMap<SchemaT, readonly string[]>>;

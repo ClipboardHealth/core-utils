@@ -1,17 +1,17 @@
-import { isNone, none, type Option, some } from "@clipboard-health/util-typescript";
+import { option as O } from "@clipboard-health/util-typescript";
 
 import { expectToBeNone } from "./expectToBeNone";
 
 describe("expectToBeNone", () => {
   interface TestCase {
-    input: Option<number> | undefined;
+    input: O.Option<number> | undefined;
     name: string;
   }
 
   it.each<TestCase>([
     {
       name: "passes for None",
-      input: none,
+      input: O.none,
     },
   ])("$name", ({ input }) => {
     expect(() => {
@@ -22,7 +22,7 @@ describe("expectToBeNone", () => {
   it.each<TestCase>([
     {
       name: "throws for Some",
-      input: some(123),
+      input: O.some(123),
     },
     {
       name: "throws for undefined",
@@ -35,12 +35,12 @@ describe("expectToBeNone", () => {
   });
 
   it("narrows type", () => {
-    const actual = none;
+    const actual = O.none;
 
     expectToBeNone(actual);
 
     // Narrowed to None
     expect(actual.isSome).toBe(false);
-    expect(isNone(actual)).toBe(true);
+    expect(O.isNone(actual)).toBe(true);
   });
 });

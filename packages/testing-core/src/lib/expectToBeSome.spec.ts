@@ -1,17 +1,17 @@
-import { none, type Option, some } from "@clipboard-health/util-typescript";
+import { option as O } from "@clipboard-health/util-typescript";
 
 import { expectToBeSome } from "./expectToBeSome";
 
 describe("expectToBeSome", () => {
   interface TestCase {
-    input: Option<number> | undefined;
+    input: O.Option<number> | undefined;
     name: string;
   }
 
   it.each<TestCase>([
     {
       name: "passes for Some",
-      input: some(123),
+      input: O.some(123),
     },
   ])("$name", ({ input }) => {
     expect(() => {
@@ -22,7 +22,7 @@ describe("expectToBeSome", () => {
   it.each<TestCase>([
     {
       name: "throws for None",
-      input: none,
+      input: O.none,
     },
     {
       name: "throws for undefined",
@@ -35,7 +35,7 @@ describe("expectToBeSome", () => {
   });
 
   it("narrows type", () => {
-    const actual = some(123);
+    const actual = O.some(123);
 
     expectToBeSome(actual);
 

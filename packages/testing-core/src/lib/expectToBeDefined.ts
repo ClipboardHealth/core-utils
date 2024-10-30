@@ -1,4 +1,6 @@
-import { ok } from "node:assert";
+import { ok } from "node:assert/strict";
+
+import { isDefined } from "@clipboard-health/util-typescript";
 
 /**
  * Asserts and narrows the type for defined values.
@@ -6,5 +8,5 @@ import { ok } from "node:assert";
  * @throws {AssertionError} for null or undefined values.
  */
 export function expectToBeDefined<T>(value: T | undefined): asserts value is T {
-  ok(value !== undefined && value !== null, "Expected value to be defined, got null or undefined");
+  ok(isDefined(value), "Expected value to be defined, got null or undefined");
 }

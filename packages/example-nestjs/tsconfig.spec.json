@@ -5,10 +5,8 @@
   },
   "include": [
     "jest.config.ts",
-    "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.d.ts",
-    "test/**/*.test.ts",
     "test/**/*.spec.ts",
     "test/**/*.d.ts"
   ]

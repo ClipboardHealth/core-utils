@@ -1,17 +1,17 @@
-import { type Either, left, right } from "@clipboard-health/util-typescript";
+import { either as E } from "@clipboard-health/util-typescript";
 
 import { expectToBeLeft } from "./expectToBeLeft";
 
 describe("expectToBeLeft", () => {
   interface TestCase {
-    input: Either<string, number> | undefined;
+    input: E.Either<string, number> | undefined;
     name: string;
   }
 
   it.each<TestCase>([
     {
       name: "passes for Left",
-      input: left("error"),
+      input: E.left("error"),
     },
   ])("$name", ({ input }) => {
     expect(() => {
@@ -22,7 +22,7 @@ describe("expectToBeLeft", () => {
   it.each<TestCase>([
     {
       name: "throws for Right",
-      input: right(123),
+      input: E.right(123),
     },
     {
       name: "throws for undefined",
@@ -35,7 +35,7 @@ describe("expectToBeLeft", () => {
   });
 
   it("narrows type", () => {
-    const actual = left("error");
+    const actual = E.left("error");
 
     expectToBeLeft(actual);
 
