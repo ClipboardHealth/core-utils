@@ -21,22 +21,20 @@ export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
 export interface ServiceIssue {
   /** Standardized {@link ERROR_CODES} */
-  code: ErrorCode;
+  code?: ErrorCode;
 
-  /** Optional human-readable title. A default title is provided if not specified. */
-  title?: string;
+  /** Details about what caused the issue */
+  message?: string;
 
-  /** Optional specific details about what caused the issue */
-  detail?: string;
-
-  /** Optional path to the issue location */
+  /** Path to issue location */
   path?: Array<string | number>;
 }
 
-export interface ServiceErrorParams {
-  issues: readonly ServiceIssue[];
-  cause?: Readonly<unknown>;
-}
+export type ServiceErrorParams =
+  // Message string
+  | string
+  // Array of issues with optional cause
+  | { cause?: Readonly<unknown>; issues: readonly ServiceIssue[] };
 
 const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
   badRequest: {
@@ -73,28 +71,32 @@ const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
   },
 };
 
+interface Issue extends ServiceIssue {
+  code: Required<ServiceIssue>["code"];
+  title: string;
+}
+
 /**
- * Error class for service-level errors, convertible to JSON:API errors. Contain one or more issues
- * with standardized error codes.
+ * Error class for service-level errors, convertible to JSON:API errors.
  */
 export class ServiceError extends Error {
   readonly id: string;
-  readonly issues: readonly ServiceIssue[];
+  readonly issues: readonly Issue[];
 
   /**
    * Creates a new ServiceError
-   * @param params.issues - Array of issues contributing to the error
-   * @param params.cause - Optional underlying cause
+   * @param parameters - Issues contributing to the error or a message string
    */
-  constructor(params: ServiceErrorParams) {
-    const { cause, issues } = params;
-    super(createServiceErrorMessage(issues));
+  constructor(parameters: ServiceErrorParams) {
+    const params =
+      typeof parameters === "string"
+        ? { issues: [toIssue({ message: parameters })] }
+        : { ...parameters, issues: parameters.issues.map(toIssue) };
+    super(createServiceErrorMessage(params.issues));
 
     this.id = randomUUID();
-    this.issues = deepFreeze(
-      issues.map((issue) => ({ ...issue, title: issue.title ?? ERROR_METADATA[issue.code].title })),
-    );
-    this.cause = cause;
+    this.issues = deepFreeze(params.issues);
+    this.cause = "cause" in params ? params.cause : undefined;
     this.name = this.constructor.name;
 
     /**
@@ -124,7 +126,7 @@ export class ServiceError extends Error {
         status: String(ERROR_METADATA[issue.code].status),
         code: issue.code,
         title: issue.title,
-        ...(issue.detail && { detail: issue.detail }),
+        ...(issue.message && { detail: issue.message }),
         ...(issue.path && {
           source: {
             pointer: `/${issue.path.join("/")}`,
@@ -140,16 +142,20 @@ export class ServiceError extends Error {
  * @param issues - Array of issues to include in the message
  * @returns Message string in format "[code1]: detail1; [code2]: detail2"
  */
-function createServiceErrorMessage(issues: readonly ServiceIssue[]): string {
+function createServiceErrorMessage(issues: readonly Issue[]): string {
   if (issues.length === 0) {
-    return "[internal]: An unknown error occurred";
+    return "[unknown]";
   }
 
   return issues
     .map((issue) => {
-      const detail = issue.detail ?? issue.title;
-      const detailString = detail ? `: ${detail}` : "";
-      return `[${issue.code}]${detailString}`;
+      const message = issue.message ? `: ${issue.message}` : "";
+      return `[${issue.code}]${message}`;
     })
     .join("; ");
+}
+
+function toIssue(issue: ServiceIssue): Issue {
+  const code = issue.code ?? ERROR_CODES.internal;
+  return { ...issue, code, title: ERROR_METADATA[code].title };
 }

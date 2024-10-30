@@ -13,11 +13,11 @@ function validateUser(params: { email: string; phone: string }): ServiceResult<{
   const code = ERROR_CODES.unprocessableEntity;
 
   if (!email.includes("@")) {
-    return failure({ issues: [{ code, detail: "Invalid email format" }] });
+    return failure({ issues: [{ code, message: "Invalid email format" }] });
   }
 
   if (phone.length !== 12) {
-    return failure({ issues: [{ code, detail: "Invalid phone number" }] });
+    return failure({ issues: [{ code, message: "Invalid phone number" }] });
   }
 
   return success({ id: "user-123" });
