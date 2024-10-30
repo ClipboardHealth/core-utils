@@ -1,32 +1,3 @@
-# @clipboard-health/execution-context <!-- omit from toc -->
-
-`ExecutionContext` is a lightweight Node.js package built with TypeScript that leverages `AsyncLocalStorage` to create a statically available context parallel to any execution. It provides a reliable, thread-safe context for attaching and accessing metadata throughout the lifecycle of an execution, such as API requests, background jobs, or message consumers. This allows various parts of your application to communicate and share metadata without needing to explicitly pass context objects.
-
-## Features
-
-- **Scoped Contexts**: Attach data to a context that is specific to each execution scope.
-- **Static Access**: Access context data statically anywhere in the codebase within an active execution.
-- **Metadata Aggregation**: Store and retrieve metadata across the lifespan of an execution, ideal for logging, tracing, and other observability tasks.
-
-## Table of Contents <!-- omit from toc -->
-
-- [Install](#install)
-- [Usage](#usage)
-- [Local development commands](#local-development-commands)
-
-## Install
-
-```bash
-npm install @clipboard-health/execution-context
-```
-
-## Usage
-
-This example demonstrates how to create a logging context, accumulate metadata from various function calls, and then log a single message containing all the gathered metadata.
-
-```ts
-// ./examples/executionContext.ts
-
 import {
   addMetadataToLocalContext,
   getExecutionContext,
@@ -75,8 +46,3 @@ function callAnotherFunctionThatAddsContext() {
     result: "passed",
   });
 }
-```
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.

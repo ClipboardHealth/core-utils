@@ -1,8 +1,9 @@
 import {
   addMetadataToLocalContext,
   addToMetadataList,
-  ContextStore,
+  getExecutionContext,
   newExecutionContext,
+  runWithExecutionContext,
 } from "./contextStore";
 
 const addMetadataIfContextIsPresent = () => {
@@ -16,9 +17,9 @@ const addMetadataIfContextIsPresent = () => {
 
 describe("Context Store", () => {
   it("should create a context that lives throughout the execution of a thread", async () => {
-    await ContextStore.withContext(newExecutionContext("test"), async () => {
+    await runWithExecutionContext(newExecutionContext("test"), async () => {
       addMetadataIfContextIsPresent();
-      const context = ContextStore.getContext();
+      const context = getExecutionContext();
 
       expect(context?.metadata).toEqual({
         key1: "value1",
@@ -30,13 +31,13 @@ describe("Context Store", () => {
 
   it("should not add anything but should not throw an error if there is no context", () => {
     addMetadataIfContextIsPresent();
-    const context = ContextStore.getContext();
+    const context = getExecutionContext();
     expect(context).toBeUndefined();
   });
 
   it("should throw exception if the underlying function throws one", async () => {
     await expect(
-      ContextStore.withContext(newExecutionContext("test"), async () => {
+      runWithExecutionContext(newExecutionContext("test"), async () => {
         throw new Error("testing asynchronous error");
       }),
     ).rejects.toThrow("testing asynchronous error");
@@ -44,7 +45,7 @@ describe("Context Store", () => {
 
   it("should throw exception if the underlying function throws a synchronous error", async () => {
     await expect(
-      ContextStore.withContext(newExecutionContext("test"), () => {
+      runWithExecutionContext(newExecutionContext("test"), () => {
         throw new Error("testing synchronous error");
       }),
     ).rejects.toThrow("testing synchronous error");
