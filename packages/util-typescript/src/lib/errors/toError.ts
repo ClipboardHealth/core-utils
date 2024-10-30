@@ -1,6 +1,6 @@
+import { isString } from "../isString";
+import { stringify } from "../stringify";
 import { isError } from "./isError";
-import { isString } from "./isString";
-import { stringify } from "./stringify";
 
 /**
  * Converts any value to an Error instance. If the input is already an Error,
