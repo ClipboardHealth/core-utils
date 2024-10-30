@@ -1,103 +1,149 @@
-# @clipboard-health/util-typescript <!-- omit from toc -->
+# @clipboard-health/testing-core <!-- omit from toc -->
 
-TypeScript utilities.
+TypeScript-friendly testing utilities.
 
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
-  - [Functional utilities](#functional-utilities)
+  - [Type narrowing `expect` helpers](#type-narrowing-expect-helpers)
 - [Local development commands](#local-development-commands)
 
 ## Install
 
 ```bash
-npm install @clipboard-health/util-typescript
+npm install @clipboard-health/testing-core
 ```
 
 ## Usage
 
-See `./src/lib` for each utility.
+### Type narrowing `expect` helpers
 
-### Functional utilities
+Jest's [`expect(...).toBeDefined()`](https://jestjs.io/docs/expect#tobedefined) does not narrow types.
+
+This gives a type error:
+
+```ts
+const value = getValue(); // returns 'string | undefined'
+
+expect(value).toBeDefined();
+
+const { length } = value;
+// ^? Property 'length' does not exist on type 'string | undefined'.
+```
+
+This library's helpers narrow types:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/pipe.ts
+// ./examples/expectToBeDefined.ts
 
-import { equal } from "node:assert/strict";
+import { ok } from "node:assert/strict";
 
-import { pipe } from "@clipboard-health/util-typescript";
+import { expectToBeDefined } from "@clipboard-health/testing-core";
 
-const result = pipe(
-  "  hello world  ",
-  (s) => s.trim(),
-  (s) => s.split(" "),
-  (array) => array.map((word) => word.charAt(0).toUpperCase() + word.slice(1)),
-  (array) => array.join(" "),
-);
+function getValue(): string | undefined {
+  return "hi";
+}
 
-equal(result, "Hello World");
+const value = getValue();
+expectToBeDefined(value);
+
+// Narrowed to `string`
+const { length } = value;
+ok(length === 2);
 
 ```
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/option.ts
+// ./examples/expectToBeLeft.ts
 
-import { equal } from "node:assert/strict";
+import { ok } from "node:assert/strict";
 
-import { option as O, pipe } from "@clipboard-health/util-typescript";
+import { expectToBeLeft } from "@clipboard-health/testing-core";
+import { either as E } from "@clipboard-health/util-typescript";
 
-function double(n: number) {
-  return n * 2;
+function divide(numerator: number, denominator: number): E.Either<string, number> {
+  if (denominator === 0) {
+    return E.left("Cannot divide by zero");
+  }
+
+  return E.right(numerator / denominator);
 }
 
-function inverse(n: number): O.Option<number> {
-  return n === 0 ? O.none : O.some(1 / n);
-}
+const value = divide(10, 0);
+expectToBeLeft(value);
 
-const result = pipe(
-  O.some(5),
-  O.map(double),
-  O.flatMap(inverse),
-  O.match(
-    (n) => `Result is ${n}`,
-    () => "No result",
-  ),
-);
-
-equal(result, "Result is 0.1");
+// Narrowed to Left
+ok(value.left === "Cannot divide by zero");
 
 ```
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/either.ts
+// ./examples/expectToBeRight.ts
 
-import { equal } from "node:assert/strict";
+import { ok } from "node:assert/strict";
 
-import { either as E, pipe } from "@clipboard-health/util-typescript";
+import { expectToBeRight } from "@clipboard-health/testing-core";
+import { either as E } from "@clipboard-health/util-typescript";
 
-function double(n: number): number {
-  return n * 2;
+function divide(numerator: number, denominator: number): E.Either<string, number> {
+  if (denominator === 0) {
+    return E.left("Cannot divide by zero");
+  }
+
+  return E.right(numerator / denominator);
 }
 
-function inverse(n: number): E.Either<string, number> {
-  return n === 0 ? E.left("Division by zero") : E.right(1 / n);
-}
+const value = divide(10, 2);
+expectToBeRight(value);
 
-const result = pipe(
-  E.right(5),
-  E.map(double),
-  E.flatMap(inverse),
-  E.match(
-    (error) => `Error: ${error}`,
-    (result) => `Result is ${result}`,
-  ),
-);
+// Narrowed to Right
+ok(value.right === 5);
 
-equal(result, "Result is 0.1");
+```
+
+<!-- prettier-ignore -->
+```ts
+// ./examples/expectToBeSafeParseError.ts
+
+import { ok } from "node:assert/strict";
+
+import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
+import { z } from "zod";
+
+const schema = z.object({ name: z.string() });
+
+const value = schema.safeParse({ name: 1 });
+expectToBeSafeParseError(value);
+
+// Narrowed to `SafeParseError`
+const firstIssue = value.error.issues[0];
+expectToBeDefined(firstIssue);
+
+// Narrowed to `ZodIssue`
+ok(firstIssue.message === "Expected string, received number");
+
+```
+
+<!-- prettier-ignore -->
+```ts
+// ./examples/expectToBeSafeParseSuccess.ts
+
+import { ok } from "node:assert/strict";
+
+import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";
+import { z } from "zod";
+
+const schema = z.object({ name: z.string() });
+
+const value = schema.safeParse({ name: "hi" });
+expectToBeSafeParseSuccess(value);
+
+// Narrowed to `SafeParseSuccess`
+ok(value.data.name === "hi");
 
 ```
 
