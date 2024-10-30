@@ -1,17 +1,16 @@
 import { ok } from "node:assert/strict";
 
 import {
+  either as E,
   ERROR_CODES,
   failure,
   type ServiceResult,
   success,
 } from "@clipboard-health/util-typescript";
 
-import { isLeft, isRight } from "../src/lib/functional/either";
-
 function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
   const { email, phone } = params;
-  const code = ERROR_CODES.unprocessableContent;
+  const code = ERROR_CODES.unprocessableEntity;
 
   if (!email.includes("@")) {
     return failure({ issues: [{ code, detail: "Invalid email format" }] });
@@ -24,5 +23,5 @@ function validateUser(params: { email: string; phone: string }): ServiceResult<{
   return success({ id: "user-123" });
 }
 
-ok(isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
-ok(isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+ok(E.isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
+ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));

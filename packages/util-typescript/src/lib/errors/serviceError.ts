@@ -8,11 +8,11 @@ import { toError } from "./toError";
  */
 export const ERROR_CODES = {
   badRequest: "badRequest",
-  unauthenticated: "unauthenticated",
   unauthorized: "unauthorized",
+  forbidden: "forbidden",
   notFound: "notFound",
   conflict: "conflict",
-  unprocessableContent: "unprocessableContent",
+  unprocessableEntity: "unprocessableEntity",
   tooManyRequests: "tooManyRequests",
   internal: "internal",
 } as const;
@@ -43,11 +43,11 @@ const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
     status: 400,
     title: "Invalid or malformed request",
   },
-  unauthenticated: {
+  unauthorized: {
     status: 401,
     title: "Invalid or missing credentials",
   },
-  unauthorized: {
+  forbidden: {
     status: 403,
     title: "Access to resource denied",
   },
@@ -59,7 +59,7 @@ const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
     status: 409,
     title: "Conflict with server state",
   },
-  unprocessableContent: {
+  unprocessableEntity: {
     status: 422,
     title: "Request failed validation",
   },
@@ -141,6 +141,10 @@ export class ServiceError extends Error {
  * @returns Message string in format "[code1]: detail1; [code2]: detail2"
  */
 function createServiceErrorMessage(issues: readonly ServiceIssue[]): string {
+  if (issues.length === 0) {
+    return "[internal]: An unknown error occurred";
+  }
+
   return issues
     .map((issue) => {
       const detail = issue.detail ?? issue.title;

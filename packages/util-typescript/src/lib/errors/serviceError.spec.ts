@@ -13,7 +13,7 @@ describe("ServiceError", () => {
 
     const actual = new ServiceError(input);
 
-    expect(actual.id).toBeDefined();
+    expect(actual.id).toMatch(/^[\da-f-]+$/);
     expect(actual.message).toBe("[notFound]: User not found");
     expect(actual.issues).toHaveLength(1);
     expect(actual.issues[0]).toMatchObject({
@@ -34,7 +34,7 @@ describe("ServiceError", () => {
         {
           code: ERROR_CODES.badRequest,
           detail: "Invalid phone",
-          path: ["data", "attributes", "phone"],
+          path: ["data", "attributes", "phoneNumber"],
         },
       ],
     };
@@ -43,6 +43,20 @@ describe("ServiceError", () => {
 
     expect(actual.message).toBe("[badRequest]: Invalid email; [badRequest]: Invalid phone");
     expect(actual.issues).toHaveLength(2);
+    expect(actual.issues).toEqual([
+      {
+        code: ERROR_CODES.badRequest,
+        detail: "Invalid email",
+        path: ["data", "attributes", "email"],
+        title: "Invalid or malformed request",
+      },
+      {
+        code: ERROR_CODES.badRequest,
+        detail: "Invalid phone",
+        path: ["data", "attributes", "phoneNumber"],
+        title: "Invalid or malformed request",
+      },
+    ]);
   });
 
   it("converts to string with cause", () => {
@@ -113,5 +127,48 @@ describe("ServiceError", () => {
       code: ERROR_CODES.notFound,
       title: "Resource not found",
     });
+  });
+
+  it("converts multiple issues to JSON:API format", () => {
+    const input = {
+      issues: [
+        {
+          code: ERROR_CODES.badRequest,
+          detail: "Invalid email",
+          path: ["data", "attributes", "email"],
+        },
+        {
+          code: ERROR_CODES.badRequest,
+          detail: "Invalid phone",
+          path: ["data", "attributes", "phone"],
+        },
+      ],
+    };
+
+    const actual = new ServiceError(input);
+
+    const jsonApi = actual.toJsonApi();
+    expect(jsonApi.errors).toHaveLength(2);
+    expect(jsonApi.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          status: "400",
+          source: expect.objectContaining({
+            pointer: expect.stringMatching(/^\//),
+          }),
+        }),
+      ]),
+    );
+  });
+
+  it("creates error with default message when issues array is empty", () => {
+    const input = {
+      issues: [],
+    };
+
+    const actual = new ServiceError(input);
+
+    expect(actual.message).toBe("[internal]: An unknown error occurred");
+    expect(actual.issues).toHaveLength(0);
   });
 });

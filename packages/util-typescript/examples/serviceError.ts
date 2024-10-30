@@ -10,7 +10,7 @@ const error = new ServiceError({
       path: ["data", "attributes", "email"],
     },
     {
-      code: ERROR_CODES.unprocessableContent,
+      code: ERROR_CODES.unprocessableEntity,
       detail: "Phone number too short",
       path: ["data", "attributes", "phoneNumber"],
     },
@@ -20,7 +20,7 @@ const error = new ServiceError({
 
 deepEqual(
   error.toString(),
-  `ServiceError[${error.id}]: [badRequest]: Invalid email format; [unprocessableContent]: Phone number too short; [cause]: Error: Validation failed`,
+  `ServiceError[${error.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short; [cause]: Error: Validation failed`,
 );
 
 deepEqual(error.toJsonApi(), {
@@ -38,7 +38,7 @@ deepEqual(error.toJsonApi(), {
     {
       id: error.id,
       status: "422",
-      code: "unprocessableContent",
+      code: "unprocessableEntity",
       title: "Request failed validation",
       detail: "Phone number too short",
       source: {

@@ -42,7 +42,7 @@ const error = new ServiceError({
       path: ["data", "attributes", "email"],
     },
     {
-      code: ERROR_CODES.unprocessableContent,
+      code: ERROR_CODES.unprocessableEntity,
       detail: "Phone number too short",
       path: ["data", "attributes", "phoneNumber"],
     },
@@ -52,7 +52,7 @@ const error = new ServiceError({
 
 deepEqual(
   error.toString(),
-  `ServiceError[${error.id}]: [badRequest]: Invalid email format; [unprocessableContent]: Phone number too short; [cause]: Error: Validation failed`,
+  `ServiceError[${error.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short; [cause]: Error: Validation failed`,
 );
 
 deepEqual(error.toJsonApi(), {
@@ -70,7 +70,7 @@ deepEqual(error.toJsonApi(), {
     {
       id: error.id,
       status: "422",
-      code: "unprocessableContent",
+      code: "unprocessableEntity",
       title: "Request failed validation",
       detail: "Phone number too short",
       source: {
@@ -91,17 +91,16 @@ deepEqual(error.toJsonApi(), {
 import { ok } from "node:assert/strict";
 
 import {
+  either as E,
   ERROR_CODES,
   failure,
   type ServiceResult,
   success,
 } from "@clipboard-health/util-typescript";
 
-import { isLeft, isRight } from "../src/lib/functional/either";
-
 function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
   const { email, phone } = params;
-  const code = ERROR_CODES.unprocessableContent;
+  const code = ERROR_CODES.unprocessableEntity;
 
   if (!email.includes("@")) {
     return failure({ issues: [{ code, detail: "Invalid email format" }] });
@@ -114,8 +113,8 @@ function validateUser(params: { email: string; phone: string }): ServiceResult<{
   return success({ id: "user-123" });
 }
 
-ok(isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
-ok(isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+ok(E.isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
+ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
 
 ```
 
@@ -166,8 +165,8 @@ const result = pipe(
   O.map(double),
   O.flatMap(inverse),
   O.match(
-    (n) => `Result is ${n}`,
     () => "No result",
+    (n) => `Result is ${n}`,
   ),
 );
 

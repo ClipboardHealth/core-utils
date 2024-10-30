@@ -15,8 +15,8 @@ const result = pipe(
   O.map(double),
   O.flatMap(inverse),
   O.match(
-    (n) => `Result is ${n}`,
     () => "No result",
+    (n) => `Result is ${n}`,
   ),
 );
 
