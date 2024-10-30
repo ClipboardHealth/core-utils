@@ -1,11 +1,13 @@
 export * from "./lib/deepFreeze";
-export * as either from "./lib/either";
+export * from "./lib/errors/isError";
+export * from "./lib/errors/serviceError";
+export * from "./lib/errors/toError";
+export * as either from "./lib/functional/either";
+export * as option from "./lib/functional/option";
+export * from "./lib/functional/pipe";
 export * from "./lib/isDefined";
-export * from "./lib/isError";
 export * from "./lib/isNil";
 export * from "./lib/isString";
-export * as option from "./lib/option";
-export * from "./lib/pipe";
+export * from "./lib/serviceResult";
 export * from "./lib/stringify";
-export * from "./lib/toError";
 export * from "./lib/types";

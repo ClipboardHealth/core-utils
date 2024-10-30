@@ -6,7 +6,12 @@ TypeScript utilities.
 
 - [Install](#install)
 - [Usage](#usage)
-  - [Functional utilities](#functional-utilities)
+  - [ServiceError](#serviceerror)
+  - [ServiceResult](#serviceresult)
+  - [Functional](#functional)
+    - [`pipe`](#pipe)
+    - [`option`](#option)
+    - [`either`](#either)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -19,7 +24,104 @@ npm install @clipboard-health/util-typescript
 
 See `./src/lib` for each utility.
 
-### Functional utilities
+### ServiceError
+
+<!-- prettier-ignore -->
+```ts
+// ./examples/serviceError.ts
+
+import { deepEqual } from "node:assert/strict";
+
+import { ERROR_CODES, ServiceError } from "@clipboard-health/util-typescript";
+
+const error = new ServiceError({
+  issues: [
+    {
+      code: ERROR_CODES.badRequest,
+      detail: "Invalid email format",
+      path: ["data", "attributes", "email"],
+    },
+    {
+      code: ERROR_CODES.unprocessableContent,
+      detail: "Phone number too short",
+      path: ["data", "attributes", "phoneNumber"],
+    },
+  ],
+  cause: new Error("Validation failed"),
+});
+
+deepEqual(
+  error.toString(),
+  `ServiceError[${error.id}]: [badRequest]: Invalid email format; [unprocessableContent]: Phone number too short; [cause]: Error: Validation failed`,
+);
+
+deepEqual(error.toJsonApi(), {
+  errors: [
+    {
+      id: error.id,
+      status: "400",
+      code: "badRequest",
+      title: "Invalid or malformed request",
+      detail: "Invalid email format",
+      source: {
+        pointer: "/data/attributes/email",
+      },
+    },
+    {
+      id: error.id,
+      status: "422",
+      code: "unprocessableContent",
+      title: "Request failed validation",
+      detail: "Phone number too short",
+      source: {
+        pointer: "/data/attributes/phoneNumber",
+      },
+    },
+  ],
+});
+
+```
+
+### ServiceResult
+
+<!-- prettier-ignore -->
+```ts
+// ./examples/serviceResult.ts
+
+import { ok } from "node:assert/strict";
+
+import {
+  ERROR_CODES,
+  failure,
+  type ServiceResult,
+  success,
+} from "@clipboard-health/util-typescript";
+
+import { isLeft, isRight } from "../src/lib/functional/either";
+
+function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
+  const { email, phone } = params;
+  const code = ERROR_CODES.unprocessableContent;
+
+  if (!email.includes("@")) {
+    return failure({ issues: [{ code, detail: "Invalid email format" }] });
+  }
+
+  if (phone.length !== 12) {
+    return failure({ issues: [{ code, detail: "Invalid phone number" }] });
+  }
+
+  return success({ id: "user-123" });
+}
+
+ok(isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
+ok(isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+
+```
+
+### Functional
+
+#### `pipe`
 
 <!-- prettier-ignore -->
 ```ts
@@ -40,6 +142,8 @@ const result = pipe(
 equal(result, "Hello World");
 
 ```
+
+#### `option`
 
 <!-- prettier-ignore -->
 ```ts
@@ -70,6 +174,8 @@ const result = pipe(
 equal(result, "Result is 0.1");
 
 ```
+
+#### `either`
 
 <!-- prettier-ignore -->
 ```ts

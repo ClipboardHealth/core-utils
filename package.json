@@ -40,7 +40,7 @@
   "private": true,
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
-    "all": "nx run-many --configuration ci --parallel 8 --targets build,lint,test",
+    "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
     "ci:check": "nx format:check && prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip",
     "ci:install": "npm install --audit false --fund false",
     "cspell": "npx cspell --no-summary --no-progress --no-must-find-files",
