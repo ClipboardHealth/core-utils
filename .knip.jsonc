@@ -12,6 +12,6 @@
   ],
   "ignore": ["**/jest.config.ts", "**/generators/**/schema.d.ts", "**/webpack.*.js"],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@nx/webpack", "typedoc-plugin-include-example", "webpack-cli"],
+  "ignoreDependencies": ["@nx/webpack", "@tsconfig/*", "tslib", "webpack-cli"],
   "webpack": false,
 }
