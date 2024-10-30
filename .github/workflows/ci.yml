@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "renovate/**"]
   pull_request:
 
 concurrency:
@@ -24,26 +24,31 @@ jobs:
       node-version: ${{ steps.nvm.outputs.nvmrc }}
 
   pull-request:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
     needs: [initialize]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
         with:
           fetch-depth: 0
           # GitHub checks PRs out based on the merge commit; we want the branch HEAD.
           ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/checkout@v4
+        if: github.event_name != 'pull_request'
+        with:
+          fetch-depth: 0
       - run: git fetch origin main:main
       - uses: ./.github/actions/setup-node
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
       - run: npm run ci:install
       - run: npm run ci:check
-      # Don't use the read-write NX_CLOUD_ACCESS_TOKEN for PRs, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
+      # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: npx nx affected --configuration ci --parallel 3 --targets build,lint,test
 
   main:
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main'
     needs: [initialize]
     permissions:
       actions: read
