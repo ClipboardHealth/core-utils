@@ -29,7 +29,11 @@ export class ContextStore {
   ): Promise<T> {
     return await new Promise((resolve, reject) => {
       ContextStore.getStorage().run(context, () => {
-        function_().then(resolve).catch(reject);
+        try {
+          Promise.resolve(function_()).then(resolve).catch(reject);
+        } catch (error) {
+          reject(error);
+        }
       });
     });
   }

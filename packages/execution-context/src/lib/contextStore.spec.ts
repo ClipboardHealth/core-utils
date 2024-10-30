@@ -37,8 +37,16 @@ describe("Context Store", () => {
   it("should throw exception if the underlying function throws one", async () => {
     await expect(
       ContextStore.withContext(newExecutionContext("test"), async () => {
-        throw new Error("testing error");
+        throw new Error("testing asynchronous error");
       }),
-    ).rejects.toThrow("testing error");
+    ).rejects.toThrow("testing asynchronous error");
+  });
+
+  it("should throw exception if the underlying function throws a synchronous error", async () => {
+    await expect(
+      ContextStore.withContext(newExecutionContext("test"), () => {
+        throw new Error("testing synchronous error");
+      }),
+    ).rejects.toThrow("testing synchronous error");
   });
 });

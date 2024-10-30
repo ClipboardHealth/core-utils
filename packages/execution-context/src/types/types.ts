@@ -37,8 +37,7 @@ export interface ExecutionContext {
    */
   source: string;
   /**
-   * everything added to the metadata will eventually be logged at the end of
-   * the execution context
+   * Additional contextual information associated with this execution context
    */
   metadata: Metadata;
 }
