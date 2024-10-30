@@ -1,7 +1,7 @@
+import { deepFreeze } from "@clipboard-health/util-typescript";
 import dotenv from "dotenv";
 import { fromZodError } from "zod-validation-error";
 
-import { deepFreeze } from "./internal/deepFreeze";
 import { resolve } from "./internal/resolver";
 import { type ConfigParams } from "./types";
 

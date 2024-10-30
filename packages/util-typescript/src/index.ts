@@ -1,3 +1,4 @@
+export * from "./lib/deepFreeze";
 export * as either from "./lib/either";
 export * from "./lib/isDefined";
 export * from "./lib/isError";
