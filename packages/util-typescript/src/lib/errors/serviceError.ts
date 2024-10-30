@@ -153,7 +153,7 @@ export class ServiceError extends Error {
   readonly issues: readonly Issue[];
 
   /**
-   * Creates a new ServiceError
+   * Creates a new `ServiceError`
    * @param parameters - Issues contributing to the error or a message string
    */
   constructor(parameters: ServiceErrorParams) {
