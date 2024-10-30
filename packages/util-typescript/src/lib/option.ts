@@ -46,3 +46,34 @@ export function isNone<A>(option: Option<A>): option is None {
 export function isSome<A>(option: Option<A>): option is Some<A> {
   return option.isSome;
 }
+
+/**
+ * Maps over the value in an Option if it exists.
+ */
+export function map<A, B>(f: (a: A) => B): (option: Option<A>) => Option<B> {
+  return (option) => (isSome(option) ? some(f(option.value)) : none);
+}
+
+/**
+ * Chains Option operations together.
+ */
+export function flatMap<A, B>(f: (a: A) => Option<B>): (option: Option<A>) => Option<B> {
+  return (option) => (isSome(option) ? f(option.value) : none);
+}
+
+/**
+ * Gets the value from an Option or returns a default.
+ */
+export function getOrElse<A>(defaultValue: A): (option: Option<A>) => A {
+  return (option) => (isSome(option) ? option.value : defaultValue);
+}
+
+/**
+ * Pattern matches on an Option, handling both Some and None cases.
+ *
+ * @param onSome - Function to handle the Some case
+ * @param onNone - Function to handle the None case
+ */
+export function match<A, B>(onSome: (value: A) => B, onNone: () => B): (option: Option<A>) => B {
+  return (option) => (isSome(option) ? onSome(option.value) : onNone());
+}

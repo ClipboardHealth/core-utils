@@ -81,6 +81,9 @@ describe("eslint-config", () => {
         // Too many false positives
         "@typescript-eslint/naming-convention": "off",
 
+        // Makes functional programming difficult
+        "@typescript-eslint/no-unsafe-call": "off",
+
         // Prefer an escape hatch instead of an outright ban
         "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
         "@typescript-eslint/return-await": ["error", "always"],
@@ -196,6 +199,9 @@ describe("eslint-config", () => {
 
         // Sort imports and exports
         "simple-import-sort/imports": "warn",
+
+        // Makes functional programming difficult
+        "unicorn/no-array-callback-reference": "off",
 
         // "Better readability" is subjective
         "unicorn/no-array-for-each": "off",

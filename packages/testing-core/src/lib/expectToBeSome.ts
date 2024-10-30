@@ -1,10 +1,10 @@
 import { ok } from "node:assert";
 
-import { isSome, type Option, type Some } from "@clipboard-health/util-typescript";
+import { option as O } from "@clipboard-health/util-typescript";
 
 import { expectToBeDefined } from "./expectToBeDefined";
 
-export function expectToBeSome<A>(value: Option<A> | undefined): asserts value is Some<A> {
+export function expectToBeSome<A>(value: O.Option<A> | undefined): asserts value is O.Some<A> {
   expectToBeDefined(value);
-  ok(isSome(value));
+  ok(O.isSome(value));
 }
