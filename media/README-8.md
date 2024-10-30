@@ -62,14 +62,14 @@ ok(length === 2);
 import { ok } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";
-import { type Either, left, right } from "@clipboard-health/util-typescript";
+import { either as E } from "@clipboard-health/util-typescript";
 
-function divide(numerator: number, denominator: number): Either<string, number> {
+function divide(numerator: number, denominator: number): E.Either<string, number> {
   if (denominator === 0) {
-    return left("Cannot divide by zero");
+    return E.left("Cannot divide by zero");
   }
 
-  return right(numerator / denominator);
+  return E.right(numerator / denominator);
 }
 
 const value = divide(10, 0);
@@ -87,14 +87,14 @@ ok(value.left === "Cannot divide by zero");
 import { ok } from "node:assert/strict";
 
 import { expectToBeRight } from "@clipboard-health/testing-core";
-import { type Either, left, right } from "@clipboard-health/util-typescript";
+import { either as E } from "@clipboard-health/util-typescript";
 
-function divide(numerator: number, denominator: number): Either<string, number> {
+function divide(numerator: number, denominator: number): E.Either<string, number> {
   if (denominator === 0) {
-    return left("Cannot divide by zero");
+    return E.left("Cannot divide by zero");
   }
 
-  return right(numerator / denominator);
+  return E.right(numerator / denominator);
 }
 
 const value = divide(10, 2);
