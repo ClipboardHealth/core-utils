@@ -1,12 +1,12 @@
-import { ERROR_CODES, ServiceError } from "./serviceError";
+import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
 
 describe("ServiceError", () => {
   it("creates error with single issue", () => {
-    const input = {
+    const input: ServiceErrorParams = {
       issues: [
         {
           code: ERROR_CODES.notFound,
-          detail: "User not found",
+          message: "User not found",
         },
       ],
     };
@@ -18,22 +18,22 @@ describe("ServiceError", () => {
     expect(actual.issues).toHaveLength(1);
     expect(actual.issues[0]).toMatchObject({
       code: ERROR_CODES.notFound,
-      detail: "User not found",
+      message: "User not found",
       title: "Resource not found",
     });
   });
 
   it("creates error with multiple issues", () => {
-    const input = {
+    const input: ServiceErrorParams = {
       issues: [
         {
           code: ERROR_CODES.badRequest,
-          detail: "Invalid email",
+          message: "Invalid email",
           path: ["data", "attributes", "email"],
         },
         {
           code: ERROR_CODES.badRequest,
-          detail: "Invalid phone",
+          message: "Invalid phone",
           path: ["data", "attributes", "phoneNumber"],
         },
       ],
@@ -46,13 +46,13 @@ describe("ServiceError", () => {
     expect(actual.issues).toEqual([
       {
         code: ERROR_CODES.badRequest,
-        detail: "Invalid email",
+        message: "Invalid email",
         path: ["data", "attributes", "email"],
         title: "Invalid or malformed request",
       },
       {
         code: ERROR_CODES.badRequest,
-        detail: "Invalid phone",
+        message: "Invalid phone",
         path: ["data", "attributes", "phoneNumber"],
         title: "Invalid or malformed request",
       },
@@ -87,8 +87,7 @@ describe("ServiceError", () => {
       issues: [
         {
           code: ERROR_CODES.badRequest,
-          title: "Custom title",
-          detail: "Invalid email format",
+          message: "Invalid email format",
           path: ["data", "attributes", "email"],
         },
       ],
@@ -101,7 +100,7 @@ describe("ServiceError", () => {
       id: actual.id,
       status: "400",
       code: ERROR_CODES.badRequest,
-      title: "Custom title",
+      title: "Invalid or malformed request",
       detail: "Invalid email format",
       source: {
         pointer: "/data/attributes/email",
@@ -168,7 +167,19 @@ describe("ServiceError", () => {
 
     const actual = new ServiceError(input);
 
-    expect(actual.message).toBe("[internal]: An unknown error occurred");
+    expect(actual.message).toBe("[unknown]");
     expect(actual.issues).toHaveLength(0);
+  });
+
+  it("creates error from string message", () => {
+    const actual = new ServiceError("Something went wrong");
+
+    expect(actual.message).toBe("[internal]: Something went wrong");
+    expect(actual.issues).toHaveLength(1);
+    expect(actual.issues[0]).toMatchObject({
+      code: ERROR_CODES.internal,
+      message: "Something went wrong",
+      title: "Internal server error",
+    });
   });
 });
