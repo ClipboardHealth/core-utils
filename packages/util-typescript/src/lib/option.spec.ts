@@ -58,12 +58,12 @@ describe("Option", () => {
 
   describe("match", () => {
     it("should handle Some case", () => {
-      const actual = pipe(O.some(5), O.match(onSome, onNone));
+      const actual = pipe(O.some(5), O.match(onNone, onSome));
       expect(actual).toBe("Got 5");
     });
 
     it("should handle None case", () => {
-      const actual = pipe(O.none, O.match(onSome, onNone));
+      const actual = pipe(O.none, O.match(onNone, onSome));
       expect(actual).toBe("Nothing");
     });
   });
@@ -74,8 +74,8 @@ describe("Option", () => {
       O.map(double),
       O.flatMap(inverse),
       O.match(
+        () => "No result",
         (n) => `Result is ${n}`,
-        () => "no result",
       ),
     );
 

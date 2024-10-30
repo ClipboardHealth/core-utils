@@ -1,4 +1,4 @@
-import { ok } from "node:assert";
+import { ok } from "node:assert/strict";
 
 /**
  * Asserts and narrows the type for defined values.

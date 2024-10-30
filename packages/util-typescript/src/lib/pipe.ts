@@ -1,16 +1,13 @@
 /**
- * Pipes a value through a series of functions from left to right.
+ * Pipes a value through a series of functions from left to right. Currently supports up to 10
+ * functions.
  *
- * @example
- * const result = pipe(
- *   1,
- *   (x) => x + 1, // 2
- *   (x) => x * 2, // 4
- *   (x) => x + 3, // 7
- *   (x) => x * 2, // 14
- *   (x) => x - 4, // 10
- *   (x) => x / 2, // 5
- * );
+ * @includeExample ./packages/util-typescript/examples/pipe.ts
+ * @see [Usage example](../../util-typescript/examples/pipe.ts)
+ *
+ * @param a - The initial value to transform
+ * @param fs - Functions to apply sequentially
+ * @returns The final transformed value
  */
 export function pipe<A>(a: A): A;
 export function pipe<A, B>(a: A, ab: (a: A) => B): B;

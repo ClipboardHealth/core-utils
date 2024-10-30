@@ -4,7 +4,7 @@ export * from "./lib/isError";
 export * from "./lib/isNil";
 export * from "./lib/isString";
 export * as option from "./lib/option";
-export * as pipe from "./lib/pipe";
+export * from "./lib/pipe";
 export * from "./lib/stringify";
 export * from "./lib/toError";
 export * from "./lib/types";

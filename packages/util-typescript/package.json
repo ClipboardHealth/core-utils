@@ -11,6 +11,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "embed": "embedme README.md"
+  },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
 }
