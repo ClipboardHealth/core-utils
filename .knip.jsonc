@@ -4,6 +4,7 @@
     "packages/config/examples/**/*.ts",
     "packages/contract-core/examples/**/*.ts",
     "packages/example-nestjs/examples/**/*.ts",
+    "packages/execution-context/examples/**/*.ts",
     "packages/json-api/examples/**/*.ts",
     "packages/rules-engine/examples/**/*.ts",
     "packages/testing-core/examples/**/*.ts",
