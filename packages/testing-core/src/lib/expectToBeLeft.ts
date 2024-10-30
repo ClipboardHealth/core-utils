@@ -1,10 +1,17 @@
-import { ok } from "node:assert";
+import { ok } from "node:assert/strict";
 
-import { type Either, isLeft, type Left } from "@clipboard-health/util-typescript";
+import { either as E } from "@clipboard-health/util-typescript";
 
 import { expectToBeDefined } from "./expectToBeDefined";
 
-export function expectToBeLeft<E, A>(value: Either<E, A> | undefined): asserts value is Left<E> {
+/**
+ * Asserts and narrows the type of the provided Either value to Left.
+ * @param value - The Either value to check
+ * @throws {AssertionError} If the value is undefined or not a Left
+ */
+export function expectToBeLeft<E, A>(
+  value: E.Either<E, A> | undefined,
+): asserts value is E.Left<E> {
   expectToBeDefined(value);
-  ok(isLeft(value));
+  ok(E.isLeft(value));
 }

@@ -31,9 +31,7 @@ dotenv.config();
  * **IMPORTANT**: To avoid runtime errors:
  * 1. Environment variables are strings, so use `z.coerce` Zod types for those you plan to override.
  *    Note that `z.coerce.boolean()` coerces any truthy value to `true`. To restrict to `"true" |
- *    "false"`, use the
- *    {@link https://github.com/ClipboardHealth/core-utils/blob/main/packages/contract-core/src/lib/schemas/booleanString.ts
- *    `booleanString` schema} from `@clipboard-health/contract-core`.
+ *    "false"`, use the `booleanString` schema from `@clipboard-health/contract-core`.
  * 2. The resulting configuration is deeply frozen and will throw a runtime error if you attempt to
  *    modify it. The actual return type is `ReadonlyDeep<SchemaT>`, but the library returns a
  *    `Readonly<SchemaT>` because the former prevents clients from passing configuration values to

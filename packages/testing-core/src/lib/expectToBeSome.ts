@@ -1,10 +1,15 @@
-import { ok } from "node:assert";
+import { ok } from "node:assert/strict";
 
-import { isSome, type Option, type Some } from "@clipboard-health/util-typescript";
+import { option as O } from "@clipboard-health/util-typescript";
 
 import { expectToBeDefined } from "./expectToBeDefined";
 
-export function expectToBeSome<A>(value: Option<A> | undefined): asserts value is Some<A> {
+/**
+ * Asserts and narrows the type of the provided Option value to Some.
+ * @param value - The Option value to check
+ * @throws {AssertionError} If the value is undefined or not Some
+ */
+export function expectToBeSome<A>(value: O.Option<A> | undefined): asserts value is O.Some<A> {
   expectToBeDefined(value);
-  ok(isSome(value));
+  ok(O.isSome(value));
 }

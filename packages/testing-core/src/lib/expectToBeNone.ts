@@ -1,10 +1,15 @@
-import { ok } from "node:assert";
+import { ok } from "node:assert/strict";
 
-import { isNone, type None, type Option } from "@clipboard-health/util-typescript";
+import { option as O } from "@clipboard-health/util-typescript";
 
 import { expectToBeDefined } from "./expectToBeDefined";
 
-export function expectToBeNone<A>(value: Option<A> | undefined): asserts value is None {
+/**
+ * Asserts and narrows the type of the provided Option value to None.
+ * @param value - The Option value to check
+ * @throws {AssertionError} If the value is undefined or not a None
+ */
+export function expectToBeNone<A>(value: O.Option<A> | undefined): asserts value is O.None {
   expectToBeDefined(value);
-  ok(isNone(value));
+  ok(O.isNone(value));
 }
