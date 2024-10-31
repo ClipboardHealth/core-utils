@@ -3,7 +3,8 @@ import { ERROR_CODES, ServiceError, type ServiceErrorParams, type ZodLike } from
 describe("ServiceError", () => {
   describe("fromZodLike", () => {
     it("converts ZodLike to ServiceError", () => {
-      const input = {
+      const input: ZodLike = {
+        name: "ZodError",
         issues: [
           {
             message: "Invalid email format",
@@ -16,7 +17,7 @@ describe("ServiceError", () => {
         ],
       };
 
-      const actual = ServiceError.fromZodLike(input);
+      const actual = ServiceError.fromZodError(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
       expect(actual.issues).toEqual([
@@ -35,21 +36,13 @@ describe("ServiceError", () => {
       ]);
       expect(actual.cause).toBe(input);
     });
-
-    it("throws ServiceError for invalid ZodLike structure", () => {
-      const input = { foo: "bar" };
-
-      const casted = input as unknown as ZodLike;
-      expect(() => ServiceError.fromZodLike(casted)).toThrow(ServiceError);
-      expect(() => ServiceError.fromZodLike(casted)).toThrow("Invalid ZodLike");
-    });
   });
 
   describe("fromError", () => {
     it("converts Error to ServiceError", () => {
       const input = new Error("Something went wrong");
 
-      const actual = ServiceError.fromError(input);
+      const actual = ServiceError.fromUnknown(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
       expect(actual.issues).toEqual([
@@ -65,7 +58,7 @@ describe("ServiceError", () => {
     it("converts non-Error to ServiceError", () => {
       const input = "Something went wrong";
 
-      const actual = ServiceError.fromError(input);
+      const actual = ServiceError.fromUnknown(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
       expect(actual.issues).toEqual([
@@ -88,7 +81,7 @@ describe("ServiceError", () => {
         ],
       });
 
-      const actual = ServiceError.fromError(input);
+      const actual = ServiceError.fromUnknown(input);
 
       expect(actual).toBe(input);
     });

@@ -41,7 +41,7 @@ import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
 
 {
   const error = new Error("boom");
-  const serviceError = ServiceError.fromError(error);
+  const serviceError = ServiceError.fromUnknown(error);
   equal(
     serviceError.toString(),
     `ServiceError[${serviceError.id}]: [internal]: boom; [cause]: Error: boom`,
