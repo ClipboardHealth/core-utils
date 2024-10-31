@@ -1,4 +1,4 @@
-import { either as E } from "@clipboard-health/util-typescript";
+import { either as E } from "@clipboard-health/util-ts";
 
 import { expectToBeLeft } from "./expectToBeLeft";
 

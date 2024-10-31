@@ -1,6 +1,6 @@
 import { ok } from "node:assert/strict";
 
-import { isDefined } from "@clipboard-health/util-typescript";
+import { isDefined } from "@clipboard-health/util-ts";
 
 /**
  * Asserts and narrows the type for defined values.

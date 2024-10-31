@@ -1,4 +1,4 @@
-import { option as O } from "@clipboard-health/util-typescript";
+import { option as O } from "@clipboard-health/util-ts";
 
 import { expectToBeSome } from "./expectToBeSome";
 

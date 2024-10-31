@@ -1,4 +1,4 @@
-import { isDefined } from "@clipboard-health/util-typescript";
+import { isDefined } from "@clipboard-health/util-ts";
 import decamelize from "decamelize";
 import { z } from "zod";
 

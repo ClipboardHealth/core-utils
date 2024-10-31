@@ -3,7 +3,7 @@
   "description": "Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.",
   "version": "0.6.2",
   "dependencies": {
-    "@clipboard-health/util-typescript": "0.5.2",
+    "@clipboard-health/util-ts": "2.8.8",
     "decamelize": "5.0.1",
     "dotenv": "16.4.5",
     "tslib": "2.8.0",

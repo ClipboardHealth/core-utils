@@ -1,6 +1,6 @@
 import { ok } from "node:assert/strict";
 
-import { either as E } from "@clipboard-health/util-typescript";
+import { either as E } from "@clipboard-health/util-ts";
 
 import { expectToBeDefined } from "./expectToBeDefined";
 
