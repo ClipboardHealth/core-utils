@@ -26,7 +26,7 @@ npx nx generate @nx/workspace:remove --projectName [PROJECT_NAME]
 
 # ...or rename it. Note: after running this command, perform a find/replace for remaining references
 # to the old name.
-npx nx generate @nx/workspace:move --projectName [PROJECT_NAME] --newProjectName [NEW_PROJECT_NAME] --destination [DESTINATION_FOLDER]
+npx nx generate @nx/workspace:move --project [PROJECT_NAME] --destination [DESTINATION_FOLDER]
 ```
 
 To porting an existing library, follow the above to generate a new package and copy the code from the existing library into it.

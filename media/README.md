@@ -25,7 +25,7 @@ The TypeDoc comment for the `createConfig` function:
 ```ts
 // ./src/lib/createConfig.ts
 
-import { deepFreeze } from "@clipboard-health/util-typescript";
+import { deepFreeze } from "@clipboard-health/util-ts";
 import dotenv from "dotenv";
 import { fromZodError } from "zod-validation-error";
 

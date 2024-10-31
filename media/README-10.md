@@ -1,4 +1,4 @@
-# @clipboard-health/util-typescript <!-- omit from toc -->
+# @clipboard-health/util-ts <!-- omit from toc -->
 
 TypeScript utilities.
 
@@ -17,7 +17,7 @@ TypeScript utilities.
 ## Install
 
 ```bash
-npm install @clipboard-health/util-typescript
+npm install @clipboard-health/util-ts
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ See `./src/lib` for each utility.
 
 import { deepEqual, equal } from "node:assert/strict";
 
-import { ERROR_CODES, ServiceError } from "@clipboard-health/util-typescript";
+import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
 
 {
   const error = new ServiceError("boom");
@@ -123,7 +123,7 @@ import {
   failure,
   type ServiceResult,
   success,
-} from "@clipboard-health/util-typescript";
+} from "@clipboard-health/util-ts";
 
 function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
   const { email, phone } = params;
@@ -155,7 +155,7 @@ ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" }))
 
 import { equal } from "node:assert/strict";
 
-import { pipe } from "@clipboard-health/util-typescript";
+import { pipe } from "@clipboard-health/util-ts";
 
 const result = pipe(
   "  hello world  ",
@@ -177,7 +177,7 @@ equal(result, "Hello World");
 
 import { equal } from "node:assert/strict";
 
-import { option as O, pipe } from "@clipboard-health/util-typescript";
+import { option as O, pipe } from "@clipboard-health/util-ts";
 
 function double(n: number) {
   return n * 2;
@@ -209,7 +209,7 @@ equal(result, "Result is 0.1");
 
 import { equal } from "node:assert/strict";
 
-import { either as E, pipe } from "@clipboard-health/util-typescript";
+import { either as E, pipe } from "@clipboard-health/util-ts";
 
 function double(n: number): number {
   return n * 2;

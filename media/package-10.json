@@ -1,9 +1,12 @@
 {
-  "name": "@clipboard-health/util-typescript",
+  "name": "@clipboard-health/util-ts",
   "description": "TypeScript utilities.",
-  "version": "0.5.2",
+  "version": "2.9.0",
   "dependencies": {
     "tslib": "2.8.0"
+  },
+  "devDependencies": {
+    "type-fest": "4.26.1"
   },
   "keywords": [],
   "license": "MIT",
