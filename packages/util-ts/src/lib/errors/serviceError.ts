@@ -43,7 +43,7 @@ export type ServiceErrorParams =
     };
 
 export interface ZodLike {
-  name: "ZodError";
+  name: string;
   issues: ReadonlyArray<{
     message?: string | undefined;
     path: Array<string | number>;
@@ -126,7 +126,6 @@ export class ServiceError extends Error {
         message: issue.message,
         path: issue.path,
       })),
-      cause: value,
     });
   }
 

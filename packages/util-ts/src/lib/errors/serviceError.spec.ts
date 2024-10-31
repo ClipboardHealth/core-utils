@@ -34,7 +34,7 @@ describe("ServiceError", () => {
           title: "Request failed validation",
         },
       ]);
-      expect(actual.cause).toBe(input);
+      expect(actual.cause).toBeUndefined();
     });
   });
 

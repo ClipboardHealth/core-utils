@@ -33,6 +33,7 @@ See `./src/lib` for each utility.
 import { deepEqual, equal } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
+import { z } from "zod";
 
 {
   const error = new ServiceError("boom");
@@ -40,12 +41,18 @@ import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
 }
 
 {
-  const error = new Error("boom");
-  const serviceError = ServiceError.fromUnknown(error);
+  const serviceError = ServiceError.fromUnknown("boom");
   equal(
     serviceError.toString(),
     `ServiceError[${serviceError.id}]: [internal]: boom; [cause]: Error: boom`,
   );
+}
+
+{
+  const serviceError = ServiceError.fromZodError(
+    new z.ZodError([{ code: "custom", path: ["foo"], message: "boom" }]),
+  );
+  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [unprocessableEntity]: boom`);
 }
 
 {
