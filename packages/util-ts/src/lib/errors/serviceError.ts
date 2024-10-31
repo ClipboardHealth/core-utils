@@ -95,7 +95,7 @@ interface Issue extends ServiceIssue {
  */
 export class ServiceError extends Error {
   /**
-   * Converts an unknown value to a `ServiceError`.
+   * Converts an unknown value to a `ServiceError`. Typically called from `catch` blocks.
    *
    * @param value - The value to convert, which can be any type
    * @returns If the value is already a `ServiceError`, returns it unchanged. Otherwise, convert it
@@ -121,6 +121,7 @@ export class ServiceError extends Error {
    */
   static fromZodError(value: ZodLike): ServiceError {
     return new ServiceError({
+      cause: value,
       issues: value.issues.map((issue) => ({
         code: ERROR_CODES.unprocessableEntity,
         message: issue.message,
@@ -159,8 +160,7 @@ export class ServiceError extends Error {
    * Return string representation of the error for logging.
    */
   override toString(): string {
-    const cause = this.cause ? `; [cause]: ${toError(this.cause).toString()}` : "";
-    return `${this.name}[${this.id}]: ${this.message}${cause}`;
+    return `${this.name}[${this.id}]: ${this.message}`;
   }
 
   /**

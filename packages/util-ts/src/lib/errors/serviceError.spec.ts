@@ -34,7 +34,7 @@ describe("ServiceError", () => {
           title: "Request failed validation",
         },
       ]);
-      expect(actual.cause).toBeUndefined();
+      expect(actual.cause).toBe(input);
     });
   });
 
@@ -145,22 +145,10 @@ describe("ServiceError", () => {
     ]);
   });
 
-  it("converts to string with cause", () => {
+  it("converts to string", () => {
     const input = {
       issues: [{ code: ERROR_CODES.notFound }],
       cause: new Error("Not in database"),
-    };
-
-    const actual = new ServiceError(input);
-
-    expect(actual.toString()).toMatch(
-      /^ServiceError\[[\da-f-]+]: \[notFound]; \[cause]: Error: Not in database$/,
-    );
-  });
-
-  it("converts to string without cause", () => {
-    const input = {
-      issues: [{ code: ERROR_CODES.notFound }],
     };
 
     const actual = new ServiceError(input);

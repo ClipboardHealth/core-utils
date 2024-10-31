@@ -10,7 +10,7 @@
     "group:recommended",
     "npm:unpublishSafe",
     "schedule:automergeDaily",
-    "schedule:monthly"
+    "schedule:daily"
   ],
   "packageRules": [
     {

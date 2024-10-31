@@ -40,12 +40,11 @@ import { z } from "zod";
   equal(error.toString(), `ServiceError[${error.id}]: [internal]: boom`);
 }
 
-{
-  const serviceError = ServiceError.fromUnknown("boom");
-  equal(
-    serviceError.toString(),
-    `ServiceError[${serviceError.id}]: [internal]: boom; [cause]: Error: boom`,
-  );
+try {
+  throw new Error("boom");
+} catch (error) {
+  const serviceError = ServiceError.fromUnknown(error);
+  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [internal]: boom`);
 }
 
 {
@@ -60,10 +59,7 @@ import { z } from "zod";
     issues: [{ message: "boom" }],
     cause: new Error("Original error"),
   });
-  equal(
-    errorWithCause.toString(),
-    `ServiceError[${errorWithCause.id}]: [internal]: boom; [cause]: Error: Original error`,
-  );
+  equal(errorWithCause.toString(), `ServiceError[${errorWithCause.id}]: [internal]: boom`);
 }
 
 {
@@ -85,7 +81,7 @@ import { z } from "zod";
 
   equal(
     multipleIssues.toString(),
-    `ServiceError[${multipleIssues.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short; [cause]: Error: Original error`,
+    `ServiceError[${multipleIssues.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short`,
   );
 
   deepEqual(multipleIssues.toJsonApi(), {
