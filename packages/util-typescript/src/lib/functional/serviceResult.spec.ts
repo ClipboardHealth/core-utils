@@ -2,7 +2,7 @@ import { ok } from "node:assert/strict";
 
 import { either as E } from "@clipboard-health/util-typescript";
 
-import { ERROR_CODES, ServiceError } from "./errors/serviceError";
+import { ERROR_CODES, ServiceError } from "../errors/serviceError";
 import { failure, success } from "./serviceResult";
 
 describe("ServiceResult", () => {

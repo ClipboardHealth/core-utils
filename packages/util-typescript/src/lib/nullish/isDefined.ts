@@ -1,5 +1,5 @@
+import { type NullOrUndefined } from "../types";
 import { isNil } from "./isNil";
-import { type NullOrUndefined } from "./types";
 
 /**
  * Type guard that checks if a value is defined (not null or undefined).

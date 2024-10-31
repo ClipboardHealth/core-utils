@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { deepFreeze } from "../deepFreeze";
-import { isDefined } from "../isDefined";
+import { isDefined } from "../nullish/isDefined";
 import { toError } from "./toError";
 
 /**

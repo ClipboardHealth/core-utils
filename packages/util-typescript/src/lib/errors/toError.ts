@@ -1,13 +1,12 @@
-import { isString } from "../isString";
-import { stringify } from "../stringify";
+import { isString } from "../strings/isString";
+import { stringify } from "../strings/stringify";
 import { isError } from "./isError";
 
 /**
- * Converts any value to an Error instance. If the input is already an Error,
- * returns it directly. Otherwise, creates a new Error with an appropriate
- * string representation of the input.
+ * Converts an error-like value to an Error instance. If the input is already an Error, returns it
+ * directly. Otherwise, creates a new Error with an appropriate string representation of the input.
  *
- * @param value - The value to convert. Can be of any type
+ * @param value - The value to convert.
  * @returns An Error instance containing a string representation of the input
  */
 export function toError(value: unknown): Error {

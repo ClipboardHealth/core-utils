@@ -1,6 +1,6 @@
 import { either as E } from "@clipboard-health/util-typescript";
 
-import { ServiceError, type ServiceErrorParams } from "./errors/serviceError";
+import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
 
 /**
  * Represents the result of a service operation that may fail.

@@ -10,7 +10,12 @@
     "packages/testing-core/examples/**/*.ts",
     "packages/util-typescript/examples/**/*.ts",
   ],
-  "ignore": ["**/jest.config.ts", "**/generators/**/schema.d.ts", "**/webpack.*.js"],
+  "ignore": [
+    "**/jest.config.ts",
+    "**/generators/**/schema.d.ts",
+    "**/webpack.*.js",
+    "**/cbhResponse.ts",
+  ],
   "ignoreBinaries": [],
   "ignoreDependencies": ["@nx/webpack", "typedoc-plugin-include-example", "webpack-cli"],
   "webpack": false,

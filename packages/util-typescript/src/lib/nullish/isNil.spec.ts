@@ -1,4 +1,4 @@
-import { isNil } from "./isNil";
+import { isNil, isNullOrUndefined } from "./isNil";
 
 describe("isNil", () => {
   it.each([
@@ -17,7 +17,9 @@ describe("isNil", () => {
     { input: new Date(), expected: false },
   ])("returns $expected for $input", ({ input, expected }) => {
     const actual = isNil(input);
-
     expect(actual).toBe(expected);
+
+    const isNullOrUndefinedActual = isNullOrUndefined(input);
+    expect(isNullOrUndefinedActual).toBe(expected);
   });
 });
