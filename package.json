@@ -16,7 +16,7 @@
     "@types/jest": "29.5.13",
     "@types/node": "22.8.1",
     "@typescript-eslint/parser": "7.18.0",
-    "cspell": "8.15.3",
+    "cspell": "8.15.4",
     "embedme": "1.22.1",
     "eslint": "8.57.1",
     "husky": "9.1.6",
