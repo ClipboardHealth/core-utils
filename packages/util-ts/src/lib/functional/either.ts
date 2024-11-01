@@ -110,11 +110,11 @@ export function getOrElse<E, A>(onLeft: (left: E) => A): (either: Either<E, A>) 
  *
  * @param onLeft - Function to handle the `Left` case
  * @param onRight - Function to handle the `Right` case
- * @returns The result of `Either` `onLeft` or `onRight` based on the `Either` state
+ * @returns The result of either `onLeft` or `onRight` based on the `Either` state
  */
-export function match<E, A, B>(
+export function match<E, A, B, C>(
   onLeft: (left: E) => B,
-  onRight: (right: A) => B,
-): (either: Either<E, A>) => B {
+  onRight: (right: A) => C,
+): (either: Either<E, A>) => B | C {
   return (either) => (isRight(either) ? onRight(either.right) : onLeft(either.left));
 }

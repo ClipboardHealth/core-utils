@@ -90,6 +90,9 @@ export function getOrElse<A>(defaultValue: A): (option: Option<A>) => A {
  * @param onSome - Function to handle the `Some` case
  * @returns The result of either `onNone` or `onSome` based on the `Option` state
  */
-export function match<A, B>(onNone: () => B, onSome: (value: A) => B): (option: Option<A>) => B {
+export function match<A, B, C>(
+  onNone: () => B,
+  onSome: (value: A) => C,
+): (option: Option<A>) => B | C {
   return (option) => (isSome(option) ? onSome(option.value) : onNone());
 }
