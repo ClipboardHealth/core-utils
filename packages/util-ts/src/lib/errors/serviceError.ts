@@ -50,7 +50,7 @@ export interface ZodLike {
   }>;
 }
 
-const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
+const ERROR_METADATA = {
   badRequest: {
     status: 400,
     title: "Invalid or malformed request",
@@ -83,7 +83,8 @@ const ERROR_METADATA: Record<ErrorCode, { status: number; title: string }> = {
     status: 500,
     title: "Internal server error",
   },
-};
+} as const satisfies Record<ErrorCode, { status: number; title: string }>;
+type Status = (typeof ERROR_METADATA)[keyof typeof ERROR_METADATA]["status"];
 
 interface Issue extends ServiceIssue {
   code: Required<ServiceIssue>["code"];
@@ -132,7 +133,7 @@ export class ServiceError extends Error {
 
   readonly id: string;
   readonly issues: readonly Issue[];
-  readonly status: number;
+  readonly status: Status;
 
   /**
    * Creates a new `ServiceError`
@@ -145,11 +146,12 @@ export class ServiceError extends Error {
         : { ...parameters, issues: parameters.issues.map(toIssue) };
     super(createServiceErrorMessage(params.issues));
 
-    this.cause = params.cause;
-    this.id = params.id ?? randomUUID();
-    this.issues = deepFreeze(params.issues);
+    const { cause, id, issues } = params;
+    this.cause = cause;
+    this.id = id ?? randomUUID();
+    this.issues = deepFreeze(issues);
     this.name = this.constructor.name;
-    this.status = Math.max(...params.issues.map((issue) => ERROR_METADATA[issue.code].status));
+    this.status = Math.max(...issues.map((issue) => ERROR_METADATA[issue.code].status)) as Status;
 
     /**
      * Maintain proper prototype chain in transpiled code
