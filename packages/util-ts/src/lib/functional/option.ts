@@ -1,3 +1,5 @@
+import { isNil } from "../nullish";
+
 export type None = Readonly<{
   isSome: false;
 }>;
@@ -106,5 +108,5 @@ export function match<A, B, C>(
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function fromNullable<A>(value: A | null | undefined): Option<A> {
-  return value === null || value === undefined ? none : some(value);
+  return isNil(value) ? none : some(value);
 }
