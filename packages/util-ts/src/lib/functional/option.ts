@@ -96,3 +96,15 @@ export function match<A, B, C>(
 ): (option: Option<A>) => B | C {
   return (option) => (isSome(option) ? onSome(option.value) : onNone());
 }
+
+/**
+ * Converts a nullable value to an `Option`. If the value is `null` or `undefined`, returns `None`.
+ * Otherwise, returns `Some(value)`.
+ *
+ * @param value - The value to convert
+ * @returns An `Option` representing the nullable value
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function fromNullable<A>(value: A | null | undefined): Option<A> {
+  return value === null || value === undefined ? none : some(value);
+}

@@ -81,6 +81,25 @@ describe("Option", () => {
 
     expect(actual).toBe("Result is 0.1");
   });
+
+  describe("fromNullable", () => {
+    it("should return Some for non-null value", () => {
+      const actual = O.fromNullable("my-value");
+      expect(actual).toEqual(O.some("my-value"));
+    });
+
+    it("should return None for null value", () => {
+      // eslint-disable-next-line unicorn/no-null
+      const actual = O.fromNullable(null);
+      expect(actual).toEqual(O.none);
+    });
+
+    it("should return None for undefined value", () => {
+      // eslint-disable-next-line unicorn/no-useless-undefined
+      const actual = O.fromNullable(undefined);
+      expect(actual).toEqual(O.none);
+    });
+  });
 });
 
 function onSome(x: number) {
