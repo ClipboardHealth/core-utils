@@ -132,6 +132,7 @@ export class ServiceError extends Error {
 
   readonly id: string;
   readonly issues: readonly Issue[];
+  readonly status: number;
 
   /**
    * Creates a new `ServiceError`
@@ -148,6 +149,7 @@ export class ServiceError extends Error {
     this.id = params.id ?? randomUUID();
     this.issues = deepFreeze(params.issues);
     this.name = this.constructor.name;
+    this.status = Math.max(...params.issues.map((issue) => ERROR_METADATA[issue.code].status));
 
     /**
      * Maintain proper prototype chain in transpiled code

@@ -13,15 +13,17 @@ export interface FilterValue {
   schema: z.ZodTypeAny;
 }
 
-export type FilterMap<FieldT extends Field = Field> = Record<FieldT, FilterValue>;
+type InternalFilterMap<FieldT extends Field = Field> = Record<FieldT, FilterValue>;
 
-export type FilterSchema<MapT extends FilterMap> = {
+export type FilterMap<FieldT extends Field = Field> = Partial<InternalFilterMap<FieldT>>;
+
+export type FilterSchema<MapT extends InternalFilterMap> = {
   [K in keyof MapT]: z.ZodOptional<
     z.ZodEffects<
       z.ZodOptional<
         z.ZodObject<{
           [F in MapT[K]["filters"][number]]: z.ZodOptional<
-            z.ZodEffects<z.ZodOptional<z.ZodReadonly<z.ZodArray<MapT[K]["schema"]>>>>
+            z.ZodEffects<z.ZodOptional<z.ZodArray<MapT[K]["schema"]>>>
           >;
         }>
       >
@@ -38,7 +40,7 @@ export type FilterSchema<MapT extends FilterMap> = {
  * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
  * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
  */
-export function filterQuery<const MapT extends FilterMap>(parameters: Readonly<MapT>) {
+export function filterQuery<const MapT extends InternalFilterMap>(parameters: Readonly<MapT>) {
   return {
     filter: z
       .object(
@@ -62,9 +64,7 @@ function filterSchema(parameters: FilterValue) {
       Object.fromEntries(
         filters.map((filter) => [
           filter,
-          z
-            .preprocess(splitString, schema.array().min(1).max(10_000).readonly().optional())
-            .optional(),
+          z.preprocess(splitString, schema.array().min(1).max(10_000).optional()).optional(),
         ]),
       ),
     )

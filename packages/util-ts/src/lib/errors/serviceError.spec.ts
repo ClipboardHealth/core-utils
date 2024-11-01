@@ -35,6 +35,7 @@ describe("ServiceError", () => {
         },
       ]);
       expect(actual.cause).toBe(input);
+      expect(actual.status).toBe(422);
     });
   });
 
@@ -53,6 +54,7 @@ describe("ServiceError", () => {
         },
       ]);
       expect(actual.cause).toBe(input);
+      expect(actual.status).toBe(500);
     });
 
     it("converts non-Error to ServiceError", () => {
@@ -69,6 +71,7 @@ describe("ServiceError", () => {
         },
       ]);
       expect(actual.cause).toBeInstanceOf(Error);
+      expect(actual.status).toBe(500);
     });
 
     it("preserves existing ServiceError", () => {
@@ -84,6 +87,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromUnknown(input);
 
       expect(actual).toBe(input);
+      expect(actual.status).toBe(404);
     });
   });
 
@@ -107,6 +111,7 @@ describe("ServiceError", () => {
       message: "User not found",
       title: "Resource not found",
     });
+    expect(actual.status).toBe(404);
   });
 
   it("creates error with multiple issues", () => {
@@ -143,6 +148,7 @@ describe("ServiceError", () => {
         title: "Invalid or malformed request",
       },
     ]);
+    expect(actual.status).toBe(400);
   });
 
   it("converts to string", () => {
@@ -154,6 +160,7 @@ describe("ServiceError", () => {
     const actual = new ServiceError(input);
 
     expect(actual.toString()).toMatch(/^ServiceError\[[\da-f-]+]: \[notFound]$/);
+    expect(actual.status).toBe(404);
   });
 
   it("converts to JSON:API format with all fields", () => {
@@ -211,7 +218,7 @@ describe("ServiceError", () => {
           path: ["data", "attributes", "email"],
         },
         {
-          code: ERROR_CODES.badRequest,
+          code: ERROR_CODES.unprocessableEntity,
           detail: "Invalid phone",
           path: ["data", "attributes", "phone"],
         },
@@ -232,6 +239,7 @@ describe("ServiceError", () => {
         }),
       ]),
     );
+    expect(actual.status).toBe(422);
   });
 
   it("creates error with default message when issues array is empty", () => {
@@ -255,5 +263,6 @@ describe("ServiceError", () => {
       message: "Something went wrong",
       title: "Internal server error",
     });
+    expect(actual.status).toBe(500);
   });
 });

@@ -7,14 +7,14 @@ type Filter = z.infer<typeof query.shape.filter>;
 let _typeCheck: Filter | undefined;
 //  ^? let _typeCheck: {
 //         age?: {
-//             eq?: readonly number[] | undefined;
-//             gt?: readonly number[] | undefined;
+//             eq?: number[] | undefined;
+//             gt?: number[] | undefined;
 //         } | undefined;
 //         dateOfBirth?: {
-//             gte?: readonly Date[] | undefined;
+//             gte?: Date[] | undefined;
 //         } | undefined;
 //         isActive?: {
-//             eq?: readonly ("true" | "false")[] | undefined;
+//             eq?: ("true" | "false")[] | undefined;
 //         } | undefined;
 //     } | undefined
 
