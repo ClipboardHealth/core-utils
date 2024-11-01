@@ -17,6 +17,6 @@
     "**/cbhResponse.ts",
   ],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@nx/webpack", "typedoc-plugin-include-example", "webpack-cli"],
+  "ignoreDependencies": ["@nx/webpack", "@tsconfig/*", "tslib", "webpack-cli"],
   "webpack": false,
 }
