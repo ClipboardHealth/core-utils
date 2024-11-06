@@ -32,7 +32,7 @@ export interface ServiceIssue {
   path?: Array<string | number>;
 }
 
-type Source = "header" | "parameter" | "pointer";
+export type ErrorSource = "header" | "parameter" | "pointer";
 
 export type ServiceErrorParams =
   // Message string
@@ -49,7 +49,7 @@ export type ServiceErrorParams =
        *
        * @see {@link https://jsonapi.org/format/#error-objects}
        */
-      source?: Source | undefined;
+      source?: ErrorSource | undefined;
     };
 
 const ERROR_METADATA = {
@@ -122,7 +122,7 @@ export class ServiceError extends Error {
    * @param error - A ZodError
    * @returns The converted `ServiceError`
    */
-  static fromZodError(error: ZodError, options?: { source?: Source }): ServiceError {
+  static fromZodError(error: ZodError, options?: { source?: ErrorSource }): ServiceError {
     return new ServiceError({
       cause: error,
       issues: error.issues.map(toZodIssue),
@@ -133,7 +133,7 @@ export class ServiceError extends Error {
   readonly id: string;
   readonly issues: readonly Issue[];
   readonly status: Status;
-  readonly source: Source;
+  readonly source: ErrorSource;
 
   /**
    * Creates a new `ServiceError`
