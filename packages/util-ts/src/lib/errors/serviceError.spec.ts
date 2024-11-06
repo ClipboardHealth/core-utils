@@ -1,21 +1,26 @@
-import { ERROR_CODES, ServiceError, type ServiceErrorParams, type ZodLike } from "./serviceError";
+import { ZodError } from "zod";
+
+import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
 
 describe("ServiceError", () => {
   describe("fromZodLike", () => {
     it("converts ZodLike to ServiceError", () => {
-      const input: ZodLike = {
-        name: "ZodError",
-        issues: [
-          {
-            message: "Invalid email format",
-            path: ["email"],
-          },
-          {
-            message: "Invalid phone number",
-            path: ["phoneNumber"],
-          },
-        ],
-      };
+      const input = new ZodError([
+        {
+          code: "invalid_type",
+          message: "Invalid email format",
+          path: ["email"],
+          expected: "string",
+          received: "number",
+        },
+        {
+          code: "invalid_type",
+          message: "Invalid phone number",
+          path: ["phoneNumber"],
+          expected: "string",
+          received: "number",
+        },
+      ]);
 
       const actual = ServiceError.fromZodError(input);
 

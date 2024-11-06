@@ -1,6 +1,7 @@
 import { either as E } from "@clipboard-health/util-ts";
+import { type SafeParseReturnType } from "zod";
 
-import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
+import { ServiceError, type ServiceErrorParams, toZodIssue } from "../errors/serviceError";
 
 /**
  * Represents the result of a service operation that may fail.
@@ -28,4 +29,12 @@ export function success<A>(value: A): ServiceResult<A> {
  */
 export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
   return E.left(params instanceof ServiceError ? params : new ServiceError(params));
+}
+
+export function fromSafeParseReturnType<A>(
+  value: SafeParseReturnType<unknown, A>,
+): ServiceResult<A> {
+  return value.success
+    ? success(value.data)
+    : failure({ issues: value.error.issues.map(toZodIssue) });
 }

@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 
+import { type ZodError, type ZodIssue } from "zod";
+
 import { deepFreeze } from "../deepFreeze";
 import { toError } from "./toError";
 
@@ -41,14 +43,6 @@ export type ServiceErrorParams =
       /** Array of issues contributing to the error */
       issues: readonly ServiceIssue[];
     };
-
-export interface ZodLike {
-  name: string;
-  issues: ReadonlyArray<{
-    message?: string | undefined;
-    path: Array<string | number>;
-  }>;
-}
 
 const ERROR_METADATA = {
   badRequest: {
@@ -120,14 +114,10 @@ export class ServiceError extends Error {
    * @param value - A ZodError
    * @returns The converted `ServiceError`
    */
-  static fromZodError(value: ZodLike): ServiceError {
+  static fromZodError(value: ZodError): ServiceError {
     return new ServiceError({
       cause: value,
-      issues: value.issues.map((issue) => ({
-        code: ERROR_CODES.unprocessableEntity,
-        message: issue.message,
-        path: issue.path,
-      })),
+      issues: value.issues.map(toZodIssue),
     });
   }
 
@@ -188,6 +178,14 @@ export class ServiceError extends Error {
       })),
     };
   }
+}
+
+export function toZodIssue(issue: ZodIssue): ServiceIssue {
+  return {
+    code: ERROR_CODES.unprocessableEntity,
+    message: issue.message,
+    path: issue.path,
+  };
 }
 
 /**
