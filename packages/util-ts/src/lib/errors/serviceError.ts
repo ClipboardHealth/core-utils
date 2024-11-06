@@ -32,6 +32,8 @@ export interface ServiceIssue {
   path?: Array<string | number>;
 }
 
+type Source = "header" | "parameter" | "pointer";
+
 export type ServiceErrorParams =
   // Message string
   | string
@@ -42,6 +44,12 @@ export type ServiceErrorParams =
       id?: string;
       /** Array of issues contributing to the error */
       issues: readonly ServiceIssue[];
+      /**
+       * Source of the error
+       *
+       * @see {@link https://jsonapi.org/format/#error-objects}
+       */
+      source?: Source | undefined;
     };
 
 const ERROR_METADATA = {
@@ -111,19 +119,21 @@ export class ServiceError extends Error {
   /**
    * Converts a ZodError to a `ServiceError`.
    *
-   * @param value - A ZodError
+   * @param error - A ZodError
    * @returns The converted `ServiceError`
    */
-  static fromZodError(value: ZodError): ServiceError {
+  static fromZodError(error: ZodError, options?: { source?: Source }): ServiceError {
     return new ServiceError({
-      cause: value,
-      issues: value.issues.map(toZodIssue),
+      cause: error,
+      issues: error.issues.map(toZodIssue),
+      source: options?.source,
     });
   }
 
   readonly id: string;
   readonly issues: readonly Issue[];
   readonly status: Status;
+  readonly source: Source;
 
   /**
    * Creates a new `ServiceError`
@@ -132,15 +142,21 @@ export class ServiceError extends Error {
   constructor(parameters: ServiceErrorParams) {
     const params =
       typeof parameters === "string"
-        ? { cause: undefined, id: undefined, issues: [toIssue({ message: parameters })] }
+        ? {
+            cause: undefined,
+            id: undefined,
+            issues: [toIssue({ message: parameters })],
+            source: undefined,
+          }
         : { ...parameters, issues: parameters.issues.map(toIssue) };
     super(createServiceErrorMessage(params.issues));
 
-    const { cause, id, issues } = params;
+    const { cause, id, issues, source } = params;
     this.cause = cause;
     this.id = id ?? randomUUID();
     this.issues = deepFreeze(issues);
     this.name = this.constructor.name;
+    this.source = source ?? "pointer";
     this.status = Math.max(...issues.map((issue) => ERROR_METADATA[issue.code].status)) as Status;
 
     /**
@@ -172,7 +188,7 @@ export class ServiceError extends Error {
         ...(issue.message && { detail: issue.message }),
         ...(issue.path && {
           source: {
-            pointer: `/${issue.path.join("/")}`,
+            [this.source]: `/${issue.path.join("/")}`,
           },
         }),
       })),

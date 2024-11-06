@@ -1,3 +1,5 @@
+import { ok } from "node:assert/strict";
+
 import { ZodError } from "zod";
 
 import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
@@ -269,5 +271,84 @@ describe("ServiceError", () => {
       title: "Internal server error",
     });
     expect(actual.status).toBe(500);
+  });
+
+  describe("source handling", () => {
+    it("uses pointer as default source", () => {
+      const input = {
+        issues: [
+          {
+            code: ERROR_CODES.badRequest,
+            message: "Invalid value",
+            path: ["data", "attributes", "email"],
+          },
+        ],
+      };
+
+      const actual = new ServiceError(input);
+      const jsonApi = actual.toJsonApi();
+
+      ok(jsonApi.errors[0]);
+      expect(jsonApi.errors[0].source).toEqual({
+        pointer: "/data/attributes/email",
+      });
+    });
+
+    it("uses specified source in constructor", () => {
+      const input = {
+        issues: [
+          {
+            code: ERROR_CODES.badRequest,
+            message: "Invalid header",
+            path: ["authorization"],
+          },
+        ],
+        source: "header" as const,
+      };
+
+      const actual = new ServiceError(input);
+      const jsonApi = actual.toJsonApi();
+
+      ok(jsonApi.errors[0]);
+      expect(jsonApi.errors[0].source).toEqual({
+        header: "/authorization",
+      });
+    });
+
+    it("uses specified source in fromZodError", () => {
+      const zodError = new ZodError([
+        {
+          code: "invalid_type",
+          message: "Invalid parameter",
+          path: ["page"],
+          expected: "number",
+          received: "string",
+        },
+      ]);
+
+      const actual = ServiceError.fromZodError(zodError, { source: "header" });
+      const jsonApi = actual.toJsonApi();
+
+      ok(jsonApi.errors[0]);
+      expect(jsonApi.errors[0].source).toEqual({
+        header: "/page",
+      });
+    });
+  });
+
+  describe("status code handling", () => {
+    it("uses highest status code when multiple issues exist", () => {
+      const input = {
+        issues: [
+          { code: ERROR_CODES.badRequest }, // 400
+          { code: ERROR_CODES.unprocessableEntity }, // 422
+          { code: ERROR_CODES.notFound }, // 404
+        ],
+      };
+
+      const actual = new ServiceError(input);
+
+      expect(actual.status).toBe(422);
+    });
   });
 });
