@@ -1,3 +1,5 @@
+import "../types/global";
+
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { type ExecutionContext } from "../types/types";
