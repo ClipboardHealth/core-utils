@@ -1,14 +1,14 @@
 import { parseOptions } from "./parseOptions";
 
 describe("parseOptions", () => {
-  const mockProcessArgv = process.argv;
+  const originalProcessArgv = process.argv;
 
   beforeEach(() => {
     process.argv = ["node", "script.js"];
   });
 
   afterEach(() => {
-    process.argv = mockProcessArgv;
+    process.argv = originalProcessArgv;
   });
 
   it("returns default options when no flags provided", () => {
@@ -31,8 +31,8 @@ describe("parseOptions", () => {
     });
   });
 
-  it("sets custom directory when --directory provided", () => {
-    process.argv.push("--directory", "custom/directory");
+  it("sets custom directory when provided", () => {
+    process.argv.push("custom/directory");
 
     const actual = parseOptions();
 
@@ -42,9 +42,7 @@ describe("parseOptions", () => {
     });
   });
 
-  it("uses default directory when --directory flag has no value", () => {
-    process.argv.push("--directory");
-
+  it("uses default directory", () => {
     const actual = parseOptions();
 
     expect(actual).toEqual({

@@ -1,5 +1,5 @@
 import { readdir } from "node:fs/promises";
-import { join } from "node:path/posix";
+import { join } from "node:path";
 
 export interface FindExamplesParams {
   directory: string;

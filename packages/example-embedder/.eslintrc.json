@@ -7,5 +7,17 @@
   },
   "rules": {
     "security/detect-non-literal-fs-filename": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["./src/bin/**/*.ts"],
+      "rules": {
+        "n/no-process-exit": "off",
+        "n/shebang": "off",
+        "no-console": "off",
+        "unicorn/no-process-exit": "off",
+        "unicorn/prefer-top-level-await": "off"
+      }
+    }
+  ]
 }

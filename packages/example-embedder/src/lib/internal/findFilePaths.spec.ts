@@ -1,5 +1,5 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path/posix";
+import { join } from "node:path";
 
 import { findFilePaths } from "./findFilePaths";
 

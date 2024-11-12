@@ -3,16 +3,17 @@ interface CliOptions {
   directory: string;
 }
 
-const DEFAULTS = {
+const DEFAULTS: CliOptions = {
+  check: false,
   directory: "examples",
 };
 
 export function parseOptions(): CliOptions {
-  const { directory } = DEFAULTS;
-  const directoryIndex = process.argv.indexOf("--directory");
+  const check = process.argv.includes("--check") ?? DEFAULTS.check;
+  const rest = process.argv.filter((argument) => argument !== "--check");
 
   return {
-    check: process.argv.includes("--check"),
-    directory: directoryIndex === -1 ? directory : (process.argv[directoryIndex + 1] ?? directory),
+    check,
+    directory: rest[2] ?? DEFAULTS.directory,
   };
 }

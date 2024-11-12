@@ -10,22 +10,24 @@ interface CheckResult {
 }
 
 export async function checkExamples(examples: Record<string, ExampleMap>): Promise<CheckResult[]> {
-  const targetPaths = Object.entries(examples);
-  const contents = await Promise.all(
-    targetPaths.map(async ([targetPath]) => await readFile(targetPath, "utf8")),
+  const targets = await Promise.all(
+    Object.entries(examples).map(async ([targetPath, exampleMap]) => ({
+      targetPath,
+      exampleMap,
+      content: await readFile(targetPath, "utf8"),
+    })),
   );
 
-  return targetPaths.flatMap(([targetPath, exampleMap], index) => {
-    const matches = findExampleMatches(contents[index]!, targetPath);
-    const relativeExampleMap = Object.fromEntries(
+  return targets.flatMap(({ targetPath, exampleMap, content }) => {
+    const matches = findExampleMatches(content, targetPath);
+    const map = Object.fromEntries(
       Object.entries(exampleMap).map(([path, content]) => [relative(process.cwd(), path), content]),
     );
 
     return matches
       .filter(
         ({ examplePath, code }) =>
-          relativeExampleMap[examplePath] &&
-          normalize(relativeExampleMap[examplePath]) !== normalize(code),
+          map[examplePath] && normalize(map[examplePath]) !== normalize(code),
       )
       .map(({ examplePath }) => ({ targetPath, examplePath }));
   });

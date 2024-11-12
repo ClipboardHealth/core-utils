@@ -2,6 +2,9 @@
   "name": "@clipboard-health/example-embedder",
   "description": "Command-line interface (CLI) to embed example TypeScript code into TypeDoc comments and markdown files.",
   "version": "0.0.0",
+  "bin": {
+    "example-embedder": "./src/bin/cli.js"
+  },
   "dependencies": {
     "tslib": "2.8.0"
   },

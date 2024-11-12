@@ -7,6 +7,14 @@ const TEST_DIR = join(__dirname, "..", "..", "test-1");
 const EXAMPLES_DIR = join(TEST_DIR, "examples");
 const SRC_DIR = join(TEST_DIR, "src");
 
+async function setupTestFiles(exampleContent: string, targetContent: string) {
+  const examplePath = join(EXAMPLES_DIR, "example.ts");
+  const targetPath = join(SRC_DIR, "target.ts");
+  await writeFile(examplePath, [`// @example src/target.ts`, exampleContent].join("\n"));
+  await writeFile(targetPath, targetContent);
+  return { examplePath, targetPath };
+}
+
 describe("embedder", () => {
   beforeEach(async () => {
     await rm(TEST_DIR, { recursive: true, force: true });
@@ -20,12 +28,9 @@ describe("embedder", () => {
   });
 
   it("embeds examples in target files", async () => {
-    const examplePath = join(EXAMPLES_DIR, "example.ts");
-    const targetPath = join(SRC_DIR, "target.ts");
     const code = "const example = true;";
-    await writeFile(examplePath, [`// @example src/target.ts`, code].join("\n"));
-    await writeFile(
-      targetPath,
+    const { targetPath } = await setupTestFiles(
+      code,
       [
         "/**",
         " * @example examples/example.ts",
@@ -54,11 +59,8 @@ describe("embedder", () => {
   });
 
   it("throws error in check mode when examples don't match", async () => {
-    const examplePath = join(EXAMPLES_DIR, "example.ts");
-    const targetPath = join(SRC_DIR, "target.ts");
-    await writeFile(examplePath, [`// @example src/target.ts`, "const example = true;"].join("\n"));
-    await writeFile(
-      targetPath,
+    await setupTestFiles(
+      "const example = true;",
       [
         "/**",
         " * @example examples/example.ts",
@@ -71,22 +73,18 @@ describe("embedder", () => {
     );
 
     await expect(embedder({ directory: EXAMPLES_DIR, check: true })).rejects.toThrow(
-      "Mismatch in file",
+      /Mismatch in file '.+' for example '.+'/,
     );
   });
 
   it("succeeds in check mode when examples match", async () => {
-    const examplePath = join(EXAMPLES_DIR, "example.ts");
-    const targetPath = join(SRC_DIR, "target.ts");
-    const code = "const example = true;";
-    await writeFile(examplePath, [`// @example src/target.ts`, code].join("\n"));
-    await writeFile(
-      targetPath,
+    await setupTestFiles(
+      "const example = true;",
       [
         "/**",
         " * @example examples/example.ts",
         " * ```typescript",
-        ` * ${code}`,
+        " * const example = true;",
         " * ```",
         " */",
         "export const x = 1;",

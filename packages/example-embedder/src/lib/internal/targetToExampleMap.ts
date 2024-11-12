@@ -11,21 +11,21 @@ export async function targetToExampleMap(
 
   return files.reduce<Record<string, ExampleMap>>((accumulator, file) => {
     const [firstLine, ...code] = file.content.split("\n");
-    const targetPaths = firstLine?.match(/\/\/ @example\s+(.+)/)?.[1]?.split(",");
-
+    const targetPaths = firstLine?.match(/^\/\/ @example\s+(.+)/)?.[1]?.split(",");
     if (!targetPaths) {
       return accumulator;
     }
 
-    return targetPaths.reduce((intermediateResult, targetPath) => {
+    for (const targetPath of targetPaths) {
       const trimmedPath = targetPath.trim();
-      return {
-        ...intermediateResult,
-        [trimmedPath]: {
-          ...intermediateResult[trimmedPath],
-          [file.path]: code.join("\n"),
-        },
-      };
-    }, accumulator);
+      if (!trimmedPath || trimmedPath.includes("..")) {
+        throw new Error(`Invalid target path: ${targetPath}`);
+      }
+
+      accumulator[trimmedPath] ||= {};
+      accumulator[trimmedPath][file.path] = code.join("\n");
+    }
+
+    return accumulator;
   }, {});
 }
