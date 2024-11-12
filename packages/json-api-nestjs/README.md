@@ -22,7 +22,7 @@ npm install @clipboard-health/json-api-nestjs
 Create Zod schemas for your API's queries:
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ../example-nestjs/examples/query.ts
 
 import { booleanString } from "@clipboard-health/contract-core";

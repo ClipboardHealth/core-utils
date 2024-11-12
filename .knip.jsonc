@@ -3,6 +3,7 @@
   "entry": [
     "packages/config/examples/**/*.ts",
     "packages/contract-core/examples/**/*.ts",
+    "packages/example-embedder/src/bin/cli.ts",
     "packages/example-nestjs/examples/**/*.ts",
     "packages/execution-context/examples/**/*.ts",
     "packages/json-api/examples/**/*.ts",

@@ -23,7 +23,7 @@ Jest's [`expect(...).toBeDefined()`](https://jestjs.io/docs/expect#tobedefined) 
 
 This gives a type error:
 
-```ts
+```typescript
 const value = getValue(); // returns 'string | undefined'
 
 expect(value).toBeDefined();
@@ -35,7 +35,7 @@ const { length } = value;
 This library's helpers narrow types:
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/expectToBeDefined.ts
 
 import { ok } from "node:assert/strict";
@@ -56,7 +56,7 @@ ok(length === 2);
 ```
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/expectToBeLeft.ts
 
 import { ok } from "node:assert/strict";
@@ -81,7 +81,7 @@ ok(value.left === "Cannot divide by zero");
 ```
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/expectToBeRight.ts
 
 import { ok } from "node:assert/strict";
@@ -106,7 +106,7 @@ ok(value.right === 5);
 ```
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/expectToBeSafeParseError.ts
 
 import { ok } from "node:assert/strict";
@@ -129,7 +129,7 @@ ok(firstIssue.message === "Expected string, received number");
 ```
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/expectToBeSafeParseSuccess.ts
 
 import { ok } from "node:assert/strict";

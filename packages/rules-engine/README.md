@@ -18,7 +18,7 @@ npm install @clipboard-health/rules-engine
 
 ## Usage
 
-```ts
+```typescript
 // ./examples/rules.ts
 
 import {

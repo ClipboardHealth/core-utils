@@ -61,7 +61,7 @@
       "commit": true,
       "commitMessage": "chore(release): publish {projectName} {version} [skip actions]"
     },
-    "projects": ["packages/*", "!packages/example-*"],
+    "projects": ["packages/*", "!packages/example-nestjs"],
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,

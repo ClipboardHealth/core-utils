@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "example-embedder",
+  "projectType": "library",
+  "sourceRoot": "packages/example-embedder/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/example-embedder/*.md"],
+        "main": "packages/example-embedder/src/index.js",
+        "outputPath": "dist/packages/example-embedder",
+        "tsConfig": "packages/example-embedder/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/example-embedder/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/example-embedder/jest.config.ts"
+      }
+    }
+  }
+}

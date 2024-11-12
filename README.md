@@ -19,6 +19,7 @@ Clipboard Health's core libraries and utilities. See individual package `README`
 - [config](./packages/config/README.md): Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.
 - [contract-core](./packages/contract-core/README.md): Shared Zod schemas for Clipboard Health's contracts.
 - [eslint-config](./packages/eslint-config/README.md): Our ESLint configuration.
+- [example-embedder](./packages/example-embedder/README.md): Command-line interface (CLI) to embed example TypeScript code into TypeDoc comments and markdown files.
 - [example-nestjs](./packages/example-nestjs/README.md): A NestJS application using our libraries, primarily for end-to-end testing.
 - [execution-context](./packages/execution-context/README.md): A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
 - [json-api](./packages/json-api/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification.

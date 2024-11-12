@@ -22,7 +22,7 @@ npm install @clipboard-health/json-api
 From the client, call `toClientSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/toClientSearchParams.ts
 
 import { deepEqual } from "node:assert/strict";
@@ -58,7 +58,7 @@ deepEqual(
 From the server, call `toServerJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/toServerJsonApiQuery.ts
 
 import { deepEqual } from "node:assert/strict";

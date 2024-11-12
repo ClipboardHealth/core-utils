@@ -27,7 +27,7 @@ See `./src/lib` for each utility.
 ### ServiceError
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/serviceError.ts
 
 import { deepEqual, equal } from "node:assert/strict";
@@ -115,7 +115,7 @@ try {
 ### ServiceResult
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/serviceResult.ts
 
 import { ok } from "node:assert/strict";
@@ -153,7 +153,7 @@ ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" }))
 #### `pipe`
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/pipe.ts
 
 import { equal } from "node:assert/strict";
@@ -175,7 +175,7 @@ equal(result, "Hello World");
 #### `option`
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/option.ts
 
 import { equal } from "node:assert/strict";
@@ -207,7 +207,7 @@ equal(result, "Result is 0.1");
 #### `either`
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/either.ts
 
 import { equal } from "node:assert/strict";

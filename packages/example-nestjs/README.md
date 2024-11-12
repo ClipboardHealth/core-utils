@@ -25,7 +25,7 @@ Install the [REST Client](https://marketplace.visualstudio.com/items?itemName=hu
 The following makes requests to the example application using the `ts-rest` client.
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/client.ts
 
 import { initClient, type ServerInferRequest } from "@ts-rest/core";

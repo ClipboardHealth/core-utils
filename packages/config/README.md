@@ -22,7 +22,7 @@ npm install @clipboard-health/config
 The TypeDoc comment for the `createConfig` function:
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./src/lib/createConfig.ts
 
 import { deepFreeze } from "@clipboard-health/util-ts";
@@ -92,7 +92,7 @@ export function createConfig<
 A usage example:
 
 <!-- prettier-ignore -->
-```ts
+```typescript
 // ./examples/config.ts
 
 import { ok } from "node:assert/strict";

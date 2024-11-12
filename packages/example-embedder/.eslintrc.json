@@ -1,0 +1,11 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "parserOptions": {
+    "project": "tsconfig.lint.json",
+    "tsconfigRootDir": "packages/example-embedder"
+  },
+  "rules": {
+    "security/detect-non-literal-fs-filename": "off"
+  }
+}
