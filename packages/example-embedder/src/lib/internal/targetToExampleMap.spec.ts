@@ -78,4 +78,13 @@ describe("targetToExampleMap", () => {
 
     expect(result).toEqual({});
   });
+
+  it("throws error for invalid target paths", async () => {
+    const examplePath = join(EXAMPLES_DIR, "example.ts");
+    await writeFile(examplePath, "// @example ../invalid/path\nconst example = true;");
+
+    await expect(targetToExampleMap([examplePath])).rejects.toThrow(
+      "Invalid target path: ../invalid/path",
+    );
+  });
 });

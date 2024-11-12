@@ -42,6 +42,17 @@ describe("parseOptions", () => {
     });
   });
 
+  it("sets check flag and custom directory when both provided", () => {
+    process.argv.push("--check", "custom/directory");
+
+    const actual = parseOptions();
+
+    expect(actual).toEqual({
+      check: true,
+      directory: "custom/directory",
+    });
+  });
+
   it("uses default directory", () => {
     const actual = parseOptions();
 
