@@ -39,7 +39,7 @@ export type ServiceErrorParams =
   | string
   | {
       /** Error cause */
-      cause?: Readonly<unknown>;
+      cause?: unknown;
       /** Unique identifier for the issue */
       id?: string;
       /** Array of issues contributing to the error */
