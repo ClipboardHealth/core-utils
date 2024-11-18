@@ -1,3 +1,4 @@
+// packages/json-api-nestjs/src/lib/query/cursorPaginationQuery.ts,packages/json-api-nestjs/src/lib/query/fieldsQuery.ts,packages/json-api-nestjs/src/lib/query/filterQuery.ts,packages/json-api-nestjs/src/lib/query/includeQuery.ts,packages/json-api-nestjs/src/lib/query/sortQuery.ts
 import { booleanString } from "@clipboard-health/contract-core";
 import {
   cursorPaginationQuery,
@@ -36,14 +37,6 @@ const userFilterMap = {
   },
 } as const satisfies FilterMap<UserAttributeFields>;
 
-/**
- * Disclaimer: Just because JSON:API supports robust querying doesn’t mean your service should
- * implement them as they may require database indexes, which have a cost. **Implement only access
- * patterns required by clients.**
- *
- * The spec says that if clients provide fields the server doesn’t support, it **MUST** return 400
- * Bad Request, hence the `.strict()`.
- */
 export const query = z
   .object({
     ...cursorPaginationQuery(),

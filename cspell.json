@@ -22,6 +22,7 @@
     "datetime",
     "decamelize",
     "devkit",
+    "embedex",
     "embedme",
     "fieldsets",
     "gitleaks",
@@ -30,6 +31,7 @@
     "lcov",
     "maxage",
     "nestjs",
+    "nodir",
     "npmjs",
     "nrwl",
     "nvmrc",
@@ -40,6 +42,7 @@
     "typedoc",
     "typeof",
     "unpublish",
+    "yoctocolors",
     "zricethezav"
   ]
 }

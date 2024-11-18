@@ -1,3 +1,4 @@
+// packages/util-ts/src/lib/functional/either.ts
 import { equal } from "node:assert/strict";
 
 import { either as E, pipe } from "@clipboard-health/util-ts";

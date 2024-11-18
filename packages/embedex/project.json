@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "embedex",
+  "projectType": "application",
+  "sourceRoot": "packages/embedex/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/embedex/*.md", "packages/embedex/static/**/*"],
+        "main": "packages/embedex/src/index.js",
+        "outputPath": "dist/packages/embedex",
+        "tsConfig": "packages/embedex/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/embedex/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/embedex/jest.config.ts"
+      }
+    }
+  }
+}
