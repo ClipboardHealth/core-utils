@@ -22,6 +22,7 @@
     "datetime",
     "decamelize",
     "devkit",
+    "embedex",
     "embedme",
     "fieldsets",
     "gitleaks",

@@ -1,4 +1,4 @@
-import { Dirent, promises } from "node:fs";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const utf8: BufferEncoding = "utf8";
@@ -10,16 +10,16 @@ const markers = {
 
 async function updateReadme() {
   const [readme, dirNames] = await Promise.all([
-    promises.readFile(readmePath, utf8),
-    promises
-      .readdir(join(__dirname, "packages"), { withFileTypes: true })
-      .then((d) => d.filter((dirent) => dirent.isDirectory())),
+    readFile(readmePath, utf8),
+    readdir(join(__dirname, "packages"), { withFileTypes: true }).then((d) =>
+      d.filter((dirent) => dirent.isDirectory()),
+    ),
   ]);
 
   const readmeLines = await Promise.all(
     dirNames.map(async (dirent) => {
       const path = join(__dirname, "packages", dirent.name, "package.json");
-      const { description } = JSON.parse(await promises.readFile(path, utf8));
+      const { description } = JSON.parse(await readFile(path, utf8));
       return `- [${dirent.name}](./packages/${dirent.name}/README.md): ${description ?? ""}`;
     }),
   );
@@ -32,7 +32,7 @@ async function updateReadme() {
   if (readme === updatedReadme) {
     console.log("No README file changes to '## Libraries' section.");
   } else {
-    await promises.writeFile(readmePath, updatedReadme, utf8);
+    await writeFile(readmePath, updatedReadme, utf8);
   }
 }
 
