@@ -1,8 +1,8 @@
 import { type ExamplePath, type TargetPath } from "../types";
 
 export interface Example {
-  targets: TargetPath[];
   content: string;
+  targets: TargetPath[];
 }
 export type ExampleMap = Map<ExamplePath, Example>;
 

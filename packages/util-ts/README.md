@@ -156,6 +156,7 @@ ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" }))
 ```ts
 // ./examples/pipe.ts
 
+// packages/util-ts/src/lib/functional/pipe.ts
 import { equal } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";
@@ -178,6 +179,7 @@ equal(result, "Hello World");
 ```ts
 // ./examples/option.ts
 
+// packages/util-ts/src/lib/functional/option.ts
 import { equal } from "node:assert/strict";
 
 import { option as O, pipe } from "@clipboard-health/util-ts";
@@ -210,6 +212,7 @@ equal(result, "Result is 0.1");
 ```ts
 // ./examples/either.ts
 
+// packages/util-ts/src/lib/functional/either.ts
 import { equal } from "node:assert/strict";
 
 import { either as E, pipe } from "@clipboard-health/util-ts";

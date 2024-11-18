@@ -12,8 +12,34 @@ export type Some<A> = Readonly<{
 /**
  * An optional value. If the value exists, it's of type `Some<A>`, otherwise it's of type `None`.
  *
- * @includeExample ./packages/util-ts/examples/option.ts
- * @see [Usage example](../../util-ts/examples/option.ts)
+ * @example
+ * ```ts
+ * // packages/util-ts/examples/option.ts
+ * import { equal } from "node:assert/strict";
+ *
+ * import { option as O, pipe } from "@clipboard-health/util-ts";
+ *
+ * function double(n: number) {
+ *   return n * 2;
+ * }
+ *
+ * function inverse(n: number): O.Option<number> {
+ *   return n === 0 ? O.none : O.some(1 / n);
+ * }
+ *
+ * const result = pipe(
+ *   O.some(5),
+ *   O.map(double),
+ *   O.flatMap(inverse),
+ *   O.match(
+ *     () => "No result",
+ *     (n) => `Result is ${n}`,
+ *   ),
+ * );
+ *
+ * equal(result, "Result is 0.1");
+ *
+ * ```
  */
 export type Option<A> = None | Some<A>;
 

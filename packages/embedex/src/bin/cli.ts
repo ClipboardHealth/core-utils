@@ -3,7 +3,7 @@ import { Command, Option } from "@commander-js/extra-typings";
 
 import { name, version } from "../../package.json";
 import { embed } from "../lib/embed";
-import { processResult } from "./processResult";
+import { dim, processResult } from "./processResult";
 
 const program = new Command()
   .name(name)
@@ -12,36 +12,38 @@ const program = new Command()
   )
   .version(String(version))
   .addOption(
-    new Option("-e, --examples <directory>", "examples directory glob pattern").default(
-      "examples/**/*.ts",
-    ),
+    new Option("-e, --examplesGlob <pattern>", "examples glob pattern").default("examples/**/*.ts"),
   )
   .addOption(
     new Option("-c, --check", "check if examples are already embedded, useful for CI").default(
       false,
     ),
   )
-  .addOption(
-    new Option("-d, --dry-run", "show what would be changed without making changes").default(false),
-  );
+  .addOption(new Option("-v, --verbose", "show verbose output").default(false));
 
 program.parse();
 
 const options = program.opts();
-const { check, dryRun, examples } = options;
+const { check, examplesGlob, verbose } = options;
+const cwd = process.cwd();
+
+if (verbose) {
+  console.log(dim("examplesGlob:\n  ", examplesGlob));
+  console.log(dim("cwd:\n  ", cwd));
+}
 
 embed({
-  globPattern: examples,
-  root: process.cwd(),
-  write: !check && !dryRun,
+  examplesGlob,
+  cwd,
+  write: !check,
 })
   .then((result) => {
-    const output = processResult({ check, dryRun, result });
-    if (output.isError) {
-      console.error(output.message);
+    const output = processResult({ check, result, cwd, verbose });
+    if (output.some((o) => o.isError)) {
+      console.error(output.map((o) => o.message).join("\n"));
       process.exit(1);
     } else {
-      console.log(output.message);
+      console.log(output.map((o) => o.message).join("\n"));
     }
   })
   .catch((error) => {

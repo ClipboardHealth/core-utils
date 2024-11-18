@@ -1,22 +1,22 @@
 import { join } from "node:path";
 
-import type { EmbedResult } from "../types";
+import type { Embed } from "../types";
 import { type ExampleMap, type TargetMap } from "./types";
 
 export function processTargets(
   params: Readonly<{
     exampleMap: ExampleMap;
-    root: string;
+    cwd: string;
     targetMap: TargetMap;
   }>,
 ) {
-  const { exampleMap, targetMap, root } = params;
+  const { exampleMap, targetMap, cwd } = params;
 
   function absolutePath(path: string): string {
-    return join(root, path);
+    return join(cwd, path);
   }
 
-  const result: EmbedResult[] = [];
+  const result: Embed[] = [];
   for (const [target, value] of targetMap.entries()) {
     const { content, examples } = value;
     const matches = matchAll({ content, exists: (example) => examples.has(absolutePath(example)) });
@@ -37,7 +37,7 @@ export function processTargets(
       result.push(
         content === updatedContent
           ? { code: "NO_CHANGE", paths }
-          : { code: "UPDATED", paths, updatedContent },
+          : { code: "UPDATE", paths, updatedContent },
       );
     }
   }
@@ -47,7 +47,7 @@ export function processTargets(
 
 function matchAll(params: Readonly<{ content: string; exists: (path: string) => boolean }>) {
   const { content, exists } = params;
-  return [...content.matchAll(/```(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[^`]+```/g)]
+  return [...content.matchAll(/```(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]+?```/g)]
     .map((match) => {
       const [fullMatch, language, indent, example] = match;
       return isDefined(fullMatch) &&
@@ -66,7 +66,7 @@ function prefixLines(params: Readonly<{ content: string[]; indent: string }>): s
   return content
     .map((line) => {
       const trimmed = line.trim();
-      return trimmed ? `${indent}* ${trimmed}` : `${indent}*`;
+      return trimmed ? `${indent}* ${line}` : `${indent}*`;
     })
     .join("\n");
 }

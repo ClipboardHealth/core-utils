@@ -1,125 +1,89 @@
+import colors from "yoctocolors-cjs";
+
 import { processResult } from "./processResult";
 
 describe("processResult", () => {
-  it("returns error message when check is true and code is NO_MATCH", () => {
+  const target = "target/path";
+  const examples = ["example/path"];
+  const base = {
+    check: false,
+    cwd: process.cwd(),
+    result: { embeds: [], examples: [], targets: [] },
+    verbose: false,
+  };
+
+  it("returns error when check is true on 'UPDATE'", () => {
     const input = {
+      ...base,
       check: true,
-      dryRun: false,
-      result: [{ code: "NO_MATCH" as const, paths: { target: "target/path", examples: [] } }],
+      result: {
+        ...base.result,
+        embeds: [{ code: "UPDATE" as const, paths: { target, examples }, updatedContent: "" }],
+      },
     };
 
     const actual = processResult(input);
 
-    expect(actual).toEqual({ isError: true, message: "[target/path] No embed targets found" });
+    expect(actual).toEqual([
+      {
+        code: "UPDATE",
+        isError: true,
+        message: `${colors.green("UPDATE")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+      },
+    ]);
   });
 
-  it("returns error message when check is true and code is UPDATED", () => {
-    const input = {
-      check: true,
-      dryRun: false,
-      result: [
-        {
-          code: "UPDATED" as const,
-          paths: { target: "target/path", examples: ["example1", "example2"] },
-          updatedContent: "",
-        },
-      ],
-    };
+  it("returns empty array when result is empty", () => {
+    const actual = processResult(base);
 
-    const actual = processResult(input);
+    expect(actual).toEqual([]);
+  });
 
-    expect(actual).toEqual({
-      isError: true,
-      message: "[target/path] Embed required example1, example2",
+  it("logs additional data when verbose is true", () => {
+    const actual = processResult({
+      ...base,
+      result: {
+        ...base.result,
+        examples: [{ path: "example/path", targets: [target] }],
+        targets: [{ path: target, examples: ["example/path"] }],
+      },
+      verbose: true,
     });
+
+    expect(actual).toEqual([]);
   });
 
-  it("returns dry run message when dryRun is true and code is NO_MATCH", () => {
+  it("sorts output by code", () => {
     const input = {
-      check: false,
-      dryRun: true,
-      result: [{ code: "NO_MATCH" as const, paths: { target: "target/path", examples: [] } }],
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          { code: "UPDATE" as const, paths: { target, examples }, updatedContent: "" },
+          { code: "NO_CHANGE" as const, paths: { target, examples } },
+          { code: "NO_MATCH" as const, paths: { target, examples } },
+        ],
+      },
     };
 
     const actual = processResult(input);
 
-    expect(actual).toEqual({
-      isError: false,
-      message: "[target/path] Would fail; no embed targets found",
-    });
-  });
-
-  it("returns dry run message when dryRun is true and code is UPDATED", () => {
-    const input = {
-      check: false,
-      dryRun: true,
-      result: [
-        {
-          code: "UPDATED" as const,
-          paths: { target: "target/path", examples: ["example1", "example2"] },
-          updatedContent: "",
-        },
-      ],
-    };
-
-    const actual = processResult(input);
-
-    expect(actual).toEqual({
-      isError: false,
-      message: "[target/path] Would embed example1, example2",
-    });
-  });
-
-  it("returns no changes message when dryRun is true and code is NO_CHANGE", () => {
-    const input = {
-      check: false,
-      dryRun: true,
-      result: [{ code: "NO_CHANGE" as const, paths: { target: "target/path", examples: [] } }],
-    };
-
-    const actual = processResult(input);
-
-    expect(actual).toEqual({ isError: false, message: "[target/path] No changes" });
-  });
-
-  it("returns error message when code is NO_MATCH", () => {
-    const input = {
-      check: false,
-      dryRun: false,
-      result: [{ code: "NO_MATCH" as const, paths: { target: "target/path", examples: [] } }],
-    };
-
-    const actual = processResult(input);
-
-    expect(actual).toEqual({ isError: true, message: "[target/path] No embed targets found" });
-  });
-
-  it("returns embedded message when code is UPDATED", () => {
-    const input = {
-      check: false,
-      dryRun: false,
-      result: [
-        {
-          code: "UPDATED" as const,
-          paths: { target: "target/path", examples: ["example1", "example2"] },
-          updatedContent: "",
-        },
-      ],
-    };
-
-    const actual = processResult(input);
-
-    expect(actual).toEqual({
-      isError: false,
-      message: "[target/path] Embedded example1, example2",
-    });
-  });
-
-  it("returns empty message when no results are provided", () => {
-    const input = { check: false, dryRun: false, result: [] };
-
-    const actual = processResult(input);
-
-    expect(actual).toEqual({ isError: false, message: "" });
+    expect(actual).toEqual([
+      {
+        code: "NO_CHANGE",
+        isError: false,
+        message: `${colors.green("NO_CHANGE")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+      },
+      {
+        code: "NO_MATCH",
+        isError: true,
+        message: `${colors.green("NO_MATCH")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+      },
+      {
+        code: "UPDATE",
+        isError: false,
+        message: `${colors.green("UPDATE")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+      },
+    ]);
   });
 });

@@ -1,3 +1,4 @@
+// packages/config/src/lib/createConfig.ts
 import { ok } from "node:assert/strict";
 
 import { createConfig } from "@clipboard-health/config";

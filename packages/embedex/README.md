@@ -79,12 +79,12 @@ Usage: embedex [options]
 Command-line interface (CLI) to embed example TypeScript code into TypeDoc comments.
 
 Options:
-  -V, --version               output the version number
-  -e, --examples <directory>  examples directory glob pattern (default: "examples/**/*.ts")
-  -c, --check                 check if examples are already embedded, useful for CI (default:
-                              false)
-  -d, --dry-run               show what would be changed without making changes (default: false)
-  -h, --help                  display help for command
+  -V, --version                 output the version number
+  -e, --examplesGlob <pattern>  examples glob pattern (default: "examples/**/*.ts")
+  -c, --check                   check if examples are already embedded, useful for CI (default:
+                                false)
+  -v, --verbose                 show verbose output (default: false)
+  -h, --help                    display help for command
 ```
 
 ## Local development commands

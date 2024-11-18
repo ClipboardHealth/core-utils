@@ -2,12 +2,27 @@
  * Pipes a value through a series of functions from left to right. Currently supports up to 10
  * functions.
  *
- * @includeExample ./packages/util-ts/examples/pipe.ts
- * @see [Usage example](../../util-ts/examples/pipe.ts)
- *
  * @param a - The initial value to transform
  * @param fs - Functions to apply sequentially
  * @returns The final transformed value
+ * @example
+ * ```ts
+ * // packages/util-ts/examples/pipe.ts
+ * import { equal } from "node:assert/strict";
+ *
+ * import { pipe } from "@clipboard-health/util-ts";
+ *
+ * const result = pipe(
+ *   "  hello world  ",
+ *   (s) => s.trim(),
+ *   (s) => s.split(" "),
+ *   (array) => array.map((word) => word.charAt(0).toUpperCase() + word.slice(1)),
+ *   (array) => array.join(" "),
+ * );
+ *
+ * equal(result, "Hello World");
+ *
+ * ```
  */
 export function pipe<A>(a: A): A;
 export function pipe<A, B>(a: A, ab: (a: A) => B): B;

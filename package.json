@@ -30,7 +30,6 @@
     "ts-jest": "29.2.5",
     "tsx": "4.19.2",
     "typedoc": "0.26.11",
-    "typedoc-plugin-include-example": "1.4.1",
     "typescript": "5.6.3"
   },
   "engines": {
@@ -48,7 +47,7 @@
     "ci:check": "nx format:check && prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip",
     "ci:install": "npm install --audit false --fund false",
     "cspell": "npx cspell --no-summary --no-progress --no-must-find-files",
-    "docs": "rm -rf docs && typedoc --plugin typedoc-plugin-include-example",
+    "docs": "rm -rf docs && typedoc",
     "embed": "nx run-many --targets embed",
     "embed:check": "npm run embed -- --verify",
     "format": "prettier --write .",

@@ -1,3 +1,4 @@
+// packages/util-ts/src/lib/functional/pipe.ts
 import { equal } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";

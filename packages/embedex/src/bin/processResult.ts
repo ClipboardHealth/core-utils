@@ -1,57 +1,89 @@
-import { type EmbedResult } from "../lib/types";
+import { relative as nodeRelative } from "node:path";
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
-export function processResult(params: { check: boolean; dryRun: boolean; result: EmbedResult[] }): {
+import colors from "yoctocolors-cjs";
+
+import { type Embed, type EmbedResult } from "../lib/types";
+
+interface Output {
+  code: Embed["code"];
   isError: boolean;
   message: string;
-} {
-  const { check, dryRun, result } = params;
+}
 
-  for (const { code, paths } of result) {
-    if (check) {
-      if (code === "NO_MATCH") {
-        return { isError: true, message: `[${paths.target}] No embed targets found` };
+export function dim(...messages: string[]) {
+  return colors.dim(messages.join(" "));
+}
+
+export function processResult(params: {
+  check: boolean;
+  result: EmbedResult;
+  cwd: string;
+  verbose: boolean;
+}): Output[] {
+  const { check, result, cwd, verbose } = params;
+  const { embeds, examples, targets } = result;
+
+  function relative(path: string) {
+    return nodeRelative(cwd, path);
+  }
+
+  if (verbose) {
+    console.log(
+      dim(
+        "examples:\n  ",
+        examples
+          .map(({ path, targets }) => `${relative(path)} -> ${targets.map(relative).join(", ")}`)
+          .join("\n  "),
+      ),
+    );
+    console.log(
+      dim(
+        "targets:\n  ",
+        targets
+          .map(({ path, examples }) => `${relative(path)} -> ${examples.map(relative).join(", ")}`)
+          .join("\n  "),
+      ),
+    );
+  }
+
+  const output: Output[] = [];
+  for (const embed of embeds) {
+    const { code, paths } = embed;
+    const { target, examples } = paths;
+    const toOutput = createToOutput({
+      code,
+      paths: { target: relative(target), examples: examples.map((path) => relative(path)) },
+    });
+
+    // eslint-disable-next-line default-case
+    switch (code) {
+      case "NO_CHANGE": {
+        output.push(toOutput());
+        break;
       }
 
-      if (code === "UPDATED") {
-        return {
-          isError: true,
-          message: `[${paths.target}] Embed required ${paths.examples.join(", ")}`,
-        };
-      }
-    }
-
-    if (dryRun) {
-      if (code === "NO_MATCH") {
-        return {
-          isError: false,
-          message: `[${paths.target}] Would fail; no embed targets found`,
-        };
+      case "NO_MATCH": {
+        output.push(toOutput(true));
+        break;
       }
 
-      if (code === "UPDATED") {
-        return {
-          isError: false,
-          message: `[${paths.target}] Would embed ${paths.examples.join(", ")}`,
-        };
+      case "UPDATE": {
+        output.push(toOutput(check));
+        break;
       }
-
-      if (code === "NO_CHANGE") {
-        return { isError: false, message: `[${paths.target}] No changes` };
-      }
-    }
-
-    if (code === "NO_MATCH") {
-      return { isError: true, message: `[${paths.target}] No embed targets found` };
-    }
-
-    if (code === "UPDATED") {
-      return {
-        isError: false,
-        message: `[${paths.target}] Embedded ${paths.examples.join(", ")}`,
-      };
     }
   }
 
-  return { isError: false, message: "" };
+  return output.sort((a, b) => a.code.localeCompare(b.code));
+}
+
+function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) {
+  const { code, paths } = params;
+  const { target, examples } = paths;
+
+  return (isError = false) => ({
+    code,
+    isError,
+    message: `${colors.green(code)} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+  });
 }

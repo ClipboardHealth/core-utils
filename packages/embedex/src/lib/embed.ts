@@ -8,19 +8,30 @@ import { type EmbedParams, type EmbedResult } from "./types";
 /**
  * Command-line interface (CLI) to embed examples into TypeDoc comments.
  */
-export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult[]> {
-  const { globPattern, root, write } = params;
-  const exampleMap = await createExampleMap({ globPattern, root });
+export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult> {
+  const { examplesGlob: globPattern, cwd, write } = params;
+  const exampleMap = await createExampleMap({ globPattern, cwd });
   const targetMap = await createTargetMap({ exampleMap });
-  const result = processTargets({ exampleMap, root, targetMap });
+
+  const embeds = processTargets({ exampleMap, cwd, targetMap });
 
   await Promise.all(
-    result.map(async (r) => {
-      if (write && r.code === "UPDATED") {
-        await writeFile(r.paths.target, r.updatedContent);
+    embeds.map(async (embed) => {
+      if (write && embed.code === "UPDATE") {
+        await writeFile(embed.paths.target, embed.updatedContent);
       }
     }),
   );
 
-  return result;
+  return {
+    embeds,
+    examples: [...exampleMap.entries()].map(([key, value]) => ({
+      path: key,
+      targets: value.targets,
+    })),
+    targets: [...targetMap.entries()].map(([key, value]) => ({
+      path: key,
+      examples: [...value.examples],
+    })),
+  };
 }

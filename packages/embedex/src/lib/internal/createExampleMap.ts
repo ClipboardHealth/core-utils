@@ -1,5 +1,7 @@
-import { glob, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+
+import { glob } from "glob";
 
 import { type ExamplePath } from "../types";
 import { type Example, type ExampleMap } from "./types";
@@ -8,13 +10,13 @@ const EXAMPLE_MARKER_PREFIX = "// ";
 
 export async function createExampleMap(params: {
   globPattern: string;
-  root: string;
+  cwd: string;
 }): Promise<ExampleMap> {
-  const { globPattern, root } = params;
+  const { globPattern, cwd } = params;
   const exampleMap = new Map<ExamplePath, Example>();
+  const paths = await glob(globPattern, { absolute: true, cwd, nodir: true });
 
-  for await (const p of glob(globPattern, { cwd: root })) {
-    const path = join(root, p);
+  for await (const path of paths) {
     const content = await readFile(path, "utf8");
     const [first, ...rest] = content.split("\n");
     if (first?.startsWith(EXAMPLE_MARKER_PREFIX)) {
@@ -23,7 +25,7 @@ export async function createExampleMap(params: {
         targets: first
           .replace(EXAMPLE_MARKER_PREFIX, "")
           .split(",")
-          .map((t) => join(root, t.trim())),
+          .map((t) => join(cwd, t.trim())),
       });
     }
   }

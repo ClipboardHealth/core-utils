@@ -7,7 +7,9 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "12.1.0",
-    "tslib": "2.8.0"
+    "glob": "11.0.0",
+    "tslib": "2.8.0",
+    "yoctocolors-cjs": "2.1.2"
   },
   "keywords": [],
   "license": "MIT",

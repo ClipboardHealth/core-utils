@@ -5,37 +5,39 @@ import { join } from "node:path";
 import { embed } from "./embed";
 
 describe("embed", () => {
-  const exampleACode = [`const x = "a";`, "", `console.log(x);`];
-  const targetACode = [` * const x = "a";`, " *", ` * console.log(x);`];
+  // eslint-disable-next-line no-template-curly-in-string
+  const exampleACode = [`const x = "a";`, "", "console.log(`Got ${x}`);"];
+  // eslint-disable-next-line no-template-curly-in-string
+  const targetACode = [` * const x = "a";`, " *", " * console.log(`Got ${x}`);"];
   const globPattern = "examples/**/*.ts";
-  let root: string;
+  let cwd: string;
   let paths: {
     examples: Record<"a" | "b", string>;
     targets: Record<"l" | "m", string>;
   };
 
   beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), "embedex"));
+    cwd = await mkdtemp(join(tmpdir(), "embedex"));
     paths = {
       examples: { a: "examples/a.ts", b: "examples/b.ts" },
       targets: { l: "src/l.ts", m: "src/m.ts" },
     };
-    await Promise.all([mkdir(join(root, "examples")), mkdir(join(root, "src"))]);
+    await Promise.all([mkdir(join(cwd, "examples")), mkdir(join(cwd, "src"))]);
   });
 
   async function read(path: string) {
-    return await readFile(join(root, path), "utf8");
+    return await readFile(join(cwd, path), "utf8");
   }
 
   async function write(path: string, content: string[]) {
-    await writeFile(join(root, path), content.join("\n"), "utf8");
+    await writeFile(join(cwd, path), content.join("\n"), "utf8");
   }
 
   function toPath(path: string) {
-    return join(root, path);
+    return join(cwd, path);
   }
 
-  it("doesn't match non-existent examples", async () => {
+  it("returns NO_MATCH for non-existent examples", async () => {
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.targets.l, [
@@ -48,36 +50,36 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ globPattern, root, write: false });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       { code: "NO_MATCH", paths: { examples: [], target: toPath(paths.targets.l) } },
     ]);
   });
 
-  it("succeeds when no examples found", async () => {
-    const actual = await embed({ globPattern, root, write: false });
+  it("returns empty embeds when no examples found", async () => {
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([]);
+    expect(actual.embeds).toEqual([]);
   });
 
-  it("fails if target does not exist", async () => {
+  it("throws for non-existent targets", async () => {
     await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
 
-    await expect(async () => await embed({ globPattern, root, write: false })).rejects.toThrow(
-      `ENOENT: no such file or directory, open '${join(root, paths.targets.l)}'`,
-    );
+    await expect(
+      async () => await embed({ examplesGlob: globPattern, cwd, write: false }),
+    ).rejects.toThrow(`ENOENT: no such file or directory, open '${join(cwd, paths.targets.l)}'`);
   });
 
-  it("fails if target does not match", async () => {
+  it("returns NO_MATCH for targets with no matches", async () => {
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.targets.l, ["/**", " * @example", " * ```ts", " * ```", " */"]),
     ]);
 
-    const actual = await embed({ globPattern, root, write: false });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "NO_MATCH",
         paths: { examples: [], target: toPath(paths.targets.l) },
@@ -85,7 +87,7 @@ describe("embed", () => {
     ]);
   });
 
-  it("reads example and target", async () => {
+  it("returns UPDATE for targets with matches", async () => {
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.targets.l, [
@@ -98,11 +100,11 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ globPattern, root, write: false });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       {
-        code: "UPDATED",
+        code: "UPDATE",
         paths: {
           examples: [toPath(paths.examples.a)],
           target: toPath(paths.targets.l),
@@ -120,7 +122,7 @@ describe("embed", () => {
     ]);
   });
 
-  it("reads multiple targets", async () => {
+  it("returns UPDATE for multiple targets with matches", async () => {
     const targetContent = [
       "/**",
       " * @example",
@@ -135,11 +137,11 @@ describe("embed", () => {
       write(paths.targets.m, targetContent),
     ]);
 
-    const actual = await embed({ globPattern, root, write: false });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       {
-        code: "UPDATED",
+        code: "UPDATE",
         paths: {
           examples: [toPath(paths.examples.a)],
           target: toPath(paths.targets.l),
@@ -147,7 +149,7 @@ describe("embed", () => {
         updatedContent: expect.any(String),
       },
       {
-        code: "UPDATED",
+        code: "UPDATE",
         paths: {
           examples: [toPath(paths.examples.a)],
           target: toPath(paths.targets.m),
@@ -157,10 +159,11 @@ describe("embed", () => {
     ]);
   });
 
-  it("handles indentation", async () => {
-    const targetCode = [`   * const x = "a";`, "   *", `   * console.log(x);`];
+  it("returns UPDATE for targets with indented matches", async () => {
+    const exampleCode = ["function foo() {", `  console.log("bar");`, "}"];
+    const targetCode = ["   * function foo() {", `   *   console.log("bar");`, "   * }"];
     await Promise.all([
-      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleCode]),
       write(paths.targets.l, [
         "class A {",
         "  /**",
@@ -173,11 +176,11 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ globPattern, root, write: false });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       {
-        code: "UPDATED",
+        code: "UPDATE",
         paths: {
           examples: [toPath(paths.examples.a)],
           target: toPath(paths.targets.l),
@@ -197,7 +200,7 @@ describe("embed", () => {
     ]);
   });
 
-  it("finds multiple matches in targets", async () => {
+  it("returns UPDATE for targets with multiple matches", async () => {
     await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
     await write(paths.targets.l, [
       "/**",
@@ -212,11 +215,11 @@ describe("embed", () => {
       " */",
     ]);
 
-    const actual = await embed({ globPattern, root, write: false });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       {
-        code: "UPDATED",
+        code: "UPDATE",
         paths: {
           examples: [toPath(paths.examples.a), toPath(paths.examples.a)],
           target: toPath(paths.targets.l),
@@ -226,7 +229,7 @@ describe("embed", () => {
     ]);
   });
 
-  it("does not write example to target if write is false", async () => {
+  it("does not write target if `write` is false", async () => {
     const targetContent = [
       "/**",
       " * @example",
@@ -238,7 +241,7 @@ describe("embed", () => {
     await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
     await write(paths.targets.l, targetContent);
 
-    await embed({ globPattern, root, write: false });
+    await embed({ examplesGlob: globPattern, cwd, write: false });
     const actual = await read(paths.targets.l);
 
     expect(actual).toEqual(targetContent.join("\n"));
@@ -256,9 +259,9 @@ describe("embed", () => {
       " */",
     ]);
 
-    const actual = await embed({ globPattern, root, write: true });
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: true });
 
-    expect(actual).toEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "NO_CHANGE",
         paths: { examples: [toPath(paths.examples.a)], target: toPath(paths.targets.l) },
@@ -277,7 +280,7 @@ describe("embed", () => {
       " */",
     ]);
 
-    await embed({ globPattern, root, write: true });
+    await embed({ examplesGlob: globPattern, cwd, write: true });
     const actual = await read(paths.targets.l);
 
     expect(actual).toEqual(
@@ -316,7 +319,7 @@ describe("embed", () => {
       " */",
     ]);
 
-    await embed({ globPattern, root, write: true });
+    await embed({ examplesGlob: globPattern, cwd, write: true });
     const actual = await read(paths.targets.l);
 
     expect(actual).toEqual(
