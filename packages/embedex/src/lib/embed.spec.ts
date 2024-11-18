@@ -15,7 +15,7 @@ describe("embed", () => {
   };
 
   beforeEach(async () => {
-    root = await mkdtemp(tmpdir());
+    root = await mkdtemp(join(tmpdir(), "embedex"));
     paths = {
       examples: { a: "examples/a.ts", b: "examples/b.ts" },
       targets: { l: "src/l.ts", m: "src/m.ts" },

@@ -1,4 +1,4 @@
-import { join } from "node:path/posix";
+import { join } from "node:path";
 
 import type { EmbedResult } from "../types";
 import { type ExampleMap, type TargetMap } from "./types";
@@ -22,25 +22,24 @@ export function processTargets(
     const matches = matchAll({ content, exists: (example) => examples.has(absolutePath(example)) });
     if (matches.length === 0) {
       result.push({ code: "NO_MATCH", paths: { target, examples: [] } });
-      break;
-    }
+    } else {
+      let updatedContent = content;
+      for (const { fullMatch, language, indent, example } of matches) {
+        const exampleContent = exampleMap.get(absolutePath(example))!;
+        const replacement = `\`\`\`${language}\n${prefixLines({
+          content: [`// ${example}`, ...exampleContent.content.split("\n"), `\`\`\``],
+          indent,
+        })}`;
+        updatedContent = updatedContent.replaceAll(fullMatch, replacement);
+      }
 
-    let updatedContent = content;
-    for (const { fullMatch, language, indent, example } of matches) {
-      const exampleContent = exampleMap.get(absolutePath(example))!;
-      const replacement = `\`\`\`${language}\n${prefixLines({
-        content: [`// ${example}`, ...exampleContent.content.split("\n"), `\`\`\``],
-        indent,
-      })}`;
-      updatedContent = updatedContent.replaceAll(fullMatch, replacement);
+      const paths = { examples: matches.map((m) => absolutePath(m.example)), target };
+      result.push(
+        content === updatedContent
+          ? { code: "NO_CHANGE", paths }
+          : { code: "UPDATED", paths, updatedContent },
+      );
     }
-
-    const paths = { examples: matches.map((m) => absolutePath(m.example)), target };
-    result.push(
-      content === updatedContent
-        ? { code: "NO_CHANGE", paths }
-        : { code: "UPDATED", paths, updatedContent },
-    );
   }
 
   return result;

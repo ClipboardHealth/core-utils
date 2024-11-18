@@ -16,8 +16,14 @@ const program = new Command()
       "examples/**/*.ts",
     ),
   )
-  .addOption(new Option("-c, --check", "check if examples are already embedded, useful for CI"))
-  .addOption(new Option("-d, --dry-run", "show what would be changed without making changes"));
+  .addOption(
+    new Option("-c, --check", "check if examples are already embedded, useful for CI").default(
+      false,
+    ),
+  )
+  .addOption(
+    new Option("-d, --dry-run", "show what would be changed without making changes").default(false),
+  );
 
 program.parse();
 
@@ -30,7 +36,7 @@ embed({
   write: !check && !dryRun,
 })
   .then((result) => {
-    const output = processResult({ check: Boolean(check), dryRun: Boolean(dryRun), result });
+    const output = processResult({ check, dryRun, result });
     if (output.isError) {
       console.error(output.message);
       process.exit(1);

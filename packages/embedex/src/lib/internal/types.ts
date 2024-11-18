@@ -6,7 +6,7 @@ export interface Example {
 }
 export type ExampleMap = Map<ExamplePath, Example>;
 
-export interface Target {
+interface Target {
   content: string;
   examples: Set<ExamplePath>;
 }

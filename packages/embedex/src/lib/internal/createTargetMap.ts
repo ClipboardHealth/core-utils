@@ -1,24 +1,32 @@
 import { readFile } from "node:fs/promises";
 
-import type { ExamplePath, TargetPath } from "../types";
-import { type ExampleMap, type Target, type TargetMap } from "./types";
+import type { TargetPath } from "../types";
+import { type ExampleMap, type TargetMap } from "./types";
 
 export async function createTargetMap(
   params: Readonly<{ exampleMap: Readonly<ExampleMap> }>,
 ): Promise<TargetMap> {
   const { exampleMap } = params;
-  const targetMap = new Map<TargetPath, Target>();
-  for (const [examplePath, example] of exampleMap.entries()) {
-    for (const targetPath of example.targets) {
-      const value = targetMap.get(targetPath) ?? {
-        // eslint-disable-next-line no-await-in-loop
-        content: await readFile(targetPath, "utf8"),
-        examples: new Set<ExamplePath>(),
-      };
-      value.examples.add(examplePath);
-      targetMap.set(targetPath, value);
-    }
-  }
 
-  return targetMap;
+  const uniqueTargetPaths = new Set([...exampleMap.values()].flatMap(({ targets }) => targets));
+  const targetContents = new Map<TargetPath, string>();
+  await Promise.all(
+    [...uniqueTargetPaths].map(async (path) => {
+      targetContents.set(path, await readFile(path, "utf8"));
+    }),
+  );
+
+  return new Map(
+    [...uniqueTargetPaths].map((targetPath) => [
+      targetPath,
+      {
+        content: targetContents.get(targetPath)!,
+        examples: new Set(
+          [...exampleMap.entries()]
+            .filter(([_, { targets }]) => targets.includes(targetPath))
+            .map(([examplePath]) => examplePath),
+        ),
+      },
+    ]),
+  );
 }

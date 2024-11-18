@@ -81,8 +81,9 @@ Command-line interface (CLI) to embed example TypeScript code into TypeDoc comme
 Options:
   -V, --version               output the version number
   -e, --examples <directory>  examples directory glob pattern (default: "examples/**/*.ts")
-  -c, --check                 check if examples are already embedded, useful for CI
-  -d, --dry-run               show what would be changed without making changes
+  -c, --check                 check if examples are already embedded, useful for CI (default:
+                              false)
+  -d, --dry-run               show what would be changed without making changes (default: false)
   -h, --help                  display help for command
 ```
 

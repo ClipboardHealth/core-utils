@@ -1,10 +1,10 @@
 import { glob, readFile } from "node:fs/promises";
-import { join } from "node:path/posix";
+import { join } from "node:path";
 
 import { type ExamplePath } from "../types";
 import { type Example, type ExampleMap } from "./types";
 
-const COMMENT = "// ";
+const EXAMPLE_MARKER_PREFIX = "// ";
 
 export async function createExampleMap(params: {
   globPattern: string;
@@ -17,11 +17,11 @@ export async function createExampleMap(params: {
     const path = join(root, p);
     const content = await readFile(path, "utf8");
     const [first, ...rest] = content.split("\n");
-    if (first?.startsWith(COMMENT)) {
+    if (first?.startsWith(EXAMPLE_MARKER_PREFIX)) {
       exampleMap.set(path, {
         content: rest.join("\n"),
         targets: first
-          .replace(COMMENT, "")
+          .replace(EXAMPLE_MARKER_PREFIX, "")
           .split(",")
           .map((t) => join(root, t.trim())),
       });
