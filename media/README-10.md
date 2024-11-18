@@ -1,238 +1,149 @@
-# @clipboard-health/util-ts <!-- omit from toc -->
+# @clipboard-health/testing-core <!-- omit from toc -->
 
-TypeScript utilities.
+TypeScript-friendly testing utilities.
 
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
-  - [ServiceError](#serviceerror)
-  - [ServiceResult](#serviceresult)
-  - [Functional](#functional)
-    - [`pipe`](#pipe)
-    - [`option`](#option)
-    - [`either`](#either)
+  - [Type narrowing `expect` helpers](#type-narrowing-expect-helpers)
 - [Local development commands](#local-development-commands)
 
 ## Install
 
 ```bash
-npm install @clipboard-health/util-ts
+npm install @clipboard-health/testing-core
 ```
 
 ## Usage
 
-See `./src/lib` for each utility.
+### Type narrowing `expect` helpers
 
-### ServiceError
+Jest's [`expect(...).toBeDefined()`](https://jestjs.io/docs/expect#tobedefined) does not narrow types.
 
-<!-- prettier-ignore -->
+This gives a type error:
+
 ```ts
-// ./examples/serviceError.ts
+const value = getValue(); // returns 'string | undefined'
 
-import { deepEqual, equal } from "node:assert/strict";
+expect(value).toBeDefined();
 
-import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
-import { z } from "zod";
-
-{
-  const error = new ServiceError("boom");
-  equal(error.toString(), `ServiceError[${error.id}]: [internal]: boom`);
-}
-
-try {
-  throw new Error("boom");
-} catch (error) {
-  const serviceError = ServiceError.fromUnknown(error);
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [internal]: boom`);
-}
-
-{
-  const serviceError = ServiceError.fromZodError(
-    new z.ZodError([{ code: "custom", path: ["foo"], message: "boom" }]),
-  );
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [unprocessableEntity]: boom`);
-}
-
-{
-  const errorWithCause = new ServiceError({
-    issues: [{ message: "boom" }],
-    cause: new Error("Original error"),
-  });
-  equal(errorWithCause.toString(), `ServiceError[${errorWithCause.id}]: [internal]: boom`);
-}
-
-{
-  const multipleIssues = new ServiceError({
-    issues: [
-      {
-        code: ERROR_CODES.badRequest,
-        message: "Invalid email format",
-        path: ["data", "attributes", "email"],
-      },
-      {
-        code: ERROR_CODES.unprocessableEntity,
-        message: "Phone number too short",
-        path: ["data", "attributes", "phoneNumber"],
-      },
-    ],
-    cause: new Error("Original error"),
-  });
-
-  equal(
-    multipleIssues.toString(),
-    `ServiceError[${multipleIssues.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short`,
-  );
-
-  deepEqual(multipleIssues.toJsonApi(), {
-    errors: [
-      {
-        id: multipleIssues.id,
-        status: "400",
-        code: "badRequest",
-        title: "Invalid or malformed request",
-        detail: "Invalid email format",
-        source: {
-          pointer: "/data/attributes/email",
-        },
-      },
-      {
-        id: multipleIssues.id,
-        status: "422",
-        code: "unprocessableEntity",
-        title: "Request failed validation",
-        detail: "Phone number too short",
-        source: {
-          pointer: "/data/attributes/phoneNumber",
-        },
-      },
-    ],
-  });
-}
-
+const { length } = value;
+// ^? Property 'length' does not exist on type 'string | undefined'.
 ```
 
-### ServiceResult
+This library's helpers narrow types:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/serviceResult.ts
+// ./examples/expectToBeDefined.ts
 
 import { ok } from "node:assert/strict";
 
-import {
-  either as E,
-  ERROR_CODES,
-  failure,
-  type ServiceResult,
-  success,
-} from "@clipboard-health/util-ts";
+import { expectToBeDefined } from "@clipboard-health/testing-core";
 
-function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
-  const { email, phone } = params;
-  const code = ERROR_CODES.unprocessableEntity;
+function getValue(): string | undefined {
+  return "hi";
+}
 
-  if (!email.includes("@")) {
-    return failure({ issues: [{ code, message: "Invalid email format" }] });
+const value = getValue();
+expectToBeDefined(value);
+
+// Narrowed to `string`
+const { length } = value;
+ok(length === 2);
+
+```
+
+<!-- prettier-ignore -->
+```ts
+// ./examples/expectToBeLeft.ts
+
+import { ok } from "node:assert/strict";
+
+import { expectToBeLeft } from "@clipboard-health/testing-core";
+import { either as E } from "@clipboard-health/util-ts";
+
+function divide(numerator: number, denominator: number): E.Either<string, number> {
+  if (denominator === 0) {
+    return E.left("Cannot divide by zero");
   }
 
-  if (phone.length !== 12) {
-    return failure({ issues: [{ code, message: "Invalid phone number" }] });
+  return E.right(numerator / denominator);
+}
+
+const value = divide(10, 0);
+expectToBeLeft(value);
+
+// Narrowed to Left
+ok(value.left === "Cannot divide by zero");
+
+```
+
+<!-- prettier-ignore -->
+```ts
+// ./examples/expectToBeRight.ts
+
+import { ok } from "node:assert/strict";
+
+import { expectToBeRight } from "@clipboard-health/testing-core";
+import { either as E } from "@clipboard-health/util-ts";
+
+function divide(numerator: number, denominator: number): E.Either<string, number> {
+  if (denominator === 0) {
+    return E.left("Cannot divide by zero");
   }
 
-  return success({ id: "user-123" });
+  return E.right(numerator / denominator);
 }
 
-ok(E.isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
-ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+const value = divide(10, 2);
+expectToBeRight(value);
+
+// Narrowed to Right
+ok(value.right === 5);
 
 ```
 
-### Functional
-
-#### `pipe`
-
 <!-- prettier-ignore -->
 ```ts
-// ./examples/pipe.ts
+// ./examples/expectToBeSafeParseError.ts
 
-import { equal } from "node:assert/strict";
+import { ok } from "node:assert/strict";
 
-import { pipe } from "@clipboard-health/util-ts";
+import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
+import { z } from "zod";
 
-const result = pipe(
-  "  hello world  ",
-  (s) => s.trim(),
-  (s) => s.split(" "),
-  (array) => array.map((word) => word.charAt(0).toUpperCase() + word.slice(1)),
-  (array) => array.join(" "),
-);
+const schema = z.object({ name: z.string() });
 
-equal(result, "Hello World");
+const value = schema.safeParse({ name: 1 });
+expectToBeSafeParseError(value);
+
+// Narrowed to `SafeParseError`
+const firstIssue = value.error.issues[0];
+expectToBeDefined(firstIssue);
+
+// Narrowed to `ZodIssue`
+ok(firstIssue.message === "Expected string, received number");
 
 ```
 
-#### `option`
-
 <!-- prettier-ignore -->
 ```ts
-// ./examples/option.ts
+// ./examples/expectToBeSafeParseSuccess.ts
 
-import { equal } from "node:assert/strict";
+import { ok } from "node:assert/strict";
 
-import { option as O, pipe } from "@clipboard-health/util-ts";
+import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";
+import { z } from "zod";
 
-function double(n: number) {
-  return n * 2;
-}
+const schema = z.object({ name: z.string() });
 
-function inverse(n: number): O.Option<number> {
-  return n === 0 ? O.none : O.some(1 / n);
-}
+const value = schema.safeParse({ name: "hi" });
+expectToBeSafeParseSuccess(value);
 
-const result = pipe(
-  O.some(5),
-  O.map(double),
-  O.flatMap(inverse),
-  O.match(
-    () => "No result",
-    (n) => `Result is ${n}`,
-  ),
-);
-
-equal(result, "Result is 0.1");
-
-```
-
-#### `either`
-
-<!-- prettier-ignore -->
-```ts
-// ./examples/either.ts
-
-import { equal } from "node:assert/strict";
-
-import { either as E, pipe } from "@clipboard-health/util-ts";
-
-function double(n: number): number {
-  return n * 2;
-}
-
-function inverse(n: number): E.Either<string, number> {
-  return n === 0 ? E.left("Division by zero") : E.right(1 / n);
-}
-
-const result = pipe(
-  E.right(5),
-  E.map(double),
-  E.flatMap(inverse),
-  E.match(
-    (error) => `Error: ${error}`,
-    (result) => `Result is ${result}`,
-  ),
-);
-
-equal(result, "Result is 0.1");
+// Narrowed to `SafeParseSuccess`
+ok(value.data.name === "hi");
 
 ```
 
