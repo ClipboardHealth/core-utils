@@ -9,9 +9,9 @@ import { type Example, type ExampleMap } from "./types";
 const EXAMPLE_MARKER_PREFIX = "// ";
 
 export async function createExampleMap(
-  params: Readonly<{ globPattern: string; cwd: string }>,
+  params: Readonly<{ cwd: string; globPattern: string }>,
 ): Promise<ExampleMap> {
-  const { globPattern, cwd } = params;
+  const { cwd, globPattern } = params;
   const exampleMap = new Map<ExamplePath, Example>();
   const paths = await glob(globPattern, { absolute: true, cwd, nodir: true });
 

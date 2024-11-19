@@ -10,10 +10,10 @@ import { type EmbedParams, type EmbedResult } from "./types";
  */
 export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult> {
   const { examplesGlob: globPattern, cwd, write } = params;
-  const exampleMap = await createExampleMap({ globPattern, cwd });
+  const exampleMap = await createExampleMap({ cwd, globPattern });
   const targetMap = await createTargetMap({ exampleMap });
 
-  const embeds = processTargets({ exampleMap, cwd, targetMap });
+  const embeds = processTargets({ cwd, exampleMap, targetMap });
 
   await Promise.all(
     embeds.map(async (embed) => {
