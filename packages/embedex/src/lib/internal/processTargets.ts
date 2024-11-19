@@ -1,7 +1,34 @@
 import { join } from "node:path";
 
 import type { Embed } from "../types";
-import { type ExampleMap, type TargetMap } from "./types";
+import {
+  getFileExtension,
+  isSupportedFileExtension,
+  type SupportedFileExtension,
+} from "./fileTypes";
+import { type ExampleMap, type Target, type TargetMap } from "./types";
+
+const TARGET_CONFIG = {
+  ts: {
+    pattern: /(`{3,4})(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]*?\1/g,
+    prefix: "*",
+  },
+  md: {
+    pattern: /(`{3,4})(typescript|ts)\n(\s*)\/\/\s(.+)\n[\S\s]*?\1/g,
+    prefix: "",
+  },
+};
+
+type TargetConfig = (typeof TARGET_CONFIG)[keyof typeof TARGET_CONFIG];
+
+const CONFIG_BY_FILE_EXTENSION: Record<SupportedFileExtension, TargetConfig> = {
+  cts: TARGET_CONFIG.ts,
+  md: TARGET_CONFIG.md,
+  mdx: TARGET_CONFIG.md,
+  mts: TARGET_CONFIG.ts,
+  ts: TARGET_CONFIG.ts,
+  tsx: TARGET_CONFIG.ts,
+} as const;
 
 export function processTargets(
   params: Readonly<{
@@ -10,49 +37,76 @@ export function processTargets(
     targetMap: Readonly<TargetMap>;
   }>,
 ) {
-  const { cwd, exampleMap, targetMap } = params;
-
-  function absolutePath(path: string): string {
-    return join(cwd, path);
-  }
+  const { targetMap, ...rest } = params;
 
   const result: Embed[] = [];
-  for (const [target, value] of targetMap.entries()) {
-    const { content, examples } = value;
-    const matches = matchAll({ content, exists: (example) => examples.has(absolutePath(example)) });
-    if (matches.length === 0) {
-      result.push({ code: "NO_MATCH", paths: { target, examples: [] } });
-    } else {
-      let updatedContent = content;
-      for (const { fullMatch, language, indent, example } of matches) {
-        const exampleContent = exampleMap.get(absolutePath(example))!;
-        const codeBlock = exampleContent.content.includes("```") ? "````" : "```";
-        const replacement = `${codeBlock}${language}\n${prefixLines({
-          content: [
-            `// ${example}`,
-            ...exampleContent.content.replace("*/", "*\\/").split("\n"),
-            codeBlock,
-          ],
-          indent,
-        })}`;
-        updatedContent = updatedContent.replaceAll(fullMatch, replacement);
-      }
-
-      const paths = { examples: matches.map((m) => absolutePath(m.example)), target };
-      result.push(
-        content === updatedContent
-          ? { code: "NO_CHANGE", paths }
-          : { code: "UPDATE", paths, updatedContent },
-      );
-    }
+  for (const entry of targetMap.entries()) {
+    result.push(processTarget({ ...rest, entry }));
   }
 
   return result;
 }
 
-function matchAll(params: Readonly<{ content: string; exists: (path: string) => boolean }>) {
-  const { content, exists } = params;
-  return [...content.matchAll(/(`{3,4})(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]*?\1/g)]
+function processTarget(params: {
+  cwd: string;
+  entry: [target: string, value: Target];
+  exampleMap: Readonly<ExampleMap>;
+}): Embed {
+  const { cwd, exampleMap, entry } = params;
+  const [target, { content, examples }] = entry;
+
+  function absolutePath(path: string): string {
+    return join(cwd, path);
+  }
+
+  const fileExtension = getFileExtension(target);
+  if (!isSupportedFileExtension(fileExtension)) {
+    return { code: "UNSUPPORTED", paths: { target, examples: [] } };
+  }
+
+  const targetConfig = CONFIG_BY_FILE_EXTENSION[fileExtension];
+  const matches = matchAll({
+    content,
+    exists: (example) => examples.has(absolutePath(example)),
+    targetConfig,
+  });
+  if (matches.length === 0) {
+    return { code: "NO_MATCH", paths: { target, examples: [] } };
+  }
+
+  let updatedContent = content;
+  for (const { fullMatch, language, indent, example } of matches) {
+    const exampleContent = exampleMap.get(absolutePath(example))!;
+    // Escape code blocks
+    const codeBlock = exampleContent.content.includes("```") ? "````" : "```";
+    const replacement = `${codeBlock}${language}\n${prefixLines({
+      content: [
+        `// ${example}`,
+        // Escape comment blocks
+        ...exampleContent.content.replace("*/", "*\\/").split("\n"),
+        codeBlock,
+      ],
+      indent,
+      prefix: targetConfig.prefix,
+    })}`;
+    updatedContent = updatedContent.replaceAll(fullMatch, replacement);
+  }
+
+  const paths = { examples: matches.map((m) => absolutePath(m.example)), target };
+  return content === updatedContent
+    ? { code: "NO_CHANGE", paths }
+    : { code: "UPDATE", paths, updatedContent };
+}
+
+function matchAll(
+  params: Readonly<{
+    content: string;
+    exists: (path: string) => boolean;
+    targetConfig: TargetConfig;
+  }>,
+) {
+  const { content, exists, targetConfig } = params;
+  return [...content.matchAll(targetConfig.pattern)]
     .map((match) => {
       const [fullMatch, , language, indent, example] = match;
       return isDefined(fullMatch) &&
@@ -66,12 +120,18 @@ function matchAll(params: Readonly<{ content: string; exists: (path: string) => 
     .filter(isDefined);
 }
 
-function prefixLines(params: Readonly<{ content: readonly string[]; indent: string }>): string {
-  const { content, indent } = params;
+function prefixLines(
+  params: Readonly<{ content: readonly string[]; indent: string; prefix: string }>,
+): string {
+  const { content, indent, prefix } = params;
+
+  const blankLinePrefix = `${indent}${prefix}`;
+  const linePrefix = blankLinePrefix ? `${blankLinePrefix} ` : "";
+
   return content
     .map((line) => {
       const trimmed = line.trim();
-      return trimmed ? `${indent}* ${line}` : `${indent}*`;
+      return trimmed ? `${linePrefix}${line}` : blankLinePrefix;
     })
     .join("\n");
 }
