@@ -200,6 +200,43 @@ describe("embed", () => {
     ]);
   });
 
+  it("escapes examples with code and comment blocks", async () => {
+    const exampleCode = ["/** hello */", "```ts", "const x = 1;", "```"];
+    const targetCode = [" * /** hello *\\/", " * ```ts", " * const x = 1;", " * ```"];
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleCode]),
+      write(paths.targets.l, [
+        "/**",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        " * ```",
+        " */",
+      ]),
+    ]);
+
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UPDATE",
+        paths: {
+          examples: [toPath(paths.examples.a)],
+          target: toPath(paths.targets.l),
+        },
+        updatedContent: [
+          "/**",
+          " * @example",
+          " * ````ts",
+          ` * // ${paths.examples.a}`,
+          ...targetCode,
+          " * ````",
+          " */",
+        ].join("\n"),
+      },
+    ]);
+  });
+
   it("returns UPDATE for targets with multiple matches", async () => {
     await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
     await write(paths.targets.l, [

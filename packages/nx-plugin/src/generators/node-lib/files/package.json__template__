@@ -2,7 +2,7 @@
   "name": "<%= importPath %>",
   "description": "",
   "version": "0.0.0",<% if (publishPublicly) { %>
-  "bugs": "https://github.com/clipboardhealth/core-utils/issues",<% } %>
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",<% } %>
   "dependencies": {
     "tslib": "2.8.0"
   },
@@ -13,9 +13,9 @@
     "access": "<%= publishConfigAccess %>"
   },<% if (publishPublicly) { %>
   "repository": {
+    "directory": "packages/<%= projectName %>",
     "type": "git",
-    "url": "git+https://github.com/clipboardhealth/core-utils.git",
-    "directory": "packages/<%= projectName %>"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },<% } %>
   "type": "commonjs",
   "typings": "./src/index.d.ts"

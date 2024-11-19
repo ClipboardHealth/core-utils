@@ -1,23 +1,22 @@
 #!/usr/bin/env node
 import { Command, Option } from "@commander-js/extra-typings";
 
-import { name, version } from "../../package.json";
+import { description, name, version } from "../../package.json";
 import { embed } from "../lib/embed";
 import { dim, processResult } from "./processResult";
 
 const program = new Command()
   .name(name)
-  .description(
-    "Command-line interface (CLI) to embed example TypeScript code into TypeDoc comments.",
-  )
+  .description(description)
   .version(String(version))
   .addOption(
     new Option("-e, --examplesGlob <pattern>", "examples glob pattern").default("examples/**/*.ts"),
   )
   .addOption(
-    new Option("-c, --check", "check if examples are already embedded, useful for CI").default(
-      false,
-    ),
+    new Option(
+      "-c, --check",
+      "verify if examples are correctly embedded without making changes, exits with non-zero code if updates are needed; useful for CI/CD pipelines",
+    ).default(false),
   )
   .addOption(new Option("-v, --verbose", "show verbose output").default(false));
 
@@ -33,8 +32,8 @@ if (verbose) {
 }
 
 embed({
-  examplesGlob,
   cwd,
+  examplesGlob,
   write: !check,
 })
   .then((result) => {

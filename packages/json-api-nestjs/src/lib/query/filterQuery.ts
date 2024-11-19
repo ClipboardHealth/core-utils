@@ -13,7 +13,7 @@ export interface FilterValue {
   schema: z.ZodTypeAny;
 }
 
-type InternalFilterMap<FieldT extends Field = Field> = Record<FieldT, FilterValue>;
+export type InternalFilterMap<FieldT extends Field = Field> = Record<FieldT, FilterValue>;
 
 export type FilterMap<FieldT extends Field = Field> = Partial<InternalFilterMap<FieldT>>;
 

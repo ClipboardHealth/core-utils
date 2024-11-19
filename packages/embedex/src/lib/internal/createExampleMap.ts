@@ -8,11 +8,10 @@ import { type Example, type ExampleMap } from "./types";
 
 const EXAMPLE_MARKER_PREFIX = "// ";
 
-export async function createExampleMap(params: {
-  globPattern: string;
-  cwd: string;
-}): Promise<ExampleMap> {
-  const { globPattern, cwd } = params;
+export async function createExampleMap(
+  params: Readonly<{ cwd: string; globPattern: string }>,
+): Promise<ExampleMap> {
+  const { cwd, globPattern } = params;
   const exampleMap = new Map<ExamplePath, Example>();
   const paths = await glob(globPattern, { absolute: true, cwd, nodir: true });
 

@@ -25,7 +25,7 @@ export type ConfigValueMap<SchemaT, EnvironmentT extends readonly string[]> = {
   [K in keyof SchemaT]: ConfigValueForType<SchemaT[K], EnvironmentT>;
 };
 
-type ConfigValueForType<T, EnvironmentT extends readonly string[]> = T extends unknown[]
+export type ConfigValueForType<T, EnvironmentT extends readonly string[]> = T extends unknown[]
   ? ConfigValue<T, EnvironmentT>
   : T extends Date
     ? ConfigValue<Date, EnvironmentT>

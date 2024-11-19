@@ -5,12 +5,12 @@ import { type ExampleMap, type TargetMap } from "./types";
 
 export function processTargets(
   params: Readonly<{
-    exampleMap: ExampleMap;
     cwd: string;
-    targetMap: TargetMap;
+    exampleMap: Readonly<ExampleMap>;
+    targetMap: Readonly<TargetMap>;
   }>,
 ) {
-  const { exampleMap, targetMap, cwd } = params;
+  const { cwd, exampleMap, targetMap } = params;
 
   function absolutePath(path: string): string {
     return join(cwd, path);
@@ -26,8 +26,13 @@ export function processTargets(
       let updatedContent = content;
       for (const { fullMatch, language, indent, example } of matches) {
         const exampleContent = exampleMap.get(absolutePath(example))!;
-        const replacement = `\`\`\`${language}\n${prefixLines({
-          content: [`// ${example}`, ...exampleContent.content.split("\n"), `\`\`\``],
+        const codeBlock = exampleContent.content.includes("```") ? "````" : "```";
+        const replacement = `${codeBlock}${language}\n${prefixLines({
+          content: [
+            `// ${example}`,
+            ...exampleContent.content.replace("*/", "*\\/").split("\n"),
+            codeBlock,
+          ],
           indent,
         })}`;
         updatedContent = updatedContent.replaceAll(fullMatch, replacement);
@@ -47,9 +52,9 @@ export function processTargets(
 
 function matchAll(params: Readonly<{ content: string; exists: (path: string) => boolean }>) {
   const { content, exists } = params;
-  return [...content.matchAll(/```(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]+?```/g)]
+  return [...content.matchAll(/(`{3,4})(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]*?\1/g)]
     .map((match) => {
-      const [fullMatch, language, indent, example] = match;
+      const [fullMatch, , language, indent, example] = match;
       return isDefined(fullMatch) &&
         isDefined(language) &&
         isDefined(indent) &&
@@ -61,7 +66,7 @@ function matchAll(params: Readonly<{ content: string; exists: (path: string) => 
     .filter(isDefined);
 }
 
-function prefixLines(params: Readonly<{ content: string[]; indent: string }>): string {
+function prefixLines(params: Readonly<{ content: readonly string[]; indent: string }>): string {
   const { content, indent } = params;
   return content
     .map((line) => {

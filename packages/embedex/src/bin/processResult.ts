@@ -55,7 +55,6 @@ export function processResult(params: {
       paths: { target: relative(target), examples: examples.map((path) => relative(path)) },
     });
 
-    // eslint-disable-next-line default-case
     switch (code) {
       case "NO_CHANGE": {
         output.push(toOutput());
@@ -70,6 +69,10 @@ export function processResult(params: {
       case "UPDATE": {
         output.push(toOutput(check));
         break;
+      }
+
+      default: {
+        throw new Error(`Unknown embed ${JSON.stringify(embed)}`);
       }
     }
   }

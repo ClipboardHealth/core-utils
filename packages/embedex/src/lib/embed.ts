@@ -6,14 +6,14 @@ import { processTargets } from "./internal/processTargets";
 import { type EmbedParams, type EmbedResult } from "./types";
 
 /**
- * Command-line interface (CLI) to embed examples into TypeDoc comments.
+ * Embed examples into TypeDoc comments.
  */
 export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult> {
   const { examplesGlob: globPattern, cwd, write } = params;
-  const exampleMap = await createExampleMap({ globPattern, cwd });
+  const exampleMap = await createExampleMap({ cwd, globPattern });
   const targetMap = await createTargetMap({ exampleMap });
 
-  const embeds = processTargets({ exampleMap, cwd, targetMap });
+  const embeds = processTargets({ cwd, exampleMap, targetMap });
 
   await Promise.all(
     embeds.map(async (embed) => {

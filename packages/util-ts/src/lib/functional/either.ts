@@ -11,7 +11,7 @@ export type Right<A> = Readonly<{
 /**
  * A value of `Either` type `Left<E>` or type `Right<A>`; a disjoint union.
  *
- * A common use case is as an alternative to {@link Option} where `Left<E>` contains useful
+ * A common use case is as an alternative to `Option` where `Left<E>` contains useful
  * information. Convention dictates that `Left<E>` is used for failure and `Right<A>` for success.
  * To help remember, the success case is "right"; it's the result you want.
  *
@@ -59,7 +59,7 @@ export function left<E, A = never>(left: E): Either<E, A> {
 /**
  * Constructs an `Either` holding a `Right<A>`, representing a success.
  *
- * @param value - The value to wrap in a `Right`
+ * @param right - The value to wrap in a `Right`
  * @returns A `Right` containing the value
  */
 export function right<A, E = never>(right: A): Either<E, A> {
@@ -124,8 +124,8 @@ export function flatMap<E, A, B>(
  * Safely extracts the value from an `Either` with a fallback. Use this function when you need to
  * convert an `Either<E, A>` to an `A`, providing a default value for the `Left` case.
  *
- * @param defaultValue - The value to return if the `Either` is `Left`
- * @returns The contained value if `Right`, `defaultValue` if `Left`
+ * @param onLeft - The value to return if the `Either` is `Left`
+ * @returns The contained value if `Right`, the result of `onLeft` if `Left`
  */
 export function getOrElse<E, A>(onLeft: (left: E) => A): (either: Either<E, A>) => A {
   return (either) => (isRight(either) ? either.right : onLeft(either.left));

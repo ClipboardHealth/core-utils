@@ -12,15 +12,15 @@
     "paths": {
       "@clipboard-health/config": ["packages/config/src/index.ts"],
       "@clipboard-health/contract-core": ["packages/contract-core/src/index.ts"],
-      "@clipboard-health/embedex": ["packages/embedex/src/index.ts"],
       "@clipboard-health/eslint-config": ["packages/eslint-config/src/index.js"],
       "@clipboard-health/execution-context": ["packages/execution-context/src/index.ts"],
-      "@clipboard-health/json-api": ["packages/json-api/src/index.ts"],
       "@clipboard-health/json-api-nestjs": ["packages/json-api-nestjs/src/index.ts"],
+      "@clipboard-health/json-api": ["packages/json-api/src/index.ts"],
       "@clipboard-health/nx-plugin": ["packages/nx-plugin/src/index.ts"],
       "@clipboard-health/rules-engine": ["packages/rules-engine/src/index.ts"],
       "@clipboard-health/testing-core": ["packages/testing-core/src/index.ts"],
-      "@clipboard-health/util-ts": ["packages/util-ts/src/index.ts"]
+      "@clipboard-health/util-ts": ["packages/util-ts/src/index.ts"],
+      "embedex": ["packages/embedex/src/index.ts"]
     },
     "rootDir": ".",
     "skipDefaultLibCheck": true,
