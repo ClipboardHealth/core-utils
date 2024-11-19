@@ -28,8 +28,7 @@ See `./src/lib` for each utility.
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/serviceError.ts
-
+// packages/util-ts/examples/serviceError.ts
 import { deepEqual, equal } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
@@ -116,8 +115,7 @@ try {
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/serviceResult.ts
-
+// packages/util-ts/examples/serviceResult.ts
 import { ok } from "node:assert/strict";
 
 import {
@@ -154,9 +152,7 @@ ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" }))
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/pipe.ts
-
-// packages/util-ts/src/lib/functional/pipe.ts
+// packages/util-ts/examples/pipe.ts
 import { equal } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";
@@ -177,9 +173,7 @@ equal(result, "Hello World");
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/option.ts
-
-// packages/util-ts/src/lib/functional/option.ts
+// packages/util-ts/examples/option.ts
 import { equal } from "node:assert/strict";
 
 import { option as O, pipe } from "@clipboard-health/util-ts";
@@ -210,9 +204,7 @@ equal(result, "Result is 0.1");
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/either.ts
-
-// packages/util-ts/src/lib/functional/either.ts
+// packages/util-ts/examples/either.ts
 import { equal } from "node:assert/strict";
 
 import { either as E, pipe } from "@clipboard-health/util-ts";

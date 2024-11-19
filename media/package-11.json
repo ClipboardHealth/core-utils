@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/util-ts",
   "description": "TypeScript utilities.",
-  "version": "2.12.1",
+  "version": "2.13.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.0"
@@ -23,9 +23,6 @@
     "directory": "packages/util-ts",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
-  },
-  "scripts": {
-    "embed": "embedme README.md"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

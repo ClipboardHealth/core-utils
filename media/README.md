@@ -25,9 +25,7 @@ A usage example:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/config.ts
-
-// packages/config/src/lib/createConfig.ts
+// packages/config/examples/config.ts
 import { ok } from "node:assert/strict";
 
 import { createConfig } from "@clipboard-health/config";

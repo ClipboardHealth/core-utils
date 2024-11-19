@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/rules-engine",
   "description": "A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.",
-  "version": "1.14.1",
+  "version": "1.15.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.0",
@@ -22,9 +22,6 @@
     "directory": "packages/rules-engine",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
-  },
-  "scripts": {
-    "embed": "embedme README.md"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
