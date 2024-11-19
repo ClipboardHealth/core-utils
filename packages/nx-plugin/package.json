@@ -2,7 +2,7 @@
   "name": "@clipboard-health/nx-plugin",
   "description": "An Nx plugin with generators to manage libraries and applications.",
   "version": "0.15.0",
-  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "@nx/devkit": "20.0.1",
     "@nx/js": "20.0.1",
@@ -25,7 +25,7 @@
   "repository": {
     "directory": "packages/nx-plugin",
     "type": "git",
-    "url": "git+https://github.com/clipboardhealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

@@ -86,8 +86,9 @@ A command-line interface (CLI) that embeds examples into TypeDoc comments.
 Options:
   -V, --version                 output the version number
   -e, --examplesGlob <pattern>  examples glob pattern (default: "examples/**/*.ts")
-  -c, --check                   check if examples are already embedded, useful for CI
-                                (default: false)
+  -c, --check                   verify if examples are correctly embedded without making changes,
+                                exits with non-zero code if updates are needed; useful for CI/CD
+                                pipelines (default: false)
   -v, --verbose                 show verbose output (default: false)
   -h, --help                    display help for command
 ```

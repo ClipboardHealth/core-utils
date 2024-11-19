@@ -125,7 +125,7 @@ export function flatMap<E, A, B>(
  * convert an `Either<E, A>` to an `A`, providing a default value for the `Left` case.
  *
  * @param onLeft - The value to return if the `Either` is `Left`
- * @returns The contained value if `Right`, `defaultValue` if `Left`
+ * @returns The contained value if `Right`, the result of `onLeft` if `Left`
  */
 export function getOrElse<E, A>(onLeft: (left: E) => A): (either: Either<E, A>) => A {
   return (either) => (isRight(either) ? either.right : onLeft(either.left));

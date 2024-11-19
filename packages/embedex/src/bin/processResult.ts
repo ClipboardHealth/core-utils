@@ -72,7 +72,7 @@ export function processResult(params: {
       }
 
       default: {
-        throw new Error("Unknown embed", embed);
+        throw new Error(`Unknown embed ${JSON.stringify(embed)}`);
       }
     }
   }

@@ -2,12 +2,16 @@
   "name": "@clipboard-health/json-api",
   "description": "TypeScript-friendly utilities for adhering to the JSON:API specification.",
   "version": "0.15.0",
-  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.0"
   },
   "keywords": [
+    "api",
+    "json-api",
     "json:api",
+    "jsonapi",
+    "rest",
     "typescript"
   ],
   "license": "MIT",
@@ -18,7 +22,7 @@
   "repository": {
     "directory": "packages/json-api",
     "type": "git",
-    "url": "git+https://github.com/clipboardhealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "scripts": {
     "embed": "embedme README.md"

@@ -13,9 +13,10 @@ const program = new Command()
     new Option("-e, --examplesGlob <pattern>", "examples glob pattern").default("examples/**/*.ts"),
   )
   .addOption(
-    new Option("-c, --check", "check if examples are already embedded, useful for CI").default(
-      false,
-    ),
+    new Option(
+      "-c, --check",
+      "verify if examples are correctly embedded without making changes, exits with non-zero code if updates are needed; useful for CI/CD pipelines",
+    ).default(false),
   )
   .addOption(new Option("-v, --verbose", "show verbose output").default(false));
 

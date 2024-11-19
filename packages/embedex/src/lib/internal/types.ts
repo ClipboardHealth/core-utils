@@ -4,10 +4,10 @@ export interface Example {
   content: string;
   targets: TargetPath[];
 }
-export type ExampleMap = Map<ExamplePath, Example>;
+export type ExampleMap = ReadonlyMap<ExamplePath, Example>;
 
 interface Target {
   content: string;
-  examples: Set<ExamplePath>;
+  examples: ReadonlySet<ExamplePath>;
 }
-export type TargetMap = Map<TargetPath, Target>;
+export type TargetMap = ReadonlyMap<TargetPath, Target>;

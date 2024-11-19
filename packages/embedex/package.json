@@ -5,7 +5,7 @@
   "bin": {
     "embedex": "./src/bin/cli.js"
   },
-  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "@commander-js/extra-typings": "12.1.0",
     "glob": "11.0.0",
@@ -28,7 +28,7 @@
   "repository": {
     "directory": "packages/embedex",
     "type": "git",
-    "url": "git+https://github.com/clipboardhealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
