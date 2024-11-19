@@ -21,8 +21,7 @@ npm install @clipboard-health/contract-core
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/schemas.ts
-
+// packages/contract-core/examples/schemas.ts
 import { apiErrors, booleanString, nonEmptyString, uuid } from "@clipboard-health/contract-core";
 import { type ZodError } from "zod";
 

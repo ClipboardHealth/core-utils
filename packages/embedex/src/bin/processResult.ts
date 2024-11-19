@@ -55,24 +55,22 @@ export function processResult(params: {
       paths: { target: relative(target), examples: examples.map((path) => relative(path)) },
     });
 
+    // eslint-disable-next-line default-case -- ignore so we get @typescript-eslint/switch-exhaustiveness-check
     switch (code) {
       case "NO_CHANGE": {
-        output.push(toOutput());
+        output.push(toOutput({ isError: false }));
         break;
       }
 
-      case "NO_MATCH": {
-        output.push(toOutput(true));
+      case "NO_MATCH":
+      case "UNSUPPORTED": {
+        output.push(toOutput({ isError: true }));
         break;
       }
 
       case "UPDATE": {
-        output.push(toOutput(check));
+        output.push(toOutput({ isError: check }));
         break;
-      }
-
-      default: {
-        throw new Error(`Unknown embed ${JSON.stringify(embed)}`);
       }
     }
   }
@@ -84,7 +82,7 @@ function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) 
   const { code, paths } = params;
   const { target, examples } = paths;
 
-  return (isError = false) => ({
+  return ({ isError }: { isError: boolean }) => ({
     code,
     isError,
     message: `${colors.green(code)} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,

@@ -1,3 +1,4 @@
+// packages/util-ts/README.md
 import { deepEqual, equal } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";

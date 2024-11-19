@@ -13,14 +13,14 @@ describe("embed", () => {
   let cwd: string;
   let paths: {
     examples: Record<"a" | "b", string>;
-    targets: Record<"l" | "m", string>;
+    targets: Record<"l" | "m" | "n", string>;
   };
 
   beforeEach(async () => {
     cwd = await mkdtemp(join(tmpdir(), "embedex"));
     paths = {
       examples: { a: "examples/a.ts", b: "examples/b.ts" },
-      targets: { l: "src/l.ts", m: "src/m.ts" },
+      targets: { l: "src/l.ts", m: "src/m.ts", n: "src/n.md" },
     };
     await Promise.all([mkdir(join(cwd, "examples")), mkdir(join(cwd, "src"))]);
   });
@@ -87,7 +87,27 @@ describe("embed", () => {
     ]);
   });
 
-  it("returns UPDATE for targets with matches", async () => {
+  it("returns UNSUPPORTED if target is unsupported", async () => {
+    await Promise.all([
+      write(paths.examples.a, [`// l.x`, ...exampleACode]),
+      write("l.x", [
+        "/**",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        " * ```",
+        " */",
+      ]),
+    ]);
+
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: true });
+
+    expect(actual.embeds).toEqual([
+      { code: "UNSUPPORTED", paths: { examples: [], target: toPath("l.x") } },
+    ]);
+  });
+
+  it("returns UPDATE for TypeScript targets with matches", async () => {
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.targets.l, [
@@ -118,6 +138,26 @@ describe("embed", () => {
           " * ```",
           " */",
         ].join("\n"),
+      },
+    ]);
+  });
+
+  it("returns UPDATE for Markdown targets with matches", async () => {
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.n}`, ...exampleACode]),
+      write(paths.targets.n, ["```ts", `// ${paths.examples.a}`, "```"]),
+    ]);
+
+    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UPDATE",
+        paths: {
+          examples: [toPath(paths.examples.a)],
+          target: toPath(paths.targets.n),
+        },
+        updatedContent: ["```ts", `// ${paths.examples.a}`, ...exampleACode, "```"].join("\n"),
       },
     ]);
   });
@@ -238,18 +278,20 @@ describe("embed", () => {
   });
 
   it("returns UPDATE for targets with multiple matches", async () => {
-    await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
-    await write(paths.targets.l, [
-      "/**",
-      " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      " * ```",
-      " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      " * ```",
-      " */",
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
+      write(paths.targets.l, [
+        "/**",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        " * ```",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        " * ```",
+        " */",
+      ]),
     ]);
 
     const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
@@ -275,8 +317,10 @@ describe("embed", () => {
       " * ```",
       " */",
     ];
-    await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
-    await write(paths.targets.l, targetContent);
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
+      write(paths.targets.l, targetContent),
+    ]);
 
     await embed({ examplesGlob: globPattern, cwd, write: false });
     const actual = await read(paths.targets.l);
@@ -285,15 +329,17 @@ describe("embed", () => {
   });
 
   it("returns NO_CHANGE if already embedded", async () => {
-    await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
-    await write(paths.targets.l, [
-      "/**",
-      " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      ...targetACode,
-      " * ```",
-      " */",
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
+      write(paths.targets.l, [
+        "/**",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        ...targetACode,
+        " * ```",
+        " */",
+      ]),
     ]);
 
     const actual = await embed({ examplesGlob: globPattern, cwd, write: true });
@@ -307,14 +353,16 @@ describe("embed", () => {
   });
 
   it("writes example to target", async () => {
-    await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
-    await write(paths.targets.l, [
-      "/**",
-      " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      " * ```",
-      " */",
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
+      write(paths.targets.l, [
+        "/**",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        " * ```",
+        " */",
+      ]),
     ]);
 
     await embed({ examplesGlob: globPattern, cwd, write: true });
@@ -336,24 +384,26 @@ describe("embed", () => {
   it("writes multiple examples to target", async () => {
     const exampleBCode = [`const x = "b";`];
     const targetBCode = [` * const x = "b";`];
-    await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
-    await write(paths.examples.b, [`// ${paths.targets.l}`, ...exampleBCode]);
-    await write(paths.targets.l, [
-      "/**",
-      " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      " * ```",
-      " * @example",
-      " * ```ts",
-      ` * // decoy match`,
-      ` * const x = "shouldNotBeUpdated";`,
-      " * ```",
-      " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.b}`,
-      " * ```",
-      " */",
+    await Promise.all([
+      write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
+      write(paths.examples.b, [`// ${paths.targets.l}`, ...exampleBCode]),
+      write(paths.targets.l, [
+        "/**",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.a}`,
+        " * ```",
+        " * @example",
+        " * ```ts",
+        ` * // decoy match`,
+        ` * const x = "shouldNotBeUpdated";`,
+        " * ```",
+        " * @example",
+        " * ```ts",
+        ` * // ${paths.examples.b}`,
+        " * ```",
+        " */",
+      ]),
     ]);
 
     await embed({ examplesGlob: globPattern, cwd, write: true });

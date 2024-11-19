@@ -1,4 +1,4 @@
-// packages/json-api/src/lib/query/toClientSearchParams.ts
+// packages/json-api/src/lib/query/toClientSearchParams.ts,packages/json-api/README.md
 import { deepEqual } from "node:assert/strict";
 
 import { toClientSearchParams } from "@clipboard-health/json-api";

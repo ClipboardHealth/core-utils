@@ -23,9 +23,7 @@ From the client, call `toClientSearchParams` to convert from `ClientJsonApiQuery
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/toClientSearchParams.ts
-
-// packages/json-api/src/lib/query/toClientSearchParams.ts
+// packages/json-api/examples/toClientSearchParams.ts
 import { deepEqual } from "node:assert/strict";
 
 import { toClientSearchParams } from "@clipboard-health/json-api";
@@ -60,9 +58,7 @@ From the server, call `toServerJsonApiQuery` to convert from `URLSearchParams` t
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/toServerJsonApiQuery.ts
-
-// packages/json-api/src/lib/query/toServerJsonApiQuery.ts
+// packages/json-api/examples/toServerJsonApiQuery.ts
 import { deepEqual } from "node:assert/strict";
 
 import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";

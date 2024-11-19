@@ -39,15 +39,6 @@ describe("processResult", () => {
     expect(actual).toEqual([]);
   });
 
-  it("throws when unknown code", () => {
-    const input = {
-      ...base,
-      result: { ...base.result, embeds: [{ code: "UNKNOWN", paths: { target, examples } }] },
-    };
-
-    expect(() => processResult(input as unknown as typeof base)).toThrow("Unknown embed");
-  });
-
   it("logs additional data when verbose is true", () => {
     const actual = processResult({
       ...base,
@@ -69,8 +60,9 @@ describe("processResult", () => {
         ...base.result,
         embeds: [
           { code: "UPDATE" as const, paths: { target, examples }, updatedContent: "" },
-          { code: "NO_CHANGE" as const, paths: { target, examples } },
           { code: "NO_MATCH" as const, paths: { target, examples } },
+          { code: "NO_CHANGE" as const, paths: { target, examples } },
+          { code: "UNSUPPORTED" as const, paths: { target, examples } },
         ],
       },
     };
@@ -87,6 +79,11 @@ describe("processResult", () => {
         code: "NO_MATCH",
         isError: true,
         message: `${colors.green("NO_MATCH")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+      },
+      {
+        code: "UNSUPPORTED",
+        isError: true,
+        message: `${colors.green("UNSUPPORTED")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
       },
       {
         code: "UPDATE",

@@ -6,7 +6,7 @@ export interface Example {
 }
 export type ExampleMap = ReadonlyMap<ExamplePath, Example>;
 
-interface Target {
+export interface Target {
   content: string;
   examples: ReadonlySet<ExamplePath>;
 }

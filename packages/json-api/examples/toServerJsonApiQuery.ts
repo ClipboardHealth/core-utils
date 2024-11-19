@@ -1,4 +1,4 @@
-// packages/json-api/src/lib/query/toServerJsonApiQuery.ts
+// packages/json-api/src/lib/query/toServerJsonApiQuery.ts,packages/json-api/README.md
 import { deepEqual } from "node:assert/strict";
 
 import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
