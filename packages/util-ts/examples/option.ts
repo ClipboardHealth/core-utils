@@ -1,4 +1,4 @@
-// packages/util-ts/src/lib/functional/option.ts
+// packages/util-ts/src/lib/functional/option.ts,packages/util-ts/README.md
 import { equal } from "node:assert/strict";
 
 import { option as O, pipe } from "@clipboard-health/util-ts";

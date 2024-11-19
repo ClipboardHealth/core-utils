@@ -19,8 +19,5 @@
     "express": "4.21.1",
     "supertest": "7.0.0",
     "webpack-cli": "5.1.4"
-  },
-  "scripts": {
-    "embed": "embedme README.md"
   }
 }

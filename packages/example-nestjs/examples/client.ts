@@ -1,3 +1,4 @@
+// packages/example-nestjs/README.md
 import { initClient, type ServerInferRequest } from "@ts-rest/core";
 
 import { contract } from "../src/contract";

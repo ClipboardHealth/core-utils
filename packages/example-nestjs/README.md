@@ -26,8 +26,7 @@ The following makes requests to the example application using the `ts-rest` clie
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/client.ts
-
+// packages/example-nestjs/examples/client.ts
 import { initClient, type ServerInferRequest } from "@ts-rest/core";
 
 import { contract } from "../src/contract";

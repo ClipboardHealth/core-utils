@@ -19,9 +19,9 @@ export interface Result {
 
 export type NoMatch = Result & { code: "NO_MATCH" };
 export type NoChange = Result & { code: "NO_CHANGE" };
-export type UnsupportedExtension = Result & { code: "UNSUPPORTED" };
+export type Unsupported = Result & { code: "UNSUPPORTED" };
 export type Updated = Result & { code: "UPDATE"; updatedContent: string };
-export type Embed = NoMatch | Updated | NoChange | UnsupportedExtension;
+export type Embed = NoMatch | Updated | NoChange | Unsupported;
 
 export interface EmbedResult {
   embeds: Embed[];

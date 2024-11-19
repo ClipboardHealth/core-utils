@@ -9,11 +9,11 @@ import {
 import { type ExampleMap, type Target, type TargetMap } from "./types";
 
 const TARGET_CONFIG = {
-  ts: {
+  typeDoc: {
     pattern: /(`{3,4})(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]*?\1/g,
     prefix: "*",
   },
-  md: {
+  markdown: {
     pattern: /(`{3,4})(typescript|ts)\n(\s*)\/\/\s(.+)\n[\S\s]*?\1/g,
     prefix: "",
   },
@@ -22,12 +22,12 @@ const TARGET_CONFIG = {
 type TargetConfig = (typeof TARGET_CONFIG)[keyof typeof TARGET_CONFIG];
 
 const CONFIG_BY_FILE_EXTENSION: Record<SupportedFileExtension, TargetConfig> = {
-  cts: TARGET_CONFIG.ts,
-  md: TARGET_CONFIG.md,
-  mdx: TARGET_CONFIG.md,
-  mts: TARGET_CONFIG.ts,
-  ts: TARGET_CONFIG.ts,
-  tsx: TARGET_CONFIG.ts,
+  cts: TARGET_CONFIG.typeDoc,
+  md: TARGET_CONFIG.markdown,
+  mdx: TARGET_CONFIG.markdown,
+  mts: TARGET_CONFIG.typeDoc,
+  ts: TARGET_CONFIG.typeDoc,
+  tsx: TARGET_CONFIG.typeDoc,
 } as const;
 
 export function processTargets(
@@ -83,7 +83,7 @@ function processTarget(params: {
       content: [
         `// ${example}`,
         // Escape comment blocks
-        ...exampleContent.content.replace("*/", "*\\/").split("\n"),
+        ...exampleContent.content.replaceAll("*/", "*\\/").split("\n"),
         codeBlock,
       ],
       indent,
@@ -126,7 +126,7 @@ function prefixLines(
   const { content, indent, prefix } = params;
 
   const blankLinePrefix = `${indent}${prefix}`;
-  const linePrefix = blankLinePrefix ? `${blankLinePrefix} ` : "";
+  const linePrefix = prefix ? `${blankLinePrefix} ` : blankLinePrefix;
 
   return content
     .map((line) => {

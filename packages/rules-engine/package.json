@@ -23,9 +23,6 @@
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
-  "scripts": {
-    "embed": "embedme README.md"
-  },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
 }

@@ -1,3 +1,4 @@
+// packages/testing-core/README.md
 import { ok } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";

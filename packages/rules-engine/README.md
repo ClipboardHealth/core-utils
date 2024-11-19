@@ -19,8 +19,7 @@ npm install @clipboard-health/rules-engine
 ## Usage
 
 ```ts
-// ./examples/rules.ts
-
+// packages/rules-engine/examples/rules.ts
 import {
   all,
   appendOutput,

@@ -36,8 +36,7 @@ This library's helpers narrow types:
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/expectToBeDefined.ts
-
+// packages/testing-core/examples/expectToBeDefined.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeDefined } from "@clipboard-health/testing-core";
@@ -57,8 +56,7 @@ ok(length === 2);
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/expectToBeLeft.ts
-
+// packages/testing-core/examples/expectToBeLeft.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";
@@ -82,8 +80,7 @@ ok(value.left === "Cannot divide by zero");
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/expectToBeRight.ts
-
+// packages/testing-core/examples/expectToBeRight.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeRight } from "@clipboard-health/testing-core";
@@ -107,8 +104,7 @@ ok(value.right === 5);
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/expectToBeSafeParseError.ts
-
+// packages/testing-core/examples/expectToBeSafeParseError.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
@@ -130,8 +126,7 @@ ok(firstIssue.message === "Expected string, received number");
 
 <!-- prettier-ignore -->
 ```ts
-// ./examples/expectToBeSafeParseSuccess.ts
-
+// packages/testing-core/examples/expectToBeSafeParseSuccess.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";

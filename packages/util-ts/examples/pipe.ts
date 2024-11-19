@@ -1,4 +1,4 @@
-// packages/util-ts/src/lib/functional/pipe.ts
+// packages/util-ts/src/lib/functional/pipe.ts,packages/util-ts/README.md
 import { equal } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";
