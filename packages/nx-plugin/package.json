@@ -23,9 +23,9 @@
     "access": "public"
   },
   "repository": {
+    "directory": "packages/nx-plugin",
     "type": "git",
-    "url": "git+https://github.com/clipboardhealth/core-utils.git",
-    "directory": "packages/nx-plugin"
+    "url": "git+https://github.com/clipboardhealth/core-utils.git"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

@@ -39,6 +39,15 @@ describe("processResult", () => {
     expect(actual).toEqual([]);
   });
 
+  it("throws when unknown code", () => {
+    const input = {
+      ...base,
+      result: { ...base.result, embeds: [{ code: "UNKNOWN", paths: { target, examples } }] },
+    };
+
+    expect(() => processResult(input as unknown as typeof base)).toThrow("Unknown embed");
+  });
+
   it("logs additional data when verbose is true", () => {
     const actual = processResult({
       ...base,

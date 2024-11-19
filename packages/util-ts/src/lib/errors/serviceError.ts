@@ -88,7 +88,7 @@ const ERROR_METADATA = {
 } as const satisfies Record<ErrorCode, { status: number; title: string }>;
 type Status = (typeof ERROR_METADATA)[keyof typeof ERROR_METADATA]["status"];
 
-interface Issue extends ServiceIssue {
+export interface Issue extends ServiceIssue {
   code: Required<ServiceIssue>["code"];
   title: string;
 }

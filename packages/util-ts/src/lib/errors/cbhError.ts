@@ -7,7 +7,7 @@ import * as E from "../functional/either";
  *
  * @see {@link https://www.notion.so/BP-REST-API-f769b7fe745c4cf38f6eca2e9ad8a843?pvs=4#e0b4e9ea30f041409ce39505650098ea}
  */
-const ERROR_STATUS_CODES = [400, 401, 403, 404, 409, 422, 429, 500] as const;
+export const ERROR_STATUS_CODES = [400, 401, 403, 404, 409, 422, 429, 500] as const;
 
 /**
  * @deprecated Use {@link ErrorCode} instead.

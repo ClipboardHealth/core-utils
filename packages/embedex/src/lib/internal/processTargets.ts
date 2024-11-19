@@ -5,12 +5,12 @@ import { type ExampleMap, type TargetMap } from "./types";
 
 export function processTargets(
   params: Readonly<{
-    exampleMap: ExampleMap;
     cwd: string;
-    targetMap: TargetMap;
+    exampleMap: Readonly<ExampleMap>;
+    targetMap: Readonly<TargetMap>;
   }>,
 ) {
-  const { exampleMap, targetMap, cwd } = params;
+  const { cwd, exampleMap, targetMap } = params;
 
   function absolutePath(path: string): string {
     return join(cwd, path);
@@ -61,7 +61,7 @@ function matchAll(params: Readonly<{ content: string; exists: (path: string) => 
     .filter(isDefined);
 }
 
-function prefixLines(params: Readonly<{ content: string[]; indent: string }>): string {
+function prefixLines(params: Readonly<{ content: readonly string[]; indent: string }>): string {
   const { content, indent } = params;
   return content
     .map((line) => {

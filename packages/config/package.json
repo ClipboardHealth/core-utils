@@ -2,6 +2,7 @@
   "name": "@clipboard-health/config",
   "description": "Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.",
   "version": "0.8.0",
+  "bugs": "https://github.com/clipboardhealth/core-utils/issues",
   "dependencies": {
     "@clipboard-health/util-ts": "2.12.0",
     "decamelize": "5.0.1",
@@ -13,11 +14,20 @@
   "devDependencies": {
     "@clipboard-health/contract-core": "0.3.0"
   },
-  "keywords": [],
+  "keywords": [
+    "config",
+    "typescript",
+    "zod"
+  ],
   "license": "MIT",
   "main": "./src/index.js",
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "directory": "packages/config",
+    "type": "git",
+    "url": "git+https://github.com/clipboardhealth/core-utils.git"
   },
   "scripts": {
     "embed": "embedme README.md"

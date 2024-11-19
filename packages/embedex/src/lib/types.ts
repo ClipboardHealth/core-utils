@@ -2,8 +2,8 @@ export type ExamplePath = string;
 export type TargetPath = string;
 
 export interface EmbedParams {
-  examplesGlob: string;
   cwd: string;
+  examplesGlob: string;
   write: boolean;
 }
 
@@ -12,8 +12,8 @@ export type Code = "NO_CHANGE" | "NO_MATCH" | "UPDATE";
 export interface Result {
   code: Code;
   paths: {
-    target: TargetPath;
     examples: ExamplePath[];
+    target: TargetPath;
   };
 }
 

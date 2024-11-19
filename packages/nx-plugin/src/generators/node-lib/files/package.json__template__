@@ -13,9 +13,9 @@
     "access": "<%= publishConfigAccess %>"
   },<% if (publishPublicly) { %>
   "repository": {
+    "directory": "packages/<%= projectName %>",
     "type": "git",
-    "url": "git+https://github.com/clipboardhealth/core-utils.git",
-    "directory": "packages/<%= projectName %>"
+    "url": "git+https://github.com/clipboardhealth/core-utils.git"
   },<% } %>
   "type": "commonjs",
   "typings": "./src/index.d.ts"

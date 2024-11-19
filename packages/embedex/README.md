@@ -1,15 +1,12 @@
-<h1 align="center">embedex</h1>
-<p align="center">
-  <img alt="embedex logo." src="./static/logo.png" width=320>
-</p>
+# embedex <!-- omit from toc -->
 
-Command-line interface (CLI) to embed examples into TypeDoc comments.
+A command-line interface (CLI) that embeds examples into TypeDoc comments.
 
-While you can write code directly in TypeDoc comments using the [`@example` tag](https://typedoc.org/tags/example/), they aren't type-checked, linted, or tested, making it difficult to keep them up to date.
+You can write code directly in TypeDoc comments using the [`@example` tag](https://typedoc.org/tags/example/), but keeping them up to date and guaranteed runnable is challenging since they aren't type-checked, linted, or tested.
 
-While [`typedoc-plugin-include-example`](https://github.com/ferdodo/typedoc-plugin-include-example) embeds code into the resulting TypeDoc, it's missing from your code so VS Code's on-hover doesn't show the examples.
+While [`typedoc-plugin-include-example`](https://github.com/ferdodo/typedoc-plugin-include-example) embeds code into the resulting TypeDoc, the examples aren't in your code, so IDEs cannot show them on hover.
 
-Ensure your example code runs and shows up in your IDE with `embedex`.
+Keep your examples up to date, running, and showing on hover in IDEs with `embedex`.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -20,8 +17,16 @@ Ensure your example code runs and shows up in your IDE with `embedex`.
 
 ## Install
 
+Install as a dev dependency in your project:
+
 ```sh
-npm install -D embedex
+npm install --save-dev embedex
+```
+
+Or globally:
+
+```sh
+npm install --global embedex
 ```
 
 ## Usage
@@ -76,13 +81,13 @@ npm install -D embedex
 ```
 Usage: embedex [options]
 
-Command-line interface (CLI) to embed example TypeScript code into TypeDoc comments.
+A command-line interface (CLI) that embeds examples into TypeDoc comments.
 
 Options:
   -V, --version                 output the version number
   -e, --examplesGlob <pattern>  examples glob pattern (default: "examples/**/*.ts")
-  -c, --check                   check if examples are already embedded, useful for CI (default:
-                                false)
+  -c, --check                   check if examples are already embedded, useful for CI
+                                (default: false)
   -v, --verbose                 show verbose output (default: false)
   -h, --help                    display help for command
 ```

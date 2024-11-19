@@ -15,6 +15,7 @@ module.exports = {
   ],
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
+    `tsx packages/embedex/src/bin/cli.ts --examplesGlob 'packages/*/examples/**/*.ts' --check`,
   ],
   "**/*.{css,scss,graphql,js,json,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
     `prettier --write ${files.join(" ")}`,

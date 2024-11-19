@@ -35,9 +35,9 @@
     "access": "public"
   },
   "repository": {
-    "type": "git",
+    "directory": "packages/eslint-config",
     "url": "git+https://github.com/clipboardhealth/core-utils.git",
-    "directory": "packages/eslint-config"
+    "type": "git"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
