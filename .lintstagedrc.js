@@ -8,13 +8,12 @@ const esLintIgnored = async (files) => {
 };
 
 module.exports = {
-  "**/*": async (files) => [
-    `tsx packages/embedex/src/bin/cli.ts --examplesGlob 'packages/*/examples/**/*.ts' --check`,
-    `npm run cspell -- ${files.join(" ")}`,
-    `npm run knip`,
-  ],
+  "**/*": async (files) => [`npm run cspell -- ${files.join(" ")}`, `npm run knip`],
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
+  ],
+  "**/*.{ts,tsx,md,mdx}": async (files) => [
+    `tsx packages/embedex/src/bin/cli.ts --examplesGlob 'packages/*/examples/**/*.ts' --check`,
   ],
   "**/*.{css,scss,graphql,js,json,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
     `prettier --write ${files.join(" ")}`,
