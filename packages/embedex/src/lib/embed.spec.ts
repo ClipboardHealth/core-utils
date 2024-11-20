@@ -15,18 +15,19 @@ describe("embed", () => {
     // eslint-disable-next-line no-template-curly-in-string
     " * console.log(`Got ${x}`);",
     " * ```",
+    " *",
   ];
-  const globPattern = "examples/**/*.ts";
+  const examplesGlob = "examples/**/*.{md,ts}";
   let cwd: string;
   let paths: {
-    examples: Record<"a" | "b", string>;
+    examples: Record<"a" | "b" | "c", string>;
     targets: Record<"l" | "m" | "n", string>;
   };
 
   beforeEach(async () => {
     cwd = await mkdtemp(join(tmpdir(), "embedex"));
     paths = {
-      examples: { a: "examples/a.ts", b: "examples/b.ts" },
+      examples: { a: "examples/a.ts", b: "examples/b.ts", c: "examples/c.md" },
       targets: { l: "src/l.ts", m: "src/m.ts", n: "src/n.md" },
     };
     await Promise.all([mkdir(join(cwd, "examples")), mkdir(join(cwd, "src"))]);
@@ -56,7 +57,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       { code: "NO_MATCH", paths: { examples: [], target: toPath(paths.targets.l) } },
@@ -64,7 +65,7 @@ describe("embed", () => {
   });
 
   it("returns empty embeds when no examples found", async () => {
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([]);
   });
@@ -72,9 +73,9 @@ describe("embed", () => {
   it("throws for non-existent targets", async () => {
     await write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]);
 
-    await expect(
-      async () => await embed({ examplesGlob: globPattern, cwd, write: false }),
-    ).rejects.toThrow(`ENOENT: no such file or directory, open '${join(cwd, paths.targets.l)}'`);
+    await expect(async () => await embed({ examplesGlob, cwd, write: false })).rejects.toThrow(
+      `ENOENT: no such file or directory, open '${join(cwd, paths.targets.l)}'`,
+    );
   });
 
   it("returns NO_MATCH for targets with no matches", async () => {
@@ -83,7 +84,7 @@ describe("embed", () => {
       write(paths.targets.l, ["/**", " * @example", " * ```ts", " * ```", " */"]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -105,7 +106,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -132,7 +133,7 @@ describe("embed", () => {
       write(paths.targets.n, [`<embedex source="${paths.examples.a}">`, "</embedex>"]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -147,6 +148,7 @@ describe("embed", () => {
           "```ts",
           ...exampleACode,
           "```",
+          "",
           "</embedex>",
         ].join("\n"),
       },
@@ -167,7 +169,7 @@ describe("embed", () => {
       write(paths.targets.m, targetContent),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -189,6 +191,78 @@ describe("embed", () => {
     ]);
   });
 
+  it("returns UPDATE for multiple targets with Markdown example", async () => {
+    const exampleCode = ["# Hello"];
+    await Promise.all([
+      write(paths.examples.c, [`// ${paths.targets.l},${paths.targets.n}`, ...exampleCode]),
+      write(paths.targets.l, [`<embedex source="${paths.examples.c}">`, "</embedex>"]),
+      write(paths.targets.n, [`<embedex source="${paths.examples.c}">`, "</embedex>"]),
+    ]);
+
+    const actual = await embed({ examplesGlob, cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UPDATE",
+        paths: {
+          examples: [toPath(paths.examples.c)],
+          target: toPath(paths.targets.l),
+        },
+        updatedContent: [
+          `<embedex source="${paths.examples.c}">`,
+          "",
+          ...exampleCode,
+          "",
+          "</embedex>",
+        ].join("\n"),
+      },
+      {
+        code: "UPDATE",
+        paths: {
+          examples: [toPath(paths.examples.c)],
+          target: toPath(paths.targets.n),
+        },
+        updatedContent: [
+          `<embedex source="${paths.examples.c}">`,
+          "",
+          ...exampleCode,
+          "",
+          "</embedex>",
+        ].join("\n"),
+      },
+    ]);
+  });
+
+  it("returns UPDATE for unknown example with matches", async () => {
+    const exampleCode = ["val x = 1;"];
+    const examplePath = "examples/o.unknown";
+    await Promise.all([
+      write(examplePath, [`// ${paths.targets.l}`, ...exampleCode]),
+      write(paths.targets.l, [`<embedex source="${examplePath}">`, "</embedex>"]),
+    ]);
+
+    const actual = await embed({ examplesGlob: "examples/**/*.unknown", cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UPDATE",
+        paths: {
+          examples: [toPath(examplePath)],
+          target: toPath(paths.targets.l),
+        },
+        updatedContent: [
+          `<embedex source="${examplePath}">`,
+          "",
+          "```",
+          ...exampleCode,
+          "```",
+          "",
+          "</embedex>",
+        ].join("\n"),
+      },
+    ]);
+  });
+
   it("returns UPDATE for targets with indented matches", async () => {
     const exampleCode = ["function foo() {", `  console.log("bar");`, "}"];
     const targetCode = ["   * function foo() {", `   *   console.log("bar");`, "   * }"];
@@ -205,7 +279,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -223,6 +297,7 @@ describe("embed", () => {
           "   * ```ts",
           ...targetCode,
           "   * ```",
+          "   *",
           "   * </embedex>",
           "   */",
           "}",
@@ -245,7 +320,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -262,6 +337,7 @@ describe("embed", () => {
           " * ````ts",
           ...targetCode,
           " * ````",
+          " *",
           " * </embedex>",
           " */",
         ].join("\n"),
@@ -284,7 +360,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
+    const actual = await embed({ examplesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
       {
@@ -311,7 +387,7 @@ describe("embed", () => {
       write(paths.targets.l, targetContent),
     ]);
 
-    await embed({ examplesGlob: globPattern, cwd, write: false });
+    await embed({ examplesGlob, cwd, write: false });
     const actual = await read(paths.targets.l);
 
     expect(actual).toEqual(targetContent.join("\n"));
@@ -330,7 +406,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: true });
+    const actual = await embed({ examplesGlob, cwd, write: true });
 
     expect(actual.embeds).toEqual([
       {
@@ -352,7 +428,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    await embed({ examplesGlob: globPattern, cwd, write: true });
+    await embed({ examplesGlob, cwd, write: true });
     const actual = await read(paths.targets.l);
 
     expect(actual).toEqual(
@@ -369,7 +445,7 @@ describe("embed", () => {
 
   it("writes multiple examples to target", async () => {
     const exampleBCode = [`const x = "b";`];
-    const targetBCode = [" *", " * ```ts", ` * const x = "b";`, " * ```"];
+    const targetBCode = [" *", " * ```ts", ` * const x = "b";`, " * ```", " *"];
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.examples.b, [`// ${paths.targets.l}`, ...exampleBCode]),
@@ -389,7 +465,7 @@ describe("embed", () => {
       ]),
     ]);
 
-    await embed({ examplesGlob: globPattern, cwd, write: true });
+    await embed({ examplesGlob, cwd, write: true });
     const actual = await read(paths.targets.l);
 
     expect(actual).toEqual(

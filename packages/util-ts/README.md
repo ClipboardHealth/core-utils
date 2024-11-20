@@ -26,9 +26,9 @@ See `./src/lib` for each utility.
 
 ### ServiceError
 
-<!-- prettier-ignore -->
+<embedex source="packages/util-ts/examples/serviceError.ts">
+
 ```ts
-// packages/util-ts/examples/serviceError.ts
 import { deepEqual, equal } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
@@ -108,14 +108,15 @@ try {
     ],
   });
 }
-
 ```
+
+</embedex>
 
 ### ServiceResult
 
-<!-- prettier-ignore -->
+<embedex source="packages/util-ts/examples/serviceResult.ts">
+
 ```ts
-// packages/util-ts/examples/serviceResult.ts
 import { ok } from "node:assert/strict";
 
 import {
@@ -143,16 +144,17 @@ function validateUser(params: { email: string; phone: string }): ServiceResult<{
 
 ok(E.isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
 ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
-
 ```
+
+</embedex>
 
 ### Functional
 
 #### `pipe`
 
-<!-- prettier-ignore -->
+<embedex source="packages/util-ts/examples/pipe.ts">
+
 ```ts
-// packages/util-ts/examples/pipe.ts
 import { equal } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";
@@ -166,14 +168,15 @@ const result = pipe(
 );
 
 equal(result, "Hello World");
-
 ```
+
+</embedex>
 
 #### `option`
 
-<!-- prettier-ignore -->
+<embedex source="packages/util-ts/examples/option.ts">
+
 ```ts
-// packages/util-ts/examples/option.ts
 import { equal } from "node:assert/strict";
 
 import { option as O, pipe } from "@clipboard-health/util-ts";
@@ -197,14 +200,15 @@ const result = pipe(
 );
 
 equal(result, "Result is 0.1");
-
 ```
+
+</embedex>
 
 #### `either`
 
-<!-- prettier-ignore -->
+<embedex source="packages/util-ts/examples/either.ts">
+
 ```ts
-// packages/util-ts/examples/either.ts
 import { equal } from "node:assert/strict";
 
 import { either as E, pipe } from "@clipboard-health/util-ts";
@@ -228,8 +232,9 @@ const result = pipe(
 );
 
 equal(result, "Result is 0.1");
-
 ```
+
+</embedex>
 
 ## Local development commands
 

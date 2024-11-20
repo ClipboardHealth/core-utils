@@ -36,52 +36,53 @@ npm install --global embedex
    greet("world");
    ```
 
-2. In the destination file, add a code fence that includes the source file's path.
+2. In the destination file, add an `<embedex source="..."></embedex>` tag that includes the source file's path.
 
    1. `./README.md`:
 
-      ````md
+      ```
       # greeter
 
       Greets a person by name.
 
-      ```ts
-      // examples/greeter.ts
+      <embedex source="examples/greeter.ts">
+      </embedex>
       ```
-      ````
 
    2. `./src/greeter.ts`:
 
-      ````ts
+      ```ts
       /**
        * Greets a person by name.
        *
        * @example
-       * ```ts
-       * // examples/greeter.ts
-       * ```
+       * <embedex source="examples/greeter.ts">
+       * </embedex>
        */
       function greet(name: string) {
         console.log(`Hello, ${name}!`);
       }
-      ````
+      ```
 
 3. Run `npx embedex`.
 4. The example is embedded! `./src/greeter.ts`:
 
    1. `./README.md`:
 
-      ````md
+      ````
       # greeter
 
       Greets a person by name.
 
+      <embedex source="examples/greeter.ts">
+
       ```ts
-      // examples/greeter.ts
       import { greet } from "@my-scope/greeter";
 
       greet("world");
       ```
+
+      </embedex>
       ````
 
    2. `./src/greeter.ts`:
@@ -91,12 +92,15 @@ npm install --global embedex
        * Greets a person by name.
        *
        * @example
+       * <embedex source="examples/greeter.ts">
+       *
        * ```ts
-       * // examples/greeter.ts
        * import { greet } from "@my-scope/greeter";
        *
        * greet("world");
        * ```
+       *
+       * </embedex>
        */
       function greet(name: string) {
         console.log(`Hello, ${name}!`);

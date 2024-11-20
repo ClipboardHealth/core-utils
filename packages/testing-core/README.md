@@ -34,9 +34,9 @@ const { length } = value;
 
 This library's helpers narrow types:
 
-<!-- prettier-ignore -->
+<embedex source="packages/testing-core/examples/expectToBeDefined.ts">
+
 ```ts
-// packages/testing-core/examples/expectToBeDefined.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeDefined } from "@clipboard-health/testing-core";
@@ -51,12 +51,13 @@ expectToBeDefined(value);
 // Narrowed to `string`
 const { length } = value;
 ok(length === 2);
-
 ```
 
-<!-- prettier-ignore -->
+</embedex>
+
+<embedex source="packages/testing-core/examples/expectToBeLeft.ts">
+
 ```ts
-// packages/testing-core/examples/expectToBeLeft.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";
@@ -75,12 +76,13 @@ expectToBeLeft(value);
 
 // Narrowed to Left
 ok(value.left === "Cannot divide by zero");
-
 ```
 
-<!-- prettier-ignore -->
+</embedex>
+
+<embedex source="packages/testing-core/examples/expectToBeRight.ts">
+
 ```ts
-// packages/testing-core/examples/expectToBeRight.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeRight } from "@clipboard-health/testing-core";
@@ -99,12 +101,13 @@ expectToBeRight(value);
 
 // Narrowed to Right
 ok(value.right === 5);
-
 ```
 
-<!-- prettier-ignore -->
+</embedex>
+
+<embedex source="packages/testing-core/examples/expectToBeSafeParseError.ts">
+
 ```ts
-// packages/testing-core/examples/expectToBeSafeParseError.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
@@ -121,12 +124,13 @@ expectToBeDefined(firstIssue);
 
 // Narrowed to `ZodIssue`
 ok(firstIssue.message === "Expected string, received number");
-
 ```
 
-<!-- prettier-ignore -->
+</embedex>
+
+<embedex source="packages/testing-core/examples/expectToBeSafeParseSuccess.ts">
+
 ```ts
-// packages/testing-core/examples/expectToBeSafeParseSuccess.ts
 import { ok } from "node:assert/strict";
 
 import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";
@@ -139,8 +143,9 @@ expectToBeSafeParseSuccess(value);
 
 // Narrowed to `SafeParseSuccess`
 ok(value.data.name === "hi");
-
 ```
+
+</embedex>
 
 ## Local development commands
 

@@ -1,25 +1,7 @@
 # @clipboard-health/config <!-- omit from toc -->
 
-Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.
-
-## Table of contents <!-- omit from toc -->
-
-- [Install](#install)
-- [Usage](#usage)
-  - [Type-safe configuration](#type-safe-configuration)
-- [Local development commands](#local-development-commands)
-
-## Install
-
-```bash
-npm install @clipboard-health/config
-```
-
-## Usage
-
-### Type-safe configuration
-
 <embedex source="packages/config/examples/config.md">
+
 Type-safe static configuration management: a pure function to resolve, validate against a Zod
 schema, and freeze configuration values.
 
@@ -54,7 +36,22 @@ To override arrays with environment variables, use stringified JSON arrays, e.g.
 
 </embedex>
 
-A usage example:
+## Table of contents <!-- omit from toc -->
+
+- [Install](#install)
+- [Usage](#usage)
+  - [Type-safe configuration](#type-safe-configuration)
+- [Local development commands](#local-development-commands)
+
+## Install
+
+```bash
+npm install @clipboard-health/config
+```
+
+## Usage
+
+### Type-safe configuration
 
 <embedex source="packages/config/examples/config.ts">
 

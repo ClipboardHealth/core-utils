@@ -1,28 +1,19 @@
-import { join } from "node:path";
+import { extname, join } from "node:path";
 
 import type { Embed } from "../types";
-import { type FileExtension, getFileExtension } from "./fileTypes";
 import { type ExampleMap, type Target, type TargetMap } from "./types";
 
-const CODE_FENCES = {
-  javaScript: "```js",
-  markdown: "",
-  typeScript: "```ts",
-} as const;
-type CodeFence = (typeof CODE_FENCES)[keyof typeof CODE_FENCES];
-const { javaScript, markdown, typeScript } = CODE_FENCES;
-
-const CODE_FENCES_BY_FILE_EXTENSION: Record<FileExtension, CodeFence> = {
-  cjs: javaScript,
-  cts: typeScript,
-  js: javaScript,
-  jsx: javaScript,
-  md: markdown,
-  mdx: markdown,
-  mjs: javaScript,
-  mts: typeScript,
-  ts: typeScript,
-  tsx: typeScript,
+const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
+  cjs: "js",
+  cts: "ts",
+  js: "js",
+  jsx: "js",
+  md: "",
+  mdx: "",
+  mjs: "js",
+  mts: "ts",
+  ts: "ts",
+  tsx: "ts",
 } as const;
 
 export function processTargets(
@@ -64,7 +55,7 @@ function processTarget(params: {
     const exampleContent = exampleMap.get(absolutePath(examplePath))!;
     updatedContent = updatedContent.replaceAll(
       fullMatch,
-      buildReplacement({ content: exampleContent.content, examplePath, prefix }),
+      buildReplacement2({ content: exampleContent.content, examplePath, prefix }),
     );
   }
 
@@ -103,23 +94,26 @@ function matchAll(
     .filter(isDefined);
 }
 
-function buildReplacement(params: { content: string; examplePath: string; prefix: string }) {
+function buildReplacement2(
+  params: Readonly<{ content: string; examplePath: string; prefix: string }>,
+) {
   const { content, examplePath, prefix } = params;
 
-  const fileExtension = getFileExtension(examplePath);
-  const codeFenceByExtension = CODE_FENCES_BY_FILE_EXTENSION[fileExtension] ?? "```";
   const contentHasCodeFence = content.includes("```");
-  const codeFence = contentHasCodeFence ? `\`${codeFenceByExtension}` : codeFenceByExtension;
-  return [
+  const backticks = contentHasCodeFence ? "````" : "```";
+  const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(examplePath).slice(1)];
+  const escapedContent = content.replaceAll("*/", "*\\/").trimEnd().split("\n");
+  const lines = [
     `<embedex source="${examplePath}">`,
-    "", // For proper Markdown rendering, include a blank line before the code fence
-    ...(codeFenceByExtension.length > 0 ? [codeFence] : []),
-    ...content.replaceAll("*/", "*\\/").split("\n"),
-    ...(codeFenceByExtension.length > 0 ? [contentHasCodeFence ? "````" : "```"] : []),
-    `</embedex>`,
-  ]
-    .map((line) => `${prefix}${line}`.trimEnd())
-    .join("\n");
+    "",
+    ...(codeFenceId === ""
+      ? escapedContent
+      : [`${backticks}${codeFenceId ?? ""}`, ...escapedContent, backticks]),
+    "",
+    "</embedex>",
+  ];
+
+  return lines.map((line) => `${prefix}${line}`.trimEnd()).join("\n");
 }
 
 function isDefined<T>(value: T | undefined): value is T {

@@ -10,7 +10,6 @@ dotenv.config();
 /**
  * <embedex source="packages/config/examples/config.md">
  *
- * ```ts
  * Type-safe static configuration management: a pure function to resolve, validate against a Zod
  * schema, and freeze configuration values.
  *
@@ -43,7 +42,6 @@ dotenv.config();
  *    `Readonly<SchemaT>` because the former prevents clients from passing configuration values to
  *    functions that don't explicitly accept `readonly` types.
  *
- * ```
  * </embedex>
  *
  * @example
@@ -113,8 +111,8 @@ dotenv.config();
  * } finally {
  *   process.env = { ...original };
  * }
- *
  * ```
+ *
  * </embedex>
  *
  * @throws {Error} When configuration values fail schema validation

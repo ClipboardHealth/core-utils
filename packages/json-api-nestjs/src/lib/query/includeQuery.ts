@@ -51,8 +51,9 @@ export type RelationshipPaths<
  * Creates a Zod schema for JSON:API include parameters.
  *
  * @example
+ * <embedex source="packages/example-nestjs/examples/query.ts">
+ *
  * ```ts
- * // packages/example-nestjs/examples/query.ts
  * import { booleanString } from "@clipboard-health/contract-core";
  * import {
  *   cursorPaginationQuery,
@@ -108,8 +109,9 @@ export type RelationshipPaths<
  *     ...includeQuery(userIncludeFields),
  *   })
  *   .strict();
- *
  * ```
+ *
+ * </embedex>
  *
  * @see {@link https://jsonapi.org/format/#fetching-includes JSON:API includes}
  */

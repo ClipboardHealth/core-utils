@@ -16,8 +16,9 @@ export type Right<A> = Readonly<{
  * To help remember, the success case is "right"; it's the result you want.
  *
  * @example
+ * <embedex source="packages/util-ts/examples/either.ts">
+ *
  * ```ts
- * // packages/util-ts/examples/either.ts
  * import { equal } from "node:assert/strict";
  *
  * import { either as E, pipe } from "@clipboard-health/util-ts";
@@ -41,8 +42,9 @@ export type Right<A> = Readonly<{
  * );
  *
  * equal(result, "Result is 0.1");
- *
  * ```
+ *
+ * </embedex>
  */
 export type Either<E, A> = Left<E> | Right<A>;
 

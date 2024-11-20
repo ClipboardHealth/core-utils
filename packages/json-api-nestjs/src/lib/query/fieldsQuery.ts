@@ -29,8 +29,9 @@ export type AttributeFields<DocumentT extends JsonApiDocument> =
  * Creates a Zod schema for JSON:API sparse fieldsets.
  *
  * @example
+ * <embedex source="packages/example-nestjs/examples/query.ts">
+ *
  * ```ts
- * // packages/example-nestjs/examples/query.ts
  * import { booleanString } from "@clipboard-health/contract-core";
  * import {
  *   cursorPaginationQuery,
@@ -86,8 +87,9 @@ export type AttributeFields<DocumentT extends JsonApiDocument> =
  *     ...includeQuery(userIncludeFields),
  *   })
  *   .strict();
- *
  * ```
+ *
+ * </embedex>
  *
  * @see {@link https://jsonapi.org/format/#fetching-sparse-fieldsets JSON:API sparse fieldsets}
  */

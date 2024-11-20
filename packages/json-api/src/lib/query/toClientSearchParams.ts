@@ -12,8 +12,9 @@ function join(values: string[]): string {
  * Call this function from clients to convert from {@link ClientJsonApiQuery} to {@link URLSearchParams}.
  *
  * @example
+ * <embedex source="packages/json-api/examples/toClientSearchParams.ts">
+ *
  * ```ts
- * // packages/json-api/examples/toClientSearchParams.ts
  * import { deepEqual } from "node:assert/strict";
  *
  * import { toClientSearchParams } from "@clipboard-health/json-api";
@@ -41,8 +42,9 @@ function join(values: string[]): string {
  *     `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
  *   ).toString(),
  * );
- *
  * ```
+ *
+ * </embedex>
  */
 export function toClientSearchParams(query: ClientJsonApiQuery): URLSearchParams {
   const searchParams = new URLSearchParams();

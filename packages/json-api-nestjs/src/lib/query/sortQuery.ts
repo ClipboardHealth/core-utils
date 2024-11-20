@@ -6,9 +6,9 @@ import { type Field } from "../types";
 /**
  * Creates a Zod schema for JSON:API sort parameters.
  *
- * @example
+ * <embedex source="packages/example-nestjs/examples/query.ts">
+ *
  * ```ts
- * // packages/example-nestjs/examples/query.ts
  * import { booleanString } from "@clipboard-health/contract-core";
  * import {
  *   cursorPaginationQuery,
@@ -64,8 +64,9 @@ import { type Field } from "../types";
  *     ...includeQuery(userIncludeFields),
  *   })
  *   .strict();
- *
  * ```
+ *
+ * </embedex>
  *
  * @see {@link https://jsonapi.org/format/#fetching-sorting JSON:API sorting}
  */

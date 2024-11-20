@@ -24,9 +24,9 @@ Install the [REST Client](https://marketplace.visualstudio.com/items?itemName=hu
 
 The following makes requests to the example application using the `ts-rest` client.
 
-<!-- prettier-ignore -->
+<embedex source="packages/example-nestjs/examples/client.ts">
+
 ```ts
-// packages/example-nestjs/examples/client.ts
 import { initClient, type ServerInferRequest } from "@ts-rest/core";
 
 import { contract } from "../src/contract";
@@ -70,8 +70,9 @@ async function main() {
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
 void main();
-
 ```
+
+</embedex>
 
 ## Local development commands
 

@@ -18,8 +18,9 @@ npm install @clipboard-health/rules-engine
 
 ## Usage
 
+<embedex source="packages/rules-engine/examples/rules.ts">
+
 ```ts
-// packages/rules-engine/examples/rules.ts
 import {
   all,
   appendOutput,
@@ -92,6 +93,8 @@ const firstMatchResult = firstMatch(
 console.log(firstMatchResult.output);
 // => [{ result: 7 }]
 ```
+
+</embedex>
 
 ## Local development commands
 
