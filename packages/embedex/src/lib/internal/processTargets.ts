@@ -55,7 +55,7 @@ function processTarget(params: {
     const exampleContent = exampleMap.get(absolutePath(examplePath))!;
     updatedContent = updatedContent.replaceAll(
       fullMatch,
-      buildReplacement2({ content: exampleContent.content, examplePath, prefix }),
+      createReplacement({ content: exampleContent.content, examplePath, prefix }),
     );
   }
 
@@ -94,7 +94,7 @@ function matchAll(
     .filter(isDefined);
 }
 
-function buildReplacement2(
+function createReplacement(
   params: Readonly<{ content: string; examplePath: string; prefix: string }>,
 ) {
   const { content, examplePath, prefix } = params;
