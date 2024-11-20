@@ -72,7 +72,7 @@ function processTarget(params: {
  * 1. The block's prefix
  * 2. The source file path
  */
-const REGEX = /(.*)<embedex source="(.+)">\n[\S\s]*?<\/embedex>/g;
+const REGEX = /^(.*)<embedex source="(.+?)">\n[\S\s]*?<\/embedex>/gm;
 
 function matchAll(
   params: Readonly<{
