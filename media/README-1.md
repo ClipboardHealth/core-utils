@@ -19,9 +19,9 @@ npm install @clipboard-health/contract-core
 
 ### Zod schemas
 
-<!-- prettier-ignore -->
+<embedex source="packages/contract-core/examples/schemas.ts">
+
 ```ts
-// packages/contract-core/examples/schemas.ts
 import { apiErrors, booleanString, nonEmptyString, uuid } from "@clipboard-health/contract-core";
 import { type ZodError } from "zod";
 
@@ -66,8 +66,9 @@ try {
   logError(error);
   // => Invalid UUID format
 }
-
 ```
+
+</embedex>
 
 ## Local development commands
 

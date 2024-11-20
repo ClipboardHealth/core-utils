@@ -21,9 +21,9 @@ npm install @clipboard-health/json-api
 
 From the client, call `toClientSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
 
-<!-- prettier-ignore -->
+<embedex source="packages/json-api/examples/toClientSearchParams.ts">
+
 ```ts
-// packages/json-api/examples/toClientSearchParams.ts
 import { deepEqual } from "node:assert/strict";
 
 import { toClientSearchParams } from "@clipboard-health/json-api";
@@ -51,14 +51,14 @@ deepEqual(
     `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
   ).toString(),
 );
-
 ```
 
+</embedex>
 From the server, call `toServerJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
 
-<!-- prettier-ignore -->
+<embedex source="packages/json-api/examples/toServerJsonApiQuery.ts">
+
 ```ts
-// packages/json-api/examples/toServerJsonApiQuery.ts
 import { deepEqual } from "node:assert/strict";
 
 import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
@@ -84,8 +84,9 @@ deepEqual(query, {
   },
   sort: ["-age"],
 });
-
 ```
+
+</embedex>
 
 ## Local development commands
 
