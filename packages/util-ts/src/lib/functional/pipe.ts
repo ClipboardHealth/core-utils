@@ -67,8 +67,9 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
  * @param fs - Functions to apply sequentially
  * @returns The final transformed value
  * @example
+ * <embedex source="packages/util-ts/examples/pipe.ts">
+ *
  * ```ts
- * // packages/util-ts/examples/pipe.ts
  * import { equal } from "node:assert/strict";
  *
  * import { pipe } from "@clipboard-health/util-ts";
@@ -82,8 +83,9 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
  * );
  *
  * equal(result, "Hello World");
- *
  * ```
+ *
+ * </embedex>
  */
 export function pipe(a: unknown, ...fs: Array<(a: unknown) => unknown>): unknown {
   return fs.reduce((accumulator, f) => f(accumulator), a);

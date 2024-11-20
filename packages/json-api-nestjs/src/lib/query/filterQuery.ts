@@ -35,8 +35,9 @@ export type FilterSchema<MapT extends InternalFilterMap> = {
  * Creates a Zod schema for JSON:API filters.
  *
  * @example
+ * <embedex source="packages/example-nestjs/examples/query.ts">
+ *
  * ```ts
- * // packages/example-nestjs/examples/query.ts
  * import { booleanString } from "@clipboard-health/contract-core";
  * import {
  *   cursorPaginationQuery,
@@ -92,8 +93,9 @@ export type FilterSchema<MapT extends InternalFilterMap> = {
  *     ...includeQuery(userIncludeFields),
  *   })
  *   .strict();
- *
  * ```
+ *
+ * </embedex>
  *
  * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
  * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}

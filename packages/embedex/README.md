@@ -1,12 +1,8 @@
 # embedex <!-- omit from toc -->
 
-A command-line interface (CLI) that embeds examples into TypeDoc comments.
+Embed shared text and code snippets from source files into destination files. For example, embed TypeScript examples into TypeDoc comments and your README.
 
-You can write code directly in TypeDoc comments using the [`@example` tag](https://typedoc.org/tags/example/), but keeping them up to date and guaranteed runnable is challenging since they aren't type-checked, linted, or tested.
-
-While [`typedoc-plugin-include-example`](https://github.com/ferdodo/typedoc-plugin-include-example) embeds code into the resulting TypeDoc, the examples aren't in your code, so IDEs cannot show them on hover.
-
-Keep your examples up to date, running, and showing on hover in IDEs with `embedex`.
+`embedex` helps ensure a single source of truth while ensuring examples are up-to-date with the code they are documenting, runnable, linted, tested, and show on hover in IDEs.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -31,50 +27,85 @@ npm install --global embedex
 
 ## Usage
 
-1. Add an example to `./examples` (configurable). The first line is a comma-separated list of paths from the current working directory to embed targets. `./examples/greeter.ts`:
+1. Add a source file to the `./examples` directory (configurable). The first line is a comma-separated list of destination file paths to embed the source's file contents into. `./examples/greeter.ts`:
 
    ```ts
-   // src/greeter.ts
+   // README.md,src/greeter.ts
    import { greet } from "@my-scope/greeter";
 
    greet("world");
    ```
 
-1. In embed target files, add an example comment with the path of the example. `./src/greeter.ts`:
+2. In the destination file, add an `<embedex source="..."></embedex>` tag that includes the source file's path.
 
-   ````ts
-   /**
-    * Greets a person by name.
-    *
-    * @example
-    * ```ts
-    * // examples/greeter.ts
-    * ```
-    */
-   function greet(name: string) {
-     console.log(`Hello, ${name}!`);
-   }
-   ````
+   1. `./README.md`:
 
-1. Run `npx embedex`.
-1. The example is embedded! `./src/greeter.ts`:
+      ```
+      # greeter
 
-   ````ts
-   /**
-    * Greets a person by name.
-    *
-    * @example
-    * ```ts
-    * // examples/greeter.ts
-    * import { greet } from "@my-scope/greeter";
-    *
-    * greet("world");
-    * ```
-    */
-   function greet(name: string) {
-     console.log(`Hello, ${name}!`);
-   }
-   ````
+      Greets a person by name.
+
+      <embedex source="examples/greeter.ts">
+      </embedex>
+      ```
+
+   2. `./src/greeter.ts`:
+
+      ```ts
+      /**
+       * Greets a person by name.
+       *
+       * @example
+       * <embedex source="examples/greeter.ts">
+       * </embedex>
+       */
+      function greet(name: string) {
+        console.log(`Hello, ${name}!`);
+      }
+      ```
+
+3. Run `npx embedex`.
+4. The example is embedded! `./src/greeter.ts`:
+
+   1. `./README.md`:
+
+      ````
+      # greeter
+
+      Greets a person by name.
+
+      <embedex source="examples/greeter.ts">
+
+      ```ts
+      import { greet } from "@my-scope/greeter";
+
+      greet("world");
+      ```
+
+      </embedex>
+      ````
+
+   2. `./src/greeter.ts`:
+
+      ````ts
+      /**
+       * Greets a person by name.
+       *
+       * @example
+       * <embedex source="examples/greeter.ts">
+       *
+       * ```ts
+       * import { greet } from "@my-scope/greeter";
+       *
+       * greet("world");
+       * ```
+       *
+       * </embedex>
+       */
+      function greet(name: string) {
+        console.log(`Hello, ${name}!`);
+      }
+      ````
 
 ## Reference
 
@@ -85,7 +116,7 @@ A command-line interface (CLI) that embeds examples into TypeDoc comments.
 
 Options:
   -V, --version                 output the version number
-  -e, --examplesGlob <pattern>  examples glob pattern (default: "examples/**/*.ts")
+  -e, --examplesGlob <pattern>  examples glob pattern (default: "examples/**/*.{md,ts}")
   -c, --check                   verify if examples are correctly embedded without making changes,
                                 exits with non-zero code if updates are needed; useful for CI/CD
                                 pipelines (default: false)

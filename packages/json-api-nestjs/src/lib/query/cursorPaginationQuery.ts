@@ -12,8 +12,9 @@ export const PAGINATION = {
  * Creates a Zod schema for JSON:API cursor pagination.
  *
  * @example
+ * <embedex source="packages/example-nestjs/examples/query.ts">
+ *
  * ```ts
- * // packages/example-nestjs/examples/query.ts
  * import { booleanString } from "@clipboard-health/contract-core";
  * import {
  *   cursorPaginationQuery,
@@ -69,8 +70,9 @@ export const PAGINATION = {
  *     ...includeQuery(userIncludeFields),
  *   })
  *   .strict();
- *
  * ```
+ *
+ * </embedex>
  *
  * @see {@link https://jsonapi.org/format/#fetching-pagination JSON:API pagination}
  * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}

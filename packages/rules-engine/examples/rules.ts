@@ -1,4 +1,6 @@
 // packages/rules-engine/README.md
+import { deepEqual } from "node:assert/strict";
+
 import {
   all,
   appendOutput,
@@ -8,8 +10,8 @@ import {
 } from "@clipboard-health/rules-engine";
 
 interface Input {
-  number1: number;
-  number2: number;
+  a: number;
+  b: number;
 }
 
 interface Output {
@@ -18,36 +20,33 @@ interface Output {
 
 const exampleContext: RuleContext<Input, Output> = {
   input: {
-    number1: 2,
-    number2: 5,
+    a: 2,
+    b: 5,
   },
   output: [],
 };
 
 const addNumbersIfPositiveRule: Rule<Input, Output> = {
-  runIf: (input) => input.number1 > 0 && input.number2 > 0,
+  runIf: (input) => input.a > 0 && input.b > 0,
   run: (context) => {
-    const { number1, number2 } = context.input;
-    const sum = number1 + number2;
-    return appendOutput(context, { result: sum });
+    const { a, b } = context.input;
+    return appendOutput(context, { result: a + b });
   },
 };
 
 const multiplyNumbersIfPositiveRule: Rule<Input, Output> = {
-  runIf: (input) => input.number1 > 0 && input.number2 > 0,
+  runIf: (input) => input.a > 0 && input.b > 0,
   run: (context) => {
-    const { number1, number2 } = context.input;
-    const sum = number1 * number2;
-    return appendOutput(context, { result: sum });
+    const { a, b } = context.input;
+    return appendOutput(context, { result: a * b });
   },
 };
 
 const divideNumbersIfNegative: Rule<Input, Output> = {
-  runIf: (input) => input.number1 < 0 && input.number2 < 0,
+  runIf: (input) => input.a < 0 && input.b < 0,
   run: (context) => {
-    const { number1, number2 } = context.input;
-    const sum = number1 * number2;
-    return appendOutput(context, { result: sum });
+    const { a, b } = context.input;
+    return appendOutput(context, { result: a / b });
   },
 };
 
@@ -58,8 +57,7 @@ const allResult = all(
   multiplyNumbersIfPositiveRule,
 ).run(exampleContext);
 
-console.log(allResult.output);
-// => [{ result: 7 }, { result: 10 }]
+deepEqual(allResult.output, [{ result: 7 }, { result: 10 }]);
 
 // Using firstMatch() applies the first the rules to the context
 const firstMatchResult = firstMatch(
@@ -68,5 +66,4 @@ const firstMatchResult = firstMatch(
   multiplyNumbersIfPositiveRule,
 ).run(exampleContext);
 
-console.log(firstMatchResult.output);
-// => [{ result: 7 }]
+deepEqual(firstMatchResult.output, [{ result: 7 }]);

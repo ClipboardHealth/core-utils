@@ -13,8 +13,9 @@ export type Some<A> = Readonly<{
  * An optional value. If the value exists, it's of type `Some<A>`, otherwise it's of type `None`.
  *
  * @example
+ * <embedex source="packages/util-ts/examples/option.ts">
+ *
  * ```ts
- * // packages/util-ts/examples/option.ts
  * import { equal } from "node:assert/strict";
  *
  * import { option as O, pipe } from "@clipboard-health/util-ts";
@@ -38,8 +39,9 @@ export type Some<A> = Readonly<{
  * );
  *
  * equal(result, "Result is 0.1");
- *
  * ```
+ *
+ * </embedex>
  */
 export type Option<A> = None | Some<A>;
 

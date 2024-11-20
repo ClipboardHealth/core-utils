@@ -10,7 +10,9 @@ const program = new Command()
   .description(description)
   .version(String(version))
   .addOption(
-    new Option("-e, --examplesGlob <pattern>", "examples glob pattern").default("examples/**/*.ts"),
+    new Option("-e, --examplesGlob <pattern>", "examples glob pattern").default(
+      "examples/**/*.{md,ts}",
+    ),
   )
   .addOption(
     new Option(

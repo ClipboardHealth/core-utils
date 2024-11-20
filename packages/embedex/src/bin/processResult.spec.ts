@@ -62,7 +62,6 @@ describe("processResult", () => {
           { code: "UPDATE" as const, paths: { target, examples }, updatedContent: "" },
           { code: "NO_MATCH" as const, paths: { target, examples } },
           { code: "NO_CHANGE" as const, paths: { target, examples } },
-          { code: "UNSUPPORTED" as const, paths: { target, examples } },
         ],
       },
     };
@@ -79,11 +78,6 @@ describe("processResult", () => {
         code: "NO_MATCH",
         isError: true,
         message: `${colors.green("NO_MATCH")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
-      },
-      {
-        code: "UNSUPPORTED",
-        isError: true,
-        message: `${colors.green("UNSUPPORTED")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
       },
       {
         code: "UPDATE",

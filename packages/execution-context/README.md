@@ -25,8 +25,9 @@ npm install @clipboard-health/execution-context
 
 This example demonstrates how to create a logging context, accumulate metadata from various function calls, and then log a single message containing all the gathered metadata.
 
+<embedex source="packages/execution-context/examples/executionContext.ts">
+
 ```ts
-// packages/execution-context/examples/executionContext.ts
 import {
   addMetadataToLocalContext,
   getExecutionContext,
@@ -76,6 +77,8 @@ function callAnotherFunctionThatAddsContext() {
   });
 }
 ```
+
+</embedex>
 
 ## Local development commands
 

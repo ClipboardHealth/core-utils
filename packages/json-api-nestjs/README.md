@@ -21,9 +21,9 @@ npm install @clipboard-health/json-api-nestjs
 
 Create Zod schemas for your API's queries:
 
-<!-- prettier-ignore -->
+<embedex source="packages/example-nestjs/examples/query.ts">
+
 ```ts
-// packages/example-nestjs/examples/query.ts
 import { booleanString } from "@clipboard-health/contract-core";
 import {
   cursorPaginationQuery,
@@ -79,8 +79,9 @@ export const query = z
     ...includeQuery(userIncludeFields),
   })
   .strict();
-
 ```
+
+</embedex>
 
 ## Local development commands
 

@@ -13,8 +13,9 @@ const REGEX = {
  * Call this function from servers to convert from {@link URLSearchParams} to {@link ServerJsonApiQuery}.
  *
  * @example
+ * <embedex source="packages/json-api/examples/toServerJsonApiQuery.ts">
+ *
  * ```ts
- * // packages/json-api/examples/toServerJsonApiQuery.ts
  * import { deepEqual } from "node:assert/strict";
  *
  * import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
@@ -40,8 +41,9 @@ const REGEX = {
  *   },
  *   sort: ["-age"],
  * });
- *
  * ```
+ *
+ * </embedex>
  */
 export function toServerJsonApiQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
   return [...searchParams].reduce<ServerJsonApiQuery>((accumulator, [key, value]) => {
