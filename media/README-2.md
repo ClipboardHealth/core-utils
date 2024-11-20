@@ -1,8 +1,11 @@
 # embedex <!-- omit from toc -->
 
-Embed shared text and code snippets from source files into destination files. For example, embed TypeScript examples into TypeDoc comments and your README.
+Embed shared text and code snippets from source files into destination files. For example:
 
-`embedex` helps ensure a single source of truth while ensuring examples are up-to-date with the code they are documenting, runnable, linted, tested, and show on hover in IDEs.
+- Embed TypeScript examples into TypeDoc comments and your README.
+- Embed a Markdown snippet into multiple JSDoc comments.
+
+`embedex` helps ensure a single source of truth while ensuring sources are up-to-date with the code they are documenting, runnable, linted, tested, and show on hover in IDEs.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -65,7 +68,7 @@ npm install --global embedex
       ```
 
 3. Run `npx embedex`.
-4. The example is embedded! `./src/greeter.ts`:
+4. The source is embedded! `./src/greeter.ts`:
 
    1. `./README.md`:
 
@@ -112,16 +115,16 @@ npm install --global embedex
 ```
 Usage: embedex [options]
 
-A command-line interface (CLI) that embeds examples into TypeDoc comments.
+Embed shared text and code snippets from source files into destination files.
 
 Options:
-  -V, --version                 output the version number
-  -e, --examplesGlob <pattern>  examples glob pattern (default: "examples/**/*.{md,ts}")
-  -c, --check                   verify if examples are correctly embedded without making changes,
-                                exits with non-zero code if updates are needed; useful for CI/CD
-                                pipelines (default: false)
-  -v, --verbose                 show verbose output (default: false)
-  -h, --help                    display help for command
+  -V, --version                output the version number
+  -e, --sourcesGlob <pattern>  sources glob pattern (default: "examples/**/*.{md,ts}")
+  -c, --check                  verify if sources are correctly embedded without making changes,
+                               exits with non-zero code if updates are needed; useful for CI/CD
+                               pipelines (default: false)
+  -v, --verbose                show verbose output (default: false)
+  -h, --help                   display help for command
 ```
 
 ## Local development commands
