@@ -1,37 +1,37 @@
 import { writeFile } from "node:fs/promises";
 
-import { createExampleMap } from "./internal/createExampleMap";
-import { createTargetMap } from "./internal/createTargetMap";
-import { processTargets } from "./internal/processTargets";
+import { createDestinationMap } from "./internal/createDestinationMap";
+import { createSourceMap } from "./internal/createSourceMap";
+import { processDestinations } from "./internal/processDestinations";
 import { type EmbedParams, type EmbedResult } from "./types";
 
 /**
- * Embed examples into TypeDoc comments.
+ * Embed sources into destinations.
  */
 export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult> {
-  const { examplesGlob: globPattern, cwd, write } = params;
-  const exampleMap = await createExampleMap({ cwd, globPattern });
-  const targetMap = await createTargetMap({ exampleMap });
+  const { sourcesGlob: globPattern, cwd, write } = params;
+  const sourceMap = await createSourceMap({ cwd, globPattern });
+  const destinationMap = await createDestinationMap({ sourceMap });
 
-  const embeds = processTargets({ cwd, exampleMap, targetMap });
+  const embeds = processDestinations({ cwd, sourceMap, destinationMap });
 
   await Promise.all(
     embeds.map(async (embed) => {
       if (write && embed.code === "UPDATE") {
-        await writeFile(embed.paths.target, embed.updatedContent);
+        await writeFile(embed.paths.destination, embed.updatedContent);
       }
     }),
   );
 
   return {
     embeds,
-    examples: [...exampleMap.entries()].map(([key, value]) => ({
+    sources: [...sourceMap.entries()].map(([key, value]) => ({
       path: key,
-      targets: value.targets,
+      destinations: value.destinations,
     })),
-    targets: [...targetMap.entries()].map(([key, value]) => ({
+    destinations: [...destinationMap.entries()].map(([key, value]) => ({
       path: key,
-      examples: [...value.examples],
+      sources: [...value.sources],
     })),
   };
 }

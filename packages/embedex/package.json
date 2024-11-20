@@ -1,6 +1,6 @@
 {
   "name": "embedex",
-  "description": "A command-line interface (CLI) that embeds examples into TypeDoc comments.",
+  "description": "Embed shared text and code snippets from source files into destination files.",
   "version": "0.3.0",
   "bin": {
     "embedex": "./src/bin/cli.js"
@@ -17,6 +17,7 @@
     "documentation",
     "embed",
     "examples",
+    "snippets",
     "typedoc",
     "typescript"
   ],

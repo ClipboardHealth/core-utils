@@ -21,7 +21,7 @@ export function processResult(params: {
   verbose: boolean;
 }): Output[] {
   const { check, result, cwd, verbose } = params;
-  const { embeds, examples, targets } = result;
+  const { embeds, sources, destinations } = result;
 
   function relative(path: string) {
     return nodeRelative(cwd, path);
@@ -30,17 +30,20 @@ export function processResult(params: {
   if (verbose) {
     console.log(
       dim(
-        "examples:\n  ",
-        examples
-          .map(({ path, targets }) => `${relative(path)} -> ${targets.map(relative).join(", ")}`)
+        "sources:\n  ",
+        sources
+          .map(
+            ({ path, destinations }) =>
+              `${relative(path)} -> ${destinations.map(relative).join(", ")}`,
+          )
           .join("\n  "),
       ),
     );
     console.log(
       dim(
-        "targets:\n  ",
-        targets
-          .map(({ path, examples }) => `${relative(path)} -> ${examples.map(relative).join(", ")}`)
+        "destinations:\n  ",
+        destinations
+          .map(({ path, sources }) => `${relative(path)} -> ${sources.map(relative).join(", ")}`)
           .join("\n  "),
       ),
     );
@@ -49,10 +52,10 @@ export function processResult(params: {
   const output: Output[] = [];
   for (const embed of embeds) {
     const { code, paths } = embed;
-    const { target, examples } = paths;
+    const { destination, sources } = paths;
     const toOutput = createToOutput({
       code,
-      paths: { target: relative(target), examples: examples.map((path) => relative(path)) },
+      paths: { destination: relative(destination), sources: sources.map((path) => relative(path)) },
     });
 
     // eslint-disable-next-line default-case -- ignore so we get @typescript-eslint/switch-exhaustiveness-check
@@ -79,11 +82,11 @@ export function processResult(params: {
 
 function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) {
   const { code, paths } = params;
-  const { target, examples } = paths;
+  const { destination, sources } = paths;
 
   return ({ isError }: { isError: boolean }) => ({
     code,
     isError,
-    message: `${colors.green(code)} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+    message: `${colors.green(code)} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
   });
 }

@@ -3,12 +3,12 @@ import colors from "yoctocolors-cjs";
 import { processResult } from "./processResult";
 
 describe("processResult", () => {
-  const target = "target/path";
-  const examples = ["example/path"];
+  const destination = "destinations/path";
+  const sources = ["sources/path"];
   const base = {
     check: false,
     cwd: process.cwd(),
-    result: { embeds: [], examples: [], targets: [] },
+    result: { embeds: [], sources: [], destinations: [] },
     verbose: false,
   };
 
@@ -18,7 +18,7 @@ describe("processResult", () => {
       check: true,
       result: {
         ...base.result,
-        embeds: [{ code: "UPDATE" as const, paths: { target, examples }, updatedContent: "" }],
+        embeds: [{ code: "UPDATE" as const, paths: { destination, sources }, updatedContent: "" }],
       },
     };
 
@@ -28,7 +28,7 @@ describe("processResult", () => {
       {
         code: "UPDATE",
         isError: true,
-        message: `${colors.green("UPDATE")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+        message: `${colors.green("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
     ]);
   });
@@ -44,8 +44,8 @@ describe("processResult", () => {
       ...base,
       result: {
         ...base.result,
-        examples: [{ path: "example/path", targets: [target] }],
-        targets: [{ path: target, examples: ["example/path"] }],
+        sources: [{ path: "sources/path", destinations: [destination] }],
+        destinations: [{ path: destination, sources: ["sources/path"] }],
       },
       verbose: true,
     });
@@ -59,9 +59,9 @@ describe("processResult", () => {
       result: {
         ...base.result,
         embeds: [
-          { code: "UPDATE" as const, paths: { target, examples }, updatedContent: "" },
-          { code: "NO_MATCH" as const, paths: { target, examples } },
-          { code: "NO_CHANGE" as const, paths: { target, examples } },
+          { code: "UPDATE" as const, paths: { destination, sources }, updatedContent: "" },
+          { code: "NO_MATCH" as const, paths: { destination, sources } },
+          { code: "NO_CHANGE" as const, paths: { destination, sources } },
         ],
       },
     };
@@ -72,17 +72,17 @@ describe("processResult", () => {
       {
         code: "NO_CHANGE",
         isError: false,
-        message: `${colors.green("NO_CHANGE")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+        message: `${colors.green("NO_CHANGE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
       {
         code: "NO_MATCH",
         isError: true,
-        message: `${colors.green("NO_MATCH")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+        message: `${colors.green("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
       {
         code: "UPDATE",
         isError: false,
-        message: `${colors.green("UPDATE")} ${colors.gray(target)} -> ${colors.gray(examples.join(", "))}`,
+        message: `${colors.green("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
     ]);
   });

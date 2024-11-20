@@ -10,14 +10,14 @@ const program = new Command()
   .description(description)
   .version(String(version))
   .addOption(
-    new Option("-e, --examplesGlob <pattern>", "examples glob pattern").default(
+    new Option("-e, --sourcesGlob <pattern>", "sources glob pattern").default(
       "examples/**/*.{md,ts}",
     ),
   )
   .addOption(
     new Option(
       "-c, --check",
-      "verify if examples are correctly embedded without making changes, exits with non-zero code if updates are needed; useful for CI/CD pipelines",
+      "verify if sources are correctly embedded without making changes, exits with non-zero code if updates are needed; useful for CI/CD pipelines",
     ).default(false),
   )
   .addOption(new Option("-v, --verbose", "show verbose output").default(false));
@@ -25,17 +25,17 @@ const program = new Command()
 program.parse();
 
 const options = program.opts();
-const { check, examplesGlob, verbose } = options;
+const { check, sourcesGlob, verbose } = options;
 const cwd = process.cwd();
 
 if (verbose) {
-  console.log(dim("examplesGlob:\n  ", examplesGlob));
+  console.log(dim("sourcesGlob:\n  ", sourcesGlob));
   console.log(dim("cwd:\n  ", cwd));
 }
 
 embed({
   cwd,
-  examplesGlob,
+  sourcesGlob,
   write: !check,
 })
   .then((result) => {
