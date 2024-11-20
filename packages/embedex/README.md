@@ -1,6 +1,9 @@
 # embedex <!-- omit from toc -->
 
-Embed shared text and code snippets from source files into destination files. For example, embed TypeScript examples into TypeDoc comments and your README.
+Embed shared text and code snippets from source files into destination files. For example:
+
+- Embed TypeScript examples into TypeDoc comments and your README.
+- Embed a Markdown snippet into multiple JSDoc comments.
 
 `embedex` helps ensure a single source of truth while ensuring sources are up-to-date with the code they are documenting, runnable, linted, tested, and show on hover in IDEs.
 
@@ -115,13 +118,13 @@ Usage: embedex [options]
 Embed shared text and code snippets from source files into destination files.
 
 Options:
-  -V, --version                 output the version number
-  -e, --sourcesGlob <pattern>   sources glob pattern (default: "examples/**/*.{md,ts}")
-  -c, --check                   verify if sources are correctly embedded without making changes,
-                                exits with non-zero code if updates are needed; useful for CI/CD
-                                pipelines (default: false)
-  -v, --verbose                 show verbose output (default: false)
-  -h, --help                    display help for command
+  -V, --version                output the version number
+  -e, --sourcesGlob <pattern>  sources glob pattern (default: "examples/**/*.{md,ts}")
+  -c, --check                  verify if sources are correctly embedded without making changes,
+                               exits with non-zero code if updates are needed; useful for CI/CD
+                               pipelines (default: false)
+  -v, --verbose                show verbose output (default: false)
+  -h, --help                   display help for command
 ```
 
 ## Local development commands
