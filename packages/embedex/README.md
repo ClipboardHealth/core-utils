@@ -11,7 +11,7 @@ Embed shared text and code snippets from source files into destination files. Fo
 
 - [Install](#install)
 - [Usage](#usage)
-- [Reference](#reference)
+- [CLI reference](#cli-reference)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -41,76 +41,76 @@ npm install --global embedex
 
 2. In the destination file, add an `<embedex source="..."></embedex>` tag that includes the source file's path.
 
-   1. `./README.md`:
+   - `./README.md`:
 
-      ```
-      # greeter
+     ```
+     # greeter
 
-      Greets a person by name.
+     Greets a person by name.
 
-      <embedex source="examples/greeter.ts">
-      </embedex>
-      ```
+     <embedex source="examples/greeter.ts">
+     </embedex>
+     ```
 
-   2. `./src/greeter.ts`:
+   - `./src/greeter.ts`:
 
-      ```ts
-      /**
-       * Greets a person by name.
-       *
-       * @example
-       * <embedex source="examples/greeter.ts">
-       * </embedex>
-       */
-      function greet(name: string) {
-        console.log(`Hello, ${name}!`);
-      }
-      ```
+     ```ts
+     /**
+      * Greets a person by name.
+      *
+      * @example
+      * <embedex source="examples/greeter.ts">
+      * </embedex>
+      */
+     function greet(name: string) {
+       console.log(`Hello, ${name}!`);
+     }
+     ```
 
 3. Run `npx embedex`.
-4. The source is embedded! `./src/greeter.ts`:
+4. The source is embedded!
 
-   1. `./README.md`:
+   - `./README.md`:
 
-      ````
-      # greeter
+     ````
+     # greeter
 
-      Greets a person by name.
+     Greets a person by name.
 
-      <embedex source="examples/greeter.ts">
+     <embedex source="examples/greeter.ts">
 
-      ```ts
-      import { greet } from "@my-scope/greeter";
+     ```ts
+     import { greet } from "@my-scope/greeter";
 
-      greet("world");
-      ```
+     greet("world");
+     ```
 
-      </embedex>
-      ````
+     </embedex>
+     ````
 
-   2. `./src/greeter.ts`:
+   - `./src/greeter.ts`:
 
-      ````ts
-      /**
-       * Greets a person by name.
-       *
-       * @example
-       * <embedex source="examples/greeter.ts">
-       *
-       * ```ts
-       * import { greet } from "@my-scope/greeter";
-       *
-       * greet("world");
-       * ```
-       *
-       * </embedex>
-       */
-      function greet(name: string) {
-        console.log(`Hello, ${name}!`);
-      }
-      ````
+     ````ts
+     /**
+      * Greets a person by name.
+      *
+      * @example
+      * <embedex source="examples/greeter.ts">
+      *
+      * ```ts
+      * import { greet } from "@my-scope/greeter";
+      *
+      * greet("world");
+      * ```
+      *
+      * </embedex>
+      */
+     function greet(name: string) {
+       console.log(`Hello, ${name}!`);
+     }
+     ````
 
-## Reference
+## CLI reference
 
 ```
 Usage: embedex [options]
