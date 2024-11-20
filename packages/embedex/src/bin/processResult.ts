@@ -62,8 +62,7 @@ export function processResult(params: {
         break;
       }
 
-      case "NO_MATCH":
-      case "UNSUPPORTED": {
+      case "NO_MATCH": {
         output.push(toOutput({ isError: true }));
         break;
       }

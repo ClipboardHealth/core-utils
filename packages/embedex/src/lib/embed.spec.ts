@@ -7,8 +7,15 @@ import { embed } from "./embed";
 describe("embed", () => {
   // eslint-disable-next-line no-template-curly-in-string
   const exampleACode = [`const x = "a";`, "", "console.log(`Got ${x}`);"];
-  // eslint-disable-next-line no-template-curly-in-string
-  const targetACode = [` * const x = "a";`, " *", " * console.log(`Got ${x}`);"];
+  const targetACode = [
+    " *",
+    " * ```ts",
+    ` * const x = "a";`,
+    " *",
+    // eslint-disable-next-line no-template-curly-in-string
+    " * console.log(`Got ${x}`);",
+    " * ```",
+  ];
   const globPattern = "examples/**/*.ts";
   let cwd: string;
   let paths: {
@@ -43,9 +50,8 @@ describe("embed", () => {
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.b}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.b}">`,
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -87,35 +93,14 @@ describe("embed", () => {
     ]);
   });
 
-  it("returns UNSUPPORTED if target is unsupported", async () => {
-    await Promise.all([
-      write(paths.examples.a, [`// l.x`, ...exampleACode]),
-      write("l.x", [
-        "/**",
-        " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
-        " */",
-      ]),
-    ]);
-
-    const actual = await embed({ examplesGlob: globPattern, cwd, write: true });
-
-    expect(actual.embeds).toEqual([
-      { code: "UNSUPPORTED", paths: { examples: [], target: toPath("l.x") } },
-    ]);
-  });
-
   it("returns UPDATE for TypeScript targets with matches", async () => {
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.a}">`,
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -132,10 +117,9 @@ describe("embed", () => {
         updatedContent: [
           "/**",
           " * @example",
-          " * ```ts",
-          ` * // ${paths.examples.a}`,
+          ` * <embedex source="${paths.examples.a}">`,
           ...targetACode,
-          " * ```",
+          " * </embedex>",
           " */",
         ].join("\n"),
       },
@@ -145,7 +129,7 @@ describe("embed", () => {
   it("returns UPDATE for Markdown targets with matches", async () => {
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.n}`, ...exampleACode]),
-      write(paths.targets.n, ["```ts", `// ${paths.examples.a}`, "```"]),
+      write(paths.targets.n, [`<embedex source="${paths.examples.a}">`, "</embedex>"]),
     ]);
 
     const actual = await embed({ examplesGlob: globPattern, cwd, write: false });
@@ -157,7 +141,14 @@ describe("embed", () => {
           examples: [toPath(paths.examples.a)],
           target: toPath(paths.targets.n),
         },
-        updatedContent: ["```ts", `// ${paths.examples.a}`, ...exampleACode, "```"].join("\n"),
+        updatedContent: [
+          `<embedex source="${paths.examples.a}">`,
+          "",
+          "```ts",
+          ...exampleACode,
+          "```",
+          "</embedex>",
+        ].join("\n"),
       },
     ]);
   });
@@ -166,9 +157,8 @@ describe("embed", () => {
     const targetContent = [
       "/**",
       " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      " * ```",
+      ` * <embedex source="${paths.examples.a}">`,
+      " * </embedex>",
       " */",
     ];
     await Promise.all([
@@ -208,9 +198,8 @@ describe("embed", () => {
         "class A {",
         "  /**",
         "   * @example",
-        "   * ```ts",
-        `   * // ${paths.examples.a}`,
-        "   * ```",
+        `   * <embedex source="${paths.examples.a}">`,
+        "   * </embedex>",
         "   */",
         "}",
       ]),
@@ -229,10 +218,12 @@ describe("embed", () => {
           "class A {",
           "  /**",
           "   * @example",
+          `   * <embedex source="${paths.examples.a}">`,
+          "   *",
           "   * ```ts",
-          `   * // ${paths.examples.a}`,
           ...targetCode,
           "   * ```",
+          "   * </embedex>",
           "   */",
           "}",
         ].join("\n"),
@@ -240,7 +231,7 @@ describe("embed", () => {
     ]);
   });
 
-  it("escapes examples with code and comment blocks", async () => {
+  it("escapes examples with code fences and comment blocks", async () => {
     const exampleCode = ["/** hello */", "```ts", "const x = 1;", "```"];
     const targetCode = [" * /** hello *\\/", " * ```ts", " * const x = 1;", " * ```"];
     await Promise.all([
@@ -248,9 +239,8 @@ describe("embed", () => {
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.a}">`,
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -267,10 +257,12 @@ describe("embed", () => {
         updatedContent: [
           "/**",
           " * @example",
+          ` * <embedex source="${paths.examples.a}">`,
+          " *",
           " * ````ts",
-          ` * // ${paths.examples.a}`,
           ...targetCode,
           " * ````",
+          " * </embedex>",
           " */",
         ].join("\n"),
       },
@@ -283,13 +275,11 @@ describe("embed", () => {
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.a}">`,
+        " * </embedex>",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.a}">`,
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -312,9 +302,8 @@ describe("embed", () => {
     const targetContent = [
       "/**",
       " * @example",
-      " * ```ts",
-      ` * // ${paths.examples.a}`,
-      " * ```",
+      ` * <embedex source="${paths.examples.a}">`,
+      " * </embedex>",
       " */",
     ];
     await Promise.all([
@@ -334,10 +323,9 @@ describe("embed", () => {
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
+        ` * <embedex source="${paths.examples.a}">`,
         ...targetACode,
-        " * ```",
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -358,9 +346,8 @@ describe("embed", () => {
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.a}">`,
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -372,10 +359,9 @@ describe("embed", () => {
       [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
+        ` * <embedex source="${paths.examples.a}">`,
         ...targetACode,
-        " * ```",
+        " * </embedex>",
         " */",
       ].join("\n"),
     );
@@ -383,25 +369,22 @@ describe("embed", () => {
 
   it("writes multiple examples to target", async () => {
     const exampleBCode = [`const x = "b";`];
-    const targetBCode = [` * const x = "b";`];
+    const targetBCode = [" *", " * ```ts", ` * const x = "b";`, " * ```"];
     await Promise.all([
       write(paths.examples.a, [`// ${paths.targets.l}`, ...exampleACode]),
       write(paths.examples.b, [`// ${paths.targets.l}`, ...exampleBCode]),
       write(paths.targets.l, [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.a}">`,
+        " * </embedex>",
         " * @example",
         " * ```ts",
-        ` * // decoy match`,
         ` * const x = "shouldNotBeUpdated";`,
         " * ```",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.b}`,
-        " * ```",
+        ` * <embedex source="${paths.examples.b}">`,
+        " * </embedex>",
         " */",
       ]),
     ]);
@@ -413,20 +396,17 @@ describe("embed", () => {
       [
         "/**",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.a}`,
+        ` * <embedex source="${paths.examples.a}">`,
         ...targetACode,
-        " * ```",
+        " * </embedex>",
         " * @example",
         " * ```ts",
-        ` * // decoy match`,
         ` * const x = "shouldNotBeUpdated";`,
         " * ```",
         " * @example",
-        " * ```ts",
-        ` * // ${paths.examples.b}`,
+        ` * <embedex source="${paths.examples.b}">`,
         ...targetBCode,
-        " * ```",
+        " * </embedex>",
         " */",
       ].join("\n"),
     );

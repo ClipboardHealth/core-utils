@@ -7,7 +7,7 @@ export interface EmbedParams {
   write: boolean;
 }
 
-export type Code = "NO_CHANGE" | "NO_MATCH" | "UNSUPPORTED" | "UPDATE";
+export type Code = "NO_CHANGE" | "NO_MATCH" | "UPDATE";
 
 export interface Result {
   code: Code;
@@ -19,9 +19,8 @@ export interface Result {
 
 export type NoMatch = Result & { code: "NO_MATCH" };
 export type NoChange = Result & { code: "NO_CHANGE" };
-export type Unsupported = Result & { code: "UNSUPPORTED" };
 export type Updated = Result & { code: "UPDATE"; updatedContent: string };
-export type Embed = NoMatch | Updated | NoChange | Unsupported;
+export type Embed = NoMatch | Updated | NoChange;
 
 export interface EmbedResult {
   embeds: Embed[];

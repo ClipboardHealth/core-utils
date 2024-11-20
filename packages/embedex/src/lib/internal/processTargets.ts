@@ -1,33 +1,28 @@
 import { join } from "node:path";
 
 import type { Embed } from "../types";
-import {
-  getFileExtension,
-  isSupportedFileExtension,
-  type SupportedFileExtension,
-} from "./fileTypes";
+import { type FileExtension, getFileExtension } from "./fileTypes";
 import { type ExampleMap, type Target, type TargetMap } from "./types";
 
-const TARGET_CONFIG = {
-  typeDoc: {
-    pattern: /(`{3,4})(typescript|ts)\n(\s+)\*\s+\/\/\s(.+)\n[\S\s]*?\1/g,
-    prefix: "*",
-  },
-  markdown: {
-    pattern: /(`{3,4})(typescript|ts)\n(\s*)\/\/\s(.+)\n[\S\s]*?\1/g,
-    prefix: "",
-  },
-};
+const CODE_FENCES = {
+  javaScript: "```js",
+  markdown: "",
+  typeScript: "```ts",
+} as const;
+type CodeFence = (typeof CODE_FENCES)[keyof typeof CODE_FENCES];
+const { javaScript, markdown, typeScript } = CODE_FENCES;
 
-type TargetConfig = (typeof TARGET_CONFIG)[keyof typeof TARGET_CONFIG];
-
-const CONFIG_BY_FILE_EXTENSION: Record<SupportedFileExtension, TargetConfig> = {
-  cts: TARGET_CONFIG.typeDoc,
-  md: TARGET_CONFIG.markdown,
-  mdx: TARGET_CONFIG.markdown,
-  mts: TARGET_CONFIG.typeDoc,
-  ts: TARGET_CONFIG.typeDoc,
-  tsx: TARGET_CONFIG.typeDoc,
+const CODE_FENCES_BY_FILE_EXTENSION: Record<FileExtension, CodeFence> = {
+  cjs: javaScript,
+  cts: typeScript,
+  js: javaScript,
+  jsx: javaScript,
+  md: markdown,
+  mdx: markdown,
+  mjs: javaScript,
+  mts: typeScript,
+  ts: typeScript,
+  tsx: typeScript,
 } as const;
 
 export function processTargets(
@@ -59,80 +54,71 @@ function processTarget(params: {
     return join(cwd, path);
   }
 
-  const fileExtension = getFileExtension(target);
-  if (!isSupportedFileExtension(fileExtension)) {
-    return { code: "UNSUPPORTED", paths: { target, examples: [] } };
-  }
-
-  const targetConfig = CONFIG_BY_FILE_EXTENSION[fileExtension];
-  const matches = matchAll({
-    content,
-    exists: (example) => examples.has(absolutePath(example)),
-    targetConfig,
-  });
+  const matches = matchAll({ content, exists: (example) => examples.has(absolutePath(example)) });
   if (matches.length === 0) {
     return { code: "NO_MATCH", paths: { target, examples: [] } };
   }
 
   let updatedContent = content;
-  for (const { fullMatch, language, indent, example } of matches) {
-    const exampleContent = exampleMap.get(absolutePath(example))!;
-    // Escape code blocks
-    const codeBlock = exampleContent.content.includes("```") ? "````" : "```";
-    const replacement = `${codeBlock}${language}\n${prefixLines({
-      content: [
-        `// ${example}`,
-        // Escape comment blocks
-        ...exampleContent.content.replaceAll("*/", "*\\/").split("\n"),
-        codeBlock,
-      ],
-      indent,
-      prefix: targetConfig.prefix,
-    })}`;
-    updatedContent = updatedContent.replaceAll(fullMatch, replacement);
+  for (const { fullMatch, prefix, examplePath } of matches) {
+    const exampleContent = exampleMap.get(absolutePath(examplePath))!;
+    updatedContent = updatedContent.replaceAll(
+      fullMatch,
+      buildReplacement({ content: exampleContent.content, examplePath, prefix }),
+    );
   }
 
-  const paths = { examples: matches.map((m) => absolutePath(m.example)), target };
+  const paths = { examples: matches.map((m) => absolutePath(m.examplePath)), target };
   return content === updatedContent
     ? { code: "NO_CHANGE", paths }
     : { code: "UPDATE", paths, updatedContent };
 }
 
+/**
+ * A regex to match the embedex tag.
+ *
+ * Matching groups:
+ * 1. The block's prefix
+ * 2. The source file path
+ */
+const REGEX = /(.*)<embedex source="(.+)">\n[\S\s]*?<\/embedex>/g;
+
 function matchAll(
   params: Readonly<{
     content: string;
     exists: (path: string) => boolean;
-    targetConfig: TargetConfig;
   }>,
 ) {
-  const { content, exists, targetConfig } = params;
-  return [...content.matchAll(targetConfig.pattern)]
+  const { content, exists } = params;
+  return [...content.matchAll(REGEX)]
     .map((match) => {
-      const [fullMatch, , language, indent, example] = match;
+      const [fullMatch, prefix, examplePath] = match;
       return isDefined(fullMatch) &&
-        isDefined(language) &&
-        isDefined(indent) &&
-        isDefined(example) &&
-        exists(example)
-        ? { fullMatch, language, indent, example }
+        isDefined(prefix) &&
+        isDefined(examplePath) &&
+        exists(examplePath)
+        ? { fullMatch, prefix, examplePath }
         : undefined;
     })
     .filter(isDefined);
 }
 
-function prefixLines(
-  params: Readonly<{ content: readonly string[]; indent: string; prefix: string }>,
-): string {
-  const { content, indent, prefix } = params;
+function buildReplacement(params: { content: string; examplePath: string; prefix: string }) {
+  const { content, examplePath, prefix } = params;
 
-  const blankLinePrefix = `${indent}${prefix}`;
-  const linePrefix = prefix ? `${blankLinePrefix} ` : blankLinePrefix;
-
-  return content
-    .map((line) => {
-      const trimmed = line.trim();
-      return trimmed ? `${linePrefix}${line}` : blankLinePrefix;
-    })
+  const fileExtension = getFileExtension(examplePath);
+  const codeFenceByExtension = CODE_FENCES_BY_FILE_EXTENSION[fileExtension] ?? "```";
+  const contentHasCodeFence = content.includes("```");
+  const codeFence = contentHasCodeFence ? `\`${codeFenceByExtension}` : codeFenceByExtension;
+  return [
+    `<embedex source="${examplePath}">`,
+    "", // For proper Markdown rendering, include a blank line before the code fence
+    ...(codeFenceByExtension.length > 0 ? [codeFence] : []),
+    ...content.replaceAll("*/", "*\\/").split("\n"),
+    ...(codeFenceByExtension.length > 0 ? [contentHasCodeFence ? "````" : "```"] : []),
+    `</embedex>`,
+  ]
+    .map((line) => `${prefix}${line}`.trimEnd())
     .join("\n");
 }
 
