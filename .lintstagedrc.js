@@ -12,9 +12,7 @@ module.exports = {
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
   ],
-  "**/*.{ts,tsx,md,mdx}": async (files) => [
-    `tsx packages/embedex/src/bin/cli.ts --examplesGlob 'packages/*/examples/**/*.{md,ts}' --check`,
-  ],
+  "**/*.{ts,tsx,md,mdx}": async (files) => [`npm run embed:check`],
   "**/*.{css,scss,graphql,js,json,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
     `prettier --write ${files.join(" ")}`,
   ],

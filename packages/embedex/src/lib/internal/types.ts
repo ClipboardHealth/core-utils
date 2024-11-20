@@ -1,13 +1,13 @@
-import { type ExamplePath, type TargetPath } from "../types";
+import { type DestinationPath, type SourcePath } from "../types";
 
-export interface Example {
+export interface Source {
   content: string;
-  targets: TargetPath[];
+  destinations: DestinationPath[];
 }
-export type ExampleMap = ReadonlyMap<ExamplePath, Example>;
+export type SourceMap = ReadonlyMap<SourcePath, Source>;
 
-export interface Target {
+export interface Destination {
   content: string;
-  examples: ReadonlySet<ExamplePath>;
+  sources: ReadonlySet<SourcePath>;
 }
-export type TargetMap = ReadonlyMap<TargetPath, Target>;
+export type DestinationMap = ReadonlyMap<DestinationPath, Destination>;

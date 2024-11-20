@@ -1,9 +1,9 @@
-export type ExamplePath = string;
-export type TargetPath = string;
+export type SourcePath = string;
+export type DestinationPath = string;
 
 export interface EmbedParams {
   cwd: string;
-  examplesGlob: string;
+  sourcesGlob: string;
   write: boolean;
 }
 
@@ -12,8 +12,8 @@ export type Code = "NO_CHANGE" | "NO_MATCH" | "UPDATE";
 export interface Result {
   code: Code;
   paths: {
-    examples: ExamplePath[];
-    target: TargetPath;
+    sources: SourcePath[];
+    destination: DestinationPath;
   };
 }
 
@@ -24,6 +24,6 @@ export type Embed = NoMatch | Updated | NoChange;
 
 export interface EmbedResult {
   embeds: Embed[];
-  examples: Array<{ path: ExamplePath; targets: TargetPath[] }>;
-  targets: Array<{ path: TargetPath; examples: ExamplePath[] }>;
+  sources: Array<{ path: SourcePath; destinations: DestinationPath[] }>;
+  destinations: Array<{ path: DestinationPath; sources: SourcePath[] }>;
 }

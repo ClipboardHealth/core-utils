@@ -1,7 +1,7 @@
 import { extname, join } from "node:path";
 
 import type { Embed } from "../types";
-import { type ExampleMap, type Target, type TargetMap } from "./types";
+import { type Destination, type DestinationMap, type SourceMap } from "./types";
 
 const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
   cjs: "js",
@@ -16,50 +16,50 @@ const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
   tsx: "ts",
 } as const;
 
-export function processTargets(
+export function processDestinations(
   params: Readonly<{
     cwd: string;
-    exampleMap: Readonly<ExampleMap>;
-    targetMap: Readonly<TargetMap>;
+    sourceMap: Readonly<SourceMap>;
+    destinationMap: Readonly<DestinationMap>;
   }>,
-) {
-  const { targetMap, ...rest } = params;
+): Embed[] {
+  const { cwd, destinationMap, sourceMap } = params;
 
   const result: Embed[] = [];
-  for (const entry of targetMap.entries()) {
-    result.push(processTarget({ ...rest, entry }));
+  for (const entry of destinationMap.entries()) {
+    result.push(processDestination({ cwd, entry, sourceMap }));
   }
 
   return result;
 }
 
-function processTarget(params: {
+function processDestination(params: {
   cwd: string;
-  entry: [target: string, value: Target];
-  exampleMap: Readonly<ExampleMap>;
+  entry: [destination: string, value: Destination];
+  sourceMap: Readonly<SourceMap>;
 }): Embed {
-  const { cwd, exampleMap, entry } = params;
-  const [target, { content, examples }] = entry;
+  const { cwd, sourceMap, entry } = params;
+  const [destination, { content, sources }] = entry;
 
   function absolutePath(path: string): string {
     return join(cwd, path);
   }
 
-  const matches = matchAll({ content, exists: (example) => examples.has(absolutePath(example)) });
+  const matches = matchAll({ content, exists: (source) => sources.has(absolutePath(source)) });
   if (matches.length === 0) {
-    return { code: "NO_MATCH", paths: { target, examples: [] } };
+    return { code: "NO_MATCH", paths: { destination, sources: [] } };
   }
 
   let updatedContent = content;
-  for (const { fullMatch, prefix, examplePath } of matches) {
-    const exampleContent = exampleMap.get(absolutePath(examplePath))!;
+  for (const { fullMatch, prefix, sourcePath } of matches) {
+    const { content } = sourceMap.get(absolutePath(sourcePath))!;
     updatedContent = updatedContent.replaceAll(
       fullMatch,
-      createReplacement({ content: exampleContent.content, examplePath, prefix }),
+      createReplacement({ content, sourcePath, prefix }),
     );
   }
 
-  const paths = { examples: matches.map((m) => absolutePath(m.examplePath)), target };
+  const paths = { sources: matches.map((m) => absolutePath(m.sourcePath)), destination };
   return content === updatedContent
     ? { code: "NO_CHANGE", paths }
     : { code: "UPDATE", paths, updatedContent };
@@ -83,28 +83,28 @@ function matchAll(
   const { content, exists } = params;
   return [...content.matchAll(REGEX)]
     .map((match) => {
-      const [fullMatch, prefix, examplePath] = match;
+      const [fullMatch, prefix, sourcePath] = match;
       return isDefined(fullMatch) &&
         isDefined(prefix) &&
-        isDefined(examplePath) &&
-        exists(examplePath)
-        ? { fullMatch, prefix, examplePath }
+        isDefined(sourcePath) &&
+        exists(sourcePath)
+        ? { fullMatch, prefix, sourcePath }
         : undefined;
     })
     .filter(isDefined);
 }
 
 function createReplacement(
-  params: Readonly<{ content: string; examplePath: string; prefix: string }>,
+  params: Readonly<{ content: string; sourcePath: string; prefix: string }>,
 ) {
-  const { content, examplePath, prefix } = params;
+  const { content, sourcePath, prefix } = params;
 
   const contentHasCodeFence = content.includes("```");
   const backticks = contentHasCodeFence ? "````" : "```";
-  const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(examplePath).slice(1)];
+  const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(sourcePath).slice(1)];
   const escapedContent = content.replaceAll("*/", "*\\/").trimEnd().split("\n");
   const lines = [
-    `<embedex source="${examplePath}">`,
+    `<embedex source="${sourcePath}">`,
     "",
     ...(codeFenceId === ""
       ? escapedContent
