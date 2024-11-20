@@ -9,11 +9,11 @@ import { type Source, type SourceMap } from "./types";
 const SOURCE_MARKER_PREFIX = "// ";
 
 export async function createSourceMap(
-  params: Readonly<{ cwd: string; globPattern: string }>,
+  params: Readonly<{ cwd: string; sourcesGlob: string }>,
 ): Promise<SourceMap> {
-  const { cwd, globPattern } = params;
+  const { cwd, sourcesGlob } = params;
   const sourceMap = new Map<SourcePath, Source>();
-  const paths = await glob(globPattern, { absolute: true, cwd, nodir: true });
+  const paths = await glob(sourcesGlob, { absolute: true, cwd, nodir: true });
 
   for await (const path of paths) {
     const content = await readFile(path, "utf8");

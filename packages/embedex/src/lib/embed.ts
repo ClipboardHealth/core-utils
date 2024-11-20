@@ -9,8 +9,8 @@ import { type EmbedParams, type EmbedResult } from "./types";
  * Embed sources into destinations.
  */
 export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult> {
-  const { sourcesGlob: globPattern, cwd, write } = params;
-  const sourceMap = await createSourceMap({ cwd, globPattern });
+  const { sourcesGlob, cwd, write } = params;
+  const sourceMap = await createSourceMap({ cwd, sourcesGlob });
   const destinationMap = await createDestinationMap({ sourceMap });
 
   const embeds = processDestinations({ cwd, sourceMap, destinationMap });
@@ -25,13 +25,10 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
 
   return {
     embeds,
-    sources: [...sourceMap.entries()].map(([key, value]) => ({
-      path: key,
-      destinations: value.destinations,
-    })),
-    destinations: [...destinationMap.entries()].map(([key, value]) => ({
-      path: key,
-      sources: [...value.sources],
+    sources: [...sourceMap.entries()].map(([path, { destinations }]) => ({ path, destinations })),
+    destinations: [...destinationMap.entries()].map(([path, { sources }]) => ({
+      path,
+      sources: [...sources],
     })),
   };
 }

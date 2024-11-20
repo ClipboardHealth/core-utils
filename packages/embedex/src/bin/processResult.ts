@@ -27,26 +27,14 @@ export function processResult(params: {
     return nodeRelative(cwd, path);
   }
 
+  function format(item: { path: string } & ({ destinations: string[] } | { sources: string[] })) {
+    const items = "destinations" in item ? item.destinations : item.sources;
+    return `${relative(item.path)} -> ${items.map((item) => relative(item)).join(", ")}`;
+  }
+
   if (verbose) {
-    console.log(
-      dim(
-        "sources:\n  ",
-        sources
-          .map(
-            ({ path, destinations }) =>
-              `${relative(path)} -> ${destinations.map(relative).join(", ")}`,
-          )
-          .join("\n  "),
-      ),
-    );
-    console.log(
-      dim(
-        "destinations:\n  ",
-        destinations
-          .map(({ path, sources }) => `${relative(path)} -> ${sources.map(relative).join(", ")}`)
-          .join("\n  "),
-      ),
-    );
+    console.log(dim("sources:\n  ", sources.map(format).join("\n  ")));
+    console.log(dim("destinations:\n  ", destinations.map(format).join("\n  ")));
   }
 
   const output: Output[] = [];

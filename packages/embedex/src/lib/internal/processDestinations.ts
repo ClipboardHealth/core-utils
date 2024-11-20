@@ -22,12 +22,12 @@ export function processDestinations(
     sourceMap: Readonly<SourceMap>;
     destinationMap: Readonly<DestinationMap>;
   }>,
-) {
-  const { destinationMap, ...rest } = params;
+): Embed[] {
+  const { cwd, destinationMap, sourceMap } = params;
 
   const result: Embed[] = [];
   for (const entry of destinationMap.entries()) {
-    result.push(processDestination({ ...rest, entry }));
+    result.push(processDestination({ cwd, entry, sourceMap }));
   }
 
   return result;
