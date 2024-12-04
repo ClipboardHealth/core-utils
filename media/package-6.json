@@ -1,15 +1,17 @@
 {
-  "name": "@clipboard-health/execution-context",
-  "description": "A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.",
-  "version": "0.6.2",
+  "name": "@clipboard-health/json-api",
+  "description": "TypeScript-friendly utilities for adhering to the JSON:API specification.",
+  "version": "0.17.2",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.0"
   },
   "keywords": [
-    "async-local-storage",
-    "execution-context",
-    "metadata",
+    "api",
+    "json-api",
+    "json:api",
+    "jsonapi",
+    "rest",
     "typescript"
   ],
   "license": "MIT",
@@ -18,7 +20,7 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/execution-context",
+    "directory": "packages/json-api",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
