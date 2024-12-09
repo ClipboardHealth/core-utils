@@ -16,7 +16,7 @@
     "@nestjs/platform-express": "10.4.13",
     "@nestjs/testing": "10.4.13",
     "@types/supertest": "6.0.2",
-    "express": "4.21.1",
+    "express": "4.21.2",
     "supertest": "7.0.0",
     "webpack-cli": "5.1.4"
   }
