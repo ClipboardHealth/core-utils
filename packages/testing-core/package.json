@@ -6,7 +6,7 @@
   "dependencies": {
     "@clipboard-health/util-ts": "2.14.2",
     "tslib": "2.8.0",
-    "zod": "3.23.8"
+    "zod": "3.24.1"
   },
   "keywords": [
     "expect",
