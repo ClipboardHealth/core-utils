@@ -1,6 +1,6 @@
 const { ESLint } = require("eslint");
 
-// See https://github.com/okonet/lint-staged/tree/05fb3829faa5437276d98450c34699fecfc8c1c8#how-can-i-ignore-files-from-eslintignore
+// See https://github.com/lint-staged/lint-staged/tree/05fb3829faa5437276d98450c34699fecfc8c1c8?tab=readme-ov-file#eslint--7-1
 const esLintIgnored = async (files) => {
   const eslint = new ESLint();
   const isIgnored = await Promise.all(files.map((f) => eslint.isPathIgnored(f)));
@@ -12,7 +12,7 @@ module.exports = {
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
   ],
-  "**/*.{ts,tsx,md,mdx}": async (files) => [`npm run embed:check`],
+  "**/*.{ts,tsx,md,mdx}": async () => [`npm run embed:check`],
   "**/*.{css,scss,graphql,js,json,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
     `prettier --write ${files.join(" ")}`,
   ],

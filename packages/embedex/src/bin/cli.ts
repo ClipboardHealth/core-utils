@@ -10,7 +10,7 @@ const program = new Command()
   .description(description)
   .version(String(version))
   .addOption(
-    new Option("-e, --sourcesGlob <pattern>", "sources glob pattern").default(
+    new Option("-s, --sourcesGlob <pattern>", "sources glob pattern").default(
       "examples/**/*.{md,ts}",
     ),
   )
