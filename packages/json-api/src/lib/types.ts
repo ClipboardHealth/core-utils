@@ -73,3 +73,13 @@ export interface JsonApiQuery<T extends JsonApiQueryTypes> {
 export type ClientJsonApiQuery = JsonApiQuery<ClientTypes>;
 
 export type ServerJsonApiQuery = JsonApiQuery<ServerTypes>;
+
+export interface JsonApiResource {
+  type: string;
+  id: string;
+  attributes?: Record<string, any>;
+  relationships?: Record<
+    string,
+    { data: { type: string; id: string } | Array<{ type: string; id: string }> }
+  >;
+}
