@@ -171,6 +171,11 @@ module.exports = {
       },
     ],
 
+    // While continue can be misused, especially with nested loops and labels,
+    // it can be useful for preventing code nesting and the existence of the rule
+    // caused us to lose time debating its validity
+    "no-continue": "off",
+
     // Prefer debugging ease over an extra microtask by requiring `return await`.
     // `no-return-await` states "This can make debugging more difficult."
     "no-return-await": "off",
