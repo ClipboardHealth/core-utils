@@ -14,12 +14,14 @@ export interface Relationship {
   meta?: Meta;
 }
 
+export type Relationships = Record<string, Relationship | undefined>;
+
 export interface Data {
   attributes?: Record<string, unknown>;
   id?: string;
   links?: ApiLinks;
   meta?: Meta;
-  relationships?: Record<string, Relationship>;
+  relationships?: Relationships;
   type?: ApiType;
 }
 

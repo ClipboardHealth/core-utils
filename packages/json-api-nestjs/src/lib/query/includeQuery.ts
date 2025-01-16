@@ -2,7 +2,7 @@ import { type GreaterThan, type Subtract } from "type-fest";
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type JsonApiDocument, type Relationship } from "../types";
+import { type JsonApiDocument, type Relationship, type Relationships } from "../types";
 
 /**
  * Recursively traverse the JSON:API document to build a list of all possible relationship paths up
@@ -23,21 +23,23 @@ export type RelationshipPaths<
   GreaterThan<Depth, 0> extends true
     ? DocumentT["data"] extends Array<infer Data> | infer Data
       ? Data extends { relationships?: infer Relation }
-        ? Relation extends Record<string, Relationship>
+        ? Relation extends Relationships
           ? {
               [K in keyof Relation]: K extends string
-                ? Relation[K]["data"] extends
-                    | { type?: infer RelationT }
-                    | Array<{ type?: infer RelationT }>
-                  ? RelationT extends keyof MapT
-                    ?
-                        | `${Prefix}${K}`
-                        | RelationshipPaths<
-                            MapT,
-                            z.infer<MapT[RelationT]>,
-                            Subtract<Depth, 1>,
-                            `${Prefix}${K}.`
-                          >
+                ? NonNullable<Relation[K]> extends Relationship
+                  ? NonNullable<Relation[K]>["data"] extends
+                      | { type?: infer RelationT }
+                      | Array<{ type?: infer RelationT }>
+                    ? RelationT extends keyof MapT
+                      ?
+                          | `${Prefix}${K}`
+                          | RelationshipPaths<
+                              MapT,
+                              z.infer<MapT[RelationT]>,
+                              Subtract<Depth, 1>,
+                              `${Prefix}${K}.`
+                            >
+                      : never
                     : never
                   : never
                 : never;
