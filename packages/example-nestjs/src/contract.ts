@@ -23,15 +23,17 @@ const API_TYPES = {
 const userType = z.literal(API_TYPES.user);
 
 const userRelationships = z.object({
-  articles: z.object({
-    data: z
-      .object({
-        id: z.string(),
-        type: z.literal(API_TYPES.article),
-      })
-      .array()
-      .max(PAGINATION.size.maximum),
-  }),
+  articles: z
+    .object({
+      data: z
+        .object({
+          id: z.string(),
+          type: z.literal(API_TYPES.article),
+        })
+        .array()
+        .max(PAGINATION.size.maximum),
+    })
+    .optional(),
 });
 
 const userAttributes = z.object({
