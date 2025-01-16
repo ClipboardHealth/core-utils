@@ -16,6 +16,9 @@
   ],
   "license": "MIT",
   "main": "./src/index.js",
+  "peerDependencies": {
+    "zod": "^3"
+  },
   "publishConfig": {
     "access": "public"
   },
