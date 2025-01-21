@@ -1,6 +1,7 @@
 import {
   addMetadataToLocalContext,
   addToMetadataList,
+  addToMetadataRecord,
   getExecutionContext,
   newExecutionContext,
   runWithExecutionContext,
@@ -13,6 +14,8 @@ const addMetadataIfContextIsPresent = () => {
   });
   addToMetadataList("list", { listKey: "listValue" });
   addToMetadataList("list", { listKey: "listValue" });
+  addToMetadataRecord("record", { recordKey1: "recordValue1" });
+  addToMetadataRecord("record", { recordKey2: "recordValue2" });
 };
 
 describe("Context Store", () => {
@@ -25,6 +28,7 @@ describe("Context Store", () => {
         key1: "value1",
         key2: "value2",
         list: [{ listKey: "listValue" }, { listKey: "listValue" }],
+        record: { recordKey1: "recordValue1", recordKey2: "recordValue2" },
       });
     });
   });
