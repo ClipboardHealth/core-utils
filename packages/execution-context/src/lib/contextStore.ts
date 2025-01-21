@@ -3,6 +3,7 @@ import "../types/global";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { type ExecutionContext } from "../types/types";
+import { isRecord } from "./util";
 
 globalThis.threadLocalStorage ||= new AsyncLocalStorage();
 
@@ -63,7 +64,35 @@ function getMetadataListByKey(key: string): unknown[] {
   return [];
 }
 
+/**
+ * A utility function that will add metadata to the list under current context's key
+ * @param key - the list's key (string) in the context
+ * @param metadata - the metadata (key-value pair), to be added to the context
+ */
 export function addToMetadataList(key: string, metadata: Record<string, unknown>): void {
   const metadataList = [...getMetadataListByKey(key), metadata];
   addMetadataToLocalContext({ [key]: metadataList });
+}
+
+function getMetadataRecordByKey(key: string): Record<string, unknown> {
+  const context = getExecutionContext();
+  if (context?.metadata && key in context.metadata) {
+    const metadataForKey = context.metadata[key];
+    if (isRecord(metadataForKey)) {
+      return metadataForKey;
+    }
+  }
+
+  return {};
+}
+
+/**
+ * A utility function that will add metadata to the record under current context's key,
+ * supporting nested records.
+ * @param key - the record's key (string) in the context
+ * @param metadata - the metadata (key-value pair), to be added to the context
+ */
+export function addToMetadataRecord(key: string, metadata: Record<string, unknown>): void {
+  const metadataRecord = { ...getMetadataRecordByKey(key), ...metadata };
+  addMetadataToLocalContext({ [key]: metadataRecord });
 }
