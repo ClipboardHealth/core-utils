@@ -1,6 +1,6 @@
-import { type Rule, type RuleContext } from "../..";
 import { appendOutput } from "../appendOutput";
-import { allIfFirst } from "./allIfFirst";
+import { type Rule, type RuleContext } from "../rule";
+import { allIf } from "./allIf";
 
 interface Input {
   a: number;
@@ -38,31 +38,27 @@ const testRule4: TestRule = {
   run: (context) => appendOutput(context, 4),
 };
 
-describe("allIfFirst", () => {
+describe("allIf", () => {
   describe("if", () => {
-    it("returns true if the first rule is true", () => {
-      expect(allIfFirst(testRule2, testRule1).runIf(context.input)).toBe(true);
+    it("returns true if predicate returns true", () => {
+      expect(allIf(() => true, testRule2, testRule1).runIf(context.input)).toBe(true);
     });
 
-    it("returns false if the first rule is false", () => {
-      expect(allIfFirst(testRule1, testRule2).runIf(context.input)).toBe(false);
-    });
-
-    it("returns false if the array is empty", () => {
-      expect(allIfFirst().runIf(context.input)).toBe(false);
+    it("returns false if predicate returns false", () => {
+      expect(allIf(() => false, testRule2, testRule1).runIf(context.input)).toBe(false);
     });
   });
 
   describe("run", () => {
     it("runs all the matching rules", () => {
-      expect(allIfFirst(testRule2, testRule1, testRule3, testRule4).run(context)).toEqual({
+      expect(allIf(() => true, testRule2, testRule1, testRule3, testRule4).run(context)).toEqual({
         ...context,
         output: [2, 3],
       });
     });
 
     it("returns the received context if no rule can be run", () => {
-      expect(allIfFirst(testRule1, testRule4).run(context)).toEqual(context);
+      expect(allIf(() => true, testRule1, testRule4).run(context)).toEqual(context);
     });
   });
 });

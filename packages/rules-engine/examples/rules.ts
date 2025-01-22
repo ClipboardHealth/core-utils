@@ -3,6 +3,7 @@ import { deepEqual } from "node:assert/strict";
 
 import {
   all,
+  allIf,
   appendOutput,
   firstMatch,
   type Rule,
@@ -67,3 +68,14 @@ const firstMatchResult = firstMatch(
 ).run(exampleContext);
 
 deepEqual(firstMatchResult.output, [{ result: 7 }]);
+
+// Using allIf() applies all the rules that return true for `runIf` to the context when the predicate
+// (a function received as firs argument) returns true
+const allIfResult = allIf(
+  (input) => input.a === 2,
+  divideNumbersIfNegative,
+  addNumbersIfPositiveRule,
+  multiplyNumbersIfPositiveRule,
+).run(exampleContext);
+
+deepEqual(allIfResult.output, [{ result: 7 }, { result: 10 }]);
