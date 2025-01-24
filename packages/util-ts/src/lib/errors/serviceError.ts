@@ -198,7 +198,7 @@ export class ServiceError extends Error {
 
 export function toZodIssue(issue: ZodIssue): ServiceIssue {
   return {
-    code: ERROR_CODES.unprocessableEntity,
+    code: ERROR_CODES.badRequest,
     message: issue.message,
     path: issue.path,
   };

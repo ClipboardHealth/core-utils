@@ -67,8 +67,8 @@ describe("ServiceResult", () => {
       expect(actual.left).toBeInstanceOf(ServiceError);
       expect(actual.left.issues).toEqual([
         {
-          code: ERROR_CODES.unprocessableEntity,
-          title: "Request failed validation",
+          code: ERROR_CODES.badRequest,
+          title: "Invalid or malformed request",
           message: "Expected string, received number",
           path: [],
         },

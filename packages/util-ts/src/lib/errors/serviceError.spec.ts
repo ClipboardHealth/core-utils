@@ -29,20 +29,20 @@ describe("ServiceError", () => {
       expect(actual).toBeInstanceOf(ServiceError);
       expect(actual.issues).toEqual([
         {
-          code: ERROR_CODES.unprocessableEntity,
+          code: ERROR_CODES.badRequest,
           message: "Invalid email format",
           path: ["email"],
-          title: "Request failed validation",
+          title: "Invalid or malformed request",
         },
         {
-          code: ERROR_CODES.unprocessableEntity,
+          code: ERROR_CODES.badRequest,
           message: "Invalid phone number",
           path: ["phoneNumber"],
-          title: "Request failed validation",
+          title: "Invalid or malformed request",
         },
       ]);
       expect(actual.cause).toBe(input);
-      expect(actual.status).toBe(422);
+      expect(actual.status).toBe(400);
     });
   });
 
@@ -239,7 +239,7 @@ describe("ServiceError", () => {
     expect(jsonApi.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          status: "400",
+          status: "422",
           source: expect.objectContaining({
             pointer: expect.stringMatching(/^\//),
           }),
