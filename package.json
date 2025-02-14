@@ -24,7 +24,7 @@
     "knip": "5.43.6",
     "lint-staged": "15.4.3",
     "nx": "20.0.1",
-    "prettier": "3.4.2",
+    "prettier": "3.5.0",
     "syncpack": "13.0.2",
     "ts-jest": "29.2.5",
     "tsx": "4.19.2",
