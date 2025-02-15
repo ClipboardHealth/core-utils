@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "0.11.8",
-    "zod": "3.24.1"
+    "zod": "3.24.2"
   },
   "keywords": [
     "api",
