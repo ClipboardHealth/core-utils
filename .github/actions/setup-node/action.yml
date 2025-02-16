@@ -1,4 +1,5 @@
 name: Setup Node
+description: "Setup Node.js environment"
 inputs:
   node-version:
     description: "Node version to use."
@@ -18,3 +19,5 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         registry-url: https://registry.npmjs.org
+    - run: npm install --global npm@11.1.0
+      shell: bash
