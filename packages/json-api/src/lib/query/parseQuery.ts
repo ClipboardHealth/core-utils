@@ -1,13 +1,6 @@
-import { type ServerJsonApiQuery } from "../types";
+import { parse } from "qs";
 
-const REGEX = {
-  fields: /^fields\[(.*?)]$/i,
-  filter: /^filter\[([^\]]*?)]$/i,
-  filterType: /^filter\[(.*?)]\[(.*?)]$/i,
-  include: /^include$/i,
-  page: /^page\[(.*?)]$/i,
-  sort: /^sort$/i,
-} as const;
+import { type ServerJsonApiQuery } from "../types";
 
 /**
  * Call this function from servers to convert from {@link URLSearchParams} to {@link ServerJsonApiQuery}.
@@ -18,7 +11,8 @@ const REGEX = {
  * ```ts
  * import { deepEqual } from "node:assert/strict";
  *
- * import { parseQuery, type ServerJsonApiQuery } from "@clipboard-health/json-api";
+ * import { parseQuery } from "@clipboard-health/json-api";
+ * import { type ParsedQs } from "qs";
  *
  * const [date1, date2] = ["2024-01-01", "2024-01-02"];
  * // The URLSearchParams constructor also supports URL-encoded strings
@@ -26,79 +20,35 @@ const REGEX = {
  *   `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
  * );
  *
- * const query: ServerJsonApiQuery = parseQuery(searchParams);
+ * const query: ParsedQs = parseQuery(searchParams.toString());
  *
  * deepEqual(query, {
  *   fields: { user: ["age", "dateOfBirth"] },
  *   filter: {
- *     age: { eq: ["2"] },
- *     dateOfBirth: { gt: [date1], lt: [date2] },
- *     isActive: { eq: ["true"] },
+ *     age: "2",
+ *     dateOfBirth: { gt: date1, lt: date2 },
+ *     isActive: "true",
  *   },
- *   include: ["article"],
+ *   include: "article",
  *   page: {
  *     size: "10",
  *   },
- *   sort: ["-age"],
+ *   sort: "-age",
  * });
  * ```
  *
  * </embedex>
  */
-export function parseQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
-  return toServerJsonApiQuery(searchParams);
-}
-
-/**
- * @deprecated Use {@link parseQuery} instead.
- */
-export function toServerJsonApiQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
-  return [...searchParams].reduce<ServerJsonApiQuery>((accumulator, [key, value]) => {
-    const match = Object.entries(REGEX).find(([, regex]) => regex.test(key));
-    if (!match) {
-      return accumulator;
-    }
-
-    const [type, regex] = match as [keyof typeof REGEX, RegExp];
-    const groups = regex.exec(key)?.slice(1);
-    if (type === "fields" && groups?.[0]) {
-      return {
-        ...accumulator,
-        fields: {
-          ...accumulator.fields,
-          [groups[0]]: value.split(","),
-        },
-      };
-    }
-
-    if ((type === "filter" || type === "filterType") && groups?.length) {
-      const [field, fieldType] = groups;
-      if (field) {
-        return {
-          ...accumulator,
-          filter: {
-            ...accumulator.filter,
-            [field]: {
-              ...accumulator.filter?.[field],
-              [fieldType ?? "eq"]: value.split(","),
-            },
-          },
-        };
+export function parseQuery(query: string): ServerJsonApiQuery {
+  return parse(query, {
+    decoder: (item, defaultDecoder, charset, type) => {
+      const decoded = decodeURIComponent(item);
+      if (type === "value") {
+        return decoded.includes(",") ? decoded.split(",") : decoded;
       }
-    }
 
-    if (type === "include" || type === "sort") {
-      return { ...accumulator, [type]: value.split(",") };
-    }
-
-    if (type === "page" && groups?.[0]) {
-      return {
-        ...accumulator,
-        page: { ...accumulator.page, [groups[0]]: value },
-      };
-    }
-
-    /* istanbul ignore next */
-    return accumulator;
-  }, {});
+      return defaultDecoder(decoded, charset, type);
+    },
+    ignoreQueryPrefix: true,
+  }) as ServerJsonApiQuery;
 }

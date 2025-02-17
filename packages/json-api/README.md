@@ -28,10 +28,10 @@ import { deepEqual } from "node:assert/strict";
 
 import { stringifyQuery } from "@clipboard-health/json-api";
 
-import { type JsonApiQuery } from "../src/lib/types";
+import { type ClientJsonApiQuery } from "../src/lib/types";
 
 const [date1, date2] = ["2024-01-01", "2024-01-02"];
-const query: JsonApiQuery = {
+const query: ClientJsonApiQuery = {
   fields: { user: ["age", "dateOfBirth"] },
   filter: {
     age: 2,
@@ -49,7 +49,7 @@ const query: JsonApiQuery = {
 };
 
 deepEqual(
-  stringifyQuery(query).toString(),
+  stringifyQuery(query),
   new URLSearchParams(
     `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
   ).toString(),
@@ -65,7 +65,8 @@ From the server, call `parseQuery` to convert from `URLSearchParams` to `ServerJ
 ```ts
 import { deepEqual } from "node:assert/strict";
 
-import { parseQuery, type ServerJsonApiQuery } from "@clipboard-health/json-api";
+import { parseQuery } from "@clipboard-health/json-api";
+import { type ParsedQs } from "qs";
 
 const [date1, date2] = ["2024-01-01", "2024-01-02"];
 // The URLSearchParams constructor also supports URL-encoded strings
@@ -73,20 +74,20 @@ const searchParams = new URLSearchParams(
   `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
 );
 
-const query: ServerJsonApiQuery = parseQuery(searchParams);
+const query: ParsedQs = parseQuery(searchParams.toString());
 
 deepEqual(query, {
   fields: { user: ["age", "dateOfBirth"] },
   filter: {
-    age: { eq: ["2"] },
-    dateOfBirth: { gt: [date1], lt: [date2] },
-    isActive: { eq: ["true"] },
+    age: "2",
+    dateOfBirth: { gt: date1, lt: date2 },
+    isActive: "true",
   },
-  include: ["article"],
+  include: "article",
   page: {
     size: "10",
   },
-  sort: ["-age"],
+  sort: "-age",
 });
 ```
 

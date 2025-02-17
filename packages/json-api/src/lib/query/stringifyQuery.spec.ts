@@ -1,191 +1,190 @@
+import { type ClientJsonApiQuery } from "../types";
 import { stringifyQuery } from "./stringifyQuery";
 
-describe("stringifyQuery", () => {
-  it("returns empty URLSearchParams for empty query", () => {
-    const actual = stringifyQuery({});
+function stringify(query: ClientJsonApiQuery): string {
+  return stringifyQuery(query, { encode: false });
+}
 
-    expect(actual.toString()).toBe("");
-    expect([...actual.values()]).toHaveLength(0);
+describe("stringifyQuery", () => {
+  it("encodes", () => {
+    const actual = stringifyQuery({ fields: { user: "age" } });
+
+    // cspell:disable-next-line
+    expect(actual).toBe("fields%5Buser%5D=age");
+  });
+
+  it("returns empty URLSearchParams for empty query", () => {
+    const actual = stringify({});
+
+    expect(actual).toBe("");
   });
 
   it("converts fields", () => {
-    const actual = stringifyQuery({ fields: { user: "age" } });
+    const actual = stringify({ fields: { user: "age" } });
 
-    expect(actual.get("fields[user]")).toBe("age");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("fields[user]=age");
+  });
+
+  it("converts dot fields", () => {
+    const actual = stringify({ fields: { "user.account": "createdAt" } });
+
+    expect(actual).toBe("fields[user.account]=createdAt");
   });
 
   it("converts multiple fields", () => {
-    const actual = stringifyQuery({ fields: { user: ["age", "dateOfBirth"] } });
+    const actual = stringify({ fields: { user: ["age", "dateOfBirth"] } });
 
-    expect(actual.get("fields[user]")).toBe("age,dateOfBirth");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("fields[user]=age,dateOfBirth");
   });
 
   it("converts filter", () => {
-    const actual = stringifyQuery({ filter: { age: 25 } });
+    const actual = stringify({ filter: { age: 25 } });
 
-    expect(actual.get("filter[age]")).toBe("25");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("filter[age]=25");
   });
 
   it("converts multiple filters", () => {
     const date1 = new Date("2024-01-01");
-    const actual = stringifyQuery({
+    const actual = stringify({
       filter: { age: 25, dateOfBirth: { gt: [date1] } },
     });
 
-    expect(actual.get("filter[age]")).toBe("25");
-    expect(actual.get("filter[dateOfBirth][gt]")).toBe(date1.toISOString());
-    expect([...actual.values()]).toHaveLength(2);
+    expect(actual).toBe("filter[age]=25&filter[dateOfBirth][gt]=2024-01-01T00:00:00.000Z");
+  });
+
+  it("converts nested filters", () => {
+    const actual = stringify({
+      filter: { location: { latitude: 40, longitude: -104 } },
+    });
+
+    expect(actual).toBe("filter[location][latitude]=40&filter[location][longitude]=-104");
   });
 
   it("converts boolean filter", () => {
-    const actual = stringifyQuery({ filter: { isActive: true } });
+    const actual = stringify({ filter: { isActive: true } });
 
-    expect(actual.get("filter[isActive]")).toBe("true");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("filter[isActive]=true");
   });
 
   it("converts Date filter", () => {
     const isoDate = "2024-01-01T15:00:00.000Z";
-    const actual = stringifyQuery({ filter: { dateOfBirth: new Date(isoDate) } });
+    const actual = stringify({ filter: { dateOfBirth: new Date(isoDate) } });
 
-    expect(actual.get("filter[dateOfBirth]")).toBe(isoDate);
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe(`filter[dateOfBirth]=${isoDate}`);
   });
 
   it("converts number filter", () => {
-    const actual = stringifyQuery({ filter: { age: [2, 4] } });
+    const actual = stringify({ filter: { age: [2, 4] } });
 
-    expect(actual.get("filter[age]")).toBe("2,4");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("filter[age]=2,4");
   });
 
   it("converts filters with multiple values", () => {
-    const actual = stringifyQuery({ filter: { age: [25, 30] } });
+    const actual = stringify({ filter: { age: [25, 30] } });
 
-    expect(actual.get("filter[age]")).toBe("25,30");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("filter[age]=25,30");
   });
 
   it("converts Date filter type", () => {
     const isoDate = "2024-01-01T15:00:00.000Z";
-    const actual = stringifyQuery({ filter: { dateOfBirth: { gte: [new Date(isoDate)] } } });
+    const actual = stringify({ filter: { dateOfBirth: { gte: [new Date(isoDate)] } } });
 
-    expect(actual.get("filter[dateOfBirth][gte]")).toBe(isoDate);
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe(`filter[dateOfBirth][gte]=${isoDate}`);
   });
 
   it("converts number filter type", () => {
-    const actual = stringifyQuery({ filter: { age: { gte: [2] } } });
+    const actual = stringify({ filter: { age: { gte: [2] } } });
 
-    expect(actual.get("filter[age][gte]")).toBe("2");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("filter[age][gte]=2");
   });
 
   it("converts multiple filter types", () => {
-    const actual = stringifyQuery({
+    const actual = stringify({
       filter: {
         age: { eq: 1, ne: 2, gt: 3, gte: 4, lt: 5, lte: 6 },
       },
     });
 
-    expect(actual.get("filter[age]")).toBe("1");
-    expect(actual.get("filter[age][ne]")).toBe("2");
-    expect(actual.get("filter[age][gt]")).toBe("3");
-    expect(actual.get("filter[age][gte]")).toBe("4");
-    expect(actual.get("filter[age][lt]")).toBe("5");
-    expect(actual.get("filter[age][lte]")).toBe("6");
-    expect([...actual.values()]).toHaveLength(6);
+    expect(actual).toBe(
+      "filter[age][eq]=1&filter[age][ne]=2&filter[age][gt]=3&filter[age][gte]=4&filter[age][lt]=5&filter[age][lte]=6",
+    );
   });
 
   it("converts include", () => {
-    const actual = stringifyQuery({ include: ["article"] });
+    const actual = stringify({ include: ["article"] });
 
-    expect(actual.get("include")).toBe("article");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("include=article");
   });
 
   it("converts include with multiple values", () => {
-    const actual = stringifyQuery({ include: ["articles", "articles.comments"] });
+    const actual = stringify({ include: ["articles", "articles.comments"] });
 
-    expect(actual.get("include")).toBe("articles,articles.comments");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("include=articles,articles.comments");
   });
 
   it("converts page", () => {
-    const actual = stringifyQuery({ page: { size: 10, cursor: "a2c12" } });
+    const actual = stringify({ page: { size: 10, cursor: "a2c12" } });
 
-    expect(actual.get("page[size]")).toBe("10");
-    expect(actual.get("page[cursor]")).toBe("a2c12");
-    expect([...actual.values()]).toHaveLength(2);
+    expect(actual).toBe("page[size]=10&page[cursor]=a2c12");
   });
 
   it("converts limit/offset page", () => {
-    const actual = stringifyQuery({ page: { limit: 10, number: 2, offset: 20 } });
+    const actual = stringify({ page: { limit: 10, number: 2, offset: 20 } });
 
-    expect(actual.get("page[limit]")).toBe("10");
-    expect(actual.get("page[number]")).toBe("2");
-    expect(actual.get("page[offset]")).toBe("20");
-    expect([...actual.values()]).toHaveLength(3);
+    expect(actual).toBe("page[limit]=10&page[number]=2&page[offset]=20");
   });
 
   it("converts sort", () => {
-    const actual = stringifyQuery({ sort: "age" });
+    const actual = stringify({ sort: "age" });
 
-    expect(actual.get("sort")).toBe("age");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("sort=age");
   });
 
   it("converts sort with multiple values", () => {
-    const actual = stringifyQuery({ sort: ["age", "-dateOfBirth"] });
+    const actual = stringify({ sort: ["age", "-dateOfBirth"] });
 
-    expect(actual.get("sort")).toBe("age,-dateOfBirth");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("sort=age,-dateOfBirth");
   });
 
-  it("handles null and undefined filter values", () => {
-    const actual = stringifyQuery({
+  it("ignores null and undefined filter values", () => {
+    const actual = stringify({
       filter: {
-        age: undefined,
-        // @ts-expect-error Testing invalid filter value
+        // @ts-expect-error Testing null filter value
+        // eslint-disable-next-line unicorn/no-null
+        age: null,
         status: { eq: undefined },
       },
     });
 
-    expect([...actual.values()]).toHaveLength(0);
+    expect(actual).toBe("filter[age]=");
   });
 
   it("handles single include value", () => {
-    const actual = stringifyQuery({ include: "article" });
+    const actual = stringify({ include: "article" });
 
-    expect(actual.get("include")).toBe("article");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("include=article");
   });
 
   it("handles single sort value", () => {
-    const actual = stringifyQuery({ sort: "-createdAt" });
+    const actual = stringify({ sort: "-createdAt" });
 
-    expect(actual.get("sort")).toBe("-createdAt");
-    expect([...actual.values()]).toHaveLength(1);
+    expect(actual).toBe("sort=-createdAt");
   });
 
   it("handles filter with invalid object type", () => {
-    const actual = stringifyQuery({
+    const actual = stringify({
       filter: {
         // @ts-expect-error Testing invalid filter value
         invalid: { toString: () => "test" },
       },
     });
 
-    expect(actual.toString()).toBe("");
-    expect(actual.has("filter[invalid]")).toBe(false);
+    expect(actual).toBe("");
   });
 
   it("converts combinations", () => {
     const [date1, date2] = [new Date("2024-01-01"), new Date("2024-01-02")];
-    const actual = stringifyQuery({
+    const actual = stringify({
       fields: { user: ["age", "dateOfBirth"] },
       filter: {
         age: 2,
@@ -199,14 +198,8 @@ describe("stringifyQuery", () => {
       sort: "-age",
     });
 
-    expect(actual.get("fields[user]")).toBe("age,dateOfBirth");
-    expect(actual.get("filter[age]")).toBe("2");
-    expect(actual.get("filter[dateOfBirth][gt]")).toBe(date1.toISOString());
-    expect(actual.get("filter[dateOfBirth][lt]")).toBe(date2.toISOString());
-    expect(actual.get("filter[isActive]")).toBe("true");
-    expect(actual.get("include")).toBe("article");
-    expect(actual.get("page[size]")).toBe("10");
-    expect(actual.get("sort")).toBe("-age");
-    expect([...actual.values()]).toHaveLength(8);
+    expect(actual).toBe(
+      "fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=2024-01-01T00:00:00.000Z&filter[dateOfBirth][lt]=2024-01-02T00:00:00.000Z&filter[isActive]=true&include=article&page[size]=10&sort=-age",
+    );
   });
 });
