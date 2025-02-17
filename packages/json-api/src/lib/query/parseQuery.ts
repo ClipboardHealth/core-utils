@@ -12,7 +12,8 @@ import { type ServerJsonApiQuery } from "../types";
  * import { deepEqual } from "node:assert/strict";
  *
  * import { parseQuery } from "@clipboard-health/json-api";
- * import { type ParsedQs } from "qs";
+ *
+ * import { type ServerJsonApiQuery } from "../src/lib/types";
  *
  * const [date1, date2] = ["2024-01-01", "2024-01-02"];
  * // The URLSearchParams constructor also supports URL-encoded strings
@@ -20,7 +21,7 @@ import { type ServerJsonApiQuery } from "../types";
  *   `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
  * );
  *
- * const query: ParsedQs = parseQuery(searchParams.toString());
+ * const query: ServerJsonApiQuery = parseQuery(searchParams.toString());
  *
  * deepEqual(query, {
  *   fields: { user: ["age", "dateOfBirth"] },
