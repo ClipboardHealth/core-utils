@@ -107,8 +107,6 @@ export function stringifyQuery(query: JsonApiQuery): URLSearchParams {
 }
 
 /**
- * Call this function from clients to convert from {@link ClientJsonApiQuery} to {@link URLSearchParams}.
- *
  * @deprecated Use {@link stringifyQuery} instead.
  */
 export function toClientSearchParams(query: ClientJsonApiQuery): URLSearchParams {

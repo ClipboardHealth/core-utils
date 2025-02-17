@@ -49,6 +49,9 @@ export function parseQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
   return toServerJsonApiQuery(searchParams);
 }
 
+/**
+ * @deprecated Use {@link parseQuery} instead.
+ */
 export function toServerJsonApiQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
   return [...searchParams].reduce<ServerJsonApiQuery>((accumulator, [key, value]) => {
     const match = Object.entries(REGEX).find(([, regex]) => regex.test(key));
