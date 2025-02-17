@@ -1,3 +1,3 @@
-export * from "./lib/query/toClientSearchParams";
-export * from "./lib/query/toServerJsonApiQuery";
+export * from "./lib/query/parseQuery";
+export * from "./lib/query/stringifyQuery";
 export * from "./lib/types";

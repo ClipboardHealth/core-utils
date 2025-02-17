@@ -1,9 +1,9 @@
 import { type ServerJsonApiQuery } from "../types";
-import { toServerJsonApiQuery } from "./toServerJsonApiQuery";
+import { parseQuery } from "./parseQuery";
 
 const BASE_URL = "https://google.com";
 
-describe("toServerJsonApiQuery", () => {
+describe("parseQuery", () => {
   it.each<{ expected: ServerJsonApiQuery; input: string; name: string }>([
     {
       name: "returns empty object if no matches",
@@ -78,7 +78,7 @@ describe("toServerJsonApiQuery", () => {
   ])("$name", ({ input, expected }) => {
     const url = new URL(`${BASE_URL}?${input}`);
 
-    const actual = toServerJsonApiQuery(url.searchParams);
+    const actual = parseQuery(url.searchParams);
 
     expect(actual).toEqual(expected);
   });
@@ -99,7 +99,7 @@ describe("toServerJsonApiQuery", () => {
     };
 
     const url = new URL(`${BASE_URL}?${input}`);
-    const actual = toServerJsonApiQuery(url.searchParams);
+    const actual = parseQuery(url.searchParams);
 
     expect(actual).toEqual(expected);
   });

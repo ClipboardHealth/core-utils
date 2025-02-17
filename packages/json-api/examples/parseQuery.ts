@@ -1,7 +1,7 @@
-// packages/json-api/src/lib/query/toServerJsonApiQuery.ts,packages/json-api/README.md
+// packages/json-api/src/lib/query/parseQuery.ts,packages/json-api/README.md
 import { deepEqual } from "node:assert/strict";
 
-import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
+import { parseQuery, type ServerJsonApiQuery } from "@clipboard-health/json-api";
 
 const [date1, date2] = ["2024-01-01", "2024-01-02"];
 // The URLSearchParams constructor also supports URL-encoded strings
@@ -9,7 +9,7 @@ const searchParams = new URLSearchParams(
   `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
 );
 
-const query: ServerJsonApiQuery = toServerJsonApiQuery(searchParams);
+const query: ServerJsonApiQuery = parseQuery(searchParams);
 
 deepEqual(query, {
   fields: { user: ["age", "dateOfBirth"] },

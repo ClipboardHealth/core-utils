@@ -13,12 +13,12 @@ const REGEX = {
  * Call this function from servers to convert from {@link URLSearchParams} to {@link ServerJsonApiQuery}.
  *
  * @example
- * <embedex source="packages/json-api/examples/toServerJsonApiQuery.ts">
+ * <embedex source="packages/json-api/examples/parseQuery.ts">
  *
  * ```ts
  * import { deepEqual } from "node:assert/strict";
  *
- * import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
+ * import { parseQuery, type ServerJsonApiQuery } from "@clipboard-health/json-api";
  *
  * const [date1, date2] = ["2024-01-01", "2024-01-02"];
  * // The URLSearchParams constructor also supports URL-encoded strings
@@ -26,7 +26,7 @@ const REGEX = {
  *   `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
  * );
  *
- * const query: ServerJsonApiQuery = toServerJsonApiQuery(searchParams);
+ * const query: ServerJsonApiQuery = parseQuery(searchParams);
  *
  * deepEqual(query, {
  *   fields: { user: ["age", "dateOfBirth"] },
@@ -45,6 +45,10 @@ const REGEX = {
  *
  * </embedex>
  */
+export function parseQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
+  return toServerJsonApiQuery(searchParams);
+}
+
 export function toServerJsonApiQuery(searchParams: URLSearchParams): ServerJsonApiQuery {
   return [...searchParams].reduce<ServerJsonApiQuery>((accumulator, [key, value]) => {
     const match = Object.entries(REGEX).find(([, regex]) => regex.test(key));
