@@ -23,6 +23,10 @@
       "matchPackageNames": ["/^@clipboard-health/"]
     },
     {
+      "groupName": "ts-rest",
+      "matchPackageNames": ["/^@ts-rest/"]
+    },
+    {
       "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
       "rangeStrategy": "widen"
     },
