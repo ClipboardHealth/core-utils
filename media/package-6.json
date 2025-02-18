@@ -5,7 +5,7 @@
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "qs": "6.14.0",
-    "tslib": "2.8.0"
+    "tslib": "2.8.1"
   },
   "keywords": [
     "api",
