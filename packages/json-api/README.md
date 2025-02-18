@@ -19,14 +19,14 @@ npm install @clipboard-health/json-api
 
 ### Query helpers
 
-From the client, call `toClientSearchParams` to convert from `ClientJsonApiQuery` to `URLSearchParams`:
+From the client, call `stringifyQuery` to convert from `JsonApiQuery` to `URLSearchParams`:
 
-<embedex source="packages/json-api/examples/toClientSearchParams.ts">
+<embedex source="packages/json-api/examples/stringifyQuery.ts">
 
 ```ts
 import { deepEqual } from "node:assert/strict";
 
-import { toClientSearchParams } from "@clipboard-health/json-api";
+import { stringifyQuery } from "@clipboard-health/json-api";
 
 import { type ClientJsonApiQuery } from "../src/lib/types";
 
@@ -34,19 +34,22 @@ const [date1, date2] = ["2024-01-01", "2024-01-02"];
 const query: ClientJsonApiQuery = {
   fields: { user: ["age", "dateOfBirth"] },
   filter: {
-    age: { eq: ["2"] },
-    dateOfBirth: { gt: [date1], lt: [date2] },
-    isActive: { eq: ["true"] },
+    age: 2,
+    dateOfBirth: {
+      gt: date1,
+      lt: date2,
+    },
+    isActive: true,
   },
-  include: ["article"],
+  include: "article",
   page: {
-    size: "10",
+    size: 10,
   },
-  sort: ["-age"],
+  sort: "-age",
 };
 
 deepEqual(
-  toClientSearchParams(query).toString(),
+  stringifyQuery(query),
   new URLSearchParams(
     `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
   ).toString(),
@@ -54,14 +57,17 @@ deepEqual(
 ```
 
 </embedex>
-From the server, call `toServerJsonApiQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
 
-<embedex source="packages/json-api/examples/toServerJsonApiQuery.ts">
+From the server, call `parseQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
+
+<embedex source="packages/json-api/examples/parseQuery.ts">
 
 ```ts
 import { deepEqual } from "node:assert/strict";
 
-import { type ServerJsonApiQuery, toServerJsonApiQuery } from "@clipboard-health/json-api";
+import { parseQuery } from "@clipboard-health/json-api";
+
+import { type ServerJsonApiQuery } from "../src/lib/types";
 
 const [date1, date2] = ["2024-01-01", "2024-01-02"];
 // The URLSearchParams constructor also supports URL-encoded strings
@@ -69,20 +75,20 @@ const searchParams = new URLSearchParams(
   `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
 );
 
-const query: ServerJsonApiQuery = toServerJsonApiQuery(searchParams);
+const query: ServerJsonApiQuery = parseQuery(searchParams.toString());
 
 deepEqual(query, {
   fields: { user: ["age", "dateOfBirth"] },
   filter: {
-    age: { eq: ["2"] },
-    dateOfBirth: { gt: [date1], lt: [date2] },
-    isActive: { eq: ["true"] },
+    age: "2",
+    dateOfBirth: { gt: date1, lt: date2 },
+    isActive: "true",
   },
-  include: ["article"],
+  include: "article",
   page: {
     size: "10",
   },
-  sort: ["-age"],
+  sort: "-age",
 });
 ```
 

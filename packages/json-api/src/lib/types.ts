@@ -1,43 +1,38 @@
 /**
- * Filter types to build complex filter queries.
- * - eq: Equal to; the default when no filter type is provided, do not explicitly include it.
+ * Filter operators to build complex filter queries.
+ * - eq: Equal to; the default when no filter operator is provided, do not explicitly include it.
  * - ne: Not equal to.
  * - gt: Greater than.
  * - gte: Greater than or equal to.
  * - lt: Less than.
  * - lte: Less than or equal to.
  */
-type FilterType = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
+export type FilterOperator = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
 
-type PageKey = "cursor" | "limit" | "number" | "offset" | "size";
+export type PageKey = "cursor" | "limit" | "number" | "offset" | "size";
 
 export { type URLSearchParams } from "node:url";
 
-export interface JsonApiQueryTypes {
-  filterValue: unknown;
-  pageValue: unknown;
-}
+export type FilterValue = Date | number | string | boolean;
 
-export interface ClientTypes {
-  filterValue: Array<Date | number | string | boolean>;
-  pageValue: number | string;
-}
+export type FilterObject = {
+  [K in FilterOperator]?: FilterValue | FilterValue[];
+};
 
-export interface ServerTypes {
-  filterValue: string[];
-  pageValue: string;
+export interface NestedFilter {
+  [key: string]: FilterValue | FilterValue[] | FilterObject | NestedFilter | undefined;
 }
 
 /**
- * A JSON:API URL query string.
+ * A JSON:API URL query.
  */
-export interface JsonApiQuery<T extends JsonApiQueryTypes> {
+export interface ClientJsonApiQuery {
   /**
    * Fields to include in the response.
    *
    * @see {@link https://jsonapi.org/format/#fetching-sparse-fieldsets JSON:API sparse fieldsets}
    */
-  fields?: Record<string, string[]>;
+  fields?: Record<string, string | string[]>;
 
   /**
    * Filters to apply to the query.
@@ -45,14 +40,14 @@ export interface JsonApiQuery<T extends JsonApiQueryTypes> {
    * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
    * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
    */
-  filter?: Record<string, { [K in FilterType]?: T["filterValue"] }>;
+  filter?: Record<string, FilterValue | FilterValue[] | FilterObject | NestedFilter | undefined>;
 
   /**
    * Relationships to include in the response.
    *
    * @see {@link https://jsonapi.org/format/#fetching-includes JSON:API fetching includes}
    */
-  include?: string[];
+  include?: string | string[];
 
   /**
    * Pagination data.
@@ -60,16 +55,54 @@ export interface JsonApiQuery<T extends JsonApiQueryTypes> {
    * @see {@link https://jsonapi.org/format/#fetching-pagination JSON:API pagination}
    * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
    */
-  page?: { [K in PageKey]?: T["pageValue"] };
+  page?: { [K in PageKey]?: number | string };
 
   /**
    * Sorting data. Include the "-" prefix for descending order.
    *
    * @see {@link https://jsonapi.org/format/#fetching-sorting JSON:API sorting}
    */
-  sort?: string[];
+  sort?: string | string[];
 }
 
-export type ClientJsonApiQuery = JsonApiQuery<ClientTypes>;
+/**
+ * A JSON:API URL query.
+ */
+export interface ServerJsonApiQuery {
+  /**
+   * Fields to include in the response.
+   *
+   * @see {@link https://jsonapi.org/format/#fetching-sparse-fieldsets JSON:API sparse fieldsets}
+   */
+  fields?: Record<string, string | string[]>;
 
-export type ServerJsonApiQuery = JsonApiQuery<ServerTypes>;
+  /**
+   * Filters to apply to the query.
+   *
+   * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
+   * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
+   */
+  filter?: Record<string, string | string[] | { [K in FilterOperator]?: string | string[] }>;
+
+  /**
+   * Relationships to include in the response.
+   *
+   * @see {@link https://jsonapi.org/format/#fetching-includes JSON:API fetching includes}
+   */
+  include?: string | string[];
+
+  /**
+   * Pagination data.
+   *
+   * @see {@link https://jsonapi.org/format/#fetching-pagination JSON:API pagination}
+   * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
+   */
+  page?: { [K in PageKey]?: string };
+
+  /**
+   * Sorting data. Include the "-" prefix for descending order.
+   *
+   * @see {@link https://jsonapi.org/format/#fetching-sorting JSON:API sorting}
+   */
+  sort?: string | string[];
+}
