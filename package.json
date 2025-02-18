@@ -44,7 +44,7 @@
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
     "ci:check": "nx format:check && prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip",
-    "ci:install": "npm install --audit false --fund false",
+    "ci:install": "npm install --audit false --fund false && nx reset",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
