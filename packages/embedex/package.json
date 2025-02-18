@@ -9,7 +9,7 @@
   "dependencies": {
     "@commander-js/extra-typings": "13.1.0",
     "glob": "11.0.1",
-    "tslib": "2.8.0",
+    "tslib": "2.8.1",
     "yoctocolors-cjs": "2.1.2"
   },
   "keywords": [
