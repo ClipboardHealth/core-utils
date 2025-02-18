@@ -1,19 +1,19 @@
-import { type INestApplication } from "@nestjs/common";
+import { type NestExpressApplication } from "@nestjs/platform-express";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { type Express } from "express";
 import request from "supertest";
 
 import { AppModule } from "../src/app.module";
 
 describe("GET /users", () => {
-  let app: INestApplication<Express>;
+  let app: NestExpressApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestExpressApplication>();
+    app.set("query parser", "extended");
     await app.init();
   });
 
