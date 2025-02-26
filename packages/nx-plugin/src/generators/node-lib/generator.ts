@@ -76,7 +76,6 @@ function updateRootTsConfig(
       }
 
       c.paths[options.importPath] = [joinPathFragments(options.projectRoot, "./src", "index.ts")];
-
       return json;
     },
   );
