@@ -4,5 +4,13 @@
   "parserOptions": {
     "project": "tsconfig.lint.json",
     "tsconfigRootDir": "packages/<%= projectName %>"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "unicorn/filename-case": ["error", { "case": "camelCase" }]
+      }
+    }
+  ]
 }

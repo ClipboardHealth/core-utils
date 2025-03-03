@@ -3,6 +3,7 @@
   "extends": [
     ":combinePatchMinorReleases",
     ":enableVulnerabilityAlertsWithLabel(SECURITY)",
+    ":maintainLockFilesWeekly",
     ":preserveSemverRanges",
     "config:js-lib",
     "docker:enableMajor",
