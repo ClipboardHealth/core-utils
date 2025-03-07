@@ -1,6 +1,6 @@
 # @clipboard-health/contract-core <!-- omit from toc -->
 
-Shared Zod schemas for Clipboard Health's contracts.
+Shared Zod schemas for Clipboard's contracts.
 
 ## Table of contents <!-- omit from toc -->
 
