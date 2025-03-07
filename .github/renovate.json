@@ -20,7 +20,7 @@
       "matchDepTypes": ["devDependencies"]
     },
     {
-      "groupName": "Clipboard Health",
+      "groupName": "Clipboard",
       "matchPackageNames": ["/^@clipboard-health/"]
     },
     {

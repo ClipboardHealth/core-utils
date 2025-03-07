@@ -26,4 +26,4 @@ Thanks for taking the time to contribute!
 
 Thank you!
 
-The Clipboard Health team
+The Clipboard team

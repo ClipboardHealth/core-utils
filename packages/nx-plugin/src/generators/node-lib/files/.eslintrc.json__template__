@@ -12,5 +12,10 @@
         "unicorn/filename-case": ["error", { "case": "camelCase" }]
       }
     }
-  ]
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
 }
