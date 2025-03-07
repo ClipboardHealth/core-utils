@@ -173,6 +173,17 @@ describe("eslint-config", () => {
               "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
             selector: "WithStatement",
           },
+          {
+            selector: "NewExpression[callee.name='Date'] > Literal",
+            message:
+              "Parsing of date strings using the Date constructor is discouraged due to browser inconsistencies. Use date-fns instead.",
+          },
+          {
+            selector:
+              "CallExpression[callee.object.name='Date'][callee.property.name='parse'] > Literal",
+            message:
+              "Parsing of date strings using Date.parse() is discouraged due to browser inconsistencies. Use date-fns instead.",
+          },
         ],
 
         // While continue can be misused, especially with nested loops and labels,

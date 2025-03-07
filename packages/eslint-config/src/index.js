@@ -169,6 +169,17 @@ module.exports = {
           "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
         selector: "WithStatement",
       },
+      {
+        selector: "NewExpression[callee.name='Date'] > Literal",
+        message:
+          "Parsing of date strings using the Date constructor is discouraged due to browser inconsistencies. Use date-fns instead.",
+      },
+      {
+        selector:
+          "CallExpression[callee.object.name='Date'][callee.property.name='parse'] > Literal",
+        message:
+          "Parsing of date strings using Date.parse() is discouraged due to browser inconsistencies. Use date-fns instead.",
+      },
     ],
 
     // While continue can be misused, especially with nested loops and labels,
@@ -190,7 +201,7 @@ module.exports = {
     "no-use-before-define": ["error", { classes: false, functions: false }],
 
     /*
-     * Only enable for properties. Favor arrow functions, they don’t have a `this` reference,
+     * Only enable for properties. Favor arrow functions, they don't have a `this` reference,
      * preventing accidental usage.
      */
     "object-shorthand": ["error", "properties"],
