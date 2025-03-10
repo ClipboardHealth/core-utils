@@ -2,7 +2,6 @@ import { isDefined } from "./isDefined";
 
 describe("isDefined", () => {
   it.each([
-    // eslint-disable-next-line unicorn/no-null
     { input: null, expected: false },
     { input: undefined, expected: false },
     { input: "", expected: true },

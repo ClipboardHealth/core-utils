@@ -43,7 +43,6 @@ describe("deepFreeze", () => {
   });
 
   it("returns non-object values as-is", () => {
-    // eslint-disable-next-line unicorn/no-null
     const inputs = [null, undefined, 42, "test", true, Symbol("test")] as const;
 
     inputs.forEach((input) => {

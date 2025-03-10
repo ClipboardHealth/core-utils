@@ -38,6 +38,5 @@ export function queryFilterPreprocessor(value: unknown): Record<string, string> 
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  // eslint-disable-next-line no-eq-null, unicorn/no-null
-  return value != null && typeof value === "object";
+  return value !== null && value !== undefined && typeof value === "object";
 }

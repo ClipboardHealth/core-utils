@@ -8,7 +8,6 @@ describe("stringify", () => {
     { input: { foo: "bar" }, expected: '{"foo":"bar"}' },
     { input: [1, 2, 3], expected: "[1,2,3]" },
     { input: BigInt(9_007_199_254_740_991), expected: '"9007199254740991"' },
-    // eslint-disable-next-line unicorn/no-null
     { input: null, expected: "null" },
     { input: undefined, expected: undefined },
     { input: { nested: { array: [1, { x: 2 }] } }, expected: '{"nested":{"array":[1,{"x":2}]}}' },

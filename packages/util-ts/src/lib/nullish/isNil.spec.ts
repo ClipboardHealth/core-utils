@@ -2,7 +2,6 @@ import { isNil, isNullOrUndefined } from "./isNil";
 
 describe("isNil", () => {
   it.each([
-    // eslint-disable-next-line unicorn/no-null
     { input: null, expected: true },
     { input: undefined, expected: true },
     { input: "", expected: false },

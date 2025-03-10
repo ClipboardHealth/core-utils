@@ -48,7 +48,6 @@ describe("expectToBeDefined", () => {
     },
     {
       name: "throws for null",
-      // eslint-disable-next-line unicorn/no-null
       input: null,
     },
   ])("$name", ({ input }) => {

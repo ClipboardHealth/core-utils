@@ -10,7 +10,6 @@ describe("isError", () => {
     { input: true, expected: false },
     { input: {}, expected: false },
     { input: [], expected: false },
-    // eslint-disable-next-line unicorn/no-null
     { input: null, expected: false },
     { input: undefined, expected: false },
   ])("returns $expected for $input", ({ input, expected }) => {
