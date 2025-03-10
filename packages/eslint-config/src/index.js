@@ -132,6 +132,9 @@ module.exports = {
     // Allow PascalCase for Decorators
     "new-cap": ["warn", { capIsNew: false, newIsCap: true }],
 
+    // Set to warn so LLMs to write worse code to get around it
+    "no-await-in-loop": "warn",
+
     // Disallow `.only` in tests to prevent it from making it into `main`.
     "no-only-tests/no-only-tests": "error",
 
@@ -209,6 +212,9 @@ module.exports = {
 
     // "Better readability" is subjective
     "unicorn/no-array-reduce": "off",
+
+    // React, MongoDB, and Prisma use `null`
+    "unicorn/no-null": "off",
 
     // Our libraries don't use ESM
     "unicorn/prefer-module": "off",

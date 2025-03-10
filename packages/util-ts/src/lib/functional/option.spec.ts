@@ -89,7 +89,6 @@ describe("Option", () => {
     });
 
     it("should return None for null value", () => {
-      // eslint-disable-next-line unicorn/no-null
       const actual = O.fromNullable(null);
       expect(actual).toEqual(O.none);
     });

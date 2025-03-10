@@ -8,7 +8,6 @@ describe("toError", () => {
     { input: 123, expected: "123" },
     { input: BigInt(123), expected: '"123"' },
     { input: Symbol("test"), expected: "Symbol(test)" },
-    // eslint-disable-next-line unicorn/no-null
     { input: null, expected: "null" },
     { input: undefined, expected: "" },
     { input: "", expected: "" },

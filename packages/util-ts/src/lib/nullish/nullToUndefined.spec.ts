@@ -2,7 +2,6 @@ import { nullToUndefined } from "./nullToUndefined";
 
 describe("nullToUndefined", () => {
   it("returns undefined", async () => {
-    // eslint-disable-next-line unicorn/no-null
     expect(await nullToUndefined(Promise.resolve(null))).toBeUndefined();
   });
 

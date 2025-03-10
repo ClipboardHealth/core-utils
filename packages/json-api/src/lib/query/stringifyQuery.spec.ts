@@ -150,7 +150,6 @@ describe("stringifyQuery", () => {
     const actual = stringify({
       filter: {
         // @ts-expect-error Testing null filter value
-        // eslint-disable-next-line unicorn/no-null
         age: null,
         status: { eq: undefined },
       },
