@@ -1,5 +1,6 @@
 import { type NestExpressApplication } from "@nestjs/platform-express";
 import { Test, type TestingModule } from "@nestjs/testing";
+import qs from "qs";
 import request from "supertest";
 
 import { AppModule } from "../src/app.module";
@@ -13,7 +14,12 @@ describe("GET /users", () => {
     }).compile();
 
     app = moduleFixture.createNestApplication<NestExpressApplication>();
-    app.set("query parser", "extended");
+    app.set("query parser", (queryString: string) =>
+      qs.parse(queryString, {
+        allowPrototypes: true,
+        arrayLimit: 100,
+      }),
+    );
     await app.init();
   });
 
