@@ -130,6 +130,40 @@ export class ServiceError extends Error {
     });
   }
 
+  /**
+   * Creates a ServiceError from a JSON:API error object
+   * @see {@link https://jsonapi.org/format/#error-objects}
+   * @param jsonApiError - JSON:API error object
+   * @returns New ServiceError instance
+   */
+  static fromJsonApi(jsonApiError: {
+    errors: Array<{
+      id?: string;
+      status?: string;
+      code?: ErrorCode;
+      title?: string;
+      detail?: string;
+      source?: Record<string, string>;
+    }>;
+  }): ServiceError {
+    const issues = jsonApiError.errors.map((error) => {
+      const path = Object.values(error.source ?? {})?.[0]
+        ?.split("/")
+        .filter(Boolean);
+
+      return toIssue({
+        code: error.code ?? ERROR_CODES.internal,
+        message: error.detail,
+        ...(path && path.length > 0 && { path }),
+      });
+    });
+
+    return new ServiceError({
+      id: jsonApiError.errors[0]?.id ?? "",
+      issues,
+    });
+  }
+
   readonly id: string;
   readonly issues: readonly Issue[];
   readonly status: Status;
