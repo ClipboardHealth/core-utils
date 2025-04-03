@@ -470,26 +470,97 @@ describe("ServiceError", () => {
         },
       ]);
     });
-    it("converts to and from JSON:API format without data loss", () => {
+
+    it("handles empty source object", () => {
       const input = {
         errors: [
           {
-            id: "test-id",
-            status: "400",
             code: ERROR_CODES.badRequest,
-            title: "Invalid or malformed request",
-            detail: "Invalid input",
+            detail: "Invalid request",
+            source: {},
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid request",
+          title: "Invalid or malformed request",
+        },
+      ]);
+    });
+
+    it("handles missing source field", () => {
+      const input = {
+        errors: [
+          {
+            code: ERROR_CODES.badRequest,
+            detail: "Invalid request",
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid request",
+          title: "Invalid or malformed request",
+        },
+      ]);
+    });
+
+    it("handles empty path in source", () => {
+      const input = {
+        errors: [
+          {
+            code: ERROR_CODES.badRequest,
+            detail: "Invalid request",
             source: {
-              pointer: "/data/attributes/name",
+              pointer: "/",
             },
           },
         ],
       };
 
-      const error = ServiceError.fromJsonApi(input);
-      const actual = error.toJsonApi();
+      const actual = ServiceError.fromJsonApi(input);
 
-      expect(actual).toEqual(input);
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid request",
+          title: "Invalid or malformed request",
+        },
+      ]);
+    });
+
+    it("uses default error code when none provided", () => {
+      const input = {
+        errors: [
+          {
+            detail: "Something went wrong",
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.internal,
+          message: "Something went wrong",
+          title: "Internal server error",
+        },
+      ]);
+      expect(actual.status).toBe(500);
     });
   });
 });

@@ -146,15 +146,17 @@ export class ServiceError extends Error {
       source?: Record<string, string>;
     }>;
   }): ServiceError {
-    const issues = jsonApiError.errors.map((error) =>
-      toIssue({
+    const issues = jsonApiError.errors.map((error) => {
+      const path = Object.values(error.source ?? {})?.[0]
+        ?.split("/")
+        .filter(Boolean);
+
+      return toIssue({
         code: error.code ?? ERROR_CODES.internal,
         message: error.detail,
-        ...(error.source && {
-          path: Object.values(error.source)[0]?.split("/").filter(Boolean) ?? [],
-        }),
-      }),
-    );
+        ...(path && path.length > 0 && { path }),
+      });
+    });
 
     return new ServiceError({
       id: jsonApiError.errors[0]?.id ?? "",
