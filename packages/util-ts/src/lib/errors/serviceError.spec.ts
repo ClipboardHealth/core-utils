@@ -351,4 +351,145 @@ describe("ServiceError", () => {
       expect(actual.status).toBe(422);
     });
   });
+
+  describe("fromJsonApi", () => {
+    it("converts JSON:API error with all fields", () => {
+      const input = {
+        errors: [
+          {
+            id: "123",
+            status: "400",
+            code: ERROR_CODES.badRequest,
+            title: "Invalid request",
+            detail: "Invalid email format",
+            source: {
+              pointer: "/data/attributes/email",
+            },
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.id).toBe("123");
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid email format",
+          path: ["data", "attributes", "email"],
+          title: "Invalid or malformed request",
+        },
+      ]);
+      expect(actual.status).toBe(400);
+    });
+
+    it("converts JSON:API error with minimal fields", () => {
+      const input = {
+        errors: [
+          {
+            code: ERROR_CODES.notFound,
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.notFound,
+          title: "Resource not found",
+        },
+      ]);
+      expect(actual.status).toBe(404);
+    });
+
+    it("converts multiple JSON:API errors", () => {
+      const input = {
+        errors: [
+          {
+            code: ERROR_CODES.badRequest,
+            detail: "Invalid email",
+            source: {
+              pointer: "/data/attributes/email",
+            },
+          },
+          {
+            code: ERROR_CODES.unprocessableEntity,
+            detail: "Invalid phone",
+            source: {
+              pointer: "/data/attributes/phone",
+            },
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid email",
+          path: ["data", "attributes", "email"],
+          title: "Invalid or malformed request",
+        },
+        {
+          code: ERROR_CODES.unprocessableEntity,
+          message: "Invalid phone",
+          path: ["data", "attributes", "phone"],
+          title: "Request failed validation",
+        },
+      ]);
+      expect(actual.status).toBe(422);
+    });
+
+    it("handles different source types", () => {
+      const input = {
+        errors: [
+          {
+            code: ERROR_CODES.badRequest,
+            detail: "Invalid header",
+            source: {
+              header: "/authorization",
+            },
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid header",
+          path: ["authorization"],
+          title: "Invalid or malformed request",
+        },
+      ]);
+    });
+    it("converts to and from JSON:API format without data loss", () => {
+      const input = {
+        errors: [
+          {
+            id: "test-id",
+            status: "400",
+            code: ERROR_CODES.badRequest,
+            title: "Invalid or malformed request",
+            detail: "Invalid input",
+            source: {
+              pointer: "/data/attributes/name",
+            },
+          },
+        ],
+      };
+
+      const error = ServiceError.fromJsonApi(input);
+      const actual = error.toJsonApi();
+
+      expect(actual).toEqual(input);
+    });
+  });
 });
