@@ -179,7 +179,7 @@ describe("eslint-config", () => {
           {
             selector: "TSEnumDeclaration",
             message:
-              "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicity mapping. Use const objects instead.",
+              "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
           },
         ],
 
