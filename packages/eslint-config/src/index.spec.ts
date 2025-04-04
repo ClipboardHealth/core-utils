@@ -173,7 +173,7 @@ describe("eslint-config", () => {
           },
           {
             message:
-              "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
+              "`with` is disallowed in strict mode because it makes code difficult to predict and optimize.",
             selector: "WithStatement",
           },
           {
