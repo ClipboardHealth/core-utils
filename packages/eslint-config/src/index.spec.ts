@@ -157,10 +157,10 @@ describe("eslint-config", () => {
           },
         ],
 
-        // Adapter from Airbnb's config, but allows ForOfStatement.
-        // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
         "no-restricted-syntax": [
           "error",
+          // Adapted from Airbnb's config, but allows ForOfStatement.
+          // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
           {
             message:
               "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
@@ -173,8 +173,13 @@ describe("eslint-config", () => {
           },
           {
             message:
-              "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
+              "`with` is disallowed in strict mode because it makes code difficult to predict and optimize.",
             selector: "WithStatement",
+          },
+          {
+            selector: "TSEnumDeclaration",
+            message:
+              "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
           },
         ],
 
