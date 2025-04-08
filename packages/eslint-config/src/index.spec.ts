@@ -37,9 +37,6 @@ describe("eslint-config", () => {
           rules: {
             // Interferes with `jest`'s `expect.any`
             "@typescript-eslint/no-unsafe-assignment": "off",
-
-            // Duplication allows verbose test case setups and asserts
-            "sonarjs/no-duplicate-string": "off",
           },
         },
         /**
@@ -233,6 +230,9 @@ describe("eslint-config", () => {
           "error",
           { ignore: [/config/i, /params/i, /props/i, /ref/i] },
         ],
+
+        // There are cases where duplicating strings is ok (tests, contracts, etc...)
+        "sonarjs/no-duplicate-string": "off",
       },
       settings: { node: { version: ">=18.15.0" } },
     });
