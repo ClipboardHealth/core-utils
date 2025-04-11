@@ -10,7 +10,7 @@
     "@nx/js": "20.4.6",
     "@nx/webpack": "20.4.6",
     "@swc-node/register": "1.10.10",
-    "@swc/core": "1.11.16",
+    "@swc/core": "1.11.18",
     "@tsconfig/node22": "22.0.1",
     "@tsconfig/strictest": "2.0.5",
     "@types/jest": "29.5.14",
