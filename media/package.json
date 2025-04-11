@@ -28,7 +28,7 @@
     "syncpack": "13.0.3",
     "ts-jest": "29.2.5",
     "tsx": "4.19.3",
-    "typedoc": "0.28.1",
+    "typedoc": "0.28.2",
     "typescript": "5.8.3"
   },
   "license": "MIT",
