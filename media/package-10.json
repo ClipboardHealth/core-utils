@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/util-ts",
   "description": "TypeScript utilities.",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.1"
@@ -17,6 +17,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
+    "type-fest": "^4",
     "zod": "^3"
   },
   "publishConfig": {
