@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/util-ts",
   "description": "TypeScript utilities.",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.1"
