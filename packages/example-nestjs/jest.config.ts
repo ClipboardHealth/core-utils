@@ -1,7 +1,7 @@
 export default {
-  coverageDirectory: "../../coverage/packages/json-api-nestjs",
+  coverageDirectory: "../../coverage/packages/example-nestjs",
   coveragePathIgnorePatterns: [],
-  displayName: "json-api-nestjs",
+  displayName: "example-nestjs",
   moduleFileExtensions: ["ts", "js"],
   preset: "../../jest.preset.js",
   testEnvironment: "node",
