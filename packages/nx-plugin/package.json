@@ -18,8 +18,8 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@nx/devkit": "20.4.6",
-    "@nx/js": "20.4.6"
+    "@nx/devkit": "^20.4.6",
+    "@nx/js": "^20.4.6"
   },
   "publishConfig": {
     "access": "public"

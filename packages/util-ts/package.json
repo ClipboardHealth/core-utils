@@ -17,6 +17,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
+    "type-fest": "^4",
     "zod": "^3"
   },
   "publishConfig": {
