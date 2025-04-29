@@ -14,7 +14,7 @@
     "@tsconfig/node22": "22.0.1",
     "@tsconfig/strictest": "2.0.5",
     "@types/jest": "29.5.14",
-    "@types/node": "22.14.1",
+    "@types/node": "22.15.2",
     "@typescript-eslint/parser": "7.18.0",
     "cspell": "8.19.2",
     "eslint": "8.57.1",
