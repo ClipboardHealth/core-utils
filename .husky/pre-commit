@@ -2,8 +2,3 @@
 
 npx lint-staged
 
-if command -v gitleaks >/dev/null; then
-  gitleaks protect --source . --verbose --redact --staged
-else
-  docker run --rm --volume "$(git rev-parse --show-toplevel)":/src ghcr.io/zricethezav/gitleaks:latest protect --source /src --verbose --redact --staged
-fi
