@@ -150,6 +150,11 @@ describe("eslint-config", () => {
                   'Importing `ObjectId` from `mongodb` is not allowed. Use `import { Types } from "mongoose"` and then `Types.ObjectId` instead.',
                 name: "mongodb",
               },
+              {
+                name: "date-fns-tz",
+                message:
+                  "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+              },
             ],
           },
         ],
