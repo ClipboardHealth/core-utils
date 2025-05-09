@@ -153,7 +153,7 @@ describe("eslint-config", () => {
               {
                 name: "date-fns-tz",
                 message:
-                  "date-fns-tz is not allowed. Use @clipboard-health/date-time, a recent version of date-fns, or moment-timezone instead",
+                  "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
               },
             ],
           },
