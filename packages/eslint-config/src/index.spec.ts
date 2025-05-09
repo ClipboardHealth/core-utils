@@ -150,6 +150,10 @@ describe("eslint-config", () => {
                   'Importing `ObjectId` from `mongodb` is not allowed. Use `import { Types } from "mongoose"` and then `Types.ObjectId` instead.',
                 name: "mongodb",
               },
+              {
+                name: "date-fns-tz",
+                message: "date-fns-tz is not allowed. Use @clipboard-health/date-time, a recent version of date-fns, or moment-timezone instead. Read more about why here: https://www.notion.so/date-fns-tz-is-bad-let-s-block-it-1ed8643321f48095a67afe8509b92c82",
+              },
             ],
           },
         ],
