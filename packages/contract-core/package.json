@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "0.13.2",
-    "zod": "3.24.3"
+    "zod": "3.24.4"
   },
   "keywords": [
     "contract",
