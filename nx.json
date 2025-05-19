@@ -65,10 +65,11 @@
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,
-      "generatorOptions": {
-        "fallbackCurrentVersionResolver": "disk",
-        "skipLockFileUpdate": true,
-        "updateDependents": "auto"
+      "fallbackCurrentVersionResolver": "disk",
+      "updateDependents": "auto",
+      "preserveLocalDependencyProtocols": false,
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
       }
     }
   },
