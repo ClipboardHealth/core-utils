@@ -19,3 +19,5 @@ tmp/
 .DS_Store
 npm-debug.log
 .tool-versions
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
