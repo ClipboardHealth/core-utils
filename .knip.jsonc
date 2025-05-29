@@ -18,6 +18,6 @@
     "**/cbhResponse.ts",
   ],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@nx/webpack", "@tsconfig/*", "ts-node", "tslib", "webpack-cli"],
+  "ignoreDependencies": ["@nx/webpack", "ts-node", "tslib", "webpack-cli"],
   "webpack": false,
 }
