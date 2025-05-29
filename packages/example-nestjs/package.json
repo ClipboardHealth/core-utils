@@ -4,8 +4,8 @@
   "version": "0.0.10",
   "dependencies": {
     "@clipboard-health/contract-core": "0.13.3",
-    "@clipboard-health/json-api-nestjs": "0.17.2",
-    "@nestjs/common": "11.0.13",
+    "@clipboard-health/json-api-nestjs": "0.17.3",
+    "@nestjs/common": "11.1.2",
     "@nestjs/core": "11.1.2",
     "@nestjs/platform-express": "11.1.2",
     "@nx/webpack": "21.1.2",
