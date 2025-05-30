@@ -21,6 +21,7 @@
 - [contract-core](./packages/contract-core/README.md): Shared Zod schemas for Clipboard's contracts.
 - [embedex](./packages/embedex/README.md): Embed shared text and code snippets from source files into destination files.
 - [eslint-config](./packages/eslint-config/README.md): Our ESLint configuration.
+- [eslint-plugin](./packages/eslint-plugin/README.md): Clipboard's ESLint Plugin
 - [example-nestjs](./packages/example-nestjs/README.md): A NestJS application using our libraries, primarily for end-to-end testing.
 - [execution-context](./packages/execution-context/README.md): A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
 - [json-api](./packages/json-api/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification.
