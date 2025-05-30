@@ -1,0 +1,16 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "parserOptions": {
+    "project": "tsconfig.lint.json",
+    "tsconfigRootDir": "packages/eslint-plugin"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "unicorn/filename-case": ["error", { "case": "camelCase" }]
+      }
+    }
+  ]
+}
