@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@clipboard-health/contract-core": "0.13.3",
-    "zod": "3.24.3",
+    "zod": "3.25.30",
     "zod-validation-error": "3.4.0"
   },
   "keywords": [
