@@ -1,3 +1,45 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const path = require("node:path");
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const fs = require("node:fs");
+
+/*
+ * Since the rules in the eslint-plugin project are in Typescript and are a package
+ * in this monorepo, it's not straightforward to include that plugin when using the
+ * ESLint config to lint the code in this monorepo itself. Nx currently symlinks each
+ * package in `node_modules/@clipboard-health` folder to the source folder rather than
+ * the output in `dist/`, and this will give an error where it cannot find the file:
+ * `core-utils/node_modules/@clipboard-health/eslint-plugin/src/index.js` when trying
+ * to lint code for any package in this monorepo.
+ * As a workaround, we check if we're inside the core-utils monorepo and skip including
+ * the eslint-plugin in the ESLint config. We'll need to fix this in the future if we
+ * need to rely on a rule from the eslint-plugin to lint code within core-utils itself.
+ */
+const isOutsideCoreUtilsMonorepo = (() => {
+  try {
+    const packageJsonPath = path.resolve(process.cwd(), "package.json");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    return packageJson.name !== "@clipboard-health/core-utils";
+  } catch {
+    return true;
+  }
+})();
+
+const plugins = [
+  "expect-type",
+  "jest",
+  "no-only-tests",
+  "simple-import-sort",
+  "sonarjs",
+  "@typescript-eslint",
+];
+
+// Only add @clipboard-health plugin if we're outside the monorepo
+if (isOutsideCoreUtilsMonorepo) {
+  plugins.push("@clipboard-health");
+}
+
 module.exports = {
   extends: [
     "eslint:recommended",
@@ -53,20 +95,23 @@ module.exports = {
         ],
       },
     },
+    ...(isOutsideCoreUtilsMonorepo
+      ? [
+          {
+            files: ["**/*.controller.ts", "**/*.controllers.ts"],
+            rules: {
+              "@clipboard-health/enforce-ts-rest-in-controllers": "error",
+            },
+          },
+        ]
+      : []),
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: ["tsconfig.json"],
     tsconfigRootDir: __dirname,
   },
-  plugins: [
-    "expect-type",
-    "jest",
-    "no-only-tests",
-    "simple-import-sort",
-    "sonarjs",
-    "@typescript-eslint",
-  ],
+  plugins,
   rules: {
     // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
     "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
@@ -200,7 +245,7 @@ module.exports = {
     "no-use-before-define": ["error", { classes: false, functions: false }],
 
     /*
-     * Only enable for properties. Favor arrow functions, they don’t have a `this` reference,
+     * Only enable for properties. Favor arrow functions, they don't have a `this` reference,
      * preventing accidental usage.
      */
     "object-shorthand": ["error", "properties"],
