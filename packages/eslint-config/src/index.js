@@ -1,6 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const path = require("node:path");
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const fs = require("node:fs");
 
 /*
@@ -18,7 +16,6 @@ const fs = require("node:fs");
 const isOutsideCoreUtilsMonorepo = (() => {
   try {
     const packageJsonPath = path.resolve(process.cwd(), "package.json");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
     return packageJson.name !== "@clipboard-health/core-utils";
   } catch {
@@ -35,7 +32,7 @@ const plugins = [
   "@typescript-eslint",
 ];
 
-// Only add @clipboard-health plugin if we're outside the monorepo
+// Only add `@clipboard-health/eslint-plugin` if we're outside the core-utils monorepo
 if (isOutsideCoreUtilsMonorepo) {
   plugins.push("@clipboard-health");
 }
