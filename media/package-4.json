@@ -1,24 +1,25 @@
 {
-  "name": "@clipboard-health/example-nestjs",
-  "description": "A NestJS application using our libraries, primarily for end-to-end testing.",
-  "version": "0.0.10",
+  "name": "@clipboard-health/eslint-plugin",
+  "description": "Clipboard's ESLint Plugin",
+  "version": "0.1.0",
   "dependencies": {
-    "@clipboard-health/contract-core": "0.13.4",
-    "@clipboard-health/json-api-nestjs": "0.17.3",
-    "@nestjs/common": "11.1.2",
-    "@nestjs/core": "11.1.2",
-    "@nestjs/platform-express": "11.1.2",
-    "@nx/webpack": "21.1.2",
-    "@ts-rest/core": "3.52.1",
-    "@ts-rest/nest": "3.52.1",
-    "qs": "6.14.0",
-    "reflect-metadata": "0.2.2",
-    "zod": "3.25.30"
+    "@typescript-eslint/utils": "8.33.0",
+    "tslib": "2.8.1"
   },
-  "devDependencies": {
-    "@nestjs/testing": "11.1.2",
-    "@types/supertest": "6.0.3",
-    "supertest": "7.1.1",
-    "webpack-cli": "6.0.1"
-  }
+  "keywords": [
+    "eslint",
+    "plugin"
+  ],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "packages/eslint-plugin",
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
 }

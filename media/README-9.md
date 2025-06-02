@@ -1,110 +1,32 @@
-# @clipboard-health/rules-engine <!-- omit from toc -->
+# @clipboard-health/nx-plugin <!-- omit from toc -->
 
-A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
-
-The engine uses static rules created in code instead of dynamic rules serialized to a database since we haven't needed the latter yet.
+An [Nx](https://nx.dev/) plugin with generators to manage libraries and applications.
 
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
-- [Local development commands](#local-development-commands)
 
 ## Install
 
 ```bash
-npm install @clipboard-health/rules-engine
+npm install @clipboard-health/nx-plugin
 ```
 
 ## Usage
 
-<embedex source="packages/rules-engine/examples/rules.ts">
+Libraries version and publish separately. We use [Nx Local Generators](https://nx.dev/recipes/generators/local-generators) to generate library stubs that successfully build, lint, and test. The `--publishPublicly` flag publishes the NPM package publicly.
 
-```ts
-import { deepEqual } from "node:assert/strict";
+```bash
+# Optionally, include the --publishPublicly flag.
+npx nx generate @clipboard-health/nx-plugin:node-lib [PROJECT_NAME]
 
-import {
-  all,
-  allIf,
-  appendOutput,
-  firstMatch,
-  type Rule,
-  type RuleContext,
-} from "@clipboard-health/rules-engine";
+# Change your mind? Remove it just as easily...
+npx nx generate @nx/workspace:remove --projectName [PROJECT_NAME]
 
-interface Input {
-  a: number;
-  b: number;
-}
-
-interface Output {
-  result: number;
-}
-
-const exampleContext: RuleContext<Input, Output> = {
-  input: {
-    a: 2,
-    b: 5,
-  },
-  output: [],
-};
-
-const addNumbersIfPositiveRule: Rule<Input, Output> = {
-  runIf: (input) => input.a > 0 && input.b > 0,
-  run: (context) => {
-    const { a, b } = context.input;
-    return appendOutput(context, { result: a + b });
-  },
-};
-
-const multiplyNumbersIfPositiveRule: Rule<Input, Output> = {
-  runIf: (input) => input.a > 0 && input.b > 0,
-  run: (context) => {
-    const { a, b } = context.input;
-    return appendOutput(context, { result: a * b });
-  },
-};
-
-const divideNumbersIfNegative: Rule<Input, Output> = {
-  runIf: (input) => input.a < 0 && input.b < 0,
-  run: (context) => {
-    const { a, b } = context.input;
-    return appendOutput(context, { result: a / b });
-  },
-};
-
-// Using all() applies all the rules to the context
-const allResult = all(
-  addNumbersIfPositiveRule,
-  divideNumbersIfNegative,
-  multiplyNumbersIfPositiveRule,
-).run(exampleContext);
-
-deepEqual(allResult.output, [{ result: 7 }, { result: 10 }]);
-
-// Using firstMatch() applies the first the rules to the context
-const firstMatchResult = firstMatch(
-  divideNumbersIfNegative,
-  addNumbersIfPositiveRule,
-  multiplyNumbersIfPositiveRule,
-).run(exampleContext);
-
-deepEqual(firstMatchResult.output, [{ result: 7 }]);
-
-// Using allIf() applies all the rules that return true for `runIf` to the context when the predicate
-// (a function received as firs argument) returns true
-const allIfResult = allIf(
-  (input) => input.a === 2,
-  divideNumbersIfNegative,
-  addNumbersIfPositiveRule,
-  multiplyNumbersIfPositiveRule,
-).run(exampleContext);
-
-deepEqual(allIfResult.output, [{ result: 7 }, { result: 10 }]);
+# ...or rename it. Note: after running this command, perform a find/replace for remaining references
+# to the old name.
+npx nx generate @nx/workspace:move --project [PROJECT_NAME] --destination [DESTINATION_FOLDER]
 ```
 
-</embedex>
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.
+To porting an existing library, follow the above to generate a new package and copy the code from the existing library into it.

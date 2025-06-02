@@ -1,6 +1,6 @@
-# @clipboard-health/json-api-nestjs <!-- omit from toc -->
+# @clipboard-health/json-api <!-- omit from toc -->
 
-TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org/) specification with [NestJS](https://nestjs.com/).
+TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org/) specification.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -12,73 +12,84 @@ TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org
 ## Install
 
 ```bash
-npm install @clipboard-health/json-api-nestjs
+npm install @clipboard-health/json-api
 ```
 
 ## Usage
 
 ### Query helpers
 
-Create Zod schemas for your API's queries:
+From the client, call `stringifyQuery` to convert from `JsonApiQuery` to `URLSearchParams`:
 
-<embedex source="packages/example-nestjs/examples/query.ts">
+<embedex source="packages/json-api/examples/stringifyQuery.ts">
 
 ```ts
-import { booleanString } from "@clipboard-health/contract-core";
-import {
-  cursorPaginationQuery,
-  fieldsQuery,
-  type FilterMap,
-  filterQuery,
-  includeQuery,
-  sortQuery,
-} from "@clipboard-health/json-api-nestjs";
-import { z } from "zod";
+import { deepEqual } from "node:assert/strict";
 
-import {
-  type ArticleAttributeFields,
-  type UserAttributeFields,
-  type UserIncludeFields,
-} from "../src/contract";
+import { stringifyQuery } from "@clipboard-health/json-api";
 
-const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
-const userFields = ["age", "dateOfBirth"] as const satisfies readonly UserAttributeFields[];
-const userIncludeFields = [
-  "articles",
-  "articles.comments",
-] as const satisfies readonly UserIncludeFields[];
-const userFilterMap = {
-  age: {
-    filters: ["eq", "gt"],
-    schema: z.coerce.number().int().positive().max(125),
-  },
-  dateOfBirth: {
-    filters: ["gte"],
-    schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
-  },
-  isActive: {
-    filters: ["eq"],
-    schema: booleanString,
-  },
-} as const satisfies FilterMap<UserAttributeFields>;
+import { type ClientJsonApiQuery } from "../src/lib/types";
 
-/**
- * Disclaimer: Just because JSON:API supports robust querying doesn’t mean your service should
- * implement them as they may require database indexes, which have a cost. **Implement only access
- * patterns required by clients.**
- *
- * The spec says that if clients provide fields the server doesn’t support, it **MUST** return 400
- * Bad Request, hence the `.strict()`.
- *\/
-export const query = z
-  .object({
-    ...cursorPaginationQuery(),
-    ...fieldsQuery({ article: articleFields, user: userFields }),
-    ...filterQuery(userFilterMap),
-    ...sortQuery(userFields),
-    ...includeQuery(userIncludeFields),
-  })
-  .strict();
+const [date1, date2] = ["2024-01-01", "2024-01-02"];
+const query: ClientJsonApiQuery = {
+  fields: { user: ["age", "dateOfBirth"] },
+  filter: {
+    age: 2,
+    dateOfBirth: {
+      gt: date1,
+      lt: date2,
+    },
+    isActive: true,
+  },
+  include: "article",
+  page: {
+    size: 10,
+  },
+  sort: "-age",
+};
+
+deepEqual(
+  stringifyQuery(query),
+  new URLSearchParams(
+    `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
+  ).toString(),
+);
+```
+
+</embedex>
+
+From the server, call `parseQuery` to convert from `URLSearchParams` to `ServerJsonApiQuery`:
+
+<embedex source="packages/json-api/examples/parseQuery.ts">
+
+```ts
+import { deepEqual } from "node:assert/strict";
+
+import { parseQuery } from "@clipboard-health/json-api";
+
+import { type ServerJsonApiQuery } from "../src/lib/types";
+
+const [date1, date2] = ["2024-01-01", "2024-01-02"];
+// The URLSearchParams constructor also supports URL-encoded strings
+const searchParams = new URLSearchParams(
+  `fields[user]=age,dateOfBirth&filter[age]=2&filter[dateOfBirth][gt]=${date1}&filter[dateOfBirth][lt]=${date2}&filter[isActive]=true&include=article&page[size]=10&sort=-age`,
+);
+
+const query: ServerJsonApiQuery = parseQuery(searchParams.toString());
+
+deepEqual(query, {
+  fields: { user: ["age", "dateOfBirth"] },
+  filter: {
+    age: "2",
+    dateOfBirth: { gt: date1, lt: date2 },
+    isActive: "true",
+  },
+  include: "article",
+  page: {
+    size: "10",
+  },
+  sort: "-age",
+});
 ```
 
 </embedex>

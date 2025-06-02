@@ -1,148 +1,106 @@
-# @clipboard-health/testing-core <!-- omit from toc -->
+# @clipboard-health/rules-engine <!-- omit from toc -->
 
-TypeScript-friendly testing utilities.
+A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
+
+The engine uses static rules created in code instead of dynamic rules serialized to a database since we haven't needed the latter yet.
 
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
-  - [Type narrowing `expect` helpers](#type-narrowing-expect-helpers)
 - [Local development commands](#local-development-commands)
 
 ## Install
 
 ```bash
-npm install @clipboard-health/testing-core
+npm install @clipboard-health/rules-engine
 ```
 
 ## Usage
 
-### Type narrowing `expect` helpers
-
-Jest's [`expect(...).toBeDefined()`](https://jestjs.io/docs/expect#tobedefined) does not narrow types.
-
-This gives a type error:
+<embedex source="packages/rules-engine/examples/rules.ts">
 
 ```ts
-const value = getValue(); // returns 'string | undefined'
+import { deepEqual } from "node:assert/strict";
 
-expect(value).toBeDefined();
+import {
+  all,
+  allIf,
+  appendOutput,
+  firstMatch,
+  type Rule,
+  type RuleContext,
+} from "@clipboard-health/rules-engine";
 
-const { length } = value;
-// ^? Property 'length' does not exist on type 'string | undefined'.
-```
-
-This library's helpers narrow types:
-
-<embedex source="packages/testing-core/examples/expectToBeDefined.ts">
-
-```ts
-import { ok } from "node:assert/strict";
-
-import { expectToBeDefined } from "@clipboard-health/testing-core";
-
-function getValue(): string | undefined {
-  return "hi";
+interface Input {
+  a: number;
+  b: number;
 }
 
-const value = getValue();
-expectToBeDefined(value);
-
-// Narrowed to `string`
-const { length } = value;
-ok(length === 2);
-```
-
-</embedex>
-
-<embedex source="packages/testing-core/examples/expectToBeLeft.ts">
-
-```ts
-import { ok } from "node:assert/strict";
-
-import { expectToBeLeft } from "@clipboard-health/testing-core";
-import { either as E } from "@clipboard-health/util-ts";
-
-function divide(numerator: number, denominator: number): E.Either<string, number> {
-  if (denominator === 0) {
-    return E.left("Cannot divide by zero");
-  }
-
-  return E.right(numerator / denominator);
+interface Output {
+  result: number;
 }
 
-const value = divide(10, 0);
-expectToBeLeft(value);
+const exampleContext: RuleContext<Input, Output> = {
+  input: {
+    a: 2,
+    b: 5,
+  },
+  output: [],
+};
 
-// Narrowed to Left
-ok(value.left === "Cannot divide by zero");
-```
+const addNumbersIfPositiveRule: Rule<Input, Output> = {
+  runIf: (input) => input.a > 0 && input.b > 0,
+  run: (context) => {
+    const { a, b } = context.input;
+    return appendOutput(context, { result: a + b });
+  },
+};
 
-</embedex>
+const multiplyNumbersIfPositiveRule: Rule<Input, Output> = {
+  runIf: (input) => input.a > 0 && input.b > 0,
+  run: (context) => {
+    const { a, b } = context.input;
+    return appendOutput(context, { result: a * b });
+  },
+};
 
-<embedex source="packages/testing-core/examples/expectToBeRight.ts">
+const divideNumbersIfNegative: Rule<Input, Output> = {
+  runIf: (input) => input.a < 0 && input.b < 0,
+  run: (context) => {
+    const { a, b } = context.input;
+    return appendOutput(context, { result: a / b });
+  },
+};
 
-```ts
-import { ok } from "node:assert/strict";
+// Using all() applies all the rules to the context
+const allResult = all(
+  addNumbersIfPositiveRule,
+  divideNumbersIfNegative,
+  multiplyNumbersIfPositiveRule,
+).run(exampleContext);
 
-import { expectToBeRight } from "@clipboard-health/testing-core";
-import { either as E } from "@clipboard-health/util-ts";
+deepEqual(allResult.output, [{ result: 7 }, { result: 10 }]);
 
-function divide(numerator: number, denominator: number): E.Either<string, number> {
-  if (denominator === 0) {
-    return E.left("Cannot divide by zero");
-  }
+// Using firstMatch() applies the first the rules to the context
+const firstMatchResult = firstMatch(
+  divideNumbersIfNegative,
+  addNumbersIfPositiveRule,
+  multiplyNumbersIfPositiveRule,
+).run(exampleContext);
 
-  return E.right(numerator / denominator);
-}
+deepEqual(firstMatchResult.output, [{ result: 7 }]);
 
-const value = divide(10, 2);
-expectToBeRight(value);
+// Using allIf() applies all the rules that return true for `runIf` to the context when the predicate
+// (a function received as firs argument) returns true
+const allIfResult = allIf(
+  (input) => input.a === 2,
+  divideNumbersIfNegative,
+  addNumbersIfPositiveRule,
+  multiplyNumbersIfPositiveRule,
+).run(exampleContext);
 
-// Narrowed to Right
-ok(value.right === 5);
-```
-
-</embedex>
-
-<embedex source="packages/testing-core/examples/expectToBeSafeParseError.ts">
-
-```ts
-import { ok } from "node:assert/strict";
-
-import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
-import { z } from "zod";
-
-const schema = z.object({ name: z.string() });
-
-const value = schema.safeParse({ name: 1 });
-expectToBeSafeParseError(value);
-
-// Narrowed to `SafeParseError`
-const firstIssue = value.error.issues[0];
-expectToBeDefined(firstIssue);
-
-// Narrowed to `ZodIssue`
-ok(firstIssue.message === "Expected string, received number");
-```
-
-</embedex>
-
-<embedex source="packages/testing-core/examples/expectToBeSafeParseSuccess.ts">
-
-```ts
-import { ok } from "node:assert/strict";
-
-import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";
-import { z } from "zod";
-
-const schema = z.object({ name: z.string() });
-
-const value = schema.safeParse({ name: "hi" });
-expectToBeSafeParseSuccess(value);
-
-// Narrowed to `SafeParseSuccess`
-ok(value.data.name === "hi");
+deepEqual(allIfResult.output, [{ result: 7 }, { result: 10 }]);
 ```
 
 </embedex>

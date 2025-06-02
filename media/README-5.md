@@ -1,81 +1,75 @@
-# @clipboard-health/execution-context <!-- omit from toc -->
+# @clipboard-health/example-nestjs <!-- omit from toc -->
 
-`ExecutionContext` is a lightweight Node.js package built with TypeScript that leverages `AsyncLocalStorage` to create a statically available context parallel to any execution. It provides a reliable, thread-safe context for attaching and accessing metadata throughout the lifecycle of an execution, such as API requests, background jobs, or message consumers. This allows various parts of your application to communicate and share metadata without needing to explicitly pass context objects.
+A NestJS application using our libraries, primarily for end-to-end testing.
 
-## Features
+## Table of contents <!-- omit from toc -->
 
-- **Scoped Contexts**: Attach data to a context that is specific to each execution scope.
-- **Static Access**: Access context data statically anywhere in the codebase within an active execution.
-- **Metadata Aggregation**: Store and retrieve metadata across the lifespan of an execution, ideal for logging, tracing, and other observability tasks.
-
-## Table of Contents <!-- omit from toc -->
-
-- [Features](#features)
-- [Install](#install)
 - [Usage](#usage)
+  - [Send requests](#send-requests)
+  - [`ts-rest` client](#ts-rest-client)
 - [Local development commands](#local-development-commands)
-
-## Install
-
-```bash
-npm install @clipboard-health/execution-context
-```
 
 ## Usage
 
-This example demonstrates how to create a logging context, accumulate metadata from various function calls, and then log a single message containing all the gathered metadata.
+```bash
+# Start NestJS application
+npx nx serve example-nestjs
+```
 
-<embedex source="packages/execution-context/examples/executionContext.ts">
+### Send requests
+
+Install the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) VSCode extension and open [`requests.http`](./requests.http) to send requests.
+
+### `ts-rest` client
+
+The following makes requests to the example application using the `ts-rest` client.
+
+<embedex source="packages/example-nestjs/examples/client.ts">
 
 ```ts
-import {
-  addMetadataToLocalContext,
-  getExecutionContext,
-  newExecutionContext,
-  runWithExecutionContext,
-} from "@clipboard-health/execution-context";
+import { initClient, type ServerInferRequest } from "@ts-rest/core";
 
-export async function processRequest() {
-  // Start a context for this request
-  await runWithExecutionContext(newExecutionContext("context-name"), async () => {
-    const context = getExecutionContext();
+import { contract } from "../src/contract";
 
-    try {
-      // Add metadata from the current function
-      addMetadataToLocalContext({ userId: "1" });
+type ListUsersRequest = ServerInferRequest<typeof contract.list>;
 
-      // Simulate calling other functions that add their own context metadata
-      callFunctionThatAddsContext();
-      callFunctionThatCallsAnotherFunctionThatAddsContext();
+const port = process.env["PORT"] ?? 3000;
+export const client = initClient(contract, {
+  baseUrl: `http://localhost:${port}`,
+});
 
-      // Log the successful processing event with accumulated metadata
-      console.log("event=MessageProcessed", { ...context?.metadata });
-    } catch (error) {
-      // Capture and log error metadata if something goes wrong
-      addMetadataToLocalContext({ error });
-      console.error("event=MessageProcessed", { ...context?.metadata });
-    }
-  });
+async function main() {
+  const query: ListUsersRequest["query"] = {
+    fields: {
+      user: ["age", "dateOfBirth"],
+    },
+    filter: {
+      age: {
+        gt: [2],
+      },
+      dateOfBirth: {
+        gte: [new Date("2016-01-01")],
+      },
+      isActive: {
+        eq: ["true"],
+      },
+    },
+    page: {
+      cursor: "eyJpZCI6IjQ2MDJCNjI5LTg3N0QtNEVCNC1CQzhELTREM0NGNzkzQkM2NSJ9",
+      size: 10,
+    },
+  };
+
+  try {
+    const { body, status } = await client.list({ query });
+    console.debug(status, JSON.stringify(body, undefined, 2));
+  } catch (error) {
+    console.error("Error occurred:", error);
+  }
 }
 
-// Example function that adds its own metadata to the current context
-function callFunctionThatAddsContext() {
-  addMetadataToLocalContext({ operation: "dataFetch", status: "success" });
-}
-
-// Example function that calls another function, both adding their own metadata
-function callFunctionThatCallsAnotherFunctionThatAddsContext() {
-  addMetadataToLocalContext({ operation: "validate", validationStep: "pre-check" });
-  callAnotherFunctionThatAddsContext();
-}
-
-function callAnotherFunctionThatAddsContext() {
-  addMetadataToLocalContext({
-    operation: "validate",
-    validationStep: "post-check",
-    result: "passed",
-  });
-}
+// eslint-disable-next-line unicorn/prefer-top-level-await
+void main();
 ```
 
 </embedex>

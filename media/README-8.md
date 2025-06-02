@@ -1,32 +1,88 @@
-# @clipboard-health/nx-plugin <!-- omit from toc -->
+# @clipboard-health/json-api-nestjs <!-- omit from toc -->
 
-An [Nx](https://nx.dev/) plugin with generators to manage libraries and applications.
+TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org/) specification with [NestJS](https://nestjs.com/).
 
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
+  - [Query helpers](#query-helpers)
+- [Local development commands](#local-development-commands)
 
 ## Install
 
 ```bash
-npm install @clipboard-health/nx-plugin
+npm install @clipboard-health/json-api-nestjs
 ```
 
 ## Usage
 
-Libraries version and publish separately. We use [Nx Local Generators](https://nx.dev/recipes/generators/local-generators) to generate library stubs that successfully build, lint, and test. The `--publishPublicly` flag publishes the NPM package publicly.
+### Query helpers
 
-```bash
-# Optionally, include the --publishPublicly flag.
-npx nx generate @clipboard-health/nx-plugin:node-lib [PROJECT_NAME]
+Create Zod schemas for your API's queries:
 
-# Change your mind? Remove it just as easily...
-npx nx generate @nx/workspace:remove --projectName [PROJECT_NAME]
+<embedex source="packages/example-nestjs/examples/query.ts">
 
-# ...or rename it. Note: after running this command, perform a find/replace for remaining references
-# to the old name.
-npx nx generate @nx/workspace:move --project [PROJECT_NAME] --destination [DESTINATION_FOLDER]
+```ts
+import { booleanString } from "@clipboard-health/contract-core";
+import {
+  cursorPaginationQuery,
+  fieldsQuery,
+  type FilterMap,
+  filterQuery,
+  includeQuery,
+  sortQuery,
+} from "@clipboard-health/json-api-nestjs";
+import { z } from "zod";
+
+import {
+  type ArticleAttributeFields,
+  type UserAttributeFields,
+  type UserIncludeFields,
+} from "../src/contract";
+
+const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
+const userFields = ["age", "dateOfBirth"] as const satisfies readonly UserAttributeFields[];
+const userIncludeFields = [
+  "articles",
+  "articles.comments",
+] as const satisfies readonly UserIncludeFields[];
+const userFilterMap = {
+  age: {
+    filters: ["eq", "gt"],
+    schema: z.coerce.number().int().positive().max(125),
+  },
+  dateOfBirth: {
+    filters: ["gte"],
+    schema: z.coerce.date().min(new Date("1900-01-01")).max(new Date()),
+  },
+  isActive: {
+    filters: ["eq"],
+    schema: booleanString,
+  },
+} as const satisfies FilterMap<UserAttributeFields>;
+
+/**
+ * Disclaimer: Just because JSON:API supports robust querying doesn’t mean your service should
+ * implement them as they may require database indexes, which have a cost. **Implement only access
+ * patterns required by clients.**
+ *
+ * The spec says that if clients provide fields the server doesn’t support, it **MUST** return 400
+ * Bad Request, hence the `.strict()`.
+ *\/
+export const query = z
+  .object({
+    ...cursorPaginationQuery(),
+    ...fieldsQuery({ article: articleFields, user: userFields }),
+    ...filterQuery(userFilterMap),
+    ...sortQuery(userFields),
+    ...includeQuery(userIncludeFields),
+  })
+  .strict();
 ```
 
-To porting an existing library, follow the above to generate a new package and copy the code from the existing library into it.
+</embedex>
+
+## Local development commands
+
+See [`package.json`](./package.json) `scripts` for a list of commands.
