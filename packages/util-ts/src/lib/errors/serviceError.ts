@@ -19,38 +19,9 @@ export const ERROR_CODES = {
   internal: "internal",
 } as const;
 
-export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
-
-export interface ServiceIssue {
-  /** Standardized {@link ERROR_CODES} */
-  code?: ErrorCode;
-
-  /** Details about what caused the issue */
-  message?: string | undefined;
-
-  /** Path to issue location */
-  path?: Array<string | number>;
-}
-
-export type ErrorSource = "header" | "parameter" | "pointer";
-
-export type ServiceErrorParams =
-  // Message string
-  | string
-  | {
-      /** Error cause */
-      cause?: unknown;
-      /** Unique identifier for the issue */
-      id?: string;
-      /** Array of issues contributing to the error */
-      issues: readonly ServiceIssue[];
-      /**
-       * Source of the error
-       *
-       * @see {@link https://jsonapi.org/format/#error-objects}
-       */
-      source?: ErrorSource | undefined;
-    };
+// (string & {}) keeps the literal-union intact—so we get autocomplete for the built-ins *and* accept any other string.
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | (string & {});
 
 const ERROR_METADATA = {
   badRequest: {
@@ -85,12 +56,56 @@ const ERROR_METADATA = {
     status: 500,
     title: "Internal server error",
   },
-} as const satisfies Record<ErrorCode, { status: number; title: string }>;
+} as const;
 type Status = (typeof ERROR_METADATA)[keyof typeof ERROR_METADATA]["status"];
+
+export interface ServiceIssue {
+  /**
+   * - Use {@link ERROR_CODES}
+   * – Or pass any custom string (e.g. "invalidPromoCode") for new cases
+   */
+  code?: ErrorCode;
+
+  /** Details about what caused the issue */
+  message?: string | undefined;
+
+  /** Path to issue location */
+  path?: Array<string | number>;
+
+  /**
+   * Short, reusable summary of the problem (`errors.title`).
+   * Keep it concise and localizable (e.g. "Invalid Input").
+   */
+  title?: string;
+
+  /**
+   * HTTP status code (`errors.status` in JSON:API).
+   */
+  status?: Status;
+}
+
+export type ErrorSource = "header" | "parameter" | "pointer";
+
+export type ServiceErrorParams =
+  // Message string
+  | string
+  | {
+      /** Error cause */
+      cause?: unknown;
+      /** Unique identifier for the issue */
+      id?: string;
+      /** Array of issues contributing to the error */
+      issues: readonly ServiceIssue[];
+      /**
+       * Source of the error
+       *
+       * @see {@link https://jsonapi.org/format/#error-objects}
+       */
+      source?: ErrorSource | undefined;
+    };
 
 export interface Issue extends ServiceIssue {
   code: Required<ServiceIssue>["code"];
-  title: string;
 }
 
 /**
@@ -139,7 +154,7 @@ export class ServiceError extends Error {
   static fromJsonApi(jsonApiError: {
     errors: Array<{
       id?: string;
-      status?: string;
+      status?: `${Status}`;
       code?: ErrorCode;
       title?: string;
       detail?: string;
@@ -154,6 +169,8 @@ export class ServiceError extends Error {
       return toIssue({
         code: error.code ?? ERROR_CODES.internal,
         message: error.detail,
+        ...(error.title ? { title: error.title } : undefined),
+        ...(error.status ? { status: Number(error.status) as Status } : undefined),
         ...(path && path.length > 0 && { path }),
       });
     });
@@ -191,7 +208,7 @@ export class ServiceError extends Error {
     this.issues = deepFreeze(issues);
     this.name = this.constructor.name;
     this.source = source ?? "pointer";
-    this.status = Math.max(...issues.map((issue) => ERROR_METADATA[issue.code].status)) as Status;
+    this.status = Math.max(...issues.map((issue) => getStatusFromIssue(issue))) as Status;
 
     /**
      * Maintain proper prototype chain in transpiled code
@@ -216,7 +233,7 @@ export class ServiceError extends Error {
     return {
       errors: this.issues.map((issue) => ({
         id: this.id,
-        status: String(ERROR_METADATA[issue.code].status),
+        status: String(getStatusFromIssue(issue)),
         code: issue.code,
         title: issue.title,
         ...(issue.message && { detail: issue.message }),
@@ -258,5 +275,23 @@ function createServiceErrorMessage(issues: readonly Issue[]): string {
 
 function toIssue(issue: ServiceIssue): Issue {
   const code = issue.code ?? ERROR_CODES.internal;
-  return { ...issue, code, title: ERROR_METADATA[code].title };
+  const title =
+    issue.title ?? (isKeyOf(code, ERROR_METADATA) ? ERROR_METADATA[code].title : undefined);
+  return { ...issue, code, ...(title ? { title } : undefined) };
+}
+
+function isKeyOf<T extends Record<string, unknown>>(
+  field: string | number | symbol,
+  object: T,
+): field is keyof T {
+  return field in object;
+}
+
+function getStatusFromIssue(issue: ServiceIssue): Status {
+  return (
+    issue.status ??
+    (issue.code && isKeyOf(issue.code, ERROR_METADATA)
+      ? ERROR_METADATA[issue.code].status
+      : ERROR_METADATA.internal.status)
+  );
 }
