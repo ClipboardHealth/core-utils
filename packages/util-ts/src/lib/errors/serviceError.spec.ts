@@ -273,6 +273,47 @@ describe("ServiceError", () => {
     expect(actual.status).toBe(500);
   });
 
+  it("creates with custom code", () => {
+    const input = {
+      issues: [
+        {
+          code: "licenseNotFound",
+        },
+      ],
+    };
+
+    const actual = new ServiceError(input);
+    const jsonApi = actual.toJsonApi();
+
+    expect(jsonApi.errors[0]).toEqual({
+      id: actual.id,
+      status: "500",
+      code: "licenseNotFound",
+    });
+  });
+
+  it("creates with custom code, status, and message", () => {
+    const input = {
+      issues: [
+        {
+          code: "licenseNotFound",
+          status: 422,
+          message: "CNA license is required to book a shift",
+        } as const,
+      ],
+    };
+
+    const actual = new ServiceError(input);
+    const jsonApi = actual.toJsonApi();
+
+    expect(jsonApi.errors[0]).toEqual({
+      id: actual.id,
+      status: "422",
+      code: "licenseNotFound",
+      detail: "CNA license is required to book a shift",
+    });
+  });
+
   describe("source handling", () => {
     it("uses pointer as default source", () => {
       const input = {
@@ -365,7 +406,7 @@ describe("ServiceError", () => {
             source: {
               pointer: "/data/attributes/email",
             },
-          },
+          } as const,
         ],
       };
 
@@ -378,7 +419,8 @@ describe("ServiceError", () => {
           code: ERROR_CODES.badRequest,
           message: "Invalid email format",
           path: ["data", "attributes", "email"],
-          title: "Invalid or malformed request",
+          status: 400,
+          title: "Invalid request",
         },
       ]);
       expect(actual.status).toBe(400);
@@ -561,6 +603,52 @@ describe("ServiceError", () => {
         },
       ]);
       expect(actual.status).toBe(500);
+    });
+
+    it("converts to JSON:API error with custom code", () => {
+      const input = {
+        errors: [
+          {
+            code: "licenseNotFound",
+          },
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: "licenseNotFound",
+        },
+      ]);
+      expect(actual.status).toBe(500);
+    });
+
+    it("converts to JSON:API error with custom code, status, title, and detail", () => {
+      const input = {
+        errors: [
+          {
+            code: "licenseNotFound",
+            status: "422",
+            title: "The license is not found",
+            detail: "CNA license is required when booking a placement",
+          } as const,
+        ],
+      };
+
+      const actual = ServiceError.fromJsonApi(input);
+
+      expect(actual).toBeInstanceOf(ServiceError);
+      expect(actual.issues).toEqual([
+        {
+          code: "licenseNotFound",
+          status: 422,
+          title: "The license is not found",
+          message: "CNA license is required when booking a placement",
+        },
+      ]);
+      expect(actual.status).toBe(422);
     });
   });
 });
