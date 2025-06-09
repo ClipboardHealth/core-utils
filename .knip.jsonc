@@ -1,16 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@2/schema.json",
-  "entry": [
-    "packages/config/examples/**/*.ts",
-    "packages/contract-core/examples/**/*.ts",
-    "packages/embedex/src/bin/**/*.ts",
-    "packages/example-nestjs/examples/**/*.ts",
-    "packages/execution-context/examples/**/*.ts",
-    "packages/json-api/examples/**/*.ts",
-    "packages/rules-engine/examples/**/*.ts",
-    "packages/testing-core/examples/**/*.ts",
-    "packages/util-ts/examples/**/*.ts",
-  ],
   "ignore": [
     "**/jest.config.ts",
     "**/generators/**/schema.d.ts",
@@ -20,4 +9,33 @@
   "ignoreBinaries": [],
   "ignoreDependencies": ["@nx/webpack", "ts-node", "tslib", "webpack-cli"],
   "webpack": false,
+  "workspaces": {
+    "packages/config": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/contract-core": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/embedex": {
+      "entry": ["src/bin/**/*.ts", "src/index.ts"],
+    },
+    "packages/example-nestjs": {
+      "entry": ["examples/**/*.ts", "src/main.ts"],
+    },
+    "packages/execution-context": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/json-api": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/rules-engine": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/testing-core": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/util-ts": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+  },
 }
