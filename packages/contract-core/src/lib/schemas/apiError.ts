@@ -10,7 +10,7 @@ export const apiError = z.object({
   detail: z.string().optional(),
   id: nonEmptyString,
   status: nonEmptyString,
-  title: nonEmptyString,
+  title: z.string().optional(),
 });
 
 /**
