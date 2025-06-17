@@ -18,7 +18,7 @@
     "eslint-plugin-eslint-comments": "^3",
     "eslint-plugin-expect-type": "^0.4",
     "eslint-plugin-import": "^2",
-    "eslint-plugin-jest": "^27.7",
+    "eslint-plugin-jest": "^28",
     "eslint-plugin-n": "^16",
     "eslint-plugin-no-only-tests": "^3",
     "eslint-plugin-no-use-extend-native": "^0.5",
