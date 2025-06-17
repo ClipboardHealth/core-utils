@@ -46,7 +46,6 @@ export function processResult(params: {
       paths: { destination: relative(destination), sources: sources.map((path) => relative(path)) },
     });
 
-    // eslint-disable-next-line default-case -- ignore so we get @typescript-eslint/switch-exhaustiveness-check
     switch (code) {
       case "NO_CHANGE": {
         output.push(toOutput({ isError: false }));

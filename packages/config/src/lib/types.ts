@@ -21,7 +21,6 @@ export interface ConfigValue<SchemaT, EnvironmentT extends readonly string[]> {
  * Maps configuration schema to configuration values with metadata.
  */
 export type ConfigValueMap<SchemaT, EnvironmentT extends readonly string[]> = {
-  // eslint-disable-next-line no-use-before-define
   [K in keyof SchemaT]: ConfigValueForType<SchemaT[K], EnvironmentT>;
 };
 

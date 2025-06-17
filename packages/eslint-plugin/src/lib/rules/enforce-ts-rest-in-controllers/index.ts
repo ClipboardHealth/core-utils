@@ -36,7 +36,7 @@ const rule = createRule({
        * highlight usages of those symbols to point out that they need to be
        * imported from the correct source.
        */
-      // eslint-disable-next-line sonarjs/cognitive-complexity
+
       ImportDeclaration(node) {
         if (node.source.value === "@ts-rest/nest") {
           for (const spec of node.specifiers) {
@@ -64,7 +64,7 @@ const rule = createRule({
        * `TsRestHandler` decorator and return the result of `tsRestHandler` as the
        * only expression in it.
        */
-      // eslint-disable-next-line sonarjs/cognitive-complexity, complexity
+
       MethodDefinition(node) {
         const symbolName =
           (node.key.type === AST_NODE_TYPES.Identifier && node.key.name) || "<unknown>";

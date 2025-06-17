@@ -1,21 +1,2 @@
-{
-  "extends": ["<%= offsetFromRoot %>.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
-  "parserOptions": {
-    "project": "tsconfig.lint.json",
-    "tsconfigRootDir": "packages/<%= projectName %>"
-  },
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "unicorn/filename-case": ["error", { "case": "camelCase" }]
-      }
-    }
-  ],
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
-  }
-}
+// This template is deprecated - new packages should use the root eslint.config.js
+// TODO: Update generator to use flat config format or remove this template

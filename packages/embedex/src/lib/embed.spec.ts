@@ -5,14 +5,13 @@ import { join } from "node:path";
 import { embed } from "./embed";
 
 describe("embed", () => {
-  // eslint-disable-next-line no-template-curly-in-string
   const sourceACode = [`const x = "a";`, "", "console.log(`Got ${x}`);"];
   const destinationACode = [
     " *",
     " * ```ts",
     ` * const x = "a";`,
     " *",
-    // eslint-disable-next-line no-template-curly-in-string
+
     " * console.log(`Got ${x}`);",
     " * ```",
     " *",

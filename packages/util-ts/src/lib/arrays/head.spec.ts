@@ -6,7 +6,6 @@ describe("head", () => {
   });
 
   it("returns undefined if empty list", () => {
-    // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
     expect(head([])).toBeUndefined();
   });
 

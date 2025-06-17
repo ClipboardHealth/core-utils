@@ -67,7 +67,7 @@ function updateRootTsConfig(
     (json) => {
       const c = json.compilerOptions;
       c.paths ||= {};
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+
       delete c.paths[options.name];
 
       /* istanbul ignore next */

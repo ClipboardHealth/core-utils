@@ -94,7 +94,6 @@ describe("Option", () => {
     });
 
     it("should return None for undefined value", () => {
-      // eslint-disable-next-line unicorn/no-useless-undefined
       const actual = O.fromNullable(undefined);
       expect(actual).toEqual(O.none);
     });

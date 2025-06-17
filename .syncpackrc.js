@@ -13,11 +13,6 @@ module.exports = {
   ],
   versionGroups: [
     {
-      dependencies: ["eslint", "@typescript-eslint/**"],
-      isIgnored: true,
-      label: "Nx isn't ready for eslint 9 upgrade yet.",
-    },
-    {
       dependencyTypes: ["peer"],
       specifierTypes: "range",
       label: "Allow for flexible peer dependency versions.",

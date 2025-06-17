@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
 import {
@@ -30,4 +29,3 @@ let _includeArticleFieldsTypeCheck: ArticleIncludeFields | undefined;
 
 let _includeCommentFieldsTypeCheck: CommentIncludeFields | undefined;
 //  ^? let _includeCommentFieldsTypeCheck: "user" | "user.articles" | undefined
-/* eslint-enable @typescript-eslint/no-unused-vars */

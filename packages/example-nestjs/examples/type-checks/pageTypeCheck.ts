@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
 import { type query } from "../query";
@@ -33,4 +32,3 @@ const _invalidFieldDataType: Page = {
   // @ts-expect-error: invalid
   size: "10",
 };
-/* eslint-enable @typescript-eslint/no-unused-vars */

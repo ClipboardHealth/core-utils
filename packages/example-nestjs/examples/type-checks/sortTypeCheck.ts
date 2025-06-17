@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
 import { type query } from "../query";
@@ -16,4 +15,3 @@ const _invalidSortField: Sort = ["invalid"];
 
 // @ts-expect-error: invalid
 const _invalidSortDataType: Sort = "age";
-/* eslint-enable @typescript-eslint/no-unused-vars */
