@@ -33,8 +33,28 @@ describe("objectId", () => {
       errorMessage: "Expected string, received number",
     },
     {
-      name: "rejects string with invalid characters",
+      name: "rejects string with invalid hex character 'g'",
       input: "507f1f77bcf86cd79943901g",
+      errorMessage: "Must be a valid ObjectId",
+    },
+    {
+      name: "rejects string with special character '@'",
+      input: "507f1f77bcf86cd799439@11",
+      errorMessage: "Must be a valid ObjectId",
+    },
+    {
+      name: "rejects string with special character '#'",
+      input: "507f1f77bcf86cd799439#11",
+      errorMessage: "Must be a valid ObjectId",
+    },
+    {
+      name: "rejects string with special character '$'",
+      input: "507f1f77bcf86cd799439$11",
+      errorMessage: "Must be a valid ObjectId",
+    },
+    {
+      name: "rejects string with unicode character",
+      input: "507f1f77bcf86cd7994390ñ1",
       errorMessage: "Must be a valid ObjectId",
     },
     {
