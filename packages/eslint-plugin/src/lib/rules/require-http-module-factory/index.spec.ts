@@ -87,18 +87,7 @@ ruleTester.run("require-http-module-factory", rule, {
         export class TestModule {}
       `,
     },
-    {
-      name: "Different module with same name",
-      code: `
-        import { HttpModule } from "some-other-package";
-        import { Module } from "@nestjs/common";
-        
-        @Module({
-          imports: [HttpModule],
-        })
-        export class TestModule {}
-      `,
-    },
+
     {
       name: "HttpModule with alias using registerAsync",
       code: `
@@ -199,6 +188,43 @@ ruleTester.run("require-http-module-factory", rule, {
           messageId: "requireFactory",
           line: 9,
           column: 13,
+        },
+      ],
+    },
+    {
+      name: "HttpModule used without import",
+      code: `
+        import { Module } from "@nestjs/common";
+        
+        @Module({
+          imports: [HttpModule],
+        })
+        export class TestModule {}
+      `,
+      errors: [
+        {
+          messageId: "noImport",
+          line: 5,
+          column: 21,
+        },
+      ],
+    },
+    {
+      name: "HttpModule from wrong package",
+      code: `
+        import { HttpModule } from "some-other-package";
+        import { Module } from "@nestjs/common";
+        
+        @Module({
+          imports: [HttpModule],
+        })
+        export class TestModule {}
+      `,
+      errors: [
+        {
+          messageId: "noImport",
+          line: 6,
+          column: 21,
         },
       ],
     },
