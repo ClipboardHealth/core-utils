@@ -100,6 +100,12 @@ module.exports = {
               "@clipboard-health/enforce-ts-rest-in-controllers": "error",
             },
           },
+          {
+            files: ["**/*.module.ts"],
+            rules: {
+              "@clipboard-health/require-http-module-factory": "error",
+            },
+          },
         ]
       : []),
   ],

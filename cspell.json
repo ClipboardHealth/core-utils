@@ -38,6 +38,7 @@
     "sonarjs",
     "syncpack",
     "toplevel",
+    "TSESTree",
     "typedoc",
     "typeof",
     "unpublish",
