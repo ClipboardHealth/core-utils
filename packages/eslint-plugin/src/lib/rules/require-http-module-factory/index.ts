@@ -28,12 +28,13 @@ const rule = createRule({
       ImportDeclaration(node) {
         if (node.source.value === "@nestjs/axios") {
           for (const spec of node.specifiers) {
-            if (spec.type === AST_NODE_TYPES.ImportSpecifier && 
-                spec.imported.type === AST_NODE_TYPES.Identifier &&
-                spec.imported.name === "HttpModule"
-              ) {
-                httpModuleImportName = spec.local.name;
-              }
+            if (
+              spec.type === AST_NODE_TYPES.ImportSpecifier &&
+              spec.imported.type === AST_NODE_TYPES.Identifier &&
+              spec.imported.name === "HttpModule"
+            ) {
+              httpModuleImportName = spec.local.name;
+            }
           }
         }
       },
