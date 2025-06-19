@@ -8,15 +8,15 @@ import { objectId } from "./objectId";
 describe("objectId", () => {
   it.each<{ input: string; name: string }>([
     {
-      name: "accepts valid ObjectId with lowercase hex (24 chars)",
+      name: "accepts valid ObjectId with lowercase hex",
       input: "507f1f77bcf86cd799439011",
     },
     {
-      name: "accepts valid ObjectId with uppercase hex (24 chars)",
+      name: "accepts valid ObjectId with uppercase hex",
       input: "507F1F77BCF86CD799439011",
     },
     {
-      name: "accepts valid ObjectId with mixed case (24 chars)",
+      name: "accepts valid ObjectId with mixed case",
       input: "507f1F77bcF86cd799439011",
     },
   ])("$name", ({ input }) => {
@@ -58,18 +58,13 @@ describe("objectId", () => {
       errorMessage: "Must be a valid ObjectId",
     },
     {
-      name: "rejects string with 12 characters (not valid for mongoose)",
-      input: "507f1f77bcf8",
+      name: "rejects string that is too short",
+      input: "507f1f77bcf86cd79943901",
       errorMessage: "Must be a valid ObjectId",
     },
     {
-      name: "rejects string with invalid length (13-23 chars)",
-      input: "507f1f77bcf86cd7994390",
-      errorMessage: "Must be a valid ObjectId",
-    },
-    {
-      name: "rejects string that is too long (more than 24 chars)",
-      input: "507f1f77bcf86cd7994390111a",
+      name: "rejects string that is too long",
+      input: "507f1f77bcf86cd7994390111",
       errorMessage: "Must be a valid ObjectId",
     },
     {

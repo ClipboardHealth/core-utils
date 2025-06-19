@@ -4,7 +4,6 @@
   "version": "0.16.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "mongoose": "8.8.4",
     "tslib": "2.8.1"
   },
   "devDependencies": {
