@@ -271,6 +271,12 @@ describe("eslint-config", () => {
             "@clipboard-health/enforce-ts-rest-in-controllers": "error",
           },
         },
+        {
+          files: ["**/*.module.ts"],
+          rules: {
+            "@clipboard-health/require-http-module-factory": "error",
+          },
+        },
       ],
     });
   });
@@ -289,6 +295,12 @@ describe("eslint-config", () => {
           files: ["**/*.controller.ts", "**/*.controllers.ts"],
           rules: {
             "@clipboard-health/enforce-ts-rest-in-controllers": "error",
+          },
+        },
+        {
+          files: ["**/*.module.ts"],
+          rules: {
+            "@clipboard-health/require-http-module-factory": "error",
           },
         },
       ],
