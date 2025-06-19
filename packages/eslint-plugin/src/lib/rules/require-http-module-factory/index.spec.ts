@@ -2,8 +2,11 @@ import { TSESLint } from "@typescript-eslint/utils";
 
 import rule from "./index";
 
+// eslint-disable-next-line n/no-unpublished-require
+const parser = require.resolve("@typescript-eslint/parser");
+
 const ruleTester = new TSESLint.RuleTester({
-  parser: "@typescript-eslint/parser",
+  parser,
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: "module",
