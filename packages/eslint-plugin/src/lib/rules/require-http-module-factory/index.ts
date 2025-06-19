@@ -22,7 +22,7 @@ const rule = createRule({
   },
 
   create(context) {
-    let httpModuleImportName: string | undefined = null;
+    let httpModuleImportName: string | undefined;
 
     return {
       ImportDeclaration(node) {
