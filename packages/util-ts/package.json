@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "type-fest": "4.41.0",
-    "zod": "3.25.65"
+    "zod": "3.25.76"
   },
   "keywords": [
     "typescript",
