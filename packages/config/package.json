@@ -12,7 +12,7 @@
   "devDependencies": {
     "@clipboard-health/contract-core": "0.18.0",
     "zod": "3.25.65",
-    "zod-validation-error": "3.5.1"
+    "zod-validation-error": "3.5.3"
   },
   "keywords": [
     "config",
