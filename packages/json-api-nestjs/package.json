@@ -10,7 +10,7 @@
   "devDependencies": {
     "@clipboard-health/testing-core": "0.16.0",
     "type-fest": "4.41.0",
-    "zod": "3.25.65"
+    "zod": "4.0.14"
   },
   "keywords": [
     "api",
@@ -25,7 +25,7 @@
   "main": "./src/index.js",
   "peerDependencies": {
     "type-fest": "^4",
-    "zod": "^3"
+    "zod": "^3 || ^4.0.0"
   },
   "publishConfig": {
     "access": "public"
