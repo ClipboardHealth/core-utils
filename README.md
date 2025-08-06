@@ -58,7 +58,7 @@ npx nx run [PROJECT_NAME]:[COMMAND]
 # Upgrade Nx
 npx nx migrate latest && \
   npm install && \
-  npm_config_legacy_peer_deps=false npx nx migrate --run-migrations --if-exists
+  npm_config_legacy_peer_deps=false npx nx migrate --runMigrations --ifExists
 ```
 
 ## Adding or porting libraries

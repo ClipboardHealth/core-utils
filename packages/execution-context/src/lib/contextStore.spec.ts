@@ -54,4 +54,30 @@ describe("Context Store", () => {
       }),
     ).rejects.toThrow("testing synchronous error");
   });
+
+  it("should handle addToMetadataList when existing metadata is not an array", async () => {
+    await runWithExecutionContext(newExecutionContext("test"), async () => {
+      // First, add a non-array value to the context
+      addMetadataToLocalContext({ list: "not-an-array" });
+
+      // Then try to add to metadata list - should replace the non-array with a new array
+      addToMetadataList("list", { key: "value" });
+
+      const context = getExecutionContext();
+      expect(context?.metadata?.list).toEqual([{ key: "value" }]);
+    });
+  });
+
+  it("should handle addToMetadataRecord when existing metadata is not a record", async () => {
+    await runWithExecutionContext(newExecutionContext("test"), async () => {
+      // First, add a non-record value to the context
+      addMetadataToLocalContext({ record: "not-a-record" });
+
+      // Then try to add to metadata record - should replace the non-record with a new record
+      addToMetadataRecord("record", { key: "value" });
+
+      const context = getExecutionContext();
+      expect(context?.metadata?.record).toEqual({ key: "value" });
+    });
+  });
 });

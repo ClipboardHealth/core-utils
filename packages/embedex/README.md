@@ -40,7 +40,6 @@ npm install --global embedex
    ```
 
 2. In the destination file, add an `<embedex source="..."></embedex>` tag that includes the source file's path.
-
    - `./README.md`:
 
      ```
@@ -69,7 +68,6 @@ npm install --global embedex
 
 3. Run `npx embedex`.
 4. The source is embedded!
-
    - `./README.md`:
 
      ````

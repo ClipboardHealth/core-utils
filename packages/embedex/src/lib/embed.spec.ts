@@ -70,6 +70,17 @@ describe("embed", () => {
     expect(actual.embeds).toEqual([]);
   });
 
+  it("ignores source files without source marker prefix", async () => {
+    // Create a source file without the "// " prefix
+    await write(paths.sources.a, sourceACode);
+
+    const actual = await embed({ sourcesGlob, cwd, write: false });
+
+    expect(actual.embeds).toEqual([]);
+    expect(actual.sources).toEqual([]);
+    expect(actual.destinations).toEqual([]);
+  });
+
   it("throws for non-existent destinations", async () => {
     await write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]);
 
