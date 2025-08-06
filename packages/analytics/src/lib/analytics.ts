@@ -146,6 +146,7 @@ export class Analytics {
           logParams,
           message: result.left.issues.map((issue) => issue.message).join(", "),
           logFunction: this.logger.error,
+          metadata: { traits },
         });
       } else {
         normalized.phone = result.right;
