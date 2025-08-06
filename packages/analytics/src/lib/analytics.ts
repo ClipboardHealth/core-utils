@@ -91,7 +91,7 @@ export class Analytics {
       this.log({
         logParams,
         logFunction: this.logger.error,
-        metadata: toError(error),
+        metadata: { error: toError(error) },
       });
     }
   }
@@ -122,7 +122,7 @@ export class Analytics {
       this.log({
         logParams,
         logFunction: this.logger.error,
-        metadata: toError(error),
+        metadata: { error: toError(error) },
       });
     }
   }
@@ -159,7 +159,7 @@ export class Analytics {
     logFunction?: LogFunction;
     logParams: LogContext;
     message?: string;
-    metadata?: Record<string, unknown> | Error;
+    metadata?: Record<string, unknown>;
   }): void {
     const { logParams, logFunction = this.logger.info, message, metadata } = params;
 
