@@ -116,7 +116,7 @@ export class Analytics {
       this.segment.track({
         userId: String(userId),
         event,
-        properties: traits,
+        properties: this.normalizeTraits({ logParams, traits }),
       });
     } catch (error) {
       this.log({
