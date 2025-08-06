@@ -30,11 +30,11 @@ const LOG_PARAMS = {
 };
 
 export interface CommonTraits {
-  createdAt?: Date;
-  email?: string;
-  name?: string;
-  phone?: string;
-  type?: string;
+  createdAt?: Date | undefined;
+  email?: string | undefined;
+  name?: string | undefined;
+  phone?: string | undefined;
+  type?: string | undefined;
 }
 
 export type Traits = Record<string, unknown> & Readonly<CommonTraits>;
