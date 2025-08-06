@@ -143,7 +143,7 @@ describe("Analytics", () => {
         destination: "segment.identify",
         traceName: "analytics.identify",
         userId: "user123",
-        ...error,
+        error,
       });
     });
   });
@@ -229,7 +229,7 @@ describe("Analytics", () => {
         destination: "segment.track",
         traceName: "analytics.track",
         userId: "user123",
-        ...error,
+        error,
       });
     });
   });

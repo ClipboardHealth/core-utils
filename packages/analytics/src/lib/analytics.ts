@@ -1,4 +1,10 @@
-import { either as E, type LogFunction, type Logger, toError } from "@clipboard-health/util-ts";
+import {
+  either as E,
+  isString,
+  type LogFunction,
+  type Logger,
+  toError,
+} from "@clipboard-health/util-ts";
 import { Analytics as SegmentAnalytics } from "@segment/analytics-node";
 
 import { formatPhoneAsE164 } from "./formatPhoneAsE164";
@@ -138,7 +144,7 @@ export class Analytics {
     const { logParams, traits } = params;
 
     const normalized = { ...traits };
-    if (traits.phone && typeof traits.phone === "string") {
+    if (traits.phone && isString(traits.phone)) {
       const result = formatPhoneAsE164({ phone: traits.phone });
 
       if (E.isLeft(result)) {
