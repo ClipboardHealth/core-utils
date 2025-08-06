@@ -11,7 +11,8 @@
       "{projectRoot}/**/*",
       "sharedGlobals",
       "!{projectRoot}/**/*.md",
-      "!{projectRoot}/doc/**/*"
+      "!{projectRoot}/doc/**/*",
+      "!{workspaceRoot}/package-lock.json"
     ],
     "production": [
       "default",

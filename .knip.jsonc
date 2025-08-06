@@ -10,6 +10,9 @@
   "ignoreDependencies": ["@nx/webpack", "ts-node", "tslib", "webpack-cli"],
   "webpack": false,
   "workspaces": {
+    "packages/analytics": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
     "packages/config": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
