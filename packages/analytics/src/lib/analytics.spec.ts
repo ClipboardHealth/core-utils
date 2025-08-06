@@ -63,7 +63,10 @@ describe("Analytics", () => {
       analytics.identify(request);
 
       expect(mockSegment.identify).not.toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith("Analytics identify is disabled, skipping", {
+      expect(logger.info).toHaveBeenCalledWith("analytics.identify: disabled, skipping", {
+        destination: "segment.identify",
+        traceName: "analytics.identify",
+        userId: "user123",
         params: request,
       });
     });
@@ -119,6 +122,30 @@ describe("Analytics", () => {
         traits: { email: "test@example.com" },
       });
     });
+
+    it("should handle segment identify errors", () => {
+      const enabled: Enabled = { identify: true, track: true };
+      analytics = new Analytics({ apiKey: "test-key", logger, enabled });
+
+      const request: IdentifyRequest = {
+        userId: "user123",
+        traits: { email: "test@example.com" },
+      };
+
+      const error = new Error("Segment API error");
+      mockSegment.identify.mockImplementationOnce(() => {
+        throw error;
+      });
+
+      analytics.identify(request);
+
+      expect(logger.error).toHaveBeenCalledWith("analytics.identify", {
+        destination: "segment.identify",
+        traceName: "analytics.identify",
+        userId: "user123",
+        error,
+      });
+    });
   });
 
   describe("track", () => {
@@ -154,7 +181,10 @@ describe("Analytics", () => {
       analytics.track(request);
 
       expect(mockSegment.track).not.toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith("Analytics tracking is disabled, skipping", {
+      expect(logger.info).toHaveBeenCalledWith("analytics.track: disabled, skipping", {
+        destination: "segment.track",
+        traceName: "analytics.track",
+        userId: "user123",
         params: request,
       });
     });
@@ -175,6 +205,31 @@ describe("Analytics", () => {
         userId: "456",
         event: "Page View",
         properties: { page: "home" },
+      });
+    });
+
+    it("should handle segment track errors", () => {
+      const enabled: Enabled = { identify: true, track: true };
+      analytics = new Analytics({ apiKey: "test-key", logger, enabled });
+
+      const request: TrackRequest = {
+        userId: "user123",
+        event: "Button Clicked",
+        traits: { buttonName: "Submit" },
+      };
+
+      const error = new Error("Segment track error");
+      mockSegment.track.mockImplementationOnce(() => {
+        throw error;
+      });
+
+      analytics.track(request);
+
+      expect(logger.error).toHaveBeenCalledWith("analytics.track", {
+        destination: "segment.track",
+        traceName: "analytics.track",
+        userId: "user123",
+        error,
       });
     });
   });
