@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/analytics",
-  "description": "",
+  "description": "Type-safe analytics wrapper around our third-party analytics provider for user identification and event tracking.",
   "version": "0.1.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
