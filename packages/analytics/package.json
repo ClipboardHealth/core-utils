@@ -1,16 +1,16 @@
 {
   "name": "@clipboard-health/analytics",
   "description": "",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/util-ts": "3.7.0",
+    "@clipboard-health/util-ts": "3.8.0",
     "@segment/analytics-node": "2.3.0",
     "libphonenumber-js": "1.12.10",
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@clipboard-health/testing-core": "0.16.0"
+    "@clipboard-health/testing-core": "0.17.0"
   },
   "keywords": [],
   "license": "MIT",
