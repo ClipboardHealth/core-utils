@@ -1,9 +1,27 @@
-import { either as E, type Logger } from "@clipboard-health/util-ts";
+import { either as E, type LogFunction, type Logger, toError } from "@clipboard-health/util-ts";
 import { Analytics as SegmentAnalytics } from "@segment/analytics-node";
 
 import { formatPhoneAsE164 } from "./formatPhoneAsE164";
 
-export type UserId = string | number;
+export interface UserId {
+  userId: string | number;
+}
+
+export interface LogContext extends UserId {
+  destination: string;
+  traceName: string;
+}
+
+const LOG_PARAMS = {
+  identify: {
+    traceName: "analytics.identify",
+    destination: "segment.identify",
+  },
+  track: {
+    traceName: "analytics.track",
+    destination: "segment.track",
+  },
+};
 
 export interface CommonTraits {
   createdAt?: Date;
@@ -15,13 +33,11 @@ export interface CommonTraits {
 
 export type Traits = Record<string, unknown> & Readonly<CommonTraits>;
 
-export interface IdentifyRequest {
-  userId: UserId;
+export interface IdentifyRequest extends UserId {
   traits: Traits;
 }
 
-export interface TrackRequest {
-  userId: UserId;
+export interface TrackRequest extends UserId {
   event: string;
   traits: Traits;
 }
@@ -60,15 +76,24 @@ export class Analytics {
   public identify(params: IdentifyRequest): void {
     const { userId, traits } = params;
 
+    const logParams: LogContext = { ...LOG_PARAMS.identify, userId: String(userId) };
     if (!this.enabled.identify) {
-      this.logger.info("Analytics identify is disabled, skipping", { params });
+      this.log({ logParams, message: "disabled, skipping", metadata: { params } });
       return;
     }
 
-    this.segment.identify({
-      userId: String(userId),
-      traits: this.normalizeTraits(traits),
-    });
+    try {
+      this.segment.identify({
+        userId: String(userId),
+        traits: this.normalizeTraits({ logParams, traits }),
+      });
+    } catch (error) {
+      this.log({
+        logParams,
+        logFunction: this.logger.error,
+        metadata: toError(error),
+      });
+    }
   }
 
   /**
@@ -81,18 +106,25 @@ export class Analytics {
   public track(params: TrackRequest): void {
     const { userId, event, traits } = params;
 
+    const logParams: LogContext = { ...LOG_PARAMS.track, userId: String(userId) };
     if (!this.enabled.track) {
-      this.logger.info("Analytics tracking is disabled, skipping", {
-        params,
-      });
+      this.log({ logParams, message: "disabled, skipping", metadata: { params } });
       return;
     }
 
-    this.segment.track({
-      userId: String(userId),
-      event,
-      properties: traits,
-    });
+    try {
+      this.segment.track({
+        userId: String(userId),
+        event,
+        properties: traits,
+      });
+    } catch (error) {
+      this.log({
+        logParams,
+        logFunction: this.logger.error,
+        metadata: toError(error),
+      });
+    }
   }
 
   /**
@@ -102,14 +134,18 @@ export class Analytics {
    * See https://docs.knock.app/api-reference/users/update
    * See https://www.braze.com/docs/user_guide/message_building_by_channel/sms_mms_rcs/user_phone_numbers
    */
-  private normalizeTraits(traits: Traits): Traits {
+  private normalizeTraits(params: { logParams: LogContext; traits: Traits }): Traits {
+    const { logParams, traits } = params;
+
     const normalized = { ...traits };
     if (traits.phone && typeof traits.phone === "string") {
       const result = formatPhoneAsE164({ phone: traits.phone });
 
       if (E.isLeft(result)) {
-        this.logger.error(result.left.issues.map((issue) => issue.message).join(", "), {
-          phone: traits.phone,
+        this.log({
+          logParams,
+          message: result.left.issues.map((issue) => issue.message).join(", "),
+          logFunction: this.logger.error,
         });
       } else {
         normalized.phone = result.right;
@@ -117,5 +153,19 @@ export class Analytics {
     }
 
     return normalized;
+  }
+
+  private log(params: {
+    logFunction?: LogFunction;
+    logParams: LogContext;
+    message?: string;
+    metadata?: Record<string, unknown> | Error;
+  }): void {
+    const { logParams, logFunction = this.logger.info, message, metadata } = params;
+
+    logFunction(message ? `${logParams.traceName}: ${message}` : logParams.traceName, {
+      ...logParams,
+      ...metadata,
+    });
   }
 }
