@@ -17,7 +17,7 @@ jobs:
   initialize:
     runs-on: [self-hosted, cbh-amazon-linux-2023]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: echo "nvmrc=$(cat .nvmrc)" >> $GITHUB_OUTPUT
         id: nvm
     outputs:
@@ -28,13 +28,13 @@ jobs:
     needs: [initialize]
     runs-on: [self-hosted, cbh-amazon-linux-2023]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: github.event_name == 'pull_request'
         with:
           fetch-depth: 0
           # GitHub checks PRs out based on the merge commit; we want the branch HEAD.
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: github.event_name != 'pull_request'
         with:
           fetch-depth: 0
@@ -62,7 +62,7 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
