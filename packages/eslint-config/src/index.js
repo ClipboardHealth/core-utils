@@ -92,6 +92,34 @@ module.exports = {
         ],
       },
     },
+    /**
+     * Ban isDefined from class-validator outside of DTO files
+     */
+    {
+      files: ["**/*.dto.ts"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              // We want `ObjectId` to be imported from `mongoose` only
+              {
+                importNames: ["ObjectId", "ObjectID"],
+                message:
+                  'Importing `ObjectId` from `mongodb` is not allowed. Use `import { Types } from "mongoose"` and then `Types.ObjectId` instead.',
+                name: "mongodb",
+              },
+              {
+                name: "date-fns-tz",
+                message:
+                  "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+              },
+              // isDefined is allowed in DTO files, so we don't include it here
+            ],
+          },
+        ],
+      },
+    },
     ...(isOutsideCoreUtilsMonorepo
       ? [
           {
@@ -198,6 +226,12 @@ module.exports = {
             name: "date-fns-tz",
             message:
               "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+          },
+          {
+            importNames: ["isDefined"],
+            message:
+              "Importing `isDefined` from `class-validator` is not allowed except in DTO files (*.dto.ts). Use a different validation approach or move this logic to a DTO.",
+            name: "class-validator",
           },
         ],
       },
