@@ -6,7 +6,7 @@
   "dependencies": {
     "@clipboard-health/util-ts": "3.8.1",
     "@segment/analytics-node": "2.3.0",
-    "libphonenumber-js": "1.12.12",
+    "libphonenumber-js": "1.12.13",
     "tslib": "2.8.1"
   },
   "devDependencies": {
