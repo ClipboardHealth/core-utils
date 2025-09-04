@@ -11,6 +11,7 @@
     "moduleResolution": "Node10",
     "paths": {
       "@clipboard-health/analytics": ["packages/analytics/src/index.ts"],
+      "@clipboard-health/axios-error": ["packages/axios-error/src/index.ts"],
       "@clipboard-health/config": ["packages/config/src/index.ts"],
       "@clipboard-health/contract-core": ["packages/contract-core/src/index.ts"],
       "@clipboard-health/eslint-config": ["packages/eslint-config/src/index.js"],

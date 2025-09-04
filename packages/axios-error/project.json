@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "axios-error",
+  "projectType": "library",
+  "sourceRoot": "packages/axios-error/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/axios-error/*.md"],
+        "main": "packages/axios-error/src/index.js",
+        "outputPath": "dist/packages/axios-error",
+        "tsConfig": "packages/axios-error/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/axios-error/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/axios-error/jest.config.ts"
+      }
+    }
+  }
+}

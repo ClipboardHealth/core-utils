@@ -1,0 +1,46 @@
+{
+  "name": "@clipboard-health/axios-error",
+  "description": "An axios error handling library with comprehensive error classification, and type narrowing",
+  "version": "0.0.0",
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "dependencies": {
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "axios": "1.7.0"
+  },
+  "optionalDependencies": {
+    "@nestjs/common": "^10.0.0"
+  },
+  "keywords": [
+    "axios",
+    "error-classification",
+    "error-handling",
+    "http",
+    "network-errors",
+    "typescript"
+  ],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "peerDependencies": {
+    "axios": "^1.7.0 || ^1.8.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "packages/axios-error",
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+  },
+  "bin": {
+    "test-single-version": "src/scripts/test-single-version.sh"
+  },
+  "scripts": {
+    "compatibility:report": "tsx src/scripts/generate-compatibility-docs.ts",
+    "test:axios-version": "src/scripts/test-single-version.sh",
+    "test:axios-versions": "tsx src/scripts/test-axios-versions.ts"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}
