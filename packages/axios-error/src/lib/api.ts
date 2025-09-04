@@ -48,10 +48,7 @@ export const AxiosError = {
    * }
    * ```
    */
-  async fromPromise<T>(
-    promise: AxiosPromise<T>,
-    config?: ExtractionConfig,
-  ): Promise<Result<T>> {
+  async fromPromise<T>(promise: AxiosPromise<T>, config?: ExtractionConfig): Promise<Result<T>> {
     try {
       const response = await promise;
       return {

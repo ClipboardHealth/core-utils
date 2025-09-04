@@ -385,8 +385,6 @@ export const builtInMessageExtractors: Record<string, MessageExtractor> = {
         return object["title"];
       }
     }
-
-    
   },
 
   /**
@@ -403,8 +401,6 @@ export const builtInMessageExtractors: Record<string, MessageExtractor> = {
         return object["error"];
       }
     }
-
-    
   },
 
   /**
@@ -421,8 +417,6 @@ export const builtInMessageExtractors: Record<string, MessageExtractor> = {
         return object["error"];
       }
     }
-
-    
   },
 };
 
@@ -440,8 +434,6 @@ export const builtInCodeExtractors: Record<string, CodeExtractor> = {
         return object["type"];
       }
     }
-
-    
   },
 
   /**
@@ -460,8 +452,6 @@ export const builtInCodeExtractors: Record<string, CodeExtractor> = {
         }
       }
     }
-
-    
   },
 };
 

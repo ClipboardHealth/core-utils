@@ -10,7 +10,7 @@ import { type AxiosError, type AxiosRequestConfig, type AxiosResponse } from "ax
 /**
  * Configuration for creating test axios errors
  */
-export interface AxiosErrorTestConfig {
+interface AxiosErrorTestConfig {
   message?: string;
   code?: string;
   config?: Partial<AxiosRequestConfig>;
@@ -22,7 +22,7 @@ export interface AxiosErrorTestConfig {
 /**
  * Creates a real AxiosError instance for testing
  */
-export function createAxiosError(config: AxiosErrorTestConfig = {}): AxiosError {
+function createAxiosError(config: AxiosErrorTestConfig = {}): AxiosError {
   const {
     message = "Request failed",
     code,
@@ -83,7 +83,7 @@ export function createAxiosError(config: AxiosErrorTestConfig = {}): AxiosError 
 /**
  * Creates network error scenarios
  */
-export const networkErrors = {
+const networkErrors = {
   connectionRefused: (): AxiosError =>
     createAxiosError({
       message: "connect ECONNREFUSED 127.0.0.1:3000",
@@ -124,7 +124,7 @@ export const networkErrors = {
 /**
  * Creates timeout error scenarios
  */
-export const timeoutErrors = {
+const timeoutErrors = {
   requestTimeout: (): AxiosError =>
     createAxiosError({
       message: "timeout of 5000ms exceeded",
@@ -150,7 +150,7 @@ export const timeoutErrors = {
 /**
  * Creates response error scenarios with various data formats
  */
-export const responseErrors = {
+const responseErrors = {
   simpleMessage: (status = 400, message = "Bad Request"): AxiosError =>
     createAxiosError({
       message: `Request failed with status code ${status}`,
@@ -310,7 +310,7 @@ export const responseErrors = {
 /**
  * Creates configuration error scenarios
  */
-export const configurationErrors = {
+const configurationErrors = {
   badOption: (): AxiosError =>
     createAxiosError({
       message: "Invalid option provided",
@@ -339,7 +339,7 @@ export const configurationErrors = {
 /**
  * Creates abort/cancellation error scenarios
  */
-export const abortErrors = {
+const abortErrors = {
   canceled: (): AxiosError =>
     createAxiosError({
       message: "Request canceled",
@@ -362,7 +362,7 @@ export const abortErrors = {
 /**
  * Creates parse error scenarios
  */
-export const parseErrors = {
+const parseErrors = {
   jsonParse: (): AxiosError =>
     createAxiosError({
       message: "Unexpected token < in JSON at position 0",
@@ -393,7 +393,7 @@ export const parseErrors = {
 /**
  * Creates unknown/unclassified error scenarios
  */
-export const unknownErrors = {
+const unknownErrors = {
   nonAxiosError: (): Error => new Error("Not an axios error"),
 
   weirdAxiosError: (): AxiosError =>

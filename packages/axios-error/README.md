@@ -4,19 +4,21 @@ Comprehensive axios error handling with intelligent classification and data extr
 
 ```typescript
 // Before: Manual error handling
-const message = error.response?.data?.message || 
-                error.response?.data?.error?.message || 
-                error.message || 'Unknown error';
+const message =
+  error.response?.data?.message ||
+  error.response?.data?.error?.message ||
+  error.message ||
+  "Unknown error";
 
 // After: Structured approach
-import { AxiosError } from '@clipboard-health/axios-error';
+import { AxiosError } from "@clipboard-health/axios-error";
 const { userMessage, isRetryable } = AxiosError.from(error);
 ```
 
 ## Features
 
 - **Error Classification**: 7 distinct error types with TypeScript narrowing
-- **Data Extraction**: Automatic message extraction from various API formats  
+- **Data Extraction**: Automatic message extraction from various API formats
 - **Retry Logic**: Built-in retryability detection
 - **Type Safety**: Full TypeScript support with discriminated unions
 - **Framework Integration**: Built-in helpers for NestJS, Express, and generic APIs
@@ -31,21 +33,21 @@ npm install @clipboard-health/axios-error
 ## Basic Usage
 
 ```typescript
-import axios from 'axios';
-import { AxiosError } from '@clipboard-health/axios-error';
+import axios from "axios";
+import { AxiosError } from "@clipboard-health/axios-error";
 
 // Simple error handling - get what you need directly
 try {
-  await axios.get('https://api.example.com/users');
+  await axios.get("https://api.example.com/users");
 } catch (error) {
   const axiosError = AxiosError.from(error);
-  
+
   // Direct access to common properties
-  console.log(axiosError.userMessage);  // "Unable to connect to server"
-  console.log(axiosError.message);      // Technical details
-  console.log(axiosError.isRetryable);  // true
-  console.log(axiosError.httpStatus);   // 503
-  
+  console.log(axiosError.userMessage); // "Unable to connect to server"
+  console.log(axiosError.message); // Technical details
+  console.log(axiosError.isRetryable); // true
+  console.log(axiosError.httpStatus); // 503
+
   // Optional: Use type guards for specific error handling
   if (axiosError.isNetworkError()) {
     console.log(`Network error: ${axiosError.details.code}`); // "ECONNREFUSED"
@@ -53,9 +55,7 @@ try {
 }
 
 // Result pattern (never throws)
-const { data, error } = await AxiosError.fromPromise(
-  axios.get('https://api.example.com/users')
-);
+const { data, error } = await AxiosError.fromPromise(axios.get("https://api.example.com/users"));
 
 if (error) {
   console.log(error.userMessage); // User-friendly message
@@ -63,7 +63,7 @@ if (error) {
   return;
 }
 
-console.log('Success:', data);
+console.log("Success:", data);
 ```
 
 ## Direct Property Access
@@ -74,11 +74,11 @@ All enhanced errors provide these properties without type checking:
 const axiosError = AxiosError.from(error);
 
 // Always available
-axiosError.userMessage;  // User-friendly message for display
-axiosError.message;      // Technical message for logging
-axiosError.isRetryable;  // Whether this error should be retried
-axiosError.httpStatus;   // Appropriate HTTP status code
-axiosError.code;         // Error code (when available)
+axiosError.userMessage; // User-friendly message for display
+axiosError.message; // Technical message for logging
+axiosError.isRetryable; // Whether this error should be retried
+axiosError.httpStatus; // Appropriate HTTP status code
+axiosError.code; // Error code (when available)
 ```
 
 ## Data Extraction
@@ -103,21 +103,21 @@ Automatically extracts meaningful messages from any API format:
 // }
 
 try {
-  await axios.post('/api/assign-shift', { shiftId, employeeId });
+  await axios.post("/api/assign-shift", { shiftId, employeeId });
 } catch (error) {
   const axiosError = AxiosError.from(error);
-  
+
   // Direct access - gets the meaningful message automatically
-  console.log(axiosError.userMessage);    // "The shift is not available to the employee"
-  console.log(axiosError.message);        // "Request failed with status code 400"
-  console.log(axiosError.httpStatus);     // 400 (HTTP status code)
-  console.log(axiosError.code);           // "SHIFT_UNAVAILABLE" (error code)
-  console.log(axiosError.isRetryable);    // false (4xx error)
-  
+  console.log(axiosError.userMessage); // "The shift is not available to the employee"
+  console.log(axiosError.message); // "Request failed with status code 400"
+  console.log(axiosError.httpStatus); // 400 (HTTP status code)
+  console.log(axiosError.code); // "SHIFT_UNAVAILABLE" (error code)
+  console.log(axiosError.isRetryable); // false (4xx error)
+
   // Access full response data if needed
   if (axiosError.isResponseError()) {
-    console.log(axiosError.details.data);            // Full response data
-    console.log(axiosError.details.extractedCode);   // "SHIFT_UNAVAILABLE"
+    console.log(axiosError.details.data); // Full response data
+    console.log(axiosError.details.extractedCode); // "SHIFT_UNAVAILABLE"
     console.log(axiosError.details.extractedDetails); // { shiftId: "12345", ... }
   }
 }
@@ -135,25 +135,25 @@ try {
 // }
 
 try {
-  await axios.post('/api/register', userData);
+  await axios.post("/api/register", userData);
 } catch (error) {
   const axiosError = AxiosError.from(error);
-  
+
   // Quick access to first error
   console.log(axiosError.userMessage); // "Email is required"
-  
+
   // Access all validation errors
   if (axiosError.isResponseError()) {
     const allErrors = axiosError.details.data.errors;
-    allErrors.forEach(err => {
+    allErrors.forEach((err) => {
       console.log(`${err.field}: ${err.message}`);
     });
-    
+
     // Or send full error structure to monitoring
-    logger.error('Validation failed', {
+    logger.error("Validation failed", {
       errors: allErrors,
       userId: userData.id,
-      endpoint: '/api/register'
+      endpoint: "/api/register",
     });
   }
 }
@@ -163,18 +163,18 @@ try {
 
 ```typescript
 try {
-  await axios.get('/api/data');
+  await axios.get("/api/data");
 } catch (error) {
   const axiosError = AxiosError.from(error);
-  
+
   // Enhanced properties
-  console.log(axiosError.userMessage);  // Processed user message
-  console.log(axiosError.isRetryable);  // Retry recommendation
-  
+  console.log(axiosError.userMessage); // Processed user message
+  console.log(axiosError.isRetryable); // Retry recommendation
+
   // Full raw access
-  console.log(axiosError.details.data);          // Full response body
+  console.log(axiosError.details.data); // Full response body
   console.log(axiosError.details.originalError); // Original axios error
-  console.log(axiosError.toJSON());              // Complete error info for logging
+  console.log(axiosError.toJSON()); // Complete error info for logging
 }
 ```
 
@@ -184,7 +184,7 @@ try {
 // Response: { errors: [{ message: "User not found", extensions: { code: "USER_NOT_FOUND" } }] }
 const axiosError = AxiosError.from(error, presets.graphql());
 console.log(axiosError.details.extractedMessage); // "User not found"
-console.log(axiosError.details.extractedCode);    // "USER_NOT_FOUND"
+console.log(axiosError.details.extractedCode); // "USER_NOT_FOUND"
 ```
 
 ### JSON:API Specification
@@ -193,7 +193,7 @@ console.log(axiosError.details.extractedCode);    // "USER_NOT_FOUND"
 // Response: { errors: [{ detail: "Email is invalid", code: "INVALID_EMAIL" }] }
 const axiosError = AxiosError.from(error, presets.jsonApi());
 console.log(axiosError.details.extractedMessage); // "Email is invalid"
-console.log(axiosError.details.extractedCode);    // "INVALID_EMAIL"
+console.log(axiosError.details.extractedCode); // "INVALID_EMAIL"
 ```
 
 ### RFC 7807 Problem Details
@@ -202,10 +202,10 @@ console.log(axiosError.details.extractedCode);    // "INVALID_EMAIL"
 // Response: { detail: "Insufficient funds", type: "insufficient-funds" }
 const axiosError = AxiosError.from(error, presets.rfc7807());
 console.log(axiosError.details.extractedMessage); // "Insufficient funds"
-console.log(axiosError.details.extractedCode);    // "insufficient-funds"
+console.log(axiosError.details.extractedCode); // "insufficient-funds"
 ```
 
-### Spring Boot / Laravel / Custom APIs
+### Custom APIs
 
 ```typescript
 // Works with ANY API format - automatically detects patterns
@@ -220,14 +220,8 @@ console.log(axiosError.details.extractedMessage); // Intelligent extraction
 ```typescript
 // Handle proprietary API formats
 const customConfig = {
-  messageExtractors: [
-    (data) => data?.result?.errorDescription,
-    (data) => data?.fault?.detail
-  ],
-  codeExtractors: [
-    (data) => data?.result?.errorCode,
-    (data) => data?.fault?.code
-  ]
+  messageExtractors: [(data) => data?.result?.errorDescription, (data) => data?.fault?.detail],
+  codeExtractors: [(data) => data?.result?.errorCode, (data) => data?.fault?.code],
 };
 
 const axiosError = AxiosError.from(error, customConfig);
@@ -242,9 +236,9 @@ Use type guards when you need specific error details:
 ```typescript
 // DNS resolution failed, connection refused, etc.
 if (axiosError.isNetworkError()) {
-  console.log(axiosError.details.code);        // "ECONNREFUSED" | "ENOTFOUND" | etc.
-  console.log(axiosError.isRetryable);         // Intelligent retry logic
-  console.log(axiosError.userMessage);        // "Unable to connect to server"
+  console.log(axiosError.details.code); // "ECONNREFUSED" | "ENOTFOUND" | etc.
+  console.log(axiosError.isRetryable); // Intelligent retry logic
+  console.log(axiosError.userMessage); // "Unable to connect to server"
 }
 ```
 
@@ -253,9 +247,9 @@ if (axiosError.isNetworkError()) {
 ```typescript
 // Request or response timeouts
 if (axiosError.isTimeoutError()) {
-  console.log(axiosError.details.timeout);     // 5000
+  console.log(axiosError.details.timeout); // 5000
   console.log(axiosError.details.timeoutType); // "request" | "response"
-  console.log(axiosError.isRetryable);         // true (always retryable)
+  console.log(axiosError.isRetryable); // true (always retryable)
 }
 ```
 
@@ -264,10 +258,10 @@ if (axiosError.isTimeoutError()) {
 ```typescript
 // 4xx/5xx status codes with intelligent data extraction
 if (axiosError.isResponseError()) {
-  console.log(axiosError.details.status);            // 422
-  console.log(axiosError.details.extractedMessage);  // "Email is required"
-  console.log(axiosError.details.extractedCode);     // "VALIDATION_ERROR"
-  console.log(axiosError.isRetryable);               // false (4xx) | true (5xx)
+  console.log(axiosError.details.status); // 422
+  console.log(axiosError.details.extractedMessage); // "Email is required"
+  console.log(axiosError.details.extractedCode); // "VALIDATION_ERROR"
+  console.log(axiosError.isRetryable); // false (4xx) | true (5xx)
 }
 ```
 
@@ -277,7 +271,7 @@ if (axiosError.isResponseError()) {
 // Invalid URLs, malformed requests, etc.
 if (axiosError.isConfigurationError()) {
   console.log(axiosError.details.configField); // "url" | "timeout" | etc.
-  console.log(axiosError.isRetryable);         // false (fix your code!)
+  console.log(axiosError.isRetryable); // false (fix your code!)
 }
 ```
 
@@ -287,7 +281,7 @@ if (axiosError.isConfigurationError()) {
 // Malformed JSON, XML, etc.
 if (axiosError.isParseError()) {
   console.log(axiosError.details.parseType); // "json" | "xml" | "text"
-  console.log(axiosError.details.rawData);   // Raw response data
+  console.log(axiosError.details.rawData); // Raw response data
 }
 ```
 
@@ -300,19 +294,18 @@ if (axiosError.isAbortError()) {
 }
 ```
 
-
 ## Framework Integrations
 
 ### NestJS
 
 ```typescript
-import { integrations } from '@clipboard-health/axios-error';
+import { integrations } from "@clipboard-health/axios-error";
 
 @Controller()
 export class UsersController {
   async getUsers() {
     try {
-      return await this.httpService.get('/users').toPromise();
+      return await this.httpService.get("/users").toPromise();
     } catch (error) {
       // Automatically creates proper HttpException
       throw integrations.toHttpException(error);
@@ -326,7 +319,7 @@ export class UsersController {
 ```typescript
 app.use(async (req, res, next) => {
   try {
-    const data = await axios.get('https://api.example.com/data');
+    const data = await axios.get("https://api.example.com/data");
     res.json(data);
   } catch (error) {
     const response = integrations.toExpressResponse(error);
@@ -359,18 +352,18 @@ const apiResponse = integrations.toApiResponse(error);
 For one-off extractions without creating an AxiosError instance:
 
 ```typescript
-import { 
-  extractMessage, 
-  extractUserMessage, 
-  isRetryable, 
-  getHttpStatus 
-} from '@clipboard-health/axios-error';
+import {
+  extractMessage,
+  extractUserMessage,
+  isRetryable,
+  getHttpStatus,
+} from "@clipboard-health/axios-error";
 
 // Quick extractions
-const technicalMessage = extractMessage(error);    // "Request failed with status code 400"
-const userMessage = extractUserMessage(error);     // "Invalid request. Please check your input."
-const shouldRetry = isRetryable(error);            // false
-const httpStatus = getHttpStatus(error);           // 400
+const technicalMessage = extractMessage(error); // "Request failed with status code 400"
+const userMessage = extractUserMessage(error); // "Invalid request. Please check your input."
+const shouldRetry = isRetryable(error); // false
+const httpStatus = getHttpStatus(error); // 400
 ```
 
 ## Retry Logic Example
@@ -378,19 +371,19 @@ const httpStatus = getHttpStatus(error);           // 400
 ```typescript
 async function fetchWithRetry(url: string, maxRetries = 3) {
   let attempt = 0;
-  
+
   while (attempt < maxRetries) {
     try {
       return await axios.get(url);
     } catch (error) {
       const axiosError = AxiosError.from(error);
-      
+
       if (!axiosError.isRetryable || attempt === maxRetries - 1) {
         throw axiosError;
       }
-      
+
       const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
       attempt++;
     }
   }
@@ -403,16 +396,16 @@ async function fetchWithRetry(url: string, maxRetries = 3) {
 
 ```typescript
 try {
-  await axios.get('/api/users');
+  await axios.get("/api/users");
 } catch (error) {
   const axiosError = AxiosError.from(error);
-  
+
   logger.error({
     message: axiosError.userMessage,
     type: axiosError.details.type,
     retryable: axiosError.isRetryable,
     httpStatus: axiosError.httpStatus,
-    details: axiosError.toJSON()
+    details: axiosError.toJSON(),
   });
 }
 ```
@@ -422,13 +415,13 @@ try {
 ```typescript
 function sendToMonitoring(error: unknown) {
   const axiosError = AxiosError.from(error);
-  
-  monitoring.track('api_error', {
+
+  monitoring.track("api_error", {
     type: axiosError.details.type,
     message: axiosError.userMessage,
     retryable: axiosError.isRetryable,
     httpStatus: axiosError.httpStatus,
-    severity: axiosError.isRetryable ? 'medium' : 'high'
+    severity: axiosError.isRetryable ? "medium" : "high",
   });
 }
 ```
@@ -436,21 +429,23 @@ function sendToMonitoring(error: unknown) {
 ### Custom Error Handler Factory
 
 ```typescript
-function createErrorHandler(options: {
-  logErrors?: boolean;
-  throwOnNonRetryable?: boolean;
-} = {}) {
+function createErrorHandler(
+  options: {
+    logErrors?: boolean;
+    throwOnNonRetryable?: boolean;
+  } = {},
+) {
   return (error: unknown) => {
     const axiosError = AxiosError.from(error);
-    
+
     if (options.logErrors) {
       console.error(axiosError.toJSON());
     }
-    
+
     if (options.throwOnNonRetryable && !axiosError.isRetryable) {
       throw new Error(axiosError.userMessage);
     }
-    
+
     return axiosError;
   };
 }
@@ -460,26 +455,26 @@ const handleError = createErrorHandler({ logErrors: true, throwOnNonRetryable: t
 
 ## Error Classification Reference
 
-| Error Type | Description | Retryable | HTTP Status |
-|------------|-------------|-----------|-------------|
-| `network` | Connection issues, DNS failures | Smart logic | 503 |
-| `timeout` | Request/response timeouts | Yes | 408 |
-| `response` | HTTP 4xx/5xx responses | 5xx only | Actual status |
-| `configuration` | Invalid URLs, malformed config | No | 400 |
-| `parse` | Malformed JSON/XML responses | No | 400 |
-| `abort` | Cancelled/aborted requests | No | 499 |
-| `unknown` | Unclassified errors | Yes (safe default) | 500 |
+| Error Type      | Description                     | Retryable          | HTTP Status   |
+| --------------- | ------------------------------- | ------------------ | ------------- |
+| `network`       | Connection issues, DNS failures | Smart logic        | 503           |
+| `timeout`       | Request/response timeouts       | Yes                | 408           |
+| `response`      | HTTP 4xx/5xx responses          | 5xx only           | Actual status |
+| `configuration` | Invalid URLs, malformed config  | No                 | 400           |
+| `parse`         | Malformed JSON/XML responses    | No                 | 400           |
+| `abort`         | Cancelled/aborted requests      | No                 | 499           |
+| `unknown`       | Unclassified errors             | Yes (safe default) | 500           |
 
 ## Network Error Retryability
 
-| Error Code | Retryable | Reason |
-|------------|-----------|---------|
-| `ECONNREFUSED` | No | Server refusing connections |
-| `ENOTFOUND` | Yes | Temporary DNS issues |
-| `ECONNRESET` | Yes | Connection reset by peer |
-| `ETIMEDOUT` | Yes | Network timeout |
-| `EHOSTUNREACH` | Yes | Routing issues |
-| `ENETDOWN` | Yes | Network interface down |
+| Error Code     | Retryable | Reason                      |
+| -------------- | --------- | --------------------------- |
+| `ECONNREFUSED` | No        | Server refusing connections |
+| `ENOTFOUND`    | Yes       | Temporary DNS issues        |
+| `ECONNRESET`   | Yes       | Connection reset by peer    |
+| `ETIMEDOUT`    | Yes       | Network timeout             |
+| `EHOSTUNREACH` | Yes       | Routing issues              |
+| `ENETDOWN`     | Yes       | Network interface down      |
 
 ## API Reference
 
@@ -488,6 +483,7 @@ const handleError = createErrorHandler({ logErrors: true, throwOnNonRetryable: t
 Main entry point - converts any error into an enhanced axios error.
 
 **Parameters:**
+
 - `error: unknown` - Any error object
 - `config?: ExtractionConfig` - Optional extraction configuration
 
@@ -498,15 +494,14 @@ Main entry point - converts any error into an enhanced axios error.
 Wraps an axios promise and returns a Result type instead of throwing.
 
 **Parameters:**
+
 - `promise: AxiosPromise<T>` - Axios promise
 - `config?: ExtractionConfig` - Optional extraction configuration
 
 **Returns:** `Promise<Result<T>>`
 
 ```typescript
-type Result<T> = 
-  | { data: T; error: null }
-  | { data: null; error: EnhancedAxiosError };
+type Result<T> = { data: T; error: null } | { data: null; error: EnhancedAxiosError };
 ```
 
 ### Type Guards
@@ -559,9 +554,9 @@ const axiosError = AxiosError.from(error);
 
 if (axiosError.isResponseError()) {
   // TypeScript knows this is a ResponseError
-  console.log(axiosError.details.status);     // Type: number
-  console.log(axiosError.details.data);       // Type: any
-  console.log(axiosError.details.headers);    // Type: Record<string, string>
+  console.log(axiosError.details.status); // Type: number
+  console.log(axiosError.details.data); // Type: any
+  console.log(axiosError.details.headers); // Type: Record<string, string>
 }
 ```
 

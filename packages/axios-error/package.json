@@ -9,9 +9,6 @@
   "devDependencies": {
     "axios": "1.7.0"
   },
-  "optionalDependencies": {
-    "@nestjs/common": "^10.0.0"
-  },
   "keywords": [
     "axios",
     "error-classification",
@@ -22,6 +19,9 @@
   ],
   "license": "MIT",
   "main": "./src/index.js",
+  "optionalDependencies": {
+    "@nestjs/common": "^10.0.0"
+  },
   "peerDependencies": {
     "axios": "^1.7.0 || ^1.8.0"
   },
@@ -33,13 +33,9 @@
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
-  "bin": {
-    "test-single-version": "src/scripts/test-single-version.sh"
-  },
   "scripts": {
-    "compatibility:report": "tsx src/scripts/generate-compatibility-docs.ts",
-    "test:axios-version": "src/scripts/test-single-version.sh",
-    "test:axios-versions": "tsx src/scripts/test-axios-versions.ts"
+    "compatibility:report": "tsx src/scripts/generateCompatibilityDocs.ts",
+    "test:versions": "tsx src/scripts/testAxiosVersions.ts"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
