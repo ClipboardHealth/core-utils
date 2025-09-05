@@ -148,7 +148,6 @@ export class ServiceError extends Error {
   /**
    * Merges multiple ServiceErrors into a single ServiceError.
    * Combines all issues from the input errors and uses the highest status code.
-   * The cause is taken from the first error that has one.
    *
    * @param error - The primary error
    * @param errors - Additional ServiceErrors

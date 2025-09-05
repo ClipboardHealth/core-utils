@@ -27,9 +27,9 @@ export function success<A>(value: A): ServiceResult<A> {
   const base = right(value) as ServiceResult<A>;
   Object.defineProperties(base, {
     isSuccess: { get: () => true, enumerable: true },
-    value: { get: () => value, enumerable: true },
+    value: { get: () => base, enumerable: true },
   });
-  return base;
+  return Object.freeze(base) as ServiceResult<A>;
 }
 
 /**
@@ -41,9 +41,9 @@ export function failure<A = never>(params: ServiceErrorParams | ServiceError): S
   const base = left(error) as ServiceResult<A>;
   Object.defineProperties(base, {
     isSuccess: { get: () => false, enumerable: true },
-    error: { get: () => error, enumerable: true },
+    error: { get: () => base, enumerable: true },
   });
-  return base;
+  return Object.freeze(base) as ServiceResult<A>;
 }
 
 /**
