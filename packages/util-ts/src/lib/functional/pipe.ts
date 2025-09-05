@@ -70,7 +70,7 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
  * <embedex source="packages/util-ts/examples/pipe.ts">
  *
  * ```ts
- * import { equal } from "node:assert/strict";
+ * import { strictEqual } from "node:assert/strict";
  *
  * import { pipe } from "@clipboard-health/util-ts";
  *
@@ -82,7 +82,7 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
  *   (array) => array.join(" "),
  * );
  *
- * equal(result, "Hello World");
+ * strictEqual(result, "Hello World");
  * ```
  *
  * </embedex>

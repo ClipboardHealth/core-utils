@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";
 import { either as E } from "@clipboard-health/util-ts";
@@ -16,4 +16,4 @@ const value = divide(10, 0);
 expectToBeLeft(value);
 
 // Narrowed to Left
-equal(value.left, "Cannot divide by zero");
+strictEqual(value.left, "Cannot divide by zero");

@@ -3,9 +3,7 @@ import { type either as E, type ServiceError, type ServiceResult } from "@clipbo
 import { expectToBeLeft } from "./expectToBeLeft";
 
 /**
- * Asserts and narrows the type of the provided ServiceResult value to Failure (Left with ServiceError).
- * @param value - The ServiceResult value to check
- * @throws {AssertionError} If the value is undefined or not a Failure
+ * Alias for {@link expectToBeLeft}
  */
 export function expectToBeFailure<A>(
   value: ServiceResult<A> | undefined,

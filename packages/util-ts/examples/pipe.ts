@@ -1,5 +1,5 @@
 // packages/util-ts/src/lib/functional/pipe.ts,packages/util-ts/README.md
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";
 
@@ -11,4 +11,4 @@ const result = pipe(
   (array) => array.join(" "),
 );
 
-equal(result, "Hello World");
+strictEqual(result, "Hello World");

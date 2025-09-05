@@ -1,5 +1,5 @@
 // packages/util-ts/src/lib/functional/serviceResult.ts,packages/util-ts/README.md
-import { equal, ok } from "node:assert/strict";
+import { ok, strictEqual } from "node:assert/strict";
 
 import { fromSafeParseReturnType, isFailure, isSuccess } from "@clipboard-health/util-ts";
 import { z } from "zod";
@@ -10,7 +10,7 @@ const validData = { name: "John", age: 30 };
 const successResult = fromSafeParseReturnType(schema.safeParse(validData));
 
 ok(isSuccess(successResult));
-equal(successResult.right.name, "John");
+strictEqual(successResult.right.name, "John");
 
 const invalidData = { name: "John", age: "thirty" };
 const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));

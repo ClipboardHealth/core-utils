@@ -1,5 +1,5 @@
 // packages/util-ts/src/lib/functional/serviceResult.ts,packages/util-ts/README.md
-import { equal, ok } from "node:assert/strict";
+import { ok, strictEqual } from "node:assert/strict";
 
 import { isFailure, isSuccess, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
 
@@ -9,7 +9,7 @@ const successResult = tryCatch(
 );
 
 ok(isSuccess(successResult));
-equal(successResult.right.name, "John");
+strictEqual(successResult.right.name, "John");
 
 const failureResult = tryCatch(
   () => parseJson("invalid json"),

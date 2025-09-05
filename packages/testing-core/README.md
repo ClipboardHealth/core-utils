@@ -37,7 +37,7 @@ This library's helpers narrow types:
 <embedex source="packages/testing-core/examples/expectToBeDefined.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeDefined } from "@clipboard-health/testing-core";
 
@@ -50,7 +50,7 @@ expectToBeDefined(value);
 
 // Narrowed to `string`
 const { length } = value;
-equal(length, 2);
+strictEqual(length, 2);
 ```
 
 </embedex>
@@ -58,7 +58,7 @@ equal(length, 2);
 <embedex source="packages/testing-core/examples/expectToBeLeft.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";
 import { either as E } from "@clipboard-health/util-ts";
@@ -75,7 +75,7 @@ const value = divide(10, 0);
 expectToBeLeft(value);
 
 // Narrowed to Left
-equal(value.left, "Cannot divide by zero");
+strictEqual(value.left, "Cannot divide by zero");
 ```
 
 </embedex>
@@ -83,7 +83,7 @@ equal(value.left, "Cannot divide by zero");
 <embedex source="packages/testing-core/examples/expectToBeRight.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeRight } from "@clipboard-health/testing-core";
 import { either as E } from "@clipboard-health/util-ts";
@@ -100,7 +100,7 @@ const value = divide(10, 2);
 expectToBeRight(value);
 
 // Narrowed to Right
-equal(value.right, 5);
+strictEqual(value.right, 5);
 ```
 
 </embedex>
@@ -108,7 +108,7 @@ equal(value.right, 5);
 <embedex source="packages/testing-core/examples/expectToBeFailure.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeFailure } from "@clipboard-health/testing-core";
 import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
@@ -125,7 +125,7 @@ const result = validateAge(-5);
 expectToBeFailure(result);
 
 // Narrowed to Left (Failure)
-equal(result.left.issues[0]?.message, "Age cannot be negative");
+strictEqual(result.left.issues[0]?.message, "Age cannot be negative");
 ```
 
 </embedex>
@@ -133,7 +133,7 @@ equal(result.left.issues[0]?.message, "Age cannot be negative");
 <embedex source="packages/testing-core/examples/expectToBeSuccess.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeSuccess } from "@clipboard-health/testing-core";
 import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
@@ -150,7 +150,7 @@ const result = validateAge(25);
 expectToBeSuccess(result);
 
 // Narrowed to Right (Success)
-equal(result.right, 25);
+strictEqual(result.right, 25);
 ```
 
 </embedex>
@@ -158,7 +158,7 @@ equal(result.right, 25);
 <embedex source="packages/testing-core/examples/expectToBeSafeParseError.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
 import { z } from "zod";
@@ -173,7 +173,7 @@ const firstIssue = value.error.issues[0];
 expectToBeDefined(firstIssue);
 
 // Narrowed to `ZodIssue`
-equal(firstIssue.message, "Expected string, received number");
+strictEqual(firstIssue.message, "Expected string, received number");
 ```
 
 </embedex>
@@ -181,7 +181,7 @@ equal(firstIssue.message, "Expected string, received number");
 <embedex source="packages/testing-core/examples/expectToBeSafeParseSuccess.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";
 import { z } from "zod";
@@ -192,7 +192,7 @@ const value = schema.safeParse({ name: "hi" });
 expectToBeSafeParseSuccess(value);
 
 // Narrowed to `SafeParseSuccess`
-equal(value.data.name, "hi");
+strictEqual(value.data.name, "hi");
 ```
 
 </embedex>

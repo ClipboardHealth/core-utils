@@ -1,26 +1,26 @@
 // packages/util-ts/README.md
-import { deepEqual, equal } from "node:assert/strict";
+import { deepEqual, strictEqual } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
 import { z } from "zod";
 
 {
   const error = new ServiceError("boom");
-  equal(error.toString(), `ServiceError[${error.id}]: [internal]: boom`);
+  strictEqual(error.toString(), `ServiceError[${error.id}]: [internal]: boom`);
 }
 
 try {
   throw new Error("boom");
 } catch (error) {
   const serviceError = ServiceError.fromUnknown(error);
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [internal]: boom`);
+  strictEqual(serviceError.toString(), `ServiceError[${serviceError.id}]: [internal]: boom`);
 }
 
 {
   const serviceError = ServiceError.fromZodError(
     new z.ZodError([{ code: "custom", path: ["foo"], message: "boom" }]),
   );
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [badRequest]: boom`);
+  strictEqual(serviceError.toString(), `ServiceError[${serviceError.id}]: [badRequest]: boom`);
 }
 
 {
@@ -28,7 +28,7 @@ try {
     issues: [{ message: "boom" }],
     cause: new Error("Original error"),
   });
-  equal(errorWithCause.toString(), `ServiceError[${errorWithCause.id}]: [internal]: boom`);
+  strictEqual(errorWithCause.toString(), `ServiceError[${errorWithCause.id}]: [internal]: boom`);
 }
 
 {
@@ -48,7 +48,7 @@ try {
     cause: new Error("Original error"),
   });
 
-  equal(
+  strictEqual(
     multipleIssues.toString(),
     `ServiceError[${multipleIssues.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short`,
   );

@@ -105,29 +105,6 @@ describe("ServiceResult", () => {
         },
       ]);
     });
-
-    it("returns success result when passed a resolving promise directly", async () => {
-      const actual = (await tryCatchAsync(
-        Promise.resolve("direct promise data"),
-        (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
-      )) as E.Right<string>;
-
-      expect(isSuccess(actual)).toBe(true);
-      expect(actual.isRight).toBe(true);
-      expect(actual.right).toBe("direct promise data");
-    });
-
-    it("returns failure result when passed a rejecting promise directly", async () => {
-      const actual = (await tryCatchAsync(
-        Promise.reject(new Error("direct promise failed")),
-        (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
-      )) as E.Left<ServiceError>;
-
-      expect(isFailure(actual)).toBe(true);
-      expect(actual.isRight).toBe(false);
-      expect(actual.left).toBeInstanceOf(ServiceError);
-      expect(actual.left.issues[0]?.message).toBe("Promise error: Error: direct promise failed");
-    });
   });
 
   describe("tryCatch", () => {
@@ -298,6 +275,115 @@ describe("ServiceResult", () => {
       expect(isFailure(actual)).toBe(true);
       expect(actual.left).toBeInstanceOf(ServiceError);
       expect(actual.left.issues).toHaveLength(2);
+    });
+  });
+
+  describe("handleError (via tryCatch and tryCatchAsync)", () => {
+    it("uses onError to convert error to ServiceError", () => {
+      const customError = new Error("custom error message");
+      const onError = (error: unknown) => new ServiceError(`Wrapped: ${String(error)}`);
+
+      const actual = tryCatch(() => {
+        throw customError;
+      }, onError) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("Wrapped: Error: custom error message");
+    });
+
+    it("uses onError to convert error to ServiceError with custom error params", () => {
+      const customError = new Error("validation failed");
+      const onError = (error: unknown) =>
+        new ServiceError({
+          issues: [
+            {
+              code: ERROR_CODES.badRequest,
+              message: `Validation error: ${String(error)}`,
+            },
+          ],
+        });
+
+      const actual = tryCatch(() => {
+        throw customError;
+      }, onError) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          title: "Invalid or malformed request",
+          message: "Validation error: Error: validation failed",
+        },
+      ]);
+    });
+
+    it("falls back to ServiceError.fromUnknown when onError throws", () => {
+      const originalError = new Error("original error");
+      const faultyOnError = () => {
+        throw new Error("onError function failed");
+      };
+
+      const actual = tryCatch(() => {
+        throw originalError;
+      }, faultyOnError) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("original error");
+      expect(actual.left.issues[0]?.code).toBe(ERROR_CODES.internal);
+    });
+
+    it("falls back to ServiceError.fromUnknown when onError throws (async)", async () => {
+      const originalError = new Error("async original error");
+      const faultyOnError = () => {
+        throw new Error("async onError function failed");
+      };
+
+      const actual = (await tryCatchAsync(async () => {
+        throw originalError;
+      }, faultyOnError)) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("async original error");
+      expect(actual.left.issues[0]?.code).toBe(ERROR_CODES.internal);
+    });
+
+    it("handles non-Error objects when onError throws", () => {
+      const originalError = new Error("string error");
+
+      const actual = tryCatch(
+        () => {
+          throw originalError;
+        },
+        () => {
+          throw new TypeError("onError type error");
+        },
+      ) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("string error");
+      expect(actual.left.issues[0]?.code).toBe(ERROR_CODES.internal);
+    });
+
+    it("handles null/undefined errors when onError throws", () => {
+      const originalError = new Error("null error");
+
+      const actual = tryCatch(
+        () => {
+          throw originalError;
+        },
+        () => {
+          throw new Error("onError failed with null");
+        },
+      ) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("null error");
+      expect(actual.left.issues[0]?.code).toBe(ERROR_CODES.internal);
     });
   });
 });

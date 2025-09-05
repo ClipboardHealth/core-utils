@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeRight } from "@clipboard-health/testing-core";
 import { either as E } from "@clipboard-health/util-ts";
@@ -16,4 +16,4 @@ const value = divide(10, 2);
 expectToBeRight(value);
 
 // Narrowed to Right
-equal(value.right, 5);
+strictEqual(value.right, 5);
