@@ -1,7 +1,7 @@
 import { either as E } from "@clipboard-health/util-ts";
 import { type SafeParseReturnType } from "zod";
 
-import { ServiceError, type ServiceErrorParams, toZodIssue } from "../errors/serviceError";
+import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
 
 /**
  * Represents the result of a service operation that may fail.
@@ -179,7 +179,7 @@ export async function tryCatchAsync<A>(
   onError: (error: unknown) => ServiceError,
 ): Promise<ServiceResult<A>> {
   try {
-    return success(await (f instanceof Function ? f() : f));
+    return success(await (typeof f === "function" ? f() : f));
   } catch (error) {
     return failure(onError(error));
   }
@@ -271,7 +271,5 @@ export function tryCatch<A>(
 export function fromSafeParseReturnType<A>(
   value: SafeParseReturnType<unknown, A>,
 ): ServiceResult<A> {
-  return value.success
-    ? success(value.data)
-    : failure({ issues: value.error.issues.map(toZodIssue) });
+  return value.success ? success(value.data) : failure(ServiceError.fromZodError(value.error));
 }

@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { ok } from "node:assert/strict";
+import { equal } from "node:assert/strict";
 
 import { expectToBeDefined } from "@clipboard-health/testing-core";
 
@@ -12,4 +12,4 @@ expectToBeDefined(value);
 
 // Narrowed to `string`
 const { length } = value;
-ok(length === 2);
+equal(length, 2);

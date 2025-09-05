@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { ok } from "node:assert/strict";
+import { equal } from "node:assert/strict";
 
 import { expectToBeSuccess } from "@clipboard-health/testing-core";
 import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
@@ -16,4 +16,4 @@ const result = validateAge(25);
 expectToBeSuccess(result);
 
 // Narrowed to Right (Success)
-ok(result.right === 25);
+equal(result.right, 25);

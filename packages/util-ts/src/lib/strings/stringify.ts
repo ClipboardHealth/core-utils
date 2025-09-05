@@ -5,8 +5,14 @@
  * @returns A JSON string representation of the value
  * @throws {TypeError} When the value contains circular references
  */
-export function stringify(value: unknown): string {
-  return JSON.stringify(value, (_, value: unknown) =>
-    typeof value === "bigint" ? String(value) : value,
-  );
+export function stringify(
+  value: unknown,
+  replacer?: (this: unknown, key: string, value: unknown) => unknown,
+  space?: string | number,
+): string {
+  return JSON.stringify(value, replacer ?? defaultReplacer, space);
+}
+
+function defaultReplacer(this: unknown, _key: string, value: unknown): unknown {
+  return typeof value === "bigint" ? String(value) : value;
 }

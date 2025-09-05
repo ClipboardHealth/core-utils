@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { ok } from "node:assert/strict";
+import { equal } from "node:assert/strict";
 
 import { expectToBeFailure } from "@clipboard-health/testing-core";
 import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
@@ -16,4 +16,4 @@ const result = validateAge(-5);
 expectToBeFailure(result);
 
 // Narrowed to Left (Failure)
-ok(result.left.issues[0]?.message === "Age cannot be negative");
+equal(result.left.issues[0]?.message, "Age cannot be negative");
