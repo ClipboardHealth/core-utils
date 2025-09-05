@@ -20,7 +20,7 @@ try {
   const serviceError = ServiceError.fromZodError(
     new z.ZodError([{ code: "custom", path: ["foo"], message: "boom" }]),
   );
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [unprocessableEntity]: boom`);
+  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [badRequest]: boom`);
 }
 
 {

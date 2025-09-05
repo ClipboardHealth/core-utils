@@ -49,13 +49,13 @@ export function success<A>(value: A): ServiceResult<A> {
  * ```ts
  * import { equal, ok } from "node:assert/strict";
  *
- * import { either as E, ERROR_CODES, failure } from "@clipboard-health/util-ts";
+ * import { ERROR_CODES, failure, isFailure } from "@clipboard-health/util-ts";
  *
  * const result = failure({
  *   issues: [{ code: ERROR_CODES.notFound, message: "User not found" }],
  * });
  *
- * ok(E.isLeft(result));
+ * ok(isFailure(result));
  * equal(result.left.issues[0]?.message, "User not found");
  * ```
  *
@@ -66,7 +66,7 @@ export function failure<A = never>(params: ServiceErrorParams | ServiceError): S
 }
 
 /**
- * Type guard that checks if an `ServiceResult` is failure.
+ * Type guard that checks if a `ServiceResult` is failure.
  *
  * @param result - The `ServiceResult` to check
  * @returns `true` if the `ServiceResult` is failure, `false` if it is success
@@ -76,7 +76,7 @@ export function isFailure<A>(result: ServiceResult<A>): result is E.Left<Service
 }
 
 /**
- * Type guard that checks if an `ServiceResult` is success.
+ * Type guard that checks if a `ServiceResult` is success.
  *
  * @param result - The `ServiceResult` to check
  * @returns `true` if the `ServiceResult` is success, `false` if it is failure
@@ -143,39 +143,28 @@ export function mapFailure<G>(
  * ```ts
  * import { equal, ok } from "node:assert/strict";
  *
- * import {
- *   either as E,
- *   failure,
- *   ServiceError,
- *   type ServiceResult,
- *   success,
- *   tryCatchAsync,
- * } from "@clipboard-health/util-ts";
+ * import { isFailure, isSuccess, ServiceError, tryCatchAsync } from "@clipboard-health/util-ts";
  *
- * async function getJson(url: string): Promise<ServiceResult<unknown>> {
- *   const response = await fetch(url);
- *   if (!response.ok) {
- *     return failure({ issues: [{ code: "badStatus", message: response.status.toString() }] });
- *   }
- *
- *   return success(await response.json());
+ * async function fetchJson() {
+ *   const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+ *   return (await response.json()) as { id: number };
  * }
  *
  * async function example() {
  *   const successResult = await tryCatchAsync(
- *     getJson("https://jsonplaceholder.typicode.com/posts/1"),
+ *     fetchJson(),
  *     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
  *   );
  *
- *   ok(E.isRight(successResult));
- *   equal(successResult.right, "data");
+ *   ok(isSuccess(successResult));
+ *   equal(successResult.right.id, 1);
  *
  *   const failureResult = await tryCatchAsync(
  *     Promise.reject(new Error("Network error")),
  *     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
  *   );
  *
- *   ok(E.isLeft(failureResult));
+ *   ok(isFailure(failureResult));
  *   equal(failureResult.left.issues[0]?.message, "Failed to fetch: Error: Network error");
  * }
  *
@@ -212,33 +201,33 @@ export async function tryCatchAsync<A>(
  * ```ts
  * import { equal, ok } from "node:assert/strict";
  *
- * import { either as E, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
+ * import { isFailure, isSuccess, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
  *
  * const successResult = tryCatch(
- *   parseJson<{ name: string }>('{"name": "John"}'),
+ *   () => parseJson<{ name: string }>('{"name": "John"}'),
  *   (error) => new ServiceError(`Parse error: ${String(error)}`),
  * );
  *
- * ok(E.isRight(successResult));
+ * ok(isSuccess(successResult));
  * equal(successResult.right.name, "John");
  *
  * const failureResult = tryCatch(
- *   parseJson("invalid json"),
+ *   () => parseJson("invalid json"),
  *   (error) => new ServiceError(`Parse error: ${String(error)}`),
  * );
  *
- * ok(E.isLeft(failureResult));
+ * ok(isFailure(failureResult));
  * ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
  * ```
  *
  * </embedex>
  */
 export function tryCatch<A>(
-  f: A | (() => A),
+  f: () => A,
   onError: (error: unknown) => ServiceError,
 ): ServiceResult<A> {
   try {
-    return success(f instanceof Function ? f() : f);
+    return success(f());
   } catch (error) {
     return failure(onError(error));
   }
@@ -259,7 +248,7 @@ export function tryCatch<A>(
  * ```ts
  * import { equal, ok } from "node:assert/strict";
  *
- * import { either as E, fromSafeParseReturnType } from "@clipboard-health/util-ts";
+ * import { fromSafeParseReturnType, isFailure, isSuccess } from "@clipboard-health/util-ts";
  * import { z } from "zod";
  *
  * const schema = z.object({ name: z.string(), age: z.number() });
@@ -267,13 +256,13 @@ export function tryCatch<A>(
  * const validData = { name: "John", age: 30 };
  * const successResult = fromSafeParseReturnType(schema.safeParse(validData));
  *
- * ok(E.isRight(successResult));
+ * ok(isSuccess(successResult));
  * equal(successResult.right.name, "John");
  *
  * const invalidData = { name: "John", age: "thirty" };
  * const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));
  *
- * ok(E.isLeft(failureResult));
+ * ok(isFailure(failureResult));
  * ok(failureResult.left.issues.length > 0);
  * ```
  *

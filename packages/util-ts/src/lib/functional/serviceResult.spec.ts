@@ -191,17 +191,6 @@ describe("ServiceResult", () => {
       expect(parseJson.left.issues[0]?.code).toBe(ERROR_CODES.badRequest);
       expect(parseJson.left.issues[0]?.message).toContain("JSON parse error");
     });
-
-    it("returns success result when passed a direct value", () => {
-      const actual = tryCatch(
-        "direct value",
-        (error: unknown) => new ServiceError(`Direct value error: ${String(error)}`),
-      ) as E.Right<string>;
-
-      expect(isSuccess(actual)).toBe(true);
-      expect(actual.isRight).toBe(true);
-      expect(actual.right).toBe("direct value");
-    });
   });
 
   describe("mapFailure", () => {

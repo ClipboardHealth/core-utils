@@ -56,7 +56,7 @@ try {
   const serviceError = ServiceError.fromZodError(
     new z.ZodError([{ code: "custom", path: ["foo"], message: "boom" }]),
   );
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [unprocessableEntity]: boom`);
+  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [badRequest]: boom`);
 }
 
 {
@@ -144,13 +144,13 @@ equal(result.right, "Hello, World!");
 ```ts
 import { equal, ok } from "node:assert/strict";
 
-import { either as E, ERROR_CODES, failure } from "@clipboard-health/util-ts";
+import { ERROR_CODES, failure, isFailure } from "@clipboard-health/util-ts";
 
 const result = failure({
   issues: [{ code: ERROR_CODES.notFound, message: "User not found" }],
 });
 
-ok(E.isLeft(result));
+ok(isFailure(result));
 equal(result.left.issues[0]?.message, "User not found");
 ```
 
@@ -163,39 +163,28 @@ equal(result.left.issues[0]?.message, "User not found");
 ```ts
 import { equal, ok } from "node:assert/strict";
 
-import {
-  either as E,
-  failure,
-  ServiceError,
-  type ServiceResult,
-  success,
-  tryCatchAsync,
-} from "@clipboard-health/util-ts";
+import { isFailure, isSuccess, ServiceError, tryCatchAsync } from "@clipboard-health/util-ts";
 
-async function getJson(url: string): Promise<ServiceResult<unknown>> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    return failure({ issues: [{ code: "badStatus", message: response.status.toString() }] });
-  }
-
-  return success(await response.json());
+async function fetchJson() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+  return (await response.json()) as { id: number };
 }
 
 async function example() {
   const successResult = await tryCatchAsync(
-    getJson("https://jsonplaceholder.typicode.com/posts/1"),
+    fetchJson(),
     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
   );
 
-  ok(E.isRight(successResult));
-  equal(successResult.right, "data");
+  ok(isSuccess(successResult));
+  equal(successResult.right.id, 1);
 
   const failureResult = await tryCatchAsync(
     Promise.reject(new Error("Network error")),
     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
   );
 
-  ok(E.isLeft(failureResult));
+  ok(isFailure(failureResult));
   equal(failureResult.left.issues[0]?.message, "Failed to fetch: Error: Network error");
 }
 
@@ -212,22 +201,22 @@ void example();
 ```ts
 import { equal, ok } from "node:assert/strict";
 
-import { either as E, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
+import { isFailure, isSuccess, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
 
 const successResult = tryCatch(
-  parseJson<{ name: string }>('{"name": "John"}'),
+  () => parseJson<{ name: string }>('{"name": "John"}'),
   (error) => new ServiceError(`Parse error: ${String(error)}`),
 );
 
-ok(E.isRight(successResult));
+ok(isSuccess(successResult));
 equal(successResult.right.name, "John");
 
 const failureResult = tryCatch(
-  parseJson("invalid json"),
+  () => parseJson("invalid json"),
   (error) => new ServiceError(`Parse error: ${String(error)}`),
 );
 
-ok(E.isLeft(failureResult));
+ok(isFailure(failureResult));
 ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
 ```
 
@@ -240,7 +229,7 @@ ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
 ```ts
 import { equal, ok } from "node:assert/strict";
 
-import { either as E, fromSafeParseReturnType } from "@clipboard-health/util-ts";
+import { fromSafeParseReturnType, isFailure, isSuccess } from "@clipboard-health/util-ts";
 import { z } from "zod";
 
 const schema = z.object({ name: z.string(), age: z.number() });
@@ -248,13 +237,13 @@ const schema = z.object({ name: z.string(), age: z.number() });
 const validData = { name: "John", age: 30 };
 const successResult = fromSafeParseReturnType(schema.safeParse(validData));
 
-ok(E.isRight(successResult));
+ok(isSuccess(successResult));
 equal(successResult.right.name, "John");
 
 const invalidData = { name: "John", age: "thirty" };
 const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));
 
-ok(E.isLeft(failureResult));
+ok(isFailure(failureResult));
 ok(failureResult.left.issues.length > 0);
 ```
 
