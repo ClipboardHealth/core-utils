@@ -3,7 +3,7 @@
   "description": "A NestJS application using our libraries, primarily for end-to-end testing.",
   "version": "0.0.10",
   "dependencies": {
-    "@clipboard-health/contract-core": "0.19.2",
+    "@clipboard-health/contract-core": "0.19.3",
     "@clipboard-health/json-api-nestjs": "0.20.1",
     "@nestjs/common": "11.1.6",
     "@nestjs/core": "11.1.6",
@@ -13,7 +13,7 @@
     "@ts-rest/nest": "3.52.1",
     "qs": "6.14.0",
     "reflect-metadata": "0.2.2",
-    "zod": "3.25.65"
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@nestjs/testing": "11.1.6",
