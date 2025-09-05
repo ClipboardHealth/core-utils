@@ -8,6 +8,12 @@ TypeScript utilities.
 - [Usage](#usage)
   - [ServiceError](#serviceerror)
   - [ServiceResult](#serviceresult)
+    - [`success`](#success)
+    - [`failure`](#failure)
+    - [`tryCatchAsync`](#trycatchasync)
+    - [`tryCatch`](#trycatch)
+    - [`fromSafeParseReturnType`](#fromsafeparsereturntype)
+    - [`mapFailure`](#mapfailure)
   - [Functional](#functional)
     - [`pipe`](#pipe)
     - [`option`](#option)
@@ -114,36 +120,170 @@ try {
 
 ### ServiceResult
 
-<embedex source="packages/util-ts/examples/serviceResult.ts">
+#### `success`
+
+<embedex source="packages/util-ts/examples/success.ts">
 
 ```ts
-import { ok } from "node:assert/strict";
+import { equal, ok } from "node:assert/strict";
+
+import { either as E, success } from "@clipboard-health/util-ts";
+
+const result = success("Hello, World!");
+
+ok(E.isRight(result));
+equal(result.right, "Hello, World!");
+```
+
+</embedex>
+
+#### `failure`
+
+<embedex source="packages/util-ts/examples/failure.ts">
+
+```ts
+import { equal, ok } from "node:assert/strict";
+
+import { either as E, ERROR_CODES, failure } from "@clipboard-health/util-ts";
+
+const result = failure({
+  issues: [{ code: ERROR_CODES.notFound, message: "User not found" }],
+});
+
+ok(E.isLeft(result));
+equal(result.left.issues[0]?.message, "User not found");
+```
+
+</embedex>
+
+#### `tryCatchAsync`
+
+<embedex source="packages/util-ts/examples/tryCatchAsync.ts">
+
+```ts
+import { equal, ok } from "node:assert/strict";
 
 import {
   either as E,
-  ERROR_CODES,
   failure,
+  ServiceError,
   type ServiceResult,
   success,
+  tryCatchAsync,
 } from "@clipboard-health/util-ts";
 
-function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
-  const { email, phone } = params;
-  const code = ERROR_CODES.unprocessableEntity;
-
-  if (!email.includes("@")) {
-    return failure({ issues: [{ code, message: "Invalid email format" }] });
+async function getJson(url: string): Promise<ServiceResult<unknown>> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    return failure({ issues: [{ code: "badStatus", message: response.status.toString() }] });
   }
 
-  if (phone.length !== 12) {
-    return failure({ issues: [{ code, message: "Invalid phone number" }] });
-  }
-
-  return success({ id: "user-123" });
+  return success(await response.json());
 }
 
-ok(E.isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
-ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+async function example() {
+  const successResult = await tryCatchAsync(
+    getJson("https://jsonplaceholder.typicode.com/posts/1"),
+    (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
+  );
+
+  ok(E.isRight(successResult));
+  equal(successResult.right, "data");
+
+  const failureResult = await tryCatchAsync(
+    Promise.reject(new Error("Network error")),
+    (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
+  );
+
+  ok(E.isLeft(failureResult));
+  equal(failureResult.left.issues[0]?.message, "Failed to fetch: Error: Network error");
+}
+
+// eslint-disable-next-line unicorn/prefer-top-level-await
+void example();
+```
+
+</embedex>
+
+#### `tryCatch`
+
+<embedex source="packages/util-ts/examples/tryCatch.ts">
+
+```ts
+import { equal, ok } from "node:assert/strict";
+
+import { either as E, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
+
+const successResult = tryCatch(
+  parseJson<{ name: string }>('{"name": "John"}'),
+  (error) => new ServiceError(`Parse error: ${String(error)}`),
+);
+
+ok(E.isRight(successResult));
+equal(successResult.right.name, "John");
+
+const failureResult = tryCatch(
+  parseJson("invalid json"),
+  (error) => new ServiceError(`Parse error: ${String(error)}`),
+);
+
+ok(E.isLeft(failureResult));
+ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
+```
+
+</embedex>
+
+#### `fromSafeParseReturnType`
+
+<embedex source="packages/util-ts/examples/fromSafeParseReturnType.ts">
+
+```ts
+import { equal, ok } from "node:assert/strict";
+
+import { either as E, fromSafeParseReturnType } from "@clipboard-health/util-ts";
+import { z } from "zod";
+
+const schema = z.object({ name: z.string(), age: z.number() });
+
+const validData = { name: "John", age: 30 };
+const successResult = fromSafeParseReturnType(schema.safeParse(validData));
+
+ok(E.isRight(successResult));
+equal(successResult.right.name, "John");
+
+const invalidData = { name: "John", age: "thirty" };
+const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));
+
+ok(E.isLeft(failureResult));
+ok(failureResult.left.issues.length > 0);
+```
+
+</embedex>
+
+#### `mapFailure`
+
+<embedex source="packages/util-ts/examples/mapFailure.ts">
+
+```ts
+import { equal, ok } from "node:assert/strict";
+
+import { either as E, failure, mapFailure, ServiceError, success } from "@clipboard-health/util-ts";
+
+const transformError = mapFailure(
+  (error: ServiceError) => `Transformed: ${error.issues[0]?.message}`,
+);
+
+const failureResult = failure(new ServiceError("Original error"));
+const transformedFailure = transformError(failureResult);
+
+ok(E.isLeft(transformedFailure));
+equal(transformedFailure.left, "Transformed: Original error");
+
+const successResult = success("data");
+const transformedSuccess = transformError(successResult);
+
+ok(E.isRight(transformedSuccess));
+equal(transformedSuccess.right, "data");
 ```
 
 </embedex>

@@ -1,19 +1,28 @@
-import { ok } from "node:assert/strict";
-
 import { either as E } from "@clipboard-health/util-ts";
 import { z } from "zod";
 
 import { ERROR_CODES, ServiceError } from "../errors/serviceError";
-import { failure, fromSafeParseReturnType, success } from "./serviceResult";
+import {
+  failure,
+  fromSafeParseReturnType,
+  isFailure,
+  isSuccess,
+  mapFailure,
+  success,
+  tryCatch,
+  tryCatchAsync,
+} from "./serviceResult";
 
 describe("ServiceResult", () => {
   describe("success", () => {
     it("creates success result", () => {
       const input = { data: "test" };
 
-      const actual = success(input);
+      const actual = success(input) as E.Right<{ data: string }>;
 
-      ok(E.isRight(actual));
+      expect(isSuccess(actual)).toBe(true);
+      expect(isFailure(actual)).toBe(false);
+      expect(actual.isRight).toBe(true);
       expect(actual.right).toEqual(input);
     });
   });
@@ -24,9 +33,11 @@ describe("ServiceResult", () => {
         issues: [{ code: ERROR_CODES.notFound }],
       };
 
-      const actual = failure(input);
+      const actual = failure(input) as E.Left<ServiceError>;
 
-      ok(E.isLeft(actual));
+      expect(isFailure(actual)).toBe(true);
+      expect(isSuccess(actual)).toBe(false);
+      expect(actual.isRight).toBe(false);
       expect(actual.left).toBeInstanceOf(ServiceError);
       expect(actual.left.issues).toEqual([
         { code: ERROR_CODES.notFound, title: "Resource not found" },
@@ -36,13 +47,222 @@ describe("ServiceResult", () => {
     it("creates failure result from ServiceError", () => {
       const input = new ServiceError("test error");
 
-      const actual = failure(input);
+      const actual = failure(input) as E.Left<ServiceError>;
 
-      ok(E.isLeft(actual));
+      expect(isFailure(actual)).toBe(true);
+      expect(isSuccess(actual)).toBe(false);
+      expect(actual.isRight).toBe(false);
       expect(actual.left).toBe(input);
       expect(actual.left.issues).toEqual([
         { code: ERROR_CODES.internal, title: "Internal server error", message: "test error" },
       ]);
+    });
+  });
+
+  describe("tryCatchAsync", () => {
+    it("returns success result when promise resolves", async () => {
+      const actual = (await tryCatchAsync(
+        async () => await Promise.resolve("test data"),
+        (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
+      )) as E.Right<string>;
+
+      expect(isSuccess(actual)).toBe(true);
+      expect(actual.isRight).toBe(true);
+      expect(actual.right).toBe("test data");
+    });
+
+    it("returns failure result when promise rejects", async () => {
+      const onError = (error: unknown) => new ServiceError(`Promise error: ${String(error)}`);
+
+      const actual = (await tryCatchAsync(
+        async () => await Promise.reject(new Error("Promise failed")),
+        onError,
+      )) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.isRight).toBe(false);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("Promise error: Error: Promise failed");
+    });
+
+    it("uses custom error handler when promise rejects", async () => {
+      const onError = (error: unknown) =>
+        new ServiceError({
+          issues: [{ code: ERROR_CODES.notFound, message: `Custom: ${String(error)}` }],
+        });
+
+      const actual = (await tryCatchAsync(
+        async () => await Promise.reject(new Error("custom error")),
+        onError,
+      )) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left.issues).toEqual([
+        {
+          code: ERROR_CODES.notFound,
+          title: "Resource not found",
+          message: "Custom: Error: custom error",
+        },
+      ]);
+    });
+
+    it("returns success result when passed a resolving promise directly", async () => {
+      const actual = (await tryCatchAsync(
+        Promise.resolve("direct promise data"),
+        (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
+      )) as E.Right<string>;
+
+      expect(isSuccess(actual)).toBe(true);
+      expect(actual.isRight).toBe(true);
+      expect(actual.right).toBe("direct promise data");
+    });
+
+    it("returns failure result when passed a rejecting promise directly", async () => {
+      const actual = (await tryCatchAsync(
+        Promise.reject(new Error("direct promise failed")),
+        (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
+      )) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.isRight).toBe(false);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("Promise error: Error: direct promise failed");
+    });
+  });
+
+  describe("tryCatch", () => {
+    it("returns success result when function executes successfully", () => {
+      const actual = tryCatch(
+        () => "success value",
+        (error: unknown) => new ServiceError(`Function error: ${String(error)}`),
+      ) as E.Right<string>;
+
+      expect(isSuccess(actual)).toBe(true);
+      expect(actual.isRight).toBe(true);
+      expect(actual.right).toBe("success value");
+    });
+
+    it("returns failure result when function throws", () => {
+      const onError = (error: unknown) => new ServiceError(`Function error: ${String(error)}`);
+
+      const actual = tryCatch(() => {
+        throw new Error("Function failed");
+      }, onError) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.isRight).toBe(false);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues[0]?.message).toBe("Function error: Error: Function failed");
+    });
+
+    it("uses custom error handler when function throws", () => {
+      const onError = (error: unknown) =>
+        new ServiceError({
+          issues: [{ code: ERROR_CODES.badRequest, message: `Parse error: ${String(error)}` }],
+        });
+
+      const actual = tryCatch(() => {
+        throw new Error("string error");
+      }, onError) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          title: "Invalid or malformed request",
+          message: "Parse error: Error: string error",
+        },
+      ]);
+    });
+
+    it("handles JSON.parse example", () => {
+      const invalidJson = "{ invalid json }";
+      const parseJson = tryCatch(
+        () => JSON.parse(invalidJson) as unknown,
+        (error) =>
+          new ServiceError({
+            issues: [
+              { code: ERROR_CODES.badRequest, message: `JSON parse error: ${String(error)}` },
+            ],
+          }),
+      ) as E.Left<ServiceError>;
+
+      expect(isFailure(parseJson)).toBe(true);
+      expect(parseJson.left.issues[0]?.code).toBe(ERROR_CODES.badRequest);
+      expect(parseJson.left.issues[0]?.message).toContain("JSON parse error");
+    });
+
+    it("returns success result when passed a direct value", () => {
+      const actual = tryCatch(
+        "direct value",
+        (error: unknown) => new ServiceError(`Direct value error: ${String(error)}`),
+      ) as E.Right<string>;
+
+      expect(isSuccess(actual)).toBe(true);
+      expect(actual.isRight).toBe(true);
+      expect(actual.right).toBe("direct value");
+    });
+  });
+
+  describe("mapFailure", () => {
+    it("transforms error when ServiceResult is failure", () => {
+      const serviceError = new ServiceError("original error");
+      const failureResult = failure(serviceError);
+      const transformError = mapFailure(
+        (error: ServiceError) => error.issues[0]?.message ?? "no message",
+      );
+
+      const actual = transformError(failureResult) as E.Left<string>;
+
+      expect(E.isLeft(actual)).toBe(true);
+      expect(actual.left).toBe("original error");
+    });
+
+    it("leaves success unchanged", () => {
+      const successResult = success("success data");
+      const transformError = mapFailure(
+        (error: ServiceError) => error.issues[0]?.message ?? "no message",
+      );
+
+      const actual = transformError(successResult) as E.Right<string>;
+
+      expect(E.isRight(actual)).toBe(true);
+      expect(actual.right).toBe("success data");
+    });
+
+    it("transforms error to different type", () => {
+      const serviceError = new ServiceError({
+        issues: [{ code: ERROR_CODES.notFound, message: "Resource not found" }],
+      });
+      const failureResult = failure(serviceError);
+      const transformError = mapFailure((error: ServiceError) => ({
+        errorCode: error.issues[0]?.code,
+        errorMessage: error.issues[0]?.message,
+      }));
+
+      const actual = transformError(failureResult) as E.Left<{
+        errorCode: string | undefined;
+        errorMessage: string | undefined;
+      }>;
+
+      expect(E.isLeft(actual)).toBe(true);
+      expect(actual.left).toEqual({
+        errorCode: ERROR_CODES.notFound,
+        errorMessage: "Resource not found",
+      });
+    });
+
+    it("can be chained with other operations", () => {
+      const serviceError = new ServiceError("test error");
+      const failureResult = failure(serviceError);
+
+      const pipeline1 = mapFailure(
+        (error: ServiceError) => `Transformed: ${error.issues[0]?.message}`,
+      );
+      const result1 = pipeline1(failureResult) as E.Left<string>;
+
+      expect(E.isLeft(result1)).toBe(true);
+      expect(result1.left).toBe("Transformed: test error");
     });
   });
 
@@ -51,9 +271,10 @@ describe("ServiceResult", () => {
       const schema = z.string();
       const input = "test";
 
-      const actual = fromSafeParseReturnType(schema.safeParse(input));
+      const actual = fromSafeParseReturnType(schema.safeParse(input)) as E.Right<string>;
 
-      ok(E.isRight(actual));
+      expect(isSuccess(actual)).toBe(true);
+      expect(actual.isRight).toBe(true);
       expect(actual.right).toBe("test");
     });
 
@@ -61,9 +282,10 @@ describe("ServiceResult", () => {
       const schema = z.string();
       const input = 42;
 
-      const actual = fromSafeParseReturnType(schema.safeParse(input));
+      const actual = fromSafeParseReturnType(schema.safeParse(input)) as E.Left<ServiceError>;
 
-      ok(E.isLeft(actual));
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.isRight).toBe(false);
       expect(actual.left).toBeInstanceOf(ServiceError);
       expect(actual.left.issues).toEqual([
         {
@@ -73,6 +295,20 @@ describe("ServiceResult", () => {
           path: [],
         },
       ]);
+    });
+
+    it("handles complex schema validation", () => {
+      const schema = z.object({
+        name: z.string(),
+        age: z.number().min(0),
+      });
+      const input = { name: 123, age: -5 };
+
+      const actual = fromSafeParseReturnType(schema.safeParse(input)) as E.Left<ServiceError>;
+
+      expect(isFailure(actual)).toBe(true);
+      expect(actual.left).toBeInstanceOf(ServiceError);
+      expect(actual.left.issues).toHaveLength(2);
     });
   });
 });

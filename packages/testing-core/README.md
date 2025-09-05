@@ -105,6 +105,56 @@ ok(value.right === 5);
 
 </embedex>
 
+<embedex source="packages/testing-core/examples/expectToBeFailure.ts">
+
+```ts
+import { ok } from "node:assert/strict";
+
+import { expectToBeFailure } from "@clipboard-health/testing-core";
+import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
+
+function validateAge(age: number): ServiceResult<number> {
+  if (age < 0) {
+    return failure({ issues: [{ code: "INVALID_AGE", message: "Age cannot be negative" }] });
+  }
+
+  return success(age);
+}
+
+const result = validateAge(-5);
+expectToBeFailure(result);
+
+// Narrowed to Left (Failure)
+ok(result.left.issues[0]?.message === "Age cannot be negative");
+```
+
+</embedex>
+
+<embedex source="packages/testing-core/examples/expectToBeSuccess.ts">
+
+```ts
+import { ok } from "node:assert/strict";
+
+import { expectToBeSuccess } from "@clipboard-health/testing-core";
+import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
+
+function validateAge(age: number): ServiceResult<number> {
+  if (age < 0) {
+    return failure({ issues: [{ code: "INVALID_AGE", message: "Age cannot be negative" }] });
+  }
+
+  return success(age);
+}
+
+const result = validateAge(25);
+expectToBeSuccess(result);
+
+// Narrowed to Right (Success)
+ok(result.right === 25);
+```
+
+</embedex>
+
 <embedex source="packages/testing-core/examples/expectToBeSafeParseError.ts">
 
 ```ts
