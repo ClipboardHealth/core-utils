@@ -1,4 +1,11 @@
-import { type either as E, type ServiceResult } from "@clipboard-health/util-ts";
+import { ok } from "node:assert/strict";
+
+import {
+  type either as E,
+  isSuccess,
+  type ServiceResult,
+  type Success,
+} from "@clipboard-health/util-ts";
 
 import { expectToBeRight } from "./expectToBeRight";
 
@@ -7,6 +14,7 @@ import { expectToBeRight } from "./expectToBeRight";
  */
 export function expectToBeSuccess<A>(
   value: ServiceResult<A> | undefined,
-): asserts value is E.Right<A> {
+): asserts value is E.Right<A> & Success<A> {
   expectToBeRight(value);
+  ok(isSuccess(value));
 }

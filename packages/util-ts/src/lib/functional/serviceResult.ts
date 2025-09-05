@@ -57,14 +57,14 @@ export function failure<A = never>(params: ServiceErrorParams | ServiceError): S
 export function isFailure<A>(
   result: ServiceResult<A>,
 ): result is Left<ServiceError> & Failure<ServiceError> {
-  return isLeft(result);
+  return isLeft(result) && !result.isSuccess;
 }
 
 /**
  * Alias for {@link isRight}.
  */
 export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Success<A> {
-  return isRight(result);
+  return isRight(result) && result.isSuccess;
 }
 
 /**
