@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { ok } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeSafeParseSuccess } from "@clipboard-health/testing-core";
 import { z } from "zod";
@@ -10,4 +10,4 @@ const value = schema.safeParse({ name: "hi" });
 expectToBeSafeParseSuccess(value);
 
 // Narrowed to `SafeParseSuccess`
-ok(value.data.name === "hi");
+strictEqual(value.data.name, "hi");

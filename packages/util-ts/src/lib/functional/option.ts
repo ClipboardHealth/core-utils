@@ -16,7 +16,7 @@ export type Some<A> = Readonly<{
  * <embedex source="packages/util-ts/examples/option.ts">
  *
  * ```ts
- * import { equal } from "node:assert/strict";
+ * import { strictEqual } from "node:assert/strict";
  *
  * import { option as O, pipe } from "@clipboard-health/util-ts";
  *
@@ -38,7 +38,7 @@ export type Some<A> = Readonly<{
  *   ),
  * );
  *
- * equal(result, "Result is 0.1");
+ * strictEqual(result, "Result is 0.1");
  * ```
  *
  * </embedex>

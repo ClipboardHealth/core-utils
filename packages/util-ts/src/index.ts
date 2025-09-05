@@ -6,4 +6,5 @@ export * from "./lib/functional";
 export * from "./lib/logger";
 export * from "./lib/nullish";
 export * from "./lib/strings";
+export * from "./lib/strings/parseJson";
 export * from "./lib/types";

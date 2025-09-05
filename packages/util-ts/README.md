@@ -8,6 +8,9 @@ TypeScript utilities.
 - [Usage](#usage)
   - [ServiceError](#serviceerror)
   - [ServiceResult](#serviceresult)
+    - [`tryCatchAsync`](#trycatchasync)
+    - [`tryCatch`](#trycatch)
+    - [`fromSafeParseReturnType`](#fromsafeparsereturntype)
   - [Functional](#functional)
     - [`pipe`](#pipe)
     - [`option`](#option)
@@ -29,28 +32,28 @@ See `./src/lib` for each utility.
 <embedex source="packages/util-ts/examples/serviceError.ts">
 
 ```ts
-import { deepEqual, equal } from "node:assert/strict";
+import { deepEqual, strictEqual } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";
 import { z } from "zod";
 
 {
   const error = new ServiceError("boom");
-  equal(error.toString(), `ServiceError[${error.id}]: [internal]: boom`);
+  strictEqual(error.toString(), `ServiceError[${error.id}]: [internal]: boom`);
 }
 
 try {
   throw new Error("boom");
 } catch (error) {
   const serviceError = ServiceError.fromUnknown(error);
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [internal]: boom`);
+  strictEqual(serviceError.toString(), `ServiceError[${serviceError.id}]: [internal]: boom`);
 }
 
 {
   const serviceError = ServiceError.fromZodError(
     new z.ZodError([{ code: "custom", path: ["foo"], message: "boom" }]),
   );
-  equal(serviceError.toString(), `ServiceError[${serviceError.id}]: [unprocessableEntity]: boom`);
+  strictEqual(serviceError.toString(), `ServiceError[${serviceError.id}]: [badRequest]: boom`);
 }
 
 {
@@ -58,7 +61,7 @@ try {
     issues: [{ message: "boom" }],
     cause: new Error("Original error"),
   });
-  equal(errorWithCause.toString(), `ServiceError[${errorWithCause.id}]: [internal]: boom`);
+  strictEqual(errorWithCause.toString(), `ServiceError[${errorWithCause.id}]: [internal]: boom`);
 }
 
 {
@@ -78,7 +81,7 @@ try {
     cause: new Error("Original error"),
   });
 
-  equal(
+  strictEqual(
     multipleIssues.toString(),
     `ServiceError[${multipleIssues.id}]: [badRequest]: Invalid email format; [unprocessableEntity]: Phone number too short`,
   );
@@ -120,9 +123,10 @@ try {
 import { ok } from "node:assert/strict";
 
 import {
-  either as E,
   ERROR_CODES,
   failure,
+  isFailure,
+  isSuccess,
   type ServiceResult,
   success,
 } from "@clipboard-health/util-ts";
@@ -142,8 +146,99 @@ function validateUser(params: { email: string; phone: string }): ServiceResult<{
   return success({ id: "user-123" });
 }
 
-ok(E.isLeft(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
-ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+ok(isFailure(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
+ok(isSuccess(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+```
+
+</embedex>
+
+#### `tryCatchAsync`
+
+<embedex source="packages/util-ts/examples/tryCatchAsync.ts">
+
+```ts
+import { ok, strictEqual } from "node:assert/strict";
+
+import { isFailure, isSuccess, ServiceError, tryCatchAsync } from "@clipboard-health/util-ts";
+
+async function example() {
+  const successResult = await tryCatchAsync(
+    async () => {
+      const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+      return (await response.json()) as { id: number };
+    },
+    (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
+  );
+
+  ok(isSuccess(successResult));
+  strictEqual(successResult.value.id, 1);
+
+  const failureResult = await tryCatchAsync(
+    async () => await Promise.reject(new Error("Network error")),
+    (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
+  );
+
+  ok(isFailure(failureResult));
+  strictEqual(failureResult.error.issues[0]?.message, "Failed to fetch: Error: Network error");
+}
+
+// eslint-disable-next-line unicorn/prefer-top-level-await
+void example();
+```
+
+</embedex>
+
+#### `tryCatch`
+
+<embedex source="packages/util-ts/examples/tryCatch.ts">
+
+```ts
+import { ok, strictEqual } from "node:assert/strict";
+
+import { isFailure, isSuccess, parseJson, ServiceError, tryCatch } from "@clipboard-health/util-ts";
+
+const successResult = tryCatch(
+  () => parseJson<{ name: string }>('{"name": "John"}'),
+  (error) => new ServiceError(`Parse error: ${String(error)}`),
+);
+
+ok(isSuccess(successResult));
+strictEqual(successResult.value.name, "John");
+
+const failureResult = tryCatch(
+  () => parseJson("invalid json"),
+  (error) => new ServiceError(`Parse error: ${String(error)}`),
+);
+
+ok(isFailure(failureResult));
+ok(failureResult.error.issues[0]?.message?.includes("Parse error"));
+```
+
+</embedex>
+
+#### `fromSafeParseReturnType`
+
+<embedex source="packages/util-ts/examples/fromSafeParseReturnType.ts">
+
+```ts
+import { ok, strictEqual } from "node:assert/strict";
+
+import { fromSafeParseReturnType, isFailure, isSuccess } from "@clipboard-health/util-ts";
+import { z } from "zod";
+
+const schema = z.object({ name: z.string(), age: z.number() });
+
+const validData = { name: "John", age: 30 };
+const successResult = fromSafeParseReturnType(schema.safeParse(validData));
+
+ok(isSuccess(successResult));
+strictEqual(successResult.value.name, "John");
+
+const invalidData = { name: "John", age: "thirty" };
+const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));
+
+ok(isFailure(failureResult));
+ok(failureResult.error.issues.length > 0);
 ```
 
 </embedex>
@@ -155,7 +250,7 @@ ok(E.isRight(validateUser({ email: "user@example.com", phone: "555-555-5555" }))
 <embedex source="packages/util-ts/examples/pipe.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { pipe } from "@clipboard-health/util-ts";
 
@@ -167,7 +262,7 @@ const result = pipe(
   (array) => array.join(" "),
 );
 
-equal(result, "Hello World");
+strictEqual(result, "Hello World");
 ```
 
 </embedex>
@@ -177,7 +272,7 @@ equal(result, "Hello World");
 <embedex source="packages/util-ts/examples/option.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { option as O, pipe } from "@clipboard-health/util-ts";
 
@@ -199,7 +294,7 @@ const result = pipe(
   ),
 );
 
-equal(result, "Result is 0.1");
+strictEqual(result, "Result is 0.1");
 ```
 
 </embedex>
@@ -209,7 +304,7 @@ equal(result, "Result is 0.1");
 <embedex source="packages/util-ts/examples/either.ts">
 
 ```ts
-import { equal } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { either as E, pipe } from "@clipboard-health/util-ts";
 
@@ -231,7 +326,7 @@ const result = pipe(
   ),
 );
 
-equal(result, "Result is 0.1");
+strictEqual(result, "Result is 0.1");
 ```
 
 </embedex>

@@ -146,6 +146,34 @@ export class ServiceError extends Error {
   }
 
   /**
+   * Merges multiple ServiceErrors into a single ServiceError.
+   * Combines all issues from the input errors and uses the highest status code.
+   *
+   * @param error - The primary error
+   * @param errors - Additional ServiceErrors
+   * @returns New ServiceError containing all issues from input errors
+   */
+  static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
+  static merge(error: ServiceError, ...errors: readonly ServiceError[]): ServiceError;
+  static merge(
+    error: Readonly<unknown | ServiceError>,
+    ...errors: ReadonlyArray<unknown | ServiceError>
+  ): ServiceError {
+    const firstError = error instanceof ServiceError ? error : ServiceError.fromUnknown(error);
+    if (errors.length === 0) {
+      return firstError;
+    }
+
+    const additionalErrors = errors.map((error) =>
+      error instanceof ServiceError ? error : ServiceError.fromUnknown(error),
+    );
+    return new ServiceError({
+      cause: firstError.cause ?? firstError,
+      issues: [...firstError.issues, ...additionalErrors.flatMap((error) => error.issues)],
+    });
+  }
+
+  /**
    * Creates a ServiceError from a JSON:API error object
    * @see {@link https://jsonapi.org/format/#error-objects}
    * @param jsonApiError - JSON:API error object

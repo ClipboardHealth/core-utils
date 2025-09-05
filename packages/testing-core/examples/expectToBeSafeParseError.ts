@@ -1,5 +1,5 @@
 // packages/testing-core/README.md
-import { ok } from "node:assert/strict";
+import { strictEqual } from "node:assert/strict";
 
 import { expectToBeDefined, expectToBeSafeParseError } from "@clipboard-health/testing-core";
 import { z } from "zod";
@@ -14,4 +14,4 @@ const firstIssue = value.error.issues[0];
 expectToBeDefined(firstIssue);
 
 // Narrowed to `ZodIssue`
-ok(firstIssue.message === "Expected string, received number");
+strictEqual(firstIssue.message, "Expected string, received number");
