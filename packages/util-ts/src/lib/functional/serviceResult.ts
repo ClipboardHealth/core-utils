@@ -24,10 +24,10 @@ export type ServiceResult<A> = Either<ServiceError, A> & (Success<A> | Failure<S
  * `isSuccess`.
  */
 export function success<A>(value: A): ServiceResult<A> {
-  const base = right(value) as ServiceResult<A>;
+  const base = right(value) as Right<A>;
   Object.defineProperties(base, {
     isSuccess: { get: () => true, enumerable: true },
-    value: { get: () => base, enumerable: true },
+    value: { get: () => base.right, enumerable: true },
   });
   return Object.freeze(base) as ServiceResult<A>;
 }
@@ -38,10 +38,10 @@ export function success<A>(value: A): ServiceResult<A> {
  */
 export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
   const error = params instanceof ServiceError ? params : new ServiceError(params);
-  const base = left(error) as ServiceResult<A>;
+  const base = left(error) as Left<ServiceError>;
   Object.defineProperties(base, {
     isSuccess: { get: () => false, enumerable: true },
-    error: { get: () => base, enumerable: true },
+    error: { get: () => base.left, enumerable: true },
   });
   return Object.freeze(base) as ServiceResult<A>;
 }
