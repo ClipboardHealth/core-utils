@@ -1,16 +1,7 @@
 import { type SafeParseReturnType } from "zod";
 
 import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
-import {
-  type Either,
-  isLeft,
-  isRight,
-  type Left,
-  left,
-  mapLeft,
-  type Right,
-  right,
-} from "./either";
+import { type Either, type Left, left, mapLeft, type Right, right } from "./either";
 
 export interface Success<A> {
   readonly isSuccess: true;
@@ -34,8 +25,10 @@ export type ServiceResult<A> = Either<ServiceError, A> & (Success<A> | Failure<S
  */
 export function success<A>(value: A): ServiceResult<A> {
   const base = right(value) as ServiceResult<A>;
-  Object.defineProperty(base, "isSuccess", { get: () => true, enumerable: true });
-  Object.defineProperty(base, "value", { get: () => value, enumerable: true });
+  Object.defineProperties(base, {
+    isSuccess: { get: () => true, enumerable: true },
+    value: { get: () => value, enumerable: true },
+  });
   return base;
 }
 
@@ -46,8 +39,10 @@ export function success<A>(value: A): ServiceResult<A> {
 export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
   const error = params instanceof ServiceError ? params : new ServiceError(params);
   const base = left(error) as ServiceResult<A>;
-  Object.defineProperty(base, "isSuccess", { get: () => false, enumerable: true });
-  Object.defineProperty(base, "error", { get: () => error, enumerable: true });
+  Object.defineProperties(base, {
+    isSuccess: { get: () => false, enumerable: true },
+    error: { get: () => error, enumerable: true },
+  });
   return base;
 }
 
@@ -57,14 +52,14 @@ export function failure<A = never>(params: ServiceErrorParams | ServiceError): S
 export function isFailure<A>(
   result: ServiceResult<A>,
 ): result is Left<ServiceError> & Failure<ServiceError> {
-  return isLeft(result) && !result.isSuccess;
+  return !result.isSuccess;
 }
 
 /**
  * Alias for {@link isRight}.
  */
 export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Success<A> {
-  return isRight(result) && result.isSuccess;
+  return result.isSuccess;
 }
 
 /**
@@ -83,7 +78,7 @@ export function mapFailure<G>(
  *
  * @template A The type of the value the promise resolves to
  * @param f Function returning a Promise to execute. Passing a function allows catching synchronous throws
- * @param onError onError Maps unknown errors to a ServiceError
+ * @param onError Maps unknown errors to a ServiceError
  * @returns A promise that resolves to a ServiceResult<A>
  *
  * @example
@@ -204,13 +199,13 @@ export function tryCatch<A>(
  * const successResult = fromSafeParseReturnType(schema.safeParse(validData));
  *
  * ok(isSuccess(successResult));
- * strictEqual(successResult.right.name, "John");
+ * strictEqual(successResult.value.name, "John");
  *
  * const invalidData = { name: "John", age: "thirty" };
  * const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));
  *
  * ok(isFailure(failureResult));
- * ok(failureResult.left.issues.length > 0);
+ * ok(failureResult.error.issues.length > 0);
  * ```
  *
  * </embedex>
@@ -231,10 +226,6 @@ function handleError<A>(
   try {
     return failure(onError(error));
   } catch (mappingError) {
-    const originalError = ServiceError.fromUnknown(error);
-    return failure({
-      ...originalError,
-      issues: [...originalError.issues, ...ServiceError.fromUnknown(mappingError).issues],
-    });
+    return failure(ServiceError.merge(error, mappingError));
   }
 }

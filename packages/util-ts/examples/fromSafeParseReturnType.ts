@@ -10,10 +10,10 @@ const validData = { name: "John", age: 30 };
 const successResult = fromSafeParseReturnType(schema.safeParse(validData));
 
 ok(isSuccess(successResult));
-strictEqual(successResult.right.name, "John");
+strictEqual(successResult.value.name, "John");
 
 const invalidData = { name: "John", age: "thirty" };
 const failureResult = fromSafeParseReturnType(schema.safeParse(invalidData));
 
 ok(isFailure(failureResult));
-ok(failureResult.left.issues.length > 0);
+ok(failureResult.error.issues.length > 0);

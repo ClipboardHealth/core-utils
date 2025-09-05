@@ -651,4 +651,73 @@ describe("ServiceError", () => {
       expect(actual.status).toBe(422);
     });
   });
+
+  describe("merge", () => {
+    it("returns same error when merging single error", () => {
+      const error = new ServiceError({
+        issues: [{ code: ERROR_CODES.notFound, message: "Not found" }],
+      });
+
+      const result = ServiceError.merge(error);
+
+      expect(result).toBe(error);
+    });
+
+    it("merges two errors", () => {
+      const error1 = new ServiceError({
+        issues: [{ code: ERROR_CODES.badRequest, message: "Invalid input" }],
+      });
+      const error2 = new ServiceError({
+        issues: [{ code: ERROR_CODES.notFound, message: "Resource not found" }],
+      });
+
+      const result = ServiceError.merge(error1, error2);
+
+      expect(result.issues).toHaveLength(2);
+      expect(result.issues).toEqual([
+        {
+          code: ERROR_CODES.badRequest,
+          message: "Invalid input",
+          title: "Invalid or malformed request",
+        },
+        {
+          code: ERROR_CODES.notFound,
+          message: "Resource not found",
+          title: "Resource not found",
+        },
+      ]);
+      expect(result.cause).toBe(error1);
+    });
+
+    it("uses highest status code when merging multiple errors", () => {
+      const error1 = new ServiceError({
+        issues: [{ code: ERROR_CODES.badRequest }], // 400
+      });
+      const error2 = new ServiceError({
+        issues: [{ code: ERROR_CODES.unprocessableEntity }], // 422
+      });
+      const error3 = new ServiceError({
+        issues: [{ code: ERROR_CODES.notFound }], // 404
+      });
+
+      const result = ServiceError.merge(error1, error2, error3);
+
+      expect(result.status).toBe(422);
+    });
+
+    it("generates new ID for merged error", () => {
+      const error1 = new ServiceError({
+        issues: [{ code: ERROR_CODES.badRequest }],
+      });
+      const error2 = new ServiceError({
+        issues: [{ code: ERROR_CODES.notFound }],
+      });
+
+      const result = ServiceError.merge(error1, error2);
+
+      expect(result.id).not.toBe(error1.id);
+      expect(result.id).not.toBe(error2.id);
+      expect(result.id).toMatch(/^[\da-f-]+$/);
+    });
+  });
 });
