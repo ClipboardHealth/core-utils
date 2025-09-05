@@ -9,7 +9,7 @@ const successResult = tryCatch(
 );
 
 ok(isSuccess(successResult));
-strictEqual(successResult.right.name, "John");
+strictEqual(successResult.value.name, "John");
 
 const failureResult = tryCatch(
   () => parseJson("invalid json"),
@@ -17,4 +17,4 @@ const failureResult = tryCatch(
 );
 
 ok(isFailure(failureResult));
-ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
+ok(failureResult.error.issues[0]?.message?.includes("Parse error"));

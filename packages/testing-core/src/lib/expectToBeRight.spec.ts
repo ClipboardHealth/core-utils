@@ -1,5 +1,10 @@
-import { either as E } from "@clipboard-health/util-ts";
-import { failure, ServiceError, type ServiceResult, success } from "@clipboard-health/util-ts";
+import {
+  either as E,
+  failure,
+  ServiceError,
+  type ServiceResult,
+  success,
+} from "@clipboard-health/util-ts";
 
 import { expectToBeRight } from "./expectToBeRight";
 import { expectToBeSuccess } from "./expectToBeSuccess";

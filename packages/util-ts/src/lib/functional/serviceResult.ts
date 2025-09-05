@@ -1,49 +1,79 @@
-import { either as E } from "@clipboard-health/util-ts";
 import { type SafeParseReturnType } from "zod";
 
 import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
+import {
+  type Either,
+  isLeft,
+  isRight,
+  type Left,
+  left,
+  mapLeft,
+  type Right,
+  right,
+} from "./either";
+
+export interface Success<A> {
+  readonly isSuccess: true;
+  readonly value: A;
+}
+
+export interface Failure<E> {
+  readonly isSuccess: false;
+  readonly error: E;
+}
 
 /**
  * Represents the result of a service operation that may fail.
  * @template A The type of the successful result value
  */
-export type ServiceResult<A> = E.Either<ServiceError, A>;
+export type ServiceResult<A> = Either<ServiceError, A> & (Success<A> | Failure<ServiceError>);
 
 /**
- * Alias for {@link E.right}
+ * Alias for {@link right} that duplicates the `right` property to `value` and `isRight` to
+ * `isSuccess`.
  */
 export function success<A>(value: A): ServiceResult<A> {
-  return E.right(value);
+  const base = right(value) as ServiceResult<A>;
+  Object.defineProperty(base, "isSuccess", { get: () => true, enumerable: true });
+  Object.defineProperty(base, "value", { get: () => value, enumerable: true });
+  return base;
 }
 
 /**
- * Alias for {@link E.left}
+ * Alias for {@link left} that duplicates the `left` property to `error` and `isLeft` to
+ * `isSuccess`.
  */
 export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
-  return E.left(params instanceof ServiceError ? params : new ServiceError(params));
+  const error = params instanceof ServiceError ? params : new ServiceError(params);
+  const base = left(error) as ServiceResult<A>;
+  Object.defineProperty(base, "isSuccess", { get: () => false, enumerable: true });
+  Object.defineProperty(base, "error", { get: () => error, enumerable: true });
+  return base;
 }
 
 /**
- * Alias for {@link E.isLeft}
+ * Alias for {@link isLeft}.
  */
-export function isFailure<A>(result: ServiceResult<A>): result is E.Left<ServiceError> {
-  return E.isLeft(result);
+export function isFailure<A>(
+  result: ServiceResult<A>,
+): result is Left<ServiceError> & Failure<ServiceError> {
+  return isLeft(result);
 }
 
 /**
- * Alias for {@link E.isRight}
+ * Alias for {@link isRight}.
  */
-export function isSuccess<A>(result: ServiceResult<A>): result is E.Right<A> {
-  return E.isRight(result);
+export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Success<A> {
+  return isRight(result);
 }
 
 /**
- * Alias for {@link E.mapLeft}
+ * Alias for {@link mapLeft}
  */
 export function mapFailure<G>(
   f: (left: ServiceError) => G,
-): <A>(result: ServiceResult<A>) => E.Either<G, A> {
-  return E.mapLeft(f);
+): <A>(result: ServiceResult<A>) => Either<G, A> {
+  return mapLeft(f);
 }
 
 /**
@@ -52,8 +82,8 @@ export function mapFailure<G>(
  * If the promise rejects, calls the onError function to convert the error into a ServiceError.
  *
  * @template A The type of the value the promise resolves to
- * @param f The promise returning function to convert (a function catches sync throws)
- * @param onError Function to convert unknown errors into ServiceError
+ * @param f Function returning a Promise to execute. Passing a function allows catching synchronous throws
+ * @param onError onError Maps unknown errors to a ServiceError
  * @returns A promise that resolves to a ServiceResult<A>
  *
  * @example
@@ -74,7 +104,7 @@ export function mapFailure<G>(
  *   );
  *
  *   ok(isSuccess(successResult));
- *   strictEqual(successResult.right.id, 1);
+ *   strictEqual(successResult.value.id, 1);
  *
  *   const failureResult = await tryCatchAsync(
  *     async () => await Promise.reject(new Error("Network error")),
@@ -82,7 +112,7 @@ export function mapFailure<G>(
  *   );
  *
  *   ok(isFailure(failureResult));
- *   strictEqual(failureResult.left.issues[0]?.message, "Failed to fetch: Error: Network error");
+ *   strictEqual(failureResult.error.issues[0]?.message, "Failed to fetch: Error: Network error");
  * }
  *
  * // eslint-disable-next-line unicorn/prefer-top-level-await
@@ -126,7 +156,7 @@ export async function tryCatchAsync<A>(
  * );
  *
  * ok(isSuccess(successResult));
- * strictEqual(successResult.right.name, "John");
+ * strictEqual(successResult.value.name, "John");
  *
  * const failureResult = tryCatch(
  *   () => parseJson("invalid json"),
@@ -134,7 +164,7 @@ export async function tryCatchAsync<A>(
  * );
  *
  * ok(isFailure(failureResult));
- * ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
+ * ok(failureResult.error.issues[0]?.message?.includes("Parse error"));
  * ```
  *
  * </embedex>
@@ -200,7 +230,11 @@ function handleError<A>(
 ): ServiceResult<A> {
   try {
     return failure(onError(error));
-  } catch {
-    return failure(ServiceError.fromUnknown(error));
+  } catch (mappingError) {
+    const originalError = ServiceError.fromUnknown(error);
+    return failure({
+      ...originalError,
+      issues: [...originalError.issues, ...ServiceError.fromUnknown(mappingError).issues],
+    });
   }
 }

@@ -171,7 +171,7 @@ async function example() {
   );
 
   ok(isSuccess(successResult));
-  strictEqual(successResult.right.id, 1);
+  strictEqual(successResult.value.id, 1);
 
   const failureResult = await tryCatchAsync(
     async () => await Promise.reject(new Error("Network error")),
@@ -179,7 +179,7 @@ async function example() {
   );
 
   ok(isFailure(failureResult));
-  strictEqual(failureResult.left.issues[0]?.message, "Failed to fetch: Error: Network error");
+  strictEqual(failureResult.error.issues[0]?.message, "Failed to fetch: Error: Network error");
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
@@ -203,7 +203,7 @@ const successResult = tryCatch(
 );
 
 ok(isSuccess(successResult));
-strictEqual(successResult.right.name, "John");
+strictEqual(successResult.value.name, "John");
 
 const failureResult = tryCatch(
   () => parseJson("invalid json"),
@@ -211,7 +211,7 @@ const failureResult = tryCatch(
 );
 
 ok(isFailure(failureResult));
-ok(failureResult.left.issues[0]?.message?.includes("Parse error"));
+ok(failureResult.error.issues[0]?.message?.includes("Parse error"));
 ```
 
 </embedex>
