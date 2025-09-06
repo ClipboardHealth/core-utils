@@ -140,7 +140,7 @@ export class ServiceError extends Error {
   static fromZodError(error: ZodError, options?: { source?: ErrorSource }): ServiceError {
     return new ServiceError({
       cause: error,
-      issues: error.issues.map(toZodIssue),
+      issues: error.issues.map(fromZodIssue),
       source: options?.source,
     });
   }
@@ -275,7 +275,7 @@ export class ServiceError extends Error {
   }
 }
 
-export function toZodIssue(issue: ZodIssue): ServiceIssue {
+export function fromZodIssue(issue: ZodIssue): ServiceIssue {
   return {
     code: ERROR_CODES.badRequest,
     message: issue.message,
@@ -296,7 +296,8 @@ function createServiceErrorMessage(issues: readonly Issue[]): string {
   return issues
     .map((issue) => {
       const message = issue.message ? `: ${issue.message}` : "";
-      return `[${issue.code}]${message}`;
+      const path = issue.path && issue.path.length > 0 ? ` at "${issue.path.join(".")}"` : "";
+      return `[${issue.code}]${message}${path}`;
     })
     .join("; ");
 }
