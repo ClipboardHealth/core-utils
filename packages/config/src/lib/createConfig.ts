@@ -1,6 +1,5 @@
-import { deepFreeze } from "@clipboard-health/util-ts";
+import { deepFreeze, ServiceError } from "@clipboard-health/util-ts";
 import dotenv from "dotenv";
-import { fromZodError } from "zod-validation-error";
 
 import { resolve } from "./internal/resolver";
 import { type ConfigParams } from "./types";
@@ -127,9 +126,12 @@ export function createConfig<
 
   const result = schema.safeParse(resolve({ config, environment: current, path: [], schema }));
   if (!result.success) {
-    throw new Error(`Configuration validation failed: ${fromZodError(result.error).toString()}`, {
-      cause: result.error,
-    });
+    throw new Error(
+      `Configuration validation failed: ${ServiceError.fromZodError(result.error).message}`,
+      {
+        cause: result.error,
+      },
+    );
   }
 
   return deepFreeze(result.data);

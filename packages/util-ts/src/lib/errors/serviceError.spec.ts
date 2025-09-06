@@ -139,7 +139,9 @@ describe("ServiceError", () => {
 
     const actual = new ServiceError(input);
 
-    expect(actual.message).toBe("[badRequest]: Invalid email; [badRequest]: Invalid phone");
+    expect(actual.message).toBe(
+      '[badRequest]: Invalid email at "data.attributes.email"; [badRequest]: Invalid phone at "data.attributes.phoneNumber"',
+    );
     expect(actual.issues).toHaveLength(2);
     expect(actual.issues).toEqual([
       {
