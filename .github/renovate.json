@@ -20,6 +20,11 @@
       "matchDepTypes": ["devDependencies"]
     },
     {
+      "automerge": true,
+      "automergeType": "branch",
+      "matchUpdateTypes": ["patch", "minor"]
+    },
+    {
       "groupName": "Clipboard",
       "matchPackageNames": ["/^@clipboard-health/"]
     },
