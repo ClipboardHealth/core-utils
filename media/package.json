@@ -22,7 +22,7 @@
     "jest": "30.0.5",
     "jest-util": "30.0.5",
     "jsonc-eslint-parser": "2.4.0",
-    "knip": "5.63.0",
+    "knip": "5.63.1",
     "lint-staged": "16.1.6",
     "nx": "21.3.11",
     "prettier": "3.6.2",
