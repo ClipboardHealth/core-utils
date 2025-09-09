@@ -106,6 +106,12 @@ module.exports = {
               "@clipboard-health/require-http-module-factory": "error",
             },
           },
+          {
+            files: ["**/*.ts", "**/*.tsx"],
+            rules: {
+              "@clipboard-health/forbid-object-assign": "error",
+            },
+          },
         ]
       : []),
   ],
