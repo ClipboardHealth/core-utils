@@ -277,6 +277,12 @@ describe("eslint-config", () => {
             "@clipboard-health/require-http-module-factory": "error",
           },
         },
+        {
+          files: ["**/*.ts", "**/*.tsx"],
+          rules: {
+            "@clipboard-health/forbid-object-assign": "error",
+          },
+        },
       ],
     });
   });
@@ -301,6 +307,12 @@ describe("eslint-config", () => {
           files: ["**/*.module.ts"],
           rules: {
             "@clipboard-health/require-http-module-factory": "error",
+          },
+        },
+        {
+          files: ["**/*.ts", "**/*.tsx"],
+          rules: {
+            "@clipboard-health/forbid-object-assign": "error",
           },
         },
       ],
