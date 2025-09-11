@@ -4,10 +4,9 @@ This ESLint rule prevents cross-module repository usage in NestJS applications t
 
 ### Rule Details
 
-This rule enforces two main requirements:
+This rule enforces one main requirement:
 
 1. **No Repository Exports**: NestJS modules should not export repository classes in their `exports` array
-2. **No Cross-Module Repository Usage**: Classes should not import or inject repository classes from different modules
 
 ### Examples
 
@@ -50,14 +49,6 @@ export class AnotherService {
   exports: [SomeService], // ✅ Export service instead
 })
 export class SomeModule {}
-
-// In some.service.ts - using repository within same module
-@Injectable()
-export class SomeService {
-  constructor(
-    private readonly someRepository: SomeRepository, // ✅ Same module usage
-  ) {}
-}
 ```
 
 ### Repository Detection
@@ -65,12 +56,11 @@ export class SomeService {
 The rule identifies repository classes by:
 
 - Class names ending in "Repository"
-- Class names containing "Repo"
-- Files ending in ".repo.ts" or ".repository.ts"
+- Class names ending in "Repo"
 
-### Module Boundary Detection
+### Scope
 
-The rule determines module boundaries by analyzing `@Module` decorator's `providers` array rather than directory structure. This ensures accurate detection of which repositories belong to each module.
+This rule currently focuses on preventing repository exports from NestJS modules. Future versions may include detection of cross-module repository usage patterns.
 
 ### When Not To Use
 
