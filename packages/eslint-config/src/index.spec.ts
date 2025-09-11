@@ -275,6 +275,13 @@ describe("eslint-config", () => {
           files: ["**/*.module.ts"],
           rules: {
             "@clipboard-health/require-http-module-factory": "error",
+            "@clipboard-health/no-cross-module-repository-usage": "error",
+          },
+        },
+        {
+          files: ["**/*.service.ts", "**/*.repository.ts", "**/*.repo.ts"],
+          rules: {
+            "@clipboard-health/no-cross-module-repository-usage": "error",
           },
         },
       ],
@@ -301,6 +308,13 @@ describe("eslint-config", () => {
           files: ["**/*.module.ts"],
           rules: {
             "@clipboard-health/require-http-module-factory": "error",
+            "@clipboard-health/no-cross-module-repository-usage": "error",
+          },
+        },
+        {
+          files: ["**/*.service.ts", "**/*.repository.ts", "**/*.repo.ts"],
+          rules: {
+            "@clipboard-health/no-cross-module-repository-usage": "error",
           },
         },
       ],
