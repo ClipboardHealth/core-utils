@@ -9,32 +9,6 @@ const isRepositoryClass = (name: string): boolean =>
   name.endsWith("Repository") || name.endsWith("Repo");
 
 
-const checkModuleExports = (
-  moduleConfig: TSESTree.ObjectExpression,
-  context: any,
-) => {
-  const exportsProperty = moduleConfig.properties.find(
-    (property): property is TSESTree.Property =>
-      property.type === AST_NODE_TYPES.Property &&
-      property.key.type === AST_NODE_TYPES.Identifier &&
-      property.key.name === "exports",
-  );
-
-  if (
-    exportsProperty?.type === AST_NODE_TYPES.Property &&
-    exportsProperty.value.type === AST_NODE_TYPES.ArrayExpression
-  ) {
-    exportsProperty.value.elements.forEach((element) => {
-      if (element?.type === AST_NODE_TYPES.Identifier && isRepositoryClass(element.name)) {
-        context.report({
-          node: element,
-          messageId: "moduleExportsRepository",
-          data: { repositoryName: element.name },
-        });
-      }
-    });
-  }
-};
 
 
 const rule = createRule({
@@ -62,7 +36,27 @@ const rule = createRule({
         ) {
           const moduleConfig = node.expression.arguments[0];
           if (moduleConfig?.type === AST_NODE_TYPES.ObjectExpression) {
-            checkModuleExports(moduleConfig, context);
+            const exportsProperty = moduleConfig.properties.find(
+              (property): property is TSESTree.Property =>
+                property.type === AST_NODE_TYPES.Property &&
+                property.key.type === AST_NODE_TYPES.Identifier &&
+                property.key.name === "exports",
+            );
+
+            if (
+              exportsProperty?.type === AST_NODE_TYPES.Property &&
+              exportsProperty.value.type === AST_NODE_TYPES.ArrayExpression
+            ) {
+              exportsProperty.value.elements.forEach((element) => {
+                if (element?.type === AST_NODE_TYPES.Identifier && isRepositoryClass(element.name)) {
+                  context.report({
+                    node: element,
+                    messageId: "moduleExportsRepository",
+                    data: { repositoryName: element.name },
+                  });
+                }
+              });
+            }
           }
         }
       },
