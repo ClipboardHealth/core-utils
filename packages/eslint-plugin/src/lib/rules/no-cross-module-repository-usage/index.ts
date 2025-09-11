@@ -8,9 +8,6 @@ import createRule from "../../createRule";
 const isRepositoryClass = (name: string): boolean =>
   name.endsWith("Repository") || name.endsWith("Repo");
 
-
-
-
 const rule = createRule({
   name: "no-cross-module-repository-usage",
   defaultOptions: [],
@@ -48,7 +45,10 @@ const rule = createRule({
               exportsProperty.value.type === AST_NODE_TYPES.ArrayExpression
             ) {
               exportsProperty.value.elements.forEach((element) => {
-                if (element?.type === AST_NODE_TYPES.Identifier && isRepositoryClass(element.name)) {
+                if (
+                  element?.type === AST_NODE_TYPES.Identifier &&
+                  isRepositoryClass(element.name)
+                ) {
                   context.report({
                     node: element,
                     messageId: "moduleExportsRepository",
