@@ -19,7 +19,7 @@ Libraries version and publish separately. We use [Nx Local Generators](https://n
 
 ```bash
 # Optionally, include the --publishPublicly flag.
-npx nx generate @clipboard-health/nx-plugin:node-lib [PROJECT_NAME]
+npx nx generate @clipboard-health/nx-plugin:node-lib [PROJECT_NAME] [OPTIONS]
 
 # Change your mind? Remove it just as easily...
 npx nx generate @nx/workspace:remove --projectName [PROJECT_NAME]

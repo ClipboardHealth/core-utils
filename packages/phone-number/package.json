@@ -1,22 +1,27 @@
 {
-  "name": "@clipboard-health/analytics",
-  "description": "Type-safe analytics wrapper around our third-party analytics provider for user identification and event tracking.",
-  "version": "0.2.0",
+  "name": "@clipboard-health/phone-number",
+  "description": "",
+  "version": "0.0.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/phone-number": "0.0.0",
     "@clipboard-health/util-ts": "3.10.0",
-    "@segment/analytics-node": "2.3.0",
     "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "@clipboard-health/testing-core": "0.19.0",
+    "libphonenumber-js": "1.12.15"
   },
   "keywords": [],
   "license": "MIT",
   "main": "./src/index.js",
+  "peerDependencies": {
+    "libphonenumber-js": "^1.12"
+  },
   "publishConfig": {
     "access": "public"
   },
   "repository": {
-    "directory": "packages/analytics",
+    "directory": "packages/phone-number",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },

@@ -1,7 +1,7 @@
 import { type SafeParseReturnType } from "zod";
 
 import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
-import { type Either, type Left, left, mapLeft, type Right, right } from "./either";
+import { type Either, type Left, mapLeft, type Right } from "./either";
 
 export interface Success<A> {
   readonly isSuccess: true;
@@ -15,39 +15,42 @@ export interface Failure<E> {
 
 /**
  * Represents the result of a service operation that may fail.
+ *
+ * The type is also an {@link Either}, allowing functions built for {@link Either}.
+ *
  * @template A The type of the successful result value
  */
-export type ServiceResult<A> = Either<ServiceError, A> & (Success<A> | Failure<ServiceError>);
+export type ServiceResult<A> =
+  | (Right<A> & Success<A>)
+  | (Left<ServiceError> & Failure<ServiceError>);
 
 /**
- * Alias for {@link right} that duplicates the `right` property to `value` and `isRight` to
- * `isSuccess`.
+ * Creates a successful ServiceResult.
  */
 export function success<A>(value: A): ServiceResult<A> {
-  const base = right(value) as Right<A>;
-  Object.defineProperties(base, {
-    isSuccess: { get: () => true, enumerable: true },
-    value: { get: () => base.right, enumerable: true },
-  });
-  return Object.freeze(base) as ServiceResult<A>;
+  return Object.freeze({
+    isRight: true,
+    isSuccess: true,
+    right: value,
+    value,
+  } as const);
 }
 
 /**
- * Alias for {@link left} that duplicates the `left` property to `error` and `isLeft` to
- * `isSuccess`.
+ * Creates a failed ServiceResult.
  */
 export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
   const error = params instanceof ServiceError ? params : new ServiceError(params);
-  const base = left(error) as Left<ServiceError>;
-  Object.defineProperties(base, {
-    isSuccess: { get: () => false, enumerable: true },
-    error: { get: () => base.left, enumerable: true },
-  });
-  return Object.freeze(base) as ServiceResult<A>;
+  return Object.freeze({
+    isRight: false,
+    isSuccess: false,
+    left: error,
+    error,
+  } as const);
 }
 
 /**
- * Alias for {@link isLeft}.
+ * Type guard for failure results.
  */
 export function isFailure<A>(
   result: ServiceResult<A>,
@@ -56,7 +59,7 @@ export function isFailure<A>(
 }
 
 /**
- * Alias for {@link isRight}.
+ * Type guard for success results.
  */
 export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Success<A> {
   return result.isSuccess;

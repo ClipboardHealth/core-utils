@@ -1,13 +1,12 @@
+import { formatPhoneNumber } from "@clipboard-health/phone-number";
 import {
-  either as E,
+  isFailure,
   isString,
   type LogFunction,
   type Logger,
   toError,
 } from "@clipboard-health/util-ts";
 import { Analytics as SegmentAnalytics } from "@segment/analytics-node";
-
-import { formatPhoneAsE164 } from "./formatPhoneAsE164";
 
 export interface UserId {
   userId: string | number;
@@ -145,17 +144,17 @@ export class Analytics {
 
     const normalized = { ...traits };
     if (traits.phone && isString(traits.phone)) {
-      const result = formatPhoneAsE164({ phone: traits.phone });
+      const result = formatPhoneNumber({ phoneNumber: traits.phone, format: "E.164" });
 
-      if (E.isLeft(result)) {
+      if (isFailure(result)) {
         this.log({
           logParams,
-          message: result.left.issues.map((issue) => issue.message).join(", "),
+          message: result.error.issues.map((issue) => issue.message).join(", "),
           logFunction: this.logger.error,
           metadata: { traits },
         });
       } else {
-        normalized.phone = result.right;
+        normalized.phone = result.value;
       }
     }
 
