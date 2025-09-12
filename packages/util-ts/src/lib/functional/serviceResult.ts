@@ -13,6 +13,9 @@ export interface Failure<E> {
   readonly error: E;
 }
 
+export type SuccessResult<A> = Right<A> & Success<A>;
+export type FailureResult = Left<ServiceError> & Failure<ServiceError>;
+
 /**
  * Represents the result of a service operation that may fail.
  *
@@ -20,9 +23,7 @@ export interface Failure<E> {
  *
  * @template A The type of the successful result value
  */
-export type ServiceResult<A> =
-  | (Right<A> & Success<A>)
-  | (Left<ServiceError> & Failure<ServiceError>);
+export type ServiceResult<A> = SuccessResult<A> | FailureResult;
 
 /**
  * Creates a successful ServiceResult.
@@ -66,7 +67,8 @@ export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Suc
 }
 
 /**
- * Alias for {@link mapLeft}
+ * Alias for {@link mapLeft}.
+ * Note: returns an {@link Either}, not a ServiceResult.
  */
 export function mapFailure<G>(
   f: (left: ServiceError) => G,

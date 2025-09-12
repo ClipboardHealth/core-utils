@@ -8,7 +8,9 @@ export function formatPhoneNumber(params: {
   const { phoneNumber, format } = params;
 
   try {
-    const parsedPhoneNumber = parsePhoneNumberWithError(phoneNumber, { defaultCountry: "US" });
+    const parsedPhoneNumber = parsePhoneNumberWithError(phoneNumber.trim(), {
+      defaultCountry: "US",
+    });
     return success(parsedPhoneNumber.format(format === "E.164" ? "E.164" : "NATIONAL"));
   } catch {
     return failure({ issues: [{ message: "Invalid phone number", code: "INVALID_PHONE_NUMBER" }] });
