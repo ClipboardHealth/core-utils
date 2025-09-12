@@ -1,6 +1,6 @@
 # @clipboard-health/phone-number <!-- omit from toc -->
 
-TODO
+Phone number utility functions.
 
 ## Table of contents <!-- omit from toc -->
 
