@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "phone-number",
+  "projectType": "library",
+  "sourceRoot": "packages/phone-number/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/phone-number/*.md"],
+        "main": "packages/phone-number/src/index.js",
+        "outputPath": "dist/packages/phone-number",
+        "tsConfig": "packages/phone-number/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/phone-number/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/phone-number/jest.config.ts"
+      }
+    }
+  }
+}
