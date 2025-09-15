@@ -81,13 +81,22 @@ jobs:
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           NX_RELEASE: true
-        # Versions package.json files at project roots
+        # Version package.json files at project roots
         run: npx nx release --skip-publish
         # Run a build so package.json files in dist directories pick up new versions
       - run: npx nx run-many --target=build
       - env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx nx release publish
+      - env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        # Commit mismatched package.json versions and package-lock.json changes, if any
+        run: |
+          npx syncpack fix-mismatches &&
+          npm install &&
+          git add . &&
+          git diff --staged --quiet || git commit -m "chore(release): sync package versions [skip actions]" --no-verify &&
+          git push
       - run: npm run docs
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
