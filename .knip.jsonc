@@ -31,6 +31,9 @@
     "packages/json-api": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
+    "packages/notifications": {
+      "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
     "packages/rules-engine": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
