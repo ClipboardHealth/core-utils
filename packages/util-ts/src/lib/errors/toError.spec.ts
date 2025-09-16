@@ -63,4 +63,17 @@ describe("toError", () => {
     expect(actual.code).toBe("INTERNAL_ERROR");
     expect(actual.details).toEqual({ userId: "123" });
   });
+
+  it("preserves name property for error-like objects with string name", () => {
+    const errorLike = {
+      message: "validation failed",
+      name: "ValidationError",
+    };
+
+    const actual = toError(errorLike);
+
+    expect(actual).toBeInstanceOf(Error);
+    expect(actual.message).toBe("validation failed");
+    expect(actual.name).toBe("ValidationError");
+  });
 });

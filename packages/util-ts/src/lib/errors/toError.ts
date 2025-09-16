@@ -2,6 +2,17 @@ import { isString } from "../strings/isString";
 import { stringify } from "../strings/stringify";
 import { isError } from "./isError";
 
+const IGNORED_PROPERTIES = new Set([
+  "message",
+  "stack",
+  "name",
+  "__proto__",
+  "prototype",
+  "constructor",
+]);
+
+type PropertyObject = Record<PropertyKey, unknown>;
+
 /**
  * Converts an error-like value to an Error instance. If the input is already an Error, returns it
  * directly. Otherwise, creates a new Error with an appropriate string representation of the input.
@@ -20,8 +31,18 @@ export function toError(value: unknown): Error {
       error.stack = String(value.stack);
     }
 
-    // Preserve the original value's properties.
-    return Object.assign(error, value);
+    if ("name" in value && typeof value.name === "string") {
+      error.name = String(value.name);
+    }
+
+    // Preserve original properties without clobbering.
+    Reflect.ownKeys(value)
+      .filter((key) => !IGNORED_PROPERTIES.has(String(key)))
+      .forEach((key) => {
+        (error as unknown as PropertyObject)[key] = (value as PropertyObject)[key];
+      });
+
+    return error;
   }
 
   if (typeof value === "symbol") {
