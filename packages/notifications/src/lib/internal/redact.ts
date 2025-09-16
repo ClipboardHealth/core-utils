@@ -31,7 +31,7 @@ function redactValue(params: { keysToRedact: string[]; key?: string; value: unkn
     return value.map((aValue) => redactValue({ keysToRedact, value: aValue }));
   }
 
-  if (typeof value === "object") {
+  if (isPlainObject(value)) {
     const redactedObject: Record<string, unknown> = {};
     for (const [oKey, oValue] of Object.entries(value)) {
       redactedObject[oKey] = redactValue({ keysToRedact, key: oKey, value: oValue });
@@ -41,4 +41,8 @@ function redactValue(params: { keysToRedact: string[]; key?: string; value: unkn
   }
 
   return value;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === "[object Object]";
 }

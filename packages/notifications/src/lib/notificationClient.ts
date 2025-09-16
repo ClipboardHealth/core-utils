@@ -11,14 +11,14 @@ import {
 
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
-import { type IdempotentKnock } from "./internal/idempotentKnock";
+import { formatPhoneNumber } from "./internal/formatPhoneNumber";
+import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
 import { toKnockBody } from "./internal/toKnockBody";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
   LogParams,
-  MobilePlatform,
   Span,
   Tracer,
   TriggerBody,
@@ -42,11 +42,6 @@ const LOG_PARAMS = {
     destination: "knock.tenants.set",
   },
 };
-
-export const NOTIFICATION_CHANNEL_IDS: Record<MobilePlatform, string> = {
-  android: "c8a39708-bd79-471e-9a07-06fa95b58754",
-  ios: "4020e6fe-f3ce-4424-85eb-f0bec2fef85e",
-} as const;
 
 export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 
@@ -73,25 +68,34 @@ export class NotificationClient {
   private readonly tracer: Tracer;
 
   /**
-   * Creates a new NotificationsClient instance.
+   * Creates a new NotificationClient instance.
    *
+   * @param params.apiKey - API key for the third-party provider.
    * @param params.logger - Logger instance for structured logging.
-   * @param params.provider - Third-party provider instance.
    * @param params.tracer - Tracer instance for distributed tracing.
    */
-  constructor(params: { provider: IdempotentKnock; logger: Logger; tracer: Tracer }) {
-    const { logger, provider, tracer } = params;
+  constructor(
+    params: { logger: Logger; tracer: Tracer } &
+      // Pass either an apiKey (recommended) or a provider (used by tests).
+      ({ provider?: never; apiKey: string } | { provider: IdempotentKnock; apiKey?: never }),
+  ) {
+    const { logger, tracer } = params;
 
     this.logger = logger;
-    this.provider = provider;
     this.tracer = tracer;
+    this.provider =
+      "provider" in params
+        ? // eslint-disable-next-line unicorn/consistent-destructuring
+          params.provider
+        : // eslint-disable-next-line unicorn/consistent-destructuring
+          new IdempotentKnock({ apiKey: params.apiKey, logger });
   }
 
   /**
    * Triggers a notification through third-party providers.
    *
    * This method handles:
-   * - Stale notifications prevention through.
+   * - Stale notifications prevention through expiration checks.
    * - Logging with sensitive data redaction.
    * - Distributed tracing with notification metadata.
    * - Idempotency to prevent duplicate notifications.
@@ -106,20 +110,16 @@ export class NotificationClient {
    * import { NotificationClient, type Span } from "@clipboard-health/notifications";
    * import { isSuccess } from "@clipboard-health/util-ts";
    *
-   * import { IdempotentKnock } from "../src/lib/internal/idempotentKnock";
-   *
-   * const logger = {
-   *   info: console.log,
-   *   warn: console.warn,
-   *   error: console.error,
-   * } as const;
-   * const tracer = {
-   *   trace: <T>(_name: string, _options: unknown, fun: (span?: Span | undefined) => T): T => fun(),
-   * };
    * const client = new NotificationClient({
-   *   provider: new IdempotentKnock({ apiKey: "test-api-key", logger }),
-   *   logger,
-   *   tracer,
+   *   apiKey: "test-api-key",
+   *   logger: {
+   *     info: console.log,
+   *     warn: console.warn,
+   *     error: console.error,
+   *   } as const,
+   *   tracer: {
+   *     trace: <T>(_name: string, _options: unknown, fun: (span?: Span | undefined) => T): T => fun(),
+   *   },
    * });
    *
    * async function triggerNotification(job: { attemptsCount: number }) {
@@ -150,7 +150,7 @@ export class NotificationClient {
     const logParams = createTriggerLogParams({ ...params, ...LOG_PARAMS.trigger });
     return await this.tracer.trace(
       logParams.traceName,
-      createTriggerTraceOptions({ ...logParams, expiresAt: params.expiresAt }),
+      createTriggerTraceOptions(logParams),
       async (span) => {
         const validated = this.validateTriggerRequest({ ...params, span, logParams });
         if (isFailure(validated)) {
@@ -194,9 +194,8 @@ export class NotificationClient {
   public async appendPushToken(
     params: AppendPushTokenRequest,
   ): Promise<ServiceResult<AppendPushTokenResponse>> {
-    const { userId, token, platform } = params;
-    const channelId = NOTIFICATION_CHANNEL_IDS[platform];
-    const logParams = { ...LOG_PARAMS.appendPushToken, userId, platform, channelId };
+    const { channelId, userId, token } = params;
+    const logParams = { ...LOG_PARAMS.appendPushToken, userId, channelId };
 
     try {
       // Don't log the push token, it is sensitive.
@@ -240,22 +239,23 @@ export class NotificationClient {
   public async upsertWorkplace(
     params: UpsertWorkplaceRequest,
   ): Promise<ServiceResult<UpsertWorkplaceResponse>> {
-    const { workplaceId, name } = params;
-    const logParams = { ...LOG_PARAMS.upsertWorkplace, workplaceId, name };
+    const { workplaceId, ...body } = params;
+    const logParams = { ...LOG_PARAMS.upsertWorkplace, workplaceId, ...body };
 
     try {
       this.logger.info(`${logParams.traceName} request`, logParams);
 
-      const response = await this.provider.tenants.set(workplaceId, { name });
+      body.phoneNumber &&= formatPhoneNumber({ phoneNumber: body.phoneNumber });
+
+      const response = await this.provider.tenants.set(workplaceId, body);
 
       this.logger.info(`${logParams.traceName} response`, {
         ...logParams,
-        response,
+        response: { workplaceId: response.id, name: response.name },
       });
 
       return success({
         workplaceId: response.id,
-        name: response.name ?? name,
       });
     } catch (maybeError) {
       const error = toError(maybeError);
@@ -349,6 +349,8 @@ export class NotificationClient {
       ...logParams,
       redactedBody: {
         ...body,
+        // Don't log potentially sensitive recipient data.
+        recipients: body.recipients.length,
         data: redact({ data: body.data ?? undefined, keysToRedact }),
       },
     });

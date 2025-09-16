@@ -22,7 +22,7 @@ describe("chunkRecipients", () => {
     });
   });
 
-  it("returns empty array when no recipients provided", () => {
+  it("returns single chunk with empty recipients when no recipients provided", () => {
     const input = {
       idempotencyKey: mockIdempotencyKey,
       recipientIds: [],

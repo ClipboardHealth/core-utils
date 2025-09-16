@@ -64,7 +64,7 @@ export interface InlineIdentifyUserRequest {
   name?: string | undefined;
 
   /**
-   * The user's [E.164](https://www.twilio.com/docs/glossary/what-e164) phone number.
+   * The user's phone number.
    */
   phoneNumber?: string | undefined;
 
@@ -92,9 +92,9 @@ export interface TriggerBody {
   actor?: RecipientRequest;
 
   /**
-   * An optional key used to reference a specific trigger request a cancellation request. You must
-   * provide it while triggering in order to enable subsequent cancellation and it should be unique
-   * across trigger requests to avoid unintentional cancellations.
+   * An optional key used to reference a specific trigger request when issuing a cancellation
+   * request. You must provide it while triggering in order to enable subsequent cancellation and it
+   * should be unique across trigger requests to avoid unintentional cancellations.
    */
   cancellationKey?: string;
 
@@ -107,7 +107,7 @@ export interface TriggerBody {
   /**
    * The associated workplace ID.
    */
-  workplace?: string;
+  workplaceId?: string;
 }
 
 /**
@@ -148,14 +148,14 @@ export interface TriggerResponse {
  * Request parameters for appending a push token.
  */
 export interface AppendPushTokenRequest {
+  /** The channel ID. */
+  channelId: string;
+
   /** The user ID. */
   userId: string;
 
   /** The push token to append. */
   token: string;
-
-  /** The token's mobile platform. */
-  platform: MobilePlatform;
 }
 
 /**
@@ -167,23 +167,47 @@ export interface AppendPushTokenResponse {
 }
 
 /**
- * Request parameters to upsert a workplace.
+ * Request parameters for workplace upsert.
  */
 export interface UpsertWorkplaceRequest {
-  /** The unique identifier for the workplace. */
+  /**
+   * The workplace's unique identifier.
+   */
   workplaceId: string;
 
-  /** The name of the workplace. */
-  name: string;
+  /**
+   * The workplace's creation date.
+   */
+  createdAt?: Date | undefined;
+
+  /**
+   * The workplace's email address.
+   */
+  email?: string | undefined;
+
+  /**
+   * The workplace's display name.
+   */
+  name?: string | undefined;
+
+  /**
+   * The workplace's phone number.
+   */
+  phoneNumber?: string | undefined;
+
+  /**
+   * The workplace's [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) for
+   * scheduled notifications.
+   */
+  timeZone?: string | undefined;
 }
 
 /**
- * Response after doing a workplace upsert.
+ * Response after workplace upsert.
  */
 export interface UpsertWorkplaceResponse {
-  /** The unique identifier for the workplace. */
+  /**
+   * The workplace's unique identifier.
+   */
   workplaceId: string;
-
-  /** The name of the workplace. */
-  name: string;
 }

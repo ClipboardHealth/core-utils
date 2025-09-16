@@ -7,6 +7,14 @@
  * @returns the new 2D array of chunks.
  */
 export function chunk<T>(array: T[], size: number): T[][] {
+  if (!Number.isInteger(size) || size <= 0) {
+    throw new RangeError("size must be a positive integer");
+  }
+
+  if (array.length === 0) {
+    return [];
+  }
+
   return Array.from({ length: Math.ceil(array.length / size) }, (_, index) =>
     array.slice(index * size, (index + 1) * size),
   );

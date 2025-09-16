@@ -3,8 +3,10 @@ import { createHash } from "node:crypto";
 import { createDeterministicHash } from "./createDeterministicHash";
 
 function createExpectedHash(ids: string[]): string {
-  const sortedIds = ids.sort((a, b) => a.localeCompare(b)).join(",");
-  return createHash("sha256").update(sortedIds).digest("hex").slice(0, 32);
+  return createHash("sha256")
+    .update(JSON.stringify([...ids].sort()))
+    .digest("hex")
+    .slice(0, 32);
 }
 
 describe("createDeterministicHash", () => {
@@ -76,17 +78,6 @@ describe("createDeterministicHash", () => {
 
     expect(actual).toBe(expected);
     expect(actual).toHaveLength(32);
-  });
-
-  it("handles custom separator", () => {
-    const input = ["user1", "user2"];
-    const separator = "|";
-    const sortedIds = ["user1", "user2"].sort((a, b) => a.localeCompare(b)).join(separator);
-    const expected = createHash("sha256").update(sortedIds).digest("hex").slice(0, 32);
-
-    const actual = createDeterministicHash({ items: input, separator });
-
-    expect(actual).toBe(expected);
   });
 
   it("handles custom character length", () => {

@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
+    "@clipboard-health/phone-number": "0.1.0",
     "@clipboard-health/util-ts": "3.11.0",
     "@knocklabs/node": "1.16.0",
     "tslib": "2.8.1"

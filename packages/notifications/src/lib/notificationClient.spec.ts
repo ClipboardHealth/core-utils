@@ -1,15 +1,15 @@
-import { expectToBeLeft, expectToBeRight } from "@clipboard-health/testing-core";
+import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
 import { type Knock } from "@knocklabs/node";
 
 import { IdempotentKnock } from "./internal/idempotentKnock";
-import { NOTIFICATION_CHANNEL_IDS, NotificationClient } from "./notificationClient";
+import { NotificationClient } from "./notificationClient";
 import type { Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
 
-describe("NotificationsClient", () => {
+describe("NotificationClient", () => {
   let client: NotificationClient;
   let mockLogger: jest.Mocked<Logger>;
   let mockTracer: jest.Mocked<Tracer>;
@@ -49,6 +49,16 @@ describe("NotificationsClient", () => {
 
       expect(client).toBeDefined();
     });
+
+    it("creates Knock instance with apiKey", () => {
+      const client = new NotificationClient({
+        logger: mockLogger,
+        apiKey: "test-api-key",
+        tracer: mockTracer,
+      });
+
+      expect(client).toBeDefined();
+    });
   });
 
   describe("trigger", () => {
@@ -77,7 +87,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
 
       expect(triggerSpy).toHaveBeenCalledWith(
@@ -115,7 +125,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeLeft(actual);
+      expectToBeFailure(actual);
       expect(actual.error.message).toContain("notification expires at");
 
       expect(triggerSpy).not.toHaveBeenCalled();
@@ -142,7 +152,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeLeft(actual);
+      expectToBeFailure(actual);
       expect(actual.error).toEqual(
         new ServiceError({ issues: [{ code: "unknown", message: mockError.message }] }),
       );
@@ -179,12 +189,12 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.trigger request",
         expect.objectContaining({
           redactedBody: {
-            recipients: [{ userId: "user-1" }],
+            recipients: 1,
             data: {
               publicInfo: "visible",
               secretKey: "[REDACTED]",
@@ -214,12 +224,12 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.trigger request",
         expect.objectContaining({
           redactedBody: {
-            recipients: [{ userId: "user-1" }],
+            recipients: 1,
             data: undefined,
           },
         }),
@@ -244,7 +254,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(mockTracer.trace).toHaveBeenCalledWith(
         "notifications.trigger",
         {
@@ -256,8 +266,6 @@ describe("NotificationsClient", () => {
             "messaging.destination": "knock.workflows.trigger",
             "messaging.operation": "publish",
             "notification.attempt": "1",
-            "notification.expiresAt": expect.any(String),
-            "notification.idempotencyKey": mockIdempotencyKey,
           }),
         },
         expect.any(Function),
@@ -284,7 +292,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
 
@@ -304,7 +312,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
 
@@ -324,7 +332,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
 
@@ -358,7 +366,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
 
@@ -378,7 +386,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeLeft(actual);
+      expectToBeFailure(actual);
       expect(mockSpan.addTags).toHaveBeenCalledWith({
         error: true,
         "error.type": "expired",
@@ -403,7 +411,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeLeft(actual);
+      expectToBeFailure(actual);
       expect(mockSpan.addTags).toHaveBeenCalledWith({
         error: true,
         "error.type": "unknown",
@@ -423,7 +431,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeLeft(actual);
+      expectToBeFailure(actual);
       expect(actual.error.message).toContain("Got 0 recipients; must be > 0");
     });
 
@@ -440,7 +448,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeLeft(actual);
+      expectToBeFailure(actual);
       expect(actual.error.message).toContain("Got 1001 recipients; must be <= 1000");
     });
 
@@ -459,7 +467,7 @@ describe("NotificationsClient", () => {
 
       const actual = await client.trigger(input as TriggerRequest);
 
-      expectToBeRight(actual);
+      expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
   });
@@ -467,7 +475,7 @@ describe("NotificationsClient", () => {
   describe("appendPushToken", () => {
     const mockUserId = "user-123";
     const mockToken = "push-token-abc";
-    const mockChannelId = NOTIFICATION_CHANNEL_IDS.android;
+    const mockChannelId = "channel-id-abc";
 
     it("appends push token successfully when no existing tokens", async () => {
       const getChannelDataSpy = jest
@@ -478,12 +486,12 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeRight(result);
+      expectToBeSuccess(result);
       expect(result.value.success).toBe(true);
 
       expect(getChannelDataSpy).toHaveBeenCalledWith(mockUserId, mockChannelId);
@@ -496,7 +504,6 @@ describe("NotificationsClient", () => {
           traceName: "notifications.appendPushToken",
           destination: "knock.users.setChannelData",
           userId: mockUserId,
-          platform: "android",
           channelId: mockChannelId,
         }),
       );
@@ -518,12 +525,12 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeRight(result);
+      expectToBeSuccess(result);
       expect(result.value.success).toBe(true);
 
       expect(setChannelDataSpy).toHaveBeenCalledWith(mockUserId, mockChannelId, {
@@ -547,12 +554,12 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeRight(result);
+      expectToBeSuccess(result);
       expect(result.value.success).toBe(true);
 
       expect(setChannelDataSpy).toHaveBeenCalledWith(mockUserId, mockChannelId, {
@@ -566,28 +573,6 @@ describe("NotificationsClient", () => {
       );
     });
 
-    it("uses correct channel ID for iOS platform", async () => {
-      const iosChannelId = "4020e6fe-f3ce-4424-85eb-f0bec2fef85e";
-      const getChannelDataSpy = jest
-        .spyOn(provider.users, "getChannelData")
-        .mockRejectedValue(createNotFoundError());
-      const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: [mockToken] },
-      } as SetChannelDataResponse);
-
-      const result = await client.appendPushToken({
-        userId: mockUserId,
-        token: mockToken,
-        platform: "ios",
-      });
-
-      expectToBeRight(result);
-      expect(getChannelDataSpy).toHaveBeenCalledWith(mockUserId, iosChannelId);
-      expect(setChannelDataSpy).toHaveBeenCalledWith(mockUserId, iosChannelId, {
-        data: { tokens: [mockToken] },
-      });
-    });
-
     it("handles channel data with no tokens field", async () => {
       jest.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: {},
@@ -597,12 +582,12 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeRight(result);
+      expectToBeSuccess(result);
       expect(setChannelDataSpy).toHaveBeenCalledWith(mockUserId, mockChannelId, {
         data: { tokens: [mockToken] },
       });
@@ -615,9 +600,9 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -625,7 +610,6 @@ describe("NotificationsClient", () => {
         expect.objectContaining({
           traceName: "notifications.appendPushToken",
           userId: mockUserId,
-          platform: "android",
           channelId: mockChannelId,
         }),
       );
@@ -637,12 +621,12 @@ describe("NotificationsClient", () => {
       const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData");
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeLeft(result);
+      expectToBeFailure(result);
       expect(result.error).toEqual(
         new ServiceError({ issues: [{ code: "unknown", message: "API error" }] }),
       );
@@ -660,12 +644,12 @@ describe("NotificationsClient", () => {
       jest.spyOn(provider.users, "setChannelData").mockRejectedValue(mockError);
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeLeft(result);
+      expectToBeFailure(result);
       expect(result.error).toEqual(
         new ServiceError({ issues: [{ code: "unknown", message: "Set channel data failed" }] }),
       );
@@ -683,9 +667,9 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
       // Check that no log call contains the actual token
@@ -707,12 +691,12 @@ describe("NotificationsClient", () => {
       } as SetChannelDataResponse);
 
       const result = await client.appendPushToken({
+        channelId: mockChannelId,
         userId: mockUserId,
         token: mockToken,
-        platform: "android",
       });
 
-      expectToBeRight(result);
+      expectToBeSuccess(result);
       expect(result.value.success).toBe(true);
     });
   });
@@ -736,9 +720,8 @@ describe("NotificationsClient", () => {
 
       const result = await client.upsertWorkplace(input);
 
-      expectToBeRight(result);
+      expectToBeSuccess(result);
       expect(result.value.workplaceId).toBe(mockWorkplaceId);
-      expect(result.value.name).toBe(mockWorkplaceName);
 
       expect(tenantSetSpy).toHaveBeenCalledWith(mockWorkplaceId, {
         name: mockWorkplaceName,
@@ -755,29 +738,12 @@ describe("NotificationsClient", () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.upsertWorkplace response",
         expect.objectContaining({
-          response: mockResponse,
+          response: {
+            workplaceId: mockWorkplaceId,
+            name: mockWorkplaceName,
+          },
         }),
       );
-    });
-
-    it("uses fallback name when response name is undefined", async () => {
-      const mockResponse = {
-        id: mockWorkplaceId,
-        __typename: "Tenant",
-        name: null,
-      };
-      jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
-
-      const input: UpsertWorkplaceRequest = {
-        workplaceId: mockWorkplaceId,
-        name: mockWorkplaceName,
-      };
-
-      const result = await client.upsertWorkplace(input);
-
-      expectToBeRight(result);
-      expect(result.value.workplaceId).toBe(mockWorkplaceId);
-      expect(result.value.name).toBe(mockWorkplaceName);
     });
 
     it("handles Knock API error", async () => {
@@ -791,7 +757,7 @@ describe("NotificationsClient", () => {
 
       const result = await client.upsertWorkplace(input);
 
-      expectToBeLeft(result);
+      expectToBeFailure(result);
       expect(result.error).toEqual(
         new ServiceError({ issues: [{ code: "unknown", message: mockError.message }] }),
       );
@@ -833,7 +799,10 @@ describe("NotificationsClient", () => {
         destination: "knock.tenants.set",
         workplaceId: mockWorkplaceId,
         name: mockWorkplaceName,
-        response: mockResponse,
+        response: {
+          workplaceId: mockWorkplaceId,
+          name: mockWorkplaceName,
+        },
       });
     });
   });

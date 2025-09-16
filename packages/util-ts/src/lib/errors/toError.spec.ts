@@ -46,4 +46,21 @@ describe("toError", () => {
     expect(actual.message).toBe("custom error");
     expect(actual.stack).toBe("custom stack trace");
   });
+
+  it("preserves non-standard fields for error-like objects", () => {
+    const errorLike = {
+      message: "custom error",
+      status: 500,
+      code: "INTERNAL_ERROR",
+      details: { userId: "123" },
+    };
+
+    const actual = toError(errorLike) as Error & typeof errorLike;
+
+    expect(actual).toBeInstanceOf(Error);
+    expect(actual.message).toBe("custom error");
+    expect(actual.status).toBe(500);
+    expect(actual.code).toBe("INTERNAL_ERROR");
+    expect(actual.details).toEqual({ userId: "123" });
+  });
 });

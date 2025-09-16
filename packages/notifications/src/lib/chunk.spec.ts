@@ -61,4 +61,10 @@ describe("chunk", () => {
 
     expect(actual).toEqual(expected);
   });
+
+  it("throws error for invalid size", () => {
+    expect(() => chunk([1, 2, 3], 0)).toThrow(RangeError);
+    expect(() => chunk([1, 2, 3], -1)).toThrow(RangeError);
+    expect(() => chunk([1, 2, 3], 1.5)).toThrow(RangeError);
+  });
 });

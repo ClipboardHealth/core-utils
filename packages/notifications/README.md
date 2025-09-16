@@ -6,7 +6,7 @@ Send notifications through third-party providers.
 
 - [Install](#install)
 - [Usage](#usage)
-  - [`NotificationsClient`](#notificationsclient)
+  - [`NotificationClient`](#notificationclient)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -17,7 +17,7 @@ npm install @clipboard-health/notifications
 
 ## Usage
 
-### `NotificationsClient`
+### `NotificationClient`
 
 <embedex source="packages/notifications/examples/notificationClient.ts">
 
@@ -25,20 +25,16 @@ npm install @clipboard-health/notifications
 import { NotificationClient, type Span } from "@clipboard-health/notifications";
 import { isSuccess } from "@clipboard-health/util-ts";
 
-import { IdempotentKnock } from "../src/lib/internal/idempotentKnock";
-
-const logger = {
-  info: console.log,
-  warn: console.warn,
-  error: console.error,
-} as const;
-const tracer = {
-  trace: <T>(_name: string, _options: unknown, fun: (span?: Span | undefined) => T): T => fun(),
-};
 const client = new NotificationClient({
-  provider: new IdempotentKnock({ apiKey: "test-api-key", logger }),
-  logger,
-  tracer,
+  apiKey: "test-api-key",
+  logger: {
+    info: console.log,
+    warn: console.warn,
+    error: console.error,
+  } as const,
+  tracer: {
+    trace: <T>(_name: string, _options: unknown, fun: (span?: Span | undefined) => T): T => fun(),
+  },
 });
 
 async function triggerNotification(job: { attemptsCount: number }) {

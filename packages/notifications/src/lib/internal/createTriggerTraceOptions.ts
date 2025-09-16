@@ -1,13 +1,12 @@
 import type { TraceOptions } from "../types";
 import type { TriggerLogContext } from "./createTriggerLogParams";
 
-export function createTriggerTraceOptions(
-  params: TriggerLogContext & { expiresAt: Date },
-): TraceOptions {
-  const { key, attempt, idempotencyKey, expiresAt, destination } = params;
+export function createTriggerTraceOptions(params: TriggerLogContext): TraceOptions {
+  const { key, attempt, destination } = params;
 
   return {
     resource: `notification.${key}`,
+    // Don't include high cardinality tags like expiresAt and idempotencyKey.
     tags: {
       "span.kind": "producer",
       component: "customer-notifications",
@@ -15,8 +14,6 @@ export function createTriggerTraceOptions(
       "messaging.operation": "publish",
       "messaging.destination": destination,
       "notification.attempt": attempt.toString(),
-      "notification.idempotencyKey": idempotencyKey,
-      "notification.expiresAt": expiresAt.toISOString(),
     },
   };
 }

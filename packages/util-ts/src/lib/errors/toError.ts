@@ -20,7 +20,8 @@ export function toError(value: unknown): Error {
       error.stack = String(value.stack);
     }
 
-    return error;
+    // Preserve the original value's properties.
+    return Object.assign(error, value);
   }
 
   if (typeof value === "symbol") {
