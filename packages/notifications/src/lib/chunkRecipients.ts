@@ -1,4 +1,5 @@
-import { chunk } from "./chunk";
+import { chunk } from "@clipboard-health/util-ts";
+
 import { MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
 
 export function chunkRecipients(params: {
