@@ -79,10 +79,6 @@ export class NotificationClient {
 
   /**
    * Creates a new NotificationClient instance.
-   *
-   * @param params.apiKey - API key for the third-party provider.
-   * @param params.logger - Logger instance for structured logging.
-   * @param params.tracer - Tracer instance for distributed tracing.
    */
   constructor(params: NotificationClientParams) {
     const { logger, signingKey, tracer } = params;
