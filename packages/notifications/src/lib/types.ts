@@ -1,17 +1,12 @@
+import { type Logger } from "@clipboard-health/util-ts";
+
+import { type IdempotentKnock } from "./internal/idempotentKnock";
+
 export type Tags = Record<string, unknown>;
-
-export const MOBILE_PLATFORMS = ["android", "ios"] as const;
-
-export type MobilePlatform = (typeof MOBILE_PLATFORMS)[number];
 
 export interface TraceOptions {
   resource?: string;
   tags?: Tags;
-}
-
-export interface LogParams {
-  traceName: string;
-  destination: string;
 }
 
 export interface Span {
@@ -23,6 +18,36 @@ export interface Span {
  */
 export interface Tracer {
   trace<T>(name: string, options: TraceOptions, fun: (span?: Span) => T): T;
+}
+
+/**
+ * Configuration parameters for the NotificationClient constructor.
+ */
+export type NotificationClientParams = {
+  /** Logger instance for structured logging. */
+  logger: Logger;
+  /** Signing key for user token authentication. Only required if calling `signUserToken`. */
+  signingKey?: string;
+  /** Tracer instance for distributed tracing. */
+  tracer: Tracer;
+} &
+  /**
+   * Pass the third-party provider's apiKey.
+   */
+  (| { provider?: never; apiKey: string }
+    /**
+     * Pass the third-party provider's instance (used by tests).
+     */
+    | { provider: IdempotentKnock; apiKey?: never }
+  );
+
+export const MOBILE_PLATFORMS = ["android", "ios"] as const;
+
+export type MobilePlatform = (typeof MOBILE_PLATFORMS)[number];
+
+export interface LogParams {
+  traceName: string;
+  destination: string;
 }
 
 export interface PushChannelData {
@@ -164,6 +189,19 @@ export interface AppendPushTokenRequest {
 export interface AppendPushTokenResponse {
   /** Whether the push token was appended successfully. */
   success: boolean;
+}
+
+export interface SignUserTokenRequest {
+  /** The user ID. */
+  userId: string;
+
+  /** The expiration time in seconds. */
+  expiresInSeconds?: number;
+}
+
+export interface SignUserTokenResponse {
+  /** The signed user token. */
+  token: string;
 }
 
 /**
