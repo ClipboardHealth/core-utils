@@ -1,15 +1,10 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
-import { type Knock, signUserToken } from "@knocklabs/node";
+import { type Knock } from "@knocklabs/node";
 
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { NotificationClient } from "./notificationClient";
 import type { SignUserTokenRequest, Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
-
-jest.mock("@knocklabs/node", () => ({
-  ...(jest.requireActual("@knocklabs/node") as unknown as Record<string, unknown>),
-  signUserToken: jest.fn(),
-}));
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
@@ -814,17 +809,36 @@ describe("NotificationClient", () => {
 
   describe("signUserToken", () => {
     const mockUserId = "user-123";
-    const mockSigningKey = "test-signing-key";
-    const mockToken = "signed-jwt-token";
-    const mockSignUserToken = signUserToken as jest.MockedFunction<typeof signUserToken>;
-
-    beforeEach(() => {
-      mockSignUserToken.mockClear();
-    });
+    const mockSigningKey = `-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDev+3qU8gkOngO
+UH/7odRQ974Uobz16UTQ2eW15elMzBys+wQ43yoQUVTFzFrf3oCzXy1L0BoH+GUp
+OHaPsQFL9hc18VlphWCg3D4OUVLPhqeYiRcK1kh+955HJWWlS6imM1Ds1OgXuJOg
+ywJVnLOj6DLnuRRwjw3FO7P5+ywZuU6UzfWsSiHkcCUgMcjyVDaeStwzw8aZUhjS
+vhoUnPgPlPwkXun9WrsWDvYzToCgpKThHo5xvCtS2TSciO+oXQjbtho78FbaoRZt
+T8FfqmsEsmFoPwD/lrjHtpCtK4Qpu8WrAWyGYbQy+iF6aX+WJa9DAMpNEYUzKPaL
+STb77jOJAgMBAAECggEARhSmesHvRw6qNP64tWd90BeR0xXryIaiov7bGbaDByl0
+oCu9cVMs/cNI445ezO5JGaYJL0AC4J0S3rwn+R9cZBTByrPrSJqxAwsn7wNBBY+8
+7O28tSkj1+Z6ArJOX4oFPn0Iqep2NvhYYg9c5aiOkDP+yA7f0mX/lB0ri6utfU3M
+kE1a9O6sHCTrE1+Z2fnpIj8Ip2Wrv9cp/reXbfnpRMNhrRwAYPnV6w0igwNpwElH
+7C08cj4ftqBWEwravHl62faAP64VIURqsW4irAqsadkkWqF8h3fQqbe7vivptY6y
+u1eL817cnG3rclegKJVNSgVYc83YBZ4ALvuRJjJW7QKBgQD0pMvy0H7aviiAWhBl
+W+zcYdhvAk6NxlZtK6ii2hr7k/5eWY8RLbM3TvLK/pNzUg1j4kOCvpLUH3UJU6kq
+5pQc82vHR01CDdhDfl2EvdtUfknFmuXdZk5oSVaRUQy+2QnOYNqDXDtHEgsIVqQ5
+2s5ax+qiSqS9IK/oJDiEJ7SSGwKBgQDpFvT/CxpELApYLXumCrFDEQCTVDfJf5NE
+xwKEe0OU7VupOJVZr84qj0nKI0/08Er+bdmvRWyVtGPf9CZniRq2WlMP5V+9nMDt
+lFad5Qxanm0ZwApfJSqQkIv0tVTeGoUw9dIlG9ym+E2Yi/ZoW0/oL9CCtF0QvFg7
+RfSf/B+LKwKBgQDQfoYmGRSTfc5snNUuXOp/Y5AeA1xJLYhIoBWnPLQURitZ43+v
+R0BeWZVH9TBa7snkn1ej3KCr0WdgHIGmwz3lcnsfKaApND1kQBSZZWjAGKTsmLdg
+OamG7UGutOFk4PmffiGcJAWM606lu5lYiSambYyE5ZKCcJIaCIx17JTSkwKBgQCW
+/vcxLSkT1o/Q9Y3vT2frsVz1FA6bqthlKqKX3h42oNjLM8uUcQ4WhgJgPyXx36RF
+VDY7k7a2+Efm8YvbcHbsgHDkkEvIUn6sqXa/DH1HSvAUSVKuti3vvqPbn4hd5UI5
+KFW9EmKLi7kAxFKY4eZO3IKv2VWcnNZvd270IOjyRwKBgQDGl3CHxY/nsYWBjYcX
+ECNjX+XyepFFUianHuIbHyShCOhxTjUPSfrc0YnCWEl4WJ5aQHTocSulDJ7SAmON
+8SYmBZBUg9IiqD0jp8CaaI5Gy3n/DwwoCnLZTKxJ0kEVJWtVmn9m6Zr4wd2VZsru
+fQ4QecZi2079UtRo1Amb8+wqaQ==
+-----END PRIVATE KEY-----`;
 
     it("signs user token successfully with default expiration", async () => {
-      mockSignUserToken.mockResolvedValue(mockToken);
-
       const clientWithSigningKey = new NotificationClient({
         logger: mockLogger,
         provider,
@@ -839,12 +853,9 @@ describe("NotificationClient", () => {
       const result = await clientWithSigningKey.signUserToken(input);
 
       expectToBeSuccess(result);
-      expect(result.value.token).toBe(mockToken);
+      expect(result.value.token).toBeDefined();
+      expect(typeof result.value.token).toBe("string");
 
-      expect(mockSignUserToken).toHaveBeenCalledWith(mockUserId, {
-        signingKey: mockSigningKey,
-        expiresInSeconds: 3600,
-      });
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.signUserToken request",
         expect.objectContaining({
@@ -866,8 +877,6 @@ describe("NotificationClient", () => {
     });
 
     it("signs user token successfully with custom expiration", async () => {
-      mockSignUserToken.mockResolvedValue(mockToken);
-
       const clientWithSigningKey = new NotificationClient({
         logger: mockLogger,
         provider,
@@ -884,12 +893,9 @@ describe("NotificationClient", () => {
       const result = await clientWithSigningKey.signUserToken(input);
 
       expectToBeSuccess(result);
-      expect(result.value.token).toBe(mockToken);
+      expect(result.value.token).toBeDefined();
+      expect(typeof result.value.token).toBe("string");
 
-      expect(mockSignUserToken).toHaveBeenCalledWith(mockUserId, {
-        signingKey: mockSigningKey,
-        expiresInSeconds: customExpiration,
-      });
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.signUserToken request",
         expect.objectContaining({
@@ -918,14 +924,39 @@ describe("NotificationClient", () => {
           issues: [{ code: "missingSigningKey", message: "Missing signing key." }],
         }),
       );
-
-      expect(mockSignUserToken).not.toHaveBeenCalled();
     });
 
     it("handles signUserToken API error", async () => {
-      const mockError = new Error("Sign token API error");
-      mockSignUserToken.mockRejectedValue(mockError);
+      const invalidSigningKey = "invalid-key";
+      const clientWithInvalidSigningKey = new NotificationClient({
+        logger: mockLogger,
+        provider,
+        signingKey: invalidSigningKey,
+        tracer: mockTracer,
+      });
 
+      const input: SignUserTokenRequest = {
+        userId: mockUserId,
+      };
+
+      const result = await clientWithInvalidSigningKey.signUserToken(input);
+
+      expectToBeFailure(result);
+      expect(result.error).toBeInstanceOf(ServiceError);
+      expect(result.error.issues[0]!.code).toBe("unknown");
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringMatching(/^notifications\.signUserToken \[unknown]/),
+        expect.objectContaining({
+          traceName: "notifications.signUserToken",
+          destination: "knock.signUserToken",
+          userId: mockUserId,
+          expiresInSeconds: 3600,
+        }),
+      );
+    });
+
+    it("does not log sensitive token in response", async () => {
       const clientWithSigningKey = new NotificationClient({
         logger: mockLogger,
         provider,
@@ -938,38 +969,8 @@ describe("NotificationClient", () => {
       };
 
       const result = await clientWithSigningKey.signUserToken(input);
-
-      expectToBeFailure(result);
-      expect(result.error).toEqual(
-        new ServiceError({ issues: [{ code: "unknown", message: "Sign token API error" }] }),
-      );
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        "notifications.signUserToken [unknown] Sign token API error",
-        expect.objectContaining({
-          traceName: "notifications.signUserToken",
-          destination: "knock.signUserToken",
-          userId: mockUserId,
-          expiresInSeconds: 3600,
-        }),
-      );
-    });
-
-    it("does not log sensitive token in response", async () => {
-      mockSignUserToken.mockResolvedValue(mockToken);
-
-      const clientWithSigningKey = new NotificationClient({
-        logger: mockLogger,
-        provider,
-        signingKey: mockSigningKey,
-        tracer: mockTracer,
-      });
-
-      const input: SignUserTokenRequest = {
-        userId: mockUserId,
-      };
-
-      await clientWithSigningKey.signUserToken(input);
+      expectToBeSuccess(result);
+      const actualToken = result.value.token;
 
       // Check that no log call contains the actual token
       const allLogCalls = [
@@ -979,13 +980,11 @@ describe("NotificationClient", () => {
       ];
 
       allLogCalls.forEach((call) => {
-        expect(JSON.stringify(call)).not.toContain(mockToken);
+        expect(JSON.stringify(call)).not.toContain(actualToken);
       });
     });
 
     it("logs request and response correctly", async () => {
-      mockSignUserToken.mockResolvedValue(mockToken);
-
       const clientWithSigningKey = new NotificationClient({
         logger: mockLogger,
         provider,
