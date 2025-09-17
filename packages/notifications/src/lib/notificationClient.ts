@@ -8,6 +8,7 @@ import {
   success,
   toError,
 } from "@clipboard-health/util-ts";
+import { signUserToken } from "@knocklabs/node";
 
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
@@ -19,6 +20,9 @@ import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
   LogParams,
+  NotificationClientParams,
+  SignUserTokenRequest,
+  SignUserTokenResponse,
   Span,
   Tracer,
   TriggerBody,
@@ -41,14 +45,19 @@ const LOG_PARAMS = {
     traceName: "notifications.upsertWorkplace",
     destination: "knock.tenants.set",
   },
+  signUserToken: {
+    traceName: "notifications.signUserToken",
+    destination: "knock.signUserToken",
+  },
 };
 
 export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 
 export const ERROR_CODES = {
-  recipientCountBelowMinimum: "recipientCountBelowMinimum",
-  recipientCountAboveMaximum: "recipientCountAboveMaximum",
   expired: "expired",
+  recipientCountAboveMaximum: "recipientCountAboveMaximum",
+  recipientCountBelowMinimum: "recipientCountBelowMinimum",
+  missingSigningKey: "missingSigningKey",
   unknown: "unknown",
 } as const;
 
@@ -65,6 +74,7 @@ interface NotificationError {
 export class NotificationClient {
   private readonly logger: Logger;
   private readonly provider: IdempotentKnock;
+  private readonly signingKey: string | undefined;
   private readonly tracer: Tracer;
 
   /**
@@ -74,15 +84,12 @@ export class NotificationClient {
    * @param params.logger - Logger instance for structured logging.
    * @param params.tracer - Tracer instance for distributed tracing.
    */
-  constructor(
-    params: { logger: Logger; tracer: Tracer } &
-      // Pass either an apiKey (recommended) or a provider (used by tests).
-      ({ provider?: never; apiKey: string } | { provider: IdempotentKnock; apiKey?: never }),
-  ) {
-    const { logger, tracer } = params;
+  constructor(params: NotificationClientParams) {
+    const { logger, signingKey, tracer } = params;
 
     this.logger = logger;
     this.tracer = tracer;
+    this.signingKey = signingKey;
     this.provider =
       "provider" in params
         ? // eslint-disable-next-line unicorn/consistent-destructuring
@@ -217,6 +224,50 @@ export class NotificationClient {
       });
 
       return success({ success: true });
+    } catch (maybeError) {
+      const error = toError(maybeError);
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.unknown,
+          message: error.message,
+        },
+        logFunction: this.logger.error,
+        logParams,
+        metadata: { error },
+      });
+    }
+  }
+
+  /**
+   * Sign a user token for enhanced security.
+   *
+   * @see {@link https://docs.knock.app/in-app-ui/security-and-authentication#authentication-with-enhanced-security}
+   *
+   * @returns Promise resolving to either an error or successful response.
+   */
+  async signUserToken(params: SignUserTokenRequest): Promise<ServiceResult<SignUserTokenResponse>> {
+    if (!this.signingKey) {
+      return failure(
+        new ServiceError({
+          issues: [{ code: ERROR_CODES.missingSigningKey, message: "Missing signing key." }],
+        }),
+      );
+    }
+
+    const { userId, expiresInSeconds = 3600 } = params;
+    const logParams = { ...LOG_PARAMS.signUserToken, userId, expiresInSeconds };
+    try {
+      this.logger.info(`${logParams.traceName} request`, logParams);
+
+      const response = await signUserToken(userId, {
+        signingKey: this.signingKey,
+        expiresInSeconds,
+      });
+
+      // Don't log the actual response; user tokens are sensitive.
+      this.logger.info(`${logParams.traceName} response`, logParams);
+
+      return success({ token: response });
     } catch (maybeError) {
       const error = toError(maybeError);
       return this.createAndLogError({
