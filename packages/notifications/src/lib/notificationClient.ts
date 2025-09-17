@@ -246,16 +246,19 @@ export class NotificationClient {
    * @returns Promise resolving to either an error or successful response.
    */
   async signUserToken(params: SignUserTokenRequest): Promise<ServiceResult<SignUserTokenResponse>> {
+    const { userId, expiresInSeconds = 3600 } = params;
+
+    const logParams = { ...LOG_PARAMS.signUserToken, userId, expiresInSeconds };
     if (!this.signingKey) {
-      return failure(
-        new ServiceError({
-          issues: [{ code: ERROR_CODES.missingSigningKey, message: "Missing signing key." }],
-        }),
-      );
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.missingSigningKey,
+          message: "Missing signing key.",
+        },
+        logParams,
+      });
     }
 
-    const { userId, expiresInSeconds = 3600 } = params;
-    const logParams = { ...LOG_PARAMS.signUserToken, userId, expiresInSeconds };
     try {
       this.logger.info(`${logParams.traceName} request`, logParams);
 
