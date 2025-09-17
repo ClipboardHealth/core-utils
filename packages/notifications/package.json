@@ -4,8 +4,6 @@
   "version": "0.2.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/phone-number": "0.2.1",
-    "@clipboard-health/util-ts": "3.12.1",
     "@knocklabs/node": "1.16.0",
     "tslib": "2.8.1"
   },
@@ -15,6 +13,10 @@
   "keywords": [],
   "license": "MIT",
   "main": "./src/index.js",
+  "peerDependencies": {
+    "@clipboard-health/phone-number": "^0.2.0",
+    "@clipboard-health/util-ts": "^3.0.0"
+  },
   "publishConfig": {
     "access": "public"
   },
