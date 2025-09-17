@@ -241,10 +241,13 @@ export class NotificationClient {
    *
    * @returns Promise resolving to either an error or successful response.
    */
-  async signUserToken(params: SignUserTokenRequest): Promise<ServiceResult<SignUserTokenResponse>> {
+  public async signUserToken(
+    params: SignUserTokenRequest,
+  ): Promise<ServiceResult<SignUserTokenResponse>> {
     const { userId, expiresInSeconds = 3600 } = params;
 
     const logParams = { ...LOG_PARAMS.signUserToken, userId, expiresInSeconds };
+
     if (!this.signingKey) {
       return this.createAndLogError({
         notificationError: {
