@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@clipboard-health/contract-core": "0.22.1",
+    "@clipboard-health/util-ts": "3.12.1",
     "zod": "3.25.76"
   },
   "keywords": [

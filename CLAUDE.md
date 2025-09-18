@@ -27,6 +27,11 @@ This is an Nx monorepo containing TypeScript libraries and utilities for Clipboa
 - Structure files: constants, types, exported functions, non-exported functions
 - Use descriptive variable names with auxiliary verbs (isLoading, hasError)
 
+## Dependency Policy
+
+- Internal packages (e.g., `@clipboard-health/*`) should be declared as `peerDependencies` for other libraries within the monorepo to avoid version mismatch issues in library-consuming services.
+- Always mirror peers in `devDependencies` for local build/test stability within the monorepo.
+
 ## Commands
 
 ### Development

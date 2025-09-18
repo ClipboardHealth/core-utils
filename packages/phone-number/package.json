@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "0.21.1",
+    "@clipboard-health/util-ts": "3.12.1",
     "libphonenumber-js": "1.12.17"
   },
   "keywords": [],
