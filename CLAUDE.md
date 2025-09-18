@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard Health. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
+This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
 
 ### Key Libraries
 
