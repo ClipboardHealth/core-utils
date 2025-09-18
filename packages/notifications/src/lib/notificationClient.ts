@@ -72,10 +72,10 @@ interface NotificationError {
  * Client for sending notifications through third-party providers.
  */
 export class NotificationClient {
-  private readonly logger: Logger;
-  private readonly provider: IdempotentKnock;
+  protected readonly logger: Logger;
+  protected readonly provider: IdempotentKnock;
+  protected readonly tracer: Tracer;
   private readonly signingKey: string | undefined;
-  private readonly tracer: Tracer;
 
   /**
    * Creates a new NotificationClient instance.
@@ -324,6 +324,30 @@ export class NotificationClient {
     }
   }
 
+  protected createAndLogError(params: {
+    notificationError: NotificationError;
+    span?: Span | undefined;
+    logFunction?: LogFunction;
+    logParams: LogParams;
+    metadata?: Record<string, unknown>;
+  }): ServiceResult<never> {
+    const { logParams, notificationError, span, metadata, logFunction = this.logger.warn } = params;
+    const { code, message } = notificationError;
+
+    span?.addTags({
+      error: true,
+      "error.type": code,
+      "error.message": message,
+    });
+
+    logFunction(`${logParams.traceName} [${code}] ${message}`, {
+      ...logParams,
+      ...metadata,
+    });
+
+    return failure(new ServiceError({ issues: [{ code, message }] }));
+  }
+
   private validateTriggerRequest(
     params: TriggerRequest & { span: Span | undefined; logParams: LogParams },
   ): ServiceResult<TriggerRequest> {
@@ -425,29 +449,5 @@ export class NotificationClient {
     this.logger.info(`${logParams.traceName} response`, { ...logParams, id, response });
 
     return id;
-  }
-
-  private createAndLogError(params: {
-    notificationError: NotificationError;
-    span?: Span | undefined;
-    logFunction?: LogFunction;
-    logParams: LogParams;
-    metadata?: Record<string, unknown>;
-  }): ServiceResult<never> {
-    const { logParams, notificationError, span, metadata, logFunction = this.logger.warn } = params;
-    const { code, message } = notificationError;
-
-    span?.addTags({
-      error: true,
-      "error.type": code,
-      "error.message": message,
-    });
-
-    logFunction(`${logParams.traceName} [${code}] ${message}`, {
-      ...logParams,
-      ...metadata,
-    });
-
-    return failure(new ServiceError({ issues: [{ code, message }] }));
   }
 }
