@@ -18,7 +18,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@clipboard-health/util-ts": "^3.0.0",
+    "@clipboard-health/util-ts": "^3.12.1",
     "zod": "^3"
   },
   "publishConfig": {
