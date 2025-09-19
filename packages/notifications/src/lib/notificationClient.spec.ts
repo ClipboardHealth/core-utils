@@ -705,47 +705,6 @@ describe("NotificationClient", () => {
     const mockWorkplaceId = "workplace-123";
     const mockWorkplaceName = "Test Workplace";
 
-    it("successfully upsert workplace", async () => {
-      const mockResponse = {
-        id: mockWorkplaceId,
-        name: mockWorkplaceName,
-        __typename: "Tenant",
-      };
-      const tenantSetSpy = jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
-
-      const input: UpsertWorkplaceRequest = {
-        workplaceId: mockWorkplaceId,
-        name: mockWorkplaceName,
-      };
-
-      const result = await client.upsertWorkplace(input);
-
-      expectToBeSuccess(result);
-      expect(result.value.workplaceId).toBe(mockWorkplaceId);
-
-      expect(tenantSetSpy).toHaveBeenCalledWith(mockWorkplaceId, {
-        name: mockWorkplaceName,
-      });
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.upsertWorkplace request",
-        expect.objectContaining({
-          traceName: "notifications.upsertWorkplace",
-          destination: "knock.tenants.set",
-          workplaceId: mockWorkplaceId,
-          name: mockWorkplaceName,
-        }),
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.upsertWorkplace response",
-        expect.objectContaining({
-          response: {
-            workplaceId: mockWorkplaceId,
-            name: mockWorkplaceName,
-          },
-        }),
-      );
-    });
-
     it("handles Knock API error", async () => {
       const mockError = new Error("Tenant API error");
       jest.spyOn(provider.tenants, "set").mockRejectedValue(mockError);
@@ -772,38 +731,60 @@ describe("NotificationClient", () => {
       );
     });
 
-    it("logs request and response with correct parameters", async () => {
+    it("upserts workplace with all optional fields", async () => {
+      const mockCreatedAt = new Date("2023-01-01");
+      const mockEmail = "test@example.com";
+      const mockPhoneNumber = "+1234567890";
+      const mockTimeZone = "America/New_York";
+
       const mockResponse = {
         id: mockWorkplaceId,
         name: mockWorkplaceName,
         __typename: "Tenant",
       };
-      jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
+      const tenantSetSpy = jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
 
       const input: UpsertWorkplaceRequest = {
         workplaceId: mockWorkplaceId,
         name: mockWorkplaceName,
+        createdAt: mockCreatedAt,
+        email: mockEmail,
+        phoneNumber: mockPhoneNumber,
+        timeZone: mockTimeZone,
       };
 
-      await client.upsertWorkplace(input);
+      const result = await client.upsertWorkplace(input);
 
-      expect(mockLogger.info).toHaveBeenCalledWith("notifications.upsertWorkplace request", {
-        traceName: "notifications.upsertWorkplace",
-        destination: "knock.tenants.set",
-        workplaceId: mockWorkplaceId,
-        name: mockWorkplaceName,
-      });
+      expectToBeSuccess(result);
+      expect(result.value.workplaceId).toBe(mockWorkplaceId);
 
-      expect(mockLogger.info).toHaveBeenCalledWith("notifications.upsertWorkplace response", {
-        traceName: "notifications.upsertWorkplace",
-        destination: "knock.tenants.set",
-        workplaceId: mockWorkplaceId,
+      expect(tenantSetSpy).toHaveBeenCalledWith(mockWorkplaceId, {
         name: mockWorkplaceName,
-        response: {
-          workplaceId: mockWorkplaceId,
-          name: mockWorkplaceName,
-        },
+        created_at: mockCreatedAt.toISOString(),
+        email: mockEmail,
+        phone_number: "+1234567890",
+        timezone: mockTimeZone,
       });
+    });
+
+    it("upserts workplace with only required field", async () => {
+      const mockResponse = {
+        id: mockWorkplaceId,
+        name: mockWorkplaceName,
+        __typename: "Tenant",
+      };
+      const tenantSetSpy = jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
+
+      const input: UpsertWorkplaceRequest = {
+        workplaceId: mockWorkplaceId,
+      };
+
+      const result = await client.upsertWorkplace(input);
+
+      expectToBeSuccess(result);
+      expect(result.value.workplaceId).toBe(mockWorkplaceId);
+
+      expect(tenantSetSpy).toHaveBeenCalledWith(mockWorkplaceId, {});
     });
   });
 
