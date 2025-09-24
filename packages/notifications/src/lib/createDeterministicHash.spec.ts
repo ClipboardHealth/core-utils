@@ -3,89 +3,67 @@ import { createHash } from "node:crypto";
 import { createDeterministicHash } from "./createDeterministicHash";
 
 function createExpectedHash(ids: string[]): string {
-  return createHash("sha256")
-    .update(JSON.stringify([...ids].sort()))
-    .digest("hex")
-    .slice(0, 32);
+  return createHash("sha256").update(JSON.stringify(ids.sort())).digest("hex");
 }
 
 describe("createDeterministicHash", () => {
   it("returns 32-character hash for recipients", () => {
-    const input = [{ id: "user1" }, { id: "user2" }, { id: "user3" }];
+    const input = ["user1", "user2", "user3"];
     const expected = createExpectedHash(["user1", "user2", "user3"]);
 
-    const actual = createDeterministicHash({ items: input });
+    const actual = createDeterministicHash({ values: input });
 
     expect(actual).toBe(expected);
-    expect(actual).toHaveLength(32);
+    expect(actual).toHaveLength(64);
   });
 
   it("sorts recipients by id before creating hash", () => {
-    const input = [{ id: "charlie" }, { id: "alice" }, { id: "bob" }];
+    const input = ["charlie", "alice", "bob"];
     const expected = createExpectedHash(["alice", "bob", "charlie"]);
 
-    const actual = createDeterministicHash({ items: input });
+    const actual = createDeterministicHash({ values: input });
 
     expect(actual).toBe(expected);
   });
 
   it("returns consistent hash for same recipients in different order", () => {
-    const input1 = [{ id: "user1" }, { id: "user2" }, { id: "user3" }];
-    const input2 = [{ id: "user3" }, { id: "user1" }, { id: "user2" }];
+    const input1 = ["user1", "user2", "user3"];
+    const input2 = ["user3", "user1", "user2"];
 
-    const actual1 = createDeterministicHash({ items: input1 });
-    const actual2 = createDeterministicHash({ items: input2 });
+    const actual1 = createDeterministicHash({ values: input1 });
+    const actual2 = createDeterministicHash({ values: input2 });
 
     expect(actual1).toBe(actual2);
   });
 
   it("handles empty array", () => {
-    const input: Array<{ id: string }> = [];
+    const input: string[] = [];
     const expected = createExpectedHash([]);
 
-    const actual = createDeterministicHash({ items: input });
+    const actual = createDeterministicHash({ values: input });
 
     expect(actual).toBe(expected);
-    expect(actual).toHaveLength(32);
+    expect(actual).toHaveLength(64);
   });
 
   it("handles duplicate ids consistently", () => {
-    const input = [{ id: "user1" }, { id: "user1" }, { id: "user2" }];
+    const input = ["user1", "user1", "user2"];
     const expected = createExpectedHash(["user1", "user1", "user2"]);
 
-    const actual = createDeterministicHash({ items: input });
+    const actual = createDeterministicHash({ values: input });
 
     expect(actual).toBe(expected);
   });
 
   it("creates different hashes for different recipient sets", () => {
-    const input1 = [{ id: "user1" }, { id: "user2" }];
-    const input2 = [{ id: "user3" }, { id: "user4" }];
+    const input1 = ["user1", "user2"];
+    const input2 = ["user3", "user4"];
 
-    const actual1 = createDeterministicHash({ items: input1 });
-    const actual2 = createDeterministicHash({ items: input2 });
+    const actual1 = createDeterministicHash({ values: input1 });
+    const actual2 = createDeterministicHash({ values: input2 });
 
     expect(actual1).not.toBe(actual2);
-    expect(actual1).toHaveLength(32);
-    expect(actual2).toHaveLength(32);
-  });
-
-  it("handles array of strings", () => {
-    const input = ["user1", "user2", "user3"];
-    const expected = createExpectedHash(["user1", "user2", "user3"]);
-
-    const actual = createDeterministicHash({ items: input });
-
-    expect(actual).toBe(expected);
-    expect(actual).toHaveLength(32);
-  });
-
-  it("handles custom character length", () => {
-    const input = ["user1", "user2"];
-    const characters = 16;
-
-    const actual = createDeterministicHash({ items: input, characters });
-
-    expect(actual).toHaveLength(characters);
+    expect(actual1).toHaveLength(64);
+    expect(actual2).toHaveLength(64);
   });
 });
