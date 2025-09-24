@@ -116,7 +116,7 @@ describe("createIdempotencyKey", () => {
       const actual = createIdempotencyKey({ key: longKey, valuesToHash: input });
 
       expect(actual).toHaveLength(255);
-      expect(actual.startsWith(longKey.slice(0, 255 - 64))).toBe(true);
+      expect(actual.startsWith(longKey)).toBe(true);
     });
 
     it("handles case where key alone exceeds 255 characters", () => {

@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+const MAX_IDEMPOTENCY_KEY_LENGTH = 255;
+
 /**
  * Creates a deterministic hash for use as an idempotency key.
  *
@@ -15,10 +17,10 @@ export function createIdempotencyKey(params: { key: string; valuesToHash: string
   const { key, valuesToHash } = params;
 
   const hash = createHash("sha256")
-    // Unicode code-points for deterministic, locale-independent sorting.
-    .update(JSON.stringify(valuesToHash.sort()))
+    // Unicode code-points for deterministic, locale-independent sorting; don't mutate input array.
+    .update(JSON.stringify([...valuesToHash].sort()))
     .digest("hex");
 
   const result = `${key}${hash}`;
-  return result.slice(0, Math.min(result.length, 255));
+  return result.slice(0, MAX_IDEMPOTENCY_KEY_LENGTH);
 }
