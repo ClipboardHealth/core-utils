@@ -147,7 +147,12 @@ export interface TriggerRequest {
 
   /**
    * Key to prevent duplicate requests if provider supports it. It's important it is deterministic
-   * and remains the same across any retry logic.
+   * ({@link createIdempotencyKey}) and remains the same across any retry logic.
+   *
+   * Ensure your idempotency key doesn't prevent recipients from receiving notifications. For
+   * example, if you use the workflow key and the recipient's ID as the idempotency key, but it's
+   * possible the recipient could receive the notification multiple times within the idempotency
+   * key's validity window, the recipient will only receive the first notification.
    */
   idempotencyKey: string;
 
