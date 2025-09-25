@@ -42,13 +42,16 @@ describe("toKnockBody", () => {
 
   it("handles mixed recipient types", () => {
     const input: TriggerBody = {
-      recipients: ["user-1", { userId: "user-2", email: "test@example.com" }],
+      recipients: [
+        "user-1",
+        { userId: "user-2", email: "test@example.com", customProperties: { stage: "ENROLLED" } },
+      ],
     };
 
     const result = toKnockBody(input);
 
     expect(result).toEqual({
-      recipients: ["user-1", { id: "user-2", email: "test@example.com" }],
+      recipients: ["user-1", { id: "user-2", email: "test@example.com", stage: "ENROLLED" }],
     });
   });
 });
