@@ -26,9 +26,20 @@ function toKnockRecipient(recipient: RecipientRequest): Knock.Recipients.Recipie
 function toKnockInlineIdentifyUserRequest(
   recipient: InlineIdentifyUserRequest,
 ): Knock.Users.InlineIdentifyUserRequest {
-  const { channelData, createdAt, email, name, phoneNumber, timeZone, userId, ...rest } = recipient;
+  const {
+    channelData,
+    createdAt,
+    email,
+    name,
+    phoneNumber,
+    timeZone,
+    userId,
+    customProperties,
+    ...rest
+  } = recipient;
 
   return {
+    ...customProperties,
     id: userId,
     ...(channelData ? { channel_data: channelData } : {}),
     ...(createdAt ? { created_at: createdAt.toISOString() } : {}),

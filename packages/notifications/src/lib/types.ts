@@ -98,6 +98,11 @@ export interface InlineIdentifyUserRequest {
    * scheduled notifications.
    */
   timeZone?: string | undefined;
+
+  /**
+   * Custom user properties.
+   */
+  customProperties?: Record<string, unknown>;
 }
 
 /**
