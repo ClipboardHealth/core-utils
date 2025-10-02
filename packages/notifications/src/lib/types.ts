@@ -166,8 +166,8 @@ export interface TriggerRequest {
 
   /**
    * Expiration timestamp after which the request is dropped. Use this to prevent stale
-   * notifications. If, for example, you're notifying about an event that starts in one hour, set
-   * this to one hour from now.
+   * notifications. If, for example, you're notifying about an event that starts in one hour, you
+   * might set this to one hour from now.
    *
    * If you're triggering from a background job, don't set this at the call site! Set it when you
    * enqueue the job. Otherwise, it gets updated each time the job retries, will always be in the
