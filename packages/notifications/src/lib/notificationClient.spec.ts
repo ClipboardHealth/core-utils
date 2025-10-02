@@ -457,13 +457,10 @@ describe("NotificationClient", () => {
       const actual = await client.trigger(input);
 
       expectToBeSuccess(actual);
-      expect(actual.value.id).toBe("workflow-run-1"); // Returns first chunk's ID
-      expect(actual.value.ids).toEqual(["workflow-run-1", "workflow-run-2"]); // Returns all IDs
+      expect(actual.value.id).toBe("workflow-run-1");
+      expect(actual.value.ids).toEqual(["workflow-run-1", "workflow-run-2"]);
 
-      // Should have triggered twice (1000 recipients in first chunk, 1 in second)
       expect(triggerSpy).toHaveBeenCalledTimes(2);
-
-      // First chunk should use idempotency key with -chunk-1
       expect(triggerSpy).toHaveBeenNthCalledWith(
         1,
         mockWorkflowKey,
@@ -474,8 +471,6 @@ describe("NotificationClient", () => {
           idempotencyKey: `${mockIdempotencyKey}-chunk-1`,
         },
       );
-
-      // Second chunk should use idempotency key with -chunk-2
       expect(triggerSpy).toHaveBeenNthCalledWith(
         2,
         mockWorkflowKey,
