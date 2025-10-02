@@ -6,6 +6,8 @@ function createExpectedHash(ids: string[]): string {
   return createHash("sha256").update(JSON.stringify(ids.sort())).digest("hex");
 }
 
+const MAX_IDEMPOTENCY_KEY_LENGTH = 255;
+
 describe("createIdempotencyKey", () => {
   it("returns hash with key for recipients", () => {
     const input = ["user1", "user2", "user3"];
@@ -96,8 +98,8 @@ describe("createIdempotencyKey", () => {
     expect(actual2.startsWith(key2)).toBe(true);
   });
 
-  describe("truncation to 255 characters", () => {
-    it("returns full result when under 255 characters", () => {
+  describe("truncation to MAX_IDEMPOTENCY_KEY_LENGTH characters", () => {
+    it("returns full result when under MAX_IDEMPOTENCY_KEY_LENGTH characters", () => {
       const input = ["user1"];
       const key = "short";
       const expectedHash = createExpectedHash(["user1"]);
@@ -106,36 +108,36 @@ describe("createIdempotencyKey", () => {
       const actual = createIdempotencyKey({ key, valuesToHash: input });
 
       expect(actual).toBe(expectedResult);
-      expect(actual.length).toBeLessThan(255);
+      expect(actual.length).toBeLessThan(MAX_IDEMPOTENCY_KEY_LENGTH);
     });
 
-    it("truncates result to exactly 255 characters when longer", () => {
+    it("truncates result to exactly MAX_IDEMPOTENCY_KEY_LENGTH characters when longer", () => {
       const input = ["user1"];
       const longKey = "a".repeat(200);
 
       const actual = createIdempotencyKey({ key: longKey, valuesToHash: input });
 
-      expect(actual).toHaveLength(255);
+      expect(actual).toHaveLength(MAX_IDEMPOTENCY_KEY_LENGTH);
       expect(actual.startsWith(longKey)).toBe(true);
     });
 
-    it("handles case where key alone exceeds 255 characters", () => {
+    it("handles case where key alone exceeds MAX_IDEMPOTENCY_KEY_LENGTH characters", () => {
       const input = ["user1"];
       const veryLongKey = "a".repeat(300);
 
       const actual = createIdempotencyKey({ key: veryLongKey, valuesToHash: input });
 
-      expect(actual).toHaveLength(255);
-      expect(actual).toBe(veryLongKey.slice(0, 255));
+      expect(actual).toHaveLength(MAX_IDEMPOTENCY_KEY_LENGTH);
+      expect(actual).toBe(veryLongKey.slice(0, MAX_IDEMPOTENCY_KEY_LENGTH));
     });
 
-    it("truncates at exactly 255 characters", () => {
+    it("truncates at exactly MAX_IDEMPOTENCY_KEY_LENGTH characters", () => {
       const input = ["user1"];
-      const key = "a".repeat(191); // 191 + 64 = 255 exactly
+      const key = "a".repeat(191); // 191 + 64 = MAX_IDEMPOTENCY_KEY_LENGTH exactly
 
       const actual = createIdempotencyKey({ key, valuesToHash: input });
 
-      expect(actual).toHaveLength(255);
+      expect(actual).toHaveLength(MAX_IDEMPOTENCY_KEY_LENGTH);
       expect(actual.startsWith(key)).toBe(true);
     });
   });

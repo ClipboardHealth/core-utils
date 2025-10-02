@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 
-const MAX_IDEMPOTENCY_KEY_LENGTH = 255;
+import { MAX_IDEMPOTENCY_KEY_LENGTH } from "./internal/createChunkedIdempotencyKey";
 
 /**
  * Creates a deterministic hash for use as an idempotency key.
  *
  * The function sorts `valuesToHash`, generates a SHA-256 hash, prepends the workflow key, and
- * truncates the result to 255 characters maximum.
+ * truncates the result to MAX_IDEMPOTENCY_KEY_LENGTH characters maximum.
  *
  * @param params.key - Workflow key to prepend to the hash.
  * @param params.valuesToHash - Array of strings to hash.
