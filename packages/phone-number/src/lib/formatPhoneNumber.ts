@@ -66,11 +66,9 @@ export function formatPhoneNumber(params: FormatPhoneNumberParams): ServiceResul
  * ```
  */
 export function formatPhoneNumberOrThrow(params: FormatPhoneNumberParams): string {
-  const { phoneNumber, format } = params;
-
-  const result = formatPhoneNumber({ phoneNumber, format });
+  const result = formatPhoneNumber(params);
   if (isFailure(result)) {
-    throw new Error(result.error.issues[0]!.message);
+    throw result.error;
   }
 
   return result.value;
