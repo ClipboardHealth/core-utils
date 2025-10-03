@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { MAX_IDEMPOTENCY_KEY_LENGTH } from "./internal/createChunkedIdempotencyKey";
+export const MAX_IDEMPOTENCY_KEY_LENGTH = 255;
 
 /**
  * Creates a deterministic hash for use as an idempotency key.
