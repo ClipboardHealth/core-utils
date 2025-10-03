@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/phone-number",
   "description": "Phone number utility functions.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "@clipboard-health/util-ts": "3.12.2",
