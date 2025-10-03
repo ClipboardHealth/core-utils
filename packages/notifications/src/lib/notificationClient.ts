@@ -1,5 +1,4 @@
 import {
-  chunk,
   failure,
   isFailure,
   type LogFunction,
@@ -11,9 +10,7 @@ import {
 } from "@clipboard-health/util-ts";
 import type Knock from "@knocklabs/node";
 import { signUserToken } from "@knocklabs/node";
-import pLimit from "p-limit";
 
-import { createChunkedIdempotencyKey } from "./internal/createChunkedIdempotencyKey";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { formatPhoneNumber } from "./internal/formatPhoneNumber";
@@ -60,6 +57,7 @@ export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 export const ERROR_CODES = {
   expired: "expired",
   recipientCountBelowMinimum: "recipientCountBelowMinimum",
+  recipientCountAboveMaximum: "recipientCountAboveMaximum",
   missingSigningKey: "missingSigningKey",
   unknown: "unknown",
 } as const;
@@ -104,7 +102,6 @@ export class NotificationClient {
    * - Stale notifications prevention through expiresAt.
    * - Logging with sensitive data redaction.
    * - Distributed tracing with notification metadata.
-   * - Chunking to prevent exceeding maximum recipient count.
    * - Idempotency to prevent duplicate notifications.
    * - Comprehensive error handling and logging.
    *
@@ -165,39 +162,17 @@ export class NotificationClient {
         }
 
         try {
-          const { key, body, idempotencyKey: baseKey, keysToRedact = [] } = validated.value;
+          const { key, body, idempotencyKey, keysToRedact = [] } = validated.value;
+          this.logTriggerRequest({ logParams, body, keysToRedact });
 
-          const chunks = chunk(body.recipients, MAXIMUM_RECIPIENTS_COUNT);
-          const limit = pLimit(10);
+          const response = await this.provider.workflows.trigger(key, toKnockBody(body), {
+            idempotencyKey,
+          });
 
-          const workflowRunIds = await Promise.all(
-            chunks.map(async (recipients, chunkIndex) => {
-              const chunkedBody = { ...body, recipients };
-              const chunkedKey = createChunkedIdempotencyKey({
-                baseKey,
-                chunkIndex,
-                totalChunks: chunks.length,
-              });
+          const id = response.workflow_run_id;
+          this.logTriggerResponse({ span, response, id, logParams });
 
-              return await limit(async () => {
-                this.logTriggerRequest({ logParams, body: chunkedBody, keysToRedact });
-
-                const response = await this.provider.workflows.trigger(
-                  key,
-                  toKnockBody(chunkedBody),
-                  { idempotencyKey: chunkedKey },
-                );
-
-                const id = response.workflow_run_id;
-                this.logTriggerResponse({ span, response, id, logParams });
-
-                return id;
-              });
-            }),
-          );
-
-          // workflowRunIds[0] is safe because recipients are validated to be > 0
-          return success({ id: workflowRunIds[0]!, ids: workflowRunIds });
+          return success({ id });
         } catch (maybeError) {
           const error = toError(maybeError);
           return this.createAndLogError({
@@ -396,6 +371,19 @@ export class NotificationClient {
         },
         span,
         logParams,
+      });
+    }
+
+    if (body.recipients.length > MAXIMUM_RECIPIENTS_COUNT) {
+      const recipientsCount = body.recipients.length;
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.recipientCountAboveMaximum,
+          message: `Got ${recipientsCount} recipients; must be <= ${MAXIMUM_RECIPIENTS_COUNT}.`,
+        },
+        span,
+        logParams,
+        metadata: { recipientsCount },
       });
     }
 
