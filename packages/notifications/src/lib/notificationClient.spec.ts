@@ -89,6 +89,7 @@ describe("NotificationClient", () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
+      expect(actual.value.ids).toEqual([mockWorkflowRunId]);
 
       expect(triggerSpy).toHaveBeenCalledWith(
         mockWorkflowKey,
@@ -435,8 +436,15 @@ describe("NotificationClient", () => {
       expect(actual.error.message).toContain("Got 0 recipients; must be > 0");
     });
 
-    it("rejects request with too many recipients", async () => {
+    it("chunks requests with more than maximum recipients", async () => {
       const recipients = Array.from({ length: 1001 }, (_, index) => ({ userId: `user-${index}` }));
+      const mockResponse1 = { workflow_run_id: "workflow-run-1" };
+      const mockResponse2 = { workflow_run_id: "workflow-run-2" };
+      const triggerSpy = jest
+        .spyOn(provider.workflows, "trigger")
+        .mockResolvedValueOnce(mockResponse1)
+        .mockResolvedValueOnce(mockResponse2);
+
       const input: TriggerRequest = {
         key: mockWorkflowKey,
         body: { recipients },
@@ -448,8 +456,31 @@ describe("NotificationClient", () => {
 
       const actual = await client.trigger(input);
 
-      expectToBeFailure(actual);
-      expect(actual.error.message).toContain("Got 1001 recipients; must be <= 1000");
+      expectToBeSuccess(actual);
+      expect(actual.value.id).toBe("workflow-run-1");
+      expect(actual.value.ids).toEqual(["workflow-run-1", "workflow-run-2"]);
+
+      expect(triggerSpy).toHaveBeenCalledTimes(2);
+      expect(triggerSpy).toHaveBeenNthCalledWith(
+        1,
+        mockWorkflowKey,
+        expect.objectContaining({
+          recipients: expect.any(Array),
+        }),
+        {
+          idempotencyKey: `${mockIdempotencyKey}-chunk-1`,
+        },
+      );
+      expect(triggerSpy).toHaveBeenNthCalledWith(
+        2,
+        mockWorkflowKey,
+        expect.objectContaining({
+          recipients: expect.any(Array),
+        }),
+        {
+          idempotencyKey: `${mockIdempotencyKey}-chunk-2`,
+        },
+      );
     });
 
     it("handles trigger request without keysToRedact", async () => {

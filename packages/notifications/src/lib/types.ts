@@ -164,10 +164,18 @@ export interface TriggerRequest {
   /** Array of data keys to redact in logs for privacy. */
   keysToRedact?: string[];
 
-  /** Expiration timestamp after which the request is dropped. */
+  /**
+   * Expiration timestamp after which the request is dropped. Use this to prevent stale
+   * notifications. If, for example, you're notifying about an event that starts in one hour, you
+   * might set this to one hour from now.
+   *
+   * If you're triggering from a background job, don't set this at the call site! Set it when you
+   * enqueue the job. Otherwise, it gets updated each time the job retries, will always be in the
+   * future, and won't prevent stale notifications.
+   */
   expiresAt: Date;
 
-  /** Attempt number for tracking. */
+  /** Attempt number for tracing. */
   attempt: number;
 }
 
@@ -175,8 +183,11 @@ export interface TriggerRequest {
  * Response from triggering a notification.
  */
 export interface TriggerResponse {
-  /** Third-party provider's unique identifier. */
+  /** Third-party provider's unique identifier (first chunk for backwards compatibility). */
   id: string;
+
+  /** Array of all workflow run IDs (one per chunk). */
+  ids: string[];
 }
 
 /**
