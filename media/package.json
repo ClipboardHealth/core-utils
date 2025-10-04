@@ -29,7 +29,7 @@
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
     "ts-node": "11.0.0-beta.1",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "typedoc": "0.28.13",
     "typescript": "5.9.2"
   },
