@@ -1,6 +1,6 @@
 # @clipboard-health/background-jobs-adapter <!-- omit from toc -->
 
-TODO
+Minimal adapter interface for background jobs operations supporting Mongo and Postgres implementations.
 
 ## Table of contents <!-- omit from toc -->
 
