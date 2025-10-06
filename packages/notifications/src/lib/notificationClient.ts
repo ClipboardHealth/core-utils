@@ -14,7 +14,7 @@ import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
-import { toInlineIdentifyUserRequestWithoutUserId } from "./internal/toInlineIdentifyUserRequest";
+import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import type {
   AppendPushTokenRequest,
@@ -298,11 +298,7 @@ export class NotificationClient {
     try {
       this.logger.info(`${logParams.traceName} request`, logParams);
 
-      const response = await this.provider.tenants.set(
-        workplaceId,
-        // Use the same type as user inline identify so provider field names are consistent.
-        toInlineIdentifyUserRequestWithoutUserId(body),
-      );
+      const response = await this.provider.tenants.set(workplaceId, toTenantSetRequest(body));
 
       this.logger.info(`${logParams.traceName} response`, {
         ...logParams,

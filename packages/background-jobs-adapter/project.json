@@ -26,7 +26,8 @@
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "packages/background-jobs-adapter/jest.config.ts"
+        "jestConfig": "packages/background-jobs-adapter/jest.config.ts",
+        "passWithNoTests": true
       }
     }
   }
