@@ -6,7 +6,10 @@ export function createTriggerTraceOptions(params: TriggerLogContext): TraceOptio
 
   return {
     resource: `notification.${key}`,
-    // Don't include high cardinality tags like expiresAt and idempotencyKey.
+    /**
+     * Don't include high cardinality tags like expiresAt and idempotencyKey to reduce Datadog
+     * costs.
+     */
     tags: {
       "span.kind": "producer",
       component: "customer-notifications",

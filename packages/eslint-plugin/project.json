@@ -26,8 +26,7 @@
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "packages/eslint-plugin/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/eslint-plugin/jest.config.ts"
       }
     }
   }

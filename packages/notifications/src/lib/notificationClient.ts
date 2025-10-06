@@ -8,15 +8,14 @@ import {
   success,
   toError,
 } from "@clipboard-health/util-ts";
-import type Knock from "@knocklabs/node";
 import { signUserToken } from "@knocklabs/node";
 
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
-import { formatPhoneNumber } from "./internal/formatPhoneNumber";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
-import { toKnockBody } from "./internal/toKnockBody";
+import { toTenantSetRequest } from "./internal/toTenantSetRequest";
+import { toTriggerBody } from "./internal/toTriggerBody";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
@@ -165,7 +164,7 @@ export class NotificationClient {
           const { key, body, idempotencyKey, keysToRedact = [] } = validated.value;
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
-          const response = await this.provider.workflows.trigger(key, toKnockBody(body), {
+          const response = await this.provider.workflows.trigger(key, toTriggerBody(body), {
             idempotencyKey,
           });
 
@@ -286,7 +285,7 @@ export class NotificationClient {
   }
 
   /**
-   * Updates or creates a workplace (tenant) in Knock.
+   * Updates or creates a workplace (tenant) in our provider.
    *
    * @returns Promise resolving to either an error or successful response.
    */
@@ -299,18 +298,7 @@ export class NotificationClient {
     try {
       this.logger.info(`${logParams.traceName} request`, logParams);
 
-      // Use the same type as user inline identify so provider field names are consistent.
-      const knockBody: Omit<Knock.Users.InlineIdentifyUserRequest, "id"> = {
-        ...(body.createdAt ? { created_at: body.createdAt.toISOString() } : {}),
-        ...(body.email ? { email: body.email } : {}),
-        ...(body.name ? { name: body.name } : {}),
-        ...(body.phoneNumber
-          ? { phone_number: formatPhoneNumber({ phoneNumber: body.phoneNumber }) }
-          : {}),
-        ...(body.timeZone ? { timezone: body.timeZone } : {}),
-      };
-
-      const response = await this.provider.tenants.set(workplaceId, knockBody);
+      const response = await this.provider.tenants.set(workplaceId, toTenantSetRequest(body));
 
       this.logger.info(`${logParams.traceName} response`, {
         ...logParams,
