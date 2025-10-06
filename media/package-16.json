@@ -1,0 +1,36 @@
+{
+  "name": "embedex",
+  "description": "Embed shared text and code snippets from source files into destination files.",
+  "version": "0.14.0",
+  "bin": {
+    "embedex": "./src/bin/cli.js"
+  },
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "dependencies": {
+    "@commander-js/extra-typings": "14.0.0",
+    "glob": "11.0.3",
+    "tslib": "2.8.1",
+    "yoctocolors-cjs": "2.1.3"
+  },
+  "keywords": [
+    "cli",
+    "documentation",
+    "embed",
+    "examples",
+    "snippets",
+    "typedoc",
+    "typescript"
+  ],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "packages/embedex",
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}
