@@ -1,0 +1,22 @@
+{
+  "name": "@clipboard-health/background-jobs-adapter",
+  "description": "",
+  "version": "0.0.0",
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "dependencies": {
+    "tslib": "2.8.1"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "packages/background-jobs-adapter",
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}

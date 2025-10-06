@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "background-jobs-adapter",
+  "projectType": "library",
+  "sourceRoot": "packages/background-jobs-adapter/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/background-jobs-adapter/*.md"],
+        "main": "packages/background-jobs-adapter/src/index.js",
+        "outputPath": "dist/packages/background-jobs-adapter",
+        "tsConfig": "packages/background-jobs-adapter/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/background-jobs-adapter/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/background-jobs-adapter/jest.config.ts"
+      }
+    }
+  }
+}

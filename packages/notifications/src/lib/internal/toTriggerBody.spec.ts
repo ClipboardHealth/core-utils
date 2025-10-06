@@ -1,14 +1,14 @@
 import type { TriggerBody } from "../types";
-import { toKnockBody } from "./toKnockBody";
+import { toTriggerBody } from "./toTriggerBody";
 
-describe("toKnockBody", () => {
+describe("toTriggerBody", () => {
   it("includes tenant when workplaceId is provided", () => {
     const input: TriggerBody = {
       recipients: [{ userId: "user-1" }],
       workplaceId: "workplace-123",
     };
 
-    const result = toKnockBody(input);
+    const result = toTriggerBody(input);
 
     expect(result).toEqual({
       recipients: [{ id: "user-1" }],
@@ -21,7 +21,7 @@ describe("toKnockBody", () => {
       recipients: [{ userId: "user-1" }],
     };
 
-    const result = toKnockBody(input);
+    const result = toTriggerBody(input);
 
     expect(result).toEqual({
       recipients: [{ id: "user-1" }],
@@ -33,7 +33,7 @@ describe("toKnockBody", () => {
       recipients: ["user-1", "user-2"],
     };
 
-    const result = toKnockBody(input);
+    const result = toTriggerBody(input);
 
     expect(result).toEqual({
       recipients: ["user-1", "user-2"],
@@ -48,7 +48,7 @@ describe("toKnockBody", () => {
       ],
     };
 
-    const result = toKnockBody(input);
+    const result = toTriggerBody(input);
 
     expect(result).toEqual({
       recipients: ["user-1", { id: "user-2", email: "test@example.com", stage: "ENROLLED" }],
