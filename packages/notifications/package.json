@@ -4,6 +4,7 @@
   "version": "0.6.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
+    "@clipboard-health/background-jobs-adapter": "0.1.0",
     "@clipboard-health/phone-number": "0.5.0",
     "@clipboard-health/util-ts": "3.14.0",
     "@knocklabs/node": "1.16.0",

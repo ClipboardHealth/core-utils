@@ -2,7 +2,6 @@ import {
   failure,
   isFailure,
   type LogFunction,
-  type Logger,
   ServiceError,
   type ServiceResult,
   success,
@@ -10,6 +9,7 @@ import {
 } from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
+import { createDeterministicHash } from "./internal/createDeterministicHash";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
@@ -24,7 +24,6 @@ import type {
   SignUserTokenRequest,
   SignUserTokenResponse,
   Span,
-  Tracer,
   TriggerBody,
   TriggerRequest,
   TriggerResponse,
@@ -53,8 +52,11 @@ const LOG_PARAMS = {
 
 export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 
+const MAXIMUM_IDEMPOTENCY_KEY_LENGTH = 255;
+
 export const ERROR_CODES = {
   expired: "expired",
+  invalidCompatibilityToken: "invalidCompatibilityToken",
   recipientCountBelowMinimum: "recipientCountBelowMinimum",
   recipientCountAboveMaximum: "recipientCountAboveMaximum",
   missingSigningKey: "missingSigningKey",
@@ -72,10 +74,10 @@ interface NotificationError {
  * Client for sending notifications through third-party providers.
  */
 export class NotificationClient {
-  protected readonly logger: Logger;
-  protected readonly provider: IdempotentKnock;
-  protected readonly tracer: Tracer;
-  private readonly signingKey: string | undefined;
+  protected readonly logger: NotificationClientParams["logger"];
+  protected readonly provider: Required<NotificationClientParams>["provider"];
+  protected readonly tracer: NotificationClientParams["tracer"];
+  private readonly signingKey: NotificationClientParams["signingKey"];
 
   /**
    * Creates a new NotificationClient instance.
@@ -107,44 +109,38 @@ export class NotificationClient {
    * @returns Promise resolving to either an error or successful response.
    *
    * @example
-   * <embedex source="packages/notifications/examples/notificationClient.ts">
+   * <embedex source="packages/notifications/examples/exampleNotification.service.ts">
    *
    * ```ts
-   * import { NotificationClient, type Span } from "@clipboard-health/notifications";
-   * import { isSuccess } from "@clipboard-health/util-ts";
+   * import { type NotificationClient } from "@clipboard-health/notifications";
    *
-   * const client = new NotificationClient({
-   *   apiKey: "test-api-key",
-   *   logger: {
-   *     info: console.log,
-   *     warn: console.warn,
-   *     error: console.error,
-   *   } as const,
-   *   tracer: {
-   *     trace: <T>(_name: string, _options: unknown, fun: (span?: Span | undefined) => T): T => fun(),
-   *   },
-   * });
+   * import { type ExampleNotificationJobData } from "./exampleNotification.job";
    *
-   * async function triggerNotification(job: { attemptsCount: number }) {
-   *   const result = await client.trigger({
-   *     attempt: (job?.attemptsCount ?? 0) + 1,
-   *     body: {
-   *       recipients: ["user-1"],
-   *       data: { favoriteColor: "blue", secret: "2" },
-   *     },
-   *     expiresAt: new Date(Date.now() + 300_000), // 5 minutes
-   *     idempotencyKey: "welcome-user-4",
-   *     key: "welcome-email",
-   *     keysToRedact: ["secret"],
-   *   });
+   * type ExampleNotificationDo = ExampleNotificationJobData & { attempt: number };
    *
-   *   if (isSuccess(result)) {
-   *     console.log("Notification sent:", result.value.id);
+   * export class ExampleNotificationService {
+   *   constructor(private readonly client: NotificationClient) {}
+   *
+   *   async sendNotification(params: ExampleNotificationDo) {
+   *     const { attempt, expiresAt, idempotencyKey, recipients, workflowKey, workplaceId } = params;
+   *
+   *     // Assume this comes from a database and, for example, are used as template variables...
+   *     const data = { favoriteColor: "blue", secret: "2" };
+   *
+   *     return await this.client.trigger({
+   *       attempt,
+   *       body: {
+   *         recipients,
+   *         data,
+   *         workplaceId,
+   *       },
+   *       expiresAt,
+   *       idempotencyKey,
+   *       workflowKey,
+   *       keysToRedact: ["secret"],
+   *     });
    *   }
    * }
-   *
-   * // eslint-disable-next-line unicorn/prefer-top-level-await
-   * void triggerNotification({ attemptsCount: 0 });
    * ```
    *
    * </embedex>
@@ -161,11 +157,15 @@ export class NotificationClient {
         }
 
         try {
-          const { key, body, idempotencyKey, keysToRedact = [] } = validated.value;
+          const { workflowKey, body, idempotencyKey, keysToRedact = [] } = validated.value;
+          const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
-          const response = await this.provider.workflows.trigger(key, toTriggerBody(body), {
-            idempotencyKey,
+          const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
+            idempotencyKey: idempotencyKey.toStringWithBodyHash({
+              hash: createDeterministicHash(triggerBody),
+              lengthLimit: MAXIMUM_IDEMPOTENCY_KEY_LENGTH,
+            }),
           });
 
           const id = response.workflow_run_id;

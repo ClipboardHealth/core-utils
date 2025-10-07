@@ -1,5 +1,6 @@
 import { type Logger } from "@clipboard-health/util-ts";
 
+import { type IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { type IdempotentKnock } from "./internal/idempotentKnock";
 
 export type Tags = Record<string, unknown>;
@@ -144,27 +145,16 @@ export interface TriggerBody {
  * Request parameters for triggering a notification.
  */
 export interface TriggerRequest {
-  /** Notification key. */
-  key: string;
+  /** Workflow key. */
+  workflowKey: string;
 
-  /** Notification payload. */
+  /** Trigger payload. */
   body: TriggerBody;
 
   /**
-   * Key to prevent duplicate requests if provider supports it. It's important it is deterministic
-   * ({@link createIdempotencyKey}) and remains the same across retry logic.
-   *
-   * If you retry a request with the same idempotency key within 24 hours from the original request,
-   * we will return the same response as the original request. Idempotent requests are expected to
-   * be identical. To prevent accidental misuse, the client throws an error when incoming parameters
-   * don't match those from the original request.
-   *
-   * Ensure your idempotency key doesn't prevent recipients from receiving notifications. For
-   * example, if you use the workflow key and the recipient's ID as the idempotency key, but it's
-   * possible the recipient could receive the notification multiple times within the idempotency
-   * key's validity window, the recipient will only receive the first notification.
+   * @see {@link IdempotencyKeyDoNotImportOutsideNotificationsLibrary}
    */
-  idempotencyKey: string;
+  idempotencyKey: IdempotencyKeyDoNotImportOutsideNotificationsLibrary;
 
   /** Array of data keys to redact in logs for privacy. */
   keysToRedact?: string[];

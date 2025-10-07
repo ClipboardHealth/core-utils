@@ -2,7 +2,7 @@ import type { TraceOptions } from "../types";
 import type { TriggerLogContext } from "./createTriggerLogParams";
 
 export function createTriggerTraceOptions(params: TriggerLogContext): TraceOptions {
-  const { key, attempt, destination } = params;
+  const { workflowKey: key, attempt, destination } = params;
 
   return {
     resource: `notification.${key}`,

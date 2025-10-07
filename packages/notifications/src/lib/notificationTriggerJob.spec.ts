@@ -1,0 +1,282 @@
+import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+
+import { chunkRecipients } from "./internal/chunkRecipients";
+import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
+import { ERROR_CODES } from "./notificationClient";
+import {
+  type NotificationJobData,
+  NotificationTriggerJob,
+  RETRYABLE_ERRORS,
+} from "./notificationTriggerJob";
+
+jest.mock("./internal/chunkRecipients");
+
+describe("NotificationTriggerJob", () => {
+  const mockEnqueue = jest.fn();
+  const mockAdapter: BackgroundJobsAdapter = {
+    implementation: "postgres",
+    enqueue: mockEnqueue,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("constructor", () => {
+    it("creates instance with provided adapter", () => {
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      expect(instance).toBeInstanceOf(NotificationTriggerJob);
+    });
+  });
+
+  describe("enqueueOneOrMore", () => {
+    const mockHandler = "my-handler";
+    const mockWorkflowKey = "my-workflow-key";
+    const mockRecipients = Array.from({ length: 1000 }, (_, index) => `user-${index + 1}`);
+    const mockIdempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
+      chunk: 1,
+      recipients: mockRecipients,
+      workflowKey: mockWorkflowKey,
+    });
+    const mockExpiresAt = new Date("2025-12-31");
+
+    const mockData: NotificationJobData = {
+      idempotencyKey: mockIdempotencyKey,
+      expiresAt: mockExpiresAt,
+      recipients: mockRecipients,
+      workflowKey: mockWorkflowKey,
+    };
+
+    it("enqueues single job when recipients fit in one chunk", async () => {
+      const mockChunks = [
+        {
+          number: 1,
+          recipients: mockRecipients,
+        },
+      ];
+
+      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      await instance.enqueueOneOrMore(mockHandler, mockData);
+
+      expect(chunkRecipients).toHaveBeenCalledWith({
+        recipients: mockRecipients,
+      });
+      expect(mockEnqueue).toHaveBeenCalledTimes(1);
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        mockHandler,
+        {
+          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          recipients: mockRecipients,
+          expiresAt: mockExpiresAt,
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
+    });
+
+    it("enqueues multiple jobs when recipients require chunking", async () => {
+      const mockChunks = [
+        {
+          number: 1,
+          recipients: mockRecipients.slice(0, 1000),
+        },
+        {
+          number: 2,
+          recipients: mockRecipients.slice(1000, 1500),
+        },
+      ];
+
+      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      await instance.enqueueOneOrMore(mockHandler, mockData);
+
+      expect(chunkRecipients).toHaveBeenCalledWith({
+        recipients: mockRecipients,
+      });
+      expect(mockEnqueue).toHaveBeenCalledTimes(2);
+      expect(mockEnqueue).toHaveBeenNthCalledWith(
+        1,
+        mockHandler,
+        {
+          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          recipients: mockRecipients.slice(0, 1000),
+          expiresAt: mockExpiresAt,
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
+      expect(mockEnqueue).toHaveBeenNthCalledWith(
+        2,
+        mockHandler,
+        {
+          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          recipients: mockRecipients.slice(1000, 1500),
+          expiresAt: mockExpiresAt,
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
+    });
+
+    it("includes additional data properties in enqueued jobs", async () => {
+      interface CustomJobData extends NotificationJobData {
+        customField: string;
+        anotherField: number;
+      }
+
+      const mockRecipients = ["user-1"];
+      const mockData: CustomJobData = {
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        recipients: mockRecipients,
+        workflowKey: mockWorkflowKey,
+        customField: "test-value",
+        anotherField: 42,
+      };
+
+      const mockChunks = [
+        {
+          number: 1,
+          recipients: mockRecipients,
+        },
+      ];
+
+      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      await instance.enqueueOneOrMore(mockHandler, mockData);
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        mockHandler,
+        {
+          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          recipients: mockRecipients,
+          expiresAt: mockExpiresAt,
+          customField: "test-value",
+          anotherField: 42,
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
+    });
+
+    it("passes through enqueue options when provided", async () => {
+      const mockRecipients = ["user-1"];
+      const mockData: NotificationJobData = {
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        recipients: mockRecipients,
+        workflowKey: mockWorkflowKey,
+      };
+
+      const mockOptions = {
+        delay: 5000,
+        priority: 10,
+      };
+
+      const mockChunks = [
+        {
+          number: 1,
+          recipients: mockRecipients,
+        },
+      ];
+
+      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      await instance.enqueueOneOrMore(mockHandler, mockData, mockOptions);
+
+      expect(mockEnqueue).toHaveBeenCalledWith(
+        mockHandler,
+        {
+          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          recipients: mockRecipients,
+          expiresAt: mockExpiresAt,
+        },
+        {
+          delay: 5000,
+          priority: 10,
+          idempotencyKey: expect.any(String),
+        },
+      );
+    });
+
+    it("handles empty recipients array", async () => {
+      const mockData: NotificationJobData = {
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        recipients: [],
+        workflowKey: mockWorkflowKey,
+      };
+
+      const mockChunks = [
+        {
+          number: 1,
+          recipients: [],
+        },
+      ];
+
+      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      await instance.enqueueOneOrMore(mockHandler, mockData);
+
+      expect(chunkRecipients).toHaveBeenCalledWith({
+        recipients: [],
+      });
+      expect(mockEnqueue).toHaveBeenCalledTimes(1);
+    });
+
+    it("enqueues all chunks in parallel using Promise.all", async () => {
+      const mockRecipients = Array.from({ length: 2500 }, (_, index) => `user-${index + 1}`);
+      const mockChunks = [
+        {
+          number: 1,
+          recipients: mockRecipients.slice(0, 1000),
+        },
+        {
+          number: 2,
+          recipients: mockRecipients.slice(1000, 2000),
+        },
+        {
+          number: 3,
+          recipients: mockRecipients.slice(2000, 2500),
+        },
+      ];
+
+      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+
+      await instance.enqueueOneOrMore(mockHandler, mockData);
+
+      expect(mockEnqueue).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe("RETRYABLE_ERRORS", () => {
+    it("exports only unknown error code as retryable", () => {
+      expect(RETRYABLE_ERRORS).toEqual([ERROR_CODES.unknown]);
+    });
+
+    it("RETRYABLE_ERRORS contains only valid error codes", () => {
+      const validErrorCodes = Object.values(ERROR_CODES);
+
+      for (const errorCode of RETRYABLE_ERRORS) {
+        expect(validErrorCodes).toContain(errorCode);
+      }
+    });
+  });
+});
