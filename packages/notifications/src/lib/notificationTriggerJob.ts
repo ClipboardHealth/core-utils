@@ -45,9 +45,6 @@ interface NotificationTriggerJobParams {
 export class NotificationTriggerJob {
   private readonly adapter: NotificationTriggerJobParams["adapter"];
 
-  /**
-   *
-   */
   constructor(params: NotificationTriggerJobParams) {
     const { adapter } = params;
 
@@ -85,7 +82,8 @@ export class NotificationTriggerJob {
    * <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
    *
    * ```ts
-   * import { IdempotencyKey } from "../src";
+   * import { IdempotencyKey } from "@clipboard-health/notifications";
+   *
    * import { ExampleNotificationJob } from "./exampleNotification.job";
    * import { notificationTriggerJob } from "./notificationTriggerJob";
    *
@@ -117,34 +115,28 @@ export class NotificationTriggerJob {
    *
    * </embedex>
    */
-  async enqueueOneOrMore<T extends NotificationEnqueueData>(
+  async enqueueOneOrMore<TEnqueueData extends NotificationEnqueueData>(
     handlerClassOrInstance: EnqueueParameters[0],
-    data: T,
+    data: TEnqueueData,
     // The job's idempotency/unique key is set automatically.
     options?: Omit<EnqueueParameters[2], "idempotencyKey" | "unique">,
   ) {
-    const { idempotencyKey, recipients, workflowKey, ...rest } = data;
-
     await Promise.all(
-      chunkRecipients({ recipients }).map(async (chunk) => {
-        const key = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
-          chunk: chunk.number,
-          eventOccurredAt: idempotencyKey.eventOccurredAt,
-          recipients: chunk.recipients,
-          resourceId: idempotencyKey.resourceId,
-          workflowKey,
+      chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
+        const idempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
+          ...data.idempotencyKey,
+          chunk: number,
+          recipients,
+          workflowKey: data.workflowKey,
         });
 
         await this.adapter.enqueue(
           handlerClassOrInstance,
-          {
-            ...rest,
-            recipients: chunk.recipients,
-            idempotencyKey: key,
-          },
+          { ...data, recipients, idempotencyKey },
           {
             ...(options ? { ...options } : {}),
-            [ENQUEUE_FIELD_NAMES[this.adapter.implementation].idempotencyKey]: key.toString(),
+            [ENQUEUE_FIELD_NAMES[this.adapter.implementation].idempotencyKey]:
+              idempotencyKey.toHash({}),
           },
         );
       }),

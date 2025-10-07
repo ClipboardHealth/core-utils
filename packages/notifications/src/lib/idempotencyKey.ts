@@ -13,7 +13,8 @@ export interface IdempotencyKeyParams {
   /**
    * If a resource triggered your workflow, include its unique ID.
    *
-   * @note Do not include recipient or workplace IDs, they are included automatically.
+   * @note `recipients` (and `workplaceId` if it exists) are included in the idempotency key
+   * automatically from the trigger body.
    *
    * @example
    * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
@@ -41,8 +42,8 @@ export interface IdempotencyKeyParams {
  * receive the first notification.
  */
 export class IdempotencyKey {
-  public readonly eventOccurredAt: IdempotencyKeyParams["eventOccurredAt"];
-  public readonly resourceId: IdempotencyKeyParams["resourceId"];
+  protected readonly eventOccurredAt: IdempotencyKeyParams["eventOccurredAt"];
+  protected readonly resourceId: IdempotencyKeyParams["resourceId"];
 
   public constructor(params: IdempotencyKeyParams) {
     const { eventOccurredAt, resourceId } = params;

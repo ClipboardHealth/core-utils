@@ -9,7 +9,6 @@ import {
 } from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
-import { createDeterministicHash } from "./internal/createDeterministicHash";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
@@ -52,11 +51,8 @@ const LOG_PARAMS = {
 
 export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 
-const MAXIMUM_IDEMPOTENCY_KEY_LENGTH = 255;
-
 export const ERROR_CODES = {
   expired: "expired",
-  invalidCompatibilityToken: "invalidCompatibilityToken",
   recipientCountBelowMinimum: "recipientCountBelowMinimum",
   recipientCountAboveMaximum: "recipientCountAboveMaximum",
   missingSigningKey: "missingSigningKey",
@@ -162,10 +158,7 @@ export class NotificationClient {
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
           const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
-            idempotencyKey: idempotencyKey.toStringWithBodyHash({
-              hash: createDeterministicHash(triggerBody),
-              lengthLimit: MAXIMUM_IDEMPOTENCY_KEY_LENGTH,
-            }),
+            idempotencyKey: idempotencyKey.toHash({ workplaceId: params.body.workplaceId }),
           });
 
           const id = response.workflow_run_id;
@@ -376,7 +369,7 @@ export class NotificationClient {
     }
 
     const now = new Date();
-    if (now > expiresAt) {
+    if (expiresAt instanceof Date && now > expiresAt) {
       return this.createAndLogError({
         notificationError: {
           code: ERROR_CODES.expired,

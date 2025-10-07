@@ -1,5 +1,6 @@
 // packages/notifications/src/lib/notificationTriggerJob.ts,packages/notifications/README.md
-import { IdempotencyKey } from "../src";
+import { IdempotencyKey } from "@clipboard-health/notifications";
+
 import { ExampleNotificationJob } from "./exampleNotification.job";
 import { notificationTriggerJob } from "./notificationTriggerJob";
 

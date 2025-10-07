@@ -2,7 +2,7 @@ import { MAXIMUM_RECIPIENTS_COUNT } from "../notificationClient";
 import { chunkRecipients } from "./chunkRecipients";
 
 describe("chunkRecipients", () => {
-  it("returns single chunk with original idempotency key when recipients count equals maximum", () => {
+  it("returns single chunk with number 1 when recipients count equals maximum", () => {
     const input = {
       recipients: Array.from(
         { length: MAXIMUM_RECIPIENTS_COUNT },
@@ -33,7 +33,7 @@ describe("chunkRecipients", () => {
     });
   });
 
-  it("returns multiple chunks with indexed idempotency keys when recipients count exceeds maximum", () => {
+  it("returns multiple chunks with sequential numbers when recipients count exceeds maximum", () => {
     const input = {
       recipients: Array.from(
         { length: MAXIMUM_RECIPIENTS_COUNT + 1 },

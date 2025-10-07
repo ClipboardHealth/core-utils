@@ -25,8 +25,7 @@ npm install @clipboard-health/notifications
 
    import { BackgroundJobsService } from "./setup";
 
-   // Provide this in your microservice, similar to how we have CBHBackgroundJobs in `clipboard-health`
-   // aka `backend-main`.
+   // Provide this in your microservice.
    export const notificationTriggerJob = new NotificationTriggerJob({
      adapter: new BackgroundJobsService(),
    });
@@ -39,7 +38,8 @@ npm install @clipboard-health/notifications
    <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
 
    ```ts
-   import { IdempotencyKey } from "../src";
+   import { IdempotencyKey } from "@clipboard-health/notifications";
+
    import { ExampleNotificationJob } from "./exampleNotification.job";
    import { notificationTriggerJob } from "./notificationTriggerJob";
 

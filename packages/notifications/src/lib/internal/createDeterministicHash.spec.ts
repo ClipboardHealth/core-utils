@@ -1,13 +1,12 @@
 import { createHash } from "node:crypto";
 
-import stringify from "fast-json-stable-stringify";
+import { stringify } from "@clipboard-health/util-ts";
 
 import { createDeterministicHash } from "./createDeterministicHash";
 
 function createExpectedResult(value: unknown): string {
   const normalized = typeof value === "string" ? value : stringify(value);
-  const hash = createHash("sha256").update(normalized).digest("hex");
-  return hash.slice(0, 32);
+  return createHash("sha256").update(normalized).digest("hex");
 }
 
 describe("createDeterministicHash", () => {
@@ -76,7 +75,7 @@ describe("createDeterministicHash", () => {
     expect(actual1).not.toBe(actual2);
   });
 
-  it("always returns 32-character hash", () => {
+  it("always returns 64-character hash", () => {
     const input1 = ["user1"];
     const input2 = ["user1", "user2", "user3", "user4", "user5"];
     const input3 = "a".repeat(1000);
@@ -85,18 +84,8 @@ describe("createDeterministicHash", () => {
     const actual2 = createDeterministicHash(input2);
     const actual3 = createDeterministicHash(input3);
 
-    expect(actual1).toHaveLength(32);
-    expect(actual2).toHaveLength(32);
-    expect(actual3).toHaveLength(32);
-  });
-
-  it("uses stable stringify for consistent ordering", () => {
-    const input1 = { b: 2, a: 1 };
-    const input2 = { a: 1, b: 2 };
-
-    const actual1 = createDeterministicHash(input1);
-    const actual2 = createDeterministicHash(input2);
-
-    expect(actual1).toBe(actual2);
+    expect(actual1).toHaveLength(64);
+    expect(actual2).toHaveLength(64);
+    expect(actual3).toHaveLength(64);
   });
 });

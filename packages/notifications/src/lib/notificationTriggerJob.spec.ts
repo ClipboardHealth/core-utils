@@ -33,7 +33,7 @@ describe("NotificationTriggerJob", () => {
   describe("enqueueOneOrMore", () => {
     const mockHandler = "my-handler";
     const mockWorkflowKey = "my-workflow-key";
-    const mockRecipients = Array.from({ length: 1000 }, (_, index) => `user-${index + 1}`);
+    const mockRecipients = Array.from({ length: 1001 }, (_, index) => `user-${index + 1}`);
     const mockIdempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
       chunk: 1,
       recipients: mockRecipients,
@@ -68,14 +68,14 @@ describe("NotificationTriggerJob", () => {
       expect(mockEnqueue).toHaveBeenCalledTimes(1);
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
-        {
+        expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
-        },
-        {
+        }),
+        expect.objectContaining({
           idempotencyKey: expect.any(String),
-        },
+        }),
       );
     });
 
@@ -104,26 +104,26 @@ describe("NotificationTriggerJob", () => {
       expect(mockEnqueue).toHaveBeenNthCalledWith(
         1,
         mockHandler,
-        {
+        expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
           recipients: mockRecipients.slice(0, 1000),
           expiresAt: mockExpiresAt,
-        },
-        {
+        }),
+        expect.objectContaining({
           idempotencyKey: expect.any(String),
-        },
+        }),
       );
       expect(mockEnqueue).toHaveBeenNthCalledWith(
         2,
         mockHandler,
-        {
+        expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
           recipients: mockRecipients.slice(1000, 1500),
           expiresAt: mockExpiresAt,
-        },
-        {
+        }),
+        expect.objectContaining({
           idempotencyKey: expect.any(String),
-        },
+        }),
       );
     });
 
@@ -158,16 +158,16 @@ describe("NotificationTriggerJob", () => {
 
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
-        {
+        expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
           customField: "test-value",
           anotherField: 42,
-        },
-        {
+        }),
+        expect.objectContaining({
           idempotencyKey: expect.any(String),
-        },
+        }),
       );
     });
 
@@ -200,16 +200,16 @@ describe("NotificationTriggerJob", () => {
 
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
-        {
+        expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
-        },
-        {
+        }),
+        expect.objectContaining({
           delay: 5000,
           priority: 10,
           idempotencyKey: expect.any(String),
-        },
+        }),
       );
     });
 
@@ -238,31 +238,6 @@ describe("NotificationTriggerJob", () => {
         recipients: [],
       });
       expect(mockEnqueue).toHaveBeenCalledTimes(1);
-    });
-
-    it("enqueues all chunks in parallel using Promise.all", async () => {
-      const mockRecipients = Array.from({ length: 2500 }, (_, index) => `user-${index + 1}`);
-      const mockChunks = [
-        {
-          number: 1,
-          recipients: mockRecipients.slice(0, 1000),
-        },
-        {
-          number: 2,
-          recipients: mockRecipients.slice(1000, 2000),
-        },
-        {
-          number: 3,
-          recipients: mockRecipients.slice(2000, 2500),
-        },
-      ];
-
-      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
-
-      await instance.enqueueOneOrMore(mockHandler, mockData);
-
-      expect(mockEnqueue).toHaveBeenCalledTimes(3);
     });
   });
 

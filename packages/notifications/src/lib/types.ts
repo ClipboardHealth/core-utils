@@ -160,15 +160,17 @@ export interface TriggerRequest {
   keysToRedact?: string[];
 
   /**
-   * Expiration timestamp after which the request is dropped. Use this to prevent stale
-   * notifications. If, for example, you're notifying about an event that starts in one hour, you
-   * might set this to one hour from now.
+   * `expiresAt` prevents stale notifications across retries by dropping the request when `now >
+   * expiresAt`. If, for example, you're notifying about an event that starts in one hour, you might
+   * set this to one hour from now.
    *
-   * If you're triggering from a background job, don't set this at the call site! Set it when you
+   * If you are not retrying or your notification is never stale, set it to `false`.
+   *
+   * If you're triggering from a background job, don't set this at the call site, set it when you
    * enqueue the job. Otherwise, it gets updated each time the job retries, will always be in the
    * future, and won't prevent stale notifications.
    */
-  expiresAt: Date;
+  expiresAt: Date | false;
 
   /** Attempt number for tracing. */
   attempt: number;
