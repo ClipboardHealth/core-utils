@@ -82,6 +82,7 @@ describe("NotificationClient", () => {
       const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -120,6 +121,7 @@ describe("NotificationClient", () => {
       const triggerSpy = jest.spyOn(provider.workflows, "trigger");
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
@@ -147,6 +149,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
@@ -184,6 +187,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -219,6 +223,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -249,6 +254,7 @@ describe("NotificationClient", () => {
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -287,6 +293,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -307,6 +314,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -327,6 +335,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -361,6 +370,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
@@ -381,6 +391,7 @@ describe("NotificationClient", () => {
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
@@ -406,6 +417,7 @@ describe("NotificationClient", () => {
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
@@ -426,6 +438,7 @@ describe("NotificationClient", () => {
 
     it("rejects request with no recipients", async () => {
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: { recipients: [] },
         idempotencyKey: mockIdempotencyKey,
@@ -444,6 +457,7 @@ describe("NotificationClient", () => {
       const recipients = Array.from({ length: 1001 }, (_, index) => ({ userId: `user-${index}` }));
 
       const input: TriggerRequest = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: { recipients },
         idempotencyKey: mockIdempotencyKey,
@@ -464,6 +478,7 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: Omit<TriggerRequest, "keysToRedact"> = {
+        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,

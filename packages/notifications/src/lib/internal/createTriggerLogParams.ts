@@ -4,13 +4,13 @@ export type TriggerLogContext = LogParams &
   Pick<TriggerRequest, "attempt" | "idempotencyKey" | "workflowKey">;
 
 export function createTriggerLogParams(params: TriggerRequest & LogParams): TriggerLogContext {
-  const { attempt, destination, idempotencyKey, workflowKey, traceName } = params;
+  const { attempt, destination, idempotencyKey, key, workflowKey, traceName } = params;
 
   return {
     attempt,
     destination,
     idempotencyKey,
-    workflowKey,
+    workflowKey: /* istanbul ignore next */ workflowKey ?? key,
     traceName,
   };
 }

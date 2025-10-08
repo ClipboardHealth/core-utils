@@ -11,6 +11,7 @@ import { signUserToken } from "@knocklabs/node";
 
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
+import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
@@ -153,13 +154,21 @@ export class NotificationClient {
         }
 
         try {
-          const { workflowKey, body, idempotencyKey, keysToRedact = [] } = validated.value;
+          const { body, idempotencyKey, key, keysToRedact = [], workflowKey } = validated.value;
           const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
-          const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
-            idempotencyKey: idempotencyKey.toHash({ workplaceId: params.body.workplaceId }),
-          });
+          const response = await this.provider.workflows.trigger(
+            /* istanbul ignore next */ workflowKey ?? key,
+            triggerBody,
+            {
+              idempotencyKey:
+                idempotencyKey instanceof IdempotencyKeyDoNotImportOutsideNotificationsLibrary
+                  ? idempotencyKey.toHash({ workplaceId: params.body.workplaceId })
+                  : /* istanbul ignore next */
+                    idempotencyKey,
+            },
+          );
 
           const id = response.workflow_run_id;
           this.logTriggerResponse({ span, response, id, logParams });

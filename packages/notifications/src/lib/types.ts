@@ -145,8 +145,14 @@ export interface TriggerBody {
  * Request parameters for triggering a notification.
  */
 export interface TriggerRequest {
+  /** Workflow key.
+   *
+   * @deprecated Use `workflowKey` instead.
+   */
+  key: string;
+
   /** Workflow key. */
-  workflowKey: string;
+  workflowKey?: string;
 
   /** Trigger payload. */
   body: TriggerBody;
@@ -154,7 +160,7 @@ export interface TriggerRequest {
   /**
    * @see {@link IdempotencyKeyDoNotImportOutsideNotificationsLibrary}
    */
-  idempotencyKey: IdempotencyKeyDoNotImportOutsideNotificationsLibrary;
+  idempotencyKey: string | IdempotencyKeyDoNotImportOutsideNotificationsLibrary;
 
   /** Array of data keys to redact in logs for privacy. */
   keysToRedact?: string[];
