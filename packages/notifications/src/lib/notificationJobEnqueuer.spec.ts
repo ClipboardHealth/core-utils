@@ -2,16 +2,16 @@ import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-ad
 
 import { chunkRecipients } from "./internal/chunkRecipients";
 import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
-import { ERROR_CODES } from "./notificationClient";
+import { ERROR_CODES, MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
 import {
   type NotificationJobData,
-  NotificationTriggerJob,
+  NotificationJobEnqueuer,
   RETRYABLE_ERRORS,
-} from "./notificationTriggerJob";
+} from "./notificationJobEnqueuer";
 
 jest.mock("./internal/chunkRecipients");
 
-describe("NotificationTriggerJob", () => {
+describe("NotificationJobEnqueuer", () => {
   const mockEnqueue = jest.fn();
   const mockAdapter: BackgroundJobsAdapter = {
     implementation: "postgres",
@@ -24,9 +24,9 @@ describe("NotificationTriggerJob", () => {
 
   describe("constructor", () => {
     it("creates instance with provided adapter", () => {
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+      const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
-      expect(instance).toBeInstanceOf(NotificationTriggerJob);
+      expect(instance).toBeInstanceOf(NotificationJobEnqueuer);
     });
   });
 
@@ -58,7 +58,7 @@ describe("NotificationTriggerJob", () => {
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
 
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+      const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, mockData);
 
@@ -83,17 +83,17 @@ describe("NotificationTriggerJob", () => {
       const mockChunks = [
         {
           number: 1,
-          recipients: mockRecipients.slice(0, 1000),
+          recipients: mockRecipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
         },
         {
           number: 2,
-          recipients: mockRecipients.slice(1000, 1500),
+          recipients: mockRecipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
         },
       ];
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
 
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+      const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, mockData);
 
@@ -106,7 +106,7 @@ describe("NotificationTriggerJob", () => {
         mockHandler,
         expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
-          recipients: mockRecipients.slice(0, 1000),
+          recipients: mockRecipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
           expiresAt: mockExpiresAt,
         }),
         expect.objectContaining({
@@ -118,7 +118,7 @@ describe("NotificationTriggerJob", () => {
         mockHandler,
         expect.objectContaining({
           idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
-          recipients: mockRecipients.slice(1000, 1500),
+          recipients: mockRecipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
           expiresAt: mockExpiresAt,
         }),
         expect.objectContaining({
@@ -152,7 +152,7 @@ describe("NotificationTriggerJob", () => {
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
 
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+      const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, mockData);
 
@@ -194,7 +194,7 @@ describe("NotificationTriggerJob", () => {
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
 
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+      const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, mockData, mockOptions);
 
@@ -230,7 +230,7 @@ describe("NotificationTriggerJob", () => {
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
 
-      const instance = new NotificationTriggerJob({ adapter: mockAdapter });
+      const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, mockData);
 

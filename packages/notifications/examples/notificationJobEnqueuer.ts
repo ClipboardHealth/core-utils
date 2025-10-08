@@ -1,9 +1,9 @@
 // packages/notifications/README.md
-import { NotificationTriggerJob } from "@clipboard-health/notifications";
+import { NotificationJobEnqueuer } from "@clipboard-health/notifications";
 
 import { BackgroundJobsService } from "./setup";
 
 // Provide this in your microservice.
-export const notificationTriggerJob = new NotificationTriggerJob({
+export const notificationJobEnqueuer = new NotificationJobEnqueuer({
   adapter: new BackgroundJobsService(),
 });

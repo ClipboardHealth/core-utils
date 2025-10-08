@@ -16,17 +16,17 @@ npm install @clipboard-health/notifications
 
 ## Usage
 
-1. Export a `NotificationTriggerJob` instance:
+1. Export a `NotificationJobEnqueuer` instance:
 
-   <embedex source="packages/notifications/examples/notificationTriggerJob.ts">
+   <embedex source="packages/notifications/examples/notificationJobEnqueuer.ts">
 
    ```ts
-   import { NotificationTriggerJob } from "@clipboard-health/notifications";
+   import { NotificationJobEnqueuer } from "@clipboard-health/notifications";
 
    import { BackgroundJobsService } from "./setup";
 
    // Provide this in your microservice.
-   export const notificationTriggerJob = new NotificationTriggerJob({
+   export const notificationJobEnqueuer = new NotificationJobEnqueuer({
      adapter: new BackgroundJobsService(),
    });
    ```
@@ -41,10 +41,10 @@ npm install @clipboard-health/notifications
    import { IdempotencyKey } from "@clipboard-health/notifications";
 
    import { ExampleNotificationJob } from "./exampleNotification.job";
-   import { notificationTriggerJob } from "./notificationTriggerJob";
+   import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
 
    async function enqueueNotificationJob() {
-     await notificationTriggerJob.enqueueOneOrMore(ExampleNotificationJob, {
+     await notificationJobEnqueuer.enqueueOneOrMore(ExampleNotificationJob, {
        // Set expiresAt at enqueue-time so it remains stable across job retries.
        expiresAt: minutesFromNow(60),
        // Set idempotencyKey at enqueue-time so it remains stable across job retries.

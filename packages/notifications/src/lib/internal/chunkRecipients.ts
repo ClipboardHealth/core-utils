@@ -23,10 +23,8 @@ export function chunkRecipients(params: {
     return [{ number: 1, recipients: [] }];
   }
 
-  const idChunks = chunk(recipients, MAXIMUM_RECIPIENTS_COUNT);
-  const singleChunk = idChunks.length === 1;
-  return idChunks.map((ids, index) => ({
-    number: singleChunk ? 1 : index + 1,
-    recipients: ids,
+  return chunk(recipients, MAXIMUM_RECIPIENTS_COUNT).map((recipientsChunk, index) => ({
+    number: index + 1,
+    recipients: recipientsChunk,
   }));
 }

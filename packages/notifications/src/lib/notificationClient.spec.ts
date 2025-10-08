@@ -4,7 +4,7 @@ import { type Knock } from "@knocklabs/node";
 
 import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { IdempotentKnock } from "./internal/idempotentKnock";
-import { NotificationClient } from "./notificationClient";
+import { MAXIMUM_RECIPIENTS_COUNT, NotificationClient } from "./notificationClient";
 import type { SignUserTokenRequest, Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
@@ -454,7 +454,9 @@ describe("NotificationClient", () => {
     });
 
     it("rejects request with too many recipients", async () => {
-      const recipients = Array.from({ length: 1001 }, (_, index) => ({ userId: `user-${index}` }));
+      const recipients = Array.from({ length: MAXIMUM_RECIPIENTS_COUNT + 1 }, (_, index) => ({
+        userId: `user-${index}`,
+      }));
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
@@ -469,7 +471,9 @@ describe("NotificationClient", () => {
       const actual = await client.trigger(input);
 
       expectToBeFailure(actual);
-      expect(actual.error.message).toContain("Got 1001 recipients; must be <= 1000");
+      expect(actual.error.message).toContain(
+        `Got ${MAXIMUM_RECIPIENTS_COUNT + 1} recipients; must be <= ${MAXIMUM_RECIPIENTS_COUNT}`,
+      );
     });
 
     it("handles trigger request without keysToRedact", async () => {

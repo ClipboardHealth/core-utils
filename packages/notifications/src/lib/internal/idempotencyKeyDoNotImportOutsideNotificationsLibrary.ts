@@ -3,8 +3,8 @@ import { isDefined } from "@clipboard-health/util-ts";
 import { IdempotencyKey, type IdempotencyKeyParams } from "../idempotencyKey";
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type NotificationTriggerJob,
-} from "../notificationTriggerJob";
+  type NotificationJobEnqueuer,
+} from "../notificationJobEnqueuer";
 import { createDeterministicHash } from "./createDeterministicHash";
 
 interface IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams extends IdempotencyKeyParams {
@@ -14,7 +14,7 @@ interface IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams extends Ide
   chunk: number;
 
   /**
-   * The recipients in the chunk; maximum of 1000.
+   * The recipients in the chunk; maximum of MAXIMUM_RECIPIENTS_COUNT.
    */
   recipients: string[];
 
@@ -26,13 +26,13 @@ interface IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams extends Ide
 
 /**
  * Idempotency keys prevent duplicate notifications. `NotificationClient.trigger` should be called
- * after properly enqueuing a job using `NotificationTriggerJob.enqueueOneOrMore` to help ensure
+ * after properly enqueuing a job using `NotificationJobEnqueuer.enqueueOneOrMore` to help ensure
  * we're following best practices so customers don't receive duplicate or stale notifications.
  *
  * Yes, you could import this class into your service and call `NotificationClient.trigger`
  * directly. We're using the honor system in hopes that enforcement is unnecessary.
  *
- * @see {@link NotificationTriggerJob.enqueueOneOrMore}.
+ * @see {@link NotificationJobEnqueuer.enqueueOneOrMore}.
  */
 export class IdempotencyKeyDoNotImportOutsideNotificationsLibrary extends IdempotencyKey {
   private readonly chunk: IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams["chunk"];

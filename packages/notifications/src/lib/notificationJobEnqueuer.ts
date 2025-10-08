@@ -38,26 +38,26 @@ export interface NotificationJobData extends Omit<NotificationEnqueueData, "idem
   idempotencyKey: IdempotencyKeyDoNotImportOutsideNotificationsLibrary;
 }
 
-interface NotificationTriggerJobParams {
+interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
 }
 
-export class NotificationTriggerJob {
-  private readonly adapter: NotificationTriggerJobParams["adapter"];
+export class NotificationJobEnqueuer {
+  private readonly adapter: NotificationJobEnqueuerParams["adapter"];
 
-  constructor(params: NotificationTriggerJobParams) {
+  constructor(params: NotificationJobEnqueuerParams) {
     const { adapter } = params;
 
     this.adapter = adapter;
   }
 
   /**
-   * In short: It's important that notification trigger jobs use this method. It enforces best
-   * practices to ensure customers don't receive duplicate or stale notifications.
+   * In short: It's important that notification jobs use this method. It enforces best practices to
+   * ensure customers don't receive duplicate or stale notifications.
    *
    * @remarks
    * The following are true:
-   * 1. There is a maximum of 1000 recipients per trigger request.
+   * 1. There is a maximum of MAXIMUM_RECIPIENTS_COUNT recipients per trigger request.
    * 2. Our notification provider throws if we use the same idempotency key, but the body changes.
    * 3. We want to be able to query for template variables in jobs so we're getting the most
    *    up-to-date values.
@@ -65,16 +65,16 @@ export class NotificationTriggerJob {
    * Taken together, we need to ensure each job only contains one chunk of recipients so it either
    * succeeds or fails and retries on its own. If we moved chunking to the
    * `NotificationClient.trigger` method, for example, the following could happen:
-   * 1. A job with >1000 recipients runs.
+   * 1. A job with >MAXIMUM_RECIPIENTS_COUNT recipients runs.
    * 2. The first chunk succeeds, but the second fails because of a transient issue.
    * 3. The job retries, but a first batch template variable changes in the meantime.
    *
    * Now the job will fail indefinitely and the later batches won't get their notifications.
    *
-   * Even if you're sure you won't have more >1000 recipients, the method enforces other best
-   * practices, like setting `expiresAt` on enqueue instead of calculating it in your job on each
-   * run. Doing this usually means it's always in the future and doesn't help prevent stale
-   * notifications.
+   * Even if you're sure you won't have more >MAXIMUM_RECIPIENTS_COUNT recipients, the method
+   * enforces other best practices, like setting `expiresAt` on enqueue instead of calculating it in
+   * your job on each run. Doing this usually means it's always in the future and doesn't help
+   * prevent stale notifications.
    *
    * So please, use this method if not for customers, then to save fellow engineers time debugging!
    *
@@ -85,10 +85,10 @@ export class NotificationTriggerJob {
    * import { IdempotencyKey } from "@clipboard-health/notifications";
    *
    * import { ExampleNotificationJob } from "./exampleNotification.job";
-   * import { notificationTriggerJob } from "./notificationTriggerJob";
+   * import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
    *
    * async function enqueueNotificationJob() {
-   *   await notificationTriggerJob.enqueueOneOrMore(ExampleNotificationJob, {
+   *   await notificationJobEnqueuer.enqueueOneOrMore(ExampleNotificationJob, {
    *     // Set expiresAt at enqueue-time so it remains stable across job retries.
    *     expiresAt: minutesFromNow(60),
    *     // Set idempotencyKey at enqueue-time so it remains stable across job retries.

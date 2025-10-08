@@ -1,11 +1,11 @@
-// packages/notifications/src/lib/notificationTriggerJob.ts,packages/notifications/README.md
+// packages/notifications/src/lib/notificationJobEnqueuer.ts,packages/notifications/README.md
 import { IdempotencyKey } from "@clipboard-health/notifications";
 
 import { ExampleNotificationJob } from "./exampleNotification.job";
-import { notificationTriggerJob } from "./notificationTriggerJob";
+import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
 
 async function enqueueNotificationJob() {
-  await notificationTriggerJob.enqueueOneOrMore(ExampleNotificationJob, {
+  await notificationJobEnqueuer.enqueueOneOrMore(ExampleNotificationJob, {
     // Set expiresAt at enqueue-time so it remains stable across job retries.
     expiresAt: minutesFromNow(60),
     // Set idempotencyKey at enqueue-time so it remains stable across job retries.
