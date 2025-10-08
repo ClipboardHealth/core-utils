@@ -1,6 +1,11 @@
 import { type Logger } from "@clipboard-health/util-ts";
 import { Knock } from "@knocklabs/node";
 
+/**
+ * Extended Knock client with custom configuration for idempotent operations.
+ *
+ * @see {@link https://docs.knock.app/api-reference/overview/idempotent-requests}
+ */
 export class IdempotentKnock extends Knock {
   public override logLevel = "warn" as const; // Knock's default.
   public override maxRetries = 1; // Knock's default is 2, but we rely on background job retries.

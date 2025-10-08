@@ -2,10 +2,10 @@ import type { TraceOptions } from "../types";
 import type { TriggerLogContext } from "./createTriggerLogParams";
 
 export function createTriggerTraceOptions(params: TriggerLogContext): TraceOptions {
-  const { key, attempt, destination } = params;
+  const { workflowKey, attempt, destination } = params;
 
   return {
-    resource: `notification.${key}`,
+    resource: `notification.${workflowKey}`,
     /**
      * Don't include high cardinality tags like expiresAt and idempotencyKey to reduce Datadog
      * costs.

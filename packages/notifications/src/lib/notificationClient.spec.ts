@@ -2,8 +2,9 @@ import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
 import { type Knock } from "@knocklabs/node";
 
+import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { IdempotentKnock } from "./internal/idempotentKnock";
-import { NotificationClient } from "./notificationClient";
+import { MAXIMUM_RECIPIENTS_COUNT, NotificationClient } from "./notificationClient";
 import type { SignUserTokenRequest, Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
@@ -63,7 +64,11 @@ describe("NotificationClient", () => {
 
   describe("trigger", () => {
     const mockWorkflowKey = "test-workflow";
-    const mockIdempotencyKey = "idempotent-456";
+    const mockIdempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
+      chunk: 1,
+      recipients: ["user-1", "user-2"],
+      workflowKey: mockWorkflowKey,
+    });
     const mockAttempt = 1;
     const mockExpiresAt = new Date(Date.now() + 300_000);
     const mockWorkflowRunId = "workflow-run-789";
@@ -78,6 +83,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -97,7 +103,7 @@ describe("NotificationClient", () => {
           data: { message: "Hello world" },
         },
         {
-          idempotencyKey: mockIdempotencyKey,
+          idempotencyKey: expect.any(String),
         },
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -116,6 +122,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -143,6 +150,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -180,6 +188,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: ["secretKey"],
@@ -215,6 +224,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: ["secretKey"],
@@ -245,6 +255,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -283,6 +294,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -303,6 +315,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -323,6 +336,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -357,6 +371,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -377,6 +392,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -402,6 +418,7 @@ describe("NotificationClient", () => {
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: { recipients: [{ userId: "user-1" }] },
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -422,6 +439,7 @@ describe("NotificationClient", () => {
     it("rejects request with no recipients", async () => {
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: { recipients: [] },
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -436,10 +454,13 @@ describe("NotificationClient", () => {
     });
 
     it("rejects request with too many recipients", async () => {
-      const recipients = Array.from({ length: 1001 }, (_, index) => ({ userId: `user-${index}` }));
+      const recipients = Array.from({ length: MAXIMUM_RECIPIENTS_COUNT + 1 }, (_, index) => ({
+        userId: `user-${index}`,
+      }));
 
       const input: TriggerRequest = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: { recipients },
         idempotencyKey: mockIdempotencyKey,
         keysToRedact: [],
@@ -450,7 +471,9 @@ describe("NotificationClient", () => {
       const actual = await client.trigger(input);
 
       expectToBeFailure(actual);
-      expect(actual.error.message).toContain("Got 1001 recipients; must be <= 1000");
+      expect(actual.error.message).toContain(
+        `Got ${MAXIMUM_RECIPIENTS_COUNT + 1} recipients; must be <= ${MAXIMUM_RECIPIENTS_COUNT}`,
+      );
     });
 
     it("handles trigger request without keysToRedact", async () => {
@@ -460,6 +483,7 @@ describe("NotificationClient", () => {
 
       const input: Omit<TriggerRequest, "keysToRedact"> = {
         key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
         expiresAt: mockExpiresAt,

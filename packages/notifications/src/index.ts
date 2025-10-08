@@ -1,5 +1,5 @@
-export * from "./lib/chunkRecipients";
-export * from "./lib/createIdempotencyKey";
 export * from "./lib/errorsInResult";
+export * from "./lib/idempotencyKey";
 export * from "./lib/notificationClient";
+export * from "./lib/notificationJobEnqueuer";
 export * from "./lib/types";

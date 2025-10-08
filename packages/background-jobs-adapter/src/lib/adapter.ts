@@ -1,14 +1,14 @@
-/**
- * Minimal adapter interface for background jobs operations supporting background-jobs-mongo (Mongo)
- * and background-jobs-postgres (Postgres) implementations.
- */
+export type BackgroundJobsImplementation = "mongo" | "postgres";
+
+export interface Handler<TData> {
+  perform(data: TData, job?: unknown): Promise<string | void>;
+}
 
 /**
  * Base handler interface that supports each implementation.
  */
-export interface BaseHandler<T> {
+export interface BaseHandler<T> extends Handler<T> {
   name?: string; // Mongo uses this
-  perform(data: T, job?: unknown): Promise<unknown>;
 }
 
 /**
@@ -16,7 +16,7 @@ export interface BaseHandler<T> {
  */
 export interface BaseHandlerClass<T> {
   queueName?: string; // Postgres uses this
-  new (...arguments_: never[]): BaseHandler<T>;
+  new (...arguments_: never[]): Handler<T>;
 }
 
 /**
@@ -24,34 +24,56 @@ export interface BaseHandlerClass<T> {
  */
 export type HandlerClassOrInstance<T> = BaseHandlerClass<T> | BaseHandler<T>;
 
-/**
- * Common enqueue options that each implementation supports.
- */
-export interface CommonEnqueueOptions {
+interface WithStartAt {
   /**
    * When the job should start being processed.
    */
   startAt?: Date;
+}
 
-  /**
-   * Database transaction/session to use for atomic job creation.
-   * - Mongo: called `session`; ClientSession
-   * - Postgres: DatabaseClient (Prisma transaction, pg client, etc.)
-   */
+export interface MongoEnqueueOptions extends WithStartAt {
+  session?: unknown;
+  unique?: string | { enqueuedKey: string | undefined; runningKey: string | undefined };
+}
+
+export interface PostgresEnqueueOptions extends WithStartAt {
+  idempotencyKey?: string;
   transaction?: unknown;
-
-  /**
-   * Unique key for job deduplication
-   * - Mongo: called `unique`; string or JobUniqueOptions
-   * - Postgres: idempotencyKey
-   */
-  idempotencyKey?: string | { enqueuedKey: string | undefined; runningKey: string | undefined };
 }
 
 /**
- * Minimal adapter interface for background jobs enqueue operations.
+ * Common type of enqueue options.
+ *
+ * @example
+ * ```ts
+ * const enqueueOptions = {
+ *   [ENQUEUE_FIELD_NAMES[this.adapter.implementation].idempotencyKey]: idempotencyKey,
+ * }
+ * ```
+ */
+type EnqueueFields = keyof PostgresEnqueueOptions;
+export const ENQUEUE_FIELD_NAMES = {
+  mongo: {
+    startAt: "startAt",
+    transaction: "session",
+    idempotencyKey: "unique",
+  } as const satisfies Record<EnqueueFields, keyof MongoEnqueueOptions>,
+  postgres: {
+    startAt: "startAt",
+    idempotencyKey: "idempotencyKey",
+    transaction: "transaction",
+  } as const satisfies Record<EnqueueFields, keyof PostgresEnqueueOptions>,
+} as const;
+
+export type EnqueueOptions = MongoEnqueueOptions | PostgresEnqueueOptions;
+
+/**
+ * Minimal adapter interface for background jobs operations supporting background-jobs-mongo (Mongo)
+ * and background-jobs-postgres (Postgres) implementations.
  */
 export interface BackgroundJobsAdapter {
+  implementation: BackgroundJobsImplementation;
+
   /**
    * Enqueue a job to be processed.
    *
@@ -60,9 +82,9 @@ export interface BackgroundJobsAdapter {
    * @param options - Optional configuration for the job
    * @returns A promise that resolves to the enqueued job or undefined (implementation-specific)
    */
-  enqueue<T extends Record<string, unknown>>(
+  enqueue<T>(
     handler: string | HandlerClassOrInstance<T>,
     data: T,
-    options?: CommonEnqueueOptions,
+    options?: EnqueueOptions,
   ): Promise<unknown>;
 }
