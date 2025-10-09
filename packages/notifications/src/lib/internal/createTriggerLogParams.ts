@@ -10,7 +10,7 @@ export function createTriggerLogParams(params: TriggerRequest & LogParams): Trig
     attempt,
     destination,
     idempotencyKey,
-    workflowKey: /* istanbul ignore next */ workflowKey ?? key,
+    workflowKey: workflowKey ?? /* istanbul ignore next */ key,
     traceName,
   };
 }

@@ -14,7 +14,7 @@ import { stringify } from "@clipboard-health/util-ts";
  * @param value - Value to hash (string, string[], object, etc.).
  * @returns A hex string representing the hash.
  */
-export function createDeterministicHash(value: unknown) {
+export function createDeterministicHash(value: unknown): string {
   return createHash("sha256")
     .update(typeof value === "string" ? value : stringify(value))
     .digest("hex");

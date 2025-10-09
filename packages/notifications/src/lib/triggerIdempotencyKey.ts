@@ -7,7 +7,7 @@ import {
   type NotificationJobEnqueuer,
 } from "./notificationJobEnqueuer";
 
-interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
+export interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
   /**
    * The recipient chunk number.
    */
@@ -37,6 +37,9 @@ interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
  */
 export class TriggerIdempotencyKey extends IdempotencyKey {
   /**
+   * For internal library use and testing only. Service code should use
+   * {@link NotificationJobEnqueuer.enqueueOneOrMore} instead.
+   *
    * @see {@link TriggerIdempotencyKey}.
    */
   public static DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
