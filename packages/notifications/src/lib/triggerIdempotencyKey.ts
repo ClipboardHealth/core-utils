@@ -7,7 +7,7 @@ import {
   type NotificationJobEnqueuer,
 } from "./notificationJobEnqueuer";
 
-interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
+export interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
   /**
    * The recipient chunk number.
    */

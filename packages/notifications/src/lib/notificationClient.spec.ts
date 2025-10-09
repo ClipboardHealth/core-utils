@@ -506,6 +506,7 @@ describe("NotificationClient", () => {
         recipients: ["user-1"],
         workflowKey: mockWorkflowKey,
         resourceId: "test-resource-id",
+        eventOccurredAt: "2024-01-01T00:00:00.000Z",
       };
 
       const input: TriggerRequest = {
@@ -578,6 +579,71 @@ describe("NotificationClient", () => {
       expectToBeFailure(actual);
       expect(actual.error.message).toContain("Invalid idempotency key");
       expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("rejects plain object idempotencyKey with invalid eventOccurredAt string", async () => {
+      const mockBody = { recipients: [{ userId: "user-1" }] };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+
+      const plainObjectWithInvalidDate = {
+        chunk: 1,
+        recipients: ["user-1"],
+        workflowKey: mockWorkflowKey,
+        resourceId: "test-resource-id",
+        eventOccurredAt: "not-a-valid-date",
+      };
+
+      const input: TriggerRequest = {
+        key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
+        body: { ...mockBody, workplaceId: "workplace-123" },
+        idempotencyKey: plainObjectWithInvalidDate as unknown as TriggerIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.message).toContain("Invalid idempotency key");
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("handles plain object idempotencyKey with eventOccurredAt Date object", async () => {
+      const mockBody = { recipients: [{ userId: "user-1" }] };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const plainObjectWithDate = {
+        chunk: 1,
+        recipients: ["user-1"],
+        workflowKey: mockWorkflowKey,
+        resourceId: "test-resource-id",
+        eventOccurredAt: new Date("2024-01-01T00:00:00.000Z"),
+      };
+
+      const input: TriggerRequest = {
+        key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
+        body: { ...mockBody, workplaceId: "workplace-123" },
+        idempotencyKey: plainObjectWithDate as unknown as TriggerIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.id).toBe(mockWorkflowRunId);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        expect.any(Object),
+        expect.objectContaining({
+          idempotencyKey: expect.any(String),
+        }),
+      );
     });
   });
 

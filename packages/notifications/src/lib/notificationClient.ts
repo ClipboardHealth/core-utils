@@ -17,7 +17,7 @@ import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
-import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
+import { TriggerIdempotencyKey, type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
@@ -485,11 +485,23 @@ function toIdempotencyKey(
   }
 
   if (
+    typeof idempotencyKey === "object" &&
+    idempotencyKey !== null &&
     "chunk" in idempotencyKey &&
     "recipients" in idempotencyKey &&
     "workflowKey" in idempotencyKey
   ) {
-    return TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(idempotencyKey);
+    const { eventOccurredAt, ...rest } = idempotencyKey as TriggerIdempotencyKeyParams & {
+      eventOccurredAt?: Date | string;
+    };
+    if (isString(eventOccurredAt) && Number.isNaN(Date.parse(eventOccurredAt))) {
+      return undefined;
+    }
+
+    return TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+      ...rest,
+      eventOccurredAt: isString(eventOccurredAt) ? new Date(eventOccurredAt) : eventOccurredAt,
+    });
   }
 
   return undefined;
