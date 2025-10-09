@@ -495,6 +495,90 @@ describe("NotificationClient", () => {
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
+
+    it("handles plain object idempotencyKey (deserialized from database)", async () => {
+      const mockBody = { recipients: [{ userId: "user-1" }] };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const plainObjectIdempotencyKey = {
+        chunk: 1,
+        recipients: ["user-1"],
+        workflowKey: mockWorkflowKey,
+        resourceId: "test-resource-id",
+      };
+
+      const input: TriggerRequest = {
+        key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
+        body: { ...mockBody, workplaceId: "workplace-123" },
+        idempotencyKey: plainObjectIdempotencyKey as unknown as TriggerIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.id).toBe(mockWorkflowRunId);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        expect.any(Object),
+        expect.objectContaining({
+          idempotencyKey: expect.any(String),
+        }),
+      );
+    });
+
+    it("handles string idempotencyKey", async () => {
+      const mockBody = { recipients: [{ userId: "user-1" }] };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const stringIdempotencyKey = "custom-idempotency-key-123";
+
+      const input: TriggerRequest = {
+        key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: stringIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.id).toBe(mockWorkflowRunId);
+      expect(triggerSpy).toHaveBeenCalledWith(mockWorkflowKey, expect.any(Object), {
+        idempotencyKey: stringIdempotencyKey,
+      });
+    });
+
+    it("rejects request with invalid idempotencyKey", async () => {
+      const mockBody = { recipients: [{ userId: "user-1" }] };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+
+      const invalidIdempotencyKey = { invalid: "key" };
+
+      const input: TriggerRequest = {
+        key: mockWorkflowKey,
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: invalidIdempotencyKey as unknown as TriggerIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.message).toContain("Invalid idempotency key");
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe("appendPushToken", () => {

@@ -1,6 +1,8 @@
 import {
   failure,
   isFailure,
+  isNil,
+  isString,
   type LogFunction,
   ServiceError,
   type ServiceResult,
@@ -54,6 +56,7 @@ export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 
 export const ERROR_CODES = {
   expired: "expired",
+  invalidIdempotencyKey: "invalidIdempotencyKey",
   recipientCountBelowMinimum: "recipientCountBelowMinimum",
   recipientCountAboveMaximum: "recipientCountAboveMaximum",
   missingSigningKey: "missingSigningKey",
@@ -160,14 +163,12 @@ export class NotificationClient {
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
           const response = await this.provider.workflows.trigger(
-            /* istanbul ignore next */ workflowKey ?? key,
+            workflowKey ?? /* istanbul ignore next */ key,
             triggerBody,
             {
-              idempotencyKey:
-                idempotencyKey instanceof TriggerIdempotencyKey
-                  ? idempotencyKey.toHash({ workplaceId: params.body.workplaceId })
-                  : /* istanbul ignore next */
-                    idempotencyKey,
+              idempotencyKey: isString(idempotencyKey)
+                ? idempotencyKey
+                : idempotencyKey.toHash({ workplaceId: body.workplaceId }),
             },
           );
 
@@ -352,7 +353,7 @@ export class NotificationClient {
   private validateTriggerRequest(
     params: TriggerRequest & { span: Span | undefined; logParams: LogParams },
   ): ServiceResult<TriggerRequest> {
-    const { body, expiresAt, span, logParams } = params;
+    const { body, expiresAt, idempotencyKey, span, logParams } = params;
 
     if (body.recipients.length <= 0) {
       return this.createAndLogError({
@@ -378,6 +379,18 @@ export class NotificationClient {
       });
     }
 
+    const validatedIdempotencyKey = toIdempotencyKey(idempotencyKey);
+    if (isNil(validatedIdempotencyKey)) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.invalidIdempotencyKey,
+          message: "Invalid idempotency key.",
+        },
+        span,
+        logParams,
+      });
+    }
+
     const now = new Date();
     if (expiresAt instanceof Date && now > expiresAt) {
       return this.createAndLogError({
@@ -391,7 +404,7 @@ export class NotificationClient {
       });
     }
 
-    return success(params);
+    return success({ ...params, idempotencyKey: validatedIdempotencyKey });
   }
 
   private async getExistingTokens(params: {
@@ -451,4 +464,33 @@ export class NotificationClient {
 
     return id;
   }
+}
+
+/**
+ * Cannot rely on `instanceof` because idempotencyKey may have been serialized to/deserialized from
+ * a database and just a regular object.
+ */
+function toIdempotencyKey(
+  idempotencyKey:
+    | string
+    | TriggerIdempotencyKey
+    | { chunk: number; recipients: string[]; workflowKey: string },
+): string | TriggerIdempotencyKey | undefined {
+  if (isString(idempotencyKey)) {
+    return idempotencyKey;
+  }
+
+  if (idempotencyKey instanceof TriggerIdempotencyKey) {
+    return idempotencyKey;
+  }
+
+  if (
+    "chunk" in idempotencyKey &&
+    "recipients" in idempotencyKey &&
+    "workflowKey" in idempotencyKey
+  ) {
+    return TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(idempotencyKey);
+  }
+
+  return undefined;
 }
