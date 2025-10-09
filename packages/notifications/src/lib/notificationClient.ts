@@ -494,9 +494,6 @@ function toIdempotencyKey(
     const { eventOccurredAt, ...rest } = idempotencyKey as TriggerIdempotencyKeyParams & {
       eventOccurredAt?: Date | string;
     };
-    if (isString(eventOccurredAt) && Number.isNaN(Date.parse(eventOccurredAt))) {
-      return undefined;
-    }
 
     return TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
       ...rest,

@@ -581,35 +581,6 @@ describe("NotificationClient", () => {
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
-    it("rejects plain object idempotencyKey with invalid eventOccurredAt string", async () => {
-      const mockBody = { recipients: [{ userId: "user-1" }] };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
-
-      const plainObjectWithInvalidDate = {
-        chunk: 1,
-        recipients: ["user-1"],
-        workflowKey: mockWorkflowKey,
-        resourceId: "test-resource-id",
-        eventOccurredAt: "not-a-valid-date",
-      };
-
-      const input: TriggerRequest = {
-        key: mockWorkflowKey,
-        workflowKey: mockWorkflowKey,
-        body: { ...mockBody, workplaceId: "workplace-123" },
-        idempotencyKey: plainObjectWithInvalidDate as unknown as TriggerIdempotencyKey,
-        keysToRedact: [],
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      const actual = await client.trigger(input);
-
-      expectToBeFailure(actual);
-      expect(actual.error.message).toContain("Invalid idempotency key");
-      expect(triggerSpy).not.toHaveBeenCalled();
-    });
-
     it("handles plain object idempotencyKey with eventOccurredAt Date object", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
