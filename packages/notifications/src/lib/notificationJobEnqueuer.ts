@@ -5,8 +5,8 @@ import {
 
 import { type IdempotencyKey } from "./idempotencyKey";
 import { chunkRecipients } from "./internal/chunkRecipients";
-import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { ERROR_CODES, type ErrorCode } from "./notificationClient";
+import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type TriggerBody,
@@ -35,7 +35,7 @@ export interface NotificationEnqueueData {
 }
 
 export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKey"> {
-  idempotencyKey: IdempotencyKeyDoNotImportOutsideNotificationsLibrary;
+  idempotencyKey: TriggerIdempotencyKey;
 }
 
 interface NotificationJobEnqueuerParams {
@@ -123,7 +123,7 @@ export class NotificationJobEnqueuer {
   ) {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
-        const idempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
+        const idempotencyKey = TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
           ...data.idempotencyKey,
           chunk: number,
           recipients,

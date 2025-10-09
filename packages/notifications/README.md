@@ -142,8 +142,9 @@ npm install @clipboard-health/notifications
          },
          expiresAt,
          idempotencyKey,
-         workflowKey,
+         key: workflowKey,
          keysToRedact: ["secret"],
+         workflowKey,
        });
      }
    }

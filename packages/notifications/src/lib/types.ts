@@ -1,7 +1,7 @@
 import { type Logger } from "@clipboard-health/util-ts";
 
-import { type IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { type IdempotentKnock } from "./internal/idempotentKnock";
+import { type TriggerIdempotencyKey } from "./triggerIdempotencyKey";
 
 export type Tags = Record<string, unknown>;
 
@@ -158,9 +158,9 @@ export interface TriggerRequest {
   body: TriggerBody;
 
   /**
-   * @see {@link IdempotencyKeyDoNotImportOutsideNotificationsLibrary}
+   * @see {@link TriggerIdempotencyKey}
    */
-  idempotencyKey: string | IdempotencyKeyDoNotImportOutsideNotificationsLibrary;
+  idempotencyKey: string | TriggerIdempotencyKey;
 
   /** Array of data keys to redact in logs for privacy. */
   keysToRedact?: string[];

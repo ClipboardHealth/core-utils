@@ -2,9 +2,9 @@ import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
 import { type Knock } from "@knocklabs/node";
 
-import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { MAXIMUM_RECIPIENTS_COUNT, NotificationClient } from "./notificationClient";
+import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
 import type { SignUserTokenRequest, Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
@@ -64,7 +64,7 @@ describe("NotificationClient", () => {
 
   describe("trigger", () => {
     const mockWorkflowKey = "test-workflow";
-    const mockIdempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
+    const mockIdempotencyKey = TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
       chunk: 1,
       recipients: ["user-1", "user-2"],
       workflowKey: mockWorkflowKey,

@@ -11,11 +11,11 @@ import { signUserToken } from "@knocklabs/node";
 
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
-import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
+import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
@@ -133,8 +133,9 @@ export class NotificationClient {
    *       },
    *       expiresAt,
    *       idempotencyKey,
-   *       workflowKey,
+   *       key: workflowKey,
    *       keysToRedact: ["secret"],
+   *       workflowKey,
    *     });
    *   }
    * }
@@ -163,7 +164,7 @@ export class NotificationClient {
             triggerBody,
             {
               idempotencyKey:
-                idempotencyKey instanceof IdempotencyKeyDoNotImportOutsideNotificationsLibrary
+                idempotencyKey instanceof TriggerIdempotencyKey
                   ? idempotencyKey.toHash({ workplaceId: params.body.workplaceId })
                   : /* istanbul ignore next */
                     idempotencyKey,

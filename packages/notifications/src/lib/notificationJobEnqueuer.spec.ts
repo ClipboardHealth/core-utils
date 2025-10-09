@@ -1,13 +1,13 @@
 import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients } from "./internal/chunkRecipients";
-import { IdempotencyKeyDoNotImportOutsideNotificationsLibrary } from "./internal/idempotencyKeyDoNotImportOutsideNotificationsLibrary";
 import { ERROR_CODES, MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
 import {
   type NotificationJobData,
   NotificationJobEnqueuer,
   RETRYABLE_ERRORS,
 } from "./notificationJobEnqueuer";
+import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
 
 jest.mock("./internal/chunkRecipients");
 
@@ -34,7 +34,7 @@ describe("NotificationJobEnqueuer", () => {
     const mockHandler = "my-handler";
     const mockWorkflowKey = "my-workflow-key";
     const mockRecipients = Array.from({ length: 1001 }, (_, index) => `user-${index + 1}`);
-    const mockIdempotencyKey = new IdempotencyKeyDoNotImportOutsideNotificationsLibrary({
+    const mockIdempotencyKey = TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
       chunk: 1,
       recipients: mockRecipients,
       workflowKey: mockWorkflowKey,
@@ -69,7 +69,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          idempotencyKey: expect.any(TriggerIdempotencyKey),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
         }),
@@ -105,7 +105,7 @@ describe("NotificationJobEnqueuer", () => {
         1,
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          idempotencyKey: expect.any(TriggerIdempotencyKey),
           recipients: mockRecipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
           expiresAt: mockExpiresAt,
         }),
@@ -117,7 +117,7 @@ describe("NotificationJobEnqueuer", () => {
         2,
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          idempotencyKey: expect.any(TriggerIdempotencyKey),
           recipients: mockRecipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
           expiresAt: mockExpiresAt,
         }),
@@ -159,7 +159,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          idempotencyKey: expect.any(TriggerIdempotencyKey),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
           customField: "test-value",
@@ -201,7 +201,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: expect.any(IdempotencyKeyDoNotImportOutsideNotificationsLibrary),
+          idempotencyKey: expect.any(TriggerIdempotencyKey),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
         }),
