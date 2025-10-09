@@ -1,13 +1,13 @@
 import { isDefined } from "@clipboard-health/util-ts";
 
-import { IdempotencyKey, type IdempotencyKeyParams } from "../idempotencyKey";
+import { IdempotencyKey, type IdempotencyKeyParams } from "./idempotencyKey";
+import { createDeterministicHash } from "./internal/createDeterministicHash";
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type NotificationJobEnqueuer,
-} from "../notificationJobEnqueuer";
-import { createDeterministicHash } from "./createDeterministicHash";
+} from "./notificationJobEnqueuer";
 
-interface IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams extends IdempotencyKeyParams {
+interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
   /**
    * The recipient chunk number.
    */
@@ -29,17 +29,27 @@ interface IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams extends Ide
  * after properly enqueuing a job using `NotificationJobEnqueuer.enqueueOneOrMore` to help ensure
  * we're following best practices so customers don't receive duplicate or stale notifications.
  *
- * Yes, you could import this class into your service and call `NotificationClient.trigger`
- * directly. We're using the honor system in hopes that enforcement is unnecessary.
+ * Yes, you could import this class into your service, create an instance, and call
+ * `NotificationClient.trigger` directly. We're using the honor system in hopes that enforcement is
+ * unnecessary.
  *
  * @see {@link NotificationJobEnqueuer.enqueueOneOrMore}.
  */
-export class IdempotencyKeyDoNotImportOutsideNotificationsLibrary extends IdempotencyKey {
-  private readonly chunk: IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams["chunk"];
-  private readonly recipients: IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams["recipients"];
-  private readonly workflowKey: IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams["workflowKey"];
+export class TriggerIdempotencyKey extends IdempotencyKey {
+  /**
+   * @see {@link TriggerIdempotencyKey}.
+   */
+  public static DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
+    params: TriggerIdempotencyKeyParams,
+  ): TriggerIdempotencyKey {
+    return new TriggerIdempotencyKey(params);
+  }
 
-  constructor(params: IdempotencyKeyDoNotImportOutsideNotificationsLibraryParams) {
+  private readonly chunk: TriggerIdempotencyKeyParams["chunk"];
+  private readonly recipients: TriggerIdempotencyKeyParams["recipients"];
+  private readonly workflowKey: TriggerIdempotencyKeyParams["workflowKey"];
+
+  private constructor(params: TriggerIdempotencyKeyParams) {
     const { chunk, recipients, workflowKey, ...rest } = params;
 
     super(rest);
@@ -48,7 +58,7 @@ export class IdempotencyKeyDoNotImportOutsideNotificationsLibrary extends Idempo
     this.workflowKey = workflowKey;
   }
 
-  toHash(params: { workplaceId?: string | undefined }): string {
+  public toHash(params: { workplaceId?: string | undefined }): string {
     const { workplaceId } = params;
 
     return createDeterministicHash(

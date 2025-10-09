@@ -23,8 +23,9 @@ export class ExampleNotificationService {
       },
       expiresAt,
       idempotencyKey,
-      workflowKey,
+      key: workflowKey,
       keysToRedact: ["secret"],
+      workflowKey,
     });
   }
 }
