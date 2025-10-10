@@ -2,7 +2,7 @@
 
 ## Feature-Based Structure
 
-```
+```text
 FeatureName/
 ├── api/                          # Data fetching hooks
 │   ├── useGetFeature.ts
@@ -42,7 +42,7 @@ Don't repeat directory names in file names - the full path provides enough conte
 
 ❌ **Bad** - Path stuttering:
 
-```
+```text
 Shift/
   ShiftInvites/
     ShiftInviteCard.tsx      // ❌ "Shift" repeated 3 times in path
@@ -51,7 +51,7 @@ Shift/
 
 ✅ **Good** - Clean, concise:
 
-```
+```text
 Shift/
   Invites/
     Card.tsx                 // ✅ Path: Shift/Invites/Card
@@ -71,8 +71,8 @@ Shift/
 
 ### Multi-word Non-Components
 
-- **kebab-case** for multi-word configuration or utility files
-- Examples: `user-profile-utils.ts`, `api-helpers.ts`
+- **camelCase** for multi-word utility and configuration files
+- Examples: `userProfileUtils.ts`, `apiHelpers.ts`
 
 ### Test Files
 
@@ -203,7 +203,7 @@ export const FEATURE_EVENTS = {
 - For deeper nesting, consider splitting into separate features
 - Use meaningful folder names that describe the content
 
-```
+```text
 Good:
 ├── Shift/
 │   ├── Calendar/
@@ -251,7 +251,7 @@ export default function Button(props: ButtonProps) {}
 
 ## API Folder Structure
 
-```
+```text
 api/
 ├── useGetFeatures.ts          # GET requests
 ├── useCreateFeature.ts        # POST requests

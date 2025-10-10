@@ -58,8 +58,8 @@ export function usePaginatedShifts(params: Params) {
 ```typescript
 // Hook that combines multiple queries
 export function useWorkerBookingsData() {
-  const { data: shifts, refetch: refetchShifts } = useGetShifts();
-  const { data: invites, refetch: refetchInvites } = useGetInvites();
+  const { data: shifts, isLoading: isLoadingShifts, refetch: refetchShifts } = useGetShifts();
+  const { data: invites, isLoading: isLoadingInvites, refetch: refetchInvites } = useGetInvites();
 
   // Combine data
   const bookings = useMemo(() => {
@@ -67,7 +67,7 @@ export function useWorkerBookingsData() {
   }, [shifts, invites]);
 
   // Combine loading states
-  const isLoading = shiftsQuery.isLoading || invitesQuery.isLoading;
+  const isLoading = isLoadingShifts || isLoadingInvites;
 
   // Combine refetch functions
   async function refreshAllData() {
@@ -311,7 +311,7 @@ export function useGetUser(userId: string) {
 
 Example:
 
-```
+```text
 Feature/
 ├── api/
 │   ├── useGetResource.ts
