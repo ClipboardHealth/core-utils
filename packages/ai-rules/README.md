@@ -220,6 +220,9 @@ The `init` command can automatically set this up, or you can add it manually:
 # Format all rule files
 npm run format
 
+# Lint markdown files
+npm run lint:md
+
 # Apply ruler (for this package's own development)
 npm run apply
 ```

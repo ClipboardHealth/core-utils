@@ -301,10 +301,10 @@ mockApiServer.use(
 
 ```typescript
 import { vi } from "vitest";
-import * as useDefinedWorkerModule from "@src/appV2/Worker/useDefinedWorker";
+import * as useUserModule from "@/features/user/hooks/useUser";
 
 // Mock entire module
-vi.mock("@src/appV2/Worker/useDefinedWorker");
+vi.mock("@/features/user/hooks/useUser");
 
 // Spy on specific function
 const useDefinedWorkerSpy = vi.spyOn(useDefinedWorkerModule, "useDefinedWorker");
@@ -332,7 +332,7 @@ it("should call callback on success", async () => {
 ```typescript
 import { vi } from "vitest";
 
-vi.mock("@src/appV2/lib/api", () => ({
+vi.mock("@/lib/api", () => ({
   get: vi.fn().mockResolvedValue({
     data: { id: "1", name: "Test" },
   }),

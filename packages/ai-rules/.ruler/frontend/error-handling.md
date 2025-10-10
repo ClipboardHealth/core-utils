@@ -185,8 +185,8 @@ export function useUpdateProfile() {
 ### Event Logging
 
 ```typescript
-import { logEvent } from '@src/appV2/lib/analytics';
-import { APP_V2_APP_EVENTS } from '@src/appV2/lib/events';
+import { logEvent } from '@/lib/analytics';
+import { APP_EVENTS } from '@/constants/events';
 
 // In query configuration
 meta: {

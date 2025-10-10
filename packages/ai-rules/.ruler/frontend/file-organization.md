@@ -121,7 +121,7 @@ import { type FeatureData } from "./types";
 
 ```typescript
 // paths.ts
-import { RootPaths } from "@src/appV2/App/paths";
+import { APP_PATHS } from "@/constants/paths";
 
 export const FEATURE_BASE_PATH = "feature";
 export const FEATURE_FULL_PATH = `${RootPaths.APP_V2_HOME}/${FEATURE_BASE_PATH}`;
@@ -233,8 +233,8 @@ export * from "./Button";
 export * from "./Card";
 
 // Prefer explicit imports
-import { Button } from "@redesign/components/Button";
-import { Card } from "@redesign/components/Card";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 ```
 
 ### Named Exports

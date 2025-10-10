@@ -36,7 +36,8 @@
   "scripts": {
     "apply": "ruler apply",
     "build": "tsc",
-    "format": "prettier --write '.ruler/**/*.md'"
+    "format": "prettier --write '.ruler/**/*.md'",
+    "lint:md": "markdownlint-cli2 '.ruler/**/*.md'"
   },
   "type": "commonjs",
   "dependencies": {

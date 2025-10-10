@@ -1,6 +1,30 @@
 #!/bin/bash
 set -Eeuo pipefail
 
+# ==============================================================================
+# Complete CLI Test Suite for @clipboard-health/ai-rules
+# ==============================================================================
+#
+# - Rebuilds the CLI from TypeScript source
+# - Tests all profile combinations (frontend, backend, fullstack, common)
+# - Tests custom ruleset combinations
+# - Tests error handling (invalid inputs, missing options, conflicting flags)
+# - Verifies generated file content matches expected rulesets
+# - Provides detailed pass/fail summary
+#
+# - Uses isolated temporary directories under /tmp for each test
+# - Cleans up all test directories automatically
+# - Only rebuilds packages/ai-rules/dist (which is gitignored)
+# - Does not modify any source files or repo state
+#
+# - Cleans dist/ directory before building
+# - Creates unique temp directories using timestamps + random numbers
+# - Each test is isolated and cleaned up afterward
+# - Can be run repeatedly without any manual cleanup
+# - Safe to run in CI/CD pipelines
+#
+# ==============================================================================
+
 echo "🧪 Complete CLI Test Suite"
 echo "============================"
 echo ""

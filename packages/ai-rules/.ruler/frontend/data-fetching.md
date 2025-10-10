@@ -215,7 +215,7 @@ useGetQuery({
 Use `enabled` option with `isDefined()` helper:
 
 ```typescript
-import { isDefined } from "@src/appV2/lib";
+import { isDefined } from "@/lib/utils";
 
 const { data } = useGetQuery({
   url: "/api/resource",

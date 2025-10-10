@@ -1,14 +1,14 @@
 # Import Standards
 
-## Enforced Restrictions
+## Component Wrapper Pattern
 
-The `@redesign/` folder has strict import rules enforced by ESLint via `.eslintrcRestrictedImports.js`.
+Many projects wrap third-party UI library components to add app-specific functionality. This can be enforced via ESLint rules.
 
 ## Restricted MUI Imports
 
-### ❌ Component Restrictions
+### ❌ Component Restrictions (Example)
 
-Do NOT import these components directly from `@mui/material`:
+Some projects restrict direct imports of certain components from `@mui/material`:
 
 ```typescript
 // ❌ Forbidden
@@ -49,51 +49,41 @@ import {
 ### ✅ Use Internal Wrappers
 
 ```typescript
-// ✅ Correct
-import { Button } from "@redesign/components/Button";
-import { IconButton } from "@redesign/components/IconButton";
-import { LoadingButton } from "@redesign/components/LoadingButton";
+// ✅ Correct - Use project wrappers
+import { Button } from "@clipboard-health/ui-components/Button";
+import { IconButton } from "@clipboard-health/ui-components/IconButton";
+import { LoadingButton } from "@clipboard-health/ui-components/LoadingButton";
 ```
 
-### Error Message
+### Rationale
 
-```text
-1. Many of the MUI components have our own wrappers in the "components" directory.
-   Use them instead of the MUI components.
-2. Instead of deprecated `styled`, use `sx` prop to define custom styles that have
-   access to themes. See guidelines: https://mui.com/system/getting-started/the-sx-prop/.
-3. Don't use Modal, use BottomSheet or FullScreenDialog. Don't use DialogTitle as
-   we don't have a single appearance for all dialogs.
-```
+1. Wrappers provide app-specific functionality and consistent behavior
+2. Use `sx` prop for custom styles with theme access
+3. Prefer app-specific dialog components over generic Modal components
 
 ## Icon Restrictions
 
-### ❌ MUI Icons Forbidden
+### ❌ Third-Party Icons (Example)
 
 ```typescript
-// ❌ Don't use MUI icons
+// ❌ Avoid direct imports from icon libraries
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 ```
 
-### ✅ Use CbhIcon
+### ✅ Use Project Icon Component
 
 ```typescript
-// ✅ Correct
-import { CbhIcon } from '@clipboard-health/ui-components';
+// ✅ Correct - Use project's icon system
+import { Icon } from '@clipboard-health/ui-components';
 
-<CbhIcon type="search" size="large" />
-<CbhIcon type="close" size="medium" />
-<CbhIcon type="plus" size="small" />
+<Icon type="search" size="large" />
+<Icon type="close" size="medium" />
+<Icon type="plus" size="small" />
 ```
 
-### Error Message
-
-```text
-Do not use mui icons. We have our own icons set,
-`import { CbhIcon } from "@clipboard-health/ui-components";`
-```
+Many projects maintain their own icon system for consistency and customization.
 
 ## Allowed MUI Imports
 
@@ -126,11 +116,11 @@ Layout and utility components are generally safe.
 ### Use @ Prefix for Absolute Imports
 
 ```typescript
-// ✅ Use path aliases
-import { formatDate } from "@src/appV2/lib/dates";
-import { useDefinedWorker } from "@src/appV2/Worker/useDefinedWorker";
-import { Button } from "@clipboard-health/ui-components";
-import { getTheme } from "@clipboard-health/ui-theme";
+// ✅ Use path aliases configured in tsconfig
+import { formatDate } from "@/lib/dates";
+import { useUser } from "@/features/user/hooks/useUser";
+import { Button } from "@clipboard-health/ui-components/Button";
+import { theme } from "@/theme";
 
 // ❌ Avoid relative paths to distant folders
 import { formatDate } from "../../../lib/dates";
@@ -157,14 +147,14 @@ import { useQuery } from "@tanstack/react-query";
 import { parseISO, format } from "date-fns";
 import { z } from "zod";
 
-// 2. Internal packages (@clipboard-health, @src)
-import { Button, CbhIcon } from "@clipboard-health/ui-components";
-import { getTheme } from "@clipboard-health/ui-theme";
-import { formatDate } from "@src/appV2/lib/dates";
-import { useDefinedWorker } from "@src/appV2/Worker/useDefinedWorker";
-import { RootPaths } from "@src/appV2/App/paths";
+// 2. Internal absolute imports (via path aliases)
+import { Button, Icon } from "@clipboard-health/ui-components";
+import { theme } from "@/theme";
+import { formatDate } from "@/lib/dates";
+import { useUser } from "@/features/user/hooks/useUser";
+import { APP_PATHS } from "@/constants/paths";
 
-// 3. Relative imports (same feature)
+// 3. Relative imports (same feature/module)
 import { useFeatureData } from "./hooks/useFeatureData";
 import { FeatureCard } from "./components/FeatureCard";
 import { FEATURE_PATHS } from "./paths";
@@ -197,10 +187,10 @@ import { formatUser } from "./utils";
 
 ## Barrel Exports (index.ts)
 
-### ❌ Avoid in Redesign
+### Consider Avoiding Barrel Exports
 
 ```typescript
-// ❌ Don't create index.ts files
+// ❌ Barrel exports can slow build times
 // index.ts
 export * from "./Button";
 export * from "./Card";
@@ -209,10 +199,12 @@ export * from "./Card";
 ### ✅ Use Explicit Imports
 
 ```typescript
-// ✅ Import directly from files
-import { Button } from "@redesign/components/Button";
-import { Card } from "@redesign/components/Card";
+// ✅ Import directly from files for better tree-shaking
+import { Button } from "@clipboard-health/ui-components/Button";
+import { Card } from "@clipboard-health/ui-components/Card";
 ```
+
+Note: Barrel exports can cause issues with circular dependencies and slow down builds, especially in large projects.
 
 ## Dynamic Imports
 
@@ -230,11 +222,11 @@ const HeavyComponent = lazy(() => import("./HeavyComponent"));
 
 ## Common Import Patterns
 
-### API Hooks
+### API Utilities
 
 ```typescript
-import { useGetQuery } from "@src/appV2/lib/api";
-import { get, post } from "@src/appV2/lib/api";
+import { useQuery } from "@/lib/api/hooks";
+import { api } from "@/lib/api/client";
 ```
 
 ### React Query
@@ -266,68 +258,75 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 ## ESLint Configuration
 
-The restrictions are enforced in `.eslintrcRestrictedImports.js`:
+Import restrictions can be enforced with ESLint's `no-restricted-imports` rule:
 
 ```javascript
 module.exports = {
-  paths: [
-    {
-      name: "@mui/material",
-      importNames: [...restrictedComponents],
-      message: "Use our wrapper components from @redesign/components",
-    },
-  ],
-  patterns: [
-    {
-      group: ["@mui/icons-material/*"],
-      message: "Use CbhIcon from @clipboard-health/ui-components",
-    },
-  ],
+  rules: {
+    "no-restricted-imports": [
+      "error",
+      {
+        paths: [
+          {
+            name: "@mui/material",
+            importNames: ["Button", "TextField", "Dialog"],
+            message: "Use wrapper components from @/components",
+          },
+        ],
+        patterns: [
+          {
+            group: ["@mui/icons-material/*"],
+            message: "Use project icon component instead",
+          },
+        ],
+      },
+    ],
+  },
 };
 ```
 
 ## Checking for Violations
 
 ```bash
-# Lint the redesign folder
-npm run lint:v2
+# Lint your code
+npm run lint
 
 # Auto-fix import issues
-npm run lint:v2:fix
+npm run lint:fix
 ```
 
 ## Migration Guide
 
 ### When You See Import Errors
 
-1. **MUI Component Error**
-   - Check if wrapper exists in `@redesign/components/`
+1. **Wrapper Component Error**
+   - Check if wrapper exists in `@/components/`
    - If yes, import from there
    - If no, discuss with team about creating wrapper
 
-2. **MUI Icon Error**
-   - Find equivalent in CbhIcon types
-   - Use `<CbhIcon type="icon-name" />`
-   - Check icon names in `@clipboard-health/ui-components`
+2. **Icon Error**
+   - Find equivalent in project icon system
+   - Use project's icon component
+   - Check available icon names in documentation
 
-3. **Deprecated styled() Error**
-   - Replace with `sx` prop
-   - Move styles inline or to component
+3. **Deprecated Pattern Error**
+   - Follow the suggested replacement pattern
+   - Move to modern alternatives (e.g., `sx` prop instead of `styled`)
 
 ## Summary
 
 ✅ **DO**:
 
-- Use wrappers from `@redesign/components/`
-- Use `CbhIcon` for all icons
-- Use `@src` path alias for absolute imports
+- Use project wrapper components instead of third-party components directly
+- Use project icon system for consistency
+- Use path aliases (e.g., `@/`) for absolute imports
 - Group imports by external, internal, relative
-- Use explicit imports (not barrel exports)
+- Consider avoiding barrel exports for better build performance
 
 ❌ **DON'T**:
 
-- Import MUI components directly (use wrappers)
-- Import MUI icons (use CbhIcon)
-- Use `styled()` or `makeStyles()`
-- Use `Modal` (use BottomSheet/FullScreenDialog)
-- Create `index.ts` barrel exports in redesign
+- Import third-party UI components directly if wrappers exist
+- Import icon libraries directly if project has custom icon system
+- Use deprecated styling patterns (check project guidelines)
+- Use relative imports for distant files
+- Create excessive barrel exports that hurt tree-shaking
