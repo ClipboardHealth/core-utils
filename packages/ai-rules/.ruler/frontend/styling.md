@@ -2,9 +2,9 @@
 
 ## Technology Stack
 
-- **Material UI (MUI)** via `@clipboard-health/ui-theme`
+- **Material UI (MUI)** with custom theme
 - **sx prop** for custom styles (NOT `styled()`)
-- Custom component wrappers in `redesign/components/`
+- Custom component wrappers for consistent UI
 - **Storybook** as single source of truth for UI components
 
 ## Core Principles
@@ -30,12 +30,9 @@
 
 ### Rationale
 
-```javascript
-// From .eslintrcRestrictedImports.js
-message: `1. Many of the MUI components have our own wrappers in the "components" directory. Use them instead of the MUI components.
-   2. Instead of deprecated \`styled\`, use \`sx\` prop to define custom styles that have access to themes. See guidelines: https://mui.com/system/getting-started/the-sx-prop/.
-   3. Don't use Modal, use BottomSheet or FullScreenDialog. Don't use DialogTitle as we don't have a single appearance for all dialogs.`;
-```
+1. Component wrappers provide consistent behavior and app-specific functionality
+2. `sx` prop provides type-safe access to theme tokens
+3. Project-specific dialog components ensure consistent UX patterns
 
 ## Storybook as Source of Truth
 
@@ -45,34 +42,34 @@ message: `1. Many of the MUI components have our own wrappers in the "components
 
 1. **Check Storybook first** - It shows real, implemented components
 2. **Use closest existing variant** - Don't create one-off font sizes/colors
-3. **Confirm changes are intentional** - Ask PM or `@frontend` before updating components
+3. **Confirm changes are intentional** - Consult with team before updating components
 4. **Create follow-up ticket** - If component needs updating but you're short on time
 5. **Make changes system-wide** - Component updates should benefit entire app
 
 ### Process
 
 - **Minor differences** (font sizes, colors) → Stick to Storybook
-- **Component looks different** → Confirm with PM, update component intentionally
-- **Missing component** → Ask `@frontend` - it may exist with a different name
+- **Component looks different** → Confirm with team, update component intentionally
+- **Missing component** → Check with team - it may exist with a different name
 
 ## Use Internal Components
 
-### ✅ ALWAYS USE Our Wrappers
+### ✅ ALWAYS USE Project Wrappers
 
-Instead of importing directly from `@mui/material`, use our wrappers from `@redesign/components`:
+Instead of importing directly from `@mui/material`, use project wrappers:
 
 ```typescript
 // ❌ Don't
 import { Button, IconButton } from "@mui/material";
 
 // ✅ Do
-import { Button } from "@redesign/components/Button";
-import { IconButton } from "@redesign/components/IconButton";
+import { Button } from "@/components/Button";
+import { IconButton } from "@clipboard-health/ui-componentsButton";
 ```
 
-### Component Wrapper List
+### Component Wrapper List (Example)
 
-Use wrappers instead of direct MUI imports for:
+Common components that may have wrappers:
 
 - `Button`, `LoadingButton`, `IconButton`
 - `Avatar`, `Accordion`, `Badge`
@@ -81,27 +78,27 @@ Use wrappers instead of direct MUI imports for:
 - `Rating`, `Slider`, `Switch`
 - `TextField`, `Typography`, `Tab`, `Tabs`
 
-Full restricted list in `.eslintrcRestrictedImports.js`
+Check your project's ESLint configuration for the full list.
 
 ## Icons
 
-### Use CbhIcon
+### Use Project Icon Component
 
 ```typescript
-// ❌ Don't use MUI icons
+// ❌ Don't use third-party icons directly
 import SearchIcon from '@mui/icons-material/Search';
 
-// ✅ Use CbhIcon
-import { CbhIcon } from '@clipboard-health/ui-components';
+// ✅ Use project's icon system
+import { Icon } from '@clipboard-health/ui-components';
 
-<CbhIcon type="search" size="large" />
-<CbhIcon type="search-colored" size="medium" />
+<Icon type="search" size="large" />
+<Icon type="search-colored" size="medium" />
 ```
 
 ### Icon Variants
 
-- Many icons have `-colored` variants for active states
-- Example: `"search"` and `"search-colored"`
+- Many icon systems have variants for different states (e.g., `-colored` for active states)
+- Check your project's icon documentation for available variants
 
 ## Styling with sx Prop
 
@@ -267,44 +264,54 @@ MUI provides shorthand properties - use full names, not abbreviations:
 
 [Full list of shorthand properties](https://mui.com/system/properties/)
 
-## mergeSxProps Utility
+## Merging sx Props
 
-For generic components accepting an `sx` prop, use `mergeSxProps` to combine default styles with custom styles:
+For generic components accepting an `sx` prop, merge default styles with custom styles:
 
 ```typescript
-import { mergeSxProps } from "@clipboard-health/ui-react";
-
+// Option 1: Array syntax (MUI native)
 <Box
-  sx={mergeSxProps(
+  sx={[
     (theme) => ({
       backgroundColor: theme.palette.background.tertiary,
       padding: 2,
     }),
-    sx // User's custom sx prop
-  )}
+    sx, // User's custom sx prop
+  ]}
+  {...restProps}
+/>
+
+// Option 2: Use a utility function if your project provides one
+import { mergeSxProps } from "@clipboard-health/ui-components";
+
+<Box
+  sx={mergeSxProps(defaultStyles, sx)}
   {...restProps}
 />;
 ```
 
 ## Theme Access
 
-### Using getTheme
+### Using useTheme Hook
 
 ```typescript
-import { getTheme } from "@clipboard-health/ui-theme";
-import { ThemeProvider } from "@mui/material";
+import { useTheme } from "@mui/material";
 
 export function Component() {
-  const theme = getTheme();
+  const theme = useTheme();
 
-  return <ThemeProvider theme={theme}>{/* Your components */}</ThemeProvider>;
+  return (
+    <Box sx={{ color: theme.palette.primary.main }}>
+      {/* Your components */}
+    </Box>
+  );
 }
 ```
 
 ### Theme Properties
 
 ```typescript
-const theme = getTheme();
+const theme = useTheme();
 
 // Colors
 theme.palette.primary.main;
@@ -314,8 +321,8 @@ theme.palette.text.primary;
 theme.palette.background.default;
 
 // Spacing
-theme.spacing(1); // 8px
-theme.spacing(2); // 16px
+theme.spacing(1); // Default: 8px
+theme.spacing(2); // Default: 16px
 
 // Typography
 theme.typography.h1;
@@ -328,22 +335,27 @@ theme.breakpoints.down("sm");
 
 ## Modal Patterns
 
-### ❌ Don't Use Modal
+### ❌ Avoid Generic Modal
 
 ```typescript
-// Don't
+// Avoid generic Modal when project has specific dialog components
 import { Modal } from "@mui/material";
 ```
 
-### ✅ Use BottomSheet or FullScreenDialog
+### ✅ Use Project-Specific Dialog Components
 
 ```typescript
 // For mobile-friendly modals
-import { BottomSheet } from "@redesign/components/BottomSheet";
+import { BottomSheet } from "@/components/BottomSheet";
 
 // For full-screen views
-import { FullScreenDialog } from "@redesign/components/FullScreenDialog";
+import { FullScreenDialog } from "@/components/FullScreenDialog";
+
+// For standard dialogs
+import { Dialog } from "@/components/Dialog";
 ```
+
+Check your project's component library for available dialog/modal components.
 
 ## Layout Components
 
@@ -373,20 +385,31 @@ import { Box, Stack, Container, Grid } from '@mui/material';
 </Grid>
 ```
 
-## MUI Augmentations
+## MUI Theme Augmentation
 
 ### Type Safety
 
-Import MUI theme augmentations to ensure type safety:
+Projects often augment MUI's theme with custom properties:
 
 ```typescript
-// At top of file that uses extensive MUI theming
-import "@clipboard-health/ui-theme";
-import "@clipboard-health/ui-theme/src/lib/colors";
-import "@clipboard-health/ui-theme/src/lib/overrides/button";
+// Example: Custom theme augmentation
+declare module "@mui/material/styles" {
+  interface Theme {
+    customSpacing: {
+      large: string;
+      xlarge: string;
+    };
+  }
+  interface ThemeOptions {
+    customSpacing?: {
+      large?: string;
+      xlarge?: string;
+    };
+  }
+}
 ```
 
-See `muiAugmentations.d.ts` for full list of augmentations.
+Check your project's type definitions for available theme augmentations.
 
 ## Common Patterns
 
@@ -411,7 +434,7 @@ import { Card, CardContent } from "@mui/material";
 ### Buttons with Theme Colors
 
 ```typescript
-import { Button } from "@redesign/components/Button";
+import { Button } from "@/components/Button";
 
 <Button
   variant="contained"

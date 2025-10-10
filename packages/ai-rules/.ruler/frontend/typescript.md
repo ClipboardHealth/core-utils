@@ -539,9 +539,3 @@ const user = getUser();
 if (!user) throw new Error("User not found");
 // Now TypeScript knows user exists
 ```
-
-## Related Rules
-
-- **Zod Integration**: See `.ruler/frontend/data-fetching.md` for API validation patterns
-- **React Patterns**: See `.ruler/frontend/react-patterns.md` for component prop types
-- **Testing**: See `.ruler/frontend/testing.md` for test type patterns

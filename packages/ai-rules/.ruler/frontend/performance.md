@@ -230,7 +230,7 @@ export function useDependentData(userId?: string) {
 ### Debouncing Search Queries
 
 ```typescript
-import { useDebouncedValue } from "@src/appV2/lib/hooks";
+import { useDebouncedValue } from "@/lib/hooks";
 
 export function SearchComponent() {
   const [searchTerm, setSearchTerm] = useState("");

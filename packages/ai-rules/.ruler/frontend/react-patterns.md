@@ -3,7 +3,7 @@
 ## Core Principles
 
 - **Storybook is the single source of truth** for UI components, not Figma
-- **Named exports only** (no default exports in redesign)
+- **Named exports only** (prefer named exports over default exports)
 - **Explicit types** for all props and return values
 - **Handle all states**: loading, error, empty, success
 - **Composition over configuration** - prefer children over complex props
@@ -15,10 +15,10 @@ Follow this consistent structure for all components:
 ```typescript
 // 1. Imports (grouped with blank lines between groups)
 import { useState, useMemo, useCallback } from "react";
-import { Box, Typography } from "@redesign/components";
+import { Box, Typography } from "@mui/material";
 
-import { useGetData } from "@src/appV2/api/useGetData";
-import { formatDate } from "@src/appV2/utils/date";
+import { useGetUser } from "@/api/hooks/useGetUser";
+import { formatDate } from "@/utils/date";
 
 import { ChildComponent } from "./ChildComponent";
 
@@ -76,9 +76,9 @@ export function UserCard({ userId, onAction, isHighlighted = false }: UserCardPr
 
 ## Component Naming
 
-- **PascalCase** for components: `UserProfile`, `ShiftCard`
+- **PascalCase** for components: `UserProfile`, `DataCard`
 - **camelCase** for hooks and utilities: `useUserData`, `formatDate`
-- Export function components (not default exports in redesign)
+- Prefer named exports over default exports for better refactoring support
 
 ## Props
 
@@ -111,23 +111,23 @@ export function CustomButton(props: ButtonProps) {
 ## Wrappers
 
 - Wrap third-party components to add app-specific functionality
-- Example: `Button.tsx` wraps `@clipboard-health/ui-components` Button
+- Example: Wrapping a third-party Button with custom link handling
 
 ```typescript
 import {
   Button as ButtonBase,
   type ButtonProps as ButtonPropsBase,
-} from "@clipboard-health/ui-components";
+} from "@some-ui-library/components";
 import { type LocationState } from "history";
 
-import { ButtonInternalLink } from "./ButtonInternalLink";
+import { InternalLink } from "./InternalLink";
 
 interface ButtonProps extends Omit<ButtonPropsBase, "LinkComponent"> {
   locationState?: LocationState;
 }
 
 export function Button(props: ButtonProps) {
-  return <ButtonBase {...props} LinkComponent={ButtonInternalLink} />;
+  return <ButtonBase {...props} LinkComponent={InternalLink} />;
 }
 ```
 
@@ -387,43 +387,41 @@ export function UserList({ users }: { users: User[] }) {
 ## Conditional Rendering Best Practices
 
 ```typescript
-export function ShiftCard({ shift }: { shift: Shift }) {
+export function ItemCard({ item }: { item: Item }) {
   // ✅ Good - Early returns for invalid states
-  if (!shift) return null;
-  if (shift.isDeleted) return null;
+  if (!item) return null;
+  if (item.isDeleted) return null;
 
   // ✅ Good - Ternary for simple either/or
-  const statusColor = shift.isUrgent ? "error" : "default";
+  const statusColor = item.isUrgent ? "error" : "default";
 
   return (
     <Box>
-      <Typography color={statusColor}>{shift.title}</Typography>
+      <Typography color={statusColor}>{item.title}</Typography>
 
       {/* ✅ Good - && for optional elements */}
-      {shift.isPremium && <PremiumBadge />}
+      {item.isFeatured && <FeaturedBadge />}
 
       {/* ✅ Good - Ternary for alternate content */}
-      {shift.isBooked ? <BookedStatus worker={shift.worker} /> : <AvailableStatus />}
+      {item.isAvailable ? <AvailableStatus /> : <UnavailableStatus />}
 
       {/* ❌ Bad - Nested ternaries (hard to read) */}
-      {shift.status === "urgent" ? (
+      {item.status === "urgent" ? (
         <UrgentBadge />
-      ) : shift.status === "normal" ? (
+      ) : item.status === "normal" ? (
         <NormalBadge />
       ) : (
         <DefaultBadge />
       )}
 
       {/* ✅ Good - Extract to variable or switch */}
-      <StatusBadge status={shift.status} />
+      <StatusBadge status={item.status} />
     </Box>
   );
 }
 ```
 
 ## Performance Optimization
-
-See `.agents/rules/performance.md` for detailed optimization patterns.
 
 ### When to Use `useMemo`
 
@@ -454,10 +452,3 @@ const handleSubmit = useCallback(() => {
   // No child components use this
 }, []);
 ```
-
-## Related Rules
-
-- **Data Fetching**: See `.agents/rules/data-fetching.md` for React Query patterns
-- **Custom Hooks**: See `.agents/rules/custom-hooks.md` for hook creation patterns
-- **Testing**: See `.agents/rules/testing.md` for component testing strategies
-- **Styling**: See `.agents/rules/styling.md` for MUI and sx prop usage
