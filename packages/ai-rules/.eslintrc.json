@@ -11,6 +11,15 @@
       "rules": {
         "unicorn/filename-case": ["error", { "case": "camelCase" }]
       }
+    },
+    {
+      "files": ["./src/bin/**/*.ts"],
+      "rules": {
+        "n/no-process-exit": "off",
+        "n/shebang": "off",
+        "no-console": "off",
+        "security/detect-non-literal-fs-filename": "off"
+      }
     }
   ],
   "settings": {
