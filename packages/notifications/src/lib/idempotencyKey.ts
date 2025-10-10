@@ -13,8 +13,8 @@ export interface IdempotencyKeyParams {
   /**
    * If a resource triggered your workflow, include its unique ID.
    *
-   * @note `recipients` (and `workplaceId` if it exists) are included in the idempotency key
-   * automatically from the trigger body.
+   * @note `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
+   * included in the idempotency key automatically.
    *
    * @example
    * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
@@ -30,8 +30,8 @@ export interface IdempotencyKeyParams {
  * If you retry a request with the same idempotency key within 24 hours, the client returns the same
  * response as the original request.
  *
- * @note `recipients` (and `workplaceId` if it exists) are included in the idempotency key
- * automatically from the trigger body.
+ * @note `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
+ * included in the idempotency key automatically.
  *
  * We provide this class because idempotency keys can be difficult to use correctly. If the key
  * changes on each retry (e.g., Date.now() or uuid.v4()), it won't prevent duplicate notifications.
