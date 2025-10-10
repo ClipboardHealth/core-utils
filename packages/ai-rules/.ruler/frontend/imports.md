@@ -301,13 +301,11 @@ npm run lint:v2:fix
 ### When You See Import Errors
 
 1. **MUI Component Error**
-
    - Check if wrapper exists in `@redesign/components/`
    - If yes, import from there
    - If no, discuss with team about creating wrapper
 
 2. **MUI Icon Error**
-
    - Find equivalent in CbhIcon types
    - Use `<CbhIcon type="icon-name" />`
    - Check icon names in `@clipboard-health/ui-components`
