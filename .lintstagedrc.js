@@ -20,4 +20,5 @@ module.exports = {
     process.env.NX_RELEASE === "true" ? `syncpack fix-mismatches` : `syncpack lint`,
     "tsx ./populateLibraries.ts",
   ],
+  "packages/ai-rules/**/*.md": async () => ["nx run ai-rules:apply"],
 };
