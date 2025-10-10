@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/ai-rules",
   "description": "Rules for AI agents.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "@intellectronica/ruler": "0.3.10",
