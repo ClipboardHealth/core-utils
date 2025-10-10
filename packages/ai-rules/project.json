@@ -6,12 +6,18 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/dist"],
+      "executor": "@nx/js:tsc",
       "options": {
-        "command": "tsc -p packages/ai-rules/tsconfig.lib.json",
-        "cwd": "."
-      }
+        "assets": [
+          "packages/ai-rules/*.md",
+          "packages/ai-rules/.ruler/**/*.md",
+          "packages/ai-rules/.ruler/ruler.toml"
+        ],
+        "main": "packages/ai-rules/src/index.ts",
+        "outputPath": "dist/packages/ai-rules",
+        "tsConfig": "packages/ai-rules/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",
