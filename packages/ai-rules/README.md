@@ -2,20 +2,12 @@
 
 Modular AI agent rules for consistent coding standards across your projects. One command to configure Claude, Cursor, GitHub Copilot, and more.
 
-**✨ Features:**
-
-- 🤖 Auto-detects your project type (React, NestJS, fullstack)
-- 💬 Interactive setup with smart defaults
-- 📦 Automatically updates `package.json` and `.gitignore`
-- 🎯 Generates config files for multiple AI assistants
-- 🔄 Keep rules in sync across all your projects
-
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
 - [Usage](#usage)
-  - [Quick Start (Interactive Setup)](#quick-start-interactive-setup)
-  - [Quick Start (Direct Apply)](#quick-start-direct-apply)
+  - [Quick Start](#quick-start)
+  - [Alternative: Non-Interactive Mode](#alternative-non-interactive-mode)
   - [View Available Profiles](#view-available-profiles)
   - [What Gets Generated](#what-gets-generated)
   - [Available Rule Categories](#available-rule-categories)
@@ -31,9 +23,9 @@ npm install --save-dev @clipboard-health/ai-rules
 
 ## Usage
 
-### Quick Start (Interactive Setup)
+### Quick Start
 
-The easiest way to get started is with the interactive `init` command:
+The easiest way to get started:
 
 ```bash
 npm install --save-dev @clipboard-health/ai-rules
@@ -45,22 +37,19 @@ This will:
 - 🔍 **Auto-detect** your project type (frontend, backend, fullstack)
 - 💬 **Prompt** you to select the right profile
 - 📦 **Ask** if you want to update `package.json` with a sync script
-- 📝 **Ask** if you want to update `.gitignore` with generated files
 - ✨ **Generate** AI agent config files
 
-#### Non-interactive Mode
+### Alternative: Non-Interactive Mode
 
-Skip all prompts by specifying a profile directly:
+For more direct control, you can:
+
+**1. Use init with a profile (skips prompts):**
 
 ```bash
 npx @clipboard-health/ai-rules init --profile=frontend
 ```
 
-This will only generate the AI agent files without updating `package.json` or `.gitignore`.
-
-### Quick Start (Direct Apply)
-
-If you prefer direct control without interactive prompts:
+**2. Use apply directly (just generates files):**
 
 ```bash
 # Frontend project (React)
@@ -110,76 +99,9 @@ The CLI generates config files for the primary AI coding assistants:
 
 ### Examples
 
-#### Interactive Setup (Recommended)
-
-```bash
-# Install and run interactive setup
-npm install --save-dev @clipboard-health/ai-rules
-npx @clipboard-health/ai-rules init
-
-# The CLI will:
-# 1. Detect your project type
-# 2. Prompt you to confirm or change the profile
-# 3. Ask if you want to add a sync script
-# 4. Ask if you want to update .gitignore
-# 5. Generate all AI agent config files
-```
-
-#### Frontend React Project
-
-```bash
-npm install --save-dev @clipboard-health/ai-rules
-# Interactive (recommended):
-npx @clipboard-health/ai-rules init
-# Or non-interactive:
-npx @clipboard-health/ai-rules init --profile=frontend
-# Or just apply rules:
-npx @clipboard-health/ai-rules apply --profile=frontend
-```
-
-#### Backend NestJS Project
-
-```bash
-npm install --save-dev @clipboard-health/ai-rules
-# Interactive (recommended):
-npx @clipboard-health/ai-rules init
-# Or non-interactive:
-npx @clipboard-health/ai-rules init --profile=backend
-```
-
-#### Fullstack Project
-
-```bash
-npm install --save-dev @clipboard-health/ai-rules
-# Interactive (recommended):
-npx @clipboard-health/ai-rules init
-# Or non-interactive:
-npx @clipboard-health/ai-rules init --profile=fullstack
-```
-
-#### TypeScript Library
-
-```bash
-npm install --save-dev @clipboard-health/ai-rules
-npx @clipboard-health/ai-rules apply --profile=common
-```
-
-#### Custom Ruleset Combination
-
-```bash
-npx @clipboard-health/ai-rules apply --ruleset=common,frontend,backend
-```
-
-#### Preview Changes (Dry Run)
-
-```bash
-# See what files would be generated without actually creating them
-npx @clipboard-health/ai-rules apply --profile=frontend --dry-run
-```
-
 #### Automatic Sync on Install
 
-The `init` command can automatically set this up, or you can add it manually:
+The `init` command can set this up for you, or add it manually to `package.json`:
 
 ```json
 {
@@ -189,6 +111,8 @@ The `init` command can automatically set this up, or you can add it manually:
   }
 }
 ```
+
+This ensures your AI rules stay in sync whenever dependencies are installed.
 
 ## How It Works
 

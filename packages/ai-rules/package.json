@@ -1,16 +1,17 @@
 {
   "name": "@clipboard-health/ai-rules",
-  "description": "Rules for AI agents.",
+  "description": "Modular AI agent rules for consistent coding standards.",
   "version": "0.2.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "bin": {
-    "ai-rules": "./dist/bin/cli.js"
+    "ai-rules": "./src/bin/cli.js"
   },
   "files": [
     ".ruler/**/*.md",
     ".ruler/ruler.toml",
-    "dist/**/*.js",
-    "dist/**/*.d.ts"
+    "src/**/*.js",
+    "src/**/*.d.ts",
+    "*.md"
   ],
   "keywords": [
     "ai",
@@ -25,6 +26,7 @@
     "nestjs"
   ],
   "license": "MIT",
+  "main": "./src/index.js",
   "publishConfig": {
     "access": "public"
   },
@@ -35,17 +37,14 @@
   },
   "scripts": {
     "apply": "ruler apply",
-    "build": "tsc",
     "format": "prettier --write '.ruler/**/*.md'",
     "lint:md": "markdownlint-cli2 '.ruler/**/*.md'"
   },
   "type": "commonjs",
+  "typings": "./src/index.d.ts",
   "dependencies": {
     "@commander-js/extra-typings": "14.0.0",
     "@inquirer/prompts": "^7.2.0",
     "tslib": "2.8.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2"
   }
 }
