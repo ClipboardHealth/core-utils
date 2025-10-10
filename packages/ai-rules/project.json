@@ -5,6 +5,20 @@
   "sourceRoot": "packages/ai-rules/src",
   "tags": [],
   "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          "packages/ai-rules/*.md",
+          "packages/ai-rules/.ruler/**/*.md",
+          "packages/ai-rules/.ruler/ruler.toml"
+        ],
+        "main": "packages/ai-rules/src/index.ts",
+        "outputPath": "dist/packages/ai-rules",
+        "tsConfig": "packages/ai-rules/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
@@ -12,6 +26,12 @@
         "maxWarnings": 0
       },
       "outputs": ["{options.outputFile}"]
+    },
+    "lint:md": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm run lint:md --workspace=@clipboard-health/ai-rules"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",
