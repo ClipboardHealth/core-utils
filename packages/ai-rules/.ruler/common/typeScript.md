@@ -15,4 +15,3 @@
 - Leverage `readonly` properties for function parameter immutability.
 - Prefer narrow types whenever possible with `as const` assertions, `typeof`, `instanceof`, `satisfies`, and custom type guards.
 - Implement exhaustiveness checking using `never`.
-

@@ -3,6 +3,7 @@
 Modular AI agent rules for consistent coding standards across your projects. One command to configure Claude, Cursor, GitHub Copilot, and more.
 
 **✨ Features:**
+
 - 🤖 Auto-detects your project type (React, NestJS, fullstack)
 - 💬 Interactive setup with smart defaults
 - 📦 Automatically updates `package.json` and `.gitignore`
@@ -40,6 +41,7 @@ npx @clipboard-health/ai-rules init
 ```
 
 This will:
+
 - 🔍 **Auto-detect** your project type (frontend, backend, fullstack)
 - 💬 **Prompt** you to select the right profile
 - 📦 **Ask** if you want to update `package.json` with a sync script
@@ -49,6 +51,7 @@ This will:
 #### Non-interactive Mode
 
 Skip all prompts by specifying a profile directly:
+
 ```bash
 npx @clipboard-health/ai-rules init --profile=frontend
 ```
@@ -82,6 +85,7 @@ npx @clipboard-health/ai-rules apply --profile=frontend --dry-run
 ### View Available Profiles
 
 See what profiles and rulesets are available:
+
 ```bash
 npx @clipboard-health/ai-rules list
 ```
@@ -89,6 +93,7 @@ npx @clipboard-health/ai-rules list
 ### What Gets Generated
 
 The CLI generates config files for the primary AI coding assistants:
+
 - ✅ `AGENTS.md` (GitHub Copilot, OpenAI Codex, and other AGENTS.md-compatible assistants)
 - ✅ `CLAUDE.md` (Claude Code)
 - ✅ `.cursor/rules/` (Cursor AI)
@@ -97,15 +102,16 @@ The CLI generates config files for the primary AI coding assistants:
 
 ### Available Rule Categories
 
-| Category | Description | Files |
-|----------|-------------|-------|
-| **`common/`** | Core conventions for all projects | Code style, error handling, TypeScript usage, testing patterns |
-| **`frontend/`** | Frontend development rules | React patterns, UI/styling |
-| **`backend/`** | Backend development rules | NestJS APIs, three-tier architecture |
+| Category        | Description                       | Files                                                          |
+| --------------- | --------------------------------- | -------------------------------------------------------------- |
+| **`common/`**   | Core conventions for all projects | Code style, error handling, TypeScript usage, testing patterns |
+| **`frontend/`** | Frontend development rules        | React patterns, UI/styling                                     |
+| **`backend/`**  | Backend development rules         | NestJS APIs, three-tier architecture                           |
 
 ### Examples
 
 #### Interactive Setup (Recommended)
+
 ```bash
 # Install and run interactive setup
 npm install --save-dev @clipboard-health/ai-rules
@@ -120,6 +126,7 @@ npx @clipboard-health/ai-rules init
 ```
 
 #### Frontend React Project
+
 ```bash
 npm install --save-dev @clipboard-health/ai-rules
 # Interactive (recommended):
@@ -131,6 +138,7 @@ npx @clipboard-health/ai-rules apply --profile=frontend
 ```
 
 #### Backend NestJS Project
+
 ```bash
 npm install --save-dev @clipboard-health/ai-rules
 # Interactive (recommended):
@@ -140,6 +148,7 @@ npx @clipboard-health/ai-rules init --profile=backend
 ```
 
 #### Fullstack Project
+
 ```bash
 npm install --save-dev @clipboard-health/ai-rules
 # Interactive (recommended):
@@ -149,24 +158,29 @@ npx @clipboard-health/ai-rules init --profile=fullstack
 ```
 
 #### TypeScript Library
+
 ```bash
 npm install --save-dev @clipboard-health/ai-rules
 npx @clipboard-health/ai-rules apply --profile=common
 ```
 
 #### Custom Ruleset Combination
+
 ```bash
 npx @clipboard-health/ai-rules apply --ruleset=common,frontend,backend
 ```
 
 #### Preview Changes (Dry Run)
+
 ```bash
 # See what files would be generated without actually creating them
 npx @clipboard-health/ai-rules apply --profile=frontend --dry-run
 ```
 
 #### Automatic Sync on Install
+
 The `init` command can automatically set this up, or you can add it manually:
+
 ```json
 {
   "scripts": {
@@ -186,7 +200,7 @@ The `init` command can automatically set this up, or you can add it manually:
 ### Commands
 
 - **`init`** - Interactive setup with project detection, prompts, and automatic configuration
-- **`apply`** - Direct rule application with profiles or custom ruleset combinations  
+- **`apply`** - Direct rule application with profiles or custom ruleset combinations
 - **`list`** - View all available profiles and rulesets
 - **`--dry-run`** - Preview what files would be generated without actually creating them
 

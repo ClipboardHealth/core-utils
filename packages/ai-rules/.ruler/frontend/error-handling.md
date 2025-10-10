@@ -327,7 +327,7 @@ api.interceptors.response.use(
       showErrorToast("Request timed out. Please try again.");
     }
     return Promise.reject(error);
-  }
+  },
 );
 ```
 

@@ -262,7 +262,7 @@ it("should update when dependencies change", async () => {
 // Bad - can only return this one mock
 export const facilityNotesSuccessScenario = rest.get(
   `${TEST_API_URL}/facilityNotes`,
-  async (_, res, ctx) => res(ctx.status(200), ctx.json(mockFacilityNotes))
+  async (_, res, ctx) => res(ctx.status(200), ctx.json(mockFacilityNotes)),
 );
 ```
 
@@ -275,7 +275,7 @@ export const createFacilityNotesTestHandler = (facilityNotes: FacilityNote[]) =>
     `${TEST_API_URL}/facilityNotes/:facilityId`,
     async (_req, res, ctx) => {
       return res(ctx.status(200), ctx.json(facilityNotes));
-    }
+    },
   );
 };
 
@@ -289,7 +289,7 @@ export const facilityNotesTestHandlers = [createFacilityNotesTestHandler(mockFac
 // In test setup
 mockApiServer.use(
   createFacilityNotesTestHandler(myCustomFacilityNotes),
-  createExtraTimePaySettingsTestHandler({ payload: customSettings })
+  createExtraTimePaySettingsTestHandler({ payload: customSettings }),
 );
 ```
 
