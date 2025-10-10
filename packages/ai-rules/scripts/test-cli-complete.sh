@@ -1,11 +1,14 @@
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
 echo "🧪 Complete CLI Test Suite"
 echo "============================"
 echo ""
 
-cd /Users/sub/workspace/core-utils
+# Resolve repo root dynamically
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+cd "$REPO_ROOT"
 
 # Clean and rebuild
 echo "🧹 Cleaning..."
@@ -46,7 +49,7 @@ run_test() {
   
   # Initialize
   npm init -y > /dev/null 2>&1
-  npm install /Users/sub/workspace/core-utils/packages/ai-rules --save-dev > /dev/null 2>&1
+  npm install --save-dev "$REPO_ROOT/packages/ai-rules" > /dev/null 2>&1
   
   # Run CLI
   echo "Running: npx @clipboard-health/ai-rules apply $CLI_ARGS"
@@ -89,7 +92,7 @@ run_test() {
   fi
   
   # Cleanup
-  cd /Users/sub/workspace/core-utils
+  cd "$REPO_ROOT"
   rm -rf "$TEST_DIR"
 }
 
@@ -152,7 +155,7 @@ mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
 npm init -y > /dev/null 2>&1
-npm install /Users/sub/workspace/core-utils/packages/ai-rules --save-dev > /dev/null 2>&1
+npm install --save-dev "$REPO_ROOT/packages/ai-rules" > /dev/null 2>&1
 
 npx @clipboard-health/ai-rules apply --profile=backend > /dev/null 2>&1
 
@@ -181,7 +184,7 @@ if [ "$CONTENT_PASS" = true ]; then
   TESTS_PASSED=$((TESTS_PASSED + 1))
 fi
 
-cd /Users/sub/workspace/core-utils
+cd "$REPO_ROOT"
 rm -rf "$TEST_DIR"
 
 # ======================

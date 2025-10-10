@@ -257,7 +257,7 @@ export function useWorkerBookingsData() {
 - Place API hooks in `api/` folder
 - Keep generic/shared hooks in `lib/` or `utils/`
 
-```
+```text
 FeatureName/
 ├── api/
 │   ├── useGetFeature.ts      # API data fetching

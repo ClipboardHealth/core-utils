@@ -57,7 +57,7 @@ import { LoadingButton } from "@redesign/components/LoadingButton";
 
 ### Error Message
 
-```
+```text
 1. Many of the MUI components have our own wrappers in the "components" directory.
    Use them instead of the MUI components.
 2. Instead of deprecated `styled`, use `sx` prop to define custom styles that have
@@ -90,7 +90,7 @@ import { CbhIcon } from '@clipboard-health/ui-components';
 
 ### Error Message
 
-```
+```text
 Do not use mui icons. We have our own icons set,
 `import { CbhIcon } from "@clipboard-health/ui-components";`
 ```

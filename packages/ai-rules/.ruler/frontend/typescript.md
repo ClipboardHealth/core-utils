@@ -275,7 +275,7 @@ function findById<T extends HasId>(items: T[], id: string): T | undefined {
 }
 ```
 
-## Type Guards
+## Runtime Type Checking
 
 Use type guards for runtime type checking:
 
@@ -542,6 +542,6 @@ if (!user) throw new Error("User not found");
 
 ## Related Rules
 
-- **Zod Integration**: See `.agents/rules/data-fetching.md` for API validation patterns
-- **React Patterns**: See `.agents/rules/react-patterns.md` for component prop types
-- **Testing**: See `.agents/rules/testing.md` for test type patterns
+- **Zod Integration**: See `.ruler/frontend/data-fetching.md` for API validation patterns
+- **React Patterns**: See `.ruler/frontend/react-patterns.md` for component prop types
+- **Testing**: See `.ruler/frontend/testing.md` for test type patterns

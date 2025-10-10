@@ -4,7 +4,7 @@
 
 Our testing strategy follows the **Testing Trophy** model:
 
-```
+```text
         /\_
        /E2E\         ← End-to-End (smallest layer)
       /-----\
@@ -374,7 +374,7 @@ it("should display user name", async () => {
 - Place test files next to source files
 - Use same name with `.test.ts` or `.test.tsx` extension
 
-```
+```text
 Feature/
 ├── Component.tsx
 ├── Component.test.tsx
