@@ -1,0 +1,21 @@
+# See https://ai.intellectronica.net/ruler for documentation.
+
+# Active agents when --agents is not used
+default_agents = ["claude", "codex", "cursor"]
+
+[gitignore]
+# Enable/disable automatic .gitignore updates
+enabled = false
+
+[agents.claude]
+enabled = true
+output_path = "CLAUDE.md"
+
+[agents.codex]
+enabled = true
+output_path = "AGENTS.md"
+
+# Cursor supports AGENTS.md, see https://agents.md
+[agents.cursor]
+enabled = true
+output_path = "AGENTS.md"

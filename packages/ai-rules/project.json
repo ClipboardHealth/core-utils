@@ -1,0 +1,24 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "ai-rules",
+  "projectType": "library",
+  "sourceRoot": "packages/ai-rules/src",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/ai-rules/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/ai-rules/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

@@ -17,8 +17,9 @@ tmp/
 !.vscode/launch.json
 !.vscode/settings.json
 !.vscode/tasks.json
-.DS_Store
-npm-debug.log
-.tool-versions
 .cursor/rules/nx-rules.mdc
+.DS_Store
 .github/instructions/nx.instructions.md
+.tool-versions
+*.bak
+npm-debug.log

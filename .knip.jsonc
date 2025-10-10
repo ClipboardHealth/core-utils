@@ -7,7 +7,13 @@
     "**/cbhResponse.ts",
   ],
   "ignoreBinaries": [],
-  "ignoreDependencies": ["@nx/webpack", "ts-node", "tslib", "webpack-cli"],
+  "ignoreDependencies": [
+    "@intellectronica/ruler",
+    "@nx/webpack",
+    "ts-node",
+    "tslib",
+    "webpack-cli",
+  ],
   "webpack": false,
   "workspaces": {
     "packages/analytics": {
