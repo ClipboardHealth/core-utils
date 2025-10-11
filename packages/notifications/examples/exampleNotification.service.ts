@@ -21,7 +21,7 @@ export class ExampleNotificationService {
         data,
         workplaceId,
       },
-      expiresAt,
+      expiresAt: new Date(expiresAt),
       idempotencyKey,
       key: workflowKey,
       keysToRedact: ["secret"],

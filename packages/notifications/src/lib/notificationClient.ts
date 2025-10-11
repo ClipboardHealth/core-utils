@@ -1,7 +1,6 @@
 import {
   failure,
   isFailure,
-  isNil,
   isString,
   type LogFunction,
   ServiceError,
@@ -17,7 +16,7 @@ import { IdempotentKnock } from "./internal/idempotentKnock";
 import { redact } from "./internal/redact";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
-import { TriggerIdempotencyKey, type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
+import { triggerIdempotencyKeyToHash } from "./internal/triggerIdempotencyKeyToHash";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
@@ -134,7 +133,7 @@ export class NotificationClient {
    *         data,
    *         workplaceId,
    *       },
-   *       expiresAt,
+   *       expiresAt: new Date(expiresAt),
    *       idempotencyKey,
    *       key: workflowKey,
    *       keysToRedact: ["secret"],
@@ -166,9 +165,9 @@ export class NotificationClient {
             workflowKey ?? /* istanbul ignore next */ key,
             triggerBody,
             {
-              idempotencyKey: isString(idempotencyKey)
+              idempotencyKey: /* istanbul ignore next */ isString(idempotencyKey)
                 ? idempotencyKey
-                : idempotencyKey.toHash({ workplaceId: body.workplaceId }),
+                : triggerIdempotencyKeyToHash({ idempotencyKey, workplaceId: body.workplaceId }),
             },
           );
 
@@ -353,7 +352,7 @@ export class NotificationClient {
   private validateTriggerRequest(
     params: TriggerRequest & { span: Span | undefined; logParams: LogParams },
   ): ServiceResult<TriggerRequest> {
-    const { body, expiresAt, idempotencyKey, span, logParams } = params;
+    const { body, expiresAt, span, logParams } = params;
 
     if (body.recipients.length <= 0) {
       return this.createAndLogError({
@@ -379,18 +378,6 @@ export class NotificationClient {
       });
     }
 
-    const validatedIdempotencyKey = toIdempotencyKey(idempotencyKey);
-    if (isNil(validatedIdempotencyKey)) {
-      return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.invalidIdempotencyKey,
-          message: "Invalid idempotency key.",
-        },
-        span,
-        logParams,
-      });
-    }
-
     const now = new Date();
     if (expiresAt instanceof Date && now > expiresAt) {
       return this.createAndLogError({
@@ -404,7 +391,7 @@ export class NotificationClient {
       });
     }
 
-    return success({ ...params, idempotencyKey: validatedIdempotencyKey });
+    return success(params);
   }
 
   private async getExistingTokens(params: {
@@ -464,42 +451,4 @@ export class NotificationClient {
 
     return id;
   }
-}
-
-/**
- * Cannot rely on `instanceof` because idempotencyKey may have been serialized to/deserialized from
- * a database and just a regular object.
- */
-function toIdempotencyKey(
-  idempotencyKey:
-    | string
-    | TriggerIdempotencyKey
-    | { chunk: number; recipients: string[]; workflowKey: string },
-): string | TriggerIdempotencyKey | undefined {
-  if (isString(idempotencyKey)) {
-    return idempotencyKey;
-  }
-
-  if (idempotencyKey instanceof TriggerIdempotencyKey) {
-    return idempotencyKey;
-  }
-
-  if (
-    typeof idempotencyKey === "object" &&
-    idempotencyKey !== null &&
-    "chunk" in idempotencyKey &&
-    "recipients" in idempotencyKey &&
-    "workflowKey" in idempotencyKey
-  ) {
-    const { eventOccurredAt, ...rest } = idempotencyKey as TriggerIdempotencyKeyParams & {
-      eventOccurredAt?: Date | string;
-    };
-
-    return TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
-      ...rest,
-      eventOccurredAt: isString(eventOccurredAt) ? new Date(eventOccurredAt) : eventOccurredAt,
-    });
-  }
-
-  return undefined;
 }
