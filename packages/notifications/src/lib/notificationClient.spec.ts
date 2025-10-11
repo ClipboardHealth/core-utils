@@ -4,7 +4,7 @@ import { type Knock } from "@knocklabs/node";
 
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { MAXIMUM_RECIPIENTS_COUNT, NotificationClient } from "./notificationClient";
-import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
+import { DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS } from "./triggerIdempotencyKey";
 import type { SignUserTokenRequest, Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
@@ -64,7 +64,7 @@ describe("NotificationClient", () => {
 
   describe("trigger", () => {
     const mockWorkflowKey = "test-workflow";
-    const mockIdempotencyKey = TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+    const mockIdempotencyKey = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
       chunk: 1,
       recipients: ["user-1", "user-2"],
       workflowKey: mockWorkflowKey,
@@ -496,42 +496,6 @@ describe("NotificationClient", () => {
       expect(actual.value.id).toBe(mockWorkflowRunId);
     });
 
-    it("handles plain object idempotencyKey (deserialized from database)", async () => {
-      const mockBody = { recipients: [{ userId: "user-1" }] };
-      const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
-
-      const plainObjectIdempotencyKey = {
-        chunk: 1,
-        recipients: ["user-1"],
-        workflowKey: mockWorkflowKey,
-        resourceId: "test-resource-id",
-        eventOccurredAt: "2024-01-01T00:00:00.000Z",
-      };
-
-      const input: TriggerRequest = {
-        key: mockWorkflowKey,
-        workflowKey: mockWorkflowKey,
-        body: { ...mockBody, workplaceId: "workplace-123" },
-        idempotencyKey: plainObjectIdempotencyKey as unknown as TriggerIdempotencyKey,
-        keysToRedact: [],
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      const actual = await client.trigger(input);
-
-      expectToBeSuccess(actual);
-      expect(actual.value.id).toBe(mockWorkflowRunId);
-      expect(triggerSpy).toHaveBeenCalledWith(
-        mockWorkflowKey,
-        expect.any(Object),
-        expect.objectContaining({
-          idempotencyKey: expect.any(String),
-        }),
-      );
-    });
-
     it("handles string idempotencyKey", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
@@ -556,65 +520,6 @@ describe("NotificationClient", () => {
       expect(triggerSpy).toHaveBeenCalledWith(mockWorkflowKey, expect.any(Object), {
         idempotencyKey: stringIdempotencyKey,
       });
-    });
-
-    it("rejects request with invalid idempotencyKey", async () => {
-      const mockBody = { recipients: [{ userId: "user-1" }] };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
-
-      const invalidIdempotencyKey = { invalid: "key" };
-
-      const input: TriggerRequest = {
-        key: mockWorkflowKey,
-        workflowKey: mockWorkflowKey,
-        body: mockBody,
-        idempotencyKey: invalidIdempotencyKey as unknown as TriggerIdempotencyKey,
-        keysToRedact: [],
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      const actual = await client.trigger(input);
-
-      expectToBeFailure(actual);
-      expect(actual.error.message).toContain("Invalid idempotency key");
-      expect(triggerSpy).not.toHaveBeenCalled();
-    });
-
-    it("handles plain object idempotencyKey with eventOccurredAt Date object", async () => {
-      const mockBody = { recipients: [{ userId: "user-1" }] };
-      const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
-
-      const plainObjectWithDate = {
-        chunk: 1,
-        recipients: ["user-1"],
-        workflowKey: mockWorkflowKey,
-        resourceId: "test-resource-id",
-        eventOccurredAt: new Date("2024-01-01T00:00:00.000Z"),
-      };
-
-      const input: TriggerRequest = {
-        key: mockWorkflowKey,
-        workflowKey: mockWorkflowKey,
-        body: { ...mockBody, workplaceId: "workplace-123" },
-        idempotencyKey: plainObjectWithDate as unknown as TriggerIdempotencyKey,
-        keysToRedact: [],
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      const actual = await client.trigger(input);
-
-      expectToBeSuccess(actual);
-      expect(actual.value.id).toBe(mockWorkflowRunId);
-      expect(triggerSpy).toHaveBeenCalledWith(
-        mockWorkflowKey,
-        expect.any(Object),
-        expect.objectContaining({
-          idempotencyKey: expect.any(String),
-        }),
-      );
     });
   });
 

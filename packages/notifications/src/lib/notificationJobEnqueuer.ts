@@ -3,13 +3,17 @@ import {
   ENQUEUE_FIELD_NAMES,
 } from "@clipboard-health/background-jobs-adapter";
 
-import { type IdempotencyKey } from "./idempotencyKey";
 import { chunkRecipients } from "./internal/chunkRecipients";
+import { triggerIdempotencyKeyToHash } from "./internal/triggerIdempotencyKeyToHash";
 import { ERROR_CODES, type ErrorCode } from "./notificationClient";
-import { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
+import {
+  DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
+  type TriggerIdempotencyKey,
+} from "./triggerIdempotencyKey";
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type TriggerBody,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type TriggerRequest,
 } from "./types";
 
@@ -21,11 +25,53 @@ export const RETRYABLE_ERRORS: ErrorCode[] = [ERROR_CODES.unknown];
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
+export interface IdempotencyKey {
+  /**
+   * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
+   *
+   * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
+   * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
+   *
+   * Use `.toISOString()`.
+   */
+  eventOccurredAt?: string | undefined;
+
+  /**
+   * If a resource triggered your workflow, include its unique ID.
+   *
+   * @note `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
+   * included in the idempotency key automatically.
+   *
+   * @example
+   * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
+   * 2. For a payout notification, set resourceId to the payment ID.
+   */
+  resourceId?: string | undefined;
+}
+
 export interface NotificationEnqueueData {
+  /**
+   * Idempotency keys prevent duplicate notifications. They should be deterministic and remain the
+   * same across retry logic.
+   *
+   * If you retry a request with the same idempotency key within 24 hours, the client returns the same
+   * response as the original request.
+   *
+   * @note `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
+   * included in the idempotency key automatically.
+   *
+   * We provide this class because idempotency keys can be difficult to use correctly. If the key
+   * changes on each retry (e.g., Date.now() or uuid.v4()), it won't prevent duplicate notifications.
+   * Conversely, if you don't provide enough information, you prevent recipients from receiving
+   * notifications they otherwise should have. For example, if you use the trigger key and the
+   * recipient's ID as the idempotency key, but it's possible the recipient could receive the same
+   * notification multiple times within the idempotency key's validity window, the recipient will only
+   * receive the first notification.
+   */
   idempotencyKey: IdempotencyKey;
 
   /** @see {@link TriggerRequest.expiresAt} */
-  expiresAt: TriggerRequest["expiresAt"];
+  expiresAt: string;
 
   /** @see {@link TriggerBody.recipients} */
   recipients: string[];
@@ -82,27 +128,31 @@ export class NotificationJobEnqueuer {
    * <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
    *
    * ```ts
-   * import { IdempotencyKey } from "@clipboard-health/notifications";
-   *
-   * import { ExampleNotificationJob } from "./exampleNotification.job";
+   * import {
+   *   type ExampleNotificationEnqueueData,
+   *   ExampleNotificationJob,
+   * } from "./exampleNotification.job";
    * import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
    *
    * async function enqueueNotificationJob() {
-   *   await notificationJobEnqueuer.enqueueOneOrMore(ExampleNotificationJob, {
-   *     // Set expiresAt at enqueue-time so it remains stable across job retries.
-   *     expiresAt: minutesFromNow(60),
-   *     // Set idempotencyKey at enqueue-time so it remains stable across job retries.
-   *     idempotencyKey: new IdempotencyKey({
-   *       resourceId: "event-123",
-   *     }),
-   *     // Set recipients at enqueue-time so they respect our notification provider's limits.
-   *     recipients: ["user-1"],
+   *   await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationEnqueueData>(
+   *     ExampleNotificationJob,
+   *     {
+   *       // Set expiresAt at enqueue-time so it remains stable across job retries.
+   *       expiresAt: minutesFromNow(60).toISOString(),
+   *       // Set idempotencyKey at enqueue-time so it remains stable across job retries.
+   *       idempotencyKey: {
+   *         resourceId: "event-123",
+   *       },
+   *       // Set recipients at enqueue-time so they respect our notification provider's limits.
+   *       recipients: ["user-1"],
    *
-   *     workflowKey: "event-starting-reminder",
+   *       workflowKey: "event-starting-reminder",
    *
-   *     // Any additional enqueue-time data passed to the job:
-   *     workplaceId: "workplace-123",
-   *   });
+   *       // Any additional enqueue-time data passed to the job:
+   *       workplaceId: "workplace-123",
+   *     },
+   *   );
    * }
    *
    * // eslint-disable-next-line unicorn/prefer-top-level-await
@@ -123,7 +173,7 @@ export class NotificationJobEnqueuer {
   ) {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
-        const idempotencyKey = TriggerIdempotencyKey.DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+        const idempotencyKey = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
           ...data.idempotencyKey,
           chunk: number,
           recipients,
@@ -136,7 +186,7 @@ export class NotificationJobEnqueuer {
           {
             ...(options ? { ...options } : {}),
             [ENQUEUE_FIELD_NAMES[this.adapter.implementation].idempotencyKey]:
-              idempotencyKey.toHash({}),
+              triggerIdempotencyKeyToHash({ idempotencyKey }),
           },
         );
       }),
