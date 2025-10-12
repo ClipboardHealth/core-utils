@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/notifications",
   "description": "Send notifications through third-party providers.",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "@clipboard-health/background-jobs-adapter": "0.3.0",
