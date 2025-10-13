@@ -5,6 +5,18 @@
   "sourceRoot": "packages/ai-rules/src",
   "tags": [],
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "mkdir -p dist/packages/ai-rules",
+          "cp packages/ai-rules/*.md dist/packages/ai-rules/",
+          "cp packages/ai-rules/package.json dist/packages/ai-rules/"
+        ],
+        "parallel": false
+      },
+      "outputs": ["{workspaceRoot}/dist/packages/ai-rules"]
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
