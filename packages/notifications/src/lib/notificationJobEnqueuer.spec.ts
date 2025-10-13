@@ -1,10 +1,13 @@
 import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients } from "./internal/chunkRecipients";
-import { triggerIdempotencyKeyToHash } from "./internal/triggerIdempotencyKeyToHash";
-import { ERROR_CODES, MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
-import { NotificationJobEnqueuer, RETRYABLE_ERRORS } from "./notificationJobEnqueuer";
-import { DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS } from "./triggerIdempotencyKey";
+import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
+import { MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
+import { NotificationJobEnqueuer } from "./notificationJobEnqueuer";
+import {
+  DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
+  type TriggerIdempotencyKeyParams,
+} from "./triggerIdempotencyKey";
 
 jest.mock("./internal/chunkRecipients");
 
@@ -34,15 +37,15 @@ describe("NotificationJobEnqueuer", () => {
     const mockIdempotencyKey = {
       resourceId: "my-resource-id",
     };
-    const mockTriggerIdempotencyKey = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+    const mockTriggerIdempotencyKey: TriggerIdempotencyKeyParams = {
       ...mockIdempotencyKey,
       chunk: 1,
       recipients: mockRecipients,
       workflowKey: mockWorkflowKey,
-    });
-    const mockTriggerIdempotencyKeyHash = triggerIdempotencyKeyToHash({
-      idempotencyKey: mockTriggerIdempotencyKey,
-    });
+    };
+
+    const mockTriggerIdempotencyKeyHash =
+      triggerIdempotencyKeyParamsToHash(mockTriggerIdempotencyKey);
     const mockExpiresAt = new Date("2025-12-31").toISOString();
 
     it("enqueues single job when recipients fit in one chunk", async () => {
@@ -71,7 +74,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: mockTriggerIdempotencyKey,
+          idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(mockTriggerIdempotencyKey),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
         }),
@@ -93,18 +96,18 @@ describe("NotificationJobEnqueuer", () => {
         },
       ];
 
-      const mockKey1 = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+      const mockKey1: TriggerIdempotencyKeyParams = {
         ...mockIdempotencyKey,
         chunk: 1,
         recipients: mockChunks[0]!.recipients,
         workflowKey: mockWorkflowKey,
-      });
-      const mockKey2 = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+      };
+      const mockKey2: TriggerIdempotencyKeyParams = {
         ...mockIdempotencyKey,
         chunk: 2,
         recipients: mockChunks[1]!.recipients,
         workflowKey: mockWorkflowKey,
-      });
+      };
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
 
@@ -125,24 +128,24 @@ describe("NotificationJobEnqueuer", () => {
         1,
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: mockKey1,
+          idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(mockKey1),
           recipients: mockRecipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
           expiresAt: mockExpiresAt,
         }),
         expect.objectContaining({
-          idempotencyKey: triggerIdempotencyKeyToHash({ idempotencyKey: mockKey1 }),
+          idempotencyKey: triggerIdempotencyKeyParamsToHash(mockKey1),
         }),
       );
       expect(mockEnqueue).toHaveBeenNthCalledWith(
         2,
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: mockKey2,
+          idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(mockKey2),
           recipients: mockRecipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
           expiresAt: mockExpiresAt,
         }),
         expect.objectContaining({
-          idempotencyKey: triggerIdempotencyKeyToHash({ idempotencyKey: mockKey2 }),
+          idempotencyKey: triggerIdempotencyKeyParamsToHash(mockKey2),
         }),
       );
     });
@@ -166,7 +169,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: mockTriggerIdempotencyKey,
+          idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(mockTriggerIdempotencyKey),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
           customField: "test-value",
@@ -200,7 +203,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(mockEnqueue).toHaveBeenCalledWith(
         mockHandler,
         expect.objectContaining({
-          idempotencyKey: mockTriggerIdempotencyKey,
+          idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(mockTriggerIdempotencyKey),
           recipients: mockRecipients,
           expiresAt: mockExpiresAt,
         }),
@@ -233,20 +236,6 @@ describe("NotificationJobEnqueuer", () => {
 
       expect(chunkRecipients).toHaveBeenCalledWith({ recipients: [] });
       expect(mockEnqueue).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("RETRYABLE_ERRORS", () => {
-    it("exports only unknown error code as retryable", () => {
-      expect(RETRYABLE_ERRORS).toEqual([ERROR_CODES.unknown]);
-    });
-
-    it("RETRYABLE_ERRORS contains only valid error codes", () => {
-      const validErrorCodes = Object.values(ERROR_CODES);
-
-      for (const errorCode of RETRYABLE_ERRORS) {
-        expect(validErrorCodes).toContain(errorCode);
-      }
     });
   });
 });

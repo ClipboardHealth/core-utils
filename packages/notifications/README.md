@@ -82,12 +82,10 @@ npm install @clipboard-health/notifications
    ```ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import {
-     errorsInResult,
      type NotificationEnqueueData,
      type NotificationJobData,
-     RETRYABLE_ERRORS,
    } from "@clipboard-health/notifications";
-   import { toError } from "@clipboard-health/util-ts";
+   import { isFailure, toError } from "@clipboard-health/util-ts";
 
    import { type ExampleNotificationService } from "./exampleNotification.service";
 
@@ -108,7 +106,7 @@ npm install @clipboard-health/notifications
          attempt: job.attemptsCount + 1,
        });
 
-       if (errorsInResult(result, RETRYABLE_ERRORS)) {
+       if (isFailure(result)) {
          throw toError(result.error);
        }
      }

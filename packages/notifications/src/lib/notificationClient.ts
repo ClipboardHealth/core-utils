@@ -1,7 +1,6 @@
 import {
   failure,
   isFailure,
-  isString,
   type LogFunction,
   ServiceError,
   type ServiceResult,
@@ -13,10 +12,10 @@ import { signUserToken } from "@knocklabs/node";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
+import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKey";
 import { redact } from "./internal/redact";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
-import { triggerIdempotencyKeyToHash } from "./internal/triggerIdempotencyKeyToHash";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
@@ -158,17 +157,14 @@ export class NotificationClient {
 
         try {
           const { body, idempotencyKey, key, keysToRedact = [], workflowKey } = validated.value;
+          const { workplaceId } = body;
           const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
           const response = await this.provider.workflows.trigger(
             workflowKey ?? /* istanbul ignore next */ key,
             triggerBody,
-            {
-              idempotencyKey: /* istanbul ignore next */ isString(idempotencyKey)
-                ? idempotencyKey
-                : triggerIdempotencyKeyToHash({ idempotencyKey, workplaceId: body.workplaceId }),
-            },
+            { idempotencyKey: parseTriggerIdempotencyKey({ idempotencyKey, workplaceId }) },
           );
 
           const id = response.workflow_run_id;

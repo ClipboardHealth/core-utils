@@ -4,11 +4,11 @@ import {
 } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients } from "./internal/chunkRecipients";
-import { triggerIdempotencyKeyToHash } from "./internal/triggerIdempotencyKeyToHash";
-import { ERROR_CODES, type ErrorCode } from "./notificationClient";
+import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
 import {
   DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
   type TriggerIdempotencyKey,
+  type TriggerIdempotencyKeyParams,
 } from "./triggerIdempotencyKey";
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -16,12 +16,6 @@ import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type TriggerRequest,
 } from "./types";
-
-/**
- * Assuming `NotificationClient` is called from a background job with unchanging recipients, only
- * the following are retryable.
- */
-export const RETRYABLE_ERRORS: ErrorCode[] = [ERROR_CODES.unknown];
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
@@ -173,20 +167,24 @@ export class NotificationJobEnqueuer {
   ) {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
-        const idempotencyKey = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS({
+        const idempotencyKeyParams: TriggerIdempotencyKeyParams = {
           ...data.idempotencyKey,
           chunk: number,
           recipients,
           workflowKey: data.workflowKey,
-        });
+        };
 
         await this.adapter.enqueue(
           handlerClassOrInstance,
-          { ...data, recipients, idempotencyKey },
+          {
+            ...data,
+            recipients,
+            idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(idempotencyKeyParams),
+          },
           {
             ...(options ? { ...options } : {}),
             [ENQUEUE_FIELD_NAMES[this.adapter.implementation].idempotencyKey]:
-              triggerIdempotencyKeyToHash({ idempotencyKey }),
+              triggerIdempotencyKeyParamsToHash(idempotencyKeyParams),
           },
         );
       }),

@@ -1,3 +1,6 @@
+import { isNil } from "@clipboard-health/util-ts";
+import { type Tagged } from "type-fest";
+
 import {
   type IdempotencyKey,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -13,7 +16,7 @@ import {
  * `NotificationClient.trigger` directly. We're using the honor system in hopes that enforcement is
  * unnecessary.
  */
-export type TriggerIdempotencyKey = string & { __brand: "TriggerIdempotencyKey" };
+export type TriggerIdempotencyKey = Tagged<string, "TriggerIdempotencyKey">;
 
 export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
   /**
@@ -30,6 +33,26 @@ export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
    * The workflow key.
    */
   workflowKey: string;
+}
+
+/**
+ * Type guard to check if a value is a valid TriggerIdempotencyKeyParams object.
+ */
+export function isTriggerIdempotencyKeyParams(
+  value: unknown,
+): value is TriggerIdempotencyKeyParams {
+  if (isNil(value) || typeof value !== "object") {
+    return false;
+  }
+
+  const params = value as Partial<TriggerIdempotencyKeyParams>;
+  return (
+    "chunk" in params &&
+    "workflowKey" in params &&
+    "recipients" in params &&
+    Array.isArray(params.recipients) &&
+    params.recipients.every((recipient) => typeof recipient === "string")
+  );
 }
 
 /**
