@@ -33,7 +33,7 @@ export interface IdempotencyKey {
   /**
    * If a resource triggered your workflow, include its unique ID.
    *
-   * @note `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
+   * Note: `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
    * included in the idempotency key automatically.
    *
    * @example
@@ -51,7 +51,7 @@ export interface NotificationEnqueueData {
    * If you retry a request with the same idempotency key within 24 hours, the client returns the same
    * response as the original request.
    *
-   * @note `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
+   * Note: `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
    * included in the idempotency key automatically.
    *
    * We provide this class because idempotency keys can be difficult to use correctly. If the key
