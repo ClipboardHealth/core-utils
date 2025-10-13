@@ -1,13 +1,24 @@
-import { isDefined } from "@clipboard-health/util-ts";
+import { isNil } from "@clipboard-health/util-ts";
+import { type Tagged } from "type-fest";
 
-import { IdempotencyKey, type IdempotencyKeyParams } from "./idempotencyKey";
-import { createDeterministicHash } from "./internal/createDeterministicHash";
 import {
+  type IdempotencyKey,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type NotificationJobEnqueuer,
 } from "./notificationJobEnqueuer";
 
-export interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
+/**
+ * Idempotency keys prevent duplicate notifications. `NotificationClient.trigger` should be called
+ * after properly enqueuing a job using `NotificationJobEnqueuer.enqueueOneOrMore` to help ensure
+ * we're following best practices so customers don't receive duplicate or stale notifications.
+ *
+ * Yes, you could use an as assertion to create a TriggerIdempotencyKey and then call
+ * `NotificationClient.trigger` directly. We're using the honor system in hopes that enforcement is
+ * unnecessary.
+ */
+export type TriggerIdempotencyKey = Tagged<string, "TriggerIdempotencyKey">;
+
+export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
   /**
    * The recipient chunk number.
    */
@@ -25,56 +36,31 @@ export interface TriggerIdempotencyKeyParams extends IdempotencyKeyParams {
 }
 
 /**
- * Idempotency keys prevent duplicate notifications. `NotificationClient.trigger` should be called
- * after properly enqueuing a job using `NotificationJobEnqueuer.enqueueOneOrMore` to help ensure
- * we're following best practices so customers don't receive duplicate or stale notifications.
- *
- * Yes, you could import this class into your service, create an instance, and call
- * `NotificationClient.trigger` directly. We're using the honor system in hopes that enforcement is
- * unnecessary.
- *
- * @see {@link NotificationJobEnqueuer.enqueueOneOrMore}.
+ * Type guard to check if a value is a valid TriggerIdempotencyKeyParams object.
  */
-export class TriggerIdempotencyKey extends IdempotencyKey {
-  /**
-   * For internal library use and testing only. Service code should use
-   * {@link NotificationJobEnqueuer.enqueueOneOrMore} instead.
-   *
-   * @see {@link TriggerIdempotencyKey}.
-   */
-  public static DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
-    params: TriggerIdempotencyKeyParams,
-  ): TriggerIdempotencyKey {
-    return new TriggerIdempotencyKey(params);
+export function isTriggerIdempotencyKeyParams(
+  value: unknown,
+): value is TriggerIdempotencyKeyParams {
+  if (isNil(value) || typeof value !== "object") {
+    return false;
   }
 
-  private readonly chunk: TriggerIdempotencyKeyParams["chunk"];
-  private readonly recipients: TriggerIdempotencyKeyParams["recipients"];
-  private readonly workflowKey: TriggerIdempotencyKeyParams["workflowKey"];
+  const params = value as Partial<TriggerIdempotencyKeyParams>;
+  return (
+    "chunk" in params &&
+    "workflowKey" in params &&
+    "recipients" in params &&
+    Array.isArray(params.recipients) &&
+    params.recipients.every((recipient) => typeof recipient === "string")
+  );
+}
 
-  private constructor(params: TriggerIdempotencyKeyParams) {
-    const { chunk, recipients, workflowKey, ...rest } = params;
-
-    super(rest);
-    this.chunk = chunk;
-    this.recipients = recipients;
-    this.workflowKey = workflowKey;
-  }
-
-  public toHash(params: { workplaceId?: string | undefined }): string {
-    const { workplaceId } = params;
-
-    return createDeterministicHash(
-      [
-        this.workflowKey,
-        this.chunk,
-        this.resourceId,
-        this.eventOccurredAt?.toISOString(),
-        this.recipients.join(","),
-        workplaceId,
-      ]
-        .filter(isDefined)
-        .join(","),
-    );
-  }
+/**
+ * For internal library use and testing only. Service code should use
+ * {@link NotificationJobEnqueuer.enqueueOneOrMore} instead.
+ */
+export function DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
+  params: TriggerIdempotencyKeyParams,
+): TriggerIdempotencyKey {
+  return JSON.stringify(params) as TriggerIdempotencyKey;
 }
