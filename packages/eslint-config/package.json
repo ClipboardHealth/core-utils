@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "5.14.1",
+  "version": "5.14.2",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
@@ -10,7 +10,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@clipboard-health/eslint-plugin": "^0.11.1",
+    "@clipboard-health/eslint-plugin": "^0.11.2",
     "@typescript-eslint/eslint-plugin": "^7",
     "@typescript-eslint/parser": "^7",
     "eslint": "^8",
