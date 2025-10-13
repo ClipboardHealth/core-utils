@@ -1,42 +1,31 @@
 {
-  "name": "@clipboard-health/eslint-config",
-  "description": "Our ESLint configuration.",
-  "version": "5.13.0",
+  "name": "@clipboard-health/contract-core",
+  "description": "Shared Zod schemas for Clipboard's contracts.",
+  "version": "0.26.2",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "dependencies": {
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "@clipboard-health/testing-core": "0.25.2",
+    "zod": "3.25.76"
+  },
   "keywords": [
-    "config",
-    "eslint"
+    "contract",
+    "schema",
+    "typescript",
+    "zod"
   ],
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@clipboard-health/eslint-plugin": "^0.10.0",
-    "@typescript-eslint/eslint-plugin": "^7",
-    "@typescript-eslint/parser": "^7",
-    "eslint": "^8",
-    "eslint-config-airbnb-base": "^15",
-    "eslint-config-prettier": "^9 || ^10",
-    "eslint-config-xo": "^0.45.0",
-    "eslint-config-xo-react": "^0.27",
-    "eslint-config-xo-typescript": "^1",
-    "eslint-plugin-eslint-comments": "^3",
-    "eslint-plugin-expect-type": "^0.4",
-    "eslint-plugin-import": "^2",
-    "eslint-plugin-jest": "^27.7",
-    "eslint-plugin-n": "^16",
-    "eslint-plugin-no-only-tests": "^3",
-    "eslint-plugin-no-use-extend-native": "^0.5",
-    "eslint-plugin-react": "^7",
-    "eslint-plugin-security": "^1",
-    "eslint-plugin-simple-import-sort": "^10",
-    "eslint-plugin-sonarjs": "^0.23",
-    "eslint-plugin-unicorn": "^48"
+    "zod": "^3"
   },
   "publishConfig": {
     "access": "public"
   },
   "repository": {
-    "directory": "packages/eslint-config",
+    "directory": "packages/contract-core",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },

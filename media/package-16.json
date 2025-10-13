@@ -1,33 +1,30 @@
 {
-  "name": "embedex",
-  "description": "Embed shared text and code snippets from source files into destination files.",
-  "version": "0.15.0",
-  "bin": {
-    "embedex": "./src/bin/cli.js"
-  },
+  "name": "@clipboard-health/util-ts",
+  "description": "TypeScript utilities.",
+  "version": "3.16.2",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@commander-js/extra-typings": "14.0.0",
-    "glob": "11.0.3",
-    "tslib": "2.8.1",
-    "yoctocolors-cjs": "2.1.3"
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "type-fest": "5.0.1",
+    "zod": "3.25.76"
   },
   "keywords": [
-    "cli",
-    "documentation",
-    "embed",
-    "examples",
-    "snippets",
-    "typedoc",
-    "typescript"
+    "typescript",
+    "utility"
   ],
   "license": "MIT",
   "main": "./src/index.js",
+  "peerDependencies": {
+    "type-fest": "^4 || ^5.0.0",
+    "zod": "^3"
+  },
   "publishConfig": {
     "access": "public"
   },
   "repository": {
-    "directory": "packages/embedex",
+    "directory": "packages/util-ts",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },

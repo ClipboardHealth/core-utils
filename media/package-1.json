@@ -1,25 +1,27 @@
 {
-  "name": "@clipboard-health/analytics",
-  "description": "Type-safe analytics wrapper around our third-party analytics provider for user identification and event tracking.",
-  "version": "0.7.0",
+  "name": "@clipboard-health/ai-rules",
+  "description": "Rules for AI agents.",
+  "version": "0.1.2",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/phone-number": "0.6.0",
-    "@clipboard-health/util-ts": "3.15.0",
-    "@segment/analytics-node": "2.3.0",
+    "@intellectronica/ruler": "0.3.10",
     "tslib": "2.8.1"
+  },
+  "exports": {
+    "./*": "./*.md"
   },
   "keywords": [],
   "license": "MIT",
-  "main": "./src/index.js",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
-    "directory": "packages/analytics",
+    "directory": "packages/ai-rules",
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
-  "type": "commonjs",
-  "typings": "./src/index.d.ts"
+  "scripts": {
+    "apply": "ruler apply && prettier --write *.md"
+  },
+  "type": "commonjs"
 }
