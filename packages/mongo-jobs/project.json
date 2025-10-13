@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "mongo-jobs",
+  "projectType": "library",
+  "sourceRoot": "packages/mongo-jobs/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/mongo-jobs/*.md"],
+        "main": "packages/mongo-jobs/src/index.js",
+        "outputPath": "dist/packages/mongo-jobs",
+        "tsConfig": "packages/mongo-jobs/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/mongo-jobs/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/mongo-jobs/jest.config.ts"
+      }
+    }
+  }
+}
