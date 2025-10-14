@@ -30,7 +30,7 @@ describe("objectId", () => {
     {
       name: "rejects non-string input",
       input: 123,
-      errorMessage: "Expected string, received number",
+      errorMessage: "Must be a valid ObjectId",
     },
     {
       name: "rejects string with invalid hex character 'g'",
