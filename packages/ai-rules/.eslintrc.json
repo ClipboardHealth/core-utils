@@ -7,15 +7,7 @@
   },
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-        "rules": {
-        "n/no-process-exit": "off",
-        "n/shebang": "off",
-        "no-console": "off",
-        "security/detect-non-literal-fs-filename": "off",
-        "unicorn/prefer-top-level-await": "off",
-        "unicorn/no-process-exit": "off"
-      }
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"]
     }
   ]
 }
