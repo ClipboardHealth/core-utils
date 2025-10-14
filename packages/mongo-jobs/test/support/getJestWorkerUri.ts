@@ -13,7 +13,7 @@
  *
  * @example
  * ```ts
- * getJestWorkerUri("mongodb://root:mongo@localhost7/tests-{{jest_worker_id}}?authSource=admin")
+ * getJestWorkerUri("mongodb://root:mongo@localhost/tests-{{jest_worker_id}}?authSource=admin")
  * "mongodb://root:mongo@localhost/tests-1?authSource=admin"
  * ```
  *
