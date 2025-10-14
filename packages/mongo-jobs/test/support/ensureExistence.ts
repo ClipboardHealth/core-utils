@@ -1,7 +1,7 @@
-import { isNullOrUndefined } from "@clipboard-health/util-ts";
+import { isNil } from "@clipboard-health/util-ts";
 
 export function ensureExistence<T>(value: T | undefined): T {
-  if (isNullOrUndefined(value)) {
+  if (isNil(value)) {
     throw new Error("not defined");
   }
 
