@@ -68,9 +68,6 @@ class ShiftStartReminderJob implements HandlerInterface<ShiftStartReminderData> 
     logger.info(`Starting job ${job._id}`);
     const shift = await Shift.findById(new mongoose.Types.ObjectId(shiftId));
 
-    // get the shift from the database
-    const shift = await db.getShift(data.shiftId);
-
     // if shift is not found, we skip the job.
     // the job is marked as "done" and won't be retried
     if (!shift) {
