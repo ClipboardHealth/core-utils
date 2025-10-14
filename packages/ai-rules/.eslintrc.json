@@ -7,7 +7,7 @@
   },
   "overrides": [
     {
-      "files": ["scripts/**/*.js"],
+      "files": ["scripts/**/*.ts"],
       "rules": {
         "n/no-process-exit": "off",
         "n/shebang": "off",

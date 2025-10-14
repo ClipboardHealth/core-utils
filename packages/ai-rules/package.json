@@ -28,9 +28,9 @@
   },
   "scripts": {
     "apply": "ruler apply",
-    "build": "node scripts/build.js",
+    "build": "tsx scripts/build.ts",
     "format": "prettier --write '.ruler/**/*.md'",
-    "lint:md": "markdownlint-cli2 '.ruler/**/*.md'"
+    "lint:md": "markdownlint-cli2 '.ruler/**/*.md' 'README.md'"
   },
   "devDependencies": {
     "@intellectronica/ruler": "0.3.10"

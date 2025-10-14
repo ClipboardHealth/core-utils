@@ -1,32 +1,24 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
+import { execSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
-/**
- * Pre-generates AI agent configuration files for all profiles.
- * This script runs during package build to create ready-to-copy files.
- */
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const { execSync } = require("node:child_process");
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const fs = require("node:fs");
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const os = require("node:os");
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const path = require("node:path");
+declare const __dirname: string;
 
 const PROFILES = {
   frontend: ["common", "frontend"],
   backend: ["common", "backend"],
   fullstack: ["common", "frontend", "backend"],
   common: ["common"],
-};
+} as const;
+
+type ProfileName = keyof typeof PROFILES;
 
 /**
  * Builds a single profile by combining rule categories and running Ruler.
- * @param {string} profileName - The name of the profile to build.
- * @param {readonly string[]} categories - The rule categories to include.
  */
-function buildProfile(profileName, categories) {
+function buildProfile(profileName: ProfileName, categories: readonly string[]): void {
   console.log(`\n📦 Building profile: ${profileName}`);
   console.log(`   Categories: ${categories.join(", ")}`);
 
@@ -68,7 +60,7 @@ function buildProfile(profileName, categories) {
     // 3. Copy generated files to dist
     fs.mkdirSync(outputDirectory, { recursive: true });
 
-    const filesToCopy = ["AGENTS.md", "CLAUDE.md", ".cursor"];
+    const filesToCopy = ["AGENTS.md", "CLAUDE.md", ".cursor"] as const;
 
     for (const file of filesToCopy) {
       const sourcePath = path.join(temporaryDirectory, file);
@@ -89,7 +81,8 @@ function buildProfile(profileName, categories) {
 
     console.log(`   ✅ Profile built: dist/${profileName}/`);
   } catch (error) {
-    console.error(`   ❌ Error building ${profileName}:`, error.message);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`   ❌ Error building ${profileName}:`, message);
     process.exit(1);
   } finally {
     // Cleanup temp directory
@@ -111,7 +104,7 @@ console.log("🚀 Building AI Rules profiles...");
 console.log("================================\n");
 
 for (const [profileName, categories] of Object.entries(PROFILES)) {
-  buildProfile(profileName, categories);
+  buildProfile(profileName as ProfileName, categories);
 }
 
 console.log("\n✨ All profiles built successfully!");
