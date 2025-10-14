@@ -21,7 +21,7 @@ export interface TraceHeaders {
 // Where destination is the name of the queue and operation is the action being performed
 //
 // https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/messaging/#span-name
-const TRACER_NAME = "background-jobs-mongo";
+const TRACER_NAME = "mongo-jobs";
 const PRODUCER_SPAN = "background-jobs.producer";
 const CONSUMER_SPAN = "background-jobs.consumer";
 const INTERNALS_SPAN = "background-jobs.internals";
@@ -36,7 +36,7 @@ const Operation = {
 } as const;
 
 const MessagingSystem = {
-  MONGO: "mongo-background-jobs",
+  MONGO: "mongo-jobs",
 } as const;
 
 const MessagingDestinationKind = {

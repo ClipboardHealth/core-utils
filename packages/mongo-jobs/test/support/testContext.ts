@@ -15,8 +15,7 @@ export interface TestContext {
 export async function createTestContext(
   backgroundJobsOptions: ConstructorOptions = {},
 ): Promise<TestContext> {
-  const databaseUrlTemplate =
-    "mongodb://localhost:27017/background-jobs-mongo-test-{{jest_worker_id}}";
+  const databaseUrlTemplate = "mongodb://localhost:27017/mongo-jobs-test-{{jest_worker_id}}";
   const databaseUrl = getJestWorkerUri(databaseUrlTemplate);
 
   await dropDatabase(databaseUrl);
