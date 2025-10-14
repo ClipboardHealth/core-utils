@@ -3,11 +3,14 @@ AGENTS.md
 CLAUDE.md
 *.md.bak
 
+# Build output (generated during package build)
+dist/
+
 # TypeScript
 *.tsbuildinfo
 
 # Ruler generated configs for various agents (local testing)
-.cursor/rules/
+.cursor/
 .windsurf/rules/
 .clinerules
 .codex/

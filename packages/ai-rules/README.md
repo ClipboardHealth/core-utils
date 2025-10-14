@@ -1,19 +1,24 @@
-# @clipboard-health/ai-rules <!-- omit from toc -->
+# @clipboard-health/ai-rules
 
-Modular AI agent rules for consistent coding standards across your projects. One command to configure Claude, Cursor, GitHub Copilot, and more.
+Pre-built AI agent rules for consistent coding standards across your projects. Dead simple installation with just a copy command.
 
-## Table of contents <!-- omit from toc -->
+**✨ Why this library:**
+
+- 📦 **Pre-built files** - No CLI, no complexity, just copy files
+- 🎯 **Multiple AI assistants** - Works with Claude, Cursor, GitHub Copilot, and more
+- 🔄 **Auto-sync on updates** - Add to `postinstall` and rules update automatically
+- 🚀 **Zero configuration** - Pick a profile, copy, commit, done
+
+## Table of contents
 
 - [Install](#install)
 - [Usage](#usage)
   - [Quick Start](#quick-start)
-  - [Alternative: Non-Interactive Mode](#alternative-non-interactive-mode)
-  - [View Available Profiles](#view-available-profiles)
-  - [What Gets Generated](#what-gets-generated)
-  - [Available Rule Categories](#available-rule-categories)
-  - [Examples](#examples)
+  - [Available Profiles](#available-profiles)
+  - [What Gets Copied](#what-gets-copied)
 - [How It Works](#how-it-works)
-- [Local development commands](#local-development-commands)
+- [Update Rules](#update-rules)
+- [Local Development](#local-development)
 
 ## Install
 
@@ -25,130 +30,165 @@ npm install --save-dev @clipboard-health/ai-rules
 
 ### Quick Start
 
-The easiest way to get started:
+Choose the profile that matches your project type and add this to your `package.json`:
 
-```bash
-npm install --save-dev @clipboard-health/ai-rules
-npx @clipboard-health/ai-rules init
-```
-
-This will:
-
-- 🔍 **Auto-detect** your project type (frontend, backend, fullstack)
-- 💬 **Prompt** you to select the right profile
-- 📦 **Ask** if you want to update `package.json` with a sync script
-- ✨ **Generate** AI agent config files
-
-### Alternative: Non-Interactive Mode
-
-For more direct control, you can:
-
-**1. Use init with a profile (skips prompts):**
-
-```bash
-npx @clipboard-health/ai-rules init --profile=frontend
-```
-
-**2. Use apply directly (just generates files):**
-
-```bash
-# Frontend project (React)
-npx @clipboard-health/ai-rules apply --profile=frontend
-
-# Backend project (NestJS)
-npx @clipboard-health/ai-rules apply --profile=backend
-
-# Fullstack project
-npx @clipboard-health/ai-rules apply --profile=fullstack
-
-# TypeScript library (just common rules)
-npx @clipboard-health/ai-rules apply --profile=common
-
-# Custom combination using rulesets
-npx @clipboard-health/ai-rules apply --ruleset=common,frontend
-
-# Preview changes without writing files
-npx @clipboard-health/ai-rules apply --profile=frontend --dry-run
-```
-
-### View Available Profiles
-
-See what profiles and rulesets are available:
-
-```bash
-npx @clipboard-health/ai-rules list
-```
-
-### What Gets Generated
-
-The CLI generates config files for the primary AI coding assistants:
-
-- ✅ `AGENTS.md` (GitHub Copilot, OpenAI Codex, and other AGENTS.md-compatible assistants)
-- ✅ `CLAUDE.md` (Claude Code)
-- ✅ `.cursor/rules/` (Cursor AI)
-
-**No manual setup required!** The package handles everything.
-
-### Available Rule Categories
-
-| Category        | Description                       | Files                                                          |
-| --------------- | --------------------------------- | -------------------------------------------------------------- |
-| **`common/`**   | Core conventions for all projects | Code style, error handling, TypeScript usage, testing patterns |
-| **`frontend/`** | Frontend development rules        | React patterns, UI/styling                                     |
-| **`backend/`**  | Backend development rules         | NestJS APIs, three-tier architecture                           |
-
-### Examples
-
-#### Automatic Sync on Install
-
-The `init` command can set this up for you, or add it manually to `package.json`:
+**Frontend project (React):**
 
 ```json
 {
   "scripts": {
-    "sync-ai-rules": "npx @clipboard-health/ai-rules apply --profile=frontend",
+    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/frontend/. ./",
     "postinstall": "npm run sync-ai-rules"
   }
 }
 ```
 
-This ensures your AI rules stay in sync whenever dependencies are installed.
+**Backend project (NestJS):**
+
+```json
+{
+  "scripts": {
+    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/backend/. ./",
+    "postinstall": "npm run sync-ai-rules"
+  }
+}
+```
+
+**Fullstack project:**
+
+```json
+{
+  "scripts": {
+    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/fullstack/. ./",
+    "postinstall": "npm run sync-ai-rules"
+  }
+}
+```
+
+**TypeScript library (common rules only):**
+
+```json
+{
+  "scripts": {
+    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/common/. ./",
+    "postinstall": "npm run sync-ai-rules"
+  }
+}
+```
+
+Then run:
+
+```bash
+npm install  # Runs postinstall automatically
+```
+
+**Commit the generated files:**
+
+```bash
+git add AGENTS.md CLAUDE.md .cursor/
+git commit -m "feat: add AI coding rules"
+```
+
+### Available Profiles
+
+| Profile     | Includes                    | Use For                                |
+| ----------- | --------------------------- | -------------------------------------- |
+| `frontend`  | common + frontend           | React apps, web apps                   |
+| `backend`   | common + backend            | NestJS services, APIs                  |
+| `fullstack` | common + frontend + backend | Monorepos, fullstack apps              |
+| `common`    | common only                 | TypeScript libraries, generic projects |
+
+**Rule categories:**
+
+- **common**: TypeScript, testing, code style, error handling, key conventions
+- **frontend**: React patterns, hooks, performance, styling, data fetching, custom hooks
+- **backend**: NestJS APIs, three-tier architecture, controllers, services
+
+### What Gets Copied
+
+Each profile copies these files to your project root:
+
+```text
+AGENTS.md         # GitHub Copilot, OpenAI Codex
+CLAUDE.md         # Claude Code
+.cursor/          # Cursor AI
+```
+
+Your AI assistants will automatically use these files.
 
 ## How It Works
 
-1. **This package** provides organized markdown rule files in category folders (common, frontend, backend)
-2. **The CLI** intelligently detects your project type and selects appropriate rules
-3. **Ruler** (abstracted by the CLI) generates configuration files for multiple AI assistants
-4. **Your project** gets perfectly configured AI agent files with zero manual effort
+1. **Install** the package as a dev dependency
+2. **Add `sync-ai-rules` script** to copy the profile you need
+3. **Add to `postinstall`** so it runs automatically on `npm install`
+4. **Commit the files** to your repo (they're generated, but should be committed)
+5. **Update anytime** - When you update the package version, `postinstall` re-syncs the latest rules
 
-### Commands
+## Update Rules
 
-- **`init`** - Interactive setup with project detection, prompts, and automatic configuration
-- **`apply`** - Direct rule application with profiles or custom ruleset combinations
-- **`list`** - View all available profiles and rulesets
-- **`--dry-run`** - Preview what files would be generated without actually creating them
-
-### Benefits
-
-- ✅ **Intelligent defaults** - Auto-detects project type (React, NestJS, etc.)
-- ✅ **Interactive or direct** - Use prompts or specify `--profile` for non-interactive mode
-- ✅ **Selective rules** - Only include what you need via profiles or rulesets
-- ✅ **Zero complexity** - Single command handles everything
-- ✅ **Multi-agent support** - Works with Claude, Cursor, GitHub Copilot, and more
-- ✅ **Automatic updates** - Update the package and re-sync to get latest rules
-- ✅ **No Ruler knowledge needed** - CLI abstracts all complexity
-
-## Local development commands
+When we release new rules or improvements:
 
 ```bash
-# Format all rule files
+# Update the package
+npm update @clipboard-health/ai-rules
+
+# The postinstall script automatically copies the latest files
+# Review the changes
+git diff AGENTS.md CLAUDE.md .cursor/
+
+# Commit the updates
+git add AGENTS.md CLAUDE.md .cursor/
+git commit -m "chore: update AI coding rules"
+```
+
+## Local Development
+
+This package is part of the `core-utils` monorepo.
+
+**Build all profiles:**
+
+```bash
+npm run build
+```
+
+This generates pre-built files in `dist/` for each profile:
+
+```text
+dist/
+  ├── frontend/    (AGENTS.md, CLAUDE.md, .cursor/)
+  ├── backend/     (AGENTS.md, CLAUDE.md, .cursor/)
+  ├── fullstack/   (AGENTS.md, CLAUDE.md, .cursor/)
+  └── common/      (AGENTS.md, CLAUDE.md, .cursor/)
+```
+
+**Format markdown:**
+
+```bash
 npm run format
+```
 
-# Lint markdown files
+**Lint markdown:**
+
+```bash
 npm run lint:md
+```
 
-# Apply ruler (for this package's own development)
+**Apply Ruler locally (for testing):**
+
+```bash
 npm run apply
 ```
 
 See [`package.json`](./package.json) `scripts` for a complete list of commands.
+
+---
+
+## Benefits
+
+- ✅ **Dead simple** - Just a `cp` command, nothing to break
+- ✅ **No CLI overhead** - No 400+ line CLI, no dependencies to maintain
+- ✅ **Automatic updates** - Postinstall keeps rules in sync
+- ✅ **Multi-agent support** - Works with Claude, Cursor, GitHub Copilot, and more
+- ✅ **Version controlled** - Commit the files, track changes over time
+- ✅ **Golden path** - Pick from 4 pre-built profiles, no customization needed
+- ✅ **Batch updates** - Use Sourcegraph Batch Changes to update all repos at once

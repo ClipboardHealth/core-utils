@@ -1,30 +1,21 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "dist/**/*"],
   "parserOptions": {
     "project": "tsconfig.lint.json",
     "tsconfigRootDir": "packages/ai-rules"
   },
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "unicorn/filename-case": ["error", { "case": "camelCase" }]
-      }
-    },
-    {
-      "files": ["./src/bin/**/*.ts"],
+      "files": ["scripts/**/*.js"],
       "rules": {
         "n/no-process-exit": "off",
         "n/shebang": "off",
         "no-console": "off",
-        "security/detect-non-literal-fs-filename": "off"
+        "security/detect-non-literal-fs-filename": "off",
+        "unicorn/prefer-top-level-await": "off",
+        "unicorn/no-process-exit": "off"
       }
     }
-  ],
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
-  }
+  ]
 }

@@ -17,4 +17,3 @@ output_path = "AGENTS.md"
 # Cursor AI
 [agents.cursor]
 enabled = true
-output_path = "AGENTS.md"
