@@ -16,18 +16,7 @@ Background Jobs library for MongoDB.
     - [Updating cron schedules](#updating-cron-schedules)
     - [Caveats](#caveats)
   - [Starting the worker](#starting-the-worker)
-  - [NestJS integration](#nestjs-integration)
-    - [NestJS caveats](#nestjs-caveats)
-- [Design decisions](#design-decisions)
-  - [Jobs Registry Design](#jobs-registry)
-  - [Worker Design](#worker-design)
-  - [Cron Design](#cron-design)
 - [Local development commands](#local-development-commands)
-
-```ts
-const provider = new tracer.TracerProvider();
-provider.register();
-```
 
 ## Install
 
