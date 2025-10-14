@@ -60,6 +60,25 @@ describe("Background Jobs Worker", () => {
     expect(jobRun?.meta).toMatchObject({ jobId: job?._id.toString() });
   });
 
+  it("will pick up the first unlocked job", async () => {
+    const job1 = await backgroundJobs.enqueue(
+      ExampleJob,
+      { myNumber: 111 },
+      { startAt: new Date(Date.now() - 5000) },
+    );
+    const job2 = await backgroundJobs.enqueue(ExampleJob, { myNumber: 222 });
+
+    await backgroundJobs.jobModel.updateOne({ _id: job1!._id }, { lockedAt: new Date() });
+
+    await backgroundJobs.start(["default"]);
+    await setTimeout(100);
+    await backgroundJobs.stop();
+
+    const jobRun = await JobRun.findOne();
+    expect(jobRun?.myNumber).toBe(222);
+    expect(jobRun?.meta).toMatchObject({ jobId: job2?._id.toString() });
+  });
+
   it("can run a scheduled job using string", async () => {
     const myNumber = 5514;
     const jobName = "ExampleJob";

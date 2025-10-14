@@ -106,7 +106,7 @@ export class JobsRepository {
         .findOneAndUpdate(
           {
             queue: { $in: queues },
-            lockedAt: undefined,
+            lockedAt: null,
             nextRunAt: { $lte: new Date() },
           },
           {
@@ -129,7 +129,7 @@ export class JobsRepository {
         .findOne(
           {
             queue,
-            lockedAt: undefined,
+            lockedAt: null,
           },
           {},
           {
@@ -152,7 +152,7 @@ export class JobsRepository {
   public async unlockFirstExpiredJob(lockedAtThreshold: Date) {
     const expiredJob = await this.jobModel.findOneAndUpdate(
       {
-        failedAt: undefined,
+        failedAt: null,
         lockedAt: { $lt: lockedAtThreshold },
       },
       {
@@ -185,7 +185,7 @@ export class JobsRepository {
       scheduleName,
       attemptsCount: 0,
       nextRunAt: { $gt: new Date() },
-      lockedAt: undefined,
+      lockedAt: null,
     });
   }
 
