@@ -13,7 +13,7 @@
       "path": "./tsconfig.lint.json"
     },	
     {	
-      "path": "./tsconfig.spec.json"	
+      "path": "./tsconfig.spec.json"
     }
   ]
 }
