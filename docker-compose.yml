@@ -7,9 +7,11 @@ services:
     volumes:
       - cbh-mongo:/data/db
     healthcheck:
-      test: test $$(mongosh --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok || rs.status().ok" --quiet) -eq 1
+      test: mongosh --quiet --eval "rs.status().ok" || mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok"
       interval: 10s
       start_period: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   cbh-mongo:

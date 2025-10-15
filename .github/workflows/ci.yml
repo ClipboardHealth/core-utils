@@ -43,7 +43,7 @@ jobs:
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
 
-      - run: docker compose up -d
+      - run: docker compose up -d --wait --wait-timeout 120
       - run: npm run ci:install
       - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
