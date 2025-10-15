@@ -3,22 +3,18 @@ import {
   type TriggerIdempotencyKey,
   type TriggerIdempotencyKeyParams,
 } from "../triggerIdempotencyKey";
-import { triggerIdempotencyKeyParamsToHash } from "./triggerIdempotencyKeyParamsToHash";
 
 export function parseTriggerIdempotencyKey(params: {
-  idempotencyKey: TriggerIdempotencyKey | string;
-  workplaceId?: string | undefined;
-}): string {
-  const { idempotencyKey, workplaceId } = params;
-
+  idempotencyKey: TriggerIdempotencyKey;
+}): TriggerIdempotencyKeyParams | false {
   try {
-    const parsed = JSON.parse(idempotencyKey) as Partial<TriggerIdempotencyKeyParams>;
+    const parsed = JSON.parse(params.idempotencyKey) as unknown;
     if (isTriggerIdempotencyKeyParams(parsed)) {
-      return triggerIdempotencyKeyParamsToHash({ ...parsed, workplaceId });
+      return parsed;
     }
   } catch {
-    // Not a branded key; fall through
+    // Invalid; fall through
   }
 
-  return idempotencyKey;
+  return false;
 }

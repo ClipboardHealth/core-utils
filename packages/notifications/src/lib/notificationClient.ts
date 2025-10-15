@@ -16,6 +16,8 @@ import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKe
 import { redact } from "./internal/redact";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
+import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
+import { type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
@@ -156,16 +158,17 @@ export class NotificationClient {
         }
 
         try {
-          const { body, idempotencyKey, key, keysToRedact = [], workflowKey } = validated.value;
+          const { body, idempotencyKeyParams, keysToRedact = [], workflowKey } = validated.value;
           const { workplaceId } = body;
           const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
-          const response = await this.provider.workflows.trigger(
-            workflowKey ?? /* istanbul ignore next */ key,
-            triggerBody,
-            { idempotencyKey: parseTriggerIdempotencyKey({ idempotencyKey, workplaceId }) },
-          );
+          const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
+            idempotencyKey: triggerIdempotencyKeyParamsToHash({
+              ...idempotencyKeyParams,
+              workplaceId,
+            }),
+          });
 
           const id = response.workflow_run_id;
           this.logTriggerResponse({ span, response, id, logParams });
@@ -347,8 +350,8 @@ export class NotificationClient {
 
   private validateTriggerRequest(
     params: TriggerRequest & { span: Span | undefined; logParams: LogParams },
-  ): ServiceResult<TriggerRequest> {
-    const { body, expiresAt, span, logParams } = params;
+  ): ServiceResult<TriggerRequest & { idempotencyKeyParams: TriggerIdempotencyKeyParams }> {
+    const { body, expiresAt, idempotencyKey, span, logParams } = params;
 
     if (body.recipients.length <= 0) {
       return this.createAndLogError({
@@ -374,6 +377,18 @@ export class NotificationClient {
       });
     }
 
+    const idempotencyKeyParams = parseTriggerIdempotencyKey({ idempotencyKey });
+    if (idempotencyKeyParams === false) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.invalidIdempotencyKey,
+          message: `Invalid idempotency key: ${idempotencyKey}`,
+        },
+        span,
+        logParams,
+      });
+    }
+
     const now = new Date();
     if (expiresAt instanceof Date && now > expiresAt) {
       return this.createAndLogError({
@@ -387,7 +402,7 @@ export class NotificationClient {
       });
     }
 
-    return success(params);
+    return success({ ...params, idempotencyKeyParams });
   }
 
   private async getExistingTokens(params: {
