@@ -98,7 +98,6 @@ Start processing jobs from the queue:
 <embedex source="packages/mongo-jobs/examples/quickstart/startWorker.ts">
 
 ```ts
-
 import { backgroundJobs } from "./jobsRegistry";
 
 await backgroundJobs.start(["emails"], {
