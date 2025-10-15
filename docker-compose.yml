@@ -1,0 +1,17 @@
+services:
+  test-mongo:
+    image: mongo:8.0
+    command: --replSet "rs0"
+    ports:
+      - 127.0.0.1:27017:27017
+    volumes:
+      - cbh-mongo:/data/db
+    healthcheck:
+      test: mongosh --quiet --eval "rs.status().ok" || mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok"
+      interval: 10s
+      start_period: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  cbh-mongo:

@@ -42,10 +42,13 @@ jobs:
       - uses: ./.github/actions/setup-node
         with:
           node-version: ${{ needs.initialize.outputs.node-version }}
+
+      - run: docker compose up -d --wait --wait-timeout 120
       - run: npm run ci:install
       - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: npx nx affected --configuration ci --parallel 3 --targets build,lint,test
+      - run: docker compose down --volumes
 
   main:
     if: github.ref == 'refs/heads/main'
