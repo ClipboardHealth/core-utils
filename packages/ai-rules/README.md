@@ -1,6 +1,6 @@
 # @clipboard-health/ai-rules
 
-Pre-built AI agent rules for consistent coding standards across your projects. Dead simple installation with just a copy command.
+Pre-built AI agent rules for consistent coding standards.
 
 ## Table of contents
 
@@ -56,7 +56,7 @@ npm install --save-dev @clipboard-health/ai-rules
 4. Commit the generated files:
 
    ```bash
-   git add
+   git add AGENTS.md CLAUDE.md
    git commit -m "feat: add AI coding rules"
    ```
 
@@ -77,7 +77,7 @@ npm install
 git diff AGENTS.md CLAUDE.md
 
 # Commit the updates
-git add
+git add AGENTS.md CLAUDE.md
 git commit -m "chore: update AI coding rules"
 ```
 

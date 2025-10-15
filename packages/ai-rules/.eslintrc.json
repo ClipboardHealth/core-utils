@@ -5,16 +5,6 @@
     "project": "tsconfig.lint.json",
     "tsconfigRootDir": "packages/ai-rules"
   },
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "rules": {
-        "n/no-process-exit": "off",
-        "no-console": "off",
-        "security/detect-non-literal-fs-filename": "off"
-      }
-    }
-  ],
   "settings": {
     "react": {
       "version": "detect"

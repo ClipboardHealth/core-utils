@@ -1,3 +1,5 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
+/* eslint-disable no-console */
 import { execSync } from "node:child_process";
 import { constants } from "node:fs";
 import { access, copyFile, cp, mkdir, mkdtemp, readdir, rm, stat } from "node:fs/promises";
@@ -150,3 +152,6 @@ async function buildAllProfiles() {
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
 void buildAllProfiles();
+
+/* eslint-enable security/detect-non-literal-fs-filename */
+/* eslint-enable no-console */
