@@ -207,8 +207,8 @@ backgroundJobs.enqueue(
   { data },
   {
     unique: {
-      enqueuedKey: "my-job-${shiftId}-enqueued",
-      runningKey: "my-job-${shiftId}-running"
+      enqueuedKey: `my-job-${shiftId}-enqueued`,
+      runningKey: `my-job-${shiftId}-running`
     }
   }
 )
