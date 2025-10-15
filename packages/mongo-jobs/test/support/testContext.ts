@@ -1,8 +1,8 @@
 import { setTimeout } from "node:timers/promises";
 
-import { BackgroundJobsService, type ConstructorOptions } from "@clipboard-health/mongo-jobs";
 import mongoose from "mongoose";
 
+import { BackgroundJobsService, type ConstructorOptions } from "../../src";
 import { defaultConnectToMongo } from "./connectToMongo";
 import { dropDatabase } from "./dropDatabase";
 import { getJestWorkerUri } from "./getJestWorkerUri";

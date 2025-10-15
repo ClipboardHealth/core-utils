@@ -1,7 +1,7 @@
-import { type BackgroundJobsService } from "@clipboard-health/mongo-jobs";
-import { drainHandlers, drainQueues } from "@clipboard-health/mongo-jobs/src/lib/testing";
 import { Types } from "mongoose";
 
+import { type BackgroundJobsService } from "../src";
+import { drainHandlers, drainQueues } from "../src/lib/testing";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
 import { EnqueueAnotherJob } from "./support/enqueueAnotherJob";
 import { ExampleJob } from "./support/exampleJob";

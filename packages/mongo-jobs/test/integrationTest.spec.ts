@@ -1,7 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { BackgroundJobsService, type BackgroundJobType } from "@clipboard-health/mongo-jobs";
-
+import { BackgroundJobsService, type BackgroundJobType } from "../src";
 import { createMongoConnection, createMongoSession } from "./support/connectToMongo";
 import { dropDatabase } from "./support/dropDatabase";
 import { EmptyExampleJob } from "./support/emptyExampleJob";

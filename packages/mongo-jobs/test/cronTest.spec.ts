@@ -1,5 +1,4 @@
-import type { BackgroundJobsService } from "@clipboard-health/mongo-jobs";
-
+import type { BackgroundJobsService } from "../src";
 import { Semaphore } from "./support/semaphore";
 import { SemaphoreJob } from "./support/semaphoreJob";
 import { createTestContext, type TestContext } from "./support/testContext";

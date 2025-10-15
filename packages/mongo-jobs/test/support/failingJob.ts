@@ -1,4 +1,4 @@
-import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
+import type { HandlerInterface } from "../../src";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface JobData {}

@@ -1,7 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
-
+import type { HandlerInterface } from "../../src";
 import { JobRun } from "./jobRun";
 
 interface JobData {
