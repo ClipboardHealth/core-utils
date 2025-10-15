@@ -21,6 +21,7 @@ describe("BackgroundJobMetrics", () => {
   });
 
   afterEach(async () => {
+    await backgroundJobs.stop();
     await testContext.tearDown();
   });
 
