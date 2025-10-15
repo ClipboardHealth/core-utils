@@ -24,7 +24,7 @@
     "jsonc-eslint-parser": "2.4.1",
     "knip": "5.64.2",
     "lint-staged": "16.2.3",
-    "markdownlint-cli2": "^0.16.0",
+    "markdownlint-cli2": "0.16.0",
     "nx": "21.5.3",
     "prettier": "3.6.2",
     "syncpack": "13.0.4",

@@ -3,19 +3,20 @@
   "description": "Pre-built AI agent rules for consistent coding standards.",
   "version": "0.2.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
-  "files": [
-    "dist/**/*"
-  ],
+  "devDependencies": {
+    "@intellectronica/ruler": "0.3.10"
+  },
   "keywords": [
     "ai",
+    "best-practices",
+    "claude",
     "coding-assistant",
+    "coding-standards",
     "copilot",
     "cursor",
-    "claude",
-    "coding-standards",
-    "typescript",
+    "nestjs",
     "react",
-    "nestjs"
+    "typescript"
   ],
   "license": "MIT",
   "publishConfig": {
@@ -27,12 +28,7 @@
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "scripts": {
-    "apply": "ruler apply",
-    "build": "tsx scripts/build.ts",
     "format": "prettier --write '.ruler/**/*.md'",
     "lint:md": "markdownlint-cli2 '.ruler/**/*.md' 'README.md'"
-  },
-  "devDependencies": {
-    "@intellectronica/ruler": "0.3.10"
   }
 }

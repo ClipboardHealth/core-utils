@@ -7,10 +7,17 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/scripts/build.ts",
+        "{projectRoot}/.ruler/**/*",
+        "{projectRoot}/package.json"
+      ],
       "options": {
         "command": "tsx scripts/build.ts",
-        "cwd": "{projectRoot}"
-      }
+        "cwd": "{projectRoot}",
+        "outputPath": "dist/packages/ai-rules"
+      },
+      "outputs": ["{options.outputPath}"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -19,13 +26,6 @@
         "maxWarnings": 0
       },
       "outputs": ["{options.outputFile}"]
-    },
-    "lint:md": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "markdownlint-cli2 '.ruler/**/*.md' 'README.md'",
-        "cwd": "{projectRoot}"
-      }
     },
     "test": {
       "executor": "@nx/jest:jest",

@@ -4,14 +4,16 @@ Pre-built AI agent rules for consistent coding standards across your projects. D
 
 ## Table of contents
 
-- [Install](#install)
-- [Usage](#usage)
-  - [Quick Start](#quick-start)
-  - [Available Profiles](#available-profiles)
-  - [What Gets Copied](#what-gets-copied)
-- [How It Works](#how-it-works)
-- [Update Rules](#update-rules)
-- [Local Development](#local-development)
+- [@clipboard-health/ai-rules](#clipboard-healthai-rules)
+  - [Table of contents](#table-of-contents)
+  - [Install](#install)
+  - [Usage](#usage)
+    - [Quick Start](#quick-start)
+    - [Available Profiles](#available-profiles)
+    - [What Gets Copied](#what-gets-copied)
+  - [How It Works](#how-it-works)
+  - [Update Rules](#update-rules)
+  - [Local Development](#local-development)
 
 ## Install
 
@@ -78,7 +80,7 @@ npm install  # Runs postinstall automatically
 **Commit the generated files:**
 
 ```bash
-git add AGENTS.md CLAUDE.md .cursor/
+git add AGENTS.md CLAUDE.md
 git commit -m "feat: add AI coding rules"
 ```
 
@@ -102,9 +104,8 @@ git commit -m "feat: add AI coding rules"
 Each profile copies these files to your project root:
 
 ```text
-AGENTS.md         # GitHub Copilot, OpenAI Codex
+AGENTS.md         # Cursor, GitHub Copilot, OpenAI Codex
 CLAUDE.md         # Claude Code
-.cursor/          # Cursor AI
 ```
 
 Your AI assistants will automatically use these files.
@@ -127,10 +128,10 @@ npm update @clipboard-health/ai-rules
 
 # The postinstall script automatically copies the latest files
 # Review the changes
-git diff AGENTS.md CLAUDE.md .cursor/
+git diff AGENTS.md CLAUDE.md
 
 # Commit the updates
-git add AGENTS.md CLAUDE.md .cursor/
+git add AGENTS.md CLAUDE.md
 git commit -m "chore: update AI coding rules"
 ```
 
@@ -148,10 +149,10 @@ This generates pre-built files in `dist/` for each profile:
 
 ```text
 dist/
-  ├── frontend/    (AGENTS.md, CLAUDE.md, .cursor/)
-  ├── backend/     (AGENTS.md, CLAUDE.md, .cursor/)
-  ├── fullstack/   (AGENTS.md, CLAUDE.md, .cursor/)
-  └── common/      (AGENTS.md, CLAUDE.md, .cursor/)
+  ├── frontend/    (AGENTS.md, CLAUDE.md)
+  ├── backend/     (AGENTS.md, CLAUDE.md)
+  ├── fullstack/   (AGENTS.md, CLAUDE.md)
+  └── common/      (AGENTS.md, CLAUDE.md)
 ```
 
 **Format markdown:**
