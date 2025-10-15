@@ -21,6 +21,93 @@
 npm install @clipboard-health/mongo-jobs
 ```
 
+## Quick Start
+
+### 1. Define a job handler
+
+Job handlers implement the `HandlerInterface` and define how your jobs are processed:
+
+<embedex source="packages/mongo-jobs/examples/quickstart/welcomeEmailJob.ts">
+
+```ts
+import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
+
+export interface WelcomeEmailData {
+  userId: string;
+  email: string;
+}
+
+export class WelcomeEmailJob implements HandlerInterface<WelcomeEmailData> {
+  public name = "WelcomeEmailJob";
+  public maxAttempts = 3;
+
+  async perform({ userId, email }: WelcomeEmailData) {
+    await this.sendEmail(email, `Welcome, user ${userId}!`);
+  }
+
+  private async sendEmail(_to: string, _message: string) {
+    // Email sending logic
+  }
+}
+```
+
+</embedex>
+
+### 2. Create a service and register handlers
+
+Create a `BackgroundJobsService` instance and register your handlers to groups:
+
+<embedex source="packages/mongo-jobs/examples/quickstart/jobsRegistry.ts">
+
+```ts
+import { BackgroundJobsService } from "@clipboard-health/mongo-jobs";
+
+import { WelcomeEmailJob } from "./welcomeEmailJob";
+
+const backgroundJobs = new BackgroundJobsService();
+
+backgroundJobs.register(WelcomeEmailJob, "emails");
+
+export { backgroundJobs };
+```
+
+</embedex>
+
+### 3. Enqueue jobs
+
+Add jobs to the queue to be processed:
+
+<embedex source="packages/mongo-jobs/examples/quickstart/enqueueJob.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
+import { WelcomeEmailJob } from "./welcomeEmailJob";
+
+await backgroundJobs.enqueue(WelcomeEmailJob, {
+  userId: "123",
+  email: "user@example.com",
+});
+```
+
+</embedex>
+
+### 4. Start the worker
+
+Start processing jobs from the queue:
+
+<embedex source="packages/mongo-jobs/examples/quickstart/startWorker.ts">
+
+```ts
+
+import { backgroundJobs } from "./jobsRegistry";
+
+await backgroundJobs.start(["emails"], {
+  maxConcurrency: 10,
+});
+```
+
+</embedex>
+
 ## License
 
 MIT
