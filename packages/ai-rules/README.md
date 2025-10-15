@@ -2,13 +2,6 @@
 
 Pre-built AI agent rules for consistent coding standards across your projects. Dead simple installation with just a copy command.
 
-**✨ Why this library:**
-
-- 📦 **Pre-built files** - No CLI, no complexity, just copy files
-- 🎯 **Multiple AI assistants** - Works with Claude, Cursor, GitHub Copilot, and more
-- 🔄 **Auto-sync on updates** - Add to `postinstall` and rules update automatically
-- 🚀 **Zero configuration** - Pick a profile, copy, commit, done
-
 ## Table of contents
 
 - [Install](#install)
@@ -182,13 +175,3 @@ npm run apply
 See [`package.json`](./package.json) `scripts` for a complete list of commands.
 
 ---
-
-## Benefits
-
-- ✅ **Dead simple** - Just a `cp` command, nothing to break
-- ✅ **No CLI overhead** - No 400+ line CLI, no dependencies to maintain
-- ✅ **Automatic updates** - Postinstall keeps rules in sync
-- ✅ **Multi-agent support** - Works with Claude, Cursor, GitHub Copilot, and more
-- ✅ **Version controlled** - Commit the files, track changes over time
-- ✅ **Golden path** - Pick from 4 pre-built profiles, no customization needed
-- ✅ **Batch updates** - Use Sourcegraph Batch Changes to update all repos at once
