@@ -20,3 +20,7 @@
 ```bash
 npm install @clipboard-health/mongo-jobs
 ```
+
+## License
+
+MIT
