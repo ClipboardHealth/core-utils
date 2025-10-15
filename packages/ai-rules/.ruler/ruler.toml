@@ -1,16 +1,15 @@
 # See https://ai.intellectronica.net/ruler for documentation.
 
-# Active agents when --agents is not used
-default_agents = ["claude", "codex", "cursor"]
-
 [gitignore]
-# Enable/disable automatic .gitignore updates
+# Disable automatic .gitignore updates - consumers manage their own
 enabled = false
 
+# Claude Code
 [agents.claude]
 enabled = true
 output_path = "CLAUDE.md"
 
+# GitHub Copilot, OpenAI Codex, and other AGENTS.md-compatible assistants
 [agents.codex]
 enabled = true
 output_path = "AGENTS.md"

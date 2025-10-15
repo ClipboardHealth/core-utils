@@ -7,15 +7,19 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "{projectRoot}/scripts/**/*",
+        "{projectRoot}/.ruler/**/*",
+        "{projectRoot}/README.md",
+        "{projectRoot}/package.json"
+      ],
       "options": {
-        "commands": [
-          "mkdir -p dist/packages/ai-rules",
-          "cp packages/ai-rules/*.md dist/packages/ai-rules/",
-          "cp packages/ai-rules/package.json dist/packages/ai-rules/"
-        ],
-        "parallel": false
+        "command": "tsx scripts/build.ts",
+        "cwd": "{projectRoot}",
+        "outputPath": "dist/packages/ai-rules"
       },
-      "outputs": ["{workspaceRoot}/dist/packages/ai-rules"]
+      "outputs": ["{options.outputPath}"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",
