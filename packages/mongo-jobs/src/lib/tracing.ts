@@ -90,7 +90,7 @@ function producerAttributes(job: BackgroundJobType<unknown>): Record<string, str
     "messaging.operation": Operation.PUBLISH,
     "messaging.destination": job.handlerName,
     "messaging.destination_kind": MessagingDestinationKind.QUEUE,
-    "messaging.mongo-bg-jobs.queue": job.queue,
+    "messaging.mongo-bg-jobs.queue": job.queue ?? "unknown",
     "resource.name": resourceName(Operation.PUBLISH, job.handlerName),
   };
 }
@@ -104,7 +104,7 @@ function consumerAttributes(job: BackgroundJobType<unknown>): Record<string, str
     "messaging.message_id": job._id.toString(),
     "messaging.destination": job.handlerName,
     "messaging.destination_kind": MessagingDestinationKind.QUEUE,
-    "messaging.mongo-bg-jobs.queue": job.queue,
+    "messaging.mongo-bg-jobs.queue": job.queue ?? "unknown",
     "messaging.mongo-bg-jobs.attemptsCount": job.attemptsCount.toString(),
     "messaging.mongo-bg-jobs.createdAt": job.createdAt.toISOString(),
     "messaging.mongo-bg-jobs.updatedAt": job.updatedAt.toISOString(),

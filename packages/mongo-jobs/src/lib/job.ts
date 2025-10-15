@@ -16,7 +16,7 @@ export interface BackgroundJobType<T> {
   createdAt: Date;
   updatedAt: Date;
 
-  queue: string;
+  queue: string | undefined;
   handlerName: string;
   data: T & TraceHeaders;
 

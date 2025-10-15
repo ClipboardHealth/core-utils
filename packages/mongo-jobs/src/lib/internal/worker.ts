@@ -354,7 +354,10 @@ export class Worker {
         return;
       }
 
-      this.metrics.increment(job.queue, "expired");
+      if (job.queue) {
+        this.metrics.increment(job.queue, "expired");
+      }
+
       this.logger?.error("Background job expired", this.logContext(job));
     }
   }
@@ -364,7 +367,9 @@ export class Worker {
       return;
     }
 
-    this.metrics.timing(job.queue, "delay", job.nextRunAt);
+    if (job.queue) {
+      this.metrics.timing(job.queue, "delay", job.nextRunAt);
+    }
   }
 
   private logContext(job: BackgroundJobType<unknown>) {
@@ -423,7 +428,9 @@ export class Worker {
     const exponentialBackoffTime = 2 ** attemptsCount * MILLIS_IN_SECOND;
     const nextRunAt = fromNow(exponentialBackoffTime);
 
-    this.metrics.increment(job.queue, "retry");
+    if (job.queue) {
+      this.metrics.increment(job.queue, "retry");
+    }
 
     await this.jobsRepo.updateOne(job._id, {
       $set: {
