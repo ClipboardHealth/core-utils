@@ -114,23 +114,21 @@ In order to use background jobs, first we need to keep a registry of jobs/job ha
 import { BackgroundJobsService } from "@clipboard-health/mongo-jobs";
 import { ShiftStartReminderJob } from "./jobs/shift-start-reminder";
 
-const backgroundJobs = new BackgroundJobsService(
-    {
-        // You can pass a db connection if you are app is not using mongoose's default connection
-        dbConnection: connection
+const backgroundJobs = new BackgroundJobsService({
+  // You can pass a db connection if you are app is not using mongoose's default connection
+  dbConnection: connection,
 
-        // You can pass a logger to be used by background jobs
-        logger: myLogger
+  // You can pass a logger to be used by background jobs
+  logger: myLogger,
 
-        // StatsD-like metrics reporter
-        metricsReporter: myMetricsReporter
+  // StatsD-like metrics reporter
+  metricsReporter: myMetricsReporter,
 
-        // For test scenarios you may want to allow handler overriding if your
-        // test setup re-register handlers on the same instance of the service.
-        // Default: false.
-        allowHandlerOverride: true
-    }
-);
+  // For test scenarios you may want to allow handler overriding if your
+  // test setup re-register handlers on the same instance of the service.
+  // Default: false.
+  allowHandlerOverride: true,
+});
 // We are registering ShiftStartReminderJob. It will be run in "notifications" group
 backgroundJobs.register(ShiftStartReminderJob, "notifications");
 export { backgroundJobs };
