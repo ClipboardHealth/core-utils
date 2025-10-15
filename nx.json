@@ -68,10 +68,7 @@
       "conventionalCommits": true,
       "fallbackCurrentVersionResolver": "disk",
       "updateDependents": "auto",
-      "preserveLocalDependencyProtocols": false,
-      "versionActionsOptions": {
-        "skipLockFileUpdate": true
-      }
+      "preserveLocalDependencyProtocols": false
     }
   },
   "targetDefaults": {
