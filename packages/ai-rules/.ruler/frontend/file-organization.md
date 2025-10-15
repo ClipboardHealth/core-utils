@@ -124,8 +124,7 @@ import { type FeatureData } from "./types";
 import { APP_PATHS } from "@/constants/paths";
 
 export const FEATURE_BASE_PATH = "feature";
-export const FEATURE_FULL_PATH = `${RootPaths.APP_V2_HOME}/${FEATURE_BASE_PATH}`;
-
+export const FEATURE_FULL_PATH = `${APP_PATHS.APP_V2_HOME}/${FEATURE_BASE_PATH}`;
 export const FEATURE_PATHS = {
   ROOT: FEATURE_FULL_PATH,
   DETAILS: `${FEATURE_FULL_PATH}/:id`,
