@@ -423,13 +423,21 @@ const str3 = formatValue(new Date()); // string
 Use for type-safe string patterns:
 
 ```typescript
-// ✅ Good - Event names
-type EventName = `on${Capitalize<string>}`;
+// ✅ Good - Event handler props with enforced naming
+type EventHandlers<T extends string> = {
+  [K in T as `on${Capitalize<K>}`]: () => void;
+};
 
-interface Props {
-  onClick: () => void; // Valid
-  onHover: () => void; // Valid
-  // click: () => void; // Error: doesn't match pattern
+type Props = EventHandlers<"click" | "hover" | "submit">;
+// Results in: { onClick: () => void; onHover: () => void; onSubmit: () => void; }
+
+// ✅ Good - Validate event handler keys
+type ValidateEventKey<K extends string> = K extends `on${Capitalize<string>}` ? K : never;
+
+interface ComponentProps {
+  onClick: () => void; // ✅ Valid
+  onHover: () => void; // ✅ Valid
+  // click: () => void; // ❌ Does not satisfy ValidateEventKey
 }
 
 // ✅ Good - Route paths

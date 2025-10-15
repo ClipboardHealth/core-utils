@@ -24,7 +24,7 @@
 - `makeStyles()` from MUI (deprecated)
 - CSS/SCSS/SASS files
 - Direct MUI icons from `@mui/icons-material`
-- Direct MUI components without wrappers (see list below)
+- Direct MUI components without wrappers (except layout primitives; see list below)
 - Inline styles via `style` prop (use `sx` instead)
 - String paths for theme tokens (not type-safe)
 
@@ -64,7 +64,7 @@ import { Button, IconButton } from "@mui/material";
 
 // ✅ Do
 import { Button } from "@/components/Button";
-import { IconButton } from "@clipboard-health/ui-components/IconButton";
+import { IconButton } from "@clipboard-health/ui-components";
 ```
 
 ### Component Wrapper List (Example)
@@ -89,10 +89,10 @@ Check your project's ESLint configuration for the full list.
 import SearchIcon from '@mui/icons-material/Search';
 
 // ✅ Use project's icon system
-import { Icon } from '@clipboard-health/ui-components';
+import { CbhIcon } from '@clipboard-health/ui-components';
 
-<Icon type="search" size="large" />
-<Icon type="search-colored" size="medium" />
+<CbhIcon type="search" size="large" />
+<CbhIcon type="search-colored" size="medium" />
 ```
 
 ### Icon Variants
@@ -200,18 +200,18 @@ We use a strict index-based spacing system:
 
 ```typescript
 <Box
-  sx={{
+  sx={(theme) => ({
     "&:hover": {
-      backgroundColor: "primary.dark",
+      backgroundColor: theme.palette.primary.dark,
       cursor: "pointer",
     },
     "&:disabled": {
       opacity: 0.5,
     },
     "&.active": {
-      borderColor: "primary.main",
+      borderColor: theme.palette.primary.main,
     },
-  }}
+  })}
 />
 ```
 
@@ -321,8 +321,8 @@ theme.palette.text.primary;
 theme.palette.background.default;
 
 // Spacing
-theme.spacing(1); // Default: 8px
-theme.spacing(2); // Default: 16px
+theme.spacing(1); // Project-defined (see spacing system above)
+theme.spacing(2); // Project-defined (see spacing system above)
 
 // Typography
 theme.typography.h1;
@@ -452,10 +452,12 @@ import { Button } from "@/components/Button";
 
 ```typescript
 <Box
-  sx={{
-    backgroundColor: isActive ? "primary.main" : "grey.200",
+  sx={(theme) => ({
+    backgroundColor: isActive
+      ? theme.palette.primary.main
+      : theme.palette.grey[200],
     padding: 2,
-  }}
+  })}
 >
   {content}
 </Box>
