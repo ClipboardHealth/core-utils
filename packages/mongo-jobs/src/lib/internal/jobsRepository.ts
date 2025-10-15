@@ -245,8 +245,11 @@ export class JobsRepository {
   }
 
   public async fetchQueuesWithJobs(pertinentQueues: string[]): Promise<string[]> {
-    const queuesFilter = pertinentQueues ? { queue: { $in: pertinentQueues } } : {};
+    if (pertinentQueues.length === 0) {
+      return [];
+    }
 
+    const queuesFilter = { queue: { $in: pertinentQueues } };
     return await this.jobModel.distinct("queue", queuesFilter);
   }
 }
