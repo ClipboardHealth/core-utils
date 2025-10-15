@@ -120,7 +120,7 @@ export class Metrics {
     return {
       queue,
       nextRunAt: { $gt: new Date() },
-      lockedAt: undefined,
+      lockedAt: null,
     };
   }
 
@@ -128,14 +128,14 @@ export class Metrics {
     return {
       queue,
       nextRunAt: { $lte: new Date() },
-      lockedAt: undefined,
+      lockedAt: null,
     };
   }
 
   private failedJobsQuery(queue: string) {
     return {
       originalQueue: queue,
-      failedAt: { $ne: undefined },
+      failedAt: { $ne: null },
     };
   }
 }
