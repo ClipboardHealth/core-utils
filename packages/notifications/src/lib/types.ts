@@ -145,25 +145,11 @@ export interface TriggerBody {
  * Request parameters for triggering a notification.
  */
 export interface TriggerRequest {
-  /** Workflow key.
-   *
-   * @deprecated Use `workflowKey` instead.
-   */
-  key: string;
-
-  /** Workflow key. */
-  workflowKey?: string;
+  /** Attempt number for tracing. */
+  attempt: number;
 
   /** Trigger payload. */
   body: TriggerBody;
-
-  /**
-   * @see {@link TriggerIdempotencyKey}
-   */
-  idempotencyKey: string | TriggerIdempotencyKey;
-
-  /** Array of data keys to redact in logs for privacy. */
-  keysToRedact?: string[];
 
   /**
    * `expiresAt` prevents stale notifications across retries by dropping the request when `now >
@@ -176,8 +162,16 @@ export interface TriggerRequest {
    */
   expiresAt: Date;
 
-  /** Attempt number for tracing. */
-  attempt: number;
+  /**
+   * @see {@link TriggerIdempotencyKey}
+   */
+  idempotencyKey: TriggerIdempotencyKey;
+
+  /** Array of data keys to redact in logs for privacy. */
+  keysToRedact?: string[];
+
+  /** Workflow key. */
+  workflowKey: string;
 }
 
 /**

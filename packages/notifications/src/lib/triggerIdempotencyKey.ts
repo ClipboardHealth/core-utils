@@ -45,7 +45,7 @@ export function isTriggerIdempotencyKeyParams(
     return false;
   }
 
-  const params = value as Partial<TriggerIdempotencyKeyParams>;
+  const params = value as TriggerIdempotencyKeyParams;
   return (
     "chunk" in params &&
     "workflowKey" in params &&
