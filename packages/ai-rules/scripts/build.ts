@@ -67,7 +67,7 @@ async function buildProfile(params: {
 
     // Run Ruler to generate files
     console.log("   ⚙️  Running Ruler...");
-    execSync("npx --yes @intellectronica/ruler@latest apply", {
+    execSync("npx @intellectronica/ruler apply", {
       cwd: PATHS.temporary,
       stdio: verbose ? "inherit" : "pipe",
       timeout: 60_000,

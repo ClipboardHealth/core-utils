@@ -9,11 +9,8 @@ Pre-built AI agent rules for consistent coding standards across your projects. D
   - [Install](#install)
   - [Usage](#usage)
     - [Quick Start](#quick-start)
-    - [Available Profiles](#available-profiles)
-    - [What Gets Copied](#what-gets-copied)
-  - [How It Works](#how-it-works)
-  - [Update Rules](#update-rules)
-  - [Local Development](#local-development)
+    - [Updating Rules](#updating-rules)
+  - [Local development commands](#local-development-commands)
 
 ## Install
 
@@ -25,100 +22,47 @@ npm install --save-dev @clipboard-health/ai-rules
 
 ### Quick Start
 
-Choose the profile that matches your project type and add this to your `package.json`:
+1. Choose the profile that matches your project type:
 
-**Frontend project (React):**
+   | Profile     | Includes                    | Use For                                |
+   | ----------- | --------------------------- | -------------------------------------- |
+   | `common`    | common                      | TypeScript libraries, generic projects |
+   | `frontend`  | common + frontend           | React apps, web apps                   |
+   | `backend`   | common + backend            | NestJS services, APIs                  |
+   | `fullstack` | common + frontend + backend | Monorepos, fullstack apps              |
 
-```json
-{
-  "scripts": {
-    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/frontend/. ./",
-    "postinstall": "npm run sync-ai-rules"
-  }
-}
-```
+   **Rule categories:**
+   - **common**: TypeScript, testing, code style, error handling, key conventions
+   - **frontend**: React patterns, hooks, performance, styling, data fetching, custom hooks
+   - **backend**: NestJS APIs, three-tier architecture, controllers, services
 
-**Backend project (NestJS):**
+2. Add it to your `package.json`:
 
-```json
-{
-  "scripts": {
-    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/backend/. ./",
-    "postinstall": "npm run sync-ai-rules"
-  }
-}
-```
+   ```json
+   {
+     "scripts": {
+       "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/[CHOSEN_PROFILE_NAME]/. ./",
+       "postinstall": "npm run sync-ai-rules"
+     }
+   }
+   ```
 
-**Fullstack project:**
+3. Run:
 
-```json
-{
-  "scripts": {
-    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/fullstack/. ./",
-    "postinstall": "npm run sync-ai-rules"
-  }
-}
-```
+   ```bash
+   npm install  # Runs postinstall automatically
+   ```
 
-**TypeScript library (common rules only):**
+4. Commit the generated files:
 
-```json
-{
-  "scripts": {
-    "sync-ai-rules": "cp -r ./node_modules/@clipboard-health/ai-rules/dist/common/. ./",
-    "postinstall": "npm run sync-ai-rules"
-  }
-}
-```
+   ```bash
+   git add
+   git commit -m "feat: add AI coding rules"
+   ```
 
-Then run:
+5. That's it! Your AI assistants will automatically use these files.
 
-```bash
-npm install  # Runs postinstall automatically
-```
-
-**Commit the generated files:**
-
-```bash
-git add AGENTS.md CLAUDE.md
-git commit -m "feat: add AI coding rules"
-```
-
-### Available Profiles
-
-| Profile     | Includes                    | Use For                                |
-| ----------- | --------------------------- | -------------------------------------- |
-| `frontend`  | common + frontend           | React apps, web apps                   |
-| `backend`   | common + backend            | NestJS services, APIs                  |
-| `fullstack` | common + frontend + backend | Monorepos, fullstack apps              |
-| `common`    | common only                 | TypeScript libraries, generic projects |
-
-**Rule categories:**
-
-- **common**: TypeScript, testing, code style, error handling, key conventions
-- **frontend**: React patterns, hooks, performance, styling, data fetching, custom hooks
-- **backend**: NestJS APIs, three-tier architecture, controllers, services
-
-### What Gets Copied
-
-Each profile copies these files to your project root:
-
-```text
-AGENTS.md         # Cursor, GitHub Copilot, OpenAI Codex
-CLAUDE.md         # Claude Code
-```
-
-Your AI assistants will automatically use these files.
-
-## How It Works
-
-1. **Install** the package as a dev dependency
-2. **Add `sync-ai-rules` script** to copy the profile you need
-3. **Add to `postinstall`** so it runs automatically on `npm install`
-4. **Commit the files** to your repo (they're generated, but should be committed)
-5. **Update anytime** - When you update the package version, `postinstall` re-syncs the latest rules
-
-## Update Rules
+### Updating Rules
 
 When we release new rules or improvements:
 
@@ -127,52 +71,16 @@ When we release new rules or improvements:
 npm update @clipboard-health/ai-rules
 
 # The postinstall script automatically copies the latest files
+npm install
+
 # Review the changes
 git diff AGENTS.md CLAUDE.md
 
 # Commit the updates
-git add AGENTS.md CLAUDE.md
+git add
 git commit -m "chore: update AI coding rules"
 ```
 
-## Local Development
+## Local development commands
 
-This package is part of the `core-utils` monorepo.
-
-**Build all profiles:**
-
-```bash
-npm run build
-```
-
-This generates pre-built files in `dist/` for each profile:
-
-```text
-dist/
-  ├── frontend/    (AGENTS.md, CLAUDE.md)
-  ├── backend/     (AGENTS.md, CLAUDE.md)
-  ├── fullstack/   (AGENTS.md, CLAUDE.md)
-  └── common/      (AGENTS.md, CLAUDE.md)
-```
-
-**Format markdown:**
-
-```bash
-npm run format
-```
-
-**Lint markdown:**
-
-```bash
-npm run lint:md
-```
-
-**Apply Ruler locally (for testing):**
-
-```bash
-npm run apply
-```
-
-See [`package.json`](./package.json) `scripts` for a complete list of commands.
-
----
+See [`package.json`](./package.json) `scripts` for a list of commands.

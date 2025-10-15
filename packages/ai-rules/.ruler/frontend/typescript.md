@@ -79,7 +79,7 @@ type UserOptions = { ... };
 // ❌ Bad
 interface IButton { ... }  // No I prefix
 type TResponse = { ... };   // No T prefix
-interface buttonprops { ... }  // Wrong case
+interface buttonProps { ... }  // Wrong case
 ```
 
 ### Boolean Properties
@@ -190,7 +190,7 @@ type DefinedString = NonNullable<string | null | undefined>; // string
 
 // ReturnType - Extract return type from function
 function getUser() { return { id: '1', name: 'John' }; }
-type User = ReturnType<typeof getUser>;
+type GetUserResult = ReturnType<typeof getUser>;
 
 // Parameters - Extract parameter types from function
 function updateUser(id: string, data: UserData) { ... }

@@ -427,7 +427,7 @@ export function ItemCard({ item }: { item: Item }) {
 
 ```typescript
 // ✅ Do - Expensive computation
-const sortedUsers = useMemo(() => users.sort((a, b) => a.name.localeCompare(b.name)), [users]);
+const sortedUsers = useMemo(() => [...users].sort((a, b) => a.name.localeCompare(b.name)), [users]);
 
 // ❌ Don't - Simple operations (premature optimization)
 const fullName = useMemo(() => `${firstName} ${lastName}`, [firstName, lastName]);

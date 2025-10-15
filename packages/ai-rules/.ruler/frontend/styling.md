@@ -64,7 +64,7 @@ import { Button, IconButton } from "@mui/material";
 
 // ✅ Do
 import { Button } from "@/components/Button";
-import { IconButton } from "@clipboard-health/ui-componentsButton";
+import { IconButton } from "@clipboard-health/ui-components/Button";
 ```
 
 ### Component Wrapper List (Example)
@@ -219,7 +219,7 @@ We use a strict index-based spacing system:
 
 ```typescript
 <Box
-  sx={{
+  sx={(theme) => ({
     "& .child-element": {
       color: "text.secondary",
     },
@@ -230,7 +230,7 @@ We use a strict index-based spacing system:
     "& .MuiTypography-root": {
       color: theme.palette.intent?.disabled.text,
     },
-  }}
+  })}
 />
 ```
 

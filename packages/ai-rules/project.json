@@ -8,8 +8,10 @@
     "build": {
       "executor": "nx:run-commands",
       "inputs": [
-        "{projectRoot}/scripts/build.ts",
+        "default",
+        "{projectRoot}/scripts/**/*",
         "{projectRoot}/.ruler/**/*",
+        "{projectRoot}/README.md",
         "{projectRoot}/package.json"
       ],
       "options": {

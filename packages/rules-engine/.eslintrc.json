@@ -1,6 +1,6 @@
 {
   "extends": ["../../.eslintrc.json"],
-  "ignorePatterns": ["!**/*", "*.json", "!**/package.json"],
+  "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
   "parserOptions": {
     "project": "tsconfig.lint.json",
     "tsconfigRootDir": "packages/rules-engine"
