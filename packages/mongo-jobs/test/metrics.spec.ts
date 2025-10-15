@@ -80,7 +80,7 @@ describe("BackgroundJobMetrics", () => {
     expect(metricsReporter.metricFor("FailingJob", "created")).toBe(0);
   });
 
-  it("reports a a retry", async () => {
+  it("reports a retry", async () => {
     await backgroundJobs.enqueue(FailingJob, { myNumber: 123 });
 
     void backgroundJobs.start(["default"]);
