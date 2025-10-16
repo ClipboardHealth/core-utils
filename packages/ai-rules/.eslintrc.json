@@ -7,7 +7,7 @@
   },
   "overrides": [
     {
-      "files": ["scripts/**/*.ts"],
+      "files": ["*.ts"],
       "rules": {
         "no-console": "off",
         "security/detect-non-literal-fs-filename": "off"
