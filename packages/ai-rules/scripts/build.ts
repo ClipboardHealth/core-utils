@@ -9,7 +9,7 @@ import { join, relative } from "node:path";
 import { toErrorMessage } from "@clipboard-health/util-ts";
 
 const PACKAGE_ROOT = join(__dirname, "..");
-const OUTPUT_DIRECTORY = join(PACKAGE_ROOT, "..", "..", "..", "dist", "packages", "ai-rules");
+const OUTPUT_DIRECTORY = join(PACKAGE_ROOT, "..", "..", "dist", "packages", "ai-rules");
 const PROFILES = {
   frontend: ["common", "frontend"] as const,
   backend: ["common", "backend"] as const,
