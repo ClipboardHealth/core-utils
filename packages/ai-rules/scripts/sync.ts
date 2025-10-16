@@ -9,7 +9,6 @@ import { toErrorMessage } from "./toErrorMessage";
 const PATHS = {
   projectRoot: join(__dirname, "../../.."),
   rules: join(__dirname, ".."),
-  rulerDir: join(__dirname, "..", ".ruler"),
 };
 
 function getProfileFromArguments(): ProfileName {
@@ -30,7 +29,7 @@ async function sync() {
     const profile = getProfileFromArguments();
 
     // Force copy files; rely on `git` if it overwrites files.
-    await cp(join(PATHS.rulerDir, profile), PATHS.projectRoot, { recursive: true, force: true });
+    await cp(join(PATHS.rules, profile), PATHS.projectRoot, { recursive: true, force: true });
     console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
