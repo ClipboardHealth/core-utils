@@ -1,20 +1,29 @@
-import { exec, type ExecOptions } from "node:child_process";
+import { execFile, type ExecFileOptions } from "node:child_process";
 import { promisify } from "node:util";
 
-const execAsync = promisify(exec);
+const execAsync = promisify(execFile);
 
-interface ExecAndLogParams extends ExecOptions {
+interface ExecAndLogParams extends ExecFileOptions {
   command: readonly string[];
-  timeout: number;
   verbose: boolean;
 }
 
 export async function execAndLog(params: ExecAndLogParams) {
-  const { command, timeout, verbose } = params;
+  const { command, verbose, ...rest } = params;
 
-  const result = await execAsync(command.join(" "), { timeout });
+  const [cmd, ...execArguments] = command;
+  if (!cmd) {
+    throw new Error("Executable is required");
+  }
+
+  const result = await execAsync(cmd, execArguments, { ...rest, encoding: "utf8" });
+
   if (verbose && result.stdout) {
     console.log(result.stdout.trim());
+  }
+
+  if (result.stderr) {
+    console.error(result.stderr.trim());
   }
 
   return result;
