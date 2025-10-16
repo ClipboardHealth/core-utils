@@ -7,7 +7,7 @@ import { type ProfileName, PROFILES } from "./constants";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {
-  projectRoot: join(__dirname, "../../.."),
+  projectRoot: join(__dirname, "../../../.."),
   rules: join(__dirname, ".."),
 };
 
