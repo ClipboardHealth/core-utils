@@ -5,6 +5,7 @@
     "**/generators/**/schema.d.ts",
     "**/webpack.*.js",
     "**/cbhResponse.ts",
+    "packages/ai-rules/scripts/sync.ts",
   ],
   "ignoreBinaries": [],
   "ignoreDependencies": [

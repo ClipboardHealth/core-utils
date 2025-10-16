@@ -3,9 +3,8 @@ import { copyFile, cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { toErrorMessage } from "@clipboard-health/util-ts";
-
 import { PATHS, type ProfileName } from "./constants";
+import { toErrorMessage } from "./toErrorMessage";
 
 const { packageRoot, outputDirectory } = PATHS;
 
