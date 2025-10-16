@@ -396,14 +396,14 @@ Projects often augment MUI's theme with custom properties:
 declare module "@mui/material/styles" {
   interface Theme {
     customSpacing: {
+      small: string;
       large: string;
-      xlarge: string;
     };
   }
   interface ThemeOptions {
     customSpacing?: {
+      small?: string;
       large?: string;
-      xlarge?: string;
     };
   }
 }

@@ -5,7 +5,7 @@
 ### Stale Time Configuration
 
 ```typescript
-// Set appropriate staleTime to avoid unnecessary refetches
+// Set appropriate staleTime to avoid unnecessary refetch
 useGetQuery({
   url: "/api/resource",
   responseSchema: schema,
