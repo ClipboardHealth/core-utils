@@ -4,6 +4,7 @@
   "version": "0.2.1",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "devDependencies": {
+    "@clipboard-health/util-ts": "3.17.1",
     "@intellectronica/ruler": "0.3.10"
   },
   "keywords": [

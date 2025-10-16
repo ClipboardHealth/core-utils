@@ -2,11 +2,14 @@
 /* eslint-disable no-console */
 import { execSync } from "node:child_process";
 import { constants } from "node:fs";
-import { access, copyFile, cp, mkdir, mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { access, copyFile, cp, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
-const OUTPUT_DIRECTORY = join(__dirname, "..", "..", "..", "dist", "packages", "ai-rules");
+import { toErrorMessage } from "@clipboard-health/util-ts";
+
+const PACKAGE_ROOT = join(__dirname, "..");
+const OUTPUT_DIRECTORY = join(PACKAGE_ROOT, "..", "..", "..", "dist", "packages", "ai-rules");
 const PROFILES = {
   frontend: ["common", "frontend"] as const,
   backend: ["common", "backend"] as const,
@@ -32,13 +35,13 @@ async function buildProfile(params: {
   profileName: ProfileName;
   categories: readonly string[];
   verbose: boolean;
-}): Promise<void> {
+}): Promise<string[]> {
   const { profileName, categories, verbose } = params;
+  const logs: string[] = [];
 
-  console.log(`\n📦 Building profile: ${profileName}`);
-  console.log(`   Categories: ${categories.join(", ")}`);
+  logs.push(`📦 Building ${profileName} with ${categories.join(", ")}`);
 
-  const sourceDirectory = join(__dirname, "..", ".ruler");
+  const sourceDirectory = join(PACKAGE_ROOT, ".ruler");
   const temporaryDirectory = await mkdtemp(join(tmpdir(), `ai-rules-${profileName}-`));
   const PATHS = {
     source: sourceDirectory,
@@ -68,17 +71,20 @@ async function buildProfile(params: {
     }
 
     // Run Ruler to generate files
-    console.log("   ⚙️  Running Ruler...");
-    execSync("npx @intellectronica/ruler apply", {
+    const output = execSync("npx @intellectronica/ruler apply", {
       cwd: PATHS.temporary,
-      stdio: verbose ? "inherit" : "pipe",
+      stdio: "pipe",
       timeout: 60_000,
+      encoding: "utf8",
     });
+    if (verbose && output) {
+      logs.push(output.trim());
+    }
 
-    // Copy generated files to dist
+    // Copy generated files to output
     await mkdir(PATHS.output, { recursive: true });
     await Promise.all(
-      (["AGENTS.md", "CLAUDE.md"] as const).map(async (file) => {
+      ["AGENTS.md", "CLAUDE.md"].map(async (file) => {
         const paths = {
           source: join(PATHS.temporary, file),
           target: join(PATHS.output, file),
@@ -92,62 +98,38 @@ async function buildProfile(params: {
       }),
     );
 
-    console.log(`   ✅ Profile built: dist/${profileName}/`);
+    return logs;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(`   ❌ Error building ${profileName}:`, message);
-    return;
+    throw new Error(`Error building ${profileName}: ${toErrorMessage(error)}`);
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
 }
 
 async function buildAllProfiles() {
+  console.log(`🚀 Building profiles...\n`);
   if (await exists(OUTPUT_DIRECTORY)) {
     await rm(OUTPUT_DIRECTORY, { recursive: true, force: true });
   }
 
   await mkdir(OUTPUT_DIRECTORY, { recursive: true });
 
-  // Build profiles sequentially to keep logs ordered
-  for (const [profileName, categories] of Object.entries(PROFILES)) {
-    // eslint-disable-next-line no-await-in-loop
-    await buildProfile({ profileName: profileName as ProfileName, categories, verbose: false });
-  }
-
-  const profileChecks = await Promise.all(
-    Object.keys(PROFILES).map(async (profileName) => ({
-      profileName,
-      exists: await exists(join(OUTPUT_DIRECTORY, profileName)),
-    })),
+  const logs = await Promise.all(
+    Object.entries(PROFILES).map(
+      async ([profileName, categories]) =>
+        await buildProfile({ profileName: profileName as ProfileName, categories, verbose: false }),
+    ),
   );
 
-  const failedProfiles = profileChecks
-    .filter((check) => !check.exists)
-    .map((check) => check.profileName);
+  console.log(logs.flat().join("\n"));
 
-  if (failedProfiles.length > 0) {
-    throw new Error(`Failed to build profiles: ${failedProfiles.join(", ")}`);
-  }
+  // Copy README.md and package.json to output directory root for NPM publishing
+  await Promise.all([
+    copyFile(join(PACKAGE_ROOT, "README.md"), join(OUTPUT_DIRECTORY, "README.md")),
+    copyFile(join(PACKAGE_ROOT, "package.json"), join(OUTPUT_DIRECTORY, "package.json")),
+  ]);
 
-  console.log("\n✨ All profiles built successfully!\n");
-  console.log(relative(process.cwd(), OUTPUT_DIRECTORY));
-
-  const profiles = await readdir(OUTPUT_DIRECTORY);
-  const profileFiles = await Promise.all(
-    profiles.map(async (profile) => ({
-      profile,
-      files: await readdir(join(OUTPUT_DIRECTORY, profile)),
-    })),
-  );
-
-  const maxProfileLength = Math.max(...profileFiles.map(({ profile }) => profile.length));
-  for (const [index, { profile, files }] of profileFiles.entries()) {
-    const isLast = index === profiles.length - 1;
-    const prefix = isLast ? "└──" : "├──";
-    const paddedProfile = `${profile}/`.padEnd(maxProfileLength + 1);
-    console.log(`  ${prefix} ${paddedProfile}    (${files.join(", ")})`);
-  }
+  console.log(`\n✨ Profiles built. See ${relative(process.cwd(), OUTPUT_DIRECTORY)}.`);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
