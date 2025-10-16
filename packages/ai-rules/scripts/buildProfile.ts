@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { copyFile, cp, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { copyFile, cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -13,11 +13,12 @@ const { packageRoot, outputDirectory } = PATHS;
  * Builds a single profile by combining rule categories and running Ruler.
  */
 export async function buildProfile(params: {
-  profileName: ProfileName;
   categories: readonly string[];
+  profileName: ProfileName;
+  timeout: number;
   verbose: boolean;
 }): Promise<string[]> {
-  const { profileName, categories, verbose } = params;
+  const { categories, profileName, timeout, verbose } = params;
   const logs: string[] = [];
 
   logs.push(`📦 Building ${profileName} with ${categories.join(", ")}`);
@@ -49,7 +50,7 @@ export async function buildProfile(params: {
     const output = execSync("npx @intellectronica/ruler apply", {
       cwd: paths.temporary,
       stdio: "pipe",
-      timeout: 60_000,
+      timeout,
       encoding: "utf8",
     });
     if (verbose && output) {
@@ -60,14 +61,7 @@ export async function buildProfile(params: {
     await mkdir(paths.output, { recursive: true });
     await Promise.all(
       ["AGENTS.md", "CLAUDE.md"].map(async (file) => {
-        const ps = {
-          source: join(paths.temporary, file),
-          target: join(paths.output, file),
-        };
-        const statResult = await stat(ps.source);
-        await (statResult.isDirectory()
-          ? cp(ps.source, ps.target, { recursive: true })
-          : copyFile(ps.source, ps.target));
+        await copyFile(join(paths.temporary, file), join(paths.output, file));
       }),
     );
 

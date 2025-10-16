@@ -5,9 +5,7 @@ import { PATHS, type ProfileName, PROFILES } from "./constants";
 
 const { outputDirectory } = PATHS;
 
-export async function buildProfiles(params: { verbose: boolean }) {
-  const { verbose } = params;
-
+export async function buildProfiles(params: { timeout: number; verbose: boolean }) {
   await rm(outputDirectory, { recursive: true, force: true });
   await mkdir(outputDirectory, { recursive: true });
 
@@ -15,9 +13,9 @@ export async function buildProfiles(params: { verbose: boolean }) {
     Object.entries(PROFILES).map(
       async ([profileName, categories]) =>
         await buildProfile({
-          profileName: profileName as ProfileName,
+          ...params,
           categories,
-          verbose,
+          profileName: profileName as ProfileName,
         }),
     ),
   );

@@ -7,12 +7,15 @@ import { PATHS } from "./constants";
 
 const { packageRoot, outputDirectory } = PATHS;
 
-const verbose = false;
+const params = {
+  timeout: 60_000,
+  verbose: false,
+};
 
 async function build() {
   console.log(`🚀 Building profiles...\n`);
 
-  const logs = await buildProfiles({ verbose });
+  const logs = await buildProfiles(params);
 
   console.log(logs.flat().join("\n"));
   console.log(`\n✨ Profiles built. See ${relative(process.cwd(), outputDirectory)}.`);
@@ -24,9 +27,10 @@ async function build() {
   ]);
 
   // Format markdown files with prettier, ignoring .gitignore
+  const { timeout, verbose } = params;
   const output = execSync(
     `npx prettier --write --ignore-path /dev/null "${outputDirectory}/**/*.md"`,
-    { stdio: "pipe", timeout: 60_000, encoding: "utf8" },
+    { stdio: "pipe", timeout, encoding: "utf8" },
   );
   if (verbose && output) {
     console.log(output.trim());
