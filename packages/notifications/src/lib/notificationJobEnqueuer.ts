@@ -88,7 +88,7 @@ export interface NotificationJobData extends Omit<NotificationEnqueueData, "idem
  *   age: number;
  * }>;
  *
- * export class MyNotificationJob implements HandlerInterface<MyNotificationData["Job"]>
+ * export class MyNotificationJob implements HandlerInterface<MyNotificationData["Job"]> {
  *   ...
  * }
  *
