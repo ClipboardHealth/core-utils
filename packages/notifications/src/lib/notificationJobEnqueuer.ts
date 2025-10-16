@@ -78,6 +78,30 @@ export interface NotificationJobData extends Omit<NotificationEnqueueData, "idem
   idempotencyKey: TriggerIdempotencyKey;
 }
 
+/**
+ * Type utility to create Job and Enqueue data type variants.
+ *
+ * @example
+ * ```ts
+ * type MyNotificationData = NotificationData<{
+ *   name: string;
+ *   age: number;
+ * }>;
+ *
+ * export class MyNotificationJob implements HandlerInterface<MyNotificationData["Job"]> {
+ *   ...
+ * }
+ *
+ * await notificationJobEnqueuer.enqueueOneOrMore<MyNotificationData["Enqueue"]>(
+ *   ...
+ * );
+ * ```
+ */
+export interface NotificationData<T> {
+  Job: NotificationJobData & T;
+  Enqueue: NotificationEnqueueData & T;
+}
+
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
 }
