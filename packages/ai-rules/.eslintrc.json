@@ -5,6 +5,15 @@
     "project": "tsconfig.lint.json",
     "tsconfigRootDir": "packages/ai-rules"
   },
+  "overrides": [
+    {
+      "files": ["scripts/**/*.ts"],
+      "rules": {
+        "no-console": "off",
+        "security/detect-non-literal-fs-filename": "off"
+      }
+    }
+  ],
   "settings": {
     "react": {
       "version": "detect"
