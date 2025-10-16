@@ -60,7 +60,7 @@ npm install --save-dev @clipboard-health/ai-rules
    git commit -m "feat: add AI coding rules"
    ```
 
-5. That's it! Your AI assistants will automatically use these files.
+5. Bonus: For repo-specific rules, create an `OVERLAY.md` file. The generated files instruct agents to read this file if it exists for additional rules.
 
 ### Updating Rules
 
