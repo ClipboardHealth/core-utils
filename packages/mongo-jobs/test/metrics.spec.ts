@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { type BackgroundJobType,MongoJobs } from "../src";
+import { type BackgroundJobType, MongoJobs } from "../src";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { createTestContext, type TestContext } from "./support/testContext";

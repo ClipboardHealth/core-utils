@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { type BackgroundJobType,MongoJobs } from "../src";
+import { type BackgroundJobType, MongoJobs } from "../src";
 import { createMongoConnection, createMongoSession } from "./support/connectToMongo";
 import { dropDatabase } from "./support/dropDatabase";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
