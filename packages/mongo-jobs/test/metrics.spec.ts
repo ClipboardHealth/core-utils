@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { BackgroundJobs,type BackgroundJobType } from "../src";
+import { BackgroundJobs, type BackgroundJobType } from "../src";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { createTestContext, type TestContext } from "./support/testContext";

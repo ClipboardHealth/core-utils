@@ -2,7 +2,7 @@ import { setTimeout } from "node:timers/promises";
 
 import mongoose from "mongoose";
 
-import { BackgroundJobs,type ConstructorOptions } from "../../src";
+import { BackgroundJobs, type ConstructorOptions } from "../../src";
 import { defaultConnectToMongo } from "./connectToMongo";
 import { dropDatabase } from "./dropDatabase";
 import { getJestWorkerUri } from "./getJestWorkerUri";
