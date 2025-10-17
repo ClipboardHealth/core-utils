@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { BackgroundJobsService, type BackgroundJobType } from "../src";
+import { BackgroundJobs, type BackgroundJobType } from "../src";
 import { createMongoConnection, createMongoSession } from "./support/connectToMongo";
 import { dropDatabase } from "./support/dropDatabase";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
@@ -23,7 +23,7 @@ async function getMappedJobRuns() {
 
 describe("Background Jobs Worker", () => {
   let testContext: TestContext;
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: BackgroundJobs;
   let testLogger: TestLogger;
 
   beforeEach(async () => {
@@ -364,7 +364,7 @@ describe("Background Jobs Worker", () => {
 
 describe("Unique jobs", () => {
   let testContext: TestContext;
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: BackgroundJobs;
   let semaphore: Semaphore;
 
   beforeEach(async () => {
@@ -508,7 +508,7 @@ describe("Unique jobs", () => {
 
 describe("Helper APIs", () => {
   let testContext: TestContext;
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: BackgroundJobs;
 
   beforeEach(async () => {
     testContext = await createTestContext();
@@ -656,7 +656,7 @@ describe("Using custom connection", () => {
     await dropDatabase(otherDatabaseUrl);
 
     const connection = await createMongoConnection(otherDatabaseUrl);
-    const backgroundJobs = new BackgroundJobsService({ dbConnection: connection });
+    const backgroundJobs = new BackgroundJobs({ dbConnection: connection });
 
     backgroundJobs.register(ExampleJob, "default");
 

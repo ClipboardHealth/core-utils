@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-import { type BackgroundJobsService } from "../src";
+import { type BackgroundJobs } from "../src";
 import { drainHandlers, drainQueues } from "../src/lib/testing";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
 import { EnqueueAnotherJob } from "./support/enqueueAnotherJob";
@@ -16,7 +16,7 @@ const HOURS = 1000 * 60 * 60;
 
 describe("Testing helpers", () => {
   let testContext: TestContext;
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: BackgroundJobs;
 
   beforeEach(async () => {
     testContext = await createTestContext();

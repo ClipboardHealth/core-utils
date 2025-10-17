@@ -24,7 +24,7 @@ export interface ConstructorOptions {
   allowHandlerOverride?: boolean;
 }
 
-export class BackgroundJobsService {
+export class BackgroundJobs {
   public readonly jobModel: mongoose.Model<BackgroundJobType<unknown>>;
   public readonly scheduleModel: mongoose.Model<ScheduleType<unknown>>;
   public readonly jobsRepo: JobsRepository;
