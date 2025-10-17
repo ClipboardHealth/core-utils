@@ -1,15 +1,15 @@
 /* eslint-disable  @typescript-eslint/dot-notation */
-import { BackgroundJobsService } from "../src/lib/backgroundJobs";
+import { MongoJobs } from "../src/lib/backgroundJobs";
 import type { Registry } from "../src/lib/internal/registry";
 import { ExampleJob } from "./support/exampleJob";
 import { JobWithDependencies } from "./support/jobWithDependencies";
 
 describe("Registering background jobs", () => {
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: MongoJobs;
   let registry: Registry;
 
   beforeEach(() => {
-    backgroundJobs = new BackgroundJobsService();
+    backgroundJobs = new MongoJobs();
     registry = backgroundJobs["registry"];
   });
 
@@ -86,7 +86,7 @@ describe("Registering background jobs", () => {
   });
 
   it("is possible to register a job with same name if allowHandlerOverride is set to true", () => {
-    const overridableBackgroundJobs = new BackgroundJobsService({ allowHandlerOverride: true });
+    const overridableBackgroundJobs = new MongoJobs({ allowHandlerOverride: true });
     const overridableRegistry = overridableBackgroundJobs["registry"];
 
     overridableBackgroundJobs.register(ExampleJob, "default");

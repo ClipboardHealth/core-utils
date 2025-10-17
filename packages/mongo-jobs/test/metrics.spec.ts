@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { BackgroundJobsService, type BackgroundJobType } from "../src";
+import { type BackgroundJobType,MongoJobs } from "../src";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { createTestContext, type TestContext } from "./support/testContext";
@@ -8,13 +8,13 @@ import { TestMetricsReporter } from "./support/testMetricsReporter";
 
 describe("BackgroundJobMetrics", () => {
   let testContext: TestContext;
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: MongoJobs;
   let metricsReporter: TestMetricsReporter;
 
   beforeEach(async () => {
     testContext = await createTestContext();
     metricsReporter = new TestMetricsReporter();
-    backgroundJobs = new BackgroundJobsService({ metricsReporter });
+    backgroundJobs = new MongoJobs({ metricsReporter });
 
     backgroundJobs.register(ExampleJob, "default");
     backgroundJobs.register(FailingJob, "default");

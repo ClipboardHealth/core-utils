@@ -1,4 +1,4 @@
-import type { BackgroundJobsService } from "../src";
+import type { MongoJobs } from "../src";
 import { Semaphore } from "./support/semaphore";
 import { SemaphoreJob } from "./support/semaphoreJob";
 import { createTestContext, type TestContext } from "./support/testContext";
@@ -34,7 +34,7 @@ function jestFakeOnlyTimers(toFake: FakeableAPI[]) {
 
 describe("Cron jobs", () => {
   let testContext: TestContext;
-  let backgroundJobs: BackgroundJobsService;
+  let backgroundJobs: MongoJobs;
   let semaphore: Semaphore;
 
   beforeEach(async () => {

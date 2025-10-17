@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import type { BackgroundJobsService } from "./backgroundJobs";
+import type { MongoJobs } from "./backgroundJobs";
 import type { AnyHandlerClass } from "./internal/registry";
 import type { Worker } from "./internal/worker";
 
@@ -9,7 +9,7 @@ interface DrainOptions {
 }
 
 async function executeJobs(
-  backgroundJobs: BackgroundJobsService,
+  backgroundJobs: MongoJobs,
   worker: Worker,
   queues: string[],
   options: DrainOptions = {},
@@ -38,7 +38,7 @@ async function executeJobs(
 
 // Drain jobs for all queues in given groups
 export async function drainQueues(
-  backgroundJobs: BackgroundJobsService,
+  backgroundJobs: MongoJobs,
   groups: string[],
   options: DrainOptions = {},
 ) {
@@ -50,7 +50,7 @@ export async function drainQueues(
 
 // Drain jobs for given handlers
 export async function drainHandlers(
-  backgroundJobs: BackgroundJobsService,
+  backgroundJobs: MongoJobs,
   handlers: Array<AnyHandlerClass<unknown> | string>,
   options: DrainOptions = {},
 ) {

@@ -1,4 +1,4 @@
-import { BackgroundJobsService } from "../../src/lib/backgroundJobs";
+import { MongoJobs } from "../../src/lib/backgroundJobs";
 import type { HandlerInterface } from "../../src/lib/handler";
 import { ExampleJob } from "./exampleJob";
 
@@ -9,7 +9,7 @@ interface JobData {
 export class EnqueueAnotherJob implements HandlerInterface<JobData> {
   public name = "EnqueueAnotherJob";
   public async perform(data: JobData) {
-    const backgroundJobs = new BackgroundJobsService();
+    const backgroundJobs = new MongoJobs();
     backgroundJobs.register(ExampleJob, "default");
 
     await backgroundJobs.enqueue(ExampleJob, data);

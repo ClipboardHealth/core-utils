@@ -2,14 +2,14 @@ import { setTimeout } from "node:timers/promises";
 
 import mongoose from "mongoose";
 
-import { BackgroundJobsService, type ConstructorOptions } from "../../src";
+import { type ConstructorOptions,MongoJobs } from "../../src";
 import { defaultConnectToMongo } from "./connectToMongo";
 import { dropDatabase } from "./dropDatabase";
 import { getJestWorkerUri } from "./getJestWorkerUri";
 
 export interface TestContext {
   tearDown: () => Promise<void>;
-  backgroundJobs: BackgroundJobsService;
+  backgroundJobs: MongoJobs;
 }
 
 export async function createTestContext(
@@ -21,7 +21,7 @@ export async function createTestContext(
   await dropDatabase(databaseUrl);
   await defaultConnectToMongo(databaseUrl);
 
-  const backgroundJobs = new BackgroundJobsService(backgroundJobsOptions);
+  const backgroundJobs = new MongoJobs(backgroundJobsOptions);
   await backgroundJobs.jobModel.createIndexes();
 
   return {
