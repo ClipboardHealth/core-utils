@@ -18,3 +18,8 @@ output_path = "AGENTS.md"
 [agents.cursor]
 enabled = true
 output_path = "AGENTS.md"
+
+# Windsurf
+[agents.windsurf]
+enabled = true
+output_path = ".windsurf/rules/ruler_windsurf_instructions.md"
