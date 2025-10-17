@@ -55,16 +55,16 @@ export class WelcomeEmailJob implements HandlerInterface<WelcomeEmailData> {
 
 ### 2. Create a service and register handlers
 
-Create a `MongoJobs` instance and register your handlers to groups:
+Create a `BackgroundJobs` instance and register your handlers to groups:
 
 <embedex source="packages/mongo-jobs/examples/quickstart/jobsRegistry.ts">
 
 ```ts
-import { MongoJobs } from "@clipboard-health/mongo-jobs";
+import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
 
 import { WelcomeEmailJob } from "./welcomeEmailJob";
 
-const backgroundJobs = new MongoJobs();
+const backgroundJobs = new BackgroundJobs();
 
 backgroundJobs.register(WelcomeEmailJob, "emails");
 

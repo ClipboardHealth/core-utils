@@ -1,12 +1,12 @@
 /* eslint-disable  @typescript-eslint/dot-notation */
-import { MongoJobs } from "../src/lib/backgroundJobs";
+import { BackgroundJobs } from "../src/lib/backgroundJobs";
 import { ExampleJob } from "./support/exampleJob";
 
 describe("Registering background jobs", () => {
-  let backgroundJobs: MongoJobs;
+  let backgroundJobs: BackgroundJobs;
 
   beforeEach(() => {
-    backgroundJobs = new MongoJobs();
+    backgroundJobs = new BackgroundJobs();
   });
 
   it("is not possible to schedule a job for unregistered handler", async () => {

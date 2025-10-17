@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import type { MongoJobs } from "../src";
+import type { BackgroundJobs } from "../src";
 import { ensureExistence } from "./support/ensureExistence";
 import { ExampleJob } from "./support/exampleJob";
 import { JobRun } from "./support/jobRun";
@@ -10,7 +10,7 @@ import { TestMetricsReporter } from "./support/testMetricsReporter";
 
 describe("Expired Jobs", () => {
   let testContext: TestContext;
-  let backgroundJobs: MongoJobs;
+  let backgroundJobs: BackgroundJobs;
   let logger: TestLogger;
   let metricsReporter: TestMetricsReporter;
 

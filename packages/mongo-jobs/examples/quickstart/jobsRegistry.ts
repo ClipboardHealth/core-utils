@@ -1,9 +1,9 @@
 // packages/mongo-jobs/README.md
-import { MongoJobs } from "@clipboard-health/mongo-jobs";
+import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
 
 import { WelcomeEmailJob } from "./welcomeEmailJob";
 
-const backgroundJobs = new MongoJobs();
+const backgroundJobs = new BackgroundJobs();
 
 backgroundJobs.register(WelcomeEmailJob, "emails");
 
