@@ -7,13 +7,16 @@
     "**/cbhResponse.ts",
     "packages/ai-rules/scripts/sync.ts",
   ],
-  "ignoreBinaries": [],
+  "ignoreBinaries": [
+    "markdownlint-cli2"
+  ],
   "ignoreDependencies": [
     "@intellectronica/ruler",
     "@nx/webpack",
     "ts-node",
     "tslib",
     "webpack-cli",
+    "markdownlint-cli2"
   ],
   "webpack": false,
   "workspaces": {
