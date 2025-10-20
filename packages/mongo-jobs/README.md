@@ -113,8 +113,10 @@ await backgroundJobs.start(["emails"], {
 
 Jobs are defined as classes that implement the `HandlerInterface`:
 
+<embedex source="packages/mongo-jobs/examples/usage/createJob.ts">
+
 ```ts
-import type { HandlerInterface, BackgroundJobType } from "@clipboard-health/mongo-jobs";
+import type { BackgroundJobType, HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 export interface MyJobData {
   userId: string;
@@ -142,6 +144,8 @@ export class MyJob implements HandlerInterface<MyJobData> {
 }
 ```
 
+</embedex>
+
 #### Job handler options
 
 - **`name`** (required): Unique identifier for the job type
@@ -154,11 +158,15 @@ export class MyJob implements HandlerInterface<MyJobData> {
 
 Register job handlers with the `BackgroundJobs` instance and assign them to processing groups:
 
+<embedex source="packages/mongo-jobs/examples/usage/registerJobs.ts">
+
 ```ts
 import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
+
+import { CleanupJob } from "./jobs/cleanupJob";
 import { EmailJob } from "./jobs/emailJob";
 import { ReportJob } from "./jobs/reportJob";
-import { CleanupJob } from "./jobs/cleanupJob";
+import { SmsJob } from "./jobs/smsJob";
 
 const backgroundJobs = new BackgroundJobs();
 
@@ -171,6 +179,8 @@ backgroundJobs.register(CleanupJob, "maintenance");
 backgroundJobs.register(SmsJob, "notifications");
 ```
 
+</embedex>
+
 Groups allow you to:
 - Organize related jobs together
 - Run dedicated workers for specific job types
@@ -181,12 +191,26 @@ Groups allow you to:
 
 Add jobs to the queue for processing:
 
+<embedex source="packages/mongo-jobs/examples/usage/enqueueBasic.ts">
+
 ```ts
+import { backgroundJobs } from "./jobsRegistry";
+import { MyJob } from "./myJob";
+
 // Basic enqueue
 await backgroundJobs.enqueue(MyJob, {
   userId: "123",
   action: "process",
 });
+```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/enqueueWithOptions.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
+import { MyJob } from "./myJob";
 
 // Enqueue with options
 await backgroundJobs.enqueue(
@@ -201,15 +225,22 @@ await backgroundJobs.enqueue(
 
     // Use within a MongoDB transaction
     session: mongoSession,
-  }
-);
-
-// Enqueue by job name (when handler is already registered)
-await backgroundJobs.enqueue(
-  "MyJob",
-  { userId: "123", action: "process" }
+  },
 );
 ```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/enqueueByName.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
+
+// Enqueue by job name (when handler is already registered)
+await backgroundJobs.enqueue("MyJob", { userId: "123", action: "process" });
+```
+
+</embedex>
 
 #### Enqueue options
 
@@ -221,11 +252,23 @@ await backgroundJobs.enqueue(
 
 Start processing jobs from one or more groups:
 
+<embedex source="packages/mongo-jobs/examples/usage/startWorkerBasic.ts">
+
 ```ts
+import { backgroundJobs } from "./jobsRegistry";
+
 // Start a worker for specific groups
 await backgroundJobs.start(["notifications", "reports"], {
   maxConcurrency: 20,
 });
+```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/startWorkerWithOptions.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
 
 // Start with all available options
 await backgroundJobs.start(["notifications"], {
@@ -250,10 +293,20 @@ await backgroundJobs.start(["notifications"], {
   // Exclude specific queues from processing
   exclude: ["low-priority-queue"],
 });
+```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/stopWorker.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
 
 // Graceful shutdown
 await backgroundJobs.stop(30000); // Wait up to 30 seconds for jobs to complete
 ```
+
+</embedex>
 
 #### Worker options
 
@@ -269,8 +322,11 @@ await backgroundJobs.stop(30000); // Wait up to 30 seconds for jobs to complete
 
 Schedule recurring jobs using cron expressions:
 
+<embedex source="packages/mongo-jobs/examples/usage/cronRegister.ts">
+
 ```ts
 import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
+
 import { DailyReportJob } from "./jobs/dailyReportJob";
 
 const backgroundJobs = new BackgroundJobs();
@@ -292,10 +348,20 @@ await backgroundJobs.registerCron(DailyReportJob, {
   // Data to pass to each job execution
   data: { reportType: "daily" },
 });
+```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/cronRemove.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
 
 // Remove a cron schedule and its pending jobs
 await backgroundJobs.removeCron("daily-report");
 ```
+
+</embedex>
 
 #### Cron scheduling details
 
@@ -309,15 +375,29 @@ await backgroundJobs.removeCron("daily-report");
 
 Prevent duplicate jobs from being enqueued or running simultaneously:
 
+<embedex source="packages/mongo-jobs/examples/usage/uniqueSimple.ts">
+
 ```ts
+import { backgroundJobs } from "./jobsRegistry";
+import { ProcessUserJob } from "./jobs/processUserJob";
+
 // Simple uniqueness - single unique key for both enqueued and running
 await backgroundJobs.enqueue(
   ProcessUserJob,
   { userId: "123" },
   {
     unique: "process-user-123",
-  }
+  },
 );
+```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/uniqueAdvanced.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
+import { ProcessUserJob } from "./jobs/processUserJob";
 
 // Advanced uniqueness - separate keys for enqueued vs running states
 await backgroundJobs.enqueue(
@@ -331,8 +411,17 @@ await backgroundJobs.enqueue(
       // Only one running job per user
       runningKey: "process-user-123-running",
     },
-  }
+  },
 );
+```
+
+</embedex>
+
+<embedex source="packages/mongo-jobs/examples/usage/uniqueMultipleEnqueued.ts">
+
+```ts
+import { backgroundJobs } from "./jobsRegistry";
+import { SendEmailJob } from "./jobs/sendEmailJob";
 
 // Example: Allow multiple enqueued but only one running
 await backgroundJobs.enqueue(
@@ -343,9 +432,11 @@ await backgroundJobs.enqueue(
       enqueuedKey: undefined, // Allow multiple enqueued emails
       runningKey: "send-email-123", // But only one sending at a time
     },
-  }
+  },
 );
 ```
+
+</embedex>
 
 #### Uniqueness behavior
 
