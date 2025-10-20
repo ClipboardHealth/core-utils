@@ -458,6 +458,119 @@ await backgroundJobs.enqueue(
 - Uniqueness is enforced via MongoDB unique index on the `uniqueKey` field
 - Cron jobs automatically use unique keys based on schedule name and timestamp
 
+## Observability
+
+### Metrics
+
+The library automatically reports metrics using StatsD by default. Metrics are reported every 60 seconds for each queue and include:
+
+- **`background_jobs.queue.scheduled`** - Number of jobs scheduled for future execution
+- **`background_jobs.queue.pending`** - Number of jobs ready to be processed
+- **`background_jobs.queue.created`** - Total jobs (scheduled + pending)
+- **`background_jobs.queue.failed`** - Number of jobs that exhausted all retry attempts
+- **`background_jobs.queue.retry`** - Counter incremented when a job is retried
+- **`background_jobs.queue.expired`** - Counter incremented when a job lock expires (stuck jobs)
+- **`background_jobs.queue.delay`** - Timing metric for execution delay (time between `nextRunAt` and actual execution)
+
+All metrics are tagged with `queue` to identify which queue the metric belongs to.
+
+#### Custom metrics reporter
+
+You can provide a custom metrics reporter by implementing the `MetricsReporter` interface:
+
+```ts
+import { BackgroundJobs, type MetricsReporter } from "@clipboard-health/mongo-jobs";
+
+class CustomMetricsReporter implements MetricsReporter {
+  gauge(name: string, value: number, tags: Record<string, string>): void {
+    // Report gauge metric
+    console.log(`Gauge: ${name} = ${value}`, tags);
+  }
+
+  increment(name: string, tags: Record<string, string>): void {
+    // Report counter increment
+    console.log(`Increment: ${name}`, tags);
+  }
+
+  timing(name: string, value: number | Date, tags: Record<string, string>): void {
+    // Report timing metric
+    console.log(`Timing: ${name} = ${value}`, tags);
+  }
+}
+
+const backgroundJobs = new BackgroundJobs({
+  metricsReporter: new CustomMetricsReporter(),
+});
+```
+
+#### StatsD configuration
+
+The default metrics reporter uses the `hot-shots` StatsD client. You can configure it by passing options:
+
+```ts
+import { BackgroundJobs, defaultMetricsReporter } from "@clipboard-health/mongo-jobs";
+
+const backgroundJobs = new BackgroundJobs({
+  metricsReporter: defaultMetricsReporter({
+    host: "localhost",
+    port: 8125,
+    globalTags: { env: "production" },
+  }),
+});
+```
+
+### OpenTelemetry tracing
+
+The library provides built-in OpenTelemetry distributed tracing support. Traces are automatically created for job enqueueing (producer) and execution (consumer), allowing you to track jobs across your distributed system.
+
+#### Trace spans
+
+Three types of spans are created:
+
+1. **Producer spans** (`background-jobs.producer`) - Created when a job is enqueued
+   - Kind: `PRODUCER`
+   - Attributes include: messaging system, operation, destination (handler name), queue name
+
+2. **Consumer spans** (`background-jobs.consumer`) - Created when a job is executed
+   - Kind: `CONSUMER`
+   - Linked to the producer span for distributed tracing
+   - Attributes include: message ID, handler name, queue, attempt count, timestamps
+
+3. **Internal spans** (`background-jobs.internals`) - Created for internal operations
+   - Kind: `INTERNAL`
+   - Used for operations like fetching jobs, reporting metrics, etc.
+
+#### Setting up OpenTelemetry
+
+To enable tracing, configure the OpenTelemetry SDK in your application:
+
+```ts
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+
+const sdk = new NodeSDK({
+  traceExporter: new OTLPTraceExporter({
+    url: "http://localhost:4318/v1/traces",
+  }),
+  instrumentations: [getNodeAutoInstrumentations()],
+});
+
+sdk.start();
+```
+
+#### Distributed tracing
+
+When a job is enqueued, trace context is automatically injected into the job data via the `_traceHeaders` field. When the job is executed, this context is extracted to link the consumer span to the producer span, enabling end-to-end trace visibility.
+
+```
+HTTP Request → Enqueue Job (Producer Span)
+                    ↓
+              [Job in Queue]
+                    ↓
+              Execute Job (Consumer Span) → Your Handler
+```
+
 ## License
 
 MIT
