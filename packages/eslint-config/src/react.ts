@@ -1,5 +1,7 @@
-const baseConfig = require("./index");
-const xoReactModule = require("eslint-config-xo-react");
+import xoReactModule from "eslint-config-xo-react";
+
+import baseConfig from "./index";
+
 const xoReact = xoReactModule.default || xoReactModule;
 
 module.exports = [

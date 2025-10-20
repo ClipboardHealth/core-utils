@@ -9,7 +9,7 @@
       "executor": "@nx/js:tsc",
       "options": {
         "assets": ["packages/eslint-config/*.md"],
-        "main": "packages/eslint-config/src/index.js",
+        "main": "packages/eslint-config/src/index.ts",
         "outputPath": "dist/packages/eslint-config",
         "tsConfig": "packages/eslint-config/tsconfig.lib.json"
       },

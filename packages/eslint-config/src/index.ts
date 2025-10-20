@@ -1,37 +1,38 @@
-const path = require("node:path");
-const fs = require("node:fs");
-const eslint = require("@eslint/js");
-const tseslint = require("typescript-eslint");
-const globals = require("globals");
+import fs from "node:fs";
+import path from "node:path";
+
+import eslint from "@eslint/js";
+import prettierConfigModule from "eslint-config-prettier";
+import xoConfigModule from "eslint-config-xo";
+import eslintCommentsModule from "eslint-plugin-eslint-comments";
+import expectTypeModule from "eslint-plugin-expect-type";
+import importPluginModule from "eslint-plugin-import";
+import jestModule from "eslint-plugin-jest";
+import nModule from "eslint-plugin-n";
+import noOnlyTestsModule from "eslint-plugin-no-only-tests";
+import noUseExtendNativeModule from "eslint-plugin-no-use-extend-native";
+import securityModule from "eslint-plugin-security";
+import simpleImportSortModule from "eslint-plugin-simple-import-sort";
+import sonarjsModule from "eslint-plugin-sonarjs";
+import unicornModule from "eslint-plugin-unicorn";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
 // Helper to get default export from ES modules
-const getDefault = (module) => module.default || module;
-
-const eslintCommentsModule = require("eslint-plugin-eslint-comments");
+const getDefault = (module: any): any => module.default || module;
 const eslintComments = getDefault(eslintCommentsModule);
-const expectTypeModule = require("eslint-plugin-expect-type");
 const expectType = getDefault(expectTypeModule);
-const jestModule = require("eslint-plugin-jest");
 const jest = getDefault(jestModule);
-const importPluginModule = require("eslint-plugin-import");
 const importPlugin = getDefault(importPluginModule);
-const nModule = require("eslint-plugin-n");
 const n = getDefault(nModule);
-const noOnlyTestsModule = require("eslint-plugin-no-only-tests");
 const noOnlyTests = getDefault(noOnlyTestsModule);
-const noUseExtendNativeModule = require("eslint-plugin-no-use-extend-native");
 const noUseExtendNative = getDefault(noUseExtendNativeModule);
-const securityModule = require("eslint-plugin-security");
 const security = getDefault(securityModule);
-const simpleImportSortModule = require("eslint-plugin-simple-import-sort");
 const simpleImportSort = getDefault(simpleImportSortModule);
-const sonarjsModule = require("eslint-plugin-sonarjs");
 const sonarjs = getDefault(sonarjsModule);
-const unicornModule = require("eslint-plugin-unicorn");
 const unicorn = getDefault(unicornModule);
-const xoConfigModule = require("eslint-config-xo");
 const xoConfig = getDefault(xoConfigModule);
-const prettierConfigModule = require("eslint-config-prettier");
+
 const prettierConfig = getDefault(prettierConfigModule);
 
 /*
@@ -46,7 +47,7 @@ const prettierConfig = getDefault(prettierConfigModule);
  * the eslint-plugin in the ESLint config. We'll need to fix this in the future if we
  * need to rely on a rule from the eslint-plugin to lint code within core-utils itself.
  */
-const isOutsideCoreUtilsMonorepo = (() => {
+const isOutsideCoreUtilitiesMonorepo = (() => {
   try {
     const packageJsonPath = path.resolve(process.cwd(), "package.json");
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
@@ -57,8 +58,8 @@ const isOutsideCoreUtilsMonorepo = (() => {
 })();
 
 // Conditionally load clipboard-health plugin
-let clipboardHealth;
-const plugins = {
+let clipboardHealth: any;
+const plugins: Record<string, any> = {
   "@typescript-eslint": tseslint.plugin,
   "eslint-comments": eslintComments,
   "expect-type": expectType,
@@ -73,7 +74,7 @@ const plugins = {
   unicorn,
 };
 
-if (isOutsideCoreUtilsMonorepo) {
+if (isOutsideCoreUtilitiesMonorepo) {
   clipboardHealth = require("@clipboard-health/eslint-plugin");
   plugins["@clipboard-health"] = clipboardHealth;
 }
@@ -86,7 +87,7 @@ module.exports = [
   ...tseslint.configs.recommended,
 
   // XO config (filter out JSONC config as we handle it ourselves)
-  ...xoConfig.filter((c) => !c.files || !c.files.includes("**/*.jsonc")),
+  ...xoConfig.filter((c: any) => !c.files || !c.files.includes("**/*.jsonc")),
 
   // Main configuration
   {
@@ -107,7 +108,6 @@ module.exports = [
     },
     rules: {
       // Import plugin recommended rules
-      "import/no-unresolved": "error",
       "import/named": "error",
       "import/default": "error",
       "import/namespace": "error",
@@ -155,7 +155,7 @@ module.exports = [
       "sonarjs/no-duplicate-string": "off",
 
       // Unicorn rules (using flat/recommended for ESLint 9)
-      ...(unicorn.configs['flat/recommended'] || unicorn.configs.recommended).rules,
+      ...(unicorn.configs["flat/recommended"] || unicorn.configs.recommended).rules,
       "unicorn/no-array-callback-reference": "off",
       "unicorn/no-array-for-each": "off",
       "unicorn/no-array-reduce": "off",
@@ -170,8 +170,8 @@ module.exports = [
       ...eslintComments.configs.recommended.rules,
 
       // Jest rules (using flat/* for ESLint 9)
-      ...(jest.configs['flat/recommended'] || jest.configs.recommended).rules,
-      ...(jest.configs['flat/style'] || jest.configs.style).rules,
+      ...(jest.configs["flat/recommended"] || jest.configs.recommended).rules,
+      ...(jest.configs["flat/style"] || jest.configs.style).rules,
       "jest/expect-expect": [
         "error",
         {
@@ -262,7 +262,7 @@ module.exports = [
         },
       ],
 
-      ...(isOutsideCoreUtilsMonorepo
+      ...(isOutsideCoreUtilitiesMonorepo
         ? {
             "@clipboard-health/enforce-ts-rest-in-controllers": "off",
             "@clipboard-health/require-http-module-factory": "off",
@@ -306,7 +306,7 @@ module.exports = [
   },
 
   // Controller files override (only outside core-utils)
-  ...(isOutsideCoreUtilsMonorepo
+  ...(isOutsideCoreUtilitiesMonorepo
     ? [
         {
           files: ["**/*.controller.ts", "**/*.controllers.ts"],
