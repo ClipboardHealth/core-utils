@@ -1,7 +1,0 @@
-# Alphabetical directories
-coverage/
-dist/
-node_modules/
-
-# Alphabetical files
-packages/eslint-config/src/index.js
