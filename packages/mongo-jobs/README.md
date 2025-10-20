@@ -113,7 +113,7 @@ await backgroundJobs.start(["emails"], {
 
 Jobs are defined as classes that implement the `HandlerInterface`:
 
-<embedex source="packages/mongo-jobs/examples/usage/createJob.ts">
+<embedex source="packages/mongo-jobs/examples/usage/myJob.ts">
 
 ```ts
 import type { BackgroundJobType, HandlerInterface } from "@clipboard-health/mongo-jobs";
@@ -137,7 +137,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
 
     // Optional: access job metadata
     if (job) {
-      console.log(`Job ID: ${job._id}`);
+      console.log(`Job ID: ${job._id.toString()}`);
       console.log(`Attempt: ${job.attemptsCount}`);
     }
   }
@@ -636,7 +636,7 @@ sdk.start();
 
 When a job is enqueued, trace context is automatically injected into the job data via the `_traceHeaders` field. When the job is executed, this context is extracted to link the consumer span to the producer span, enabling end-to-end trace visibility.
 
-```
+```text
 HTTP Request → Enqueue Job (Producer Span)
                     ↓
               [Job in Queue]
