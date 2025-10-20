@@ -3,13 +3,16 @@
   "description": "Our ESLint configuration.",
   "version": "5.17.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "devDependencies": {
+    "@types/eslint-config-prettier": "6.11.3",
+    "@types/eslint-plugin-security": "3.0.0"
+  },
   "keywords": [
     "config",
     "eslint"
   ],
   "license": "MIT",
   "main": "./src/index.js",
-  "types": "./src/index.d.ts",
   "peerDependencies": {
     "@clipboard-health/eslint-plugin": "^0.13.0",
     "@eslint/js": "^9",
@@ -42,5 +45,6 @@
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
-  "type": "commonjs"
+  "type": "commonjs",
+  "types": "./src/index.d.ts"
 }

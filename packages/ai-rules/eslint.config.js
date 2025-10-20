@@ -13,5 +13,10 @@ module.exports = [
         tsconfigRootDir: __dirname,
       },
     },
+    rules: {
+      // Enable type-aware rules (disabled in base config)
+      "@typescript-eslint/return-await": ["error", "always"],
+      "expect-type/expect": "error",
+    },
   },
 ];

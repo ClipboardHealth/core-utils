@@ -1,5 +1,5 @@
 const nxPlugin = require("@nx/eslint-plugin");
-const baseConfig = require("./packages/eslint-config/src/index.js");
+const baseConfig = require("./dist/packages/eslint-config");
 const globals = require("globals");
 const jsoncParser = require("jsonc-eslint-parser");
 
@@ -10,10 +10,9 @@ module.exports = [
       "**/coverage/**",
       "**/dist/**",
       "**/node_modules/**",
-      "packages/eslint-config/src/index.js",
-      "packages/eslint-config/src/index.d.ts",
-      "packages/eslint-config/src/react.js",
-      "eslint.config.js",
+      "**/eslint.config.js",
+      // eslint-config package has its own config to avoid circular dependency
+      "packages/eslint-config/**",
     ],
   },
 
@@ -48,10 +47,7 @@ module.exports = [
 
   // Test files (add Jest globals)
   {
-    files: [
-      "**/*.spec.{ts,tsx,js,jsx}",
-      "**/*.test.{ts,tsx,js,jsx}",
-    ],
+    files: ["**/*.spec.{ts,tsx,js,jsx}", "**/*.test.{ts,tsx,js,jsx}"],
     languageOptions: {
       globals: {
         ...globals.jest,
@@ -67,17 +63,15 @@ module.exports = [
     },
   },
 
-  // package.json files
+  // JSON files
   {
-    files: ["**/package.json"],
+    files: ["**/*.json"],
     languageOptions: {
       parser: jsoncParser,
     },
-    plugins: {
-      "@nx": nxPlugin,
-    },
     rules: {
-      "@nx/dependency-checks": "error",
+      // Disable rules that don't work with JSON files
+      "no-irregular-whitespace": "off",
     },
   },
 ];

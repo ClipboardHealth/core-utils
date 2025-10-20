@@ -1,3 +1,5 @@
+import type { Linter } from "eslint";
+
 // Use require() for CommonJS modules to avoid TypeScript's __importDefault issues
 const path = require("node:path");
 const fs = require("node:fs");
@@ -79,7 +81,7 @@ if (isOutsideCoreUtilitiesMonorepo) {
   plugins["@clipboard-health"] = clipboardHealth;
 }
 
-module.exports = [
+const config: Linter.Config[] = [
   // Base ESLint recommended config
   eslint.configs.recommended,
 
@@ -95,10 +97,8 @@ module.exports = [
     plugins,
     languageOptions: {
       parser: tseslint.parser,
-      parserOptions: {
-        project: ["tsconfig.json"],
-        tsconfigRootDir: __dirname,
-      },
+      // parserOptions.project is NOT set in base config to avoid errors on files without tsconfig.
+      // Consuming projects should override this with their own project/tsconfigRootDir to enable type-aware linting.
       globals: {
         ...globals.node,
       },
@@ -189,15 +189,17 @@ module.exports = [
         },
       ],
 
-      // Expect Type rules
-      ...expectType.configs.recommended.rules,
+      // Expect Type rules - all disabled as they require type information
+      // Enable in consuming projects with parserOptions.project configured
 
       // TypeScript ESLint rules
       "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
       "@typescript-eslint/naming-convention": "off",
       "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-      "@typescript-eslint/return-await": ["error", "always"],
+      // Type-aware rules require parserOptions.project to be configured.
+      // Consuming projects should set this in their parserOptions override.
+      "@typescript-eslint/return-await": "off",
 
       // General rules
       "capitalized-comments": "off",
@@ -332,3 +334,5 @@ module.exports = [
   // Prettier config (must be last to override other formatting rules)
   prettierConfig,
 ];
+
+export = config;
