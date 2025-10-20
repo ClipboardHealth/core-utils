@@ -188,6 +188,79 @@ Groups allow you to:
 - Control concurrency per group
 - Scale different job types independently
 
+#### Jobs with dependencies
+
+If your job requires dependencies (like services, database connections, etc.) passed through the constructor, you must register an instance instead of the class:
+
+<embedex source="packages/mongo-jobs/examples/usage/registerJobsWithDependencies.ts">
+
+```ts
+import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
+
+import { EmailServiceJob } from "./jobs/emailServiceJob";
+
+const backgroundJobs = new BackgroundJobs();
+
+// For jobs with constructor dependencies, register an instance
+const emailService = {
+  async send(to: string, subject: string, body: string) {
+    console.log(`Sending email to ${to}: ${subject}`);
+  },
+};
+
+backgroundJobs.register(new EmailServiceJob(emailService), "notifications");
+```
+
+</embedex>
+
+Example job with dependencies:
+
+<embedex source="packages/mongo-jobs/examples/usage/jobs/emailServiceJob.ts">
+
+```ts
+import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
+
+interface EmailService {
+  send(to: string, subject: string, body: string): Promise<void>;
+}
+
+export interface EmailServiceJobData {
+  to: string;
+  subject: string;
+  body: string;
+}
+
+export class EmailServiceJob implements HandlerInterface<EmailServiceJobData> {
+  public name = "EmailServiceJob";
+  public maxAttempts = 3;
+
+  constructor(private readonly emailService: EmailService) {}
+
+  async perform({ to, subject, body }: EmailServiceJobData) {
+    await this.emailService.send(to, subject, body);
+  }
+}
+```
+
+</embedex>
+
+**Important**: When registering job instances, the library will use the instance directly rather than instantiating the class. This means:
+
+- The same instance is used for all job executions in this process
+- Dependencies are shared across all executions
+- Your job class should be stateless (all state should come from the `data` parameter)
+
+**Note**: Even when registering an instance, you can still enqueue jobs using the class, instance, or handler name:
+
+```ts
+// All of these work, regardless of whether you registered a class or instance
+await backgroundJobs.enqueue(EmailServiceJob, data); // By class
+await backgroundJobs.enqueue(emailServiceJobInstance, data); // By instance
+await backgroundJobs.enqueue("EmailServiceJob", data); // By name
+```
+
+The enqueued class/instance/name is only used to look up the registered handler. The **registered** instance is always used for execution, not the instance passed to `enqueue()`.
+
 ### Enqueuing jobs
 
 Add jobs to the queue for processing:
