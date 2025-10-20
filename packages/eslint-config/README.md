@@ -13,29 +13,30 @@ Our [ESLint](https://eslint.org/) configuration.
 npm install -D @clipboard-health/eslint-config eslint-config-prettier prettier
 ```
 
-Then, modify your `.eslintrc.js` file:
+Then, create an `eslint.config.js` file (ESLint 9 flat config format):
 
 ```js
-module.exports = {
-  extends: ["@clipboard-health", "prettier"],
-  overrides: [
-    {
-      files: ["*.ts", "*.tsx", "*.js", "*.jsx"],
+const clipboardHealthConfig = require("@clipboard-health/eslint-config");
+const prettierConfig = require("eslint-config-prettier");
+
+module.exports = [
+  ...clipboardHealthConfig,
+  prettierConfig,
+
+  // Project-specific overrides
+  {
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    languageOptions: {
       parserOptions: {
-        project: "tsconfig.lint.json",
+        project: "./tsconfig.lint.json",
         tsconfigRootDir: __dirname,
       },
     },
-    {
-      files: ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
-      env: {
-        jest: true,
-      },
-    },
-  ],
-  root: true,
-};
+  },
+];
 ```
+
+**Note:** ESLint 9 uses the new flat config format. The old `.eslintrc.*` format is no longer supported.
 
 ## Local development commands
 
