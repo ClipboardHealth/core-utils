@@ -19,7 +19,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
 
     // Optional: access job metadata
     if (job) {
-      console.log(`Job ID: ${job._id}`);
+      console.log(`Job ID: ${job._id.toString()}`);
       console.log(`Attempt: ${job.attemptsCount}`);
     }
   }

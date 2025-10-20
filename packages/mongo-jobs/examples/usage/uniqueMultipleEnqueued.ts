@@ -1,5 +1,5 @@
-import { backgroundJobs } from "./jobsRegistry";
 import { SendEmailJob } from "./jobs/sendEmailJob";
+import { backgroundJobs } from "./jobsRegistry";
 
 // Example: Allow multiple enqueued but only one running
 await backgroundJobs.enqueue(

@@ -1,5 +1,9 @@
+import type { ClientSession } from "mongodb";
+
 import { backgroundJobs } from "./jobsRegistry";
 import { MyJob } from "./myJob";
+
+declare const mongoSession: ClientSession;
 
 // Enqueue with options
 await backgroundJobs.enqueue(

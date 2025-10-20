@@ -12,13 +12,13 @@ await backgroundJobs.start(["notifications"], {
   useChangeStream: true,
 
   // Lock timeout for stuck jobs, in ms (default: 600000 = 10 minutes)
-  lockTimeoutMS: 300000,
+  lockTimeoutMS: 300_000,
 
   // Interval to check for stuck jobs, in ms (default: 60000 = 1 minute)
-  unlockJobsIntervalMS: 30000,
+  unlockJobsIntervalMS: 30_000,
 
   // Interval to refresh queue list, in ms (default: 30000 = 30 seconds)
-  refreshQueuesIntervalMS: 60000,
+  refreshQueuesIntervalMS: 60_000,
 
   // Exclude specific queues from processing
   exclude: ["low-priority-queue"],

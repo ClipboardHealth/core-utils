@@ -1,5 +1,5 @@
-import { backgroundJobs } from "./jobsRegistry";
 import { ProcessUserJob } from "./jobs/processUserJob";
+import { backgroundJobs } from "./jobsRegistry";
 
 // Simple uniqueness - single unique key for both enqueued and running
 await backgroundJobs.enqueue(
