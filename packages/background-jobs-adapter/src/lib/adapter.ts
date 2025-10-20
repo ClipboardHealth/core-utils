@@ -71,8 +71,10 @@ export type EnqueueOptions = MongoEnqueueOptions | PostgresEnqueueOptions;
  * Minimal adapter interface for background jobs operations supporting background-jobs-mongo (Mongo)
  * and background-jobs-postgres (Postgres) implementations.
  */
-export interface BackgroundJobsAdapter {
-  implementation: BackgroundJobsImplementation;
+export interface BackgroundJobsAdapter<
+  TImplementation extends BackgroundJobsImplementation = BackgroundJobsImplementation,
+> {
+  implementation: TImplementation;
 
   /**
    * Enqueue a job to be processed.
@@ -85,6 +87,10 @@ export interface BackgroundJobsAdapter {
   enqueue<T>(
     handler: string | HandlerClassOrInstance<T>,
     data: T,
-    options?: EnqueueOptions,
+    options?: TImplementation extends "mongo"
+      ? MongoEnqueueOptions
+      : TImplementation extends "postgres"
+        ? PostgresEnqueueOptions
+        : EnqueueOptions,
   ): Promise<unknown>;
 }
