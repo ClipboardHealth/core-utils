@@ -1,8 +1,12 @@
-import xoReactModule from "eslint-config-xo-react";
+import type { Linter } from "eslint";
 
-import baseConfig from "./index";
+// Use require for CommonJS modules
+const baseConfig = require("./index") as Linter.Config[];
+const xoReactModule = require("eslint-config-xo-react");
 
-const xoReact = xoReactModule.default || xoReactModule;
+// Helper to get default export from ES modules
+const getDefault = (module: any): any => module.default || module;
+const xoReact = getDefault(xoReactModule);
 
 module.exports = [
   ...baseConfig,

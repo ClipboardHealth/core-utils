@@ -1,38 +1,38 @@
-import fs from "node:fs";
-import path from "node:path";
-
-import eslint from "@eslint/js";
-import prettierConfigModule from "eslint-config-prettier";
-import xoConfigModule from "eslint-config-xo";
-import eslintCommentsModule from "eslint-plugin-eslint-comments";
-import expectTypeModule from "eslint-plugin-expect-type";
-import importPluginModule from "eslint-plugin-import";
-import jestModule from "eslint-plugin-jest";
-import nModule from "eslint-plugin-n";
-import noOnlyTestsModule from "eslint-plugin-no-only-tests";
-import noUseExtendNativeModule from "eslint-plugin-no-use-extend-native";
-import securityModule from "eslint-plugin-security";
-import simpleImportSortModule from "eslint-plugin-simple-import-sort";
-import sonarjsModule from "eslint-plugin-sonarjs";
-import unicornModule from "eslint-plugin-unicorn";
-import globals from "globals";
-import tseslint from "typescript-eslint";
+// Use require() for CommonJS modules to avoid TypeScript's __importDefault issues
+const path = require("node:path");
+const fs = require("node:fs");
+const eslint = require("@eslint/js");
+const tseslint = require("typescript-eslint");
+const globals = require("globals");
 
 // Helper to get default export from ES modules
 const getDefault = (module: any): any => module.default || module;
-const eslintComments = getDefault(eslintCommentsModule);
-const expectType = getDefault(expectTypeModule);
-const jest = getDefault(jestModule);
-const importPlugin = getDefault(importPluginModule);
-const n = getDefault(nModule);
-const noOnlyTests = getDefault(noOnlyTestsModule);
-const noUseExtendNative = getDefault(noUseExtendNativeModule);
-const security = getDefault(securityModule);
-const simpleImportSort = getDefault(simpleImportSortModule);
-const sonarjs = getDefault(sonarjsModule);
-const unicorn = getDefault(unicornModule);
-const xoConfig = getDefault(xoConfigModule);
 
+const eslintCommentsModule = require("eslint-plugin-eslint-comments");
+const eslintComments = getDefault(eslintCommentsModule);
+const expectTypeModule = require("eslint-plugin-expect-type");
+const expectType = getDefault(expectTypeModule);
+const jestModule = require("eslint-plugin-jest");
+const jest = getDefault(jestModule);
+const importPluginModule = require("eslint-plugin-import");
+const importPlugin = getDefault(importPluginModule);
+const nModule = require("eslint-plugin-n");
+const n = getDefault(nModule);
+const noOnlyTestsModule = require("eslint-plugin-no-only-tests");
+const noOnlyTests = getDefault(noOnlyTestsModule);
+const noUseExtendNativeModule = require("eslint-plugin-no-use-extend-native");
+const noUseExtendNative = getDefault(noUseExtendNativeModule);
+const securityModule = require("eslint-plugin-security");
+const security = getDefault(securityModule);
+const simpleImportSortModule = require("eslint-plugin-simple-import-sort");
+const simpleImportSort = getDefault(simpleImportSortModule);
+const sonarjsModule = require("eslint-plugin-sonarjs");
+const sonarjs = getDefault(sonarjsModule);
+const unicornModule = require("eslint-plugin-unicorn");
+const unicorn = getDefault(unicornModule);
+const xoConfigModule = require("eslint-config-xo");
+const xoConfig = getDefault(xoConfigModule);
+const prettierConfigModule = require("eslint-config-prettier");
 const prettierConfig = getDefault(prettierConfigModule);
 
 /*
