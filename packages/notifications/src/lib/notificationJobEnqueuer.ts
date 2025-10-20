@@ -1,6 +1,8 @@
 import {
   type BackgroundJobsAdapter,
   ENQUEUE_FIELD_NAMES,
+  type MongoEnqueueOptions,
+  type PostgresEnqueueOptions,
 } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients } from "./internal/chunkRecipients";
@@ -102,6 +104,17 @@ export interface NotificationData<T> {
   Enqueue: NotificationEnqueueData & T;
 }
 
+/**
+ * `enqueueOneOrMore` sets `idempotencyKey`/`unique` automatically, so it's not accepted here.
+ *
+ * `startAt` is also not accepted. To prevent stale recipient lists, notification jobs shouldn't
+ * start in the future. Use `startAt` to schedule a normal job in the future that, when executed,
+ * looks up recipients and queues a notification job that runs immediately.
+ */
+export type EnqueueOneOrMoreOptions =
+  | Pick<MongoEnqueueOptions, "session">
+  | Pick<PostgresEnqueueOptions, "transaction">;
+
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
 }
@@ -186,8 +199,7 @@ export class NotificationJobEnqueuer {
   async enqueueOneOrMore<TEnqueueData extends NotificationEnqueueData>(
     handlerClassOrInstance: EnqueueParameters[0],
     data: TEnqueueData,
-    // The job's idempotency/unique key is set automatically.
-    options?: Omit<EnqueueParameters[2], "idempotencyKey" | "unique">,
+    options?: EnqueueOneOrMoreOptions,
   ) {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
