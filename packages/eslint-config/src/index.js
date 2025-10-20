@@ -85,8 +85,8 @@ module.exports = [
   // TypeScript ESLint recommended configs
   ...tseslint.configs.recommended,
 
-  // XO config
-  ...xoConfig,
+  // XO config (filter out JSONC config as we handle it ourselves)
+  ...xoConfig.filter((c) => !c.files || !c.files.includes("**/*.jsonc")),
 
   // Main configuration
   {
