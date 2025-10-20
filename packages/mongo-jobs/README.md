@@ -182,6 +182,7 @@ backgroundJobs.register(SmsJob, "notifications");
 </embedex>
 
 Groups allow you to:
+
 - Organize related jobs together
 - Run dedicated workers for specific job types
 - Control concurrency per group
@@ -392,6 +393,17 @@ await backgroundJobs.enqueue(
 ```
 
 </embedex>
+
+#### Advanced uniqueness
+
+It's possible to have separate enqueued and running key. When the job is enqueued, the library will
+ensure that we can't enqueue another one but once it starts running it switches to its running key so
+we can enqueue another one that will wait to be executed until the first one finishes.
+
+An example where this can be useful is recalculating some kind of a cache. We don't want to enqueue more
+than one non-running job to not explode number of enqueued jobs. But once it starts running and there is another
+trigger that may warrant cache recalculation we want to schedule another one to do another recalculation even
+if there is one running, cause we don't know if the current recalculation will include the newest change.
 
 <embedex source="packages/mongo-jobs/examples/usage/uniqueAdvanced.ts">
 
