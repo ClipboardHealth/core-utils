@@ -28,7 +28,7 @@
     "eslint-plugin-simple-import-sort": "^12",
     "eslint-plugin-sonarjs": "^1 || ^2",
     "eslint-plugin-unicorn": "^56",
-    "globals": "^15"
+    "globals": "^15 || ^16"
   },
   "publishConfig": {
     "access": "public"
