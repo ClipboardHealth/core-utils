@@ -1,6 +1,7 @@
 import {
   type BackgroundJobsAdapter,
   ENQUEUE_FIELD_NAMES,
+  type EnqueueOptions,
   type MongoEnqueueOptions,
   type PostgresEnqueueOptions,
 } from "@clipboard-health/background-jobs-adapter";
@@ -106,18 +107,19 @@ export interface NotificationData<T> {
 
 /**
  * `enqueueOneOrMore` sets `idempotencyKey`/`unique` automatically, so it's not accepted here.
+ *
+ * Use `startAt` with care to prevent stale recipient lists. To prevent stale recipient lists, it
+ * may make more sense to schedule a normal job in the future that, when executed, looks up
+ * recipients and queues a notification job that runs immediately.
+ *
+ * There are valid use cases for `startAt`, however. For example, if you do checks in your job (or
+ * in a service the job calls) to validate the notification is still valid prior to triggering it.
  */
-export type EnqueueOneOrMoreOptions = {
-  /**
-   * `startAt` is discouraged. To prevent stale recipient lists, notification jobs shouldn't start
-   * in the future. Use `startAt` to schedule a normal job in the future that, when executed, looks
-   * up recipients and queues a notification job that runs immediately.
-   */
-  startAtUseIsDiscouraged: Date;
-} & (
-  | Pick<MongoEnqueueOptions, "session" | "startAt">
-  | Pick<PostgresEnqueueOptions, "transaction" | "startAt">
-);
+export type EnqueueOneOrMoreOptions = Pick<EnqueueOptions, "startAt"> &
+  (
+    | Pick<MongoEnqueueOptions, "session" | "startAt">
+    | Pick<PostgresEnqueueOptions, "transaction" | "startAt">
+  );
 
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
