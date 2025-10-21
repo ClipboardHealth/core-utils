@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "0.27.1",
-    "type-fest": "5.0.1",
+    "type-fest": "5.1.0",
     "zod": "3.25.76"
   },
   "keywords": [
