@@ -1,2 +1,2 @@
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line 
 export type NullOrUndefined = null | undefined;

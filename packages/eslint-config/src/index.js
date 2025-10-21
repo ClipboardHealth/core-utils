@@ -2,6 +2,7 @@
 const path = require("node:path");
 const fs = require("node:fs");
 const js = require("@eslint/js");
+const globals = require("globals");
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
 const tsParser = require("@typescript-eslint/parser");
 const eslintComments = require("eslint-plugin-eslint-comments");
@@ -71,6 +72,10 @@ module.exports = [
       parser: tsParser,
       parserOptions: {
         projectService: true,
+      },
+      globals: {
+        ...globals.node,
+        ...globals.es2021,
       },
     },
 

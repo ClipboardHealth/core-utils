@@ -50,7 +50,7 @@ const duplicatedConfig = {
     {
       files: ["**/*.dto.ts", "**/*.repository.ts", "**/*.repo.ts"],
       rules: {
-        "@typescript-eslint/ban-types": [
+        "": [
           "error",
           {
             extendDefaults: true,
