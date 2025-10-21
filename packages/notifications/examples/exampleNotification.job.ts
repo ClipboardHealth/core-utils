@@ -1,24 +1,24 @@
-// packages/notifications/README.md
+// packages/notifications/examples/usage.md
 import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
-import {
-  type NotificationEnqueueData,
-  type NotificationJobData,
-} from "@clipboard-health/notifications";
+import { type NotificationData } from "@clipboard-health/notifications";
 import { isFailure, toError } from "@clipboard-health/util-ts";
 
 import { type ExampleNotificationService } from "./exampleNotification.service";
 
-interface ExampleNotificationData {
+export type ExampleNotificationData = NotificationData<{
   workplaceId: string;
-}
+}>;
 
-export type ExampleNotificationEnqueueData = NotificationEnqueueData & ExampleNotificationData;
-export type ExampleNotificationJobData = NotificationJobData & ExampleNotificationData;
+export const EXAMPLE_NOTIFICATION_JOB_NAME = "ExampleNotificationJob";
 
-export class ExampleNotificationJob implements BaseHandler<ExampleNotificationJobData> {
+// For mongo-jobs, you'll implement HandlerInterface<ExampleNotificationData["Job"]>
+// For background-jobs-postgres, you'll implement Handler<ExampleNotificationData["Job"]>
+export class ExampleNotificationJob implements BaseHandler<ExampleNotificationData["Job"]> {
+  public name = EXAMPLE_NOTIFICATION_JOB_NAME;
+
   constructor(private readonly service: ExampleNotificationService) {}
 
-  async perform(data: ExampleNotificationJobData, job: { attemptsCount: number }) {
+  async perform(data: ExampleNotificationData["Job"], job: { attemptsCount: number }) {
     const result = await this.service.sendNotification({
       ...data,
       // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.

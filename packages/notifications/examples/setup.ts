@@ -6,7 +6,7 @@ import {
 } from "@clipboard-health/background-jobs-adapter";
 
 /**
- * Assume this is `background-jobs-mongo` or `background-jobs-postgres`.
+ * Assume this is `@clipboard-health/mongo-jobs` or `@clipboard-health/background-jobs-postgres`.
  */
 export class BackgroundJobsService implements BackgroundJobsAdapter {
   implementation: BackgroundJobsImplementation = "mongo";

@@ -652,7 +652,7 @@ describe("Helper APIs", () => {
 
 describe("Using custom connection", () => {
   it("is possible to use background jobs with custom connection", async () => {
-    const otherDatabaseUrl = "mongodb://localhost:27017/background-jobs-mongo-test-other-db";
+    const otherDatabaseUrl = "mongodb://localhost:27017/mongo-jobs-test-other-db";
     await dropDatabase(otherDatabaseUrl);
 
     const connection = await createMongoConnection(otherDatabaseUrl);

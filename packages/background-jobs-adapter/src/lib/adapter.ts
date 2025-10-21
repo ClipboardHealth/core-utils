@@ -68,7 +68,7 @@ export const ENQUEUE_FIELD_NAMES = {
 export type EnqueueOptions = MongoEnqueueOptions | PostgresEnqueueOptions;
 
 /**
- * Minimal adapter interface for background jobs operations supporting background-jobs-mongo (Mongo)
+ * Minimal adapter interface for background jobs operations supporting mongo-jobs (Mongo)
  * and background-jobs-postgres (Postgres) implementations.
  */
 export interface BackgroundJobsAdapter<
