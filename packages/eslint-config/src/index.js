@@ -42,7 +42,7 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "airbnb-base",
+    // "airbnb-base", // Temporarily removed for ESLint v9 migration
     "plugin:eslint-comments/recommended",
     "plugin:expect-type/recommended",
     "plugin:jest/recommended",
