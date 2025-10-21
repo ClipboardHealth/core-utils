@@ -1,14 +1,8 @@
-# @clipboard-health/notifications <!-- omit from toc -->
-
-Send notifications through third-party providers.
-
-## Table of contents <!-- omit from toc -->
-
-- [Local development commands](#local-development-commands)
-
-<embedex source="packages/notifications/examples/usage.md">
+// packages/ai-rules/.ruler/backend/notifications.md,packages/notifications/README.md
 
 1. Search your service for a `NotificationJobEnqueuer` instance. If there isn't one, create and export it:
+
+   <embedex source="packages/notifications/examples/notificationJobEnqueuer.ts">
 
    ```ts
    import { NotificationJobEnqueuer } from "@clipboard-health/notifications";
@@ -22,7 +16,11 @@ Send notifications through third-party providers.
    });
    ```
 
+   </embedex>
+
 1. Implement a minimal job, calling off to a NestJS service for any business logic and to send the notification.
+
+   <embedex source="packages/notifications/examples/exampleNotification.job.ts">
 
    ```ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
@@ -58,7 +56,11 @@ Send notifications through third-party providers.
    }
    ```
 
+   </embedex>
+
 1. Search your service for a constant that stores workflow keys. If there isn't one, create and export it:
+
+   <embedex source="packages/notifications/examples/workflowKeys.ts">
 
    ```ts
    export const WORKFLOW_KEYS = {
@@ -66,7 +68,11 @@ Send notifications through third-party providers.
    } as const;
    ```
 
+   </embedex>
+
 1. Enqueue your job:
+
+   <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
 
    ```ts
    import {
@@ -103,7 +109,11 @@ Send notifications through third-party providers.
    void enqueueNotificationJob();
    ```
 
+   </embedex>
+
 1. Trigger the job in your NestJS service:
+
+   <embedex source="packages/notifications/examples/exampleNotification.service.ts">
 
    ```ts
    import { type NotificationClient } from "@clipboard-health/notifications";
@@ -139,8 +149,4 @@ Send notifications through third-party providers.
    }
    ```
 
-</embedex>
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.
+   </embedex>

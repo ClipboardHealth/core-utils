@@ -1,10 +1,8 @@
-# @clipboard-health/notifications <!-- omit from toc -->
+# Notifications
 
-Send notifications through third-party providers.
+Send notifications through [Knock](https://docs.knock.app) using the `@clipboard-health/notifications` NPM library.
 
-## Table of contents <!-- omit from toc -->
-
-- [Local development commands](#local-development-commands)
+## Usage
 
 <embedex source="packages/notifications/examples/usage.md">
 
@@ -140,7 +138,3 @@ Send notifications through third-party providers.
    ```
 
 </embedex>
-
-## Local development commands
-
-See [`package.json`](./package.json) `scripts` for a list of commands.

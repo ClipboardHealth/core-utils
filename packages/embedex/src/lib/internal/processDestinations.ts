@@ -102,13 +102,40 @@ function createReplacement(
   const contentHasCodeFence = content.includes("```");
   const backticks = contentHasCodeFence ? "````" : "```";
   const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(sourcePath).slice(1)];
-  const escapedContent = content.replaceAll("*/", "*\\/").trimEnd().split("\n");
+  let processedContent = content.replaceAll("*/", "*\\/").trimEnd();
+
+  // For markdown files, strip nested embedex tags to prevent recursive processing
+  if (codeFenceId === "") {
+    processedContent = processedContent
+      .replaceAll(
+        /^(.*)<embedex source=".+?">\n([\S\s]*?)<\/embedex>/gm,
+        (_match, _prefix, content: string) => {
+          const lines = content.split("\n");
+
+          // Remove leading blank lines
+          while (lines.length > 0 && lines[0]?.trim() === "") {
+            lines.shift();
+          }
+
+          // Remove trailing blank lines
+          while (lines.length > 0 && lines.at(-1)?.trim() === "") {
+            lines.pop();
+          }
+
+          // Content already has correct indentation, don't prepend prefix
+          return lines.join("\n");
+        },
+      )
+      .trim();
+  }
+
+  const contentLines = processedContent.split("\n");
   const lines = [
     `<embedex source="${sourcePath}">`,
     "",
     ...(codeFenceId === ""
-      ? escapedContent
-      : [`${backticks}${codeFenceId ?? ""}`, ...escapedContent, backticks]),
+      ? contentLines
+      : [`${backticks}${codeFenceId ?? ""}`, ...contentLines, backticks]),
     "",
     "</embedex>",
   ];

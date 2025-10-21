@@ -501,4 +501,163 @@ describe("embed", () => {
       ].join("\n"),
     );
   });
+
+  describe("nested embedex tags", () => {
+    it("strips nested embedex tags from markdown and removes leading/trailing blank lines", async () => {
+      const intermediateMarkdown = "sources/intermediate.md";
+      const finalMarkdown = "src/final.md";
+
+      // Create a TypeScript source
+      await write(paths.sources.a, [`// ${intermediateMarkdown}`, ...sourceACode]);
+
+      // Create an intermediate markdown that embeds the TypeScript source
+      await write(intermediateMarkdown, [
+        `// ${finalMarkdown}`,
+        "",
+        "1. Step one:",
+        "",
+        `   <embedex source="${paths.sources.a}">`,
+        "",
+        "   ```ts",
+        ...sourceACode.map((line) => `   ${line}`),
+        "   ```",
+        "",
+        "   </embedex>",
+      ]);
+
+      // Create final markdown that embeds the intermediate markdown
+      await write(finalMarkdown, [`<embedex source="${intermediateMarkdown}">`, "</embedex>"]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      // Find the final markdown embed (order of processing may vary)
+      const finalEmbed = actual.embeds.find(
+        (embed) => embed.paths.destination === toPath(finalMarkdown),
+      );
+      const intermediateEmbed = actual.embeds.find(
+        (embed) => embed.paths.destination === toPath(intermediateMarkdown),
+      );
+
+      // The intermediate markdown should embed the TypeScript source
+      expect(intermediateEmbed).toEqual({
+        code: "UPDATE",
+        paths: {
+          sources: [toPath(paths.sources.a)],
+          destination: toPath(intermediateMarkdown),
+        },
+        updatedContent: expect.any(String),
+      });
+
+      // The final markdown should have the intermediate content with nested tags stripped
+      expect(finalEmbed).toEqual({
+        code: "UPDATE",
+        paths: {
+          sources: [toPath(intermediateMarkdown)],
+          destination: toPath(finalMarkdown),
+        },
+        updatedContent: [
+          `<embedex source="${intermediateMarkdown}">`,
+          "",
+          "1. Step one:",
+          "",
+          "   ```ts",
+          '   const x = "a";',
+          "",
+          // eslint-disable-next-line no-template-curly-in-string
+          "   console.log(`Got ${x}`);",
+          "   ```",
+          "",
+          "</embedex>",
+        ].join("\n"),
+      });
+    });
+
+    it("removes multiple levels of nested embedex tags with blank lines", async () => {
+      const level1 = "sources/level1.md";
+      const level2 = "sources/level2.md";
+      const final = "src/final.md";
+
+      // Level 1: Raw content
+      await write(level1, [`// ${level2}`, "Hello world"]);
+
+      // Level 2: Embeds level 1 with extra blank lines
+      await write(level2, [
+        `// ${final}`,
+        "",
+        `<embedex source="${level1}">`,
+        "",
+        "",
+        "Hello world",
+        "",
+        "",
+        "</embedex>",
+      ]);
+
+      // Final: Embeds level 2
+      await write(final, [`<embedex source="${level2}">`, "</embedex>"]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      const finalEmbed = actual.embeds.find((embed) => embed.paths.destination === toPath(final));
+      expect(finalEmbed).toEqual({
+        code: "UPDATE",
+        paths: {
+          sources: [toPath(level2)],
+          destination: toPath(final),
+        },
+        updatedContent: [`<embedex source="${level2}">`, "", "Hello world", "", "</embedex>"].join(
+          "\n",
+        ),
+      });
+    });
+
+    it("preserves intentional blank lines within content while removing extras", async () => {
+      const intermediate = "sources/intermediate.md";
+      const final = "src/final.md";
+
+      // Create intermediate with intentional blank lines in content
+      await write(intermediate, [
+        `// ${final}`,
+        "",
+        "Line 1",
+        "",
+        "Line 2",
+        "",
+        `<embedex source="${paths.sources.a}">`,
+        "",
+        "```ts",
+        ...sourceACode,
+        "```",
+        "",
+        "</embedex>",
+      ]);
+
+      await write(paths.sources.a, [`// ${intermediate}`, ...sourceACode]);
+      await write(final, [`<embedex source="${intermediate}">`, "</embedex>"]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      const finalEmbed = actual.embeds.find((embed) => embed.paths.destination === toPath(final));
+      expect(finalEmbed).toEqual({
+        code: "UPDATE",
+        paths: {
+          sources: [toPath(intermediate)],
+          destination: toPath(final),
+        },
+        updatedContent: [
+          `<embedex source="${intermediate}">`,
+          "",
+          "Line 1",
+          "",
+          "Line 2",
+          "",
+          "```ts",
+          ...sourceACode,
+          "```",
+          "",
+          "</embedex>",
+        ].join("\n"),
+      });
+    });
+  });
 });
