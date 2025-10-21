@@ -445,6 +445,20 @@ await backgroundJobs.removeCron("daily-report");
 - Failed cron jobs are retried according to `maxAttempts`, but the next scheduled job will still be enqueued
 - Each scheduled execution is a unique job instance
 
+#### Removing cron schedules
+
+**Important**: When you register a cron schedule, it is persisted in the database. Even if you remove the schedule registration from your code, it will continue executing. To stop a cron schedule, you must explicitly remove it using the `removeCron` API:
+
+```ts
+await backgroundJobs.removeCron("daily-report");
+```
+
+This will:
+
+- Delete the schedule from the database
+- Cancel all pending jobs that were created by this schedule
+- Prevent future jobs from being scheduled
+
 ### Job uniqueness
 
 Prevent duplicate jobs from being enqueued or running simultaneously:
