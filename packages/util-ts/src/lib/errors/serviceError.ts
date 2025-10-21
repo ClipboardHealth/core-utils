@@ -20,7 +20,7 @@ export const ERROR_CODES = {
 } as const;
 
 // (string & {}) keeps the literal-union intact—so we get autocomplete for the built-ins *and* accept any other string.
-// eslint-disable-next-line 
+// eslint-disable-next-line
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | (string & {});
 
 const ERROR_METADATA = {
