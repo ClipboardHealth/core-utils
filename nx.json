@@ -18,7 +18,6 @@
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/**/examples/**/*",
-      "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/jest.config.ts",
       "!{projectRoot}/jest.setup.js",
       "!{projectRoot}/test/**/*",
@@ -79,8 +78,7 @@
       "cache": true,
       "inputs": [
         "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
         "{workspaceRoot}/packages/eslint-config/src/index.js"
       ]
     },

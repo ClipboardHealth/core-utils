@@ -70,8 +70,7 @@ module.exports = [
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: ["tsconfig.json"],
-        tsconfigRootDir: process.cwd(),
+        projectService: true,
       },
     },
 
