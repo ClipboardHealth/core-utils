@@ -106,14 +106,18 @@ export interface NotificationData<T> {
 
 /**
  * `enqueueOneOrMore` sets `idempotencyKey`/`unique` automatically, so it's not accepted here.
- *
- * `startAt` is also not accepted. To prevent stale recipient lists, notification jobs shouldn't
- * start in the future. Use `startAt` to schedule a normal job in the future that, when executed,
- * looks up recipients and queues a notification job that runs immediately.
  */
-export type EnqueueOneOrMoreOptions =
-  | Pick<MongoEnqueueOptions, "session">
-  | Pick<PostgresEnqueueOptions, "transaction">;
+export type EnqueueOneOrMoreOptions = {
+  /**
+   * `startAt` is discouraged. To prevent stale recipient lists, notification jobs shouldn't start
+   * in the future. Use `startAt` to schedule a normal job in the future that, when executed, looks
+   * up recipients and queues a notification job that runs immediately.
+   */
+  startAtUseIsDiscouraged: Date;
+} & (
+  | Pick<MongoEnqueueOptions, "session" | "startAt">
+  | Pick<PostgresEnqueueOptions, "transaction" | "startAt">
+);
 
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
