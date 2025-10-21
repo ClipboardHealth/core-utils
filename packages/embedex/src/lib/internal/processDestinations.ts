@@ -107,7 +107,25 @@ function createReplacement(
   // For markdown files, strip nested embedex tags to prevent recursive processing
   if (codeFenceId === "") {
     processedContent = processedContent
-      .replaceAll(/^(.*)<embedex source=".+?">\n([\S\s]*?)<\/embedex>/gm, "$1$2")
+      .replaceAll(
+        /^(.*)<embedex source=".+?">\n([\S\s]*?)<\/embedex>/gm,
+        (_match, _prefix, content: string) => {
+          const lines = content.split("\n");
+
+          // Remove leading blank lines
+          while (lines.length > 0 && lines[0]?.trim() === "") {
+            lines.shift();
+          }
+
+          // Remove trailing blank lines
+          while (lines.length > 0 && lines.at(-1)?.trim() === "") {
+            lines.pop();
+          }
+
+          // Content already has correct indentation, don't prepend prefix
+          return lines.join("\n");
+        },
+      )
       .trim();
   }
 
