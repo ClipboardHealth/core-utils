@@ -68,6 +68,28 @@ describe("embed", () => {
     ]);
   });
 
+  it("returns UNREFERENCED_SOURCE when source declares destination but has no embedex tag", async () => {
+    await Promise.all([
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.destinations.l, [
+        "/**",
+        " * @example",
+        " * Some content without embedex tag",
+        " */",
+      ]),
+    ]);
+
+    const actual = await embed({ sourcesGlob, cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UNREFERENCED_SOURCE",
+        paths: { sources: [], destination: toPath(paths.destinations.l) },
+        unreferencedSources: [toPath(paths.sources.a)],
+      },
+    ]);
+  });
+
   it("returns empty embeds when no sources found", async () => {
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
@@ -93,7 +115,7 @@ describe("embed", () => {
     );
   });
 
-  it("returns NO_MATCH for destinations with no matches", async () => {
+  it("returns UNREFERENCED_SOURCE for destinations with no embedex tags", async () => {
     await Promise.all([
       write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, ["/**", " * @example", " * ```ts", " * ```", " */"]),
@@ -103,8 +125,9 @@ describe("embed", () => {
 
     expect(actual.embeds).toEqual([
       {
-        code: "NO_MATCH",
+        code: "UNREFERENCED_SOURCE",
         paths: { sources: [], destination: toPath(paths.destinations.l) },
+        unreferencedSources: [toPath(paths.sources.a)],
       },
     ]);
   });

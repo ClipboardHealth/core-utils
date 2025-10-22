@@ -7,7 +7,7 @@ export interface EmbedParams {
   write: boolean;
 }
 
-export type Code = "NO_CHANGE" | "NO_MATCH" | "UPDATE" | "INVALID_SOURCE";
+export type Code = "NO_CHANGE" | "NO_MATCH" | "UPDATE" | "INVALID_SOURCE" | "UNREFERENCED_SOURCE";
 
 export interface Result {
   code: Code;
@@ -21,7 +21,11 @@ export type NoMatch = Result & { code: "NO_MATCH" };
 export type NoChange = Result & { code: "NO_CHANGE" };
 export type Updated = Result & { code: "UPDATE"; updatedContent: string };
 export type InvalidSource = Result & { code: "INVALID_SOURCE"; invalidSources: string[] };
-export type Embed = NoMatch | Updated | NoChange | InvalidSource;
+export type UnreferencedSource = Result & {
+  code: "UNREFERENCED_SOURCE";
+  unreferencedSources: string[];
+};
+export type Embed = NoMatch | Updated | NoChange | InvalidSource | UnreferencedSource;
 
 export interface EmbedResult {
   embeds: Embed[];

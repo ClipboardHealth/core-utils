@@ -54,13 +54,21 @@ function processDestination(params: {
     return join(cwd, path);
   }
 
-  // First, check for invalid source references
+  // First, check for invalid source references and collect referenced sources
   const allEmbedexTags = [...content.matchAll(REGEX)];
   const invalidSources: string[] = [];
+  const referencedSources = new Set<string>();
+
   for (const match of allEmbedexTags) {
     const sourcePath = match[2];
-    if (sourcePath && !sources.has(absolutePath(sourcePath))) {
-      invalidSources.push(sourcePath);
+    /* istanbul ignore next */
+    if (sourcePath) {
+      const absoluteSourcePath = absolutePath(sourcePath);
+      if (sources.has(absoluteSourcePath)) {
+        referencedSources.add(absoluteSourcePath);
+      } else {
+        invalidSources.push(sourcePath);
+      }
     }
   }
 
@@ -72,7 +80,24 @@ function processDestination(params: {
     };
   }
 
+  // Check for unreferenced sources (sources that declare this destination but have no embedex tag)
+  const unreferencedSources: string[] = [];
+  for (const source of sources) {
+    if (!referencedSources.has(source)) {
+      unreferencedSources.push(source);
+    }
+  }
+
+  if (unreferencedSources.length > 0) {
+    return {
+      code: "UNREFERENCED_SOURCE",
+      paths: { destination, sources: [] },
+      unreferencedSources,
+    };
+  }
+
   const matches = matchAll({ content, exists: (source) => sources.has(absolutePath(source)) });
+  /* istanbul ignore next */
   if (matches.length === 0) {
     return { code: "NO_MATCH", paths: { destination, sources: [] } };
   }

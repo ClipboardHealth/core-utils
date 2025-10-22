@@ -51,6 +51,15 @@ export function processResult(params: {
         isError: true,
         message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(missingMessage)}`,
       });
+    } else if (code === "UNREFERENCED_SOURCE") {
+      const { unreferencedSources } = embed;
+      const joined = unreferencedSources.map((path) => relative(path)).join(", ");
+      const notReferencedMessage = `not referenced: ${joined}`;
+      output.push({
+        code,
+        isError: true,
+        message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(notReferencedMessage)}`,
+      });
     } else {
       const toOutput = createToOutput({
         code,

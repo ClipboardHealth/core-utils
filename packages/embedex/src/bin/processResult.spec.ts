@@ -113,4 +113,31 @@ describe("processResult", () => {
       },
     ]);
   });
+
+  it("returns error for UNREFERENCED_SOURCE", () => {
+    const unreferencedSources = ["sources/unreferenced1.ts", "sources/unreferenced2.ts"];
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          {
+            code: "UNREFERENCED_SOURCE" as const,
+            paths: { destination, sources: [] },
+            unreferencedSources,
+          },
+        ],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "UNREFERENCED_SOURCE",
+        isError: true,
+        message: `${colors.red("UNREFERENCED_SOURCE")} ${colors.gray(destination)} -> ${colors.gray("not referenced: sources/unreferenced1.ts, sources/unreferenced2.ts")}`,
+      },
+    ]);
+  });
 });
