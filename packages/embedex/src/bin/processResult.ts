@@ -109,7 +109,9 @@ export function processResult(params: {
         break;
       }
 
-      default: {
+      case "NO_CHANGE":
+      case "NO_MATCH":
+      case "UPDATE": {
         const toOutput = createToOutput({
           code,
           paths: {
@@ -120,6 +122,12 @@ export function processResult(params: {
 
         const isError = code === "NO_MATCH" || (code === "UPDATE" && check);
         output.push(toOutput({ isError }));
+        break;
+      }
+
+      default: {
+        const exhaustiveCheck: never = code;
+        throw new Error(`Unhandled embed code: ${String(exhaustiveCheck)}`);
       }
     }
   }

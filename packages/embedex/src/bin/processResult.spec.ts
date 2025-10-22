@@ -187,4 +187,16 @@ describe("processResult", () => {
       },
     ]);
   });
+
+  it("throws error for unhandled embed code", () => {
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [{ code: "INVALID_CODE" as never, paths: { destination, sources } }],
+      },
+    };
+
+    expect(() => processResult(input)).toThrow("Unhandled embed code: INVALID_CODE");
+  });
 });
