@@ -1,5 +1,5 @@
 import type { DestinationPath } from "../types";
-import type { DestinationMap, SourceMap } from "./types";
+import type { DestinationMap } from "./types";
 
 export interface DependencyGraph {
   // Map of destination path to set of destinations it depends on (must be processed before it)
@@ -27,7 +27,6 @@ interface CircularDependencyError {
  */
 export function buildDependencyGraph(
   params: Readonly<{
-    sourceMap: Readonly<SourceMap>;
     destinationMap: Readonly<DestinationMap>;
   }>,
 ): DependencyGraph {
@@ -140,6 +139,7 @@ export function detectCircularDependency(
  *
  * @throws Error if the graph has a cycle (should check with detectCircularDependency first)
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPath[] {
   const { dependencies, destinations } = graph;
 
@@ -147,6 +147,19 @@ export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPa
   const inDegree = new Map<DestinationPath, number>();
   for (const destination of destinations) {
     inDegree.set(destination, dependencies.get(destination)!.size);
+  }
+
+  // Build reverse adjacency map: for each node, track which nodes depend on it
+  // This allows O(out-degree) updates instead of O(E) per dequeue
+  const dependents = new Map<DestinationPath, Set<DestinationPath>>();
+  for (const destination of destinations) {
+    dependents.set(destination, new Set());
+  }
+
+  for (const [destination, deps] of dependencies.entries()) {
+    for (const dependency of deps) {
+      dependents.get(dependency)!.add(destination);
+    }
   }
 
   // Queue of nodes with no dependencies
@@ -164,14 +177,16 @@ export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPa
     const current = queue.shift()!;
     result.push(current);
 
-    // For each destination that depends on current, decrease its in-degree
-    for (const [destination, deps] of dependencies.entries()) {
-      if (deps.has(current)) {
-        const newDegree = inDegree.get(destination)! - 1;
-        inDegree.set(destination, newDegree);
+    // For each node that depends on current, decrease its in-degree
+    const nodeDependents = dependents.get(current);
+    /* istanbul ignore next */
+    if (nodeDependents) {
+      for (const dependent of nodeDependents) {
+        const newDegree = inDegree.get(dependent)! - 1;
+        inDegree.set(dependent, newDegree);
 
         if (newDegree === 0) {
-          queue.push(destination);
+          queue.push(dependent);
         }
       }
     }

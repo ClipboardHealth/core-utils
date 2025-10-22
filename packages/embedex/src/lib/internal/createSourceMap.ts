@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { resolve } from "node:path";
 
 import { glob } from "glob";
 
@@ -18,7 +18,6 @@ export function stripSourceMarker(content: string): string {
     return rest.join("\n");
   }
 
-  /* istanbul ignore next */
   return content;
 }
 
@@ -29,19 +28,22 @@ export async function createSourceMap(
   const sourceMap = new Map<SourcePath, Source>();
   const paths = await glob(sourcesGlob, { absolute: true, cwd, nodir: true });
 
-  for await (const path of paths) {
-    const content = await readFile(path, "utf8");
-    const [first, ...rest] = content.split("\n");
-    if (first?.startsWith(SOURCE_MARKER_PREFIX)) {
-      sourceMap.set(path, {
-        content: rest.join("\n"),
-        destinations: first
-          .replace(SOURCE_MARKER_PREFIX, "")
-          .split(",")
-          .map((t) => join(cwd, t.trim())),
-      });
-    }
-  }
+  await Promise.all(
+    paths.map(async (path) => {
+      const content = await readFile(path, "utf8");
+      const [first, ...rest] = content.split("\n");
+      if (first?.startsWith(SOURCE_MARKER_PREFIX)) {
+        sourceMap.set(path, {
+          content: rest.join("\n"),
+          destinations: first
+            .replace(SOURCE_MARKER_PREFIX, "")
+            .split(",")
+            .filter((t) => t.length > 0)
+            .map((t) => resolve(cwd, t.trim())),
+        });
+      }
+    }),
+  );
 
   return sourceMap;
 }

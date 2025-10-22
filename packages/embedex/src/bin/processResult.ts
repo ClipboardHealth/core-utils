@@ -106,6 +106,6 @@ function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) 
   return ({ isError }: { isError: boolean }) => ({
     code,
     isError,
-    message: `${colors.green(code)} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+    message: `${(isError ? colors.red : colors.green)(code)} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
   });
 }

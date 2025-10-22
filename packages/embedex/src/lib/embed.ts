@@ -24,7 +24,7 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
   const destinationMap = await createDestinationMap({ sourceMap });
 
   // Build dependency graph to determine processing order
-  const graph = buildDependencyGraph({ sourceMap, destinationMap });
+  const graph = buildDependencyGraph({ destinationMap });
 
   // Check for circular dependencies
   const circularDependency = detectCircularDependency(graph);

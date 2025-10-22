@@ -1,34 +1,13 @@
 import type { DependencyGraph } from "./dependencyGraph";
 import { buildDependencyGraph, detectCircularDependency, topologicalSort } from "./dependencyGraph";
-import type { DestinationMap, SourceMap } from "./types";
-
-function createSourceMap(entries: Array<[source: string, destinations: string[]]>): SourceMap {
-  return new Map(
-    entries.map(([source, destinations]) => [
-      source,
-      { content: `content of ${source}`, destinations },
-    ]),
-  );
-}
-
-function createDestinationMap(
-  entries: Array<[destination: string, sources: string[]]>,
-): DestinationMap {
-  return new Map(
-    entries.map(([destination, sources]) => [
-      destination,
-      { content: `content of ${destination}`, sources: new Set(sources) },
-    ]),
-  );
-}
+import type { DestinationMap } from "./types";
 
 describe("dependencyGraph", () => {
   describe("buildDependencyGraph", () => {
     it("creates empty graph when no destinations", () => {
-      const sourceMap = createSourceMap([]);
       const destinationMap = createDestinationMap([]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph).toEqual({
         dependencies: new Map(),
@@ -37,10 +16,9 @@ describe("dependencyGraph", () => {
     });
 
     it("creates graph with no dependencies for single destination", () => {
-      const sourceMap = createSourceMap([["A", ["B"]]]);
       const destinationMap = createDestinationMap([["B", ["A"]]]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph).toEqual({
         dependencies: new Map([["B", new Set()]]),
@@ -50,16 +28,12 @@ describe("dependencyGraph", () => {
 
     it("creates simple chain A -> B -> C", () => {
       // A embeds into B, B embeds into C
-      const sourceMap = createSourceMap([
-        ["A", ["B"]],
-        ["B", ["C"]],
-      ]);
       const destinationMap = createDestinationMap([
         ["B", ["A"]],
         ["C", ["B"]],
       ]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph).toEqual({
         dependencies: new Map([
@@ -73,11 +47,6 @@ describe("dependencyGraph", () => {
     it("creates chain where all files are both source and destination", () => {
       // A embeds into B, B embeds into C, C embeds into D
       // All are both sources and destinations
-      const sourceMap = createSourceMap([
-        ["A", ["B"]],
-        ["B", ["C"]],
-        ["C", ["D"]],
-      ]);
       const destinationMap = createDestinationMap([
         ["A", ["X"]], // A receives from X (not in this test)
         ["B", ["A"]],
@@ -85,7 +54,7 @@ describe("dependencyGraph", () => {
         ["D", ["C"]],
       ]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph.dependencies).toEqual(
         new Map([
@@ -98,11 +67,6 @@ describe("dependencyGraph", () => {
     });
 
     it("creates diamond dependency: A -> B, A -> C, B -> D, C -> D", () => {
-      const sourceMap = createSourceMap([
-        ["A", ["B", "C"]],
-        ["B", ["D"]],
-        ["C", ["D"]],
-      ]);
       const destinationMap = createDestinationMap([
         ["A", ["X"]],
         ["B", ["A"]],
@@ -110,7 +74,7 @@ describe("dependencyGraph", () => {
         ["D", ["B", "C"]],
       ]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph.dependencies).toEqual(
         new Map([
@@ -125,11 +89,6 @@ describe("dependencyGraph", () => {
     it("handles multiple independent chains", () => {
       // Chain 1: A -> B -> C
       // Chain 2: X -> Y
-      const sourceMap = createSourceMap([
-        ["A", ["B"]],
-        ["B", ["C"]],
-        ["X", ["Y"]],
-      ]);
       const destinationMap = createDestinationMap([
         ["A", ["Z"]],
         ["B", ["A"]],
@@ -138,7 +97,7 @@ describe("dependencyGraph", () => {
         ["Y", ["X"]],
       ]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph.dependencies).toEqual(
         new Map([
@@ -153,7 +112,6 @@ describe("dependencyGraph", () => {
 
     it("handles fan-out: one source to multiple destinations", () => {
       // A -> B, A -> C, A -> D
-      const sourceMap = createSourceMap([["A", ["B", "C", "D"]]]);
       const destinationMap = createDestinationMap([
         ["A", ["X"]],
         ["B", ["A"]],
@@ -161,7 +119,7 @@ describe("dependencyGraph", () => {
         ["D", ["A"]],
       ]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph.dependencies).toEqual(
         new Map([
@@ -175,11 +133,6 @@ describe("dependencyGraph", () => {
 
     it("handles fan-in: multiple sources to one destination", () => {
       // A -> D, B -> D, C -> D
-      const sourceMap = createSourceMap([
-        ["A", ["D"]],
-        ["B", ["D"]],
-        ["C", ["D"]],
-      ]);
       const destinationMap = createDestinationMap([
         ["A", ["X"]],
         ["B", ["Y"]],
@@ -187,7 +140,7 @@ describe("dependencyGraph", () => {
         ["D", ["A", "B", "C"]],
       ]);
 
-      const graph = buildDependencyGraph({ sourceMap, destinationMap });
+      const graph = buildDependencyGraph({ destinationMap });
 
       expect(graph.dependencies).toEqual(
         new Map([
@@ -509,3 +462,14 @@ describe("dependencyGraph", () => {
     });
   });
 });
+
+function createDestinationMap(
+  entries: Array<[destination: string, sources: string[]]>,
+): DestinationMap {
+  return new Map(
+    entries.map(([destination, sources]) => [
+      destination,
+      { content: `content of ${destination}`, sources: new Set(sources) },
+    ]),
+  );
+}

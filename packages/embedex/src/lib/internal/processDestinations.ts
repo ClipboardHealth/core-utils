@@ -38,7 +38,7 @@ export function processDestinations(
 
   const result: Embed[] = [];
   for (const entry of destinationMap.entries()) {
-    const params: {
+    const childParams: {
       cwd: string;
       entry: [string, Destination];
       sourceMap: Readonly<SourceMap>;
@@ -46,10 +46,10 @@ export function processDestinations(
     } = { cwd, entry, sourceMap };
     /* istanbul ignore else */
     if (updatedContentMap) {
-      params.updatedContentMap = updatedContentMap;
+      childParams.updatedContentMap = updatedContentMap;
     }
 
-    result.push(processDestination(params));
+    result.push(processDestination(childParams));
   }
 
   return result;

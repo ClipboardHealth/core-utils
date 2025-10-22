@@ -28,7 +28,7 @@ describe("processResult", () => {
       {
         code: "UPDATE",
         isError: true,
-        message: `${colors.green("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+        message: `${colors.red("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
     ]);
   });
@@ -77,7 +77,7 @@ describe("processResult", () => {
       {
         code: "NO_MATCH",
         isError: true,
-        message: `${colors.green("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+        message: `${colors.red("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
       {
         code: "UPDATE",
