@@ -6,7 +6,7 @@ import { glob } from "glob";
 import { type SourcePath } from "../types";
 import { type Source, type SourceMap } from "./types";
 
-const SOURCE_MARKER_PREFIX = "// ";
+const SOURCE_MARKER_PREFIX = "// embedex: ";
 
 export async function createSourceMap(
   params: Readonly<{ cwd: string; sourcesGlob: string }>,

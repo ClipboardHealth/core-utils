@@ -1,4 +1,4 @@
-// packages/rules-engine/README.md
+// embedex: packages/rules-engine/README.md
 import { deepEqual } from "node:assert/strict";
 
 import {

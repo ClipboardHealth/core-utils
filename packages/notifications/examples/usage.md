@@ -1,4 +1,4 @@
-// packages/ai-rules/.ruler/backend/notifications.md,packages/notifications/README.md
+// embedex: packages/ai-rules/.ruler/backend/notifications.md,packages/notifications/README.md
 
 1. Search your service for a `NotificationJobEnqueuer` instance. If there isn't one, create and export it:
 

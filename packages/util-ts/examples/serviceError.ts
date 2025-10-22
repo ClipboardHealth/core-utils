@@ -1,4 +1,4 @@
-// packages/util-ts/README.md
+// embedex: packages/util-ts/README.md
 import { deepEqual, strictEqual } from "node:assert/strict";
 
 import { ERROR_CODES, ServiceError } from "@clipboard-health/util-ts";

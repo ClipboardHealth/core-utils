@@ -33,7 +33,7 @@ npm install --global embedex
 1. Add a source file to the `./examples` directory (configurable). The first line is a comma-separated list of destination file paths to embed the source's file contents into. `./examples/greeter.ts`:
 
    ```ts
-   // README.md,src/greeter.ts
+   // embedex: README.md,src/greeter.ts
    import { greet } from "@my-scope/greeter";
 
    greet("world");

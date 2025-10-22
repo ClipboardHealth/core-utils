@@ -1,4 +1,4 @@
-// packages/config/src/lib/createConfig.ts,packages/config/README.md
+// embedex: packages/config/src/lib/createConfig.ts,packages/config/README.md
 import { ok } from "node:assert/strict";
 
 import { createConfig } from "@clipboard-health/config";

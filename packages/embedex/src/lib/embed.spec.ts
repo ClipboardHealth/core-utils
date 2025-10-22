@@ -47,7 +47,7 @@ describe("embed", () => {
 
   it("returns NO_MATCH for non-existent sources", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -71,7 +71,7 @@ describe("embed", () => {
   });
 
   it("ignores source files without source marker prefix", async () => {
-    // Create a source file without the "// " prefix
+    // Create a source file without the "// embedex: " prefix
     await write(paths.sources.a, sourceACode);
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
@@ -82,7 +82,7 @@ describe("embed", () => {
   });
 
   it("throws for non-existent destinations", async () => {
-    await write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]);
+    await write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]);
 
     await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
       `ENOENT: no such file or directory, open '${join(cwd, paths.destinations.l)}'`,
@@ -91,7 +91,7 @@ describe("embed", () => {
 
   it("returns NO_MATCH for destinations with no matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, ["/**", " * @example", " * ```ts", " * ```", " */"]),
     ]);
 
@@ -107,7 +107,7 @@ describe("embed", () => {
 
   it("returns UPDATE for TypeScript destinations with matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -140,7 +140,7 @@ describe("embed", () => {
 
   it("returns UPDATE for Markdown destinations with matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.n}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.n}`, ...sourceACode]),
       write(paths.destinations.n, [`<embedex source="${paths.sources.a}">`, "</embedex>"]),
     ]);
 
@@ -176,7 +176,7 @@ describe("embed", () => {
     ];
     await Promise.all([
       write(paths.sources.a, [
-        `// ${paths.destinations.l},${paths.destinations.m}`,
+        `// embedex: ${paths.destinations.l},${paths.destinations.m}`,
         ...sourceACode,
       ]),
       write(paths.destinations.l, destinationContent),
@@ -208,7 +208,10 @@ describe("embed", () => {
   it("returns UPDATE for multiple destinations with Markdown source", async () => {
     const sourceCode = ["# Hello"];
     await Promise.all([
-      write(paths.sources.c, [`// ${paths.destinations.l},${paths.destinations.n}`, ...sourceCode]),
+      write(paths.sources.c, [
+        `// embedex: ${paths.destinations.l},${paths.destinations.n}`,
+        ...sourceCode,
+      ]),
       write(paths.destinations.l, [`<embedex source="${paths.sources.c}">`, "</embedex>"]),
       write(paths.destinations.n, [`<embedex source="${paths.sources.c}">`, "</embedex>"]),
     ]);
@@ -251,7 +254,7 @@ describe("embed", () => {
     const sourceCode = ["val x = 1;"];
     const sourcePath = "sources/o.unknown";
     await Promise.all([
-      write(sourcePath, [`// ${paths.destinations.l}`, ...sourceCode]),
+      write(sourcePath, [`// embedex: ${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [`<embedex source="${sourcePath}">`, "</embedex>"]),
     ]);
 
@@ -281,7 +284,7 @@ describe("embed", () => {
     const sourceCode = ["function foo() {", `  console.log("bar");`, "}"];
     const destinationCode = ["   * function foo() {", `   *   console.log("bar");`, "   * }"];
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceCode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [
         "class A {",
         "  /**",
@@ -324,7 +327,7 @@ describe("embed", () => {
     const sourceCode = ["/** hello */", "```ts", "const x = 1;", "```"];
     const destinationCode = [" * /** hello *\\/", " * ```ts", " * const x = 1;", " * ```"];
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceCode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -361,7 +364,7 @@ describe("embed", () => {
 
   it("returns UPDATE for destinations with multiple matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -397,7 +400,7 @@ describe("embed", () => {
       " */",
     ];
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, destinationContent),
     ]);
 
@@ -409,7 +412,7 @@ describe("embed", () => {
 
   it("returns NO_CHANGE if already embedded", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -432,7 +435,7 @@ describe("embed", () => {
 
   it("writes source to destination", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -461,8 +464,8 @@ describe("embed", () => {
     const sourceBCode = [`const x = "b";`];
     const destinationBCode = [" *", " * ```ts", ` * const x = "b";`, " * ```", " *"];
     await Promise.all([
-      write(paths.sources.a, [`// ${paths.destinations.l}`, ...sourceACode]),
-      write(paths.sources.b, [`// ${paths.destinations.l}`, ...sourceBCode]),
+      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.b, [`// embedex: ${paths.destinations.l}`, ...sourceBCode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -508,11 +511,11 @@ describe("embed", () => {
       const finalMarkdown = "src/final.md";
 
       // Create a TypeScript source
-      await write(paths.sources.a, [`// ${intermediateMarkdown}`, ...sourceACode]);
+      await write(paths.sources.a, [`// embedex: ${intermediateMarkdown}`, ...sourceACode]);
 
       // Create an intermediate markdown that embeds the TypeScript source
       await write(intermediateMarkdown, [
-        `// ${finalMarkdown}`,
+        `// embedex: ${finalMarkdown}`,
         "",
         "1. Step one:",
         "",
@@ -578,11 +581,11 @@ describe("embed", () => {
       const final = "src/final.md";
 
       // Level 1: Raw content
-      await write(level1, [`// ${level2}`, "Hello world"]);
+      await write(level1, [`// embedex: ${level2}`, "Hello world"]);
 
       // Level 2: Embeds level 1 with extra blank lines
       await write(level2, [
-        `// ${final}`,
+        `// embedex: ${final}`,
         "",
         `<embedex source="${level1}">`,
         "",
@@ -617,7 +620,7 @@ describe("embed", () => {
 
       // Create intermediate with intentional blank lines in content
       await write(intermediate, [
-        `// ${final}`,
+        `// embedex: ${final}`,
         "",
         "Line 1",
         "",
@@ -632,7 +635,7 @@ describe("embed", () => {
         "</embedex>",
       ]);
 
-      await write(paths.sources.a, [`// ${intermediate}`, ...sourceACode]);
+      await write(paths.sources.a, [`// embedex: ${intermediate}`, ...sourceACode]);
       await write(final, [`<embedex source="${intermediate}">`, "</embedex>"]);
 
       const actual = await embed({ sourcesGlob, cwd, write: false });

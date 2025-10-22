@@ -1,4 +1,4 @@
-// packages/testing-core/README.md
+// embedex: packages/testing-core/README.md
 import { strictEqual } from "node:assert/strict";
 
 import { expectToBeLeft } from "@clipboard-health/testing-core";

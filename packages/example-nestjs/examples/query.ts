@@ -1,4 +1,4 @@
-// packages/json-api-nestjs/src/lib/query/cursorPaginationQuery.ts,packages/json-api-nestjs/src/lib/query/fieldsQuery.ts,packages/json-api-nestjs/src/lib/query/filterQuery.ts,packages/json-api-nestjs/src/lib/query/includeQuery.ts,packages/json-api-nestjs/src/lib/query/sortQuery.ts,packages/json-api-nestjs/README.md
+// embedex: packages/json-api-nestjs/src/lib/query/cursorPaginationQuery.ts,packages/json-api-nestjs/src/lib/query/fieldsQuery.ts,packages/json-api-nestjs/src/lib/query/filterQuery.ts,packages/json-api-nestjs/src/lib/query/includeQuery.ts,packages/json-api-nestjs/src/lib/query/sortQuery.ts,packages/json-api-nestjs/README.md
 import { booleanString } from "@clipboard-health/contract-core";
 import {
   cursorPaginationQuery,

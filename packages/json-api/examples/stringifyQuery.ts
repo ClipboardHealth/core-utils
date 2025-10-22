@@ -1,4 +1,4 @@
-// packages/json-api/src/lib/query/stringifyQuery.ts,packages/json-api/README.md
+// embedex: packages/json-api/src/lib/query/stringifyQuery.ts,packages/json-api/README.md
 import { deepEqual } from "node:assert/strict";
 
 import { stringifyQuery } from "@clipboard-health/json-api";
