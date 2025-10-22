@@ -146,7 +146,14 @@ function createReplacement(
   const contentHasCodeFence = content.includes("```");
   const backticks = contentHasCodeFence ? "````" : "```";
   const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(sourcePath).slice(1)];
-  let processedContent = content.replaceAll("*/", "*\\/").trimEnd();
+
+  // Only escape */ when embedding into comment blocks (e.g., JSDoc)
+  // to prevent breaking the comment. Don't escape in Markdown.
+  const isInCommentBlock = prefix.includes("*");
+  let processedContent = content.trimEnd();
+  if (isInCommentBlock) {
+    processedContent = processedContent.replaceAll("*/", "*\\/");
+  }
 
   // For markdown files, strip nested embedex tags to prevent recursive processing
   if (codeFenceId === "") {

@@ -389,6 +389,35 @@ describe("embed", () => {
     ]);
   });
 
+  it("does not escape comment blocks when embedding into markdown", async () => {
+    const sourceCode = ["/** hello */", "const x = 1;"];
+    await Promise.all([
+      write(paths.sources.a, [`// embedex: ${paths.destinations.n}`, ...sourceCode]),
+      write(paths.destinations.n, [`<embedex source="${paths.sources.a}">`, "</embedex>"]),
+    ]);
+
+    const actual = await embed({ sourcesGlob, cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UPDATE",
+        paths: {
+          sources: [toPath(paths.sources.a)],
+          destination: toPath(paths.destinations.n),
+        },
+        updatedContent: [
+          `<embedex source="${paths.sources.a}">`,
+          "",
+          "```ts",
+          ...sourceCode,
+          "```",
+          "",
+          "</embedex>",
+        ].join("\n"),
+      },
+    ]);
+  });
+
   it("returns UPDATE for destinations with multiple matches", async () => {
     await Promise.all([
       write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
