@@ -69,9 +69,12 @@ function processDestination(params: {
   // otherwise use the original content from disk
   // Strip source marker from updated content to ensure clean processing
   /* istanbul ignore next - defensive: destination typically not in updatedContentMap during processing */
-  const content = updatedContentMap?.has(destination)
+  let content = updatedContentMap?.has(destination)
     ? stripSourceMarker(updatedContentMap.get(destination)!)
     : originalContent;
+
+  // Normalize CRLF to LF to ensure consistent processing across platforms
+  content = content.replaceAll("\r\n", "\n");
 
   function absolutePath(path: string): string {
     return join(cwd, path);
@@ -137,6 +140,9 @@ function processDestination(params: {
       sourceContent = stripSourceMarker(sourceContent);
     }
 
+    // Normalize CRLF to LF to ensure consistent processing
+    sourceContent = sourceContent.replaceAll("\r\n", "\n");
+
     updatedContent = updatedContent.replaceAll(
       fullMatch,
       createReplacement({ content: sourceContent, sourcePath, prefix }),
@@ -191,9 +197,9 @@ function createReplacement(
   if (codeFenceId === "") {
     processedContent = processedContent
       .replaceAll(
-        /^(.*)<embedex source=".+?">\n([\S\s]*?)<\/embedex>/gm,
+        /^(.*)<embedex source=".+?">\r?\n([\S\s]*?)<\/embedex>/gm,
         (_match, _prefix, content: string) => {
-          const lines = content.split("\n");
+          const lines = content.split(/\r?\n/);
 
           // Remove leading blank lines
           while (lines.length > 0 && lines[0]?.trim() === "") {
@@ -212,7 +218,7 @@ function createReplacement(
       .trim();
   }
 
-  const contentLines = processedContent.split("\n");
+  const contentLines = processedContent.split(/\r?\n/);
   const lines = [
     `<embedex source="${sourcePath}">`,
     "",

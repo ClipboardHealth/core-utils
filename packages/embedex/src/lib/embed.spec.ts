@@ -42,6 +42,10 @@ describe("embed", () => {
     await writeFile(join(cwd, path), content.join("\n"), "utf8");
   }
 
+  async function writeWithCRLF(path: string, content: string[]) {
+    await writeFile(join(cwd, path), content.join("\r\n"), "utf8");
+  }
+
   function toPath(path: string) {
     return join(cwd, path);
   }
@@ -942,6 +946,76 @@ describe("embed", () => {
           "</embedex>",
         ].join("\n"),
       });
+    });
+  });
+
+  describe("CRLF line endings", () => {
+    it("handles Windows-style CRLF line endings correctly", async () => {
+      const sourceCode = [`const x = "windows";`, "", "console.log(x);"];
+
+      // Write files with CRLF line endings
+      await Promise.all([
+        writeWithCRLF(paths.sources.a, [
+          `${SOURCE_MARKER_PREFIX}${paths.destinations.l}`,
+          ...sourceCode,
+        ]),
+        writeWithCRLF(paths.destinations.l, [
+          "/**",
+          " * @example",
+          ` * <embedex source="${paths.sources.a}">`,
+          " * </embedex>",
+          " */",
+        ]),
+      ]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      expect(actual.embeds).toHaveLength(1);
+      const embedResult = actual.embeds[0]!;
+      expect(embedResult.code).toBe("UPDATE");
+      expect(embedResult.paths).toEqual({
+        sources: [toPath(paths.sources.a)],
+        destination: toPath(paths.destinations.l),
+      });
+
+      // Verify the updated content
+      expect(embedResult).toHaveProperty("updatedContent");
+      const { updatedContent } = embedResult as { code: "UPDATE"; updatedContent: string };
+      // Ensure no trailing \r characters are present
+      expect(updatedContent).not.toContain("\r");
+      // Verify the content structure
+      expect(updatedContent).toContain(`<embedex source="${paths.sources.a}">`);
+      expect(updatedContent).toContain('const x = "windows";');
+      expect(updatedContent).toContain("console.log(x);");
+    });
+
+    it("handles mixed LF and CRLF line endings", async () => {
+      // Source has LF, destination has CRLF
+      await Promise.all([
+        write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, "const x = 1;"]),
+        writeWithCRLF(paths.destinations.l, [
+          "/**",
+          " * @example",
+          ` * <embedex source="${paths.sources.a}">`,
+          " * </embedex>",
+          " */",
+        ]),
+      ]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      expect(actual.embeds).toHaveLength(1);
+      const embedResult = actual.embeds[0]!;
+      expect(embedResult.code).toBe("UPDATE");
+      expect(embedResult.paths).toEqual({
+        sources: [toPath(paths.sources.a)],
+        destination: toPath(paths.destinations.l),
+      });
+
+      expect(embedResult).toHaveProperty("updatedContent");
+      const { updatedContent } = embedResult as { code: "UPDATE"; updatedContent: string };
+      expect(updatedContent).not.toContain("\r");
+      expect(updatedContent).toContain("const x = 1;");
     });
   });
 });
