@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { embed } from "./embed";
+import { SOURCE_MARKER_PREFIX } from "./internal/createSourceMap";
 
 describe("embed", () => {
   // eslint-disable-next-line no-template-curly-in-string
@@ -47,7 +48,7 @@ describe("embed", () => {
 
   it("returns INVALID_SOURCE for non-existent sources", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX} ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -70,7 +71,7 @@ describe("embed", () => {
 
   it("returns UNREFERENCED_SOURCE when source declares destination but has no embedex tag", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -97,7 +98,7 @@ describe("embed", () => {
   });
 
   it("ignores source files without source marker prefix", async () => {
-    // Create a source file without the "// embedex: " prefix
+    // Create a source file without the SOURCE_MARKER_PREFIX prefix
     await write(paths.sources.a, sourceACode);
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
@@ -108,7 +109,10 @@ describe("embed", () => {
   });
 
   it("throws for non-existent destinations", async () => {
-    await write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]);
+    await write(paths.sources.a, [
+      `${SOURCE_MARKER_PREFIX}${paths.destinations.l}`,
+      ...sourceACode,
+    ]);
 
     await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
       `ENOENT: no such file or directory, open '${join(cwd, paths.destinations.l)}'`,
@@ -117,7 +121,7 @@ describe("embed", () => {
 
   it("returns UNREFERENCED_SOURCE for destinations with no embedex tags", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, ["/**", " * @example", " * ```ts", " * ```", " */"]),
     ]);
 
@@ -134,7 +138,7 @@ describe("embed", () => {
 
   it("returns UPDATE for TypeScript destinations with matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -167,7 +171,7 @@ describe("embed", () => {
 
   it("returns UPDATE for Markdown destinations with matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.n}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.n}`, ...sourceACode]),
       write(paths.destinations.n, [`<embedex source="${paths.sources.a}">`, "</embedex>"]),
     ]);
 
@@ -203,7 +207,7 @@ describe("embed", () => {
     ];
     await Promise.all([
       write(paths.sources.a, [
-        `// embedex: ${paths.destinations.l},${paths.destinations.m}`,
+        `${SOURCE_MARKER_PREFIX}${paths.destinations.l},${paths.destinations.m}`,
         ...sourceACode,
       ]),
       write(paths.destinations.l, destinationContent),
@@ -236,7 +240,7 @@ describe("embed", () => {
     const sourceCode = ["# Hello"];
     await Promise.all([
       write(paths.sources.c, [
-        `// embedex: ${paths.destinations.l},${paths.destinations.n}`,
+        `${SOURCE_MARKER_PREFIX}${paths.destinations.l},${paths.destinations.n}`,
         ...sourceCode,
       ]),
       write(paths.destinations.l, [`<embedex source="${paths.sources.c}">`, "</embedex>"]),
@@ -281,7 +285,7 @@ describe("embed", () => {
     const sourceCode = ["val x = 1;"];
     const sourcePath = "sources/o.unknown";
     await Promise.all([
-      write(sourcePath, [`// embedex: ${paths.destinations.l}`, ...sourceCode]),
+      write(sourcePath, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [`<embedex source="${sourcePath}">`, "</embedex>"]),
     ]);
 
@@ -311,7 +315,7 @@ describe("embed", () => {
     const sourceCode = ["function foo() {", `  console.log("bar");`, "}"];
     const destinationCode = ["   * function foo() {", `   *   console.log("bar");`, "   * }"];
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceCode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [
         "class A {",
         "  /**",
@@ -354,7 +358,7 @@ describe("embed", () => {
     const sourceCode = ["/** hello */", "```ts", "const x = 1;", "```"];
     const destinationCode = [" * /** hello *\\/", " * ```ts", " * const x = 1;", " * ```"];
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceCode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -392,7 +396,7 @@ describe("embed", () => {
   it("does not escape comment blocks when embedding into markdown", async () => {
     const sourceCode = ["/** hello */", "const x = 1;"];
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.n}`, ...sourceCode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.n}`, ...sourceCode]),
       write(paths.destinations.n, [`<embedex source="${paths.sources.a}">`, "</embedex>"]),
     ]);
 
@@ -420,7 +424,7 @@ describe("embed", () => {
 
   it("returns UPDATE for destinations with multiple matches", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -456,7 +460,7 @@ describe("embed", () => {
       " */",
     ];
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, destinationContent),
     ]);
 
@@ -468,7 +472,7 @@ describe("embed", () => {
 
   it("returns NO_CHANGE if already embedded", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -491,7 +495,7 @@ describe("embed", () => {
 
   it("writes source to destination", async () => {
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -520,8 +524,8 @@ describe("embed", () => {
     const sourceBCode = [`const x = "b";`];
     const destinationBCode = [" *", " * ```ts", ` * const x = "b";`, " * ```", " *"];
     await Promise.all([
-      write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
-      write(paths.sources.b, [`// embedex: ${paths.destinations.l}`, ...sourceBCode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.b, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceBCode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -561,17 +565,238 @@ describe("embed", () => {
     );
   });
 
+  describe("dependency graph and chained embeds", () => {
+    it("processes simple chain A -> B -> C in single run", async () => {
+      // A.ts embeds into B.md, B.md embeds into C.md
+      // Should work in a single run now
+      const chainPaths = {
+        a: "sources/a.ts",
+        b: "sources/b.md",
+        c: "src/c.md",
+      };
+
+      await Promise.all([
+        write(chainPaths.a, [`${SOURCE_MARKER_PREFIX}${chainPaths.b}`, ...sourceACode]),
+        write(chainPaths.b, [
+          `${SOURCE_MARKER_PREFIX}${chainPaths.c}`,
+          `<embedex source="${chainPaths.a}">`,
+          "</embedex>",
+        ]),
+        write(chainPaths.c, [`<embedex source="${chainPaths.b}">`, "</embedex>"]),
+      ]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      // B.md should have A.ts embedded
+      const embedB = actual.embeds.find(
+        (embed) => embed.paths.destination === toPath(chainPaths.b),
+      );
+      expect(embedB?.code).toBe("UPDATE");
+
+      // C.md should have updated B.md content (with A.ts embedded)
+      const embedC = actual.embeds.find(
+        (embed) => embed.paths.destination === toPath(chainPaths.c),
+      );
+      expect(embedC?.code).toBe("UPDATE");
+      expect(embedC).toBeDefined();
+      // Verify that C.md contains the code from A.ts
+      expect(embedC!.code).toBe("UPDATE");
+      expect((embedC as { code: "UPDATE"; updatedContent: string }).updatedContent).toContain(
+        sourceACode[0],
+      );
+    });
+
+    it("processes 4-level chain correctly", async () => {
+      const paths4 = {
+        a: "sources/a.ts",
+        b: "sources/b.md",
+        c: "sources/c.md",
+        d: "src/d.md",
+      };
+
+      await Promise.all([
+        write(paths4.a, [`${SOURCE_MARKER_PREFIX}${paths4.b}`, "const x = 1;"]),
+        write(paths4.b, [
+          `${SOURCE_MARKER_PREFIX}${paths4.c}`,
+          `<embedex source="${paths4.a}">`,
+          "</embedex>",
+        ]),
+        write(paths4.c, [
+          `${SOURCE_MARKER_PREFIX}${paths4.d}`,
+          `<embedex source="${paths4.b}">`,
+          "</embedex>",
+        ]),
+        write(paths4.d, [`<embedex source="${paths4.c}">`, "</embedex>"]),
+      ]);
+
+      const actual = await embed({ sourcesGlob: "sources/**/*.{md,ts}", cwd, write: false });
+
+      // All should be UPDATE
+      expect(actual.embeds.every((embed) => embed.code === "UPDATE")).toBe(true);
+
+      // Final destination should contain original source code
+      const embedD = actual.embeds.find((embed) => embed.paths.destination === toPath(paths4.d));
+      expect(embedD?.code).toBe("UPDATE");
+      expect(embedD).toBeDefined();
+      expect((embedD as { code: "UPDATE"; updatedContent: string }).updatedContent).toContain(
+        "const x = 1;",
+      );
+    });
+
+    it("processes diamond dependency correctly", async () => {
+      // A -> B, A -> C, both embed into D
+      const pathsDiamond = {
+        a: "sources/a.ts",
+        b: "sources/b.md",
+        c: "sources/c.md",
+        d: "src/d.md",
+      };
+
+      await Promise.all([
+        write(pathsDiamond.a, [
+          `${SOURCE_MARKER_PREFIX}${pathsDiamond.b},${pathsDiamond.c}`,
+          "const x = 1;",
+        ]),
+        write(pathsDiamond.b, [
+          `${SOURCE_MARKER_PREFIX}${pathsDiamond.d}`,
+          `<embedex source="${pathsDiamond.a}">`,
+          "</embedex>",
+        ]),
+        write(pathsDiamond.c, [
+          `${SOURCE_MARKER_PREFIX}${pathsDiamond.d}`,
+          `<embedex source="${pathsDiamond.a}">`,
+          "</embedex>",
+        ]),
+        write(pathsDiamond.d, [
+          `<embedex source="${pathsDiamond.b}">`,
+          "</embedex>",
+          "",
+          `<embedex source="${pathsDiamond.c}">`,
+          "</embedex>",
+        ]),
+      ]);
+
+      const actual = await embed({ sourcesGlob: "sources/**/*.{md,ts}", cwd, write: false });
+
+      // All should be UPDATE
+      expect(actual.embeds.every((embed) => embed.code === "UPDATE")).toBe(true);
+
+      // Final destination should contain embedded content from both B and C
+      const embedD = actual.embeds.find(
+        (embed) => embed.paths.destination === toPath(pathsDiamond.d),
+      );
+      expect(embedD?.code).toBe("UPDATE");
+      expect(embedD).toBeDefined();
+      expect((embedD as { code: "UPDATE"; updatedContent: string }).updatedContent).toContain(
+        "const x = 1;",
+      );
+    });
+
+    it("detects circular dependency A -> B -> A", async () => {
+      const cyclePaths = {
+        a: "sources/a.md",
+        b: "sources/b.md",
+      };
+
+      await Promise.all([
+        write(cyclePaths.a, [
+          `${SOURCE_MARKER_PREFIX}${cyclePaths.b}`,
+          `<embedex source="${cyclePaths.b}">`,
+          "</embedex>",
+        ]),
+        write(cyclePaths.b, [
+          `${SOURCE_MARKER_PREFIX}${cyclePaths.a}`,
+          `<embedex source="${cyclePaths.a}">`,
+          "</embedex>",
+        ]),
+      ]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      expect(actual.embeds).toHaveLength(1);
+      const firstEmbed = actual.embeds[0];
+      expect(firstEmbed?.code).toBe("CIRCULAR_DEPENDENCY");
+      expect(firstEmbed).toBeDefined();
+      const circularEmbed = firstEmbed as { code: "CIRCULAR_DEPENDENCY"; cycle: string[] };
+      expect(circularEmbed.cycle.length).toBeGreaterThanOrEqual(3);
+      // Cycle should contain both files
+      const cycleSet = new Set(circularEmbed.cycle);
+      expect(cycleSet.has(toPath(cyclePaths.a))).toBe(true);
+      expect(cycleSet.has(toPath(cyclePaths.b))).toBe(true);
+    });
+
+    it("detects 3-node circular dependency A -> B -> C -> A", async () => {
+      const pathsCycle = {
+        a: "sources/a.md",
+        b: "sources/b.md",
+        c: "sources/c.md",
+      };
+
+      await Promise.all([
+        write(pathsCycle.a, [
+          `${SOURCE_MARKER_PREFIX}${pathsCycle.b}`,
+          `<embedex source="${pathsCycle.c}">`,
+          "</embedex>",
+        ]),
+        write(pathsCycle.b, [
+          `${SOURCE_MARKER_PREFIX}${pathsCycle.c}`,
+          `<embedex source="${pathsCycle.a}">`,
+          "</embedex>",
+        ]),
+        write(pathsCycle.c, [
+          `${SOURCE_MARKER_PREFIX}${pathsCycle.a}`,
+          `<embedex source="${pathsCycle.b}">`,
+          "</embedex>",
+        ]),
+      ]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      expect(actual.embeds).toHaveLength(1);
+      const cycleEmbed = actual.embeds[0];
+      expect(cycleEmbed?.code).toBe("CIRCULAR_DEPENDENCY");
+      expect(cycleEmbed).toBeDefined();
+      expect(
+        (cycleEmbed as { code: "CIRCULAR_DEPENDENCY"; cycle: string[] }).cycle.length,
+      ).toBeGreaterThanOrEqual(3);
+    });
+
+    it("processes multiple independent chains correctly", async () => {
+      const pathsMulti = {
+        a1: "sources/a1.ts",
+        b1: "sources/b1.md",
+        a2: "sources/a2.ts",
+        b2: "sources/b2.md",
+      };
+
+      await Promise.all([
+        write(pathsMulti.a1, [`${SOURCE_MARKER_PREFIX}${pathsMulti.b1}`, "const x = 1;"]),
+        write(pathsMulti.b1, [`<embedex source="${pathsMulti.a1}">`, "</embedex>"]),
+        write(pathsMulti.a2, [`${SOURCE_MARKER_PREFIX}${pathsMulti.b2}`, "const y = 2;"]),
+        write(pathsMulti.b2, [`<embedex source="${pathsMulti.a2}">`, "</embedex>"]),
+      ]);
+
+      const actual = await embed({ sourcesGlob, cwd, write: false });
+
+      expect(actual.embeds).toHaveLength(2);
+      expect(actual.embeds.every((embed) => embed.code === "UPDATE")).toBe(true);
+    });
+  });
+
   describe("nested embedex tags", () => {
     it("strips nested embedex tags from markdown and removes leading/trailing blank lines", async () => {
       const intermediateMarkdown = "sources/intermediate.md";
       const finalMarkdown = "src/final.md";
 
       // Create a TypeScript source
-      await write(paths.sources.a, [`// embedex: ${intermediateMarkdown}`, ...sourceACode]);
+      await write(paths.sources.a, [
+        `${SOURCE_MARKER_PREFIX}${intermediateMarkdown}`,
+        ...sourceACode,
+      ]);
 
       // Create an intermediate markdown that embeds the TypeScript source
       await write(intermediateMarkdown, [
-        `// embedex: ${finalMarkdown}`,
+        `${SOURCE_MARKER_PREFIX}${finalMarkdown}`,
         "",
         "1. Step one:",
         "",
@@ -637,11 +862,11 @@ describe("embed", () => {
       const final = "src/final.md";
 
       // Level 1: Raw content
-      await write(level1, [`// embedex: ${level2}`, "Hello world"]);
+      await write(level1, [`${SOURCE_MARKER_PREFIX}${level2}`, "Hello world"]);
 
       // Level 2: Embeds level 1 with extra blank lines
       await write(level2, [
-        `// embedex: ${final}`,
+        `${SOURCE_MARKER_PREFIX}${final}`,
         "",
         `<embedex source="${level1}">`,
         "",
@@ -676,7 +901,7 @@ describe("embed", () => {
 
       // Create intermediate with intentional blank lines in content
       await write(intermediate, [
-        `// embedex: ${final}`,
+        `${SOURCE_MARKER_PREFIX}${final}`,
         "",
         "Line 1",
         "",
@@ -691,7 +916,7 @@ describe("embed", () => {
         "</embedex>",
       ]);
 
-      await write(paths.sources.a, [`// embedex: ${intermediate}`, ...sourceACode]);
+      await write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${intermediate}`, ...sourceACode]);
       await write(final, [`<embedex source="${intermediate}">`, "</embedex>"]);
 
       const actual = await embed({ sourcesGlob, cwd, write: false });

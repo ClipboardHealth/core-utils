@@ -42,35 +42,57 @@ export function processResult(params: {
     const { code, paths } = embed;
     const { destination, sources } = paths;
 
-    if (code === "INVALID_SOURCE") {
-      const { invalidSources } = embed;
-      const joined = invalidSources.map((path) => relative(path)).join(", ");
-      const missingMessage = `missing: ${joined}`;
-      output.push({
-        code,
-        isError: true,
-        message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(missingMessage)}`,
-      });
-    } else if (code === "UNREFERENCED_SOURCE") {
-      const { unreferencedSources } = embed;
-      const joined = unreferencedSources.map((path) => relative(path)).join(", ");
-      const notReferencedMessage = `not referenced: ${joined}`;
-      output.push({
-        code,
-        isError: true,
-        message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(notReferencedMessage)}`,
-      });
-    } else {
-      const toOutput = createToOutput({
-        code,
-        paths: {
-          destination: relative(destination),
-          sources: sources.map((path) => relative(path)),
-        },
-      });
+    switch (code) {
+      case "INVALID_SOURCE": {
+        const { invalidSources } = embed;
+        const joined = invalidSources.map((path) => relative(path)).join(", ");
+        const missingMessage = `missing: ${joined}`;
+        output.push({
+          code,
+          isError: true,
+          message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(missingMessage)}`,
+        });
 
-      const isError = code === "NO_MATCH" || (code === "UPDATE" && check);
-      output.push(toOutput({ isError }));
+        break;
+      }
+
+      case "UNREFERENCED_SOURCE": {
+        const { unreferencedSources } = embed;
+        const joined = unreferencedSources.map((path) => relative(path)).join(", ");
+        const notReferencedMessage = `not referenced: ${joined}`;
+        output.push({
+          code,
+          isError: true,
+          message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(notReferencedMessage)}`,
+        });
+
+        break;
+      }
+
+      case "CIRCULAR_DEPENDENCY": {
+        const { cycle } = embed;
+        const cycleMessage = cycle.map((path) => relative(path)).join(" → ");
+        output.push({
+          code,
+          isError: true,
+          message: `${colors.red(code)} ${colors.gray(cycleMessage)}`,
+        });
+
+        break;
+      }
+
+      default: {
+        const toOutput = createToOutput({
+          code,
+          paths: {
+            destination: relative(destination),
+            sources: sources.map((path) => relative(path)),
+          },
+        });
+
+        const isError = code === "NO_MATCH" || (code === "UPDATE" && check);
+        output.push(toOutput({ isError }));
+      }
     }
   }
 

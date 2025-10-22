@@ -1,6 +1,7 @@
 import { extname, join } from "node:path";
 
 import type { Embed } from "../types";
+import { stripSourceMarker } from "./createSourceMap";
 import { type Destination, type DestinationMap, type SourceMap } from "./types";
 
 const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
@@ -30,25 +31,43 @@ export function processDestinations(
     cwd: string;
     sourceMap: Readonly<SourceMap>;
     destinationMap: Readonly<DestinationMap>;
+    updatedContentMap?: ReadonlyMap<string, string>;
   }>,
 ): Embed[] {
-  const { cwd, destinationMap, sourceMap } = params;
+  const { cwd, destinationMap, sourceMap, updatedContentMap } = params;
 
   const result: Embed[] = [];
   for (const entry of destinationMap.entries()) {
-    result.push(processDestination({ cwd, entry, sourceMap }));
+    const params: {
+      cwd: string;
+      entry: [string, Destination];
+      sourceMap: Readonly<SourceMap>;
+      updatedContentMap?: ReadonlyMap<string, string>;
+    } = { cwd, entry, sourceMap };
+    /* istanbul ignore else */
+    if (updatedContentMap) {
+      params.updatedContentMap = updatedContentMap;
+    }
+
+    result.push(processDestination(params));
   }
 
   return result;
 }
 
+// eslint-disable-next-line sonarjs/cognitive-complexity
 function processDestination(params: {
   cwd: string;
   entry: [destination: string, value: Destination];
   sourceMap: Readonly<SourceMap>;
+  updatedContentMap?: ReadonlyMap<string, string>;
 }): Embed {
-  const { cwd, sourceMap, entry } = params;
-  const [destination, { content, sources }] = entry;
+  const { cwd, sourceMap, entry, updatedContentMap } = params;
+  const [destination, { content: originalContent, sources }] = entry;
+
+  // Use updated content if available (from earlier processing in dependency order),
+  // otherwise use the original content from disk
+  const content = updatedContentMap?.get(destination) ?? originalContent;
 
   function absolutePath(path: string): string {
     return join(cwd, path);
@@ -104,10 +123,19 @@ function processDestination(params: {
 
   let updatedContent = content;
   for (const { fullMatch, prefix, sourcePath } of matches) {
-    const { content } = sourceMap.get(absolutePath(sourcePath))!;
+    const absoluteSourcePath = absolutePath(sourcePath);
+    const sourceFromMap = sourceMap.get(absoluteSourcePath)!;
+
+    // If the source is also a destination that was updated earlier, use its updated content
+    // and strip the source marker line if present
+    let sourceContent = updatedContentMap?.get(absoluteSourcePath) ?? sourceFromMap.content;
+    if (updatedContentMap?.has(absoluteSourcePath)) {
+      sourceContent = stripSourceMarker(sourceContent);
+    }
+
     updatedContent = updatedContent.replaceAll(
       fullMatch,
-      createReplacement({ content, sourcePath, prefix }),
+      createReplacement({ content: sourceContent, sourcePath, prefix }),
     );
   }
 

@@ -140,4 +140,31 @@ describe("processResult", () => {
       },
     ]);
   });
+
+  it("returns error for CIRCULAR_DEPENDENCY", () => {
+    const cycle = ["sources/a.md", "sources/b.md", "sources/a.md"];
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          {
+            code: "CIRCULAR_DEPENDENCY" as const,
+            paths: { destination, sources: [] },
+            cycle,
+          },
+        ],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "CIRCULAR_DEPENDENCY",
+        isError: true,
+        message: `${colors.red("CIRCULAR_DEPENDENCY")} ${colors.gray("sources/a.md → sources/b.md → sources/a.md")}`,
+      },
+    ]);
+  });
 });

@@ -6,7 +6,21 @@ import { glob } from "glob";
 import { type SourcePath } from "../types";
 import { type Source, type SourceMap } from "./types";
 
-const SOURCE_MARKER_PREFIX = "// embedex: ";
+export const SOURCE_MARKER_PREFIX = "// embedex: ";
+
+/**
+ * Strips the source marker line from content if it exists.
+ * This is needed when a file that is both a source and destination gets updated.
+ */
+export function stripSourceMarker(content: string): string {
+  const [first, ...rest] = content.split("\n");
+  if (first?.startsWith(SOURCE_MARKER_PREFIX)) {
+    return rest.join("\n");
+  }
+
+  /* istanbul ignore next */
+  return content;
+}
 
 export async function createSourceMap(
   params: Readonly<{ cwd: string; sourcesGlob: string }>,
