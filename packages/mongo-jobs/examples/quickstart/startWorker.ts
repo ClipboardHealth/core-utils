@@ -1,4 +1,4 @@
-// packages/mongo-jobs/README.md
+// embedex: packages/mongo-jobs/README.md
 import { backgroundJobs } from "./jobsRegistry";
 
 await backgroundJobs.start(["emails"], {

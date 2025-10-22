@@ -204,7 +204,7 @@ const backgroundJobs = new BackgroundJobs();
 // For jobs with constructor dependencies, register an instance
 const emailService = {
   async send(to: string, subject: string, body: string) {
-    console.log(`Sending email to ${to}: ${subject}`);
+    console.log(`Sending email to ${to}: ${subject} : ${body}`);
   },
 };
 
@@ -283,8 +283,12 @@ await backgroundJobs.enqueue(MyJob, {
 <embedex source="packages/mongo-jobs/examples/usage/enqueueWithOptions.ts">
 
 ```ts
+import type { ClientSession } from "mongodb";
+
 import { backgroundJobs } from "./jobsRegistry";
 import { MyJob } from "./myJob";
+
+declare const mongoSession: ClientSession;
 
 // Enqueue with options
 await backgroundJobs.enqueue(
@@ -356,13 +360,13 @@ await backgroundJobs.start(["notifications"], {
   useChangeStream: true,
 
   // Lock timeout for stuck jobs, in ms (default: 600000 = 10 minutes)
-  lockTimeoutMS: 300000,
+  lockTimeoutMS: 300_000,
 
   // Interval to check for stuck jobs, in ms (default: 60000 = 1 minute)
-  unlockJobsIntervalMS: 30000,
+  unlockJobsIntervalMS: 30_000,
 
   // Interval to refresh queue list, in ms (default: 30000 = 30 seconds)
-  refreshQueuesIntervalMS: 60000,
+  refreshQueuesIntervalMS: 60_000,
 
   // Exclude specific queues from processing
   exclude: ["low-priority-queue"],
@@ -377,7 +381,7 @@ await backgroundJobs.start(["notifications"], {
 import { backgroundJobs } from "./jobsRegistry";
 
 // Graceful shutdown
-await backgroundJobs.stop(30000); // Wait up to 30 seconds for jobs to complete
+await backgroundJobs.stop(30_000); // Wait up to 30 seconds for jobs to complete
 ```
 
 </embedex>
@@ -466,8 +470,8 @@ Prevent duplicate jobs from being enqueued or running simultaneously:
 <embedex source="packages/mongo-jobs/examples/usage/uniqueSimple.ts">
 
 ```ts
-import { backgroundJobs } from "./jobsRegistry";
 import { ProcessUserJob } from "./jobs/processUserJob";
+import { backgroundJobs } from "./jobsRegistry";
 
 // Simple uniqueness - single unique key for both enqueued and running
 await backgroundJobs.enqueue(
@@ -495,8 +499,8 @@ if there is one running, cause we don't know if the current recalculation will i
 <embedex source="packages/mongo-jobs/examples/usage/uniqueAdvanced.ts">
 
 ```ts
-import { backgroundJobs } from "./jobsRegistry";
 import { ProcessUserJob } from "./jobs/processUserJob";
+import { backgroundJobs } from "./jobsRegistry";
 
 // Advanced uniqueness - separate keys for enqueued vs running states
 await backgroundJobs.enqueue(
@@ -519,8 +523,8 @@ await backgroundJobs.enqueue(
 <embedex source="packages/mongo-jobs/examples/usage/uniqueMultipleEnqueued.ts">
 
 ```ts
-import { backgroundJobs } from "./jobsRegistry";
 import { SendEmailJob } from "./jobs/sendEmailJob";
+import { backgroundJobs } from "./jobsRegistry";
 
 // Example: Allow multiple enqueued but only one running
 await backgroundJobs.enqueue(

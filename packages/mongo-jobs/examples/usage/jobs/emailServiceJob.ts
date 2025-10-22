@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 interface EmailService {

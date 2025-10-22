@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import type { ClientSession } from "mongodb";
 
 import { backgroundJobs } from "./jobsRegistry";

@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import { ProcessUserJob } from "./jobs/processUserJob";
 import { backgroundJobs } from "./jobsRegistry";
 

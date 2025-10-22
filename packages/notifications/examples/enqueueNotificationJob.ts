@@ -1,4 +1,4 @@
-// packages/notifications/src/lib/notificationJobEnqueuer.ts,packages/notifications/examples/usage.md
+// embedex: packages/notifications/src/lib/notificationJobEnqueuer.ts,packages/notifications/examples/usage.md
 import {
   EXAMPLE_NOTIFICATION_JOB_NAME,
   type ExampleNotificationData,
@@ -11,8 +11,10 @@ async function enqueueNotificationJob() {
     EXAMPLE_NOTIFICATION_JOB_NAME,
     // Important: Read the TypeDoc documentation for additional context.
     {
-      // Set expiresAt at enqueue-time so it remains stable across job retries.
-      // Use date-fns in your service instead of this manual calculation.
+      /**
+       * Set expiresAt at enqueue-time so it remains stable across job retries. Use date-fns in your
+       * service instead of this manual calculation.
+       */
       expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
       // Set idempotencyKey at enqueue-time so it remains stable across job retries.
       idempotencyKey: {

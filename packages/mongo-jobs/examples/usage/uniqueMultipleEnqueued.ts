@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import { SendEmailJob } from "./jobs/sendEmailJob";
 import { backgroundJobs } from "./jobsRegistry";
 

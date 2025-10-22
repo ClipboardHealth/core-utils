@@ -1,4 +1,4 @@
-// packages/util-ts/src/lib/functional/serviceResult.ts,packages/util-ts/README.md
+// embedex: packages/util-ts/src/lib/functional/serviceResult.ts,packages/util-ts/README.md
 import { ok, strictEqual } from "node:assert/strict";
 
 import { isFailure, isSuccess, ServiceError, tryCatchAsync } from "@clipboard-health/util-ts";

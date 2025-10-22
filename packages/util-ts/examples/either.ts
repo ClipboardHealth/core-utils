@@ -1,4 +1,4 @@
-// packages/util-ts/src/lib/functional/either.ts,packages/util-ts/README.md
+// embedex: packages/util-ts/src/lib/functional/either.ts,packages/util-ts/README.md
 import { strictEqual } from "node:assert/strict";
 
 import { either as E, pipe } from "@clipboard-health/util-ts";

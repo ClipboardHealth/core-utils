@@ -7,7 +7,13 @@ export interface EmbedParams {
   write: boolean;
 }
 
-export type Code = "NO_CHANGE" | "NO_MATCH" | "UPDATE";
+export type Code =
+  | "NO_CHANGE"
+  | "NO_MATCH"
+  | "UPDATE"
+  | "INVALID_SOURCE"
+  | "UNREFERENCED_SOURCE"
+  | "CIRCULAR_DEPENDENCY";
 
 export interface Result {
   code: Code;
@@ -20,7 +26,22 @@ export interface Result {
 export type NoMatch = Result & { code: "NO_MATCH" };
 export type NoChange = Result & { code: "NO_CHANGE" };
 export type Updated = Result & { code: "UPDATE"; updatedContent: string };
-export type Embed = NoMatch | Updated | NoChange;
+export type InvalidSource = Result & { code: "INVALID_SOURCE"; invalidSources: string[] };
+export type UnreferencedSource = Result & {
+  code: "UNREFERENCED_SOURCE";
+  unreferencedSources: string[];
+};
+export type CircularDependency = Result & {
+  code: "CIRCULAR_DEPENDENCY";
+  cycle: string[];
+};
+export type Embed =
+  | NoMatch
+  | Updated
+  | NoChange
+  | InvalidSource
+  | UnreferencedSource
+  | CircularDependency;
 
 export interface EmbedResult {
   embeds: Embed[];

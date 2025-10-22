@@ -1,4 +1,4 @@
-// packages/contract-core/README.md
+// embedex: packages/contract-core/README.md
 import { apiErrors, booleanString, nonEmptyString, uuid } from "@clipboard-health/contract-core";
 import { type ZodError } from "zod";
 

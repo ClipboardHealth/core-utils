@@ -1,4 +1,4 @@
-// packages/config/README.md,packages/config/src/lib/createConfig.ts
+// embedex: packages/config/README.md,packages/config/src/lib/createConfig.ts
 Type-safe static configuration management: a pure function to resolve, validate against a Zod
 schema, and freeze configuration values.
 

@@ -1,4 +1,4 @@
-// packages/json-api/src/lib/query/parseQuery.ts,packages/json-api/README.md
+// embedex: packages/json-api/src/lib/query/parseQuery.ts,packages/json-api/README.md
 import { deepEqual } from "node:assert/strict";
 
 import { parseQuery } from "@clipboard-health/json-api";

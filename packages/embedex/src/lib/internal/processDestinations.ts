@@ -1,6 +1,7 @@
-import { extname, join } from "node:path";
+import { extname, resolve } from "node:path";
 
 import type { Embed } from "../types";
+import { stripSourceMarker } from "./createSourceMap";
 import { type Destination, type DestinationMap, type SourceMap } from "./types";
 
 const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
@@ -16,55 +17,6 @@ const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
   tsx: "ts",
 } as const;
 
-export function processDestinations(
-  params: Readonly<{
-    cwd: string;
-    sourceMap: Readonly<SourceMap>;
-    destinationMap: Readonly<DestinationMap>;
-  }>,
-): Embed[] {
-  const { cwd, destinationMap, sourceMap } = params;
-
-  const result: Embed[] = [];
-  for (const entry of destinationMap.entries()) {
-    result.push(processDestination({ cwd, entry, sourceMap }));
-  }
-
-  return result;
-}
-
-function processDestination(params: {
-  cwd: string;
-  entry: [destination: string, value: Destination];
-  sourceMap: Readonly<SourceMap>;
-}): Embed {
-  const { cwd, sourceMap, entry } = params;
-  const [destination, { content, sources }] = entry;
-
-  function absolutePath(path: string): string {
-    return join(cwd, path);
-  }
-
-  const matches = matchAll({ content, exists: (source) => sources.has(absolutePath(source)) });
-  if (matches.length === 0) {
-    return { code: "NO_MATCH", paths: { destination, sources: [] } };
-  }
-
-  let updatedContent = content;
-  for (const { fullMatch, prefix, sourcePath } of matches) {
-    const { content } = sourceMap.get(absolutePath(sourcePath))!;
-    updatedContent = updatedContent.replaceAll(
-      fullMatch,
-      createReplacement({ content, sourcePath, prefix }),
-    );
-  }
-
-  const paths = { sources: matches.map((m) => absolutePath(m.sourcePath)), destination };
-  return content === updatedContent
-    ? { code: "NO_CHANGE", paths }
-    : { code: "UPDATE", paths, updatedContent };
-}
-
 /**
  * A regex to match the embedex tag.
  *
@@ -72,7 +24,139 @@ function processDestination(params: {
  * 1. The block's prefix
  * 2. The source file path
  */
-const REGEX = /^(.*)<embedex source="(.+?)">\n[\S\s]*?<\/embedex>/gm;
+const REGEX = /^(.*)<embedex source="(.+?)">\r?\n[\S\s]*?<\/embedex>/gm;
+
+export function processDestinations(
+  params: Readonly<{
+    cwd: string;
+    sourceMap: Readonly<SourceMap>;
+    destinationMap: Readonly<DestinationMap>;
+    updatedContentMap?: ReadonlyMap<string, string>;
+  }>,
+): Embed[] {
+  const { cwd, destinationMap, sourceMap, updatedContentMap } = params;
+
+  const result: Embed[] = [];
+  for (const entry of destinationMap.entries()) {
+    const childParams: {
+      cwd: string;
+      entry: [string, Destination];
+      sourceMap: Readonly<SourceMap>;
+      updatedContentMap?: ReadonlyMap<string, string>;
+    } = { cwd, entry, sourceMap };
+    /* istanbul ignore else */
+    if (updatedContentMap) {
+      childParams.updatedContentMap = updatedContentMap;
+    }
+
+    result.push(processDestination(childParams));
+  }
+
+  return result;
+}
+
+// eslint-disable-next-line sonarjs/cognitive-complexity
+function processDestination(params: {
+  cwd: string;
+  entry: [destination: string, value: Destination];
+  sourceMap: Readonly<SourceMap>;
+  updatedContentMap?: ReadonlyMap<string, string>;
+}): Embed {
+  const { cwd, sourceMap, entry, updatedContentMap } = params;
+  const [destination, { content: originalContent, sources }] = entry;
+
+  // Use updated content if available (from earlier processing in dependency order),
+  // otherwise use the original content from disk
+  // Strip source marker from updated content to ensure clean processing
+  /* istanbul ignore next - defensive: destination typically not in updatedContentMap during processing */
+  let content = updatedContentMap?.has(destination)
+    ? stripSourceMarker(updatedContentMap.get(destination)!)
+    : originalContent;
+
+  // Normalize CRLF to LF to ensure consistent processing across platforms
+  content = content.replaceAll("\r\n", "\n");
+
+  function absolutePath(path: string): string {
+    return resolve(cwd, path);
+  }
+
+  // First, check for invalid source references and collect referenced sources
+  const allEmbedexTags = [...content.matchAll(REGEX)];
+  const invalidSources: string[] = [];
+  const referencedSources = new Set<string>();
+
+  for (const match of allEmbedexTags) {
+    const sourcePath = match[2];
+    /* istanbul ignore next */
+    if (sourcePath) {
+      const absoluteSourcePath = absolutePath(sourcePath);
+      if (sources.has(absoluteSourcePath)) {
+        referencedSources.add(absoluteSourcePath);
+      } else {
+        invalidSources.push(absoluteSourcePath);
+      }
+    }
+  }
+
+  if (invalidSources.length > 0) {
+    return {
+      code: "INVALID_SOURCE",
+      paths: { destination, sources: [] },
+      invalidSources,
+    };
+  }
+
+  // Check for unreferenced sources (sources that declare this destination but have no embedex tag)
+  const unreferencedSources: string[] = [];
+  for (const source of sources) {
+    if (!referencedSources.has(source)) {
+      unreferencedSources.push(source);
+    }
+  }
+
+  if (unreferencedSources.length > 0) {
+    return {
+      code: "UNREFERENCED_SOURCE",
+      paths: { destination, sources: [] },
+      unreferencedSources,
+    };
+  }
+
+  const matches = matchAll({ content, exists: (source) => sources.has(absolutePath(source)) });
+  /* istanbul ignore next */
+  if (matches.length === 0) {
+    return { code: "NO_MATCH", paths: { destination, sources: [] } };
+  }
+
+  // Deduplicate matches to avoid replacing identical tags multiple times with replaceAll
+  const uniqueMatches = [...new Map(matches.map((m) => [m.fullMatch, m])).values()];
+
+  let updatedContent = content;
+  for (const { fullMatch, prefix, sourcePath } of uniqueMatches) {
+    const absoluteSourcePath = absolutePath(sourcePath);
+    const sourceFromMap = sourceMap.get(absoluteSourcePath)!;
+
+    // If the source is also a destination that was updated earlier, use its updated content
+    // and strip the source marker line if present
+    let sourceContent = updatedContentMap?.get(absoluteSourcePath) ?? sourceFromMap.content;
+    if (updatedContentMap?.has(absoluteSourcePath)) {
+      sourceContent = stripSourceMarker(sourceContent);
+    }
+
+    // Normalize CRLF to LF to ensure consistent processing
+    sourceContent = sourceContent.replaceAll("\r\n", "\n");
+
+    updatedContent = updatedContent.replaceAll(
+      fullMatch,
+      createReplacement({ content: sourceContent, sourcePath, prefix }),
+    );
+  }
+
+  const paths = { sources: uniqueMatches.map((m) => absolutePath(m.sourcePath)), destination };
+  return content === updatedContent
+    ? { code: "NO_CHANGE", paths }
+    : { code: "UPDATE", paths, updatedContent };
+}
 
 function matchAll(
   params: Readonly<{
@@ -84,6 +168,7 @@ function matchAll(
   return [...content.matchAll(REGEX)]
     .map((match) => {
       const [fullMatch, prefix, sourcePath] = match;
+      /* istanbul ignore next */
       return isDefined(fullMatch) &&
         isDefined(prefix) &&
         isDefined(sourcePath) &&
@@ -102,15 +187,22 @@ function createReplacement(
   const contentHasCodeFence = content.includes("```");
   const backticks = contentHasCodeFence ? "````" : "```";
   const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(sourcePath).slice(1)];
-  let processedContent = content.replaceAll("*/", "*\\/").trimEnd();
+
+  // Only escape */ when embedding into comment blocks (e.g., JSDoc)
+  // to prevent breaking the comment. Don't escape in Markdown.
+  const isInCommentBlock = /^\s*\*/.test(prefix);
+  let processedContent = content.trimEnd();
+  if (isInCommentBlock) {
+    processedContent = processedContent.replaceAll("*/", "*\\/");
+  }
 
   // For markdown files, strip nested embedex tags to prevent recursive processing
   if (codeFenceId === "") {
     processedContent = processedContent
       .replaceAll(
-        /^(.*)<embedex source=".+?">\n([\S\s]*?)<\/embedex>/gm,
+        /^(.*)<embedex source=".+?">\r?\n([\S\s]*?)<\/embedex>/gm,
         (_match, _prefix, content: string) => {
-          const lines = content.split("\n");
+          const lines = content.split(/\r?\n/);
 
           // Remove leading blank lines
           while (lines.length > 0 && lines[0]?.trim() === "") {
@@ -129,7 +221,7 @@ function createReplacement(
       .trim();
   }
 
-  const contentLines = processedContent.split("\n");
+  const contentLines = processedContent.split(/\r?\n/);
   const lines = [
     `<embedex source="${sourcePath}">`,
     "",

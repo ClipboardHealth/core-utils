@@ -1,4 +1,4 @@
-// packages/analytics/README.md
+// embedex: packages/analytics/README.md
 import { Analytics } from "@clipboard-health/analytics";
 
 const logger = {

@@ -1,4 +1,4 @@
-// packages/ai-rules/.ruler/backend/notifications.md,packages/notifications/README.md
+// embedex: packages/ai-rules/.ruler/backend/notifications.md,packages/notifications/README.md
 
 1. Search your service for a `NotificationJobEnqueuer` instance. If there isn't one, create and export it:
 
@@ -87,8 +87,10 @@
        EXAMPLE_NOTIFICATION_JOB_NAME,
        // Important: Read the TypeDoc documentation for additional context.
        {
-         // Set expiresAt at enqueue-time so it remains stable across job retries.
-         // Use date-fns in your service instead of this manual calculation.
+         /**
+          * Set expiresAt at enqueue-time so it remains stable across job retries. Use date-fns in your
+          * service instead of this manual calculation.
+          */
          expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
          // Set idempotencyKey at enqueue-time so it remains stable across job retries.
          idempotencyKey: {

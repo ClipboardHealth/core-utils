@@ -69,7 +69,7 @@ const userFilterMap = {
  *
  * The spec says that if clients provide fields the server doesn’t support, it **MUST** return 400
  * Bad Request, hence the `.strict()`.
- *\/
+ */
 export const query = z
   .object({
     ...cursorPaginationQuery(),

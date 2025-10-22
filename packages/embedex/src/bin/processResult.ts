@@ -14,6 +14,22 @@ export function dim(...messages: string[]) {
   return colors.dim(messages.join(" "));
 }
 
+function formatOutput(params: {
+  code: Embed["code"];
+  isError: boolean;
+  destination?: string;
+  detail: string;
+}): string {
+  const coloredCode = (params.isError ? colors.red : colors.green)(params.code);
+  const grayDetail = colors.gray(params.detail);
+
+  if (params.destination) {
+    return `${coloredCode} ${colors.gray(params.destination)} -> ${grayDetail}`;
+  }
+
+  return `${coloredCode} ${grayDetail}`;
+}
+
 export function processResult(params: {
   check: boolean;
   result: EmbedResult;
@@ -41,26 +57,77 @@ export function processResult(params: {
   for (const embed of embeds) {
     const { code, paths } = embed;
     const { destination, sources } = paths;
-    const toOutput = createToOutput({
-      code,
-      paths: { destination: relative(destination), sources: sources.map((path) => relative(path)) },
-    });
 
-    // eslint-disable-next-line default-case -- ignore so we get @typescript-eslint/switch-exhaustiveness-check
     switch (code) {
-      case "NO_CHANGE": {
-        output.push(toOutput({ isError: false }));
+      case "INVALID_SOURCE": {
+        const { invalidSources } = embed;
+        const joined = invalidSources.map((path) => relative(path)).join(", ");
+        output.push({
+          code,
+          isError: true,
+          message: formatOutput({
+            code,
+            isError: true,
+            destination: relative(destination),
+            detail: `missing: ${joined}`,
+          }),
+        });
+
         break;
       }
 
-      case "NO_MATCH": {
-        output.push(toOutput({ isError: true }));
+      case "UNREFERENCED_SOURCE": {
+        const { unreferencedSources } = embed;
+        const joined = unreferencedSources.map((path) => relative(path)).join(", ");
+        output.push({
+          code,
+          isError: true,
+          message: formatOutput({
+            code,
+            isError: true,
+            destination: relative(destination),
+            detail: `not referenced: ${joined}`,
+          }),
+        });
+
         break;
       }
 
+      case "CIRCULAR_DEPENDENCY": {
+        const { cycle } = embed;
+        const cycleMessage = cycle.map((path) => relative(path)).join(" → ");
+        output.push({
+          code,
+          isError: true,
+          message: formatOutput({
+            code,
+            isError: true,
+            detail: cycleMessage,
+          }),
+        });
+
+        break;
+      }
+
+      case "NO_CHANGE":
+      case "NO_MATCH":
       case "UPDATE": {
-        output.push(toOutput({ isError: check }));
+        const toOutput = createToOutput({
+          code,
+          paths: {
+            destination: relative(destination),
+            sources: sources.map((path) => relative(path)),
+          },
+        });
+
+        const isError = code === "NO_MATCH" || (code === "UPDATE" && check);
+        output.push(toOutput({ isError }));
         break;
+      }
+
+      default: {
+        const exhaustiveCheck: never = code;
+        throw new Error(`Unhandled embed code: ${String(exhaustiveCheck)}`);
       }
     }
   }
@@ -75,6 +142,11 @@ function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) 
   return ({ isError }: { isError: boolean }) => ({
     code,
     isError,
-    message: `${colors.green(code)} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+    message: formatOutput({
+      code,
+      isError,
+      destination,
+      detail: sources.length > 0 ? sources.join(", ") : "—",
+    }),
   });
 }

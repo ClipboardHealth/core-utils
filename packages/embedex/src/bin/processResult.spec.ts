@@ -28,7 +28,7 @@ describe("processResult", () => {
       {
         code: "UPDATE",
         isError: true,
-        message: `${colors.green("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+        message: `${colors.red("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
     ]);
   });
@@ -77,7 +77,7 @@ describe("processResult", () => {
       {
         code: "NO_MATCH",
         isError: true,
-        message: `${colors.green("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+        message: `${colors.red("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
       {
         code: "UPDATE",
@@ -85,5 +85,118 @@ describe("processResult", () => {
         message: `${colors.green("UPDATE")} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
       },
     ]);
+  });
+
+  it("returns error for INVALID_SOURCE", () => {
+    const invalidSources = ["missing/file1.ts", "missing/file2.ts"];
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          {
+            code: "INVALID_SOURCE" as const,
+            paths: { destination, sources: [] },
+            invalidSources,
+          },
+        ],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "INVALID_SOURCE",
+        isError: true,
+        message: `${colors.red("INVALID_SOURCE")} ${colors.gray(destination)} -> ${colors.gray("missing: missing/file1.ts, missing/file2.ts")}`,
+      },
+    ]);
+  });
+
+  it("returns error for UNREFERENCED_SOURCE", () => {
+    const unreferencedSources = ["sources/unreferenced1.ts", "sources/unreferenced2.ts"];
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          {
+            code: "UNREFERENCED_SOURCE" as const,
+            paths: { destination, sources: [] },
+            unreferencedSources,
+          },
+        ],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "UNREFERENCED_SOURCE",
+        isError: true,
+        message: `${colors.red("UNREFERENCED_SOURCE")} ${colors.gray(destination)} -> ${colors.gray("not referenced: sources/unreferenced1.ts, sources/unreferenced2.ts")}`,
+      },
+    ]);
+  });
+
+  it("returns error for CIRCULAR_DEPENDENCY", () => {
+    const cycle = ["sources/a.md", "sources/b.md", "sources/a.md"];
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          {
+            code: "CIRCULAR_DEPENDENCY" as const,
+            paths: { destination, sources: [] },
+            cycle,
+          },
+        ],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "CIRCULAR_DEPENDENCY",
+        isError: true,
+        message: `${colors.red("CIRCULAR_DEPENDENCY")} ${colors.gray("sources/a.md → sources/b.md → sources/a.md")}`,
+      },
+    ]);
+  });
+
+  it("handles empty sources with fallback character", () => {
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [{ code: "NO_MATCH" as const, paths: { destination, sources: [] } }],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "NO_MATCH",
+        isError: true,
+        message: `${colors.red("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray("—")}`,
+      },
+    ]);
+  });
+
+  it("throws error for unhandled embed code", () => {
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [{ code: "INVALID_CODE" as never, paths: { destination, sources } }],
+      },
+    };
+
+    expect(() => processResult(input)).toThrow("Unhandled embed code: INVALID_CODE");
   });
 });

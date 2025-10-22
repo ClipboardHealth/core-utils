@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import type { BackgroundJobType, HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 export interface MyJobData {

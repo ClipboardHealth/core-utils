@@ -1,4 +1,4 @@
-// packages/notifications/src/lib/notificationClient.ts,packages/notifications/examples/usage.md
+// embedex: packages/notifications/src/lib/notificationClient.ts,packages/notifications/examples/usage.md
 import { type NotificationClient } from "@clipboard-health/notifications";
 
 import { type ExampleNotificationData } from "./exampleNotification.job";
