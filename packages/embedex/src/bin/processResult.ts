@@ -15,7 +15,7 @@ export function dim(...messages: string[]) {
 }
 
 function formatOutput(params: {
-  code: string;
+  code: Embed["code"];
   isError: boolean;
   destination?: string;
   detail: string;
@@ -138,7 +138,7 @@ function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) 
       code,
       isError,
       destination,
-      detail: sources.join(", "),
+      detail: sources.length > 0 ? sources.join(", ") : "—",
     }),
   });
 }

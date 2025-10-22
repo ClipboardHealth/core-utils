@@ -93,7 +93,7 @@ function processDestination(params: {
       if (sources.has(absoluteSourcePath)) {
         referencedSources.add(absoluteSourcePath);
       } else {
-        invalidSources.push(sourcePath);
+        invalidSources.push(absoluteSourcePath);
       }
     }
   }
@@ -190,7 +190,7 @@ function createReplacement(
 
   // Only escape */ when embedding into comment blocks (e.g., JSDoc)
   // to prevent breaking the comment. Don't escape in Markdown.
-  const isInCommentBlock = prefix.includes("*");
+  const isInCommentBlock = /^\s*\*/.test(prefix);
   let processedContent = content.trimEnd();
   if (isInCommentBlock) {
     processedContent = processedContent.replaceAll("*/", "*\\/");

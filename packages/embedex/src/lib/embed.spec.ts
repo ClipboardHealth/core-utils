@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { embed } from "./embed";
 import { SOURCE_MARKER_PREFIX } from "./internal/createSourceMap";
+import type { CircularDependency, Embed, Updated } from "./types";
 
 describe("embed", () => {
   // eslint-disable-next-line no-template-curly-in-string
@@ -68,7 +69,7 @@ describe("embed", () => {
       {
         code: "INVALID_SOURCE",
         paths: { sources: [], destination: toPath(paths.destinations.l) },
-        invalidSources: [paths.sources.b],
+        invalidSources: [toPath(paths.sources.b)],
       },
     ]);
   });
@@ -601,13 +602,10 @@ describe("embed", () => {
       const embedC = actual.embeds.find(
         (embed) => embed.paths.destination === toPath(chainPaths.c),
       );
-      expect(embedC?.code).toBe("UPDATE");
       expect(embedC).toBeDefined();
+      assertIsUpdatedEmbed(embedC!);
       // Verify that C.md contains the code from A.ts
-      expect(embedC!.code).toBe("UPDATE");
-      expect((embedC as { code: "UPDATE"; updatedContent: string }).updatedContent).toContain(
-        sourceACode[0],
-      );
+      expect(embedC.updatedContent).toContain(sourceACode[0]);
     });
 
     it("processes 4-level chain correctly", async () => {
@@ -640,11 +638,9 @@ describe("embed", () => {
 
       // Final destination should contain original source code
       const embedD = actual.embeds.find((embed) => embed.paths.destination === toPath(paths4.d));
-      expect(embedD?.code).toBe("UPDATE");
       expect(embedD).toBeDefined();
-      expect((embedD as { code: "UPDATE"; updatedContent: string }).updatedContent).toContain(
-        "const x = 1;",
-      );
+      assertIsUpdatedEmbed(embedD!);
+      expect(embedD.updatedContent).toContain("const x = 1;");
     });
 
     it("processes diamond dependency correctly", async () => {
@@ -689,11 +685,9 @@ describe("embed", () => {
       const embedD = actual.embeds.find(
         (embed) => embed.paths.destination === toPath(pathsDiamond.d),
       );
-      expect(embedD?.code).toBe("UPDATE");
       expect(embedD).toBeDefined();
-      expect((embedD as { code: "UPDATE"; updatedContent: string }).updatedContent).toContain(
-        "const x = 1;",
-      );
+      assertIsUpdatedEmbed(embedD!);
+      expect(embedD.updatedContent).toContain("const x = 1;");
     });
 
     it("detects circular dependency A -> B -> A", async () => {
@@ -719,12 +713,11 @@ describe("embed", () => {
 
       expect(actual.embeds).toHaveLength(1);
       const firstEmbed = actual.embeds[0];
-      expect(firstEmbed?.code).toBe("CIRCULAR_DEPENDENCY");
       expect(firstEmbed).toBeDefined();
-      const circularEmbed = firstEmbed as { code: "CIRCULAR_DEPENDENCY"; cycle: string[] };
-      expect(circularEmbed.cycle.length).toBeGreaterThanOrEqual(3);
+      assertIsCircularDependencyEmbed(firstEmbed!);
+      expect(firstEmbed.cycle.length).toBeGreaterThanOrEqual(3);
       // Cycle should contain both files
-      const cycleSet = new Set(circularEmbed.cycle);
+      const cycleSet = new Set(firstEmbed.cycle);
       expect(cycleSet.has(toPath(cyclePaths.a))).toBe(true);
       expect(cycleSet.has(toPath(cyclePaths.b))).toBe(true);
     });
@@ -758,11 +751,9 @@ describe("embed", () => {
 
       expect(actual.embeds).toHaveLength(1);
       const cycleEmbed = actual.embeds[0];
-      expect(cycleEmbed?.code).toBe("CIRCULAR_DEPENDENCY");
       expect(cycleEmbed).toBeDefined();
-      expect(
-        (cycleEmbed as { code: "CIRCULAR_DEPENDENCY"; cycle: string[] }).cycle.length,
-      ).toBeGreaterThanOrEqual(3);
+      assertIsCircularDependencyEmbed(cycleEmbed!);
+      expect(cycleEmbed.cycle.length).toBeGreaterThanOrEqual(3);
     });
 
     it("processes multiple independent chains correctly", async () => {
@@ -972,15 +963,14 @@ describe("embed", () => {
 
       expect(actual.embeds).toHaveLength(1);
       const embedResult = actual.embeds[0]!;
-      expect(embedResult.code).toBe("UPDATE");
+      assertIsUpdatedEmbed(embedResult);
       expect(embedResult.paths).toEqual({
         sources: [toPath(paths.sources.a)],
         destination: toPath(paths.destinations.l),
       });
 
       // Verify the updated content
-      expect(embedResult).toHaveProperty("updatedContent");
-      const { updatedContent } = embedResult as { code: "UPDATE"; updatedContent: string };
+      const { updatedContent } = embedResult;
       // Ensure no trailing \r characters are present
       expect(updatedContent).not.toContain("\r");
       // Verify the content structure
@@ -1006,16 +996,23 @@ describe("embed", () => {
 
       expect(actual.embeds).toHaveLength(1);
       const embedResult = actual.embeds[0]!;
-      expect(embedResult.code).toBe("UPDATE");
+      assertIsUpdatedEmbed(embedResult);
       expect(embedResult.paths).toEqual({
         sources: [toPath(paths.sources.a)],
         destination: toPath(paths.destinations.l),
       });
 
-      expect(embedResult).toHaveProperty("updatedContent");
-      const { updatedContent } = embedResult as { code: "UPDATE"; updatedContent: string };
+      const { updatedContent } = embedResult;
       expect(updatedContent).not.toContain("\r");
       expect(updatedContent).toContain("const x = 1;");
     });
   });
 });
+
+function assertIsUpdatedEmbed(embed: Embed): asserts embed is Updated {
+  expect(embed.code).toBe("UPDATE");
+}
+
+function assertIsCircularDependencyEmbed(embed: Embed): asserts embed is CircularDependency {
+  expect(embed.code).toBe("CIRCULAR_DEPENDENCY");
+}

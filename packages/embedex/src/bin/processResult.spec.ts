@@ -167,4 +167,24 @@ describe("processResult", () => {
       },
     ]);
   });
+
+  it("handles empty sources with fallback character", () => {
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [{ code: "NO_MATCH" as const, paths: { destination, sources: [] } }],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "NO_MATCH",
+        isError: true,
+        message: `${colors.red("NO_MATCH")} ${colors.gray(destination)} -> ${colors.gray("—")}`,
+      },
+    ]);
+  });
 });
