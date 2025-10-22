@@ -1,4 +1,4 @@
-// embedex: packages/notifications/src/lib/notificationJobEnqueuer.tsx,packages/notifications/examples/usage.md
+// embedex: packages/notifications/src/lib/notificationJobEnqueuer.ts,packages/notifications/examples/usage.md
 import {
   EXAMPLE_NOTIFICATION_JOB_NAME,
   type ExampleNotificationData,

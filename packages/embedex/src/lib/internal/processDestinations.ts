@@ -16,6 +16,15 @@ const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
   tsx: "ts",
 } as const;
 
+/**
+ * A regex to match the embedex tag.
+ *
+ * Matching groups:
+ * 1. The block's prefix
+ * 2. The source file path
+ */
+const REGEX = /^(.*)<embedex source="(.+?)">\n[\S\s]*?<\/embedex>/gm;
+
 export function processDestinations(
   params: Readonly<{
     cwd: string;
@@ -45,6 +54,24 @@ function processDestination(params: {
     return join(cwd, path);
   }
 
+  // First, check for invalid source references
+  const allEmbedexTags = [...content.matchAll(REGEX)];
+  const invalidSources: string[] = [];
+  for (const match of allEmbedexTags) {
+    const sourcePath = match[2];
+    if (sourcePath && !sources.has(absolutePath(sourcePath))) {
+      invalidSources.push(sourcePath);
+    }
+  }
+
+  if (invalidSources.length > 0) {
+    return {
+      code: "INVALID_SOURCE",
+      paths: { destination, sources: [] },
+      invalidSources,
+    };
+  }
+
   const matches = matchAll({ content, exists: (source) => sources.has(absolutePath(source)) });
   if (matches.length === 0) {
     return { code: "NO_MATCH", paths: { destination, sources: [] } };
@@ -65,15 +92,6 @@ function processDestination(params: {
     : { code: "UPDATE", paths, updatedContent };
 }
 
-/**
- * A regex to match the embedex tag.
- *
- * Matching groups:
- * 1. The block's prefix
- * 2. The source file path
- */
-const REGEX = /^(.*)<embedex source="(.+?)">\n[\S\s]*?<\/embedex>/gm;
-
 function matchAll(
   params: Readonly<{
     content: string;
@@ -84,6 +102,7 @@ function matchAll(
   return [...content.matchAll(REGEX)]
     .map((match) => {
       const [fullMatch, prefix, sourcePath] = match;
+      /* istanbul ignore next */
       return isDefined(fullMatch) &&
         isDefined(prefix) &&
         isDefined(sourcePath) &&

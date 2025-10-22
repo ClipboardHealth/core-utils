@@ -45,7 +45,7 @@ describe("embed", () => {
     return join(cwd, path);
   }
 
-  it("returns NO_MATCH for non-existent sources", async () => {
+  it("returns INVALID_SOURCE for non-existent sources", async () => {
     await Promise.all([
       write(paths.sources.a, [`// embedex: ${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
@@ -60,7 +60,11 @@ describe("embed", () => {
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
     expect(actual.embeds).toEqual([
-      { code: "NO_MATCH", paths: { sources: [], destination: toPath(paths.destinations.l) } },
+      {
+        code: "INVALID_SOURCE",
+        paths: { sources: [], destination: toPath(paths.destinations.l) },
+        invalidSources: [paths.sources.b],
+      },
     ]);
   });
 

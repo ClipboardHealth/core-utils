@@ -86,4 +86,31 @@ describe("processResult", () => {
       },
     ]);
   });
+
+  it("returns error for INVALID_SOURCE", () => {
+    const invalidSources = ["missing/file1.ts", "missing/file2.ts"];
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        embeds: [
+          {
+            code: "INVALID_SOURCE" as const,
+            paths: { destination, sources: [] },
+            invalidSources,
+          },
+        ],
+      },
+    };
+
+    const actual = processResult(input);
+
+    expect(actual).toEqual([
+      {
+        code: "INVALID_SOURCE",
+        isError: true,
+        message: `${colors.red("INVALID_SOURCE")} ${colors.gray(destination)} -> ${colors.gray("missing: missing/file1.ts, missing/file2.ts")}`,
+      },
+    ]);
+  });
 });

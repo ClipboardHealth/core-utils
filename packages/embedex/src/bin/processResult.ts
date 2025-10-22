@@ -41,27 +41,27 @@ export function processResult(params: {
   for (const embed of embeds) {
     const { code, paths } = embed;
     const { destination, sources } = paths;
-    const toOutput = createToOutput({
-      code,
-      paths: { destination: relative(destination), sources: sources.map((path) => relative(path)) },
-    });
 
-    // eslint-disable-next-line default-case -- ignore so we get @typescript-eslint/switch-exhaustiveness-check
-    switch (code) {
-      case "NO_CHANGE": {
-        output.push(toOutput({ isError: false }));
-        break;
-      }
+    if (code === "INVALID_SOURCE") {
+      const { invalidSources } = embed;
+      const joined = invalidSources.map((path) => relative(path)).join(", ");
+      const missingMessage = `missing: ${joined}`;
+      output.push({
+        code,
+        isError: true,
+        message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(missingMessage)}`,
+      });
+    } else {
+      const toOutput = createToOutput({
+        code,
+        paths: {
+          destination: relative(destination),
+          sources: sources.map((path) => relative(path)),
+        },
+      });
 
-      case "NO_MATCH": {
-        output.push(toOutput({ isError: true }));
-        break;
-      }
-
-      case "UPDATE": {
-        output.push(toOutput({ isError: check }));
-        break;
-      }
+      const isError = code === "NO_MATCH" || (code === "UPDATE" && check);
+      output.push(toOutput({ isError }));
     }
   }
 

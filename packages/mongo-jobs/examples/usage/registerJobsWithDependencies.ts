@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
 
 import { EmailServiceJob } from "./jobs/emailServiceJob";

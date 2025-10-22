@@ -1,3 +1,4 @@
+// embedex: packages/mongo-jobs/README.md
 import { backgroundJobs } from "./jobsRegistry";
 
 // Enqueue by job name (when handler is already registered)
