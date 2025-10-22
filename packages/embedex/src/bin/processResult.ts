@@ -14,6 +14,22 @@ export function dim(...messages: string[]) {
   return colors.dim(messages.join(" "));
 }
 
+function formatOutput(params: {
+  code: string;
+  isError: boolean;
+  destination?: string;
+  detail: string;
+}): string {
+  const coloredCode = (params.isError ? colors.red : colors.green)(params.code);
+  const grayDetail = colors.gray(params.detail);
+
+  if (params.destination) {
+    return `${coloredCode} ${colors.gray(params.destination)} -> ${grayDetail}`;
+  }
+
+  return `${coloredCode} ${grayDetail}`;
+}
+
 export function processResult(params: {
   check: boolean;
   result: EmbedResult;
@@ -46,11 +62,15 @@ export function processResult(params: {
       case "INVALID_SOURCE": {
         const { invalidSources } = embed;
         const joined = invalidSources.map((path) => relative(path)).join(", ");
-        const missingMessage = `missing: ${joined}`;
         output.push({
           code,
           isError: true,
-          message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(missingMessage)}`,
+          message: formatOutput({
+            code,
+            isError: true,
+            destination: relative(destination),
+            detail: `missing: ${joined}`,
+          }),
         });
 
         break;
@@ -59,11 +79,15 @@ export function processResult(params: {
       case "UNREFERENCED_SOURCE": {
         const { unreferencedSources } = embed;
         const joined = unreferencedSources.map((path) => relative(path)).join(", ");
-        const notReferencedMessage = `not referenced: ${joined}`;
         output.push({
           code,
           isError: true,
-          message: `${colors.red(code)} ${colors.gray(relative(destination))} -> ${colors.gray(notReferencedMessage)}`,
+          message: formatOutput({
+            code,
+            isError: true,
+            destination: relative(destination),
+            detail: `not referenced: ${joined}`,
+          }),
         });
 
         break;
@@ -75,7 +99,11 @@ export function processResult(params: {
         output.push({
           code,
           isError: true,
-          message: `${colors.red(code)} ${colors.gray(cycleMessage)}`,
+          message: formatOutput({
+            code,
+            isError: true,
+            detail: cycleMessage,
+          }),
         });
 
         break;
@@ -106,6 +134,11 @@ function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) 
   return ({ isError }: { isError: boolean }) => ({
     code,
     isError,
-    message: `${(isError ? colors.red : colors.green)(code)} ${colors.gray(destination)} -> ${colors.gray(sources.join(", "))}`,
+    message: formatOutput({
+      code,
+      isError,
+      destination,
+      detail: sources.join(", "),
+    }),
   });
 }

@@ -1,4 +1,4 @@
-import { extname, join } from "node:path";
+import { extname, resolve } from "node:path";
 
 import type { Embed } from "../types";
 import { stripSourceMarker } from "./createSourceMap";
@@ -77,7 +77,7 @@ function processDestination(params: {
   content = content.replaceAll("\r\n", "\n");
 
   function absolutePath(path: string): string {
-    return join(cwd, path);
+    return resolve(cwd, path);
   }
 
   // First, check for invalid source references and collect referenced sources
@@ -128,8 +128,11 @@ function processDestination(params: {
     return { code: "NO_MATCH", paths: { destination, sources: [] } };
   }
 
+  // Deduplicate matches to avoid replacing identical tags multiple times with replaceAll
+  const uniqueMatches = [...new Map(matches.map((m) => [m.fullMatch, m])).values()];
+
   let updatedContent = content;
-  for (const { fullMatch, prefix, sourcePath } of matches) {
+  for (const { fullMatch, prefix, sourcePath } of uniqueMatches) {
     const absoluteSourcePath = absolutePath(sourcePath);
     const sourceFromMap = sourceMap.get(absoluteSourcePath)!;
 
@@ -149,7 +152,7 @@ function processDestination(params: {
     );
   }
 
-  const paths = { sources: matches.map((m) => absolutePath(m.sourcePath)), destination };
+  const paths = { sources: uniqueMatches.map((m) => absolutePath(m.sourcePath)), destination };
   return content === updatedContent
     ? { code: "NO_CHANGE", paths }
     : { code: "UPDATE", paths, updatedContent };

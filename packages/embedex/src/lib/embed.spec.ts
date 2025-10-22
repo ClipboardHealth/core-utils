@@ -52,7 +52,7 @@ describe("embed", () => {
 
   it("returns INVALID_SOURCE for non-existent sources", async () => {
     await Promise.all([
-      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX} ${paths.destinations.l}`, ...sourceACode]),
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceACode]),
       write(paths.destinations.l, [
         "/**",
         " * @example",
@@ -447,7 +447,7 @@ describe("embed", () => {
       {
         code: "UPDATE",
         paths: {
-          sources: [toPath(paths.sources.a), toPath(paths.sources.a)],
+          sources: [toPath(paths.sources.a)],
           destination: toPath(paths.destinations.l),
         },
         updatedContent: expect.any(String),
