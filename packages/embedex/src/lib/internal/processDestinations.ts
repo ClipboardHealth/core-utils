@@ -24,7 +24,7 @@ const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
  * 1. The block's prefix
  * 2. The source file path
  */
-const REGEX = /^(.*)<embedex source="(.+?)">\n[\S\s]*?<\/embedex>/gm;
+const REGEX = /^(.*)<embedex source="(.+?)">\r?\n[\S\s]*?<\/embedex>/gm;
 
 export function processDestinations(
   params: Readonly<{
@@ -67,7 +67,11 @@ function processDestination(params: {
 
   // Use updated content if available (from earlier processing in dependency order),
   // otherwise use the original content from disk
-  const content = updatedContentMap?.get(destination) ?? originalContent;
+  // Strip source marker from updated content to ensure clean processing
+  /* istanbul ignore next - defensive: destination typically not in updatedContentMap during processing */
+  const content = updatedContentMap?.has(destination)
+    ? stripSourceMarker(updatedContentMap.get(destination)!)
+    : originalContent;
 
   function absolutePath(path: string): string {
     return join(cwd, path);
