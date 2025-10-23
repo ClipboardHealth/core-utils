@@ -30,8 +30,8 @@ module.exports = async () => {
   const jest = await import("eslint-plugin-jest");
   const importX = await import("eslint-plugin-import-x");
   const n = await import("eslint-plugin-n");
-  const noUseExtendNative = await import("eslint-plugin-no-use-extend-native");
   const noOnlyTests = await import("eslint-plugin-no-only-tests");
+  const noUseExtendNative = await import("eslint-plugin-no-use-extend-native");
   const security = await import("eslint-plugin-security");
   const simpleImportSort = await import("eslint-plugin-simple-import-sort");
   const sonarjs = await import("eslint-plugin-sonarjs");
@@ -43,40 +43,40 @@ module.exports = async () => {
     : null;
 
   const config = [
-    // Base recommended configs
+    // Base recommended configs from typescript-eslint
     ...tseslint.config(
       ...tseslint.configs.strictTypeChecked,
       ...tseslint.configs.stylisticTypeChecked
     ),
+    // Plugin configs that have flat config support
+    jest.default.configs["flat/recommended"],
+    jest.default.configs["flat/style"],
+    importX.flatConfigs.recommended,
+    n.default.configs["flat/recommended"],
+    security.default.configs.recommended,
+    sonarjs.default.configs.recommended,
+    unicorn.configs["flat/recommended"],
+    // Register additional plugins that don't have flat config or need manual setup
     {
       plugins: {
         "eslint-comments": eslintComments.default,
-        "expect-type": expectType.default,
-        jest: jest.default,
-        "import-x": importX.default,
-        n: n.default,
-        "no-use-extend-native": noUseExtendNative.default,
+        "expect-type": expectType,
         "no-only-tests": noOnlyTests.default,
-        security: security.default,
+        "no-use-extend-native": noUseExtendNative.default,
         "simple-import-sort": simpleImportSort.default,
-        sonarjs: sonarjs.default,
-        unicorn: unicorn.default,
         ...(clipboardHealthPlugin && {
           "@clipboard-health": clipboardHealthPlugin.default,
         }),
       },
-    },
-    {
       rules: {
-        ...eslintComments.default.configs.recommended.rules,
-        ...expectType.default.configs.recommended.rules,
-        ...jest.default.configs.recommended.rules,
-        ...jest.default.configs.style.rules,
-        ...importX.default.configs.recommended.rules,
-        ...n.default.configs.recommended.rules,
-        ...security.default.configs.recommended.rules,
-        ...sonarjs.default.configs.recommended.rules,
-        ...unicorn.default.configs.recommended.rules,
+        // eslint-comments rules (from recommended config)
+        "eslint-comments/disable-enable-pair": ["error", { allowWholeFile: true }],
+        "eslint-comments/no-aggregating-enable": "error",
+        "eslint-comments/no-duplicate-disable": "error",
+        "eslint-comments/no-unlimited-disable": "error",
+        "eslint-comments/no-unused-enable": "error",
+        // expect-type rules
+        "expect-type/expect": "error",
       },
     },
     // Custom rules
@@ -287,7 +287,7 @@ module.exports = async () => {
       },
     },
     // Prettier must be last to override conflicting rules
-    prettier,
+    prettier.default,
   ];
 
   // Add clipboard-health plugin rules if outside monorepo
