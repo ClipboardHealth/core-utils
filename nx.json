@@ -23,7 +23,8 @@
       "!{projectRoot}/jest.setup.js",
       "!{projectRoot}/test/**/*",
       "!{projectRoot}/tsconfig.lint.json",
-      "!{projectRoot}/tsconfig.spec.json"
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/eslint.config.mjs"
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
@@ -81,7 +82,8 @@
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/packages/eslint-config/src/index.js"
+        "{workspaceRoot}/packages/eslint-config/src/index.js",
+        "{workspaceRoot}/eslint.config.mjs"
       ]
     },
     "@nx/jest:jest": {
