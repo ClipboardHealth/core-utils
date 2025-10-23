@@ -1,18 +1,13 @@
-import { FlatCompat } from "@eslint/eslintrc";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import js from "@eslint/js";
 import nxEslintPlugin from "@nx/eslint-plugin";
+import sharedConfig from "./packages/eslint-config/src/index.js";
 
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-  recommendedConfig: js.configs.recommended,
-});
+const baseConfig = await sharedConfig();
 
 export default [
   {
     ignores: ["**/dist"],
   },
+  ...baseConfig,
   { plugins: { "@nx": nxEslintPlugin } },
   {
     rules: {
@@ -33,36 +28,20 @@ export default [
       ],
     },
   },
-  ...compat
-    .config({
-      extends: ["./packages/eslint-config/src/index.js"],
-    })
-    .map((config) => ({
-      ...config,
-      files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
-      rules: {
-        ...config.rules,
-        "unicorn/filename-case": [
-          "error",
-          {
-            case: "camelCase",
-          },
-        ],
-      },
-    })),
-  ...compat
-    .config({
-      env: {
+  {
+    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+    rules: {
+      "unicorn/filename-case": ["error", { case: "camelCase" }],
+    },
+  },
+  {
+    files: ["**/*.spec.ts", "**/*.spec.tsx", "**/*.spec.js", "**/*.spec.jsx"],
+    languageOptions: {
+      globals: {
         jest: true,
       },
-    })
-    .map((config) => ({
-      ...config,
-      files: ["**/*.spec.ts", "**/*.spec.tsx", "**/*.spec.js", "**/*.spec.jsx"],
-      rules: {
-        ...config.rules,
-      },
-    })),
+    },
+  },
   {
     files: ["./examples/**/*.ts"],
     rules: {
