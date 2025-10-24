@@ -20,7 +20,6 @@ const duplicatedConfig = {
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "airbnb-base",
     "plugin:eslint-comments/recommended",
     "plugin:expect-type/recommended",
     "plugin:jest/recommended",
@@ -62,8 +61,10 @@ const duplicatedConfig = {
     // Start: Deprecated rules removed in v8
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/lines-between-class-members": "off",
-    "@typescript-eslint/no-throw-literal": "off",
     "@typescript-eslint/padding-line-between-statements": "off",
+    "@typescript-eslint/no-throw-literal": "off",
+    // Replacement for `@typescript-eslint/no-throw-literal`
+    "@typescript-eslint/only-throw-error": "error",
     // End: Deprecated rules removed in v8
 
     // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
@@ -184,6 +185,9 @@ const duplicatedConfig = {
           "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
       },
     ],
+
+    // Use a logger instead.
+    "no-console": "error",
 
     // While continue can be misused, especially with nested loops and labels,
     // it can be useful for preventing code nesting and the existence of the rule

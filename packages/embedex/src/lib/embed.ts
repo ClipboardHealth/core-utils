@@ -25,8 +25,6 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
 
   // Build dependency graph to determine processing order
   const graph = buildDependencyGraph({ destinationMap });
-
-  // Check for circular dependencies
   const circularDependency = detectCircularDependency(graph);
   if (circularDependency) {
     const { cycle } = circularDependency;
@@ -51,7 +49,7 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
   const updatedContentMap = new Map<string, string>();
   const embeds = topologicalSort(graph).flatMap((destinationPath) => {
     const destinationEntry = destinationMap.get(destinationPath);
-    /* istanbul ignore next */
+    /* istanbul ignore next: sanity check */
     if (!destinationEntry) {
       return [];
     }
@@ -62,7 +60,7 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
       destinationMap: new Map([[destinationPath, destinationEntry]]),
       updatedContentMap,
     });
-    /* istanbul ignore next */
+    /* istanbul ignore next: sanity check */
     if (!embed) {
       return [];
     }

@@ -12,7 +12,7 @@ import {
   sortQuery,
 } from "@clipboard-health/json-api-nestjs";
 import { initContract } from "@ts-rest/core";
-import z from "zod";
+import { z } from "zod";
 
 const API_TYPES = {
   article: "article",
