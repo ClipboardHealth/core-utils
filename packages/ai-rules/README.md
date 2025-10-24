@@ -56,7 +56,7 @@ npm install --save-dev @clipboard-health/ai-rules
 4. Commit the generated files:
 
    ```bash
-   git add AGENTS.md CLAUDE.md
+   git add .
    git commit -m "feat: add AI coding rules"
    ```
 
@@ -74,10 +74,10 @@ npm update @clipboard-health/ai-rules
 npm install
 
 # Review the changes
-git diff AGENTS.md CLAUDE.md
+git diff .
 
 # Commit the updates
-git add AGENTS.md CLAUDE.md
+git add .
 git commit -m "chore: update AI coding rules"
 ```
 
