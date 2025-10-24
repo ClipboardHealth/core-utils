@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
 // eslint-disable-next-line n/no-unsupported-features/node-builtins
-import { cp } from "node:fs/promises";
+import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { type ProfileName, PROFILES } from "./constants";
@@ -10,6 +10,26 @@ const PATHS = {
   projectRoot: path.join(__dirname, "../../../.."),
   rules: path.join(__dirname, ".."),
 };
+
+async function sync() {
+  try {
+    const profile = getProfileFromArguments();
+
+    // Force copy files; rely on `git` if it overwrites files.
+    await cp(path.join(PATHS.rules, profile), PATHS.projectRoot, { force: true, recursive: true });
+    console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
+
+    // Append OVERLAY.md content if it exists
+    await appendOverlayToFiles({
+      filesToUpdate: ["CLAUDE.md", "AGENTS.md"],
+      projectRoot: PATHS.projectRoot,
+    });
+  } catch (error) {
+    // Log error but exit gracefully to avoid breaking installs
+    console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
+    process.exit(0);
+  }
+}
 
 function getProfileFromArguments(): ProfileName {
   const profile = process.argv[2];
@@ -24,17 +44,45 @@ function getProfileFromArguments(): ProfileName {
   return profile as ProfileName;
 }
 
-async function sync() {
-  try {
-    const profile = getProfileFromArguments();
+/**
+ * Appends OVERLAY.md content to specified files if OVERLAY.md exists.
+ */
+async function appendOverlayToFiles(params: {
+  filesToUpdate: string[];
+  projectRoot: string;
+}): Promise<void> {
+  const { filesToUpdate, projectRoot } = params;
+  const overlayPath = path.join(projectRoot, "OVERLAY.md");
 
-    // Force copy files; rely on `git` if it overwrites files.
-    await cp(path.join(PATHS.rules, profile), PATHS.projectRoot, { force: true, recursive: true });
-    console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
-  } catch (error) {
-    // Log error but exit gracefully to avoid breaking installs
-    console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
-    process.exit(0);
+  const overlayContent = await readOverlayContent(overlayPath);
+  if (!overlayContent) {
+    // OVERLAY.md doesn't exist or can't be read, nothing to append
+    return;
+  }
+
+  // Append to each file
+  await Promise.all(
+    filesToUpdate.map(async (file) => {
+      const filePath = path.join(projectRoot, file);
+
+      try {
+        const currentContent = await readFile(filePath, "utf8");
+        const updatedContent = `${currentContent}\n<!-- Source: ./OVERLAY.md -->\n\n${overlayContent}`;
+        await writeFile(filePath, updatedContent, "utf8");
+      } catch (error) {
+        console.warn(`⚠️ Could not append overlay to ${file}: ${toErrorMessage(error)}`);
+      }
+    }),
+  );
+
+  console.log(`📎 Appended OVERLAY.md to ${filesToUpdate.join(", ")}`);
+}
+
+async function readOverlayContent(overlayPath: string): Promise<string | undefined> {
+  try {
+    return await readFile(overlayPath, "utf8");
+  } catch {
+    return undefined;
   }
 }
 
