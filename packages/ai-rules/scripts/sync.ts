@@ -1,6 +1,6 @@
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-import { copyFile } from "node:fs/promises";
+/* eslint-disable unicorn/no-process-exit, n/no-process-exit */
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
+import { cp } from "node:fs/promises";
 import path from "node:path";
 
 import { type ProfileName, PROFILES } from "./constants";
@@ -29,7 +29,7 @@ async function sync() {
     const profile = getProfileFromArguments();
 
     // Force copy files; rely on `git` if it overwrites files.
-    await copyFile(path.join(PATHS.rules, profile), PATHS.projectRoot);
+    await cp(path.join(PATHS.rules, profile), PATHS.projectRoot, { force: true, recursive: true });
     console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
@@ -41,5 +41,4 @@ async function sync() {
 // eslint-disable-next-line unicorn/prefer-top-level-await
 void sync();
 
-/* eslint-enable n/no-process-exit */
-/* eslint-enable unicorn/no-process-exit */
+/* eslint-enable unicorn/no-process-exit, n/no-process-exit */
