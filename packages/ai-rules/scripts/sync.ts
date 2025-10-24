@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
 // eslint-disable-next-line n/no-unsupported-features/node-builtins
-import { cp, readFile, stat, writeFile } from "node:fs/promises";
+import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { type ProfileName, PROFILES } from "./constants";
@@ -54,14 +54,12 @@ async function appendOverlayToFiles(params: {
   const { filesToUpdate, projectRoot } = params;
   const overlayPath = path.join(projectRoot, "OVERLAY.md");
 
-  try {
-    await stat(overlayPath);
-  } catch {
-    // OVERLAY.md doesn't exist, nothing to append
+  const overlayContent = await readOverlayContent(overlayPath);
+  if (!overlayContent) {
+    // OVERLAY.md doesn't exist or can't be read, nothing to append
     return;
   }
 
-  const overlayContent = await readFile(overlayPath, "utf8");
   // Append to each file
   await Promise.all(
     filesToUpdate.map(async (file) => {
@@ -78,6 +76,14 @@ async function appendOverlayToFiles(params: {
   );
 
   console.log(`📎 Appended OVERLAY.md to ${filesToUpdate.join(", ")}`);
+}
+
+async function readOverlayContent(overlayPath: string): Promise<string | undefined> {
+  try {
+    return await readFile(overlayPath, "utf8");
+  } catch {
+    return undefined;
+  }
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

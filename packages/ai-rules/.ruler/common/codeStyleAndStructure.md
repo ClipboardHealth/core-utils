@@ -8,5 +8,9 @@
 - Avoid magic strings and numbers; define constants.
 - Use camelCase for files and directories (e.g., modules/shiftOffers.ts).
 - When declaring functions, use the `function` keyword, not `const`.
+- Files should read from top to bottom: `export`ed items live on top and the internal functions and methods they call go below them.
 - Prefer data immutability.
-- Use Conventional Commits 1.0 for commit messages.
+
+# Commit messages
+
+- Follow the Conventional Commits 1.0 spec for commit messages and in pull request titles.
