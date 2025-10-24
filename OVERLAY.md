@@ -1,20 +1,16 @@
-# CLAUDE.md
-
-This file provides repository-specific guidance to AI agents.
-
-## Architecture
+# Architecture
 
 This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard Health. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
 
-### Key Libraries
+## Key Libraries
 
 - **util-ts**: Core TypeScript utilities including `ServiceResult` (Either type), `ServiceError`, functional utilities (`pipe`, `option`, `either`)
 - **testing-core**: Testing utilities and helpers
 - **nx-plugin**: Custom Nx generators for project management
 
-## Commands
+# Commands
 
-### Development
+## Development
 
 ```bash
 # Install dependencies
@@ -33,7 +29,7 @@ npm run format
 npm run ci:check
 ```
 
-### Package-specific Commands
+## Package-specific Commands
 
 ```bash
 # Install dependency in specific package
@@ -50,7 +46,7 @@ npx nx run util-ts:test
 npx nx run util-ts:test:ci
 ```
 
-## Project Structure
+# Project Structure
 
 Each package in `packages/` has:
 
@@ -59,7 +55,7 @@ Each package in `packages/` has:
 - `README.md`: Package-specific documentation with usage examples
 - Individual `tsconfig.lib.json`, `jest.config.ts`, etc.
 
-## Development Notes
+# Development Notes
 
 - The repo uses conventional commits with automated releases
 - Code must pass lint, typecheck, and tests before commits
