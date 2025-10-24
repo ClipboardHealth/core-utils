@@ -134,7 +134,6 @@ export function match<A, B, C>(
  * @param value - The value to convert
  * @returns An `Option` representing the nullable value
  */
-
 export function fromNullable<A>(value: A | null | undefined): Option<A> {
   return isNil(value) ? none : some(value);
 }

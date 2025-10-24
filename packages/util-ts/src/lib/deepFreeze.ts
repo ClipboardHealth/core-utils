@@ -6,7 +6,6 @@
  * @param seen - Internal parameter to track circular references
  * @returns A deeply frozen version of the input object.
  */
-
 export function deepFreeze<T extends object>(value: T, seen = new WeakSet()): Readonly<T> {
   if (!value || typeof value !== "object" || seen.has(value)) {
     return value;

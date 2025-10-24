@@ -26,7 +26,6 @@ describe("parse", () => {
       expect(parseJson<number>("42")).toBe(42);
       expect(parseJson<boolean>("true")).toBe(true);
       expect(parseJson<boolean>("false")).toBe(false);
-
       expect(parseJson<null>("null")).toBeNull();
     });
 

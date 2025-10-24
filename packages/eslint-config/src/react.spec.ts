@@ -8,8 +8,7 @@ describe("eslint-config", () => {
         "react/prefer-read-only-props": "off",
       },
       parserOptions: {
-        project: ["tsconfig.json"],
-        tsconfigRootDir: __dirname,
+        project: "tsconfig.json",
       },
     });
   });

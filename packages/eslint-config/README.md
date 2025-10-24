@@ -23,7 +23,6 @@ module.exports = {
       files: ["*.ts", "*.tsx", "*.js", "*.jsx"],
       parserOptions: {
         project: "tsconfig.lint.json",
-        tsconfigRootDir: __dirname,
       },
     },
     {
