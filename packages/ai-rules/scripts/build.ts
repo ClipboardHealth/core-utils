@@ -59,7 +59,7 @@ async function build() {
         "--module",
         "commonjs",
         "--target",
-        "es2022",
+        "es2024",
         "--moduleResolution",
         "node",
         "--esModuleInterop",

@@ -2,16 +2,17 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 /*
- * Since the rules in the eslint-plugin project are in Typescript and are a package
- * in this monorepo, it's not straightforward to include that plugin when using the
- * ESLint config to lint the code in this monorepo itself. Nx currently symlinks each
- * package in `node_modules/@clipboard-health` folder to the source folder rather than
- * the output in `dist/`, and this will give an error where it cannot find the file:
- * `core-utils/node_modules/@clipboard-health/eslint-plugin/src/index.js` when trying
- * to lint code for any package in this monorepo.
- * As a workaround, we check if we're inside the core-utils monorepo and skip including
- * the eslint-plugin in the ESLint config. We'll need to fix this in the future if we
- * need to rely on a rule from the eslint-plugin to lint code within core-utils itself.
+ * Since the rules in the eslint-plugin project are in Typescript and are a package in this
+ * monorepo, it's not straightforward to include that plugin when using the ESLint config to lint
+ * the code in this monorepo itself. Nx currently symlinks each package in
+ * `node_modules/@clipboard-health` folder to the source folder rather than the output in `dist/`,
+ * and this will give an error where it cannot find the file:
+ * `core-utils/node_modules/@clipboard-health/eslint-plugin/src/index.js` when trying to lint code
+ * for any package in this monorepo.
+ *
+ * As a workaround, we check if we're inside the core-utils monorepo and skip including the
+ * eslint-plugin in the ESLint config. We'll need to fix this in the future if we need to rely on a
+ * rule from the eslint-plugin to lint code within core-utils itself.
  */
 const isOutsideCoreUtilsMonorepo = (() => {
   try {
@@ -74,24 +75,6 @@ module.exports = {
         "@typescript-eslint/no-unsafe-assignment": "off",
       },
     },
-    /**
-     * Exclude *.dto.ts, null is needed for PATCH endpoints to differentiate empty from optional fields
-     * Exclude *.repository.ts, null is needed for our ORMs (prisma and mongoose)
-     */
-    {
-      files: ["**/*.dto.ts", "**/*.repository.ts", "**/*.repo.ts"],
-      rules: {
-        "@typescript-eslint/ban-types": [
-          "error",
-          {
-            extendDefaults: true,
-            types: {
-              null: false,
-            },
-          },
-        ],
-      },
-    },
     ...(isOutsideCoreUtilsMonorepo
       ? [
           {
@@ -117,11 +100,17 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: ["tsconfig.json"],
-    tsconfigRootDir: __dirname,
+    projectService: true,
   },
   plugins,
   rules: {
+    // Start: Deprecated rules removed in v8
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/lines-between-class-members": "off",
+    "@typescript-eslint/no-throw-literal": "off",
+    "@typescript-eslint/padding-line-between-statements": "off",
+    // End: Deprecated rules removed in v8
+
     // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
     "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
 
@@ -132,7 +121,10 @@ module.exports = {
     "@typescript-eslint/no-unsafe-call": "off",
 
     // Prefer an escape hatch instead of an outright ban
-    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+    ],
     "@typescript-eslint/return-await": ["error", "always"],
 
     // Breaks code when temporarily commented, adding more friction than the value provided.

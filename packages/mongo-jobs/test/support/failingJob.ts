@@ -1,7 +1,6 @@
 import type { HandlerInterface } from "../../src";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface JobData {}
+type JobData = object;
 
 export class FailingJob implements HandlerInterface<JobData> {
   public name = "FailingJob";

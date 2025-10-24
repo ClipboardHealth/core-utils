@@ -21,11 +21,12 @@ export type FilterSchema<MapT extends InternalFilterMap> = {
   [K in keyof MapT]: z.ZodOptional<
     z.ZodEffects<
       z.ZodOptional<
-        z.ZodObject<{
-          [F in MapT[K]["filters"][number]]: z.ZodOptional<
-            z.ZodEffects<z.ZodOptional<z.ZodArray<MapT[K]["schema"]>>>
-          >;
-        }>
+        z.ZodObject<
+          Record<
+            MapT[K]["filters"][number],
+            z.ZodOptional<z.ZodEffects<z.ZodOptional<z.ZodArray<MapT[K]["schema"]>>>>
+          >
+        >
       >
     >
   >;

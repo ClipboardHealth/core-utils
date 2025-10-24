@@ -1,36 +1,40 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
 import { type query } from "../query";
 
 type Page = z.infer<typeof query.shape.page>;
+// @ts-expect-error: unused
 let _typeCheck: Page | undefined;
 //  ^? let _typeCheck: {
 //         size: number;
 //         cursor?: string | undefined;
 //     } | undefined
 
+// @ts-expect-error: unused
 const _validSingleField: Page = {
   size: 10,
 };
 
+// @ts-expect-error: unused
 const _validMultipleFields: Page = {
   cursor: "1",
   size: 10,
 };
 
+// @ts-expect-error: unused
 const _invalidField: Page = {
   // @ts-expect-error: invalid
   number: 1,
 };
 
+// @ts-expect-error: unused
 const _invalidKey: Page = {
   // @ts-expect-error: invalid
   invalid: 10,
 };
 
+// @ts-expect-error: unused
 const _invalidFieldDataType: Page = {
   // @ts-expect-error: invalid
   size: "10",
 };
-/* eslint-enable @typescript-eslint/no-unused-vars */

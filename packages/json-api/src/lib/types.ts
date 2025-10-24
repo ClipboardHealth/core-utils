@@ -15,9 +15,7 @@ export { type URLSearchParams } from "node:url";
 
 export type FilterValue = Date | number | string | boolean;
 
-export type FilterObject = {
-  [K in FilterOperator]?: FilterValue | FilterValue[];
-};
+export type FilterObject = Partial<Record<FilterOperator, FilterValue | FilterValue[]>>;
 
 export interface NestedFilter {
   [key: string]: FilterValue | FilterValue[] | FilterObject | NestedFilter | undefined;
@@ -55,7 +53,7 @@ export interface ClientJsonApiQuery {
    * @see {@link https://jsonapi.org/format/#fetching-pagination JSON:API pagination}
    * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
    */
-  page?: { [K in PageKey]?: number | string };
+  page?: Partial<Record<PageKey, number | string>>;
 
   /**
    * Sorting data. Include the "-" prefix for descending order.
@@ -82,7 +80,7 @@ export interface ServerJsonApiQuery {
    * @see {@link https://jsonapi.org/recommendations/#filtering JSON:API filtering}
    * @see {@link https://discuss.jsonapi.org/t/share-propose-a-filtering-strategy/257 JSON:API filtering strategy}
    */
-  filter?: Record<string, string | string[] | { [K in FilterOperator]?: string | string[] }>;
+  filter?: Record<string, string | string[] | Partial<Record<FilterOperator, string | string[]>>>;
 
   /**
    * Relationships to include in the response.
@@ -97,7 +95,7 @@ export interface ServerJsonApiQuery {
    * @see {@link https://jsonapi.org/format/#fetching-pagination JSON:API pagination}
    * @see {@link https://jsonapi.org/examples/#pagination JSON:API pagination examples}
    */
-  page?: { [K in PageKey]?: string };
+  page?: Partial<Record<PageKey, string>>;
 
   /**
    * Sorting data. Include the "-" prefix for descending order.

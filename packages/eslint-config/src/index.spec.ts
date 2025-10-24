@@ -6,6 +6,15 @@ jest.mock("node:path", () => ({
   resolve: jest.fn(),
 }));
 
+const plugins = [
+  "expect-type",
+  "jest",
+  "no-only-tests",
+  "simple-import-sort",
+  "sonarjs",
+  "@typescript-eslint",
+];
+
 const duplicatedConfig = {
   extends: [
     "eslint:recommended",
@@ -43,39 +52,20 @@ const duplicatedConfig = {
         "@typescript-eslint/no-unsafe-assignment": "off",
       },
     },
-    /**
-     * Exclude *.dto.ts, null is needed for PATCH endpoints to differentiate empty from optional fields
-     * Exclude *.repository.ts, null is needed for our ORMs (prisma and mongoose)
-     */
-    {
-      files: ["**/*.dto.ts", "**/*.repository.ts", "**/*.repo.ts"],
-      rules: {
-        "@typescript-eslint/ban-types": [
-          "error",
-          {
-            extendDefaults: true,
-            types: {
-              null: false,
-            },
-          },
-        ],
-      },
-    },
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: ["tsconfig.json"],
-    tsconfigRootDir: __dirname,
+    projectService: true,
   },
-  plugins: [
-    "expect-type",
-    "jest",
-    "no-only-tests",
-    "simple-import-sort",
-    "sonarjs",
-    "@typescript-eslint",
-  ],
+  plugins,
   rules: {
+    // Start: Deprecated rules removed in v8
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/lines-between-class-members": "off",
+    "@typescript-eslint/no-throw-literal": "off",
+    "@typescript-eslint/padding-line-between-statements": "off",
+    // End: Deprecated rules removed in v8
+
     // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
     "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
 
@@ -86,7 +76,10 @@ const duplicatedConfig = {
     "@typescript-eslint/no-unsafe-call": "off",
 
     // Prefer an escape hatch instead of an outright ban
-    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+    ],
     "@typescript-eslint/return-await": ["error", "always"],
 
     // Breaks code when temporarily commented, adding more friction than the value provided.
@@ -165,9 +158,9 @@ const duplicatedConfig = {
 
     "no-restricted-syntax": [
       "error",
-      // Adapted from Airbnb's config, but allows ForOfStatement.
-      // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
       {
+        // Adapted from Airbnb's config, but allows ForOfStatement.
+        // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
         message:
           "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
         selector: "ForInStatement",
@@ -208,7 +201,7 @@ const duplicatedConfig = {
     "no-use-before-define": ["error", { classes: false, functions: false }],
 
     /*
-     * Only enable for properties. Favor arrow functions, they don’t have a `this` reference,
+     * Only enable for properties. Favor arrow functions, they don't have a `this` reference,
      * preventing accidental usage.
      */
     "object-shorthand": ["error", "properties"],

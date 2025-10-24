@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { type z } from "zod";
 
 import { type query } from "../query";
 
 type Filter = z.infer<typeof query.shape.filter>;
+
+// @ts-expect-error: unused
 let _typeCheck: Filter | undefined;
 //  ^? let _typeCheck: {
 //         age?: {
@@ -18,12 +19,14 @@ let _typeCheck: Filter | undefined;
 //         } | undefined;
 //     } | undefined
 
+// @ts-expect-error: unused
 const _validSingleFilter: Filter = {
   age: {
     eq: [10],
   },
 };
 
+// @ts-expect-error: unused
 const _validMultipleFilters: Filter = {
   age: {
     eq: [10],
@@ -37,6 +40,7 @@ const _validMultipleFilters: Filter = {
   },
 };
 
+// @ts-expect-error: unused
 const _invalidFilterType: Filter = {
   age: {
     // @ts-expect-error: invalid
@@ -44,10 +48,10 @@ const _invalidFilterType: Filter = {
   },
 };
 
+// @ts-expect-error: unused
 const _invalidFilterDataType: Filter = {
   age: {
     // @ts-expect-error: invalid
     gt: ["10"],
   },
 };
-/* eslint-enable @typescript-eslint/no-unused-vars */

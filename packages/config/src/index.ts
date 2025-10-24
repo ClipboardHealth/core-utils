@@ -1,2 +1,2 @@
 export * from "./lib/createConfig";
-export * from "./lib/types";
+export type * from "./lib/types";

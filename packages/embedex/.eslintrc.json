@@ -20,7 +20,6 @@
     }
   ],
   "parserOptions": {
-    "project": "tsconfig.lint.json",
-    "tsconfigRootDir": "packages/embedex"
+    "project": "tsconfig.lint.json"
   }
 }
