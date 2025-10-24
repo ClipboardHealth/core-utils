@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "5.17.1",
+  "version": "6.0.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
@@ -10,11 +10,10 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@clipboard-health/eslint-plugin": "^0.13.1",
-    "@typescript-eslint/eslint-plugin": "^7",
-    "@typescript-eslint/parser": "^7",
+    "@clipboard-health/eslint-plugin": "^1.0.0",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "@typescript-eslint/parser": "^8",
     "eslint": "^8",
-    "eslint-config-airbnb-base": "^15",
     "eslint-config-prettier": "^9 || ^10",
     "eslint-config-xo": "^0.45.0",
     "eslint-config-xo-react": "^0.27",
@@ -22,15 +21,15 @@
     "eslint-plugin-eslint-comments": "^3",
     "eslint-plugin-expect-type": "^0.4",
     "eslint-plugin-import": "^2",
-    "eslint-plugin-jest": "^27.7",
-    "eslint-plugin-n": "^16",
+    "eslint-plugin-jest": "^29",
+    "eslint-plugin-n": "^17",
     "eslint-plugin-no-only-tests": "^3",
     "eslint-plugin-no-use-extend-native": "^0.5",
     "eslint-plugin-react": "^7",
     "eslint-plugin-security": "^1",
-    "eslint-plugin-simple-import-sort": "^10",
-    "eslint-plugin-sonarjs": "^0.23",
-    "eslint-plugin-unicorn": "^48"
+    "eslint-plugin-simple-import-sort": "^12",
+    "eslint-plugin-sonarjs": "^2",
+    "eslint-plugin-unicorn": "^56"
   },
   "publishConfig": {
     "access": "public"
