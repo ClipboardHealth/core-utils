@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/deprecation */
 import { type Arrayable } from "type-fest";
 
 import * as E from "../functional/either";
@@ -31,12 +32,7 @@ export class CbhError extends Error {
   public readonly issues: readonly CbhIssue[];
 
   constructor(messageOrIssues: Arrayable<CbhIssue> | string) {
-    const is: readonly CbhIssue[] =
-      typeof messageOrIssues === "string"
-        ? [{ message: messageOrIssues }]
-        : Array.isArray(messageOrIssues)
-          ? messageOrIssues
-          : [messageOrIssues];
+    const is: readonly CbhIssue[] = getMessageOrIssues(messageOrIssues);
 
     const first = is[0] ?? { message: "Unknown error" };
     super(first?.message, { cause: "cause" in first ? first.cause : undefined });
@@ -54,3 +50,16 @@ export class CbhError extends Error {
 export function toLeft<A = never>(issues: Arrayable<CbhIssue> | string): E.Either<CbhError, A> {
   return E.left(new CbhError(issues));
 }
+
+function getMessageOrIssues(messageOrIssues: string | Arrayable<CbhIssue>): readonly CbhIssue[] {
+  if (typeof messageOrIssues === "string") {
+    return [{ message: messageOrIssues }];
+  }
+
+  if (Array.isArray(messageOrIssues)) {
+    return messageOrIssues;
+  }
+
+  return [messageOrIssues];
+}
+/* eslint-enable sonarjs/deprecation */

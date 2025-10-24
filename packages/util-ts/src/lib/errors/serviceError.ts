@@ -20,7 +20,6 @@ export const ERROR_CODES = {
 } as const;
 
 // (string & {}) keeps the literal-union intact—so we get autocomplete for the built-ins *and* accept any other string.
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | (string & {});
 
 const ERROR_METADATA = {
@@ -153,12 +152,9 @@ export class ServiceError extends Error {
    * @param errors - Additional ServiceErrors
    * @returns New ServiceError containing all issues from input errors
    */
-  static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
   static merge(error: ServiceError, ...errors: readonly ServiceError[]): ServiceError;
-  static merge(
-    error: Readonly<unknown | ServiceError>,
-    ...errors: ReadonlyArray<unknown | ServiceError>
-  ): ServiceError {
+  static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
+  static merge(error: Readonly<unknown>, ...errors: readonly unknown[]): ServiceError {
     const firstError = error instanceof ServiceError ? error : ServiceError.fromUnknown(error);
     if (errors.length === 0) {
       return firstError;

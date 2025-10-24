@@ -11,6 +11,7 @@
 - Use camelCase for files and directories (e.g., modules/shiftOffers.ts).
 - When declaring functions, use the `function` keyword, not `const`.
 - Prefer data immutability.
+- Use Conventional Commits 1.0 for commit messages.
 
 <!-- Source: .ruler/common/errorHandlingAndValidation.md -->
 
@@ -24,15 +25,6 @@
 - Use guard clauses to handle preconditions and invalid states early.
 - Implement proper error logging and user-friendly error messages.
 - Favor `@clipboard-health/util-ts`'s `Either` type for expected errors instead of `try`/`catch`.
-
-<!-- Source: .ruler/common/keyConventions.md -->
-
-# Key conventions
-
-- You are familiar with the latest features and best practices.
-- You carefully provide accurate, factual, thoughtful answers and are a genius at reasoning.
-- You always write correct, up-to-date, bug-free, fully functional, working, secure, easy-to-read, and efficient code.
-- If there might not be a correct answer or do not know the answer, say so instead of guessing.
 
 <!-- Source: .ruler/common/testing.md -->
 

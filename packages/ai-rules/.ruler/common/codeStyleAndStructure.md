@@ -9,3 +9,4 @@
 - Use camelCase for files and directories (e.g., modules/shiftOffers.ts).
 - When declaring functions, use the `function` keyword, not `const`.
 - Prefer data immutability.
+- Use Conventional Commits 1.0 for commit messages.

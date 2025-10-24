@@ -2,16 +2,17 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 /*
- * Since the rules in the eslint-plugin project are in Typescript and are a package
- * in this monorepo, it's not straightforward to include that plugin when using the
- * ESLint config to lint the code in this monorepo itself. Nx currently symlinks each
- * package in `node_modules/@clipboard-health` folder to the source folder rather than
- * the output in `dist/`, and this will give an error where it cannot find the file:
- * `core-utils/node_modules/@clipboard-health/eslint-plugin/src/index.js` when trying
- * to lint code for any package in this monorepo.
- * As a workaround, we check if we're inside the core-utils monorepo and skip including
- * the eslint-plugin in the ESLint config. We'll need to fix this in the future if we
- * need to rely on a rule from the eslint-plugin to lint code within core-utils itself.
+ * Since the rules in the eslint-plugin project are in Typescript and are a package in this
+ * monorepo, it's not straightforward to include that plugin when using the ESLint config to lint
+ * the code in this monorepo itself. Nx currently symlinks each package in
+ * `node_modules/@clipboard-health` folder to the source folder rather than the output in `dist/`,
+ * and this will give an error where it cannot find the file:
+ * `core-utils/node_modules/@clipboard-health/eslint-plugin/src/index.js` when trying to lint code
+ * for any package in this monorepo.
+ *
+ * As a workaround, we check if we're inside the core-utils monorepo and skip including the
+ * eslint-plugin in the ESLint config. We'll need to fix this in the future if we need to rely on a
+ * rule from the eslint-plugin to lint code within core-utils itself.
  */
 const isOutsideCoreUtilsMonorepo = (() => {
   try {
@@ -42,7 +43,6 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "airbnb-base",
     "plugin:eslint-comments/recommended",
     "plugin:expect-type/recommended",
     "plugin:jest/recommended",
@@ -51,7 +51,7 @@ module.exports = {
     "plugin:n/recommended",
     "plugin:no-use-extend-native/recommended",
     "plugin:security/recommended",
-    "plugin:sonarjs/recommended",
+    "plugin:sonarjs/recommended-legacy",
     "plugin:unicorn/recommended",
     "xo",
     "xo-typescript/space",
@@ -72,24 +72,6 @@ module.exports = {
       rules: {
         // Interferes with `jest`'s `expect.any`
         "@typescript-eslint/no-unsafe-assignment": "off",
-      },
-    },
-    /**
-     * Exclude *.dto.ts, null is needed for PATCH endpoints to differentiate empty from optional fields
-     * Exclude *.repository.ts, null is needed for our ORMs (prisma and mongoose)
-     */
-    {
-      files: ["**/*.dto.ts", "**/*.repository.ts", "**/*.repo.ts"],
-      rules: {
-        "@typescript-eslint/ban-types": [
-          "error",
-          {
-            extendDefaults: true,
-            types: {
-              null: false,
-            },
-          },
-        ],
       },
     },
     ...(isOutsideCoreUtilsMonorepo
@@ -117,11 +99,19 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: ["tsconfig.json"],
-    tsconfigRootDir: __dirname,
+    projectService: true,
   },
   plugins,
   rules: {
+    // Start: Deprecated rules removed in v8
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/lines-between-class-members": "off",
+    "@typescript-eslint/padding-line-between-statements": "off",
+    "@typescript-eslint/no-throw-literal": "off",
+    // Replacement for `@typescript-eslint/no-throw-literal`
+    "@typescript-eslint/only-throw-error": "error",
+    // End: Deprecated rules removed in v8
+
     // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
     "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
 
@@ -132,7 +122,10 @@ module.exports = {
     "@typescript-eslint/no-unsafe-call": "off",
 
     // Prefer an escape hatch instead of an outright ban
-    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+    ],
     "@typescript-eslint/return-await": ["error", "always"],
 
     // Breaks code when temporarily commented, adding more friction than the value provided.
@@ -140,6 +133,9 @@ module.exports = {
 
     // Recommends using static fields instead of moving to a function
     "class-methods-use-this": "off",
+
+    // Not worthwhile in TypeScript
+    "consistent-return": "off",
 
     // Prevent bugs
     curly: ["error", "all"],
@@ -235,6 +231,9 @@ module.exports = {
       },
     ],
 
+    // Use a logger instead.
+    "no-console": "error",
+
     // While continue can be misused, especially with nested loops and labels,
     // it can be useful for preventing code nesting and the existence of the rule
     // caused us to lose time debating its validity
@@ -250,6 +249,9 @@ module.exports = {
     // Polarizing naming convention that isn't followed by us
     "no-underscore-dangle": "off",
 
+    // Duplicate
+    "n/hashbang": "off",
+
     // We use TypeScript where these are caught by the compiler
     "no-use-before-define": ["error", { classes: false, functions: false }],
 
@@ -264,6 +266,25 @@ module.exports = {
 
     // Sort imports and exports
     "simple-import-sort/imports": "warn",
+
+    // Start: Sonar is mostly annoying
+    "sonarjs/different-types-comparison": "off",
+    "sonarjs/function-return-type": "off",
+    "sonarjs/new-cap": "off",
+    "sonarjs/no-alphabetical-sort": "off",
+    "sonarjs/no-duplicate-string": "off",
+    "sonarjs/no-empty-test-file": "off",
+    "sonarjs/no-invalid-await": "off",
+    "sonarjs/no-os-command-from-path": "off",
+    "sonarjs/no-primitive-wrappers": "off",
+    "sonarjs/no-try-promise": "off",
+    "sonarjs/no-unused-expressions": "off",
+    "sonarjs/no-useless-intersection": "off",
+    "sonarjs/no-var": "off",
+    "sonarjs/pseudo-random": "off",
+    "sonarjs/redundant-type-aliases": "off",
+    "sonarjs/sonar-max-params": "off",
+    // End: Sonar is mostly annoying
 
     // Makes functional programming difficult
     "unicorn/no-array-callback-reference": "off",
@@ -285,9 +306,6 @@ module.exports = {
       "error",
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
-
-    // There are cases where duplicating strings is ok (tests, contracts, etc...)
-    "sonarjs/no-duplicate-string": "off",
   },
   settings: { node: { version: ">=18.15.0" } },
 };

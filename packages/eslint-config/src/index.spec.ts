@@ -6,12 +6,20 @@ jest.mock("node:path", () => ({
   resolve: jest.fn(),
 }));
 
+const plugins = [
+  "expect-type",
+  "jest",
+  "no-only-tests",
+  "simple-import-sort",
+  "sonarjs",
+  "@typescript-eslint",
+];
+
 const duplicatedConfig = {
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "airbnb-base",
     "plugin:eslint-comments/recommended",
     "plugin:expect-type/recommended",
     "plugin:jest/recommended",
@@ -20,7 +28,7 @@ const duplicatedConfig = {
     "plugin:n/recommended",
     "plugin:no-use-extend-native/recommended",
     "plugin:security/recommended",
-    "plugin:sonarjs/recommended",
+    "plugin:sonarjs/recommended-legacy",
     "plugin:unicorn/recommended",
     "xo",
     "xo-typescript/space",
@@ -43,39 +51,22 @@ const duplicatedConfig = {
         "@typescript-eslint/no-unsafe-assignment": "off",
       },
     },
-    /**
-     * Exclude *.dto.ts, null is needed for PATCH endpoints to differentiate empty from optional fields
-     * Exclude *.repository.ts, null is needed for our ORMs (prisma and mongoose)
-     */
-    {
-      files: ["**/*.dto.ts", "**/*.repository.ts", "**/*.repo.ts"],
-      rules: {
-        "@typescript-eslint/ban-types": [
-          "error",
-          {
-            extendDefaults: true,
-            types: {
-              null: false,
-            },
-          },
-        ],
-      },
-    },
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: ["tsconfig.json"],
-    tsconfigRootDir: __dirname,
+    projectService: true,
   },
-  plugins: [
-    "expect-type",
-    "jest",
-    "no-only-tests",
-    "simple-import-sort",
-    "sonarjs",
-    "@typescript-eslint",
-  ],
+  plugins,
   rules: {
+    // Start: Deprecated rules removed in v8
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/lines-between-class-members": "off",
+    "@typescript-eslint/padding-line-between-statements": "off",
+    "@typescript-eslint/no-throw-literal": "off",
+    // Replacement for `@typescript-eslint/no-throw-literal`
+    "@typescript-eslint/only-throw-error": "error",
+    // End: Deprecated rules removed in v8
+
     // See https://github.com/microsoft/TypeScript/wiki/Performance#preferring-interfaces-over-intersections
     "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
 
@@ -86,7 +77,10 @@ const duplicatedConfig = {
     "@typescript-eslint/no-unsafe-call": "off",
 
     // Prefer an escape hatch instead of an outright ban
-    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+    ],
     "@typescript-eslint/return-await": ["error", "always"],
 
     // Breaks code when temporarily commented, adding more friction than the value provided.
@@ -94,6 +88,9 @@ const duplicatedConfig = {
 
     // Recommends using static fields instead of moving to a function
     "class-methods-use-this": "off",
+
+    // Not worthwhile in TypeScript
+    "consistent-return": "off",
 
     // Prevent bugs
     curly: ["error", "all"],
@@ -127,6 +124,9 @@ const duplicatedConfig = {
         ],
       },
     ],
+
+    // Duplicate
+    "n/hashbang": "off",
 
     // Our libraries don't use ESM
     "n/no-missing-import": "off",
@@ -165,9 +165,9 @@ const duplicatedConfig = {
 
     "no-restricted-syntax": [
       "error",
-      // Adapted from Airbnb's config, but allows ForOfStatement.
-      // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
       {
+        // Adapted from Airbnb's config, but allows ForOfStatement.
+        // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
         message:
           "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
         selector: "ForInStatement",
@@ -189,6 +189,9 @@ const duplicatedConfig = {
       },
     ],
 
+    // Use a logger instead.
+    "no-console": "error",
+
     // While continue can be misused, especially with nested loops and labels,
     // it can be useful for preventing code nesting and the existence of the rule
     // caused us to lose time debating its validity
@@ -208,7 +211,7 @@ const duplicatedConfig = {
     "no-use-before-define": ["error", { classes: false, functions: false }],
 
     /*
-     * Only enable for properties. Favor arrow functions, they don’t have a `this` reference,
+     * Only enable for properties. Favor arrow functions, they don't have a `this` reference,
      * preventing accidental usage.
      */
     "object-shorthand": ["error", "properties"],
@@ -218,6 +221,25 @@ const duplicatedConfig = {
 
     // Sort imports and exports
     "simple-import-sort/imports": "warn",
+
+    // Start: Sonar is mostly annoying
+    "sonarjs/different-types-comparison": "off",
+    "sonarjs/function-return-type": "off",
+    "sonarjs/new-cap": "off",
+    "sonarjs/no-alphabetical-sort": "off",
+    "sonarjs/no-duplicate-string": "off",
+    "sonarjs/no-empty-test-file": "off",
+    "sonarjs/no-invalid-await": "off",
+    "sonarjs/no-os-command-from-path": "off",
+    "sonarjs/no-primitive-wrappers": "off",
+    "sonarjs/no-try-promise": "off",
+    "sonarjs/no-unused-expressions": "off",
+    "sonarjs/no-useless-intersection": "off",
+    "sonarjs/no-var": "off",
+    "sonarjs/pseudo-random": "off",
+    "sonarjs/redundant-type-aliases": "off",
+    "sonarjs/sonar-max-params": "off",
+    // End: Sonar is mostly annoying
 
     // Makes functional programming difficult
     "unicorn/no-array-callback-reference": "off",
@@ -239,9 +261,6 @@ const duplicatedConfig = {
       "error",
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
-
-    // There are cases where duplicating strings is ok (tests, contracts, etc...)
-    "sonarjs/no-duplicate-string": "off",
   },
   settings: { node: { version: ">=18.15.0" } },
 };

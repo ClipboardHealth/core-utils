@@ -78,7 +78,7 @@ async function delay(time: number): Promise<void> {
 
 function removeItemFromArray<T>(array: T[], item: T) {
   const index = array.indexOf(item);
-  if (index > -1) {
+  if (index !== -1) {
     array.splice(index, 1);
   }
 }

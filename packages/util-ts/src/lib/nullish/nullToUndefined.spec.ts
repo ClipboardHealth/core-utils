@@ -17,7 +17,7 @@ describe("nullToUndefined", () => {
     const promiseLike: PromiseLike<string> = {
       // eslint-disable-next-line unicorn/no-thenable
       then: function <TResult1, TResult2>(
-        onfulfilled?: ((value: string) => TResult1 | PromiseLike<TResult1>) | undefined,
+        onfulfilled?: (value: string) => TResult1 | PromiseLike<TResult1>,
       ): PromiseLike<TResult1 | TResult2> {
         if (onfulfilled) {
           return Promise.resolve(onfulfilled(expected));

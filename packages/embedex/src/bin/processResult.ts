@@ -1,4 +1,4 @@
-import { relative as nodeRelative } from "node:path";
+import path from "node:path";
 
 import colors from "yoctocolors-cjs";
 
@@ -39,8 +39,8 @@ export function processResult(params: {
   const { check, result, cwd, verbose } = params;
   const { embeds, sources, destinations } = result;
 
-  function relative(path: string) {
-    return nodeRelative(cwd, path);
+  function relative(filePath: string) {
+    return path.relative(cwd, filePath);
   }
 
   function format(item: { path: string } & ({ destinations: string[] } | { sources: string[] })) {

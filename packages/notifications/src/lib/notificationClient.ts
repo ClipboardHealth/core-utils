@@ -90,10 +90,8 @@ export class NotificationClient {
     this.signingKey = signingKey;
     this.provider =
       "provider" in params
-        ? // eslint-disable-next-line unicorn/consistent-destructuring
-          params.provider
-        : // eslint-disable-next-line unicorn/consistent-destructuring
-          new IdempotentKnock({ apiKey: params.apiKey, logger });
+        ? params.provider
+        : new IdempotentKnock({ apiKey: params.apiKey, logger });
   }
 
   /**

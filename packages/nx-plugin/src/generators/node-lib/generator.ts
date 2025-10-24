@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import path from "node:path";
 
 import {
   formatFiles,
@@ -44,7 +44,7 @@ function getRelativePathToRootTsConfig(targetPath: string): string {
 }
 
 function addFiles(tree: Tree, options: NormalizedSchema) {
-  generateFiles(tree, join(__dirname, "files"), options.projectRoot, {
+  generateFiles(tree, path.join(__dirname, "files"), options.projectRoot, {
     ...options,
     ...names(options.name),
     offsetFromRoot: offsetFromRoot(options.projectRoot),

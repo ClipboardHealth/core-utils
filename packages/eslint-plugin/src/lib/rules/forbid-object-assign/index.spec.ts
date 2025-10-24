@@ -5,6 +5,7 @@ import rule from "./index";
 // eslint-disable-next-line n/no-unpublished-require
 const parser = require.resolve("@typescript-eslint/parser");
 
+// eslint-disable-next-line sonarjs/deprecation
 const ruleTester = new TSESLint.RuleTester({
   parser,
   parserOptions: {

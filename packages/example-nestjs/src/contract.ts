@@ -12,7 +12,7 @@ import {
   sortQuery,
 } from "@clipboard-health/json-api-nestjs";
 import { initContract } from "@ts-rest/core";
-import z from "zod";
+import { z } from "zod";
 
 const API_TYPES = {
   article: "article",
@@ -98,13 +98,13 @@ const comment = z.object({
   }),
 });
 
-const API_SCHEMAS = {
+const _API_SCHEMAS = {
   [API_TYPES.article]: article,
   [API_TYPES.comment]: comment,
   [API_TYPES.user]: user,
 } as const;
 
-type IncludeFields<T extends JsonApiDocument> = RelationshipPaths<typeof API_SCHEMAS, T, 2>;
+type IncludeFields<T extends JsonApiDocument> = RelationshipPaths<typeof _API_SCHEMAS, T, 2>;
 
 export type UserDto = z.infer<typeof user>;
 export type UserAttributeFields = AttributeFields<UserDto>;

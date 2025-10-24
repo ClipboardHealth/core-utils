@@ -1,7 +1,8 @@
 import { execSync } from "node:child_process";
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import { copyFile, cp, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import { PATHS, type ProfileName } from "./constants";
 import { toErrorMessage } from "./toErrorMessage";
@@ -22,14 +23,14 @@ export async function buildProfile(params: {
 
   logs.push(`📦 Building ${profileName} with ${categories.join(", ")}`);
 
-  const sourceDirectory = join(packageRoot, ".ruler");
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), `ai-rules-${profileName}-`));
+  const sourceDirectory = path.join(packageRoot, ".ruler");
+  const temporaryDirectory = await mkdtemp(path.join(tmpdir(), `ai-rules-${profileName}-`));
   const paths = {
     source: sourceDirectory,
     temporary: temporaryDirectory,
-    temporaryRuler: join(temporaryDirectory, ".ruler"),
-    output: join(outputDirectory, profileName),
-    rulerConfig: join(sourceDirectory, "ruler.toml"),
+    temporaryRuler: path.join(temporaryDirectory, ".ruler"),
+    output: path.join(outputDirectory, profileName),
+    rulerConfig: path.join(sourceDirectory, "ruler.toml"),
   };
 
   try {
@@ -37,13 +38,13 @@ export async function buildProfile(params: {
     await mkdir(paths.temporaryRuler, { recursive: true });
     await Promise.all(
       categories.map(async (category) => {
-        const source = join(paths.source, category);
-        await cp(source, join(paths.temporaryRuler, category), {
+        const source = path.join(paths.source, category);
+        await cp(source, path.join(paths.temporaryRuler, category), {
           recursive: true,
         });
       }),
     );
-    await copyFile(paths.rulerConfig, join(paths.temporaryRuler, "ruler.toml"));
+    await copyFile(paths.rulerConfig, path.join(paths.temporaryRuler, "ruler.toml"));
 
     // Run Ruler in tmp to generate files
     const output = execSync("npx @intellectronica/ruler apply", {
@@ -60,7 +61,7 @@ export async function buildProfile(params: {
     await mkdir(paths.output, { recursive: true });
     await Promise.all(
       ["AGENTS.md", "CLAUDE.md"].map(async (file) => {
-        await copyFile(join(paths.temporary, file), join(paths.output, file));
+        await copyFile(path.join(paths.temporary, file), path.join(paths.output, file));
       }),
     );
 

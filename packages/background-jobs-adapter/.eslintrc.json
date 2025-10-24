@@ -2,8 +2,7 @@
   "extends": ["../../.eslintrc.json"],
   "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
   "parserOptions": {
-    "project": "tsconfig.lint.json",
-    "tsconfigRootDir": "packages/background-jobs-adapter"
+    "project": "tsconfig.lint.json"
   },
   "overrides": [
     {

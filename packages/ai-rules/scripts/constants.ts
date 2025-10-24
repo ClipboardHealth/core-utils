@@ -1,9 +1,9 @@
-import { join } from "node:path";
+import path from "node:path";
 
-const packageRoot = join(__dirname, "..");
+const packageRoot = path.join(__dirname, "..");
 export const PATHS = {
   packageRoot,
-  outputDirectory: join(packageRoot, "..", "..", "dist", "packages", "ai-rules"),
+  outputDirectory: path.join(packageRoot, "..", "..", "dist", "packages", "ai-rules"),
 };
 
 export const PROFILES = {

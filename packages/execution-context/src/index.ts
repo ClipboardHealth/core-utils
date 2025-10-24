@@ -1,4 +1,4 @@
 import "./types/global";
 
 export * from "./lib/contextStore";
-export * from "./types/types";
+export type * from "./types/types";
