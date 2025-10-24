@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import { embed } from "./embed";
 import { SOURCE_MARKER_PREFIX } from "./internal/createSourceMap";
@@ -27,28 +27,28 @@ describe("embed", () => {
   };
 
   beforeEach(async () => {
-    cwd = await mkdtemp(join(tmpdir(), "embedex"));
+    cwd = await mkdtemp(path.join(tmpdir(), "embedex"));
     paths = {
       sources: { a: "sources/a.ts", b: "sources/b.ts", c: "sources/c.md" },
       destinations: { l: "src/l.ts", m: "src/m.ts", n: "src/n.md" },
     };
-    await Promise.all([mkdir(join(cwd, "sources")), mkdir(join(cwd, "src"))]);
+    await Promise.all([mkdir(path.join(cwd, "sources")), mkdir(path.join(cwd, "src"))]);
   });
 
-  async function read(path: string) {
-    return await readFile(join(cwd, path), "utf8");
+  async function read(filePath: string) {
+    return await readFile(path.join(cwd, filePath), "utf8");
   }
 
-  async function write(path: string, content: string[]) {
-    await writeFile(join(cwd, path), content.join("\n"), "utf8");
+  async function write(filePath: string, content: string[]) {
+    await writeFile(path.join(cwd, filePath), content.join("\n"), "utf8");
   }
 
-  async function writeWithCRLF(path: string, content: string[]) {
-    await writeFile(join(cwd, path), content.join("\r\n"), "utf8");
+  async function writeWithCrlf(filePath: string, content: string[]) {
+    await writeFile(path.join(cwd, filePath), content.join("\r\n"), "utf8");
   }
 
-  function toPath(path: string) {
-    return join(cwd, path);
+  function toPath(filePath: string) {
+    return path.join(cwd, filePath);
   }
 
   it("returns INVALID_SOURCE for non-existent sources", async () => {
@@ -120,7 +120,7 @@ describe("embed", () => {
     ]);
 
     await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
-      `ENOENT: no such file or directory, open '${join(cwd, paths.destinations.l)}'`,
+      `ENOENT: no such file or directory, open '${path.join(cwd, paths.destinations.l)}'`,
     );
   });
 
@@ -361,7 +361,7 @@ describe("embed", () => {
 
   it("escapes sources with code fences and comment blocks", async () => {
     const sourceCode = ["/** hello */", "```ts", "const x = 1;", "```"];
-    const destinationCode = [" * /** hello *\\/", " * ```ts", " * const x = 1;", " * ```"];
+    const destinationCode = [String.raw` * /** hello *\/`, " * ```ts", " * const x = 1;", " * ```"];
     await Promise.all([
       write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, ...sourceCode]),
       write(paths.destinations.l, [
@@ -946,11 +946,11 @@ describe("embed", () => {
 
       // Write files with CRLF line endings
       await Promise.all([
-        writeWithCRLF(paths.sources.a, [
+        writeWithCrlf(paths.sources.a, [
           `${SOURCE_MARKER_PREFIX}${paths.destinations.l}`,
           ...sourceCode,
         ]),
-        writeWithCRLF(paths.destinations.l, [
+        writeWithCrlf(paths.destinations.l, [
           "/**",
           " * @example",
           ` * <embedex source="${paths.sources.a}">`,
@@ -983,7 +983,7 @@ describe("embed", () => {
       // Source has LF, destination has CRLF
       await Promise.all([
         write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.l}`, "const x = 1;"]),
-        writeWithCRLF(paths.destinations.l, [
+        writeWithCrlf(paths.destinations.l, [
           "/**",
           " * @example",
           ` * <embedex source="${paths.sources.a}">`,

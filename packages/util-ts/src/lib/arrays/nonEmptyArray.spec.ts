@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/deprecation */
 import { type NonEmptyArray, type OneOrNonEmptyArray, toNonEmptyArray } from "./nonEmptyArray";
 
 describe("NonEmptyArray", () => {
@@ -34,3 +35,4 @@ describe("toNonEmptyArray", () => {
     expect(result).toEqual(["a", "b", "c"]);
   });
 });
+/* eslint-enable sonarjs/deprecation */

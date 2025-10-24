@@ -28,7 +28,7 @@ const duplicatedConfig = {
     "plugin:n/recommended",
     "plugin:no-use-extend-native/recommended",
     "plugin:security/recommended",
-    "plugin:sonarjs/recommended",
+    "plugin:sonarjs/recommended-legacy",
     "plugin:unicorn/recommended",
     "xo",
     "xo-typescript/space",
@@ -79,7 +79,7 @@ const duplicatedConfig = {
     // Prefer an escape hatch instead of an outright ban
     "@typescript-eslint/no-unused-vars": [
       "warn",
-      { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
     ],
     "@typescript-eslint/return-await": ["error", "always"],
 
@@ -124,6 +124,9 @@ const duplicatedConfig = {
         ],
       },
     ],
+
+    // Duplicate
+    "n/hashbang": "off",
 
     // Our libraries don't use ESM
     "n/no-missing-import": "off",
@@ -219,6 +222,25 @@ const duplicatedConfig = {
     // Sort imports and exports
     "simple-import-sort/imports": "warn",
 
+    // Start: Sonar is mostly annoying
+    "sonarjs/different-types-comparison": "off",
+    "sonarjs/function-return-type": "off",
+    "sonarjs/new-cap": "off",
+    "sonarjs/no-alphabetical-sort": "off",
+    "sonarjs/no-duplicate-string": "off",
+    "sonarjs/no-empty-test-file": "off",
+    "sonarjs/no-invalid-await": "off",
+    "sonarjs/no-os-command-from-path": "off",
+    "sonarjs/no-primitive-wrappers": "off",
+    "sonarjs/no-try-promise": "off",
+    "sonarjs/no-unused-expressions": "off",
+    "sonarjs/no-useless-intersection": "off",
+    "sonarjs/no-var": "off",
+    "sonarjs/pseudo-random": "off",
+    "sonarjs/redundant-type-aliases": "off",
+    "sonarjs/sonar-max-params": "off",
+    // End: Sonar is mostly annoying
+
     // Makes functional programming difficult
     "unicorn/no-array-callback-reference": "off",
 
@@ -239,9 +261,6 @@ const duplicatedConfig = {
       "error",
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
-
-    // There are cases where duplicating strings is ok (tests, contracts, etc...)
-    "sonarjs/no-duplicate-string": "off",
   },
   settings: { node: { version: ">=18.15.0" } },
 };

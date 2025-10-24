@@ -60,7 +60,6 @@ export function buildDependencyGraph(
  *
  * @returns CircularDependencyError if a cycle exists, undefined otherwise
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export function detectCircularDependency(
   graph: Readonly<DependencyGraph>,
 ): CircularDependencyError | undefined {

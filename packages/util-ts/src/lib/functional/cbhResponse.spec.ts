@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/deprecation */
 import { CbhError } from "../errors/cbhError";
 import { toErrorCbhResponse, toSuccessCbhResponse } from "./cbhResponse";
 
@@ -23,3 +24,4 @@ describe("toSuccessCbhResponse", () => {
     expect(response).toEqual({ success: true, data: { message } });
   });
 });
+/* eslint-enable sonarjs/deprecation */

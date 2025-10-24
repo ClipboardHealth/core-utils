@@ -89,8 +89,8 @@ nestedDate;
 string;
 // ^? const string: string
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const invalidConfig = createConfig({
+// @ts-expect-error unused
+const _invalidConfig = createConfig({
   config: {
     string: {
       defaultValue: "my-string",

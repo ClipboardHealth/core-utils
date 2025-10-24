@@ -1,6 +1,6 @@
 import { copyFile, mkdir, rm } from "node:fs/promises";
 import { devNull } from "node:os";
-import { join, relative } from "node:path";
+import path from "node:path";
 
 import { buildProfile } from "./buildProfile";
 import { PATHS, type ProfileName, PROFILES } from "./constants";
@@ -14,7 +14,7 @@ const params = {
 };
 
 async function build() {
-  const scriptsOutput = join(outputDirectory, "scripts");
+  const scriptsOutput = path.join(outputDirectory, "scripts");
 
   console.log(`🚀 Building profiles...\n`);
 
@@ -29,12 +29,12 @@ async function build() {
       ),
     ),
     mkdir(scriptsOutput, { recursive: true }),
-    copyFile(join(packageRoot, "README.md"), join(outputDirectory, "README.md")),
-    copyFile(join(packageRoot, "package.json"), join(outputDirectory, "package.json")),
+    copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
+    copyFile(path.join(packageRoot, "package.json"), path.join(outputDirectory, "package.json")),
   ]);
 
   console.log(logs.flat().join("\n"));
-  console.log(`\n✨ Profiles built. See ${relative(process.cwd(), outputDirectory)}.`);
+  console.log(`\n✨ Profiles built. See ${path.relative(process.cwd(), outputDirectory)}.`);
 
   await Promise.all([
     execAndLog({
@@ -53,7 +53,7 @@ async function build() {
       command: [
         "npx",
         "tsc",
-        join(packageRoot, "scripts", "sync.ts"),
+        path.join(packageRoot, "scripts", "sync.ts"),
         "--outDir",
         scriptsOutput,
         "--module",

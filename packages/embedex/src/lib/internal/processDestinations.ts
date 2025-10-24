@@ -1,4 +1,4 @@
-import { extname, resolve } from "node:path";
+import path from "node:path";
 
 import type { Embed } from "../types";
 import { stripSourceMarker } from "./createSourceMap";
@@ -76,8 +76,8 @@ function processDestination(params: {
   // Normalize CRLF to LF to ensure consistent processing across platforms
   content = content.replaceAll("\r\n", "\n");
 
-  function absolutePath(path: string): string {
-    return resolve(cwd, path);
+  function absolutePath(filePath: string): string {
+    return path.resolve(cwd, filePath);
   }
 
   // First, check for invalid source references and collect referenced sources
@@ -186,14 +186,14 @@ function createReplacement(
 
   const contentHasCodeFence = content.includes("```");
   const backticks = contentHasCodeFence ? "````" : "```";
-  const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[extname(sourcePath).slice(1)];
+  const codeFenceId = CODE_FENCE_ID_BY_FILE_EXTENSION[path.extname(sourcePath).slice(1)];
 
   // Only escape */ when embedding into comment blocks (e.g., JSDoc)
   // to prevent breaking the comment. Don't escape in Markdown.
   const isInCommentBlock = /^\s*\*/.test(prefix);
   let processedContent = content.trimEnd();
   if (isInCommentBlock) {
-    processedContent = processedContent.replaceAll("*/", "*\\/");
+    processedContent = processedContent.replaceAll("*/", String.raw`*\/`);
   }
 
   // For markdown files, strip nested embedex tags to prevent recursive processing
@@ -236,5 +236,6 @@ function createReplacement(
 }
 
 function isDefined<T>(value: T | undefined): value is T {
-  return value !== null && value !== undefined;
+  // eslint-disable-next-line no-eq-null, eqeqeq
+  return value != null;
 }

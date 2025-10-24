@@ -1,14 +1,14 @@
 /* eslint-disable unicorn/no-process-exit */
 /* eslint-disable n/no-process-exit */
-import { cp } from "node:fs/promises";
-import { join } from "node:path";
+import { copyFile } from "node:fs/promises";
+import path from "node:path";
 
 import { type ProfileName, PROFILES } from "./constants";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {
-  projectRoot: join(__dirname, "../../../.."),
-  rules: join(__dirname, ".."),
+  projectRoot: path.join(__dirname, "../../../.."),
+  rules: path.join(__dirname, ".."),
 };
 
 function getProfileFromArguments(): ProfileName {
@@ -29,7 +29,7 @@ async function sync() {
     const profile = getProfileFromArguments();
 
     // Force copy files; rely on `git` if it overwrites files.
-    await cp(join(PATHS.rules, profile), PATHS.projectRoot, { recursive: true, force: true });
+    await copyFile(path.join(PATHS.rules, profile), PATHS.projectRoot);
     console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs

@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import path from "node:path";
 
 import { glob } from "glob";
 
@@ -29,17 +29,17 @@ export async function createSourceMap(
   const paths = await glob(sourcesGlob, { absolute: true, cwd, nodir: true });
 
   await Promise.all(
-    paths.map(async (path) => {
-      const content = await readFile(path, "utf8");
+    paths.map(async (filePath) => {
+      const content = await readFile(filePath, "utf8");
       const [first, ...rest] = content.split("\n");
       if (first?.startsWith(SOURCE_MARKER_PREFIX)) {
-        sourceMap.set(path, {
+        sourceMap.set(filePath, {
           content: rest.join("\n"),
           destinations: first
             .replace(SOURCE_MARKER_PREFIX, "")
             .split(",")
             .filter((t) => t.length > 0)
-            .map((t) => resolve(cwd, t.trim())),
+            .map((t) => path.resolve(cwd, t.trim())),
         });
       }
     }),

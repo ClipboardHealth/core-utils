@@ -1,3 +1,4 @@
+// eslint-disable-next-line sonarjs/deprecation
 import { isNil, isNullOrUndefined } from "./isNil";
 
 describe("isNil", () => {
@@ -18,6 +19,7 @@ describe("isNil", () => {
     const actual = isNil(input);
     expect(actual).toBe(expected);
 
+    // eslint-disable-next-line sonarjs/deprecation
     const isNullOrUndefinedActual = isNullOrUndefined(input);
     expect(isNullOrUndefinedActual).toBe(expected);
   });

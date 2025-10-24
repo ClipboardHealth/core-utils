@@ -30,11 +30,10 @@ const rule = createRule({
 
     return {
       /*
-       * This method iterates through import declarations and verifies that the
-       * the `TsRestHandler` decorator and `tsRestHandler` method are imported
-       * from `@ts-rest/nest` package. We'll use this information to later
-       * highlight usages of those symbols to point out that they need to be
-       * imported from the correct source.
+       * This method iterates through import declarations and verifies that the the `TsRestHandler`
+       * decorator and `tsRestHandler` method are imported from `@ts-rest/nest` package. We'll use
+       * this information to later highlight usages of those symbols to point out that they need to
+       * be imported from the correct source.
        */
       // eslint-disable-next-line sonarjs/cognitive-complexity
       ImportDeclaration(node) {
@@ -64,7 +63,7 @@ const rule = createRule({
        * `TsRestHandler` decorator and return the result of `tsRestHandler` as the
        * only expression in it.
        */
-      // eslint-disable-next-line sonarjs/cognitive-complexity, complexity
+      // eslint-disable-next-line complexity
       MethodDefinition(node) {
         const symbolName =
           (node.key.type === AST_NODE_TYPES.Identifier && node.key.name) || "<unknown>";

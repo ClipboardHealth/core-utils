@@ -154,10 +154,7 @@ export class ServiceError extends Error {
    */
   static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
   static merge(error: ServiceError, ...errors: readonly ServiceError[]): ServiceError;
-  static merge(
-    error: Readonly<unknown | ServiceError>,
-    ...errors: ReadonlyArray<unknown | ServiceError>
-  ): ServiceError {
+  static merge(error: Readonly<unknown>, ...errors: readonly unknown[]): ServiceError {
     const firstError = error instanceof ServiceError ? error : ServiceError.fromUnknown(error);
     if (errors.length === 0) {
       return firstError;
