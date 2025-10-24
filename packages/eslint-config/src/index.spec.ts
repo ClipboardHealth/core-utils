@@ -88,6 +88,9 @@ const duplicatedConfig = {
     // Recommends using static fields instead of moving to a function
     "class-methods-use-this": "off",
 
+    // Not worthwhile in TypeScript
+    "consistent-return": "off",
+
     // Prevent bugs
     curly: ["error", "all"],
 

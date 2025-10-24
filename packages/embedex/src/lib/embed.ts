@@ -47,18 +47,13 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
     };
   }
 
-  // Get topological sort order for processing
-  const sortedDestinations = topologicalSort(graph);
-
   // Process destinations in dependency order, tracking updated content
   const updatedContentMap = new Map<string, string>();
-  const embeds: Embed[] = [];
-
-  for (const destinationPath of sortedDestinations) {
+  const embeds = topologicalSort(graph).flatMap((destinationPath) => {
     const destinationEntry = destinationMap.get(destinationPath);
     /* istanbul ignore next */
     if (!destinationEntry) {
-      continue;
+      return [];
     }
 
     const [embed] = processDestinations({
@@ -67,19 +62,18 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
       destinationMap: new Map([[destinationPath, destinationEntry]]),
       updatedContentMap,
     });
-
     /* istanbul ignore next */
     if (!embed) {
-      continue;
+      return [];
     }
-
-    embeds.push(embed);
 
     // Track updated content for chained embeds
     if (embed.code === "UPDATE") {
       updatedContentMap.set(destinationPath, embed.updatedContent);
     }
-  }
+
+    return [embed];
+  });
 
   await Promise.all(
     embeds.map(async (embed) => {

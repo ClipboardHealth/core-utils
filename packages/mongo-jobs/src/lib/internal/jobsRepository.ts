@@ -89,7 +89,6 @@ export class JobsRepository {
         return createdJob as unknown as BackgroundJobType<T>;
       } catch (error) {
         if (isMongoDuplicateError(error)) {
-          // eslint-disable-next-line consistent-return
           return;
         }
 

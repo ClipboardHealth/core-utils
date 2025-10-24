@@ -28,7 +28,6 @@ export class ActionableQueues {
       return;
     }
 
-    // eslint-disable-next-line consistent-return
     return this.array[Math.floor(Math.random() * arrayLength)];
   }
 }
