@@ -241,7 +241,7 @@ const duplicatedConfig = {
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
   },
-  settings: { node: { version: ">=22.3.0" } },
+  settings: { node: { version: ">=22.15.0" } },
 };
 
 describe("eslint-config", () => {
