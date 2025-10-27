@@ -97,7 +97,6 @@ export function mapFailure<G>(
  * async function example() {
  *   const successResult = await tryCatchAsync(
  *     async () => {
- *       // eslint-disable-next-line n/no-unsupported-features/node-builtins
  *       const response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
  *       return (await response.json()) as { id: number };
  *     },

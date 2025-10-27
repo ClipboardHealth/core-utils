@@ -35,7 +35,6 @@ const rule = createRule({
        * this information to later highlight usages of those symbols to point out that they need to
        * be imported from the correct source.
        */
-      // eslint-disable-next-line sonarjs/cognitive-complexity
       ImportDeclaration(node) {
         if (node.source.value === "@ts-rest/nest") {
           for (const spec of node.specifiers) {

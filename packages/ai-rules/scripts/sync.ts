@@ -1,5 +1,4 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-// eslint-disable-next-line n/no-unsupported-features/node-builtins
 import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 

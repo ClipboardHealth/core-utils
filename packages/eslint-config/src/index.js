@@ -29,7 +29,6 @@ const plugins = [
   "jest",
   "no-only-tests",
   "simple-import-sort",
-  "sonarjs",
   "@typescript-eslint",
 ];
 
@@ -51,7 +50,6 @@ module.exports = {
     "plugin:n/recommended",
     "plugin:no-use-extend-native/recommended",
     "plugin:security/recommended",
-    "plugin:sonarjs/recommended-legacy",
     "plugin:unicorn/recommended",
     "xo",
     "xo-typescript/space",
@@ -267,25 +265,6 @@ module.exports = {
     // Sort imports and exports
     "simple-import-sort/imports": "warn",
 
-    // Start: Sonar is mostly annoying
-    "sonarjs/different-types-comparison": "off",
-    "sonarjs/function-return-type": "off",
-    "sonarjs/new-cap": "off",
-    "sonarjs/no-alphabetical-sort": "off",
-    "sonarjs/no-duplicate-string": "off",
-    "sonarjs/no-empty-test-file": "off",
-    "sonarjs/no-invalid-await": "off",
-    "sonarjs/no-os-command-from-path": "off",
-    "sonarjs/no-primitive-wrappers": "off",
-    "sonarjs/no-try-promise": "off",
-    "sonarjs/no-unused-expressions": "off",
-    "sonarjs/no-useless-intersection": "off",
-    "sonarjs/no-var": "off",
-    "sonarjs/pseudo-random": "off",
-    "sonarjs/redundant-type-aliases": "off",
-    "sonarjs/sonar-max-params": "off",
-    // End: Sonar is mostly annoying
-
     // Makes functional programming difficult
     "unicorn/no-array-callback-reference": "off",
 
@@ -307,5 +286,5 @@ module.exports = {
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
   },
-  settings: { node: { version: ">=18.15.0" } },
+  settings: { node: { version: ">=22.3.0" } },
 };

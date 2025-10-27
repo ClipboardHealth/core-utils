@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/deprecation */
 import { head } from "./head";
 
 describe("head", () => {
@@ -20,4 +19,3 @@ describe("head", () => {
     expect(head(value)).toEqual(value);
   });
 });
-/* eslint-enable sonarjs/deprecation */
