@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/deprecation */
 import { type Arrayable } from "type-fest";
 
 import * as E from "../functional/either";
@@ -62,4 +61,3 @@ function getMessageOrIssues(messageOrIssues: string | Arrayable<CbhIssue>): read
 
   return [messageOrIssues];
 }
-/* eslint-enable sonarjs/deprecation */

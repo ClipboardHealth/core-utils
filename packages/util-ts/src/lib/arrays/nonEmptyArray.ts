@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/deprecation */
 /**
  * @deprecated Use standard Array<T> instead.
  */
@@ -15,4 +14,3 @@ export type OneOrNonEmptyArray<T> = T | NonEmptyArray<T>;
 export function toNonEmptyArray<T>(value: OneOrNonEmptyArray<T>): NonEmptyArray<T> {
   return Array.isArray(value) ? value : [value];
 }
-/* eslint-enable sonarjs/deprecation */

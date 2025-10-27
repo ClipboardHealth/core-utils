@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/deprecation */
 import { ok } from "node:assert/strict";
 
 import * as E from "../functional/either";
@@ -53,4 +52,3 @@ describe("CbhError", () => {
     expect(error.left.issues[0]!.message).toBe("boom");
   });
 });
-/* eslint-enable sonarjs/deprecation */

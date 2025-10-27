@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/deprecation */
 import { forceCast } from "./forceCast";
 
 describe("forceCast", () => {
@@ -7,4 +6,3 @@ describe("forceCast", () => {
     expect(typeof a).toBe("string");
   });
 });
-/* eslint-enable sonarjs/deprecation */

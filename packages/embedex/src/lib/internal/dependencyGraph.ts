@@ -138,7 +138,6 @@ export function detectCircularDependency(
  *
  * @throws Error if the graph has a cycle (should check with detectCircularDependency first)
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPath[] {
   const { dependencies, destinations } = graph;
 

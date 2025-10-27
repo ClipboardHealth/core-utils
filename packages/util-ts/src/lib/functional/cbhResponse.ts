@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/deprecation */
 import { type Arrayable } from "type-fest";
 
 import { CbhError, type CbhIssue } from "../errors/cbhError";
@@ -21,4 +20,3 @@ export function toErrorCbhResponse(issues: Arrayable<CbhIssue>): {
 export function toSuccessCbhResponse<T>(data: T): { success: true; data: T } {
   return { success: true, data };
 }
-/* eslint-enable sonarjs/deprecation */

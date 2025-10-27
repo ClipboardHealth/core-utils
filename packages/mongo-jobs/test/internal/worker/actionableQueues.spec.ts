@@ -25,9 +25,7 @@ describe("ActionableQueues", () => {
   it("when queue is added multiple times and then removed once then as a result we get undefined on getRandom", () => {
     const queue = "myQueue";
     actionableQueues.add(queue);
-    // eslint-disable-next-line sonarjs/no-element-overwrite
     actionableQueues.add(queue);
-    // eslint-disable-next-line sonarjs/no-element-overwrite
     actionableQueues.add(queue);
     actionableQueues.remove(queue);
 
@@ -47,7 +45,6 @@ describe("ActionableQueues", () => {
 
     actionableQueues.add(queue3);
     // Queue1, queue2, queue3
-    // eslint-disable-next-line sonarjs/no-element-overwrite
     actionableQueues.add(queue1);
     // Queue1, queue2
     actionableQueues.remove(queue3);

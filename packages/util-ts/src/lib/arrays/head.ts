@@ -11,7 +11,6 @@ export type OneOrArray<T> = T | T[];
  *
  * @deprecated Use `const [first] = [1, 2, 3]` instead.
  */
-// eslint-disable-next-line sonarjs/deprecation
 export function head<T>(value?: OneOrArray<T>): T | undefined {
   return Array.isArray(value) ? value[0] : (value ?? undefined);
 }

@@ -55,7 +55,6 @@ export function processDestinations(
   return result;
 }
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
 function processDestination(params: {
   cwd: string;
   entry: [destination: string, value: Destination];
