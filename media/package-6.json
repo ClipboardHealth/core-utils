@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "6.1.0",
+  "version": "6.1.1",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
@@ -10,7 +10,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@clipboard-health/eslint-plugin": "^1.1.0",
+    "@clipboard-health/eslint-plugin": "^1.1.1",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
     "eslint": "^8",
@@ -28,7 +28,6 @@
     "eslint-plugin-react": "^7",
     "eslint-plugin-security": "^1",
     "eslint-plugin-simple-import-sort": "^12",
-    "eslint-plugin-sonarjs": "^2",
     "eslint-plugin-unicorn": "^56"
   },
   "publishConfig": {
