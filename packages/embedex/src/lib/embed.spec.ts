@@ -940,6 +940,34 @@ describe("embed", () => {
     });
   });
 
+  it("handles embedex tags with no newline between opening and closing tags", async () => {
+    await Promise.all([
+      write(paths.sources.a, [`${SOURCE_MARKER_PREFIX}${paths.destinations.n}`, ...sourceACode]),
+      write(paths.destinations.n, [`<embedex source="${paths.sources.a}"></embedex>`]),
+    ]);
+
+    const actual = await embed({ sourcesGlob, cwd, write: false });
+
+    expect(actual.embeds).toEqual([
+      {
+        code: "UPDATE",
+        paths: {
+          sources: [toPath(paths.sources.a)],
+          destination: toPath(paths.destinations.n),
+        },
+        updatedContent: [
+          `<embedex source="${paths.sources.a}">`,
+          "",
+          "```ts",
+          ...sourceACode,
+          "```",
+          "",
+          "</embedex>",
+        ].join("\n"),
+      },
+    ]);
+  });
+
   describe("CRLF line endings", () => {
     it("handles Windows-style CRLF line endings correctly", async () => {
       const sourceCode = [`const x = "windows";`, "", "console.log(x);"];
