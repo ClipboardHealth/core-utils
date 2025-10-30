@@ -15,7 +15,7 @@ export function useFeature(params: Params, options: UseFeatureOptions = {}) {
 ## Naming Rules
 
 - **Always** prefix with `use`
-- Boolean: `useIsEnabled`, `useHasPermission`
+- Boolean: Use `useIs*`, `useHas*`, or `useCan*` (e.g., `useIsEnabled`, `useHasPermission`, `useCanEdit`)
 - Data: `useGetUser`, `useFeatureData`
 - Actions: `useSubmitForm`
 

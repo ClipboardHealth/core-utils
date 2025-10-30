@@ -10,11 +10,11 @@ interface Props {
 
 export function UserProfile({ userId, onUpdate }: Props) {
   // 1. Hooks
-  const { data, isLoading } = useGetUser(userId);
+  const { data, isLoading, error } = useGetUser(userId);
   const [isEditing, setIsEditing] = useState(false);
 
-  // 2. Derived state & memoization
-  const displayName = useMemo(() => formatName(data), [data]);
+  // 2. Derived state (avoid useMemo for inexpensive operations)
+  const displayName = formatName(data);
 
   // 3. Event handlers
   const handleSave = useCallback(async () => {
@@ -24,6 +24,7 @@ export function UserProfile({ userId, onUpdate }: Props) {
 
   // 4. Early returns
   if (isLoading) return <Loading />;
+  if (error) return <Error message={error.message} />;
   if (!data) return <NotFound />;
 
   // 5. Main render
@@ -39,7 +40,7 @@ export function UserProfile({ userId, onUpdate }: Props) {
 ## Naming Conventions
 
 - Components: `PascalCase` (`UserProfile`)
-- Props interface: `ComponentNameProps` or `Props`
+- Props interface: `Props` (co-located with component) or `ComponentNameProps` (exported/shared)
 - Event handlers: `handle*` (`handleClick`, `handleSubmit`)
 - Boolean props: `is*`, `has*`, `should*`
 
@@ -68,7 +69,9 @@ interface Props {
 ```typescript
 // Container/Presentational
 export function UserListContainer() {
-  const { data } = useUsers();
+  const { data, isLoading, error } = useUsers();
+  if (isLoading) return <Loading />;
+  if (error) return <Error />;
   return <UserList users={data} />;
 }
 

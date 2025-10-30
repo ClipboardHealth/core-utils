@@ -47,6 +47,8 @@ export function useCreateItem() {
 
 ## Error Handling
 
+For detailed error handling strategies, see `error-handling.md`.
+
 ```typescript
 useQuery({
   queryKey: ["resource"],
