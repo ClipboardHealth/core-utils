@@ -9,7 +9,7 @@
     "docker:enableMajor",
     "group:monorepos",
     "group:recommended",
-    "npm:unpublishSafe",
+    "security:minimumReleaseAgeNpm",
     "schedule:automergeDaily",
     "schedule:daily"
   ],
@@ -33,7 +33,12 @@
       "matchPackageNames": ["/^@ts-rest/"]
     },
     {
-      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
+      "matchDepTypes": [
+        "peerDependencies",
+        "provider",
+        "required_provider",
+        "required_version"
+      ],
       "rangeStrategy": "widen"
     },
     {
