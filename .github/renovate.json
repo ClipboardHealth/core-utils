@@ -33,12 +33,7 @@
       "matchPackageNames": ["/^@ts-rest/"]
     },
     {
-      "matchDepTypes": [
-        "peerDependencies",
-        "provider",
-        "required_provider",
-        "required_version"
-      ],
+      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
       "rangeStrategy": "widen"
     },
     {
