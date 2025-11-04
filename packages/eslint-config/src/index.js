@@ -241,6 +241,11 @@ module.exports = {
     // `no-return-await` states "This can make debugging more difficult."
     "no-return-await": "off",
 
+    // While a good recommendation, this is frequently disabled in constructors due to
+    // NestJS dependency injection. Since we can't disable it specifically for constructors,
+    // it causes more friction than value.
+    "max-params": "off",
+
     // False positive on `enum`s
     "no-shadow": "off",
 
