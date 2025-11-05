@@ -12,7 +12,7 @@
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.14.0",
     "@tsconfig/node24": "24.0.1",
-    "@tsconfig/strictest": "2.0.6",
+    "@tsconfig/strictest": "2.0.7",
     "@types/jest": "30.0.0",
     "@types/node": "24.9.2",
     "@typescript-eslint/parser": "8.46.2",
