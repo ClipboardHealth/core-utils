@@ -1,9 +1,9 @@
 import { execSync } from "node:child_process";
-import { copyFile, cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { copyFile, cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { PATHS, type ProfileName } from "./constants";
+import { FILES, PATHS, type ProfileName } from "./constants";
 import { toErrorMessage } from "./toErrorMessage";
 
 const { packageRoot, outputDirectory } = PATHS;
@@ -58,11 +58,13 @@ export async function buildProfile(params: {
 
     // Copy generated files to output
     await mkdir(paths.output, { recursive: true });
-    await Promise.all(
-      ["AGENTS.md", "CLAUDE.md"].map(async (file) => {
-        await copyFile(path.join(paths.temporary, file), path.join(paths.output, file));
-      }),
-    );
+
+    // Copy AGENTS.md
+    await copyFile(path.join(paths.temporary, FILES.agents), path.join(paths.output, FILES.agents));
+
+    // Generate CLAUDE.md that sources AGENTS.md
+    const claudeMdContent = "@AGENTS.md\n";
+    await writeFile(path.join(paths.output, FILES.claude), claudeMdContent, "utf8");
 
     return logs;
   } catch (error) {

@@ -2,7 +2,7 @@
 import { cp, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { type ProfileName, PROFILES } from "./constants";
+import { FILES, type ProfileName, PROFILES } from "./constants";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {
@@ -20,7 +20,7 @@ async function sync() {
 
     // Append OVERLAY.md content if it exists
     await appendOverlayToFiles({
-      filesToUpdate: ["CLAUDE.md", "AGENTS.md"],
+      filesToUpdate: [FILES.agents],
       projectRoot: PATHS.projectRoot,
     });
   } catch (error) {

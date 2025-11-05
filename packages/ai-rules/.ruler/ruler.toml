@@ -5,9 +5,11 @@
 enabled = false
 
 # Claude Code
+# Claude docs recommend sourcing AGENTS.md from CLAUDE.md, which we do in packages/ai-rules/scripts/build.ts.
+# See https://docs.claude.com/en/docs/claude-code/claude-code-on-the-web#best-practices
 [agents.claude]
 enabled = true
-output_path = "CLAUDE.md"
+output_path = "AGENTS.md"
 
 # GitHub Copilot, OpenAI Codex, and other AGENTS.md-compatible assistants
 [agents.codex]
