@@ -26,6 +26,7 @@
     "lint-staged": "16.2.6",
     "markdownlint-cli2": "0.18.1",
     "nx": "22.0.2",
+    "oxlint": "1.26.0",
     "prettier": "3.6.2",
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
@@ -42,7 +43,7 @@
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
-    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip",
+    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && oxlint",
     "ci:install": "npm clean-install --audit false --fund false",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
