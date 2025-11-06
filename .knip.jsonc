@@ -10,6 +10,7 @@
   "ignoreDependencies": [
     "@intellectronica/ruler",
     "@nx/webpack",
+    "oxlint",
     "ts-node",
     "tslib",
     "webpack-cli",

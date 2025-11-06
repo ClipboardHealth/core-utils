@@ -29,5 +29,5 @@ export function getJestWorkerUri(template: string): string {
   }
 
   // Case-insensitive substitution to allow the template variable to be in upper case as well
-  return template.replaceAll(/{{jest_worker_id}}/gi, process.env["JEST_WORKER_ID"]);
+  return template.replaceAll("{{jest_worker_id}}", process.env["JEST_WORKER_ID"]);
 }
