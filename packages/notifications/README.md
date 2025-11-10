@@ -27,7 +27,7 @@ Send notifications through third-party providers.
    ```ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import { type NotificationData } from "@clipboard-health/notifications";
-   import { isFailure, toError } from "@clipboard-health/util-ts";
+   import { isFailure } from "@clipboard-health/util-ts";
 
    import { type ExampleNotificationService } from "./exampleNotification.service";
 
@@ -52,7 +52,7 @@ Send notifications through third-party providers.
        });
 
        if (isFailure(result)) {
-         throw toError(result.error);
+         throw result.error;
        }
      }
    }
