@@ -86,12 +86,6 @@ module.exports = {
               "@clipboard-health/require-http-module-factory": "error",
             },
           },
-          {
-            files: ["**/*.ts", "**/*.tsx"],
-            rules: {
-              "@clipboard-health/forbid-object-assign": "error",
-            },
-          },
         ]
       : []),
   ],
@@ -200,6 +194,16 @@ module.exports = {
               "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
           },
         ],
+      },
+    ],
+
+    "no-restricted-properties": [
+      "error",
+      {
+        object: "Object",
+        property: "assign",
+        message:
+          "Use the object spread operator. Object.assign mutates the first argument which is confusing. See https://www.notion.so/BP-TypeScript-Style-Guide-5d4c24aea08a4b9f9feb03550f2c5310?source=copy_link#2568643321f4805ba04ecce1082b2b38 for more information.",
       },
     ],
 
