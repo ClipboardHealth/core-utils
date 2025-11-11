@@ -11,8 +11,8 @@
   "main": "./src/index.js",
   "peerDependencies": {
     "@clipboard-health/eslint-plugin": "^1.2.0",
-    "@typescript-eslint/eslint-plugin": "^8",
-    "@typescript-eslint/parser": "^8",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
     "eslint": "^8",
     "eslint-config-prettier": "^9 || ^10",
     "eslint-config-xo": "^0.45.0",

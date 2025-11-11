@@ -90,9 +90,6 @@ module.exports = {
       : []),
   ],
   parser: "@typescript-eslint/parser",
-  parserOptions: {
-    projectService: true,
-  },
   plugins,
   rules: {
     // Start: Deprecated rules removed in v8
