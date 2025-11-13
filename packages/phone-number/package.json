@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "1.2.13",
-    "libphonenumber-js": "1.12.25"
+    "libphonenumber-js": "1.12.26"
   },
   "keywords": [],
   "license": "MIT",
