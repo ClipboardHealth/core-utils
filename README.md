@@ -65,7 +65,8 @@ npx nx run [PROJECT_NAME]:[COMMAND]
 npx nx migrate latest && \
   npx syncpack fix-mismatches && \
   npm install && \
-  npm_config_legacy_peer_deps=false npx nx migrate --runMigrations --ifExists
+  npx nx migrate --runMigrations --ifExists && \
+  npx nx configure-ai-agents
 ```
 
 ## Adding or porting libraries
