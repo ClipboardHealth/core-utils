@@ -54,7 +54,9 @@ describe("Expired Jobs", () => {
     );
 
     void backgroundJobs.start(["default"]);
-    await setTimeout(100);
+
+    // Wait for worker loop, unlockStuckJobs, and job execution
+    await setTimeout(300);
     await backgroundJobs.stop();
 
     expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);

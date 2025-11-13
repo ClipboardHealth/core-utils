@@ -29,7 +29,9 @@ describe("BackgroundJobMetrics", () => {
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 123 });
 
     void backgroundJobs.start(["other_group"]); // Consuming other group so that the default group won't get consumed before metrics are reported
-    await setTimeout(100);
+
+    // We don't await reportMetrics in startReporting; wait for completion.
+    await setTimeout(200);
     await backgroundJobs.stop();
 
     expect(metricsReporter.metricFor("ExampleJob", "pending")).toBe(1);
