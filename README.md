@@ -1,6 +1,6 @@
 <h1 align="center">core-utils</h1>
 <p align="center">
-  <a href="https://www.clipboardworks.com/"><img alt="Clipboard logo." height="250px" src="./static/combomark.png"></a>
+  <a href="https://www.clipboardworks.com/"><img alt="Clipboard logo." height="250px" src="./static/combomark-675x250.png"></a>
 </p>
 <p align="center">
   Clipboard's core libraries and utilities. See individual package `README`s for specific library details.
