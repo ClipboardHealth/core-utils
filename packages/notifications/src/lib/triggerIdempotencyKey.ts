@@ -62,5 +62,6 @@ export function isTriggerIdempotencyKeyParams(
 export function DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
   params: TriggerIdempotencyKeyParams,
 ): TriggerIdempotencyKey {
+  // eslint-disable-next-line no-restricted-syntax
   return JSON.stringify(params) as TriggerIdempotencyKey;
 }

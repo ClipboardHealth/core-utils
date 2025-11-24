@@ -1,6 +1,35 @@
 const path = require("node:path");
 const fs = require("node:fs");
 
+const baseNoRestrictedSyntax = [
+  "error",
+  {
+    // Adapted from Airbnb's config, but allows ForOfStatement.
+    // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
+    message:
+      "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
+    selector: "ForInStatement",
+  },
+  {
+    message:
+      "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.",
+    selector: "LabeledStatement",
+  },
+  {
+    message:
+      "`with` is disallowed in strict mode because it makes code difficult to predict and optimize.",
+    selector: "WithStatement",
+  },
+  {
+    selector: "TSEnumDeclaration",
+    message:
+      "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
+  },
+];
+
+const triggerIdempotencyKeyMessage =
+  "Do not assert to TriggerIdempotencyKey; use `NotificationJobEnqueuer.enqueueOneOrMore` instead. See https://github.com/ClipboardHealth/core-utils/blob/main/packages/notifications/README.md.";
+
 /*
  * Since the rules in the eslint-plugin project are in Typescript and are a package in this
  * monorepo, it's not straightforward to include that plugin when using the ESLint config to lint
@@ -70,6 +99,7 @@ module.exports = {
       rules: {
         // Interferes with `jest`'s `expect.any`
         "@typescript-eslint/no-unsafe-assignment": "off",
+        "no-restricted-syntax": baseNoRestrictedSyntax,
       },
     },
     ...(isOutsideCoreUtilsMonorepo
@@ -205,28 +235,14 @@ module.exports = {
     ],
 
     "no-restricted-syntax": [
-      "error",
+      ...baseNoRestrictedSyntax,
       {
-        // Adapted from Airbnb's config, but allows ForOfStatement.
-        // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
-        message:
-          "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
-        selector: "ForInStatement",
+        selector: "TSAsExpression[typeAnnotation.typeName.name='TriggerIdempotencyKey']",
+        message: triggerIdempotencyKeyMessage,
       },
       {
-        message:
-          "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.",
-        selector: "LabeledStatement",
-      },
-      {
-        message:
-          "`with` is disallowed in strict mode because it makes code difficult to predict and optimize.",
-        selector: "WithStatement",
-      },
-      {
-        selector: "TSEnumDeclaration",
-        message:
-          "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
+        selector: "TSTypeAssertion[typeAnnotation.typeName.name='TriggerIdempotencyKey']",
+        message: triggerIdempotencyKeyMessage,
       },
     ],
 
