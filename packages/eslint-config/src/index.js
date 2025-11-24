@@ -237,11 +237,11 @@ module.exports = {
     "no-restricted-syntax": [
       ...baseNoRestrictedSyntax,
       {
-        selector: "TSAsExpression[typeAnnotation.typeName.name='TriggerIdempotencyKey']",
+        selector: "TSAsExpression TSTypeReference[typeName.name='TriggerIdempotencyKey']",
         message: triggerIdempotencyKeyMessage,
       },
       {
-        selector: "TSTypeAssertion[typeAnnotation.typeName.name='TriggerIdempotencyKey']",
+        selector: "TSTypeAssertion TSTypeReference[typeName.name='TriggerIdempotencyKey']",
         message: triggerIdempotencyKeyMessage,
       },
     ],
