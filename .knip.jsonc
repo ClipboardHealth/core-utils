@@ -6,6 +6,7 @@
     "**/webpack.*.js",
     "**/cbhResponse.ts",
     "packages/ai-rules/scripts/sync.ts",
+    "packages/eslint-config/src/react.js",
   ],
   "ignoreDependencies": [
     "@intellectronica/ruler",

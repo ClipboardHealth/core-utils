@@ -471,7 +471,6 @@ describe("NotificationClient", () => {
       jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: Omit<TriggerRequest, "keysToRedact"> = {
-        key: mockWorkflowKey,
         workflowKey: mockWorkflowKey,
         body: mockBody,
         idempotencyKey: mockIdempotencyKey,
