@@ -1,3 +1,4 @@
+import { isDefined } from "@clipboard-health/util-ts";
 import type { ChangeStream, ClientSession } from "mongodb";
 import type mongoose from "mongoose";
 
@@ -70,6 +71,22 @@ export class JobsRepository {
 
     return await withProducerTrace(handler, data, async (dataWithTrace) => {
       try {
+        if (isDefined(session) && isDefined(uniqueKey)) {
+          const existingJob = await this.jobModel.findOne(
+            {
+              uniqueKey,
+            },
+            undefined,
+            {
+              session,
+            },
+          );
+
+          if (isDefined(existingJob)) {
+            return;
+          }
+        }
+
         const backgroundJobCreateResult = await this.jobModel.create(
           [
             {

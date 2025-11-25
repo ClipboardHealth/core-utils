@@ -400,6 +400,29 @@ describe("Unique jobs", () => {
     expect(otherJob).toBeDefined();
   });
 
+  it("session is not aborted when enqueueing duplicate job within transaction", async () => {
+    const job1 = await backgroundJobs.enqueue(ExampleJob, { myNumber: 7 }, { unique: "example-7" });
+    expect(job1).toBeDefined();
+    expect(job1?.uniqueKey).toBe("example-7");
+
+    const session = await createMongoSession();
+    session.startTransaction();
+
+    const job2 = await backgroundJobs.enqueue(
+      ExampleJob,
+      { myNumber: 7 },
+      { unique: "example-7", session },
+    );
+    expect(job2).toBeUndefined();
+
+    expect(session.inTransaction()).toBe(true);
+
+    await session.commitTransaction();
+    await session.endSession();
+
+    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+  });
+
   it("with a simple uniqueness the job holds uniqueness even if it starts running", async () => {
     semaphore.setNewPromise(1);
     semaphore.setNewPromise(2);
