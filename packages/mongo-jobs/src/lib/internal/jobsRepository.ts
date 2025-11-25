@@ -1,4 +1,3 @@
-import { isDefined } from "@clipboard-health/util-ts";
 import type { ChangeStream, ClientSession } from "mongodb";
 import type mongoose from "mongoose";
 
@@ -71,18 +70,15 @@ export class JobsRepository {
 
     return await withProducerTrace(handler, data, async (dataWithTrace) => {
       try {
-        if (isDefined(session) && isDefined(uniqueKey)) {
-          const existingJob = await this.jobModel.findOne(
-            {
+        if (session && uniqueKey) {
+          // Checking for existinence here to prevent DuplicateKeyError from aborting the existing transaction
+          const existingJob = await this.jobModel
+            .exists({
               uniqueKey,
-            },
-            undefined,
-            {
-              session,
-            },
-          );
+            })
+            .session(session);
 
-          if (isDefined(existingJob)) {
+          if (existingJob) {
             return;
           }
         }
