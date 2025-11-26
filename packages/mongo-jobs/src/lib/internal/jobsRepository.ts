@@ -70,6 +70,19 @@ export class JobsRepository {
 
     return await withProducerTrace(handler, data, async (dataWithTrace) => {
       try {
+        if (session && uniqueKey) {
+          // Checking for existence here to prevent DuplicateKeyError from aborting the existing transaction
+          const existingJob = await this.jobModel
+            .exists({
+              uniqueKey,
+            })
+            .session(session);
+
+          if (existingJob) {
+            return;
+          }
+        }
+
         const backgroundJobCreateResult = await this.jobModel.create(
           [
             {
