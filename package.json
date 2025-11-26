@@ -22,7 +22,7 @@
     "jest-util": "30.0.5",
     "jsonc-eslint-parser": "2.4.1",
     "knip": "5.67.1",
-    "lint-staged": "16.2.6",
+    "lint-staged": "16.2.7",
     "markdownlint-cli2": "0.18.1",
     "nx": "22.0.3",
     "oxlint": "1.26.0",
