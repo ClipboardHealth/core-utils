@@ -105,6 +105,12 @@ module.exports = {
     ...(isOutsideCoreUtilsMonorepo
       ? [
           {
+            files: ["**/*.ts", "**/*.tsx"],
+            rules: {
+              "@clipboard-health/no-nullish-coalescing-zero": "error",
+            },
+          },
+          {
             files: ["**/*.controller.ts", "**/*.controllers.ts"],
             rules: {
               "@clipboard-health/enforce-ts-rest-in-controllers": "error",
