@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "6.3.5",
+  "version": "6.3.6",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
