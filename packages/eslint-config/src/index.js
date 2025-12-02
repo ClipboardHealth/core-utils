@@ -54,6 +54,7 @@ const isOutsideCoreUtilsMonorepo = (() => {
 })();
 
 const plugins = [
+  "check-file",
   "expect-type",
   "jest",
   "no-only-tests",
@@ -100,6 +101,18 @@ module.exports = {
         // Interferes with `jest`'s `expect.any`
         "@typescript-eslint/no-unsafe-assignment": "off",
         "no-restricted-syntax": baseNoRestrictedSyntax,
+      },
+    },
+    {
+      // Enforce that job files are located under the logic folder to follow the three-tier architecture
+      files: ["src/modules/**/*.job.ts"],
+      rules: {
+        "check-file/folder-match-with-fex": [
+          "error",
+          {
+            "*.job.ts": "**/logic/**/",
+          },
+        ],
       },
     },
     ...(isOutsideCoreUtilsMonorepo
