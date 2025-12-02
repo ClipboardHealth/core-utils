@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "6.3.9",
+  "version": "6.4.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
@@ -18,6 +18,7 @@
     "eslint-config-xo": "^0.45.0",
     "eslint-config-xo-react": "^0.27",
     "eslint-config-xo-typescript": "^1",
+    "eslint-plugin-check-file": "^2.8.0",
     "eslint-plugin-eslint-comments": "^3",
     "eslint-plugin-expect-type": "^0.4",
     "eslint-plugin-import": "^2",
