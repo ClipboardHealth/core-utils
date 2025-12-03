@@ -14,6 +14,7 @@ import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions"
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKey";
 import { redact } from "./internal/redact";
+import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
@@ -29,6 +30,8 @@ import type {
   TriggerBody,
   TriggerRequest,
   TriggerResponse,
+  UpsertUserPreferencesRequest,
+  UpsertUserPreferencesResponse,
   UpsertWorkplaceRequest,
   UpsertWorkplaceResponse,
 } from "./types";
@@ -49,6 +52,10 @@ const LOG_PARAMS = {
   signUserToken: {
     traceName: "notifications.signUserToken",
     destination: "knock.signUserToken",
+  },
+  upsertUserPreferences: {
+    traceName: "notifications.upsertUserPreferences",
+    destination: "knock.users.setPreferences",
   },
 };
 
@@ -309,6 +316,43 @@ export class NotificationClient {
       return success({
         workplaceId: response.id,
       });
+    } catch (maybeError) {
+      const error = toError(maybeError);
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.unknown,
+          message: error.message,
+        },
+        logFunction: this.logger.error,
+        logParams,
+        metadata: { error },
+      });
+    }
+  }
+
+  /**
+   * Creates or updates user notification preferences.
+   *
+   * @returns Promise resolving to either an error or successful response.
+   */
+  public async upsertUserPreferences(
+    params: UpsertUserPreferencesRequest,
+  ): Promise<ServiceResult<UpsertUserPreferencesResponse>> {
+    const { userId } = params;
+    const logParams = { ...LOG_PARAMS.upsertUserPreferences, userId, preferences: params };
+
+    try {
+      this.logger.info(`${logParams.traceName} request`, logParams);
+
+      const userPreferences = toKnockUserPreferences(params);
+      const response = await this.provider.users.setPreferences(userId, "default", userPreferences);
+
+      this.logger.info(`${logParams.traceName} response`, {
+        ...logParams,
+        response: { userId, preferenceSet: response },
+      });
+
+      return success({ userId });
     } catch (maybeError) {
       const error = toError(maybeError);
       return this.createAndLogError({

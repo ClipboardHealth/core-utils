@@ -262,3 +262,75 @@ export interface UpsertWorkplaceResponse {
    */
   workplaceId: string;
 }
+
+/**
+ * Notification preferences for specific channel types.
+ */
+export interface ChannelTypePreferences {
+  chat?: boolean;
+  email?: boolean;
+  http?: boolean;
+  inAppFeed?: boolean;
+  push?: boolean;
+  sms?: boolean;
+}
+
+/**
+ * Notification preferences overrides for category, workflow or channel.
+ */
+export interface PreferenceOverrides {
+  /**
+   * Channel type-specific preferences.
+   */
+  channelTypes?: ChannelTypePreferences | null;
+
+  /**
+   * Channel-specific overrides keyed by channel UUIDs.
+   */
+  channels?: Record<string, boolean> | null;
+}
+
+/**
+ * Request parameters for upserting user notification preferences.
+ *
+ * When one of the fields is null, the preferences is cleared and Knock will fall back
+ * to default preferences. The fields are optional, so that we can support partial updates.
+ */
+export interface UpsertUserPreferencesRequest {
+  /**
+   * The user's unique identifier.
+   */
+  userId: string;
+
+  /**
+   * Channel type-specific preferences.
+   */
+  channelTypes?: ChannelTypePreferences | null;
+
+  /**
+   * Channel-specific overrides.
+   */
+  channels?: Record<string, boolean> | null;
+
+  /**
+   * Category-specific overrides keyed by category names.
+   */
+  categories?: Record<string, boolean | PreferenceOverrides> | null;
+
+  /**
+   * Workflow-specific overrides keyed by workflow IDs.
+   */
+  workflows?: Record<string, boolean | PreferenceOverrides> | null;
+
+  /**
+   * Whether the user opted-out from broadcast notification.
+   */
+  commercialSubscribed?: boolean | null;
+}
+
+/**
+ * Response after upserting user preferences.
+ */
+export interface UpsertUserPreferencesResponse {
+  userId: string;
+}
