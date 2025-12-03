@@ -8,7 +8,13 @@ import {
   DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
   type TriggerIdempotencyKey,
 } from "./triggerIdempotencyKey";
-import type { SignUserTokenRequest, Tracer, TriggerRequest, UpsertWorkplaceRequest } from "./types";
+import type {
+  SignUserTokenRequest,
+  Tracer,
+  TriggerRequest,
+  UpsertUserPreferencesRequest,
+  UpsertWorkplaceRequest,
+} from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
@@ -1030,6 +1036,60 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
         userId: mockUserId,
         expiresInSeconds: customExpiration,
       });
+    });
+  });
+
+  describe("upsertUserPreferences", () => {
+    it("upserts user preferences", async () => {
+      const mockUserId = "user-id";
+
+      const setPreferencesSpy = jest.spyOn(provider.users, "setPreferences").mockResolvedValue({});
+
+      const input: UpsertUserPreferencesRequest = {
+        userId: mockUserId,
+        channelTypes: {
+          sms: true,
+        },
+      };
+
+      const result = await client.upsertUserPreferences(input);
+
+      expectToBeSuccess(result);
+      expect(result.value.userId).toBe(mockUserId);
+
+      expect(setPreferencesSpy).toHaveBeenCalledWith(mockUserId, "default", {
+        channel_types: {
+          sms: true,
+        },
+      });
+    });
+
+    it("handles Knock API error", async () => {
+      const mockUserId = "user-id";
+      const mockError = new Error("Preferences API error");
+      jest.spyOn(provider.users, "setPreferences").mockRejectedValue(mockError);
+
+      const input: UpsertUserPreferencesRequest = {
+        userId: mockUserId,
+        channelTypes: {
+          sms: true,
+        },
+      };
+
+      const result = await client.upsertUserPreferences(input);
+
+      expectToBeFailure(result);
+      expect(result.error).toEqual(
+        new ServiceError({ issues: [{ code: "unknown", message: mockError.message }] }),
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "notifications.upsertUserPreferences [unknown] Preferences API error",
+        expect.objectContaining({
+          traceName: "notifications.upsertUserPreferences",
+          userId: mockUserId,
+        }),
+      );
     });
   });
 });
