@@ -57,6 +57,7 @@ const plugins = [
   "check-file",
   "expect-type",
   "jest",
+  "no-barrel-files",
   "no-only-tests",
   "simple-import-sort",
   "@typescript-eslint",
@@ -210,6 +211,9 @@ module.exports = {
 
     // Allow PascalCase for Decorators
     "new-cap": ["warn", { capIsNew: false, newIsCap: true }],
+
+    // Prevent barrel files to improve build performance and tree-shaking
+    "no-barrel-files/no-barrel-files": "error",
 
     // Set to warn so LLMs to write worse code to get around it
     "no-await-in-loop": "warn",
