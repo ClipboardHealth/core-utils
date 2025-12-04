@@ -31,16 +31,15 @@ export type NotificationClientParams = {
   signingKey?: string;
   /** Tracer instance for distributed tracing. */
   tracer: Tracer;
-} &
+} /**
+ * Pass the third-party provider's apiKey.
+ */ & (
+  | { provider?: never; apiKey: string }
   /**
-   * Pass the third-party provider's apiKey.
+   * Pass the third-party provider's instance (used by tests).
    */
-  (| { provider?: never; apiKey: string }
-    /**
-     * Pass the third-party provider's instance (used by tests).
-     */
-    | { provider: IdempotentKnock; apiKey?: never }
-  );
+  | { provider: IdempotentKnock; apiKey?: never }
+);
 
 export const MOBILE_PLATFORMS = ["android", "ios"] as const;
 
