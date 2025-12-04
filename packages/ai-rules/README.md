@@ -25,7 +25,7 @@ npm install --save-dev @clipboard-health/ai-rules
 1. Choose the profile that matches your project type:
 
    | Profile         | Includes                    | Use For                                |
-   | -----------     | --------------------------- | -------------------------------------- |
+   | --------------- | --------------------------- | -------------------------------------- |
    | `common`        | common                      | TypeScript libraries, generic projects |
    | `frontend`      | common + frontend           | React apps, web apps                   |
    | `backend`       | common + backend            | NestJS services, APIs                  |
