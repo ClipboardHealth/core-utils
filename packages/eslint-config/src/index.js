@@ -221,6 +221,9 @@ module.exports = {
     // Disallow `.only` in tests to prevent it from making it into `main`.
     "no-only-tests/no-only-tests": "error",
 
+    // Use isDefined() (or sometimes Boolean()) to be explicit and to clarify behavior for "" and 0
+    "no-extra-boolean-cast": "error",
+
     "no-restricted-imports": [
       "error",
       {
