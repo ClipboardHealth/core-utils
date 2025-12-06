@@ -3,6 +3,7 @@ import { type Tagged } from "type-fest";
 
 import {
   type IdempotencyKey,
+  type IdempotencyKeyParts,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type NotificationJobEnqueuer,
 } from "./notificationJobEnqueuer";
@@ -18,7 +19,7 @@ import {
  */
 export type TriggerIdempotencyKey = Tagged<string, "TriggerIdempotencyKey">;
 
-export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
+export type TriggerIdempotencyKeyParams = (IdempotencyKey | IdempotencyKeyParts) & {
   /**
    * The recipient chunk number.
    */
@@ -33,7 +34,7 @@ export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
    * The workflow key.
    */
   workflowKey: string;
-}
+};
 
 /**
  * Type guard to check if a value is a valid TriggerIdempotencyKeyParams object.

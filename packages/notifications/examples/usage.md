@@ -92,9 +92,12 @@
           * service instead of this manual calculation.
           */
          expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
-         // Set idempotencyKey at enqueue-time so it remains stable across job retries.
-         idempotencyKey: {
-           resourceId: "event-123",
+         // Set idempotencyKeyParts at enqueue-time so it remains stable across job retries.
+         idempotencyKeyParts: {
+           resource: {
+             type: "account",
+             id: "4e3ffeec-1426-4e54-ad28-83246f8f4e7c",
+           },
          },
          // Set recipients at enqueue-time so they respect our notification provider's limits.
          recipients: ["userId-1"],

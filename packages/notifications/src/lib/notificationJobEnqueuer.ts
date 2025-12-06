@@ -22,50 +22,69 @@ import {
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
+/**
+ * @deprecated Use `IdempotencyKeyParts` instead.
+ */
 export interface IdempotencyKey {
-  /**
-   * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
-   *
-   * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
-   * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
-   *
-   * Use `.toISOString()`.
-   */
   eventOccurredAt?: string | undefined;
-
-  /**
-   * If a resource triggered your workflow, include its unique ID.
-   *
-   * Note: `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
-   * included in the idempotency key automatically.
-   *
-   * @example
-   * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
-   * 2. For a payout notification, set resourceId to the payment ID.
-   */
   resourceId?: string | undefined;
 }
 
+export type IdempotencyKeyParts =
+  | {
+      /**
+       * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
+       *
+       * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
+       * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
+       *
+       * Use `.toISOString()`.
+       */
+      eventOccurredAt: string;
+
+      resource?: undefined;
+    }
+  | {
+      eventOccurredAt?: undefined;
+
+      /**
+       * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
+       * automatically.
+       *
+       * If a resource triggered your workflow, include its unique ID.
+       *
+       * @example
+       * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
+       * 2. For a payout notification, set resourceId to the payment ID.
+       */
+      resource: { type: string; id: string };
+    };
+
 export interface NotificationEnqueueData {
   /**
+   * @deprecated Use `idempotencyKeyParts` instead.
+   */
+  idempotencyKey?: IdempotencyKey;
+
+  /**
+   * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
+   * automatically.
+   *
    * Idempotency keys prevent duplicate notifications. They should be deterministic and remain the
    * same across retry logic.
    *
-   * If you retry a request with the same idempotency key within 24 hours, the client returns the same
-   * response as the original request.
-   *
-   * Note: `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
-   * included in the idempotency key automatically.
+   * If you retry a request with the same idempotency key within 24 hours, the client returns the
+   * same response as the original request.
    *
    * We provide this class because idempotency keys can be difficult to use correctly. If the key
-   * changes on each retry (e.g., Date.now() or uuid.v4()), it won't prevent duplicate notifications.
-   * Conversely, if you don't provide enough information, you prevent recipients from receiving
-   * notifications they otherwise should have. For example, if you use the trigger key and the
-   * recipient's ID as the idempotency key, but it's possible the recipient could receive the same
-   * notification multiple times within the idempotency key's validity window, the recipient will only
-   * receive the first notification.
+   * changes on each retry (e.g., Date.now() or uuid.v4()), it won't prevent duplicate
+   * notifications. Conversely, if you don't provide enough information, you prevent recipients from
+   * receiving notifications they otherwise should have. For example, if you use the trigger key and
+   * the recipient's ID as the idempotency key, but it's possible the recipient could receive the
+   * same notification multiple times within the idempotency key's validity window, the recipient
+   * will only receive the first notification.
    */
-  idempotencyKey: IdempotencyKey;
+  idempotencyKeyParts?: IdempotencyKeyParts;
 
   /** @see {@link TriggerRequest.expiresAt} */
   expiresAt: string;
@@ -182,9 +201,12 @@ export class NotificationJobEnqueuer {
    *        * service instead of this manual calculation.
    *        *\/
    *       expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
-   *       // Set idempotencyKey at enqueue-time so it remains stable across job retries.
-   *       idempotencyKey: {
-   *         resourceId: "event-123",
+   *       // Set idempotencyKeyParts at enqueue-time so it remains stable across job retries.
+   *       idempotencyKeyParts: {
+   *         resource: {
+   *           type: "account",
+   *           id: "4e3ffeec-1426-4e54-ad28-83246f8f4e7c",
+   *         },
    *       },
    *       // Set recipients at enqueue-time so they respect our notification provider's limits.
    *       recipients: ["userId-1"],
@@ -212,6 +234,7 @@ export class NotificationJobEnqueuer {
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
         const idempotencyKeyParams: TriggerIdempotencyKeyParams = {
           ...data.idempotencyKey,
+          ...data.idempotencyKeyParts,
           chunk: number,
           recipients,
           workflowKey: data.workflowKey,
