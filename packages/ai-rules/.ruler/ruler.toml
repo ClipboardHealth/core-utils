@@ -11,7 +11,7 @@ enabled = false
 enabled = true
 output_path = "AGENTS.md"
 
-# GitHub Copilot, OpenAI Codex, and other AGENTS.md-compatible assistants
+# GitHub Copilot, OpenAI Codex, Devin and other AGENTS.md-compatible assistants
 [agents.codex]
 enabled = true
 output_path = "AGENTS.md"
