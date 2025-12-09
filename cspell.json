@@ -23,6 +23,7 @@
     "CODEOWNERS",
     "combomark",
     "constate",
+    "datamodeling",
     "datetime",
     "decamelize",
     "devkit",

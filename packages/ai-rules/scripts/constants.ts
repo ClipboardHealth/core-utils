@@ -15,7 +15,7 @@ export const PROFILES = {
   frontend: ["common", "frontend"] as const,
   backend: ["common", "backend"] as const,
   fullstack: ["common", "frontend", "backend"] as const,
-  dataModeling: ["dataModeling"] as const,
+  datamodeling: ["datamodeling"] as const,
   common: ["common"] as const,
 } as const;
 
