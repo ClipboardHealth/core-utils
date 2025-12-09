@@ -30,13 +30,13 @@ npm install --save-dev @clipboard-health/ai-rules
    | `frontend`     | common + frontend           | React apps, web apps                   |
    | `backend`      | common + backend            | NestJS services, APIs                  |
    | `fullstack`    | common + frontend + backend | Monorepos, fullstack apps              |
-   | `datamodeling` | datamodeling                | DBT data modeling                      |
+   | `dataModeling` | dataModeling                | DBT data modeling                      |
 
    **Rule categories:**
    - **common**: TypeScript, testing, code style, error handling, key conventions
    - **frontend**: React patterns, hooks, performance, styling, data fetching, custom hooks
    - **backend**: NestJS APIs, three-tier architecture, controllers, services
-   - **datamodeling**: data modeling, testing, yaml documentation, data cleaning, analytics
+   - **dataModeling**: data modeling, testing, yaml documentation, data cleaning, analytics
 
 2. Add it to your `package.json`:
 
