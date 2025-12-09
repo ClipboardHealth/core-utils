@@ -89,7 +89,7 @@ jobs:
         # Run a build so package.json files in dist directories pick up new versions
       - run: npx nx run-many --target=build
       - env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.PROD_NPM_TOKEN_USEDBY_GITHUBACTIONS_ORGPUBLISH_20251205_PLATFORM }}
         run: npx nx release publish
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
