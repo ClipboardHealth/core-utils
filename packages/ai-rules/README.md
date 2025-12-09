@@ -24,19 +24,19 @@ npm install --save-dev @clipboard-health/ai-rules
 
 1. Choose the profile that matches your project type:
 
-   | Profile         | Includes                    | Use For                                |
-   | --------------- | --------------------------- | -------------------------------------- |
-   | `common`        | common                      | TypeScript libraries, generic projects |
-   | `frontend`      | common + frontend           | React apps, web apps                   |
-   | `backend`       | common + backend            | NestJS services, APIs                  |
-   | `fullstack`     | common + frontend + backend | Monorepos, fullstack apps              |
-   | `data-modeling` | data-modeling               | DBT data modeling                      |
+   | Profile        | Includes                    | Use For                                |
+   | -------------- | --------------------------- | -------------------------------------- |
+   | `common`       | common                      | TypeScript libraries, generic projects |
+   | `frontend`     | common + frontend           | React apps, web apps                   |
+   | `backend`      | common + backend            | NestJS services, APIs                  |
+   | `fullstack`    | common + frontend + backend | Monorepos, fullstack apps              |
+   | `datamodeling` | datamodeling                | DBT data modeling                      |
 
    **Rule categories:**
    - **common**: TypeScript, testing, code style, error handling, key conventions
    - **frontend**: React patterns, hooks, performance, styling, data fetching, custom hooks
    - **backend**: NestJS APIs, three-tier architecture, controllers, services
-   - **data-modeling**: data modeling, testing, yaml documentation, data cleaning, analytics
+   - **datamodeling**: data modeling, testing, yaml documentation, data cleaning, analytics
 
 2. Add it to your `package.json`:
 
