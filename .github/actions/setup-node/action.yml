@@ -9,7 +9,7 @@ runs:
   using: "composite"
   steps:
     - uses: nrwl/nx-set-shas@v4
-    - uses: actions/cache@v4
+    - uses: actions/cache@v5
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ inputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
