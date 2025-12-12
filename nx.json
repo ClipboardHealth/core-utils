@@ -62,7 +62,7 @@
       "commit": true,
       "commitMessage": "chore(release): publish {projectName} {version} [skip actions]"
     },
-    "projects": ["packages/*", "!packages/example-*"],
+    "projects": ["packages/*"],
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,
@@ -72,9 +72,6 @@
     }
   },
   "targetDefaults": {
-    "nx:run-commands": {
-      "cache": true
-    },
     "@nx/eslint:lint": {
       "cache": true,
       "inputs": [
