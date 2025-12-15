@@ -22,14 +22,6 @@ import {
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
-/**
- * @deprecated Use `IdempotencyKeyParts` instead.
- */
-export interface IdempotencyKey {
-  eventOccurredAt?: string | undefined;
-  resourceId?: string | undefined;
-}
-
 export type IdempotencyKeyParts =
   | {
       /**
@@ -62,11 +54,6 @@ export type IdempotencyKeyParts =
 
 export interface NotificationEnqueueData {
   /**
-   * @deprecated Use `idempotencyKeyParts` instead.
-   */
-  idempotencyKey?: IdempotencyKey;
-
-  /**
    * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
    * automatically.
    *
@@ -84,7 +71,7 @@ export interface NotificationEnqueueData {
    * same notification multiple times within the idempotency key's validity window, the recipient
    * will only receive the first notification.
    */
-  idempotencyKeyParts?: IdempotencyKeyParts;
+  idempotencyKeyParts: IdempotencyKeyParts;
 
   /** @see {@link TriggerRequest.expiresAt} */
   expiresAt: string;
@@ -96,7 +83,7 @@ export interface NotificationEnqueueData {
   workflowKey: string;
 }
 
-export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKey"> {
+export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKeyParts"> {
   idempotencyKey: TriggerIdempotencyKey;
 }
 
@@ -135,10 +122,7 @@ export interface NotificationData<T> {
  * in a service the job calls) to validate the notification is still valid prior to triggering it.
  */
 export type EnqueueOneOrMoreOptions = Pick<EnqueueOptions, "startAt"> &
-  (
-    | Pick<MongoEnqueueOptions, "session" | "startAt">
-    | Pick<PostgresEnqueueOptions, "transaction" | "startAt">
-  );
+  (Pick<MongoEnqueueOptions, "session"> | Pick<PostgresEnqueueOptions, "transaction">);
 
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
@@ -233,7 +217,6 @@ export class NotificationJobEnqueuer {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
         const idempotencyKeyParams: TriggerIdempotencyKeyParams = {
-          ...data.idempotencyKey,
           ...data.idempotencyKeyParts,
           chunk: number,
           recipients,
