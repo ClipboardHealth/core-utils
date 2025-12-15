@@ -122,10 +122,7 @@ export interface NotificationData<T> {
  * in a service the job calls) to validate the notification is still valid prior to triggering it.
  */
 export type EnqueueOneOrMoreOptions = Pick<EnqueueOptions, "startAt"> &
-  (
-    | Pick<MongoEnqueueOptions, "session" | "startAt">
-    | Pick<PostgresEnqueueOptions, "transaction" | "startAt">
-  );
+  (Pick<MongoEnqueueOptions, "session"> | Pick<PostgresEnqueueOptions, "transaction">);
 
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
