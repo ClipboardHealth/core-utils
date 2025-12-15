@@ -11,7 +11,7 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
     it("extracts resourceId from legacy IdempotencyKey format", () => {
       const input = {
         ...baseParams,
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
       };
 
       const actual = triggerIdempotencyKeyParamsToHash(input);
@@ -30,22 +30,6 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
       expect(actual).toHaveLength(64);
     });
 
-    it("produces same hash for equivalent resourceId values", () => {
-      const legacyInput = {
-        ...baseParams,
-        resourceId: "same-id",
-      };
-      const newInput = {
-        ...baseParams,
-        resource: { type: "account", id: "same-id" },
-      };
-
-      const actualLegacy = triggerIdempotencyKeyParamsToHash(legacyInput);
-      const actualNew = triggerIdempotencyKeyParamsToHash(newInput);
-
-      expect(actualLegacy).toBe(actualNew);
-    });
-
     it("handles eventOccurredAt without resourceId", () => {
       const input = {
         ...baseParams,
@@ -62,7 +46,7 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
     it("produces same hash for same input", () => {
       const input = {
         ...baseParams,
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
       };
 
       const actual1 = triggerIdempotencyKeyParamsToHash(input);
@@ -75,12 +59,12 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
       const input1 = {
         ...baseParams,
         recipients: ["user1", "user2", "user3"],
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
       };
       const input2 = {
         ...baseParams,
         recipients: ["user3", "user1", "user2"],
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
       };
 
       const actual1 = triggerIdempotencyKeyParamsToHash(input1);
@@ -92,11 +76,11 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
     it("produces different hash for different resourceId", () => {
       const input1 = {
         ...baseParams,
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
       };
       const input2 = {
         ...baseParams,
-        resourceId: "resource-456",
+        resource: { type: "account", id: "456" },
       };
 
       const actual1 = triggerIdempotencyKeyParamsToHash(input1);
@@ -110,11 +94,11 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
     it("includes workplaceId in hash when provided", () => {
       const inputWithoutWorkplace = {
         ...baseParams,
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
       };
       const inputWithWorkplace = {
         ...baseParams,
-        resourceId: "resource-123",
+        resource: { type: "account", id: "123" },
         workplaceId: "workplace-1",
       };
 

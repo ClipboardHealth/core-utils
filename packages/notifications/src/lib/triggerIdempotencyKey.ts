@@ -1,8 +1,7 @@
-import { isNil } from "@clipboard-health/util-ts";
+import { isNil, stringify } from "@clipboard-health/util-ts";
 import { type Tagged } from "type-fest";
 
 import {
-  type IdempotencyKey,
   type IdempotencyKeyParts,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type NotificationJobEnqueuer,
@@ -19,7 +18,7 @@ import {
  */
 export type TriggerIdempotencyKey = Tagged<string, "TriggerIdempotencyKey">;
 
-export type TriggerIdempotencyKeyParams = (IdempotencyKey | IdempotencyKeyParts) & {
+export type TriggerIdempotencyKeyParams = IdempotencyKeyParts & {
   /**
    * The recipient chunk number.
    */
@@ -64,5 +63,5 @@ export function DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
   params: TriggerIdempotencyKeyParams,
 ): TriggerIdempotencyKey {
   // eslint-disable-next-line no-restricted-syntax -- allow test casts
-  return JSON.stringify(params) as TriggerIdempotencyKey;
+  return stringify(params) as TriggerIdempotencyKey;
 }

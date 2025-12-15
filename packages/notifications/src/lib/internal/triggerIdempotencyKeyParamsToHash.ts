@@ -9,17 +9,12 @@ export function triggerIdempotencyKeyParamsToHash(params: HashParams): string {
   return createDeterministicHash(toSorted(params));
 }
 
-function toSorted(params: HashParams): HashParams {
+function toSorted(params: HashParams) {
   return {
     chunk: params.chunk,
     eventOccurredAt: params.eventOccurredAt,
     recipients: [...params.recipients].sort(),
-    resourceId:
-      "resourceId" in params
-        ? params.resourceId
-        : "resource" in params && params.resource && "id" in params.resource
-          ? params.resource.id
-          : undefined,
+    resource: params.resource,
     workflowKey: params.workflowKey,
     workplaceId: params.workplaceId,
   };

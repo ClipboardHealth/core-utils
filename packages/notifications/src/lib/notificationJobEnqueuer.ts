@@ -22,14 +22,6 @@ import {
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
-/**
- * @deprecated Use `IdempotencyKeyParts` instead.
- */
-export interface IdempotencyKey {
-  eventOccurredAt?: string | undefined;
-  resourceId?: string | undefined;
-}
-
 export type IdempotencyKeyParts =
   | {
       /**
@@ -91,7 +83,7 @@ export interface NotificationEnqueueData {
   workflowKey: string;
 }
 
-export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKey"> {
+export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKeyParts"> {
   idempotencyKey: TriggerIdempotencyKey;
 }
 
