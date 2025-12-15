@@ -22,35 +22,29 @@ import {
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
-export type IdempotencyKeyParts =
-  | {
-      /**
-       * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
-       *
-       * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
-       * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
-       *
-       * Use `.toISOString()`.
-       */
-      eventOccurredAt: string;
+export interface IdempotencyKeyParts {
+  /**
+   * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
+   *
+   * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
+   * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
+   *
+   * Use `.toISOString()`.
+   */
+  eventOccurredAt?: string;
 
-      resource?: undefined;
-    }
-  | {
-      eventOccurredAt?: undefined;
-
-      /**
-       * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
-       * automatically.
-       *
-       * If a resource triggered your workflow, include its unique ID.
-       *
-       * @example
-       * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
-       * 2. For a payout notification, set resourceId to the payment ID.
-       */
-      resource: { type: string; id: string };
-    };
+  /**
+   * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
+   * automatically.
+   *
+   * If a resource triggered your workflow, include its unique ID.
+   *
+   * @example
+   * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
+   * 2. For a payout notification, set resourceId to the payment ID.
+   */
+  resource?: { type: string; id: string };
+}
 
 export interface NotificationEnqueueData {
   /**
