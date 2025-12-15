@@ -153,6 +153,8 @@ export interface TriggerRequest {
   /**
    * If true, the notification will not be sent, but the request will be validated and logged.
    * Helpful when controlling notifications with feature flags.
+   *
+   * @default false
    */
   dryRun?: boolean;
 
@@ -172,7 +174,11 @@ export interface TriggerRequest {
    */
   idempotencyKey: TriggerIdempotencyKey;
 
-  /** Array of data keys to redact in logs for privacy. */
+  /**
+   * Array of data keys to redact in logs for privacy.
+   *
+   * @default []
+   */
   keysToRedact?: string[];
 
   /** Workflow key. */

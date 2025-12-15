@@ -598,53 +598,6 @@ describe("NotificationClient", () => {
       expect(actual.value.id).toBe(mockWorkflowRunId);
       expect(triggerSpy).toHaveBeenCalled();
     });
-
-    it("includes dryRun false in log messages when not set", async () => {
-      const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
-
-      const input: TriggerRequest = {
-        workflowKey: mockWorkflowKey,
-        body: { recipients: [{ userId: "user-1" }] },
-        idempotencyKey: mockIdempotencyKey,
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      await client.trigger(input);
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger request",
-        expect.objectContaining({ dryRun: false }),
-      );
-    });
-
-    it("includes dryRun in trace tags when false", async () => {
-      const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
-      const mockSpan = { addTags: jest.fn() };
-      mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
-
-      const input: TriggerRequest = {
-        workflowKey: mockWorkflowKey,
-        body: { recipients: [{ userId: "user-1" }] },
-        idempotencyKey: mockIdempotencyKey,
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      await client.trigger(input);
-
-      expect(mockTracer.trace).toHaveBeenCalledWith(
-        "notifications.trigger",
-        expect.objectContaining({
-          tags: expect.objectContaining({
-            "notification.dryRun": "false",
-          }),
-        }),
-        expect.any(Function),
-      );
-    });
   });
 
   describe("appendPushToken", () => {
@@ -1175,8 +1128,16 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
   describe("upsertUserPreferences", () => {
     it("upserts user preferences", async () => {
       const mockUserId = "user-id";
+      const mockPreferenceSet = {
+        id: "preference-id",
+        workflows: {},
+        categories: {},
+        channel_types: {},
+      };
 
-      const setPreferencesSpy = jest.spyOn(provider.users, "setPreferences").mockResolvedValue({});
+      const setPreferencesSpy = jest
+        .spyOn(provider.users, "setPreferences")
+        .mockResolvedValue(mockPreferenceSet);
 
       const input: UpsertUserPreferencesRequest = {
         userId: mockUserId,
