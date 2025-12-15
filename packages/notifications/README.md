@@ -135,6 +135,8 @@ Send notifications through third-party providers.
            recipients,
            workplaceId,
          },
+         // Helpful when controlling notifications with feature flags.
+         dryRun: false,
          expiresAt: new Date(expiresAt),
          idempotencyKey,
          keysToRedact: ["secret"],

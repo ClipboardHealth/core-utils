@@ -133,6 +133,8 @@ Send notifications through [Knock](https://docs.knock.app) using the `@clipboard
            recipients,
            workplaceId,
          },
+         // Helpful when controlling notifications with feature flags.
+         dryRun: false,
          expiresAt: new Date(expiresAt),
          idempotencyKey,
          keysToRedact: ["secret"],

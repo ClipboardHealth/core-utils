@@ -512,6 +512,92 @@ describe("NotificationClient", () => {
       expect(actual.error.message).toContain("Invalid idempotency key");
       expect(triggerSpy).not.toHaveBeenCalled();
     });
+
+    it("skips provider call when dryRun is true", async () => {
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+        dryRun: true,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.id).toBe("dry-run");
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("includes dryRun in log messages when true", async () => {
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+        dryRun: true,
+      };
+
+      await client.trigger(input);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.trigger request",
+        expect.objectContaining({ dryRun: true }),
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.trigger response",
+        expect.objectContaining({ dryRun: true }),
+      );
+    });
+
+    it("includes dryRun in trace tags when true", async () => {
+      const mockSpan = { addTags: jest.fn() };
+      mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+        dryRun: true,
+      };
+
+      await client.trigger(input);
+
+      expect(mockTracer.trace).toHaveBeenCalledWith(
+        "notifications.trigger",
+        expect.objectContaining({
+          tags: expect.objectContaining({
+            "notification.dryRun": "true",
+          }),
+        }),
+        expect.any(Function),
+      );
+    });
+
+    it("defaults dryRun to false and calls provider", async () => {
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.id).toBe(mockWorkflowRunId);
+      expect(triggerSpy).toHaveBeenCalled();
+    });
   });
 
   describe("appendPushToken", () => {
@@ -1042,8 +1128,16 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
   describe("upsertUserPreferences", () => {
     it("upserts user preferences", async () => {
       const mockUserId = "user-id";
+      const mockPreferenceSet = {
+        id: "preference-id",
+        workflows: {},
+        categories: {},
+        channel_types: {},
+      };
 
-      const setPreferencesSpy = jest.spyOn(provider.users, "setPreferences").mockResolvedValue({});
+      const setPreferencesSpy = jest
+        .spyOn(provider.users, "setPreferences")
+        .mockResolvedValue(mockPreferenceSet);
 
       const input: UpsertUserPreferencesRequest = {
         userId: mockUserId,
