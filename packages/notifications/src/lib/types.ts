@@ -151,6 +151,12 @@ export interface TriggerRequest {
   body: TriggerBody;
 
   /**
+   * If true, the notification will not be sent, but the request will be validated and logged.
+   * Helpful when controlling notifications with feature flags.
+   */
+  dryRun?: boolean;
+
+  /**
    * `expiresAt` prevents stale notifications across retries by dropping the request when `now >
    * expiresAt`. If, for example, you're notifying about an event that starts in one hour, you might
    * set this to one hour from now.

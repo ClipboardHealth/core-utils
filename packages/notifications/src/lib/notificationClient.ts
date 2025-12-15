@@ -141,6 +141,8 @@ export class NotificationClient {
    *         recipients,
    *         workplaceId,
    *       },
+   *       // Helpful when controlling notifications with feature flags.
+   *       dryRun: false,
    *       expiresAt: new Date(expiresAt),
    *       idempotencyKey,
    *       keysToRedact: ["secret"],
@@ -168,6 +170,11 @@ export class NotificationClient {
           const { workplaceId } = body;
           const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
+
+          if (params.dryRun) {
+            this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
+            return success({ id: "dry-run" });
+          }
 
           const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
             idempotencyKey: triggerIdempotencyKeyParamsToHash({
