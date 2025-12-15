@@ -62,11 +62,6 @@ export type IdempotencyKeyParts =
 
 export interface NotificationEnqueueData {
   /**
-   * @deprecated Use `idempotencyKeyParts` instead.
-   */
-  idempotencyKey?: IdempotencyKey;
-
-  /**
    * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
    * automatically.
    *
@@ -84,7 +79,7 @@ export interface NotificationEnqueueData {
    * same notification multiple times within the idempotency key's validity window, the recipient
    * will only receive the first notification.
    */
-  idempotencyKeyParts?: IdempotencyKeyParts;
+  idempotencyKeyParts: IdempotencyKeyParts;
 
   /** @see {@link TriggerRequest.expiresAt} */
   expiresAt: string;
@@ -233,7 +228,6 @@ export class NotificationJobEnqueuer {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
         const idempotencyKeyParams: TriggerIdempotencyKeyParams = {
-          ...data.idempotencyKey,
           ...data.idempotencyKeyParts,
           chunk: number,
           recipients,
