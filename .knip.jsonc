@@ -15,7 +15,7 @@
     "ts-node",
     "tslib",
     "webpack-cli",
-    "eslint-plugin-promise"
+    "eslint-plugin-promise",
   ],
   "webpack": false,
   "workspaces": {
