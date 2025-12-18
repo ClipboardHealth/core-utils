@@ -18,39 +18,76 @@
 
    </embedex>
 
-1. Implement a minimal job, calling off to a NestJS service for any business logic and to send the notification.
+2. Add types and the job name to the module's logic directory if it exists, else module root:
+
+   <embedex source="packages/notifications/examples/exampleNotification.constants.ts">
+
+   ```ts
+   import { type NotificationData } from "@clipboard-health/notifications";
+
+   type ExampleNotificationData = NotificationData<{
+     workplaceId: string;
+   }>;
+
+   export type ExampleNotificationDataJob = ExampleNotificationData["Job"];
+   export type ExampleNotificationDataEnqueue = ExampleNotificationData["Enqueue"];
+
+   export type ExampleNotificationDo = ExampleNotificationDataJob & { attempt: number };
+
+   export const EXAMPLE_NOTIFICATION_JOB_NAME = "ExampleNotificationJob";
+   ```
+
+   </embedex>
+
+3. Implement a minimal job in the module's logic/job directory if it exists, else module root. The job calls off to a NestJS service for any business logic and to send the notification:
 
    <embedex source="packages/notifications/examples/exampleNotification.job.ts">
 
    ```ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
-   import { type NotificationData } from "@clipboard-health/notifications";
    import { isFailure } from "@clipboard-health/util-ts";
 
+   import {
+     EXAMPLE_NOTIFICATION_JOB_NAME,
+     type ExampleNotificationDataJob,
+   } from "./exampleNotification.constants";
    import { type ExampleNotificationService } from "./exampleNotification.service";
+   import { CBHLogger } from "./setup";
 
-   export type ExampleNotificationData = NotificationData<{
-     workplaceId: string;
-   }>;
-
-   export const EXAMPLE_NOTIFICATION_JOB_NAME = "ExampleNotificationJob";
-
-   // For mongo-jobs, you'll implement HandlerInterface<ExampleNotificationData["Job"]>
-   // For background-jobs-postgres, you'll implement Handler<ExampleNotificationData["Job"]>
-   export class ExampleNotificationJob implements BaseHandler<ExampleNotificationData["Job"]> {
+   // For mongo-jobs, you'll implement HandlerInterface<ExampleNotificationDataJob>
+   // For background-jobs-postgres, you'll implement Handler<ExampleNotificationDataJob>
+   export class ExampleNotificationJob implements BaseHandler<ExampleNotificationDataJob> {
      public name = EXAMPLE_NOTIFICATION_JOB_NAME;
+     private readonly logger = new CBHLogger({
+       defaultMeta: {
+         logContext: EXAMPLE_NOTIFICATION_JOB_NAME,
+       },
+     });
 
      constructor(private readonly service: ExampleNotificationService) {}
 
-     async perform(data: ExampleNotificationData["Job"], job: { attemptsCount: number }) {
-       const result = await this.service.sendNotification({
-         ...data,
-         // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.
-         attempt: job.attemptsCount + 1,
+     async perform(data: ExampleNotificationDataJob, job: { attemptsCount: number }) {
+       this.logger.info("Processing", {
+         workflowKey: data.workflowKey,
        });
 
-       if (isFailure(result)) {
-         throw result.error;
+       try {
+         const result = await this.service.sendNotification({
+           ...data,
+           // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.
+           attempt: job.attemptsCount + 1,
+         });
+
+         if (isFailure(result)) {
+           throw result.error;
+         }
+
+         this.logger.info("Success", {
+           workflowKey: data.workflowKey,
+         });
+       } catch (error) {
+         this.logger.error("Failed", { error, data });
+         throw error;
        }
      }
    }
@@ -58,7 +95,7 @@
 
    </embedex>
 
-1. Search your service for a constant that stores workflow keys. If there isn't one, create and export it:
+4. Search the service for a constant that stores workflow keys. If there isn't one, create and export it:
 
    <embedex source="packages/notifications/examples/workflowKeys.ts">
 
@@ -70,20 +107,20 @@
 
    </embedex>
 
-1. Enqueue your job:
+5. Enqueue the job:
 
    <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
 
    ```ts
    import {
      EXAMPLE_NOTIFICATION_JOB_NAME,
-     type ExampleNotificationData,
-   } from "./exampleNotification.job";
+     type ExampleNotificationDataEnqueue,
+   } from "./exampleNotification.constants";
    import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
    import { WORKFLOW_KEYS } from "./workflowKeys";
 
    async function enqueueNotificationJob() {
-     await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationData["Enqueue"]>(
+     await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationDataEnqueue>(
        EXAMPLE_NOTIFICATION_JOB_NAME,
        // Important: Read the TypeDoc documentation for additional context.
        {
@@ -116,16 +153,14 @@
 
    </embedex>
 
-1. Trigger the job in your NestJS service:
+6. Create the NestJS service in the module's logic directory if it exists, else module root. Trigger the NotificationClient:
 
    <embedex source="packages/notifications/examples/exampleNotification.service.ts">
 
    ```ts
    import { type NotificationClient } from "@clipboard-health/notifications";
 
-   import { type ExampleNotificationData } from "./exampleNotification.job";
-
-   type ExampleNotificationDo = ExampleNotificationData["Job"] & { attempt: number };
+   import { type ExampleNotificationDo } from "./exampleNotification.constants";
 
    export class ExampleNotificationService {
      constructor(private readonly client: NotificationClient) {}

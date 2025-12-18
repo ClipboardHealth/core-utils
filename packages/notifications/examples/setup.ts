@@ -19,3 +19,23 @@ export class BackgroundJobsService implements BackgroundJobsAdapter {
     throw new Error("Method not implemented.");
   }
 }
+
+export class CBHLogger {
+  public readonly defaultMeta: Record<string, unknown>;
+
+  constructor(params: { defaultMeta: Record<string, unknown> }) {
+    this.defaultMeta = params.defaultMeta;
+  }
+
+  public info(message: string, context: Record<string, unknown>) {
+    console.info(message, { ...this.defaultMeta, ...context });
+  }
+
+  public error(message: string, context: Record<string, unknown>) {
+    console.error(message, { ...this.defaultMeta, ...context });
+  }
+
+  public warn(message: string, context: Record<string, unknown>) {
+    console.warn(message, { ...this.defaultMeta, ...context });
+  }
+}
