@@ -1,13 +1,13 @@
 // embedex: packages/notifications/src/lib/notificationJobEnqueuer.ts,packages/notifications/examples/usage.md
 import {
   EXAMPLE_NOTIFICATION_JOB_NAME,
-  type ExampleNotificationData,
-} from "./exampleNotification.job";
+  type ExampleNotificationDataEnqueue,
+} from "./exampleNotification.constants";
 import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
 import { WORKFLOW_KEYS } from "./workflowKeys";
 
 async function enqueueNotificationJob() {
-  await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationData["Enqueue"]>(
+  await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationDataEnqueue>(
     EXAMPLE_NOTIFICATION_JOB_NAME,
     // Important: Read the TypeDoc documentation for additional context.
     {

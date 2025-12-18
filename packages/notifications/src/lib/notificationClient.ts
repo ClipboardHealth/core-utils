@@ -119,9 +119,7 @@ export class NotificationClient {
    * ```ts
    * import { type NotificationClient } from "@clipboard-health/notifications";
    *
-   * import { type ExampleNotificationData } from "./exampleNotification.job";
-   *
-   * type ExampleNotificationDo = ExampleNotificationData["Job"] & { attempt: number };
+   * import { type ExampleNotificationDo } from "./exampleNotification.constants";
    *
    * export class ExampleNotificationService {
    *   constructor(private readonly client: NotificationClient) {}

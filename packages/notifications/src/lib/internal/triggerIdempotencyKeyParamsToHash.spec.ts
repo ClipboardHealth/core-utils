@@ -7,19 +7,8 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
     workflowKey: "test-workflow",
   };
 
-  describe("resourceId extraction", () => {
-    it("extracts resourceId from legacy IdempotencyKey format", () => {
-      const input = {
-        ...baseParams,
-        resource: { type: "account", id: "123" },
-      };
-
-      const actual = triggerIdempotencyKeyParamsToHash(input);
-
-      expect(actual).toHaveLength(64);
-    });
-
-    it("extracts resourceId from IdempotencyKeyParts.resource.id", () => {
+  describe("resource extraction", () => {
+    it("extracts resource from IdempotencyKeyParts.resource", () => {
       const input = {
         ...baseParams,
         resource: { type: "account", id: "resource-456" },
@@ -30,7 +19,7 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
       expect(actual).toHaveLength(64);
     });
 
-    it("handles eventOccurredAt without resourceId", () => {
+    it("handles eventOccurredAt without resource", () => {
       const input = {
         ...baseParams,
         eventOccurredAt: "2024-01-01T00:00:00.000Z",
@@ -73,7 +62,7 @@ describe("triggerIdempotencyKeyParamsToHash", () => {
       expect(actual1).toBe(actual2);
     });
 
-    it("produces different hash for different resourceId", () => {
+    it("produces different hash for different resource", () => {
       const input1 = {
         ...baseParams,
         resource: { type: "account", id: "123" },

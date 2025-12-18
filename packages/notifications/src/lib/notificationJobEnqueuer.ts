@@ -24,7 +24,7 @@ type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
 export interface IdempotencyKeyParts {
   /**
-   * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
+   * Prefer `resource` over `eventOccurredAt`; it's harder to misuse.
    *
    * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
    * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
@@ -40,8 +40,8 @@ export interface IdempotencyKeyParts {
    * If a resource triggered your workflow, include its unique ID.
    *
    * @example
-   * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
-   * 2. For a payout notification, set resourceId to the payment ID.
+   * 1. For a "meeting starts in one hour" notification, set resource.id to the meeting ID.
+   * 2. For a payout notification, set resource.id to the payment ID.
    */
   resource?: { type: string; id: string };
 }
@@ -164,13 +164,13 @@ export class NotificationJobEnqueuer {
    * ```ts
    * import {
    *   EXAMPLE_NOTIFICATION_JOB_NAME,
-   *   type ExampleNotificationData,
-   * } from "./exampleNotification.job";
+   *   type ExampleNotificationDataEnqueue,
+   * } from "./exampleNotification.constants";
    * import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
    * import { WORKFLOW_KEYS } from "./workflowKeys";
    *
    * async function enqueueNotificationJob() {
-   *   await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationData["Enqueue"]>(
+   *   await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationDataEnqueue>(
    *     EXAMPLE_NOTIFICATION_JOB_NAME,
    *     // Important: Read the TypeDoc documentation for additional context.
    *     {

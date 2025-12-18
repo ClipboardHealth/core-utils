@@ -12,7 +12,7 @@ describe("parseTriggerIdempotencyKey", () => {
         chunk: 1,
         workflowKey: "test-workflow",
         recipients: ["user1", "user2"],
-        resourceId: "resource-123",
+        resource: { id: "123", type: "account" },
       };
       const idempotencyKey = DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(params);
 
