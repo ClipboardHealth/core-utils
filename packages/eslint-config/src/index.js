@@ -61,6 +61,7 @@ const plugins = [
   "no-only-tests",
   "simple-import-sort",
   "@typescript-eslint",
+  "promise",
 ];
 
 // Only add `@clipboard-health/eslint-plugin` if we're outside the core-utils monorepo
@@ -295,6 +296,10 @@ module.exports = {
      * preventing accidental usage.
      */
     "object-shorthand": ["error", "properties"],
+
+    // Force using async/await instead of .then()
+    "promise/prefer-await-to-then": ["error", { strict: true }],
+
     "security/detect-object-injection": "off",
 
     "simple-import-sort/exports": "warn",
