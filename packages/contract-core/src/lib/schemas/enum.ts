@@ -46,14 +46,3 @@ export const requiredEnumWithFallback = <const V extends EnumValues, const F ext
   values: V,
   fallback: F,
 ) => enumWithFallback(values, fallback, { optional: false });
-
-// Argument of type '"d"' is not assignable to parameter of type '"a" | "b" | "c"'.ts(2345)
-// const testUnassignableFallbackSchema = requiredEnumWithFallback(["a", "b", "c"], "d");
-
-// type TestAssignableFallback = "a" | "b" | "c"
-// const testAssignableFallbackSchema = requiredEnumWithFallback(["a", "b", "c"], "a");
-// type TestAssignableFallback = z.infer<typeof testAssignableFallbackSchema>;
-
-// type TestOptionalFallback = "a" | "b" | "c" | undefined
-// const testOptionalFallbackSchema = optionalEnumWithFallback(["a", "b", "c"], "a");
-// type TestOptionalFallback = z.infer<typeof testOptionalFallbackSchema>;
