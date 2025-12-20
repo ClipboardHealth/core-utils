@@ -3,24 +3,26 @@ import { z } from "zod";
 type EnumValues = [string, ...string[]];
 
 /**
+ * @internal Do not use this function directly.
+ * Use `requiredEnumWithFallback` or `optionalEnumWithFallback` instead.
  * Enum + "invalid -> fallback" with optionality toggle.
  * - If optional=true: undefined stays undefined
  * - If optional=false: undefined is rejected (normal enum behavior)
  * - Fallback must be a member of the enum
  */
-function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
+export function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
   values: V,
   fallback: F,
   options?: { optional?: false },
 ): z.ZodEffects<z.ZodEnum<V>, V[number], unknown>;
 
-function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
+export function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
   values: V,
   fallback: F,
   options: { optional: true },
 ): z.ZodEffects<z.ZodOptional<z.ZodEnum<V>>, V[number] | undefined, unknown>;
 
-function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
+export function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
   values: V,
   fallback: F,
   options: { optional?: boolean } = {},
