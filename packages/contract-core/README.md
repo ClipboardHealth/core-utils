@@ -22,8 +22,15 @@ npm install @clipboard-health/contract-core
 <embedex source="packages/contract-core/examples/schemas.ts">
 
 ```ts
-import { apiErrors, booleanString, nonEmptyString, uuid } from "@clipboard-health/contract-core";
-import { type ZodError } from "zod";
+import {
+  apiErrors,
+  booleanString,
+  nonEmptyString,
+  optionalEnumWithFallback,
+  requiredEnumWithFallback,
+  uuid,
+} from "@clipboard-health/contract-core";
+import { type z, type ZodError } from "zod";
 
 function logError(error: unknown) {
   console.error((error as ZodError).issues[0]!.message);
@@ -66,6 +73,52 @@ try {
   logError(error);
   // => Invalid UUID format
 }
+
+// Enum with fallback examples
+/* -- required -- */
+const requiredStatusEnumSchema = requiredEnumWithFallback(
+  ["unspecified", "pending", "completed", "failed"],
+  "unspecified",
+);
+// type RequiredStatusEnum = "unspecified" | "pending" | "completed" | "failed"
+type RequiredStatusEnum = z.infer<typeof requiredStatusEnumSchema>;
+
+const completedStatus: RequiredStatusEnum = requiredStatusEnumSchema.parse("completed");
+// => "completed"
+console.log(completedStatus);
+
+const additionalStatus = requiredStatusEnumSchema.parse("additional");
+// => "unspecified"
+console.log(additionalStatus);
+
+try {
+  // eslint-disable-next-line unicorn/no-useless-undefined
+  requiredStatusEnumSchema.parse(undefined);
+} catch (error) {
+  logError(error);
+  // => Validation error
+}
+
+/* -- optional -- */
+const optionalStatusEnumSchema = optionalEnumWithFallback(
+  ["unspecified", "pending", "completed", "failed"],
+  "unspecified",
+);
+// type OptionalStatusEnum = "unspecified" | "pending" | "completed" | "failed" | undefined
+type OptionalStatusEnum = z.infer<typeof optionalStatusEnumSchema>;
+
+const failedStatus: OptionalStatusEnum = optionalStatusEnumSchema.parse("failed");
+// => "completed"
+console.log(failedStatus);
+
+const extraStatus = optionalStatusEnumSchema.parse("extra");
+// => "unspecified"
+console.log(extraStatus);
+
+// eslint-disable-next-line unicorn/no-useless-undefined
+const undefinedStatus = optionalStatusEnumSchema.parse(undefined);
+// => undefined
+console.log(undefinedStatus);
 ```
 
 </embedex>
