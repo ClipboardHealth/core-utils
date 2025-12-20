@@ -108,7 +108,7 @@ const optionalStatusEnumSchema = optionalEnumWithFallback(
 type OptionalStatusEnum = z.infer<typeof optionalStatusEnumSchema>;
 
 const failedStatus: OptionalStatusEnum = optionalStatusEnumSchema.parse("failed");
-// => "completed"
+// => "failed"
 console.log(failedStatus);
 
 const extraStatus = optionalStatusEnumSchema.parse("extra");
