@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "6.7.12",
+  "version": "6.7.13",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
@@ -27,6 +27,7 @@
     "eslint-plugin-no-barrel-files": "^1.2.2",
     "eslint-plugin-no-only-tests": "^3",
     "eslint-plugin-no-use-extend-native": "^0.5",
+    "eslint-plugin-promise": "^7",
     "eslint-plugin-react": "^7",
     "eslint-plugin-security": "^1",
     "eslint-plugin-simple-import-sort": "^12",
