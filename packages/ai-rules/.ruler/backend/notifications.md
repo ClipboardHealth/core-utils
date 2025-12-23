@@ -82,7 +82,7 @@ Send notifications through [Knock](https://docs.knock.app) using the `@clipboard
            workflowKey: data.workflowKey,
          });
        } catch (error) {
-         this.logger.error("Failed", { error, data });
+         this.logger.error("Failure", { error, data });
          throw error;
        }
      }

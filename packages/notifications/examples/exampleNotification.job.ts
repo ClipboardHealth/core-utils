@@ -41,7 +41,7 @@ export class ExampleNotificationJob implements BaseHandler<ExampleNotificationDa
         workflowKey: data.workflowKey,
       });
     } catch (error) {
-      this.logger.error("Failed", { error, data });
+      this.logger.error("Failure", { error, data });
       throw error;
     }
   }

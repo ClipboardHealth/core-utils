@@ -4,11 +4,10 @@ import {
   type LogFunction,
   ServiceError,
   type ServiceResult,
-  stringify,
   success,
   toError,
 } from "@clipboard-health/util-ts";
-import { BadRequestError, signUserToken } from "@knocklabs/node";
+import { signUserToken } from "@knocklabs/node";
 
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
@@ -187,16 +186,6 @@ export class NotificationClient {
 
           return success({ id });
         } catch (maybeError) {
-          /**
-           * Clients set idempotency keys when enqueuing background jobs and look up variables
-           * within the job. Across retries, these variables may change, which isn't an error.
-           */
-          const isWarn =
-            maybeError instanceof BadRequestError &&
-            stringify(maybeError.error).includes(
-              "This request does not match the first request used with this idempotency key",
-            );
-
           const error = toError(maybeError);
           return this.createAndLogError({
             notificationError: {
@@ -204,7 +193,7 @@ export class NotificationClient {
               message: error.message,
             },
             span,
-            logFunction: isWarn ? this.logger.warn : this.logger.error,
+            logFunction: this.logger.error,
             logParams,
             metadata: { error },
           });

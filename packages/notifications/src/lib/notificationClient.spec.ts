@@ -1,6 +1,6 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
-import { BadRequestError, type Knock } from "@knocklabs/node";
+import { type Knock } from "@knocklabs/node";
 
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { MAXIMUM_RECIPIENTS_COUNT, NotificationClient } from "./notificationClient";
@@ -175,37 +175,6 @@ describe("NotificationClient", () => {
         "notifications.trigger [unknown] Knock API error",
         expect.any(Object),
       );
-    });
-
-    it("logs warn instead of error for idempotency key mismatch", async () => {
-      const mockError = new BadRequestError(
-        400,
-        {
-          error:
-            "This request does not match the first request used with this idempotency key. This could mean you are reusing idempotency keys across requests.",
-        },
-        "Bad Request",
-        new Headers(),
-      );
-      jest.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
-
-      const input: TriggerRequest = {
-        workflowKey: mockWorkflowKey,
-        body: { recipients: [{ userId: "user-1" }] },
-        idempotencyKey: mockIdempotencyKey,
-        keysToRedact: [],
-        expiresAt: mockExpiresAt,
-        attempt: mockAttempt,
-      };
-
-      const actual = await client.trigger(input);
-
-      expectToBeFailure(actual);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("notifications.trigger [unknown]"),
-        expect.any(Object),
-      );
-      expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
     it("redacts sensitive data in logs", async () => {
