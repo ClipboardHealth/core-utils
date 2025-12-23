@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-type EnumValues = [string, ...string[]];
+export type EnumValues = [string, ...string[]];
 
 /**
  * @internal Do not use this function directly.
