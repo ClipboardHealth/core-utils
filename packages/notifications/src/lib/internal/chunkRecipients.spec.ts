@@ -1,4 +1,5 @@
 import { MAXIMUM_RECIPIENTS_COUNT } from "../notificationClient";
+import { type InlineIdentifyUserRequest } from "../types";
 import { chunkRecipients } from "./chunkRecipients";
 
 describe("chunkRecipients", () => {
@@ -38,6 +39,30 @@ describe("chunkRecipients", () => {
       recipients: Array.from(
         { length: MAXIMUM_RECIPIENTS_COUNT + 1 },
         (_, index) => `user-${index + 1}`,
+      ),
+    };
+
+    const actual = chunkRecipients(input);
+
+    expect(actual).toHaveLength(2);
+    expect(actual[0]).toEqual({
+      number: 1,
+      recipients: input.recipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
+    });
+    expect(actual[1]).toEqual({
+      number: 2,
+      recipients: input.recipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
+    });
+  });
+
+  it("chunks InlineIdentifyUserRequest recipients correctly", () => {
+    const input = {
+      recipients: Array.from<unknown, InlineIdentifyUserRequest>(
+        { length: MAXIMUM_RECIPIENTS_COUNT + 1 },
+        (_, index) => ({
+          userId: `user-${index + 1}`,
+          email: `user-${index + 1}@example.com`,
+        }),
       ),
     };
 
