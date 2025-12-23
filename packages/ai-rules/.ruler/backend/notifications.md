@@ -20,7 +20,7 @@ Send notifications through [Knock](https://docs.knock.app) using the `@clipboard
    });
    ```
 
-2. Add types and the job name to the module's logic directory if it exists, else module root:
+2. Add types and the job name to the module's logic directory if it exists, else module root. You MUST create and use the `...DataJob` and `...DataEnqueue` types:
 
    ```ts
    import { type NotificationData } from "@clipboard-health/notifications";
@@ -89,7 +89,7 @@ Send notifications through [Knock](https://docs.knock.app) using the `@clipboard
    }
    ```
 
-4. Search the service for a constant that stores workflow keys. If there isn't one, create and export it:
+4. Search the service for a constant that stores workflow keys. If there isn't one, create and export it. You MUST insert the key in alphabetical order:
 
    ```ts
    export const WORKFLOW_KEYS = {
