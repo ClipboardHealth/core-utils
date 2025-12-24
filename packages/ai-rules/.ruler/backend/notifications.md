@@ -29,8 +29,8 @@ Send notifications through [Knock](https://docs.knock.app) using the `@clipboard
    import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
 
    /**
-    * For mongo-jobs, implement HandlerInterface<SerializableTriggerRequest>.
-    * For background-jobs-postgres, implement Handler<SerializableTriggerRequest>.
+    * For mongo-jobs, implement HandlerInterface<SerializableTriggerChunkedRequest>.
+    * For background-jobs-postgres, implement Handler<SerializableTriggerChunkedRequest>.
     */
    export class TriggerNotificationJob implements BaseHandler<SerializableTriggerChunkedRequest> {
      public name = TRIGGER_NOTIFICATION_JOB_NAME;
