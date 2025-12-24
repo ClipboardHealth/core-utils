@@ -249,11 +249,11 @@ export class NotificationClient {
 
         if (params.dryRun) {
           this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
-          return success({ chunks: [{ chunkNumber: 1, id: "dry-run" }] });
+          return success({ responses: [{ chunkNumber: 1, id: "dry-run" }] });
         }
 
         const chunks = chunkRecipients({ recipients: body.recipients });
-        const results: Array<{ chunkNumber: number; id: string }> = [];
+        const responses: Array<{ chunkNumber: number; id: string }> = [];
 
         // Sequential execution is intentional - we want to fail fast on error and track progress
         for (const recipientChunk of chunks) {
@@ -278,7 +278,7 @@ export class NotificationClient {
               id,
             });
 
-            results.push({ chunkNumber: recipientChunk.number, id });
+            responses.push({ chunkNumber: recipientChunk.number, id });
           } catch (maybeError) {
             const error = toError(maybeError);
             return this.createAndLogError({
@@ -293,7 +293,7 @@ export class NotificationClient {
                 error,
                 chunkNumber: recipientChunk.number,
                 totalChunks: chunks.length,
-                completedChunks: results.length,
+                completedChunks: responses.length,
                 expiresAt: expiresAt.toISOString(),
                 workplaceId,
               },
@@ -302,16 +302,16 @@ export class NotificationClient {
         }
 
         span?.addTags({
-          "response.chunks": results.length,
+          "response.chunks": responses.length,
           success: true,
         });
 
         this.logger.info(`${logParams.traceName} response`, {
           ...logParams,
-          chunks: results,
+          responses,
         });
 
-        return success({ chunks: results });
+        return success({ responses });
       },
     );
   }

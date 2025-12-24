@@ -2,9 +2,9 @@
 
 ## `triggerChunked`
 
-`triggerChunked` stores an the full, immutable trigger request at job enqueue time, eliminating issues with stale data, chunking requests to stay under provider limits, and idempotency key conflicts that can occur if the request is updated at job execution time.
+`triggerChunked` stores the full, immutable trigger request at job enqueue time, eliminating issues with stale data, chunking requests to stay under provider limits, and idempotency key conflicts that can occur if the request is updated at job execution time.
 
-1. Search your service for `triggerNotification.constants.ts`, `triggerNotification.job.ts` and `notification.service.ts`. If they don't exist, create them:
+1. Search your service for `triggerNotification.constants.ts`, `triggerNotification.job.ts` and `notifications.service.ts`. If they don't exist, create them:
 
    <embedex source="packages/notifications/examples/triggerNotification.constants.ts">
 
@@ -50,6 +50,7 @@
          // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.
          attempt: job.attemptsCount + 1,
          jobId: job._id,
+         recipientCount: data.body.recipients.length,
          workflowKey: data.workflowKey,
        };
        this.logger.info("Processing", metadata);
