@@ -1,6 +1,5 @@
-import { MAXIMUM_RECIPIENTS_COUNT } from "../notificationClient";
 import { type InlineIdentifyUserRequest } from "../types";
-import { chunkRecipients } from "./chunkRecipients";
+import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./chunkRecipients";
 
 describe("chunkRecipients", () => {
   it("returns single chunk with number 1 when recipients count equals maximum", () => {

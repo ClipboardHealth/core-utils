@@ -9,6 +9,7 @@ import {
 } from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
+import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
@@ -19,26 +20,33 @@ import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
 import { type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
-import type {
-  AppendPushTokenRequest,
-  AppendPushTokenResponse,
-  LogParams,
-  NotificationClientParams,
-  SignUserTokenRequest,
-  SignUserTokenResponse,
-  Span,
-  TriggerBody,
-  TriggerRequest,
-  TriggerResponse,
-  UpsertUserPreferencesRequest,
-  UpsertUserPreferencesResponse,
-  UpsertWorkplaceRequest,
-  UpsertWorkplaceResponse,
+import {
+  type AppendPushTokenRequest,
+  type AppendPushTokenResponse,
+  type LogParams,
+  type NotificationClientParams,
+  type SerializableTriggerBody,
+  type SignUserTokenRequest,
+  type SignUserTokenResponse,
+  type Span,
+  type TriggerBody,
+  type TriggerChunkedRequest,
+  type TriggerChunkedResponse,
+  type TriggerRequest,
+  type TriggerResponse,
+  type UpsertUserPreferencesRequest,
+  type UpsertUserPreferencesResponse,
+  type UpsertWorkplaceRequest,
+  type UpsertWorkplaceResponse,
 } from "./types";
 
 const LOG_PARAMS = {
   trigger: {
     traceName: "notifications.trigger",
+    destination: "knock.workflows.trigger",
+  },
+  triggerChunked: {
+    traceName: "notifications.triggerChunked",
     destination: "knock.workflows.trigger",
   },
   appendPushToken: {
@@ -58,11 +66,9 @@ const LOG_PARAMS = {
     destination: "knock.users.setPreferences",
   },
 };
-
-export const MAXIMUM_RECIPIENTS_COUNT = 1000;
-
 export const ERROR_CODES = {
   expired: "expired",
+  invalidExpiresAt: "invalidExpiresAt",
   invalidIdempotencyKey: "invalidIdempotencyKey",
   recipientCountBelowMinimum: "recipientCountBelowMinimum",
   recipientCountAboveMaximum: "recipientCountAboveMaximum",
@@ -198,6 +204,123 @@ export class NotificationClient {
             metadata: { error },
           });
         }
+      },
+    );
+  }
+
+  /**
+   * Triggers a notification with automatic chunking for large recipient lists.
+   *
+   * This method handles:
+   * - Automatic chunking of recipients into groups of MAXIMUM_RECIPIENTS_COUNT.
+   * - Idempotency using `${idempotencyKey}-${chunkNumber}` for each chunk.
+   * - Stale notifications prevention through expiresAt.
+   * - Logging with sensitive data redaction.
+   * - Distributed tracing with notification metadata.
+   *
+   * Use this method from background jobs where you want to:
+   * - Store the full serializable request at enqueue time (no stale data issues).
+   * - Use the background job ID as the idempotency key base.
+   * - Not worry about recipient count limits.
+   *
+   * @returns Promise resolving to either an error or successful response with all chunk results.
+   */
+  public async triggerChunked(
+    params: TriggerChunkedRequest,
+  ): Promise<ServiceResult<TriggerChunkedResponse>> {
+    const logParams = createTriggerLogParams({ ...params, ...LOG_PARAMS.triggerChunked });
+    return await this.tracer.trace(
+      logParams.traceName,
+      createTriggerTraceOptions(logParams),
+      async (span) => {
+        const {
+          body,
+          expiresAt: expiresAtString,
+          idempotencyKey,
+          keysToRedact = [],
+          workflowKey,
+        } = params;
+        const { workplaceId } = body;
+
+        const validated = this.validateTriggerChunkedRequest({
+          body,
+          expiresAt: expiresAtString,
+          span,
+          logParams,
+        });
+        if (isFailure(validated)) {
+          return validated;
+        }
+
+        const { expiresAt } = validated.value;
+
+        this.logTriggerRequest({ logParams, body, keysToRedact });
+
+        if (params.dryRun) {
+          this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
+          return success({ chunks: [{ chunkNumber: 1, id: "dry-run" }] });
+        }
+
+        const chunks = chunkRecipients({ recipients: body.recipients });
+        const results: Array<{ chunkNumber: number; id: string }> = [];
+
+        // Sequential execution is intentional - we want to fail fast on error and track progress
+        for (const recipientChunk of chunks) {
+          try {
+            const chunkIdempotencyKey = `${idempotencyKey}-${recipientChunk.number}`;
+            const chunkBody: SerializableTriggerBody = {
+              ...body,
+              recipients: recipientChunk.recipients,
+            };
+            const triggerBody = toTriggerBody(chunkBody);
+
+            // eslint-disable-next-line no-await-in-loop
+            const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
+              idempotencyKey: chunkIdempotencyKey,
+            });
+
+            const id = response.workflow_run_id;
+            this.logger.info(`${logParams.traceName} chunk response`, {
+              ...logParams,
+              chunkNumber: recipientChunk.number,
+              totalChunks: chunks.length,
+              id,
+            });
+
+            results.push({ chunkNumber: recipientChunk.number, id });
+          } catch (maybeError) {
+            const error = toError(maybeError);
+            return this.createAndLogError({
+              notificationError: {
+                code: ERROR_CODES.unknown,
+                message: `Chunk ${recipientChunk.number}/${chunks.length} failed: ${error.message}`,
+              },
+              span,
+              logFunction: this.logger.error,
+              logParams,
+              metadata: {
+                error,
+                chunkNumber: recipientChunk.number,
+                totalChunks: chunks.length,
+                completedChunks: results.length,
+                expiresAt: expiresAt.toISOString(),
+                workplaceId,
+              },
+            });
+          }
+        }
+
+        span?.addTags({
+          "response.chunks": results.length,
+          success: true,
+        });
+
+        this.logger.info(`${logParams.traceName} response`, {
+          ...logParams,
+          chunks: results,
+        });
+
+        return success({ chunks: results });
       },
     );
   }
@@ -453,6 +576,53 @@ export class NotificationClient {
     return success({ ...params, idempotencyKeyParams });
   }
 
+  private validateTriggerChunkedRequest(params: {
+    body: SerializableTriggerBody;
+    expiresAt: string;
+    span: Span | undefined;
+    logParams: LogParams;
+  }): ServiceResult<{ expiresAt: Date }> {
+    const { body, expiresAt: expiresAtString, span, logParams } = params;
+
+    if (body.recipients.length <= 0) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.recipientCountBelowMinimum,
+          message: `Got ${body.recipients.length} recipients; must be > 0.`,
+        },
+        span,
+        logParams,
+      });
+    }
+
+    const expiresAt = new Date(expiresAtString);
+    if (Number.isNaN(expiresAt.getTime())) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.invalidExpiresAt,
+          message: `Invalid expiresAt: ${expiresAtString}`,
+        },
+        span,
+        logParams,
+      });
+    }
+
+    const now = new Date();
+    if (now > expiresAt) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.expired,
+          message: `Got ${now.toISOString()}; notification expires at ${expiresAt.toISOString()}.`,
+        },
+        span,
+        logParams,
+        metadata: { currentTime: now.toISOString(), expiresAt: expiresAt.toISOString() },
+      });
+    }
+
+    return success({ expiresAt });
+  }
+
   private async getExistingTokens(params: {
     userId: string;
     channelId: string;
@@ -477,7 +647,7 @@ export class NotificationClient {
 
   private logTriggerRequest(params: {
     logParams: LogParams;
-    body: TriggerBody;
+    body: TriggerBody | SerializableTriggerBody;
     keysToRedact: string[];
   }): void {
     const { logParams, body, keysToRedact } = params;
