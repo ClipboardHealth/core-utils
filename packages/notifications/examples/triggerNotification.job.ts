@@ -1,11 +1,12 @@
 // embedex: packages/notifications/examples/usage.md
 import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
 import {
-  type NotificationClient,
-  type SerializableTriggerRequest,
+  type SerializableTriggerChunkedRequest,
+  toTriggerChunkedRequest,
 } from "@clipboard-health/notifications";
 import { isFailure } from "@clipboard-health/util-ts";
 
+import { type NotificationsService } from "./notifications.service";
 import { CBHLogger } from "./setup";
 import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
 
@@ -13,7 +14,7 @@ import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
  * For mongo-jobs, implement HandlerInterface<SerializableTriggerRequest>.
  * For background-jobs-postgres, implement Handler<SerializableTriggerRequest>.
  */
-export class TriggerNotificationJob implements BaseHandler<SerializableTriggerRequest> {
+export class TriggerNotificationJob implements BaseHandler<SerializableTriggerChunkedRequest> {
   public name = TRIGGER_NOTIFICATION_JOB_NAME;
   private readonly logger = new CBHLogger({
     defaultMeta: {
@@ -21,13 +22,14 @@ export class TriggerNotificationJob implements BaseHandler<SerializableTriggerRe
     },
   });
 
-  public constructor(private readonly client: NotificationClient) {}
+  public constructor(private readonly service: NotificationsService) {}
 
   public async perform(
-    data: SerializableTriggerRequest,
+    data: SerializableTriggerChunkedRequest,
     job: { _id: string; attemptsCount: number; uniqueKey?: string },
   ) {
     const metadata = {
+      // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.
       attempt: job.attemptsCount + 1,
       jobId: job._id,
       workflowKey: data.workflowKey,
@@ -35,11 +37,11 @@ export class TriggerNotificationJob implements BaseHandler<SerializableTriggerRe
     this.logger.info("Processing", metadata);
 
     try {
-      const result = await this.client.triggerChunked({
-        ...data,
+      const request = toTriggerChunkedRequest(data, {
         attempt: metadata.attempt,
         idempotencyKey: job.uniqueKey ?? metadata.jobId,
       });
+      const result = await this.service.triggerChunked(request);
 
       if (isFailure(result)) {
         throw result.error;

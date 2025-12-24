@@ -1,10 +1,10 @@
 import { type Knock } from "@knocklabs/node";
 
-import type { InlineIdentifyUserRequest, SerializableInlineIdentifyUserRequest } from "../types";
+import type { InlineIdentifyUserRequest } from "../types";
 import { toInlineIdentifyUserRequestWithoutUserId } from "./toInlineIdentifyUserRequestWithoutUserId";
 
 export function toInlineIdentifyUserRequest(
-  recipient: InlineIdentifyUserRequest | SerializableInlineIdentifyUserRequest,
+  recipient: InlineIdentifyUserRequest,
 ): Knock.Users.InlineIdentifyUserRequest {
   const { userId, ...rest } = recipient;
 

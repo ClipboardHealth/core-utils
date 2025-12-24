@@ -606,7 +606,7 @@ describe("NotificationClient", () => {
     const mockWorkflowKey = "test-workflow";
     const mockIdempotencyKey = "job-id-12345";
     const mockAttempt = 1;
-    const mockExpiresAt = new Date(Date.now() + 300_000).toISOString();
+    const mockExpiresAt = new Date(Date.now() + 300_000);
     const mockWorkflowRunId = "workflow-run-789";
 
     it("triggers workflow successfully with single chunk", async () => {
@@ -691,7 +691,7 @@ describe("NotificationClient", () => {
     });
 
     it("rejects expired request", async () => {
-      const mockExpiredDate = new Date(Date.now() - 1000).toISOString();
+      const mockExpiredDate = new Date(Date.now() - 1000);
       const triggerSpy = jest.spyOn(provider.workflows, "trigger");
 
       const input: TriggerChunkedRequest = {
@@ -727,14 +727,15 @@ describe("NotificationClient", () => {
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
-    it("rejects request with invalid expiresAt string", async () => {
+    it("rejects request with invalid expiresAt", async () => {
       const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const invalidDate = new Date("not-a-date");
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
         body: { recipients: ["user-1"] },
         idempotencyKey: mockIdempotencyKey,
-        expiresAt: "not-a-date",
+        expiresAt: invalidDate,
         attempt: mockAttempt,
       };
 
@@ -742,7 +743,7 @@ describe("NotificationClient", () => {
 
       expectToBeFailure(actual);
       expect(actual.error.issues[0]?.code).toBe("invalidExpiresAt");
-      expect(actual.error.message).toContain("Invalid expiresAt: not-a-date");
+      expect(actual.error.message).toContain("Invalid expiresAt:");
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
@@ -870,12 +871,13 @@ describe("NotificationClient", () => {
       );
     });
 
-    it("handles serializable recipient with createdAt as string", async () => {
+    it("handles recipient with createdAt as Date", async () => {
+      const mockCreatedAt = new Date("2023-01-01T00:00:00.000Z");
       const mockBody = {
         recipients: [
           {
             userId: "user-1",
-            createdAt: "2023-01-01T00:00:00.000Z",
+            createdAt: mockCreatedAt,
             email: "user@example.com",
           },
         ],

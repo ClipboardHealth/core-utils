@@ -25,7 +25,6 @@ import {
   type AppendPushTokenResponse,
   type LogParams,
   type NotificationClientParams,
-  type SerializableTriggerBody,
   type SignUserTokenRequest,
   type SignUserTokenResponse,
   type Span,
@@ -233,26 +232,18 @@ export class NotificationClient {
       logParams.traceName,
       createTriggerTraceOptions(logParams),
       async (span) => {
-        const {
-          body,
-          expiresAt: expiresAtString,
-          idempotencyKey,
-          keysToRedact = [],
-          workflowKey,
-        } = params;
+        const { body, expiresAt, idempotencyKey, keysToRedact = [], workflowKey } = params;
         const { workplaceId } = body;
 
         const validated = this.validateTriggerChunkedRequest({
           body,
-          expiresAt: expiresAtString,
+          expiresAt,
           span,
           logParams,
         });
         if (isFailure(validated)) {
           return validated;
         }
-
-        const { expiresAt } = validated.value;
 
         this.logTriggerRequest({ logParams, body, keysToRedact });
 
@@ -268,7 +259,7 @@ export class NotificationClient {
         for (const recipientChunk of chunks) {
           try {
             const chunkIdempotencyKey = `${idempotencyKey}-${recipientChunk.number}`;
-            const chunkBody: SerializableTriggerBody = {
+            const chunkBody: TriggerBody = {
               ...body,
               recipients: recipientChunk.recipients,
             };
@@ -577,12 +568,12 @@ export class NotificationClient {
   }
 
   private validateTriggerChunkedRequest(params: {
-    body: SerializableTriggerBody;
-    expiresAt: string;
+    body: TriggerBody;
+    expiresAt: Date;
     span: Span | undefined;
     logParams: LogParams;
   }): ServiceResult<{ expiresAt: Date }> {
-    const { body, expiresAt: expiresAtString, span, logParams } = params;
+    const { body, expiresAt, span, logParams } = params;
 
     if (body.recipients.length <= 0) {
       return this.createAndLogError({
@@ -595,12 +586,11 @@ export class NotificationClient {
       });
     }
 
-    const expiresAt = new Date(expiresAtString);
     if (Number.isNaN(expiresAt.getTime())) {
       return this.createAndLogError({
         notificationError: {
           code: ERROR_CODES.invalidExpiresAt,
-          message: `Invalid expiresAt: ${expiresAtString}`,
+          message: `Invalid expiresAt: ${String(expiresAt)}`,
         },
         span,
         logParams,
@@ -647,7 +637,7 @@ export class NotificationClient {
 
   private logTriggerRequest(params: {
     logParams: LogParams;
-    body: TriggerBody | SerializableTriggerBody;
+    body: TriggerBody;
     keysToRedact: string[];
   }): void {
     const { logParams, body, keysToRedact } = params;
