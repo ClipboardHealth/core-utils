@@ -1,11 +1,9 @@
 import { type Knock } from "@knocklabs/node";
 
-import type { InlineIdentifyUserRequest, SerializableInlineIdentifyUserRequest } from "../types";
+import type { InlineIdentifyUserRequest } from "../types";
 import { formatPhoneNumber } from "./formatPhoneNumber";
 
-type RecipientWithoutUserId =
-  | Omit<InlineIdentifyUserRequest, "userId">
-  | Omit<SerializableInlineIdentifyUserRequest, "userId">;
+type RecipientWithoutUserId = Omit<InlineIdentifyUserRequest, "userId">;
 
 export function toInlineIdentifyUserRequestWithoutUserId(
   recipient: RecipientWithoutUserId,
@@ -17,9 +15,7 @@ export function toInlineIdentifyUserRequestWithoutUserId(
     ...rest,
     ...customProperties,
     ...(channelData ? { channel_data: channelData } : {}),
-    ...(createdAt
-      ? { created_at: typeof createdAt === "string" ? createdAt : createdAt.toISOString() }
-      : {}),
+    ...(createdAt ? { created_at: createdAt.toISOString() } : {}),
     ...(email ? { email } : {}),
     ...(name ? { name } : {}),
     ...(phoneNumber ? { phone_number: formatPhoneNumber({ phoneNumber }) } : {}),

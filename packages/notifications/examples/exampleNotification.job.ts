@@ -1,4 +1,4 @@
-// embedex: packages/notifications/examples/usage.md
+// embedex: packages/notifications/README.md
 import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
 import { isFailure } from "@clipboard-health/util-ts";
 

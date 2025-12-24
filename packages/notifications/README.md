@@ -4,12 +4,11 @@ Send notifications through third-party providers.
 
 ## Table of contents <!-- omit from toc -->
 
+- [`triggerChunked`](#triggerchunked)
+- [`trigger`](#trigger)
 - [Local development commands](#local-development-commands)
 
 <embedex source="packages/notifications/examples/usage.md">
-
-- [`triggerChunked`](#triggerchunked)
-- [`trigger`](#trigger)
 
 ## `triggerChunked`
 
@@ -175,12 +174,16 @@ Send notifications through third-party providers.
    );
    ```
 
+</embedex>
+
 ## `trigger`
 
 > [!WARNING]
 > Deprecated. See `triggerChunked`.
 
 1. Search your service for a `NotificationJobEnqueuer` instance. If there isn't one, create and export it:
+
+   <embedex source="packages/notifications/examples/notificationJobEnqueuer.ts">
 
    ```ts
    import { NotificationJobEnqueuer } from "@clipboard-health/notifications";
@@ -194,7 +197,11 @@ Send notifications through third-party providers.
    });
    ```
 
+   </embedex>
+
 2. Add types and the job name to the module's logic directory if it exists, else module root. You MUST create and use the `...DataJob` and `...DataEnqueue` types:
+
+   <embedex source="packages/notifications/examples/exampleNotification.constants.ts">
 
    ```ts
    import { type NotificationData } from "@clipboard-health/notifications";
@@ -211,7 +218,11 @@ Send notifications through third-party providers.
    export const EXAMPLE_NOTIFICATION_JOB_NAME = "ExampleNotificationJob";
    ```
 
+   </embedex>
+
 3. Implement a minimal job in the module's logic/job directory if it exists, else module root. The job calls off to a NestJS service for any business logic and to send the notification:
+
+   <embedex source="packages/notifications/examples/exampleNotification.job.ts">
 
    ```ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
@@ -263,7 +274,11 @@ Send notifications through third-party providers.
    }
    ```
 
+   </embedex>
+
 4. Search the service for a constant that stores workflow keys. If there isn't one, create and export it:
+
+   <embedex source="packages/notifications/examples/workflowKeys.ts">
 
    ```ts
    /* eslint sort-keys: "error" */
@@ -276,7 +291,11 @@ Send notifications through third-party providers.
    } as const;
    ```
 
+   </embedex>
+
 5. Enqueue the job:
+
+   <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
 
    ```ts
    import {
@@ -318,7 +337,11 @@ Send notifications through third-party providers.
    void enqueueNotificationJob();
    ```
 
+   </embedex>
+
 6. Create the NestJS service in the module's logic directory if it exists, else module root. Trigger the NotificationClient:
+
+   <embedex source="packages/notifications/examples/exampleNotification.service.ts">
 
    ```ts
    import { type NotificationClient } from "@clipboard-health/notifications";
@@ -354,7 +377,7 @@ Send notifications through third-party providers.
    }
    ```
 
-</embedex>
+   </embedex>
 
 ## Local development commands
 

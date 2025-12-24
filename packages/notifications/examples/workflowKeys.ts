@@ -1,4 +1,4 @@
-// embedex: packages/notifications/examples/usage.md
+// embedex: packages/notifications/examples/usage.md,packages/notifications/README.md
 /* eslint sort-keys: "error" */
 
 /**
