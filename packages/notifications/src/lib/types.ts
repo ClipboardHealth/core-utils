@@ -373,13 +373,34 @@ export interface SerializableTriggerBody extends Omit<TriggerBody, "recipients" 
 }
 
 /**
+ * Request parameters for triggerChunked.
+ *
+ * Extends SerializableTriggerRequest with job-provided fields.
+ */
+export interface TriggerChunkedRequest extends Omit<TriggerRequest, "idempotencyKey"> {
+  /**
+   * Idempotency key base, typically the background job ID. Each chunk uses
+   * `${idempotencyKey}-${chunkNumber}`.
+   */
+  idempotencyKey: string;
+}
+
+/**
+ * Response from triggerChunked.
+ */
+export interface TriggerChunkedResponse {
+  /** Results for each chunk. */
+  chunks: Array<{ chunkNumber: number; id: string }>;
+}
+
+/**
  * Serializable TriggerRequest for background job payloads.
  *
  * This is what gets enqueued in the background job. The job provides `attempt` and
  * `idempotencyKey` at execution time, and `expiresAt` is an ISO string.
  */
-export interface SerializableTriggerRequest extends Omit<
-  TriggerRequest,
+export interface SerializableTriggerChunkedRequest extends Omit<
+  TriggerChunkedRequest,
   "idempotencyKey" | "attempt" | "expiresAt" | "body"
 > {
   /** Trigger payload. */
@@ -391,28 +412,4 @@ export interface SerializableTriggerRequest extends Omit<
    * @see {@link TriggerRequest.expiresAt}
    */
   expiresAt: string;
-}
-
-/**
- * Request parameters for triggerChunked.
- *
- * Extends SerializableTriggerRequest with job-provided fields.
- */
-export interface TriggerChunkedRequest extends SerializableTriggerRequest {
-  /** Attempt number for tracing. */
-  attempt: number;
-
-  /**
-   * Idempotency key base, typically the background job ID.
-   * Each chunk will use `${idempotencyKey}-${chunkNumber}`.
-   */
-  idempotencyKey: string;
-}
-
-/**
- * Response from triggerChunked.
- */
-export interface TriggerChunkedResponse {
-  /** Results for each chunk. */
-  chunks: Array<{ chunkNumber: number; id: string }>;
 }
