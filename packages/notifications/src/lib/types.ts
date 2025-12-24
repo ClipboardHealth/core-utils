@@ -375,7 +375,7 @@ export interface SerializableTriggerBody extends Omit<TriggerBody, "recipients" 
 /**
  * Request parameters for triggerChunked.
  *
- * Extends SerializableTriggerRequest with job-provided fields.
+ * Extends SerializableTriggerChunkedRequest with job-provided fields.
  */
 export interface TriggerChunkedRequest extends Omit<TriggerRequest, "idempotencyKey"> {
   /**
