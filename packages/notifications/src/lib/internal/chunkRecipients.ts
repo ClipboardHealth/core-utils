@@ -1,7 +1,9 @@
 import { chunk } from "@clipboard-health/util-ts";
 
-import { MAXIMUM_RECIPIENTS_COUNT } from "../notificationClient";
-import { type RecipientRequest } from "../types";
+/**
+ * Maximum number of recipients allowed per trigger request.
+ */
+export const MAXIMUM_RECIPIENTS_COUNT = 1000;
 
 /**
  * Chunks recipients into groups that don't exceed the maximum recipients count, assigning a unique
@@ -15,7 +17,7 @@ import { type RecipientRequest } from "../types";
  * identify requests)
  * @returns Array of chunks, each containing a chunk number and recipients array
  */
-export function chunkRecipients<T extends RecipientRequest>(params: {
+export function chunkRecipients<T>(params: {
   recipients: T[];
 }): Array<{ number: number; recipients: T[] }> {
   const { recipients } = params;
