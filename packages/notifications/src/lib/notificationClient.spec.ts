@@ -628,8 +628,8 @@ describe("NotificationClient", () => {
       const actual = await client.triggerChunked(input);
 
       expectToBeSuccess(actual);
-      expect(actual.value.chunks).toHaveLength(1);
-      expect(actual.value.chunks[0]).toEqual({ chunkNumber: 1, id: mockWorkflowRunId });
+      expect(actual.value.responses).toHaveLength(1);
+      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: mockWorkflowRunId });
 
       expect(triggerSpy).toHaveBeenCalledWith(
         mockWorkflowKey,
@@ -667,9 +667,9 @@ describe("NotificationClient", () => {
       const actual = await client.triggerChunked(input);
 
       expectToBeSuccess(actual);
-      expect(actual.value.chunks).toHaveLength(2);
-      expect(actual.value.chunks[0]).toEqual({ chunkNumber: 1, id: "run-1" });
-      expect(actual.value.chunks[1]).toEqual({ chunkNumber: 2, id: "run-2" });
+      expect(actual.value.responses).toHaveLength(2);
+      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: "run-1" });
+      expect(actual.value.responses[1]).toEqual({ chunkNumber: 2, id: "run-2" });
 
       expect(triggerSpy).toHaveBeenCalledTimes(2);
       expect(triggerSpy).toHaveBeenNthCalledWith(
@@ -762,8 +762,8 @@ describe("NotificationClient", () => {
       const actual = await client.triggerChunked(input);
 
       expectToBeSuccess(actual);
-      expect(actual.value.chunks).toHaveLength(1);
-      expect(actual.value.chunks[0]).toEqual({ chunkNumber: 1, id: "dry-run" });
+      expect(actual.value.responses).toHaveLength(1);
+      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: "dry-run" });
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
@@ -801,7 +801,7 @@ describe("NotificationClient", () => {
       const actual = await client.triggerChunked(input);
 
       expectToBeSuccess(actual);
-      expect(actual.value.chunks).toHaveLength(1);
+      expect(actual.value.responses).toHaveLength(1);
       expect(triggerSpy).toHaveBeenCalledWith(
         mockWorkflowKey,
         { recipients: ["user-1", "user-2"] },

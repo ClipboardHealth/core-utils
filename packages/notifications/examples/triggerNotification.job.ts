@@ -32,6 +32,7 @@ export class TriggerNotificationJob implements BaseHandler<SerializableTriggerCh
       // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.
       attempt: job.attemptsCount + 1,
       jobId: job._id,
+      recipientCount: data.body.recipients.length,
       workflowKey: data.workflowKey,
     };
     this.logger.info("Processing", metadata);

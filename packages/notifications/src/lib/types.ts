@@ -390,7 +390,7 @@ export interface TriggerChunkedRequest extends Omit<TriggerRequest, "idempotency
  */
 export interface TriggerChunkedResponse {
   /** Results for each chunk. */
-  chunks: Array<{ chunkNumber: number; id: string }>;
+  responses: Array<TriggerResponse & { chunkNumber: number }>;
 }
 
 /**
