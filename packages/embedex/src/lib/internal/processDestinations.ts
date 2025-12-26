@@ -86,7 +86,7 @@ function processDestination(params: {
   const referencedSources = new Set<string>();
 
   for (const match of allEmbedexTags) {
-    const [,,sourcePath] = match;
+    const [, , sourcePath] = match;
     /* istanbul ignore next */
     if (sourcePath) {
       const absoluteSourcePath = absolutePath(sourcePath);
