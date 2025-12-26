@@ -297,6 +297,8 @@ module.exports = {
      */
     "object-shorthand": ["error", "properties"],
 
+    "prefer-destructuring": ["error", { object: false, array: true }],
+
     // Force using async/await instead of .then()
     "promise/prefer-await-to-then": ["error", { strict: true }],
 
