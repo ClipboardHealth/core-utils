@@ -1,9 +1,13 @@
-import type { LogParams, TriggerRequest } from "../types";
+import type { LogParams, TriggerChunkedRequest, TriggerRequest } from "../types";
 
 export type TriggerLogContext = LogParams &
-  Pick<TriggerRequest, "attempt" | "dryRun" | "idempotencyKey" | "workflowKey">;
+  Pick<TriggerRequest, "attempt" | "dryRun" | "workflowKey"> & {
+    idempotencyKey: string;
+  };
 
-export function createTriggerLogParams(params: TriggerRequest & LogParams): TriggerLogContext {
+type TriggerLogParamsInput = (TriggerRequest | TriggerChunkedRequest) & LogParams;
+
+export function createTriggerLogParams(params: TriggerLogParamsInput): TriggerLogContext {
   const { attempt, destination, dryRun = false, idempotencyKey, workflowKey, traceName } = params;
 
   return {

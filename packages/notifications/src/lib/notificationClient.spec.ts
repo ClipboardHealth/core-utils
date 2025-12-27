@@ -2,8 +2,9 @@ import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
 import { type Knock } from "@knocklabs/node";
 
+import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { IdempotentKnock } from "./internal/idempotentKnock";
-import { MAXIMUM_RECIPIENTS_COUNT, NotificationClient } from "./notificationClient";
+import { NotificationClient } from "./notificationClient";
 import {
   DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
   type TriggerIdempotencyKey,
@@ -11,6 +12,7 @@ import {
 import type {
   SignUserTokenRequest,
   Tracer,
+  TriggerChunkedRequest,
   TriggerRequest,
   UpsertUserPreferencesRequest,
   UpsertWorkplaceRequest,
@@ -597,6 +599,352 @@ describe("NotificationClient", () => {
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
       expect(triggerSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("triggerChunked", () => {
+    const mockWorkflowKey = "test-workflow";
+    const mockIdempotencyKey = "job-id-12345";
+    const mockAttempt = 1;
+    const mockExpiresAt = new Date(Date.now() + 300_000);
+    const mockWorkflowRunId = "workflow-run-789";
+
+    it("triggers workflow successfully with single chunk", async () => {
+      const mockBody = {
+        recipients: [{ userId: "user-1" }, { userId: "user-2" }],
+        data: { message: "Hello world" },
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.responses).toHaveLength(1);
+      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: mockWorkflowRunId });
+
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [{ id: "user-1" }, { id: "user-2" }],
+          data: { message: "Hello world" },
+        },
+        {
+          idempotencyKey: `${mockIdempotencyKey}-1`,
+        },
+      );
+    });
+
+    it("triggers workflow with multiple chunks", async () => {
+      const recipients = Array.from(
+        { length: MAXIMUM_RECIPIENTS_COUNT + 1 },
+        (_, index) => `user-${index}`,
+      );
+      const mockBody = { recipients };
+      const mockResponse1 = { workflow_run_id: "run-1" };
+      const mockResponse2 = { workflow_run_id: "run-2" };
+      const triggerSpy = jest
+        .spyOn(provider.workflows, "trigger")
+        .mockResolvedValueOnce(mockResponse1)
+        .mockResolvedValueOnce(mockResponse2);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.responses).toHaveLength(2);
+      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: "run-1" });
+      expect(actual.value.responses[1]).toEqual({ chunkNumber: 2, id: "run-2" });
+
+      expect(triggerSpy).toHaveBeenCalledTimes(2);
+      expect(triggerSpy).toHaveBeenNthCalledWith(
+        1,
+        mockWorkflowKey,
+        expect.objectContaining({
+          recipients: expect.arrayContaining(["user-0"]),
+        }),
+        { idempotencyKey: `${mockIdempotencyKey}-1` },
+      );
+      expect(triggerSpy).toHaveBeenNthCalledWith(
+        2,
+        mockWorkflowKey,
+        expect.objectContaining({
+          recipients: expect.arrayContaining([`user-${MAXIMUM_RECIPIENTS_COUNT}`]),
+        }),
+        { idempotencyKey: `${mockIdempotencyKey}-2` },
+      );
+    });
+
+    it("rejects expired request", async () => {
+      const mockExpiredDate = new Date(Date.now() - 1000);
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiredDate,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.message).toContain("notification expires at");
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("rejects request with no recipients", async () => {
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.message).toContain("Got 0 recipients; must be > 0");
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("rejects request with invalid expiresAt", async () => {
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const invalidDate = new Date("not-a-date");
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: ["user-1"] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: invalidDate,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.issues[0]?.code).toBe("invalidExpiresAt");
+      expect(actual.error.message).toContain("Invalid expiresAt:");
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("skips provider call when dryRun is true", async () => {
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+        dryRun: true,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.responses).toHaveLength(1);
+      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: "dry-run" });
+      expect(triggerSpy).not.toHaveBeenCalled();
+    });
+
+    it("handles Knock API error", async () => {
+      const mockError = new Error("Knock API error");
+      jest.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.message).toContain("Knock API error");
+    });
+
+    it("handles string recipients", async () => {
+      const mockBody = { recipients: ["user-1", "user-2"] };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.responses).toHaveLength(1);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        { recipients: ["user-1", "user-2"] },
+        { idempotencyKey: `${mockIdempotencyKey}-1` },
+      );
+    });
+
+    it("logs request and chunk responses", async () => {
+      const mockBody = { recipients: [{ userId: "user-1" }] };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      await client.triggerChunked(input);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.triggerChunked request",
+        expect.any(Object),
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.triggerChunked chunk response",
+        expect.objectContaining({
+          chunkNumber: 1,
+          totalChunks: 1,
+          id: mockWorkflowRunId,
+        }),
+      );
+    });
+
+    it("handles body with actor and cancellation key", async () => {
+      const mockBody = {
+        recipients: [{ userId: "user-1" }],
+        actor: "actor-1",
+        cancellationKey: "cancel-key",
+        workplaceId: "workplace-123",
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [{ id: "user-1" }],
+          actor: "actor-1",
+          cancellation_key: "cancel-key",
+          tenant: "workplace-123",
+        },
+        { idempotencyKey: `${mockIdempotencyKey}-1` },
+      );
+    });
+
+    it("handles recipient with createdAt as Date", async () => {
+      const mockCreatedAt = new Date("2023-01-01T00:00:00.000Z");
+      const mockBody = {
+        recipients: [
+          {
+            userId: "user-1",
+            createdAt: mockCreatedAt,
+            email: "user@example.com",
+          },
+        ],
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [
+            {
+              id: "user-1",
+              created_at: "2023-01-01T00:00:00.000Z",
+              email: "user@example.com",
+            },
+          ],
+        },
+        { idempotencyKey: `${mockIdempotencyKey}-1` },
+      );
+    });
+
+    it("redacts sensitive data in logs", async () => {
+      const mockBody = {
+        recipients: [{ userId: "user-1" }],
+        data: {
+          publicInfo: "visible",
+          secretKey: "should-be-redacted",
+        },
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        keysToRedact: ["secretKey"],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      await client.triggerChunked(input);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.triggerChunked request",
+        expect.objectContaining({
+          redactedBody: {
+            recipients: 1,
+            data: {
+              publicInfo: "visible",
+              secretKey: "[REDACTED]",
+            },
+          },
+        }),
+      );
     });
   });
 

@@ -1,4 +1,4 @@
-// embedex: packages/notifications/examples/usage.md
+// embedex: packages/notifications/README.md
 import { NotificationJobEnqueuer } from "@clipboard-health/notifications";
 
 import { BackgroundJobsService } from "./setup";

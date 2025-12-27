@@ -1,4 +1,4 @@
-// embedex: packages/notifications/examples/usage.md
+// embedex: packages/notifications/README.md
 import { type NotificationData } from "@clipboard-health/notifications";
 
 type ExampleNotificationData = NotificationData<{

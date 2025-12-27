@@ -3,8 +3,10 @@ import { type Knock } from "@knocklabs/node";
 import type { InlineIdentifyUserRequest } from "../types";
 import { formatPhoneNumber } from "./formatPhoneNumber";
 
+type RecipientWithoutUserId = Omit<InlineIdentifyUserRequest, "userId">;
+
 export function toInlineIdentifyUserRequestWithoutUserId(
-  recipient: Omit<InlineIdentifyUserRequest, "userId">,
+  recipient: RecipientWithoutUserId,
 ): Omit<Knock.Users.InlineIdentifyUserRequest, "id"> {
   const { channelData, createdAt, email, name, phoneNumber, timeZone, customProperties, ...rest } =
     recipient;

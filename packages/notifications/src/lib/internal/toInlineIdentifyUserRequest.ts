@@ -1,6 +1,6 @@
 import { type Knock } from "@knocklabs/node";
 
-import { type InlineIdentifyUserRequest } from "../types";
+import type { InlineIdentifyUserRequest } from "../types";
 import { toInlineIdentifyUserRequestWithoutUserId } from "./toInlineIdentifyUserRequestWithoutUserId";
 
 export function toInlineIdentifyUserRequest(
