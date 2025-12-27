@@ -31,7 +31,7 @@ async function sync() {
 }
 
 function getProfileFromArguments(): ProfileName {
-  const profile = process.argv[2];
+  const [_firstArgument, _secondArgument, profile] = process.argv;
 
   if (!profile || !(profile in PROFILES)) {
     console.error("❌ Error: Invalid profile argument");

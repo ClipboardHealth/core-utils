@@ -98,7 +98,7 @@ export class JobsRepository {
           { session },
         );
 
-        const createdJob = backgroundJobCreateResult[0];
+        const [createdJob] = backgroundJobCreateResult;
         return createdJob as unknown as BackgroundJobType<T>;
       } catch (error) {
         if (isMongoDuplicateError(error)) {

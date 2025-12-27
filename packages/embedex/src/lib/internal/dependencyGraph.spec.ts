@@ -240,7 +240,7 @@ describe("dependencyGraph", () => {
       expect(result).toBeDefined();
       expect(result!.cycle).toHaveLength(4);
       // Could start from any node in the cycle
-      const first = result!.cycle[0];
+      const [first] = result!.cycle;
       expect(result!.cycle.at(-1)).toBe(first);
     });
 

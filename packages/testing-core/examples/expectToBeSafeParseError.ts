@@ -10,7 +10,7 @@ const value = schema.safeParse({ name: 1 });
 expectToBeSafeParseError(value);
 
 // Narrowed to `SafeParseError`
-const firstIssue = value.error.issues[0];
+const [firstIssue] = value.error.issues;
 expectToBeDefined(firstIssue);
 
 // Narrowed to `ZodIssue`
