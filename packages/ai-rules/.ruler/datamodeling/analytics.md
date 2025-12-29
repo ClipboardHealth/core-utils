@@ -12,7 +12,7 @@ Use the dbt-mcp server to:
 
 ## Querying Snowflake Data Warehouse (using Snowflake MCP)
 
-- When you need to answer data-related questions or obtain analytics by querying the Snowflake data warehouse, you should use the `mcp-cli` tool.
+- When you need to answer data-related questions or obtain analytics by querying the Snowflake data warehouse, please use the `snowflake` mcp tool.
 - When using the Snowflake MCP to run queries, you must set the database context properly in your queries. Use fully qualified table names or set the database context to avoid connection errors.
 - The `describe_object` tool in the Snowflake MCP has a bug where it misinterprets the target_object structure, treating the table name as a database name and causing 404 "database does not exist" errors. Use `run_snowflake_query` with "DESCRIBE TABLE" instead to get table schema information successfully.
 
