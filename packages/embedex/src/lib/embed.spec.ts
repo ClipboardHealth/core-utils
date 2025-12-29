@@ -712,7 +712,7 @@ describe("embed", () => {
       const actual = await embed({ sourcesGlob, cwd, write: false });
 
       expect(actual.embeds).toHaveLength(1);
-      const firstEmbed = actual.embeds[0];
+      const [firstEmbed] = actual.embeds;
       expect(firstEmbed).toBeDefined();
       assertIsCircularDependencyEmbed(firstEmbed!);
       expect(firstEmbed.cycle.length).toBeGreaterThanOrEqual(3);
@@ -750,7 +750,7 @@ describe("embed", () => {
       const actual = await embed({ sourcesGlob, cwd, write: false });
 
       expect(actual.embeds).toHaveLength(1);
-      const cycleEmbed = actual.embeds[0];
+      const [cycleEmbed] = actual.embeds;
       expect(cycleEmbed).toBeDefined();
       assertIsCircularDependencyEmbed(cycleEmbed!);
       expect(cycleEmbed.cycle.length).toBeGreaterThanOrEqual(3);
