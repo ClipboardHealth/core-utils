@@ -5,7 +5,7 @@
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "cron-parser": "5.4.0",
-    "hot-shots": "11.2.0",
+    "hot-shots": "11.4.0",
     "tslib": "2.8.1"
   },
   "devDependencies": {
