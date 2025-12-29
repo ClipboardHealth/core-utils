@@ -1,8 +1,7 @@
 import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
 
-import { chunkRecipients } from "./internal/chunkRecipients";
+import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
-import { MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
 import {
   type EnqueueOneOrMoreOptions,
   type IdempotencyKeyParts,

@@ -150,12 +150,7 @@ export interface TriggerRequest {
   /** Trigger payload. */
   body: TriggerBody;
 
-  /**
-   * If true, the notification will not be sent, but the request will be validated and logged.
-   * Helpful when controlling notifications with feature flags.
-   *
-   * @default false
-   */
+  /** If true, the notification will not be sent, but the request will be validated and logged. */
   dryRun?: boolean;
 
   /**
@@ -174,11 +169,7 @@ export interface TriggerRequest {
    */
   idempotencyKey: TriggerIdempotencyKey;
 
-  /**
-   * Array of data keys to redact in logs for privacy.
-   *
-   * @default []
-   */
+  /** Array of data keys to redact in logs for privacy. */
   keysToRedact?: string[];
 
   /** Workflow key. */
@@ -344,4 +335,81 @@ export interface UpsertUserPreferencesRequest {
  */
 export interface UpsertUserPreferencesResponse {
   userId: string;
+}
+
+/**
+ * Serializable version of InlineIdentifyUserRequest for background job payloads.
+ * The only change is `createdAt` is an ISO string instead of a Date.
+ */
+export interface SerializableInlineIdentifyUserRequest extends Omit<
+  InlineIdentifyUserRequest,
+  "createdAt"
+> {
+  /**
+   * The user's creation date as an ISO string.
+   */
+  createdAt?: string;
+}
+
+/**
+ * Serializable recipient request for background job payloads.
+ */
+export type SerializableRecipientRequest = string | SerializableInlineIdentifyUserRequest;
+
+/**
+ * Serializable TriggerBody for background job payloads.
+ * Recipients and actor use serializable types.
+ */
+export interface SerializableTriggerBody extends Omit<TriggerBody, "recipients" | "actor"> {
+  /**
+   * The recipients to trigger the workflow for.
+   */
+  recipients: SerializableRecipientRequest[];
+
+  /**
+   * The trigger actor.
+   */
+  actor?: SerializableRecipientRequest;
+}
+
+/**
+ * Request parameters for triggerChunked.
+ *
+ * Extends SerializableTriggerChunkedRequest with job-provided fields.
+ */
+export interface TriggerChunkedRequest extends Omit<TriggerRequest, "idempotencyKey"> {
+  /**
+   * Idempotency key base, typically the background job ID. Each chunk uses
+   * `${idempotencyKey}-${chunkNumber}`.
+   */
+  idempotencyKey: string;
+}
+
+/**
+ * Response from triggerChunked.
+ */
+export interface TriggerChunkedResponse {
+  /** Results for each chunk. */
+  responses: Array<TriggerResponse & { chunkNumber: number }>;
+}
+
+/**
+ * Serializable TriggerRequest for background job payloads.
+ *
+ * This is what gets enqueued in the background job. The job provides `attempt` and
+ * `idempotencyKey` at execution time, and `expiresAt` is an ISO string.
+ */
+export interface SerializableTriggerChunkedRequest extends Omit<
+  TriggerChunkedRequest,
+  "idempotencyKey" | "attempt" | "expiresAt" | "body"
+> {
+  /** Trigger payload. */
+  body: SerializableTriggerBody;
+
+  /**
+   * `expiresAt` as an ISO string. Set at enqueue-time so it remains stable across job retries.
+   *
+   * @see {@link TriggerRequest.expiresAt}
+   */
+  expiresAt: string;
 }
