@@ -45,7 +45,7 @@ const rule = createRule({
     let httpModuleImportName: string | undefined;
 
     const checkHttpModuleUsage = (element: TSESTree.ArrayExpression["elements"][0]): void => {
-      if (!element || element.type !== AST_NODE_TYPES.Identifier) {
+      if (element?.type !== AST_NODE_TYPES.Identifier) {
         return;
       }
 
