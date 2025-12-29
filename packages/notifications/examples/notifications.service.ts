@@ -1,4 +1,5 @@
 // embedex: packages/notifications/examples/usage.md
+// notifications.service.ts
 import { NotificationClient } from "@clipboard-health/notifications";
 
 import { CBHLogger, toLogger, tracer } from "./setup";

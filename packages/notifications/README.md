@@ -17,10 +17,12 @@ Send notifications through third-party providers.
 1. Search your service for `triggerNotification.constants.ts`, `triggerNotification.job.ts` and `notifications.service.ts`. If they don't exist, create them:
 
    ```ts
+   // triggerNotification.constants.ts
    export const TRIGGER_NOTIFICATION_JOB_NAME = "TriggerNotificationJob";
    ```
 
    ```ts
+   // triggerNotification.job.ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import {
      type SerializableTriggerChunkedRequest,
@@ -80,6 +82,7 @@ Send notifications through third-party providers.
    ```
 
    ```ts
+   // notifications.service.ts
    import { NotificationClient } from "@clipboard-health/notifications";
 
    import { CBHLogger, toLogger, tracer } from "./setup";

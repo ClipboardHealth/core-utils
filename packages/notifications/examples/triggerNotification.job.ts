@@ -1,4 +1,5 @@
 // embedex: packages/notifications/examples/usage.md
+// triggerNotification.job.ts
 import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
 import {
   type SerializableTriggerChunkedRequest,

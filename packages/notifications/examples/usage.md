@@ -9,6 +9,7 @@
    <embedex source="packages/notifications/examples/triggerNotification.constants.ts">
 
    ```ts
+   // triggerNotification.constants.ts
    export const TRIGGER_NOTIFICATION_JOB_NAME = "TriggerNotificationJob";
    ```
 
@@ -17,6 +18,7 @@
    <embedex source="packages/notifications/examples/triggerNotification.job.ts">
 
    ```ts
+   // triggerNotification.job.ts
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import {
      type SerializableTriggerChunkedRequest,
@@ -80,6 +82,7 @@
    <embedex source="packages/notifications/examples/notifications.service.ts">
 
    ```ts
+   // notifications.service.ts
    import { NotificationClient } from "@clipboard-health/notifications";
 
    import { CBHLogger, toLogger, tracer } from "./setup";
