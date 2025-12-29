@@ -12,7 +12,7 @@
     "@clipboard-health/util-ts": "4.5.19",
     "@opentelemetry/api": "1.9.0",
     "mongodb": "6.20.0",
-    "mongoose": "8.20.2"
+    "mongoose": "8.20.4"
   },
   "keywords": [],
   "license": "MIT",
