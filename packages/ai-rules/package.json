@@ -4,7 +4,7 @@
   "version": "1.6.4",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "devDependencies": {
-    "@intellectronica/ruler": "0.3.20"
+    "@intellectronica/ruler": "0.3.21"
   },
   "keywords": [
     "ai",
