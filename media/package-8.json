@@ -3,20 +3,20 @@
   "description": "A NestJS application using our libraries, primarily for end-to-end testing.",
   "version": "1.0.3",
   "dependencies": {
-    "@clipboard-health/contract-core": "1.6.4",
+    "@clipboard-health/contract-core": "1.6.5",
     "@clipboard-health/json-api-nestjs": "1.5.14",
-    "@nestjs/common": "11.1.10",
-    "@nestjs/core": "11.1.10",
-    "@nestjs/platform-express": "11.1.10",
+    "@nestjs/common": "11.1.11",
+    "@nestjs/core": "11.1.11",
+    "@nestjs/platform-express": "11.1.11",
     "@nx/webpack": "22.0.3",
     "@ts-rest/core": "3.52.1",
     "@ts-rest/nest": "3.52.1",
-    "qs": "6.14.0",
+    "qs": "6.14.1",
     "reflect-metadata": "0.2.2",
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@nestjs/testing": "11.1.10",
+    "@nestjs/testing": "11.1.11",
     "@types/supertest": "6.0.3",
     "supertest": "7.1.4",
     "webpack-cli": "6.0.1"
