@@ -60,5 +60,28 @@ describe("all", () => {
     it("returns the received context if no rule can be run", () => {
       expect(all(testRule1, testRule4).run(context)).toEqual(context);
     });
+
+    it("allows runIf to use output from previous rules", () => {
+      const ruleProducesOutput: TestRule = {
+        runIf: () => true,
+        run: (context) => appendOutput(context, 10),
+      };
+
+      const ruleChecksOutput: TestRule = {
+        runIf: (_input, output) => output?.includes(10) ?? false,
+        run: (context) => appendOutput(context, 20),
+      };
+
+      const ruleSkippedWithoutOutput: TestRule = {
+        runIf: (_input, output) => output?.includes(99) ?? false,
+        run: (context) => appendOutput(context, 30),
+      };
+
+      const result = all(ruleProducesOutput, ruleChecksOutput, ruleSkippedWithoutOutput).run(
+        context,
+      );
+
+      expect(result.output).toEqual([10, 20]);
+    });
   });
 });

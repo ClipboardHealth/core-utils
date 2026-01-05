@@ -24,8 +24,12 @@ export function allIf<TInput, TOutput, TContext extends RuleContext<TInput, TOut
   return {
     runIf: (input, output) => allIfPredicate(input, output),
     run: (context: TContext) =>
-      rules
-        .filter((rule) => rule.runIf(context.input, context.output))
-        .reduce((previousContext, rule) => rule.run(previousContext), context),
+      rules.reduce(
+        (previousContext, rule) =>
+          rule.runIf(previousContext.input, previousContext.output)
+            ? rule.run(previousContext)
+            : previousContext,
+        context,
+      ),
   };
 }
