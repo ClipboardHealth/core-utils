@@ -391,6 +391,7 @@ export class NotificationClient {
       const response = await signUserToken(userId, {
         signingKey: this.signingKey,
         expiresInSeconds,
+        shouldGenerateJti: true,
       });
 
       // Don't log the actual response; user tokens are sensitive.
