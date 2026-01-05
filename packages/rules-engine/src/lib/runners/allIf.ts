@@ -15,14 +15,17 @@ import { type Rule, type RuleContext } from "../rule";
  * );
  */
 export function allIf<TInput, TOutput, TContext extends RuleContext<TInput, TOutput>>(
-  allIfPredicate: (input: RuleContext<TInput, TOutput>["input"]) => boolean,
+  allIfPredicate: (
+    input: RuleContext<TInput, TOutput>["input"],
+    output?: RuleContext<TInput, TOutput>["output"],
+  ) => boolean,
   ...rules: Array<Rule<TInput, TOutput, TContext>>
 ): Rule<TInput, TOutput, TContext> {
   return {
-    runIf: (input) => allIfPredicate(input),
+    runIf: (input, output) => allIfPredicate(input, output),
     run: (context: TContext) =>
       rules
-        .filter((rule) => rule.runIf(context.input))
+        .filter((rule) => rule.runIf(context.input, context.output))
         .reduce((previousContext, rule) => rule.run(previousContext), context),
   };
 }

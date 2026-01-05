@@ -9,10 +9,10 @@ export function all<TInput, TOutput, TContext extends RuleContext<TInput, TOutpu
   ...rules: Array<Rule<TInput, TOutput, TContext>>
 ): Rule<TInput, TOutput, TContext> {
   return {
-    runIf: (input) => rules.some((rule) => rule.runIf(input)),
+    runIf: (input, output) => rules.some((rule) => rule.runIf(input, output)),
     run: (context) =>
       rules
-        .filter((rule) => rule.runIf(context.input))
+        .filter((rule) => rule.runIf(context.input, context.output))
         .reduce((previousContext, rule) => rule.run(previousContext), context),
   };
 }
