@@ -19,6 +19,20 @@ npm install @clipboard-health/contract-core
 
 ### Zod schemas
 
+#### Enum validation helpers
+
+This package provides four enum validation helpers to cover different use cases:
+
+**Fallback validation (with coalescing):**
+
+- `requiredEnumWithFallback(values, fallback)` - Invalid values are coerced to the fallback value. `undefined` fails validation.
+- `optionalEnumWithFallback(values, fallback)` - Invalid values are coerced to the fallback value. `undefined` passes through as `undefined`.
+
+**Strict validation (no fallback):**
+
+- `requiredEnum(values)` - Wraps `z.enum()` for required strict validation. Invalid values fail validation.
+- `optionalEnum(values)` - Wraps `z.enum()` for optional strict validation. Invalid values fail validation, but `undefined` is allowed.
+
 <embedex source="packages/contract-core/examples/schemas.ts">
 
 ```ts
@@ -26,7 +40,9 @@ import {
   apiErrors,
   booleanString,
   nonEmptyString,
+  optionalEnum,
   optionalEnumWithFallback,
+  requiredEnum,
   requiredEnumWithFallback,
   uuid,
 } from "@clipboard-health/contract-core";
@@ -119,6 +135,55 @@ console.log(extraStatus);
 const undefinedStatus = optionalStatusEnumSchema.parse(undefined);
 // => undefined
 console.log(undefinedStatus);
+
+// Strict enum examples (no fallback behavior)
+// Use these when invalid values should fail validation rather than being coerced.
+// Ideal for user types, authentication, and critical business logic.
+
+/* -- required strict -- */
+const requiredUserTypeSchema = requiredEnum(["admin", "worker", "facility"]);
+// type RequiredUserType = "admin" | "worker" | "facility"
+type RequiredUserType = z.infer<typeof requiredUserTypeSchema>;
+
+const adminUser: RequiredUserType = requiredUserTypeSchema.parse("admin");
+// => "admin"
+console.log(adminUser);
+
+try {
+  requiredUserTypeSchema.parse("invalid");
+} catch (error) {
+  logError(error);
+  // => Invalid enum value. Expected 'admin' | 'worker' | 'facility', received 'invalid'
+}
+
+try {
+  // eslint-disable-next-line unicorn/no-useless-undefined
+  requiredUserTypeSchema.parse(undefined);
+} catch (error) {
+  logError(error);
+  // => Required
+}
+
+/* -- optional strict -- */
+const optionalUserTypeSchema = optionalEnum(["admin", "worker", "facility"]);
+// type OptionalUserType = "admin" | "worker" | "facility" | undefined
+type OptionalUserType = z.infer<typeof optionalUserTypeSchema>;
+
+const workerUser: OptionalUserType = optionalUserTypeSchema.parse("worker");
+// => "worker"
+console.log(workerUser);
+
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noUserType = optionalUserTypeSchema.parse(undefined);
+// => undefined
+console.log(noUserType);
+
+try {
+  optionalUserTypeSchema.parse("invalid");
+} catch (error) {
+  logError(error);
+  // => Invalid enum value. Expected 'admin' | 'worker' | 'facility', received 'invalid'
+}
 ```
 
 </embedex>

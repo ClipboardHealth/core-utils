@@ -48,3 +48,11 @@ export const requiredEnumWithFallback = <const V extends EnumValues, const F ext
   values: V,
   fallback: F,
 ) => enumWithFallback(values, fallback, { optional: false });
+
+export function requiredEnum<const V extends EnumValues>(values: V): z.ZodEnum<V> {
+  return z.enum(values);
+}
+
+export function optionalEnum<const V extends EnumValues>(values: V): z.ZodOptional<z.ZodEnum<V>> {
+  return z.enum(values).optional();
+}

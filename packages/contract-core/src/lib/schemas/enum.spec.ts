@@ -3,7 +3,13 @@ import {
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
 
-import { enumWithFallback, optionalEnumWithFallback, requiredEnumWithFallback } from "./enum";
+import {
+  enumWithFallback,
+  optionalEnum,
+  optionalEnumWithFallback,
+  requiredEnum,
+  requiredEnumWithFallback,
+} from "./enum";
 
 const VALUES = ["a", "b", "c"] as const;
 const FALLBACK = "a";
@@ -132,6 +138,68 @@ describe("enumWithFallback", () => {
 
       expectToBeSafeParseSuccess(actual);
       expect(actual.data).toBe("b");
+    });
+  });
+});
+
+describe("requiredEnum", () => {
+  const schema = requiredEnum([...VALUES]);
+
+  describe("success cases", () => {
+    it.each<{ expected: string; input: unknown; name: string }>([
+      { name: "accepts valid enum value 'a'", input: "a", expected: "a" },
+      { name: "accepts valid enum value 'b'", input: "b", expected: "b" },
+      { name: "accepts valid enum value 'c'", input: "c", expected: "c" },
+    ])("$name", ({ input, expected }) => {
+      const actual = schema.safeParse(input);
+
+      expectToBeSafeParseSuccess(actual);
+      expect(actual.data).toBe(expected);
+    });
+  });
+
+  describe("error cases", () => {
+    it.each<{ input: unknown; name: string }>([
+      { name: "rejects undefined", input: undefined },
+      { name: "rejects invalid string", input: "invalid" },
+      { name: "rejects non-string input", input: 123 },
+      { name: "rejects null", input: null },
+      { name: "rejects object", input: {} },
+    ])("$name", ({ input }) => {
+      const actual = schema.safeParse(input);
+
+      expectToBeSafeParseError(actual);
+    });
+  });
+});
+
+describe("optionalEnum", () => {
+  const schema = optionalEnum([...VALUES]);
+
+  describe("success cases", () => {
+    it.each<{ expected: string | undefined; input: unknown; name: string }>([
+      { name: "accepts valid enum value 'a'", input: "a", expected: "a" },
+      { name: "accepts valid enum value 'b'", input: "b", expected: "b" },
+      { name: "accepts valid enum value 'c'", input: "c", expected: "c" },
+      { name: "accepts undefined", input: undefined, expected: undefined },
+    ])("$name", ({ input, expected }) => {
+      const actual = schema.safeParse(input);
+
+      expectToBeSafeParseSuccess(actual);
+      expect(actual.data).toBe(expected);
+    });
+  });
+
+  describe("error cases", () => {
+    it.each<{ input: unknown; name: string }>([
+      { name: "rejects invalid string", input: "invalid" },
+      { name: "rejects non-string input", input: 123 },
+      { name: "rejects null", input: null },
+      { name: "rejects object", input: {} },
+    ])("$name", ({ input }) => {
+      const actual = schema.safeParse(input);
+
+      expectToBeSafeParseError(actual);
     });
   });
 });
