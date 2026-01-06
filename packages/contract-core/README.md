@@ -23,29 +23,15 @@ npm install @clipboard-health/contract-core
 
 This package provides four enum validation helpers to cover different use cases:
 
-**Strict validation (no fallback):**
-
-- `requiredEnum(values)` - Wraps `z.enum()` for required strict validation. Invalid values fail validation.
-- `optionalEnum(values)` - Wraps `z.enum()` for optional strict validation. Invalid values fail validation, but `undefined` is allowed.
-
-Use strict validation when:
-
-- User types and authentication scenarios where invalid values should fail validation
-- Critical business logic where coalescing could hide data quality issues
-- API contract validation where all parties should use current enum values
-- Strict validation is required without fallback behavior
-
 **Fallback validation (with coalescing):**
 
 - `requiredEnumWithFallback(values, fallback)` - Invalid values are coerced to the fallback value. `undefined` fails validation.
 - `optionalEnumWithFallback(values, fallback)` - Invalid values are coerced to the fallback value. `undefined` passes through as `undefined`.
 
-Use fallback validation when:
+**Strict validation (no fallback):**
 
-- Parsing data from external sources that may have evolved over time
-- Handling legacy data with deprecated enum values
-- Scenarios where graceful degradation is acceptable
-- Backwards compatibility is required
+- `requiredEnum(values)` - Wraps `z.enum()` for required strict validation. Invalid values fail validation.
+- `optionalEnum(values)` - Wraps `z.enum()` for optional strict validation. Invalid values fail validation, but `undefined` is allowed.
 
 <embedex source="packages/contract-core/examples/schemas.ts">
 
