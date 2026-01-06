@@ -158,7 +158,7 @@ export class NotificationJobEnqueuer {
    *
    * So please, use this method if not for customers, then to save fellow engineers time debugging!
    *
-   * @deprecated Use {@link triggerChunked} instead; see the README for details.
+   * @deprecated Use {@link NotificationClient.triggerChunked} instead; see the README for details.
    */
   async enqueueOneOrMore<TEnqueueData extends NotificationEnqueueData>(
     handlerClassOrInstance: EnqueueParameters[0],

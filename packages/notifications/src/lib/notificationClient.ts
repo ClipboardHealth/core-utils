@@ -202,8 +202,8 @@ export class NotificationClient {
    * import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
    *
    * /**
-   *  * For mongo-jobs, implement HandlerInterface<SerializableTriggerChunkedRequest>.
-   *  * For background-jobs-postgres, implement Handler<SerializableTriggerChunkedRequest>.
+   *  * For mongo-jobs, implement `HandlerInterface<SerializableTriggerChunkedRequest>`.
+   *  * For background-jobs-postgres, implement `Handler<SerializableTriggerChunkedRequest>`.
    *  *\/
    * export class TriggerNotificationJob implements BaseHandler<SerializableTriggerChunkedRequest> {
    *   public name = TRIGGER_NOTIFICATION_JOB_NAME;
@@ -217,6 +217,10 @@ export class NotificationClient {
    *
    *   public async perform(
    *     data: SerializableTriggerChunkedRequest,
+   *     /**
+   *      * For mongo-jobs, implement `BackgroundJobType<SerializableTriggerChunkedRequest>`, which has _id, attemptsCount, and uniqueKey.
+   *      * For background-jobs-postgres, implement `Job<SerializableTriggerChunkedRequest>`, which has id, retryAttempts, and idempotencyKey.
+   *      *\/
    *     job: { _id: string; attemptsCount: number; uniqueKey?: string },
    *   ) {
    *     const metadata = {
@@ -226,7 +230,7 @@ export class NotificationClient {
    *       recipientCount: data.body.recipients.length,
    *       workflowKey: data.workflowKey,
    *     };
-   *     this.logger.info("Processing", metadata);
+   *     this.logger.info("TriggerNotificationJob processing", metadata);
    *
    *     try {
    *       const request = toTriggerChunkedRequest(data, {
@@ -239,9 +243,11 @@ export class NotificationClient {
    *         throw result.error;
    *       }
    *
-   *       this.logger.info("Success", { ...metadata, response: result.value });
+   *       const success = "TriggerNotificationJob success";
+   *       this.logger.info(success, { ...metadata, response: result.value });
+   *       // For background-jobs-postgres, return the `success` string result.
    *     } catch (error) {
-   *       this.logger.error("Failure", { ...metadata, error });
+   *       this.logger.error("TriggerNotificationJob failure", { ...metadata, error });
    *       throw error;
    *     }
    *   }
