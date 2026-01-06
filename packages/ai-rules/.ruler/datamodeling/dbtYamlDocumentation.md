@@ -4,7 +4,7 @@
 - At least one column must be the primary key. This column should have both the `not_null` and `unique` tests.
 - Every column must include:
   - A `name`
-  - A `description`. Always use doc blocks for YAML column descriptions (reference `models/docs.md`). Reuse existing doc blocks instead of duplicating descriptions for the same column across multiple models.
+  - A `description`. Always use doc blocks for YAML column descriptions (reference `models/docs.md`). Reuse existing doc blocks instead of duplicating descriptions for the same column across multiple models. If they don't already exist, make them.
   - A `data_type`.
   - Include a newline between columns
 - Ensure proper YAML formatting and indentation.
