@@ -6,7 +6,7 @@ Send notifications through [Knock](https://docs.knock.app) using the `@clipboard
 
 <embedex source="packages/notifications/examples/usage.md">
 
-## `triggerChunked`
+### `triggerChunked`
 
 `triggerChunked` stores the full, immutable trigger request at job enqueue time, eliminating issues with stale data, chunking requests to stay under provider limits, and idempotency key conflicts that can occur if the request is updated at job execution time.
 

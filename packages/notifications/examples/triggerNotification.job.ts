@@ -1,4 +1,4 @@
-// embedex: packages/notifications/examples/usage.md
+// embedex: packages/notifications/examples/usage.md,packages/notifications/src/lib/notificationClient.ts
 // triggerNotification.job.ts
 import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
 import {
