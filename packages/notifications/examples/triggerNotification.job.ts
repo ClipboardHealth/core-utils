@@ -25,6 +25,7 @@ import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
  *    `maxRetryAttempts` (and `SerializableTriggerChunkedRequest.expiresAt`) when enqueueing.
  */
 export class TriggerNotificationJob implements BaseHandler<SerializableTriggerChunkedRequest> {
+  // For background-jobs-postgres, use `public static queueName = TRIGGER_NOTIFICATION_JOB_NAME;`
   public name = TRIGGER_NOTIFICATION_JOB_NAME;
   private readonly logger = new CBHLogger({
     defaultMeta: {
