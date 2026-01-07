@@ -37,8 +37,17 @@ Send notifications through third-party providers.
    import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
 
    /**
-    * For mongo-jobs, implement `HandlerInterface<SerializableTriggerChunkedRequest>`.
-    * For background-jobs-postgres, implement `Handler<SerializableTriggerChunkedRequest>`.
+    * For @clipboard-health/mongo-jobs:
+    * 1. Implement `HandlerInterface<SerializableTriggerChunkedRequest>`.
+    * 2. The 10 default `maxAttempts` with exponential backoff of `2^attemptsCount` means ~17 minutes
+    *    of cumulative delay. If your notification could be stale before this, set
+    *    `SerializableTriggerChunkedRequest.expiresAt` when enqueueing.
+    *
+    * For @clipboard-health/background-jobs-postgres:
+    * 1. Implement `Handler<SerializableTriggerChunkedRequest>`.
+    * 2. The 20 default `maxRetryAttempts` with exponential backoff of `10s * 2^(attempt - 1)` means
+    *    ~121 days of cumulative delay. If your notification could be stale before this, set
+    *    `maxRetryAttempts` (and `SerializableTriggerChunkedRequest.expiresAt`) when enqueueing.
     */
    export class TriggerNotificationJob implements BaseHandler<SerializableTriggerChunkedRequest> {
      public name = TRIGGER_NOTIFICATION_JOB_NAME;
@@ -53,13 +62,16 @@ Send notifications through third-party providers.
      public async perform(
        data: SerializableTriggerChunkedRequest,
        /**
-        * For mongo-jobs, implement `BackgroundJobType<SerializableTriggerChunkedRequest>`, which has _id, attemptsCount, and uniqueKey.
-        * For background-jobs-postgres, implement `Job<SerializableTriggerChunkedRequest>`, which has id, retryAttempts, and idempotencyKey.
+        * For mongo-jobs, implement `BackgroundJobType<SerializableTriggerChunkedRequest>`, which has
+        *    `_id`, `attemptsCount`, and `uniqueKey`.
+        *
+        * For background-jobs-postgres, implement `Job<SerializableTriggerChunkedRequest>`, which has
+        *    `id`, `retryAttempts`, and `idempotencyKey`.
         */
        job: { _id: string; attemptsCount: number; uniqueKey?: string },
      ) {
        const metadata = {
-         // Include the job's attempts count for debugging, this is called `retryAttempts` in `background-jobs-postgres`.
+         // For background-jobs-postgres, this is called `retryAttempts`.
          attempt: job.attemptsCount + 1,
          jobId: job._id,
          recipientCount: data.body.recipients.length,
