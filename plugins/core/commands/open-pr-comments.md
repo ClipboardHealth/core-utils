@@ -1,14 +1,16 @@
 ---
-description: Fetch unresolved review comments from a GitHub pull request
+description: Get unresolved review comments from a GitHub pull request
 argument-hint: [pr-number]
-allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/get-review-comments.sh:*)
+allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/scripts/open-pr-comments.sh:*)
 ---
 
 Fetch and display unresolved review comments from a pull request.
 
+Note: Limited to 100 review threads and 10 comments per thread.
+
 ## Data
 
-!`"${CLAUDE_PLUGIN_ROOT}/scripts/get-review-comments.sh" $1 2>&1`
+!`"${CLAUDE_PLUGIN_ROOT}/scripts/open-pr-comments.sh" "${1:-}" 2>&1`
 
 ## Instructions
 

@@ -17,7 +17,7 @@
       "Bash(gh api graphql:*)",
       "Bash(gh pr view:*)",
       "Bash(gh repo view:*)",
-      "Bash(node --version)",
+      "Bash(node:*)",
       "Bash(npm list)",
       "Bash(npm run embed:*)",
       "Bash(npm view:*)"

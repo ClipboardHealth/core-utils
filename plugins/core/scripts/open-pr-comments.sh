@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fetch unresolved review comments from a GitHub pull request
+# Get unresolved review comments from a GitHub pull request
 set -euo pipefail
 
 PR_NUMBER="${1:-}"
@@ -7,6 +7,12 @@ PR_NUMBER="${1:-}"
 # Check for gh CLI
 if ! command -v gh >/dev/null 2>&1; then
   echo '{"error": "gh CLI not found. Install from https://cli.github.com"}' >&2
+  exit 1
+fi
+
+# Check for jq
+if ! command -v jq >/dev/null 2>&1; then
+  echo '{"error": "jq not found. Install from https://jqlang.github.io/jq/"}' >&2
   exit 1
 fi
 
@@ -65,6 +71,12 @@ query($owner: String!, $repo: String!, $pr: Int!) {
   jq -n --arg msg "GraphQL query failed: $RESULT" '{"error": $msg}' >&2
   exit 1
 }
+
+# Check if PR exists
+if echo "$RESULT" | jq -e '.data.repository.pullRequest == null' >/dev/null 2>&1; then
+  echo '{"error": "PR #'"$PR_NUMBER"' not found or not accessible."}' >&2
+  exit 1
+fi
 
 # Filter to unresolved threads and format output
 echo "$RESULT" | jq --argjson pr_number "$PR_NUMBER" \
