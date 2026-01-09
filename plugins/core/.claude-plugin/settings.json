@@ -1,8 +1,4 @@
 {
-  "env": {
-    // Maximize token efficiency by searching for tools as needed.
-    "ENABLE_TOOL_SEARCH": "true"
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -54,6 +50,6 @@
       "WebFetch(domain:code.claude.com)",
       "WebSearch"
     ],
-    "deny": ["Read(./.env)", "Read(./.env.*)"]
+    "deny": []
   }
 }

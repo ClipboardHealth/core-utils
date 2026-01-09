@@ -14,7 +14,12 @@ output_message() {
 
 # Get installation status and configuration in one pass
 read -r STATUS < <(node -e "
-  const pkg = require('$PROJECT_DIR/package.json');
+  const path = require('path');
+  const fs = require('fs');
+
+  const projectPath = path.resolve('$PROJECT_DIR');
+  const pkgPath = path.join(projectPath, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
 
   if (!deps['$PACKAGE_NAME']) {
@@ -23,7 +28,7 @@ read -r STATUS < <(node -e "
   }
 
   try {
-    require('$PROJECT_DIR/node_modules/$PACKAGE_NAME/package.json');
+    require.resolve('$PACKAGE_NAME/package.json', { paths: [projectPath] });
   } catch {
     console.log('not-in-node-modules');
     process.exit();

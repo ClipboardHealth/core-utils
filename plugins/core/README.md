@@ -7,7 +7,7 @@ Clipboard's core development tools.
 ### 1. Add the Marketplace
 
 ```bash
-/plugin marketplace add git@github.com:ClipboardHealth/core-utils.git
+/plugin marketplace add ClipboardHealth/core-utils
 ```
 
 ### 2. Install the Plugin
