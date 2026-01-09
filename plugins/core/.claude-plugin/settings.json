@@ -14,6 +14,9 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
+      "Bash(gh api graphql:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh repo view:*)",
       "Bash(node --version)",
       "Bash(npm list)",
       "Bash(npm run embed:*)",

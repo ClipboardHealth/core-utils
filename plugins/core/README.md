@@ -28,5 +28,6 @@ Clipboard's core development tools.
 /plugin install commit-commands@claude-plugins-official
 /plugin install code-review@claude-plugins-official
 /plugin install code-simplifier@claude-plugins-official
+/plugin install serena@claude-plugins-official
 /plugin install typescript-lsp@claude-plugins-official
 ```
