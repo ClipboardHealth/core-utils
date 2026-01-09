@@ -10,7 +10,7 @@ Note: Limited to 100 review threads and 10 comments per thread.
 
 ## Data
 
-!`"${CLAUDE_PLUGIN_ROOT}/scripts/open-pr-comments.sh" "${1:-}" 2>&1`
+!`"${CLAUDE_PLUGIN_ROOT}/scripts/open-pr-comments.sh" "${1:-}"`
 
 ## Instructions
 

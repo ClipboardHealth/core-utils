@@ -28,6 +28,12 @@ Clipboard's core development tools.
 /plugin install commit-commands@claude-plugins-official
 /plugin install code-review@claude-plugins-official
 /plugin install code-simplifier@claude-plugins-official
-/plugin install serena@claude-plugins-official
 /plugin install typescript-lsp@claude-plugins-official
+
+# Optional MCP servers
+# Note: While Github and Playwright exist, having Claude use their CLIs is more context efficient.
+/plugin install linear@claude-plugins-official
+/plugin install Notion@claude-plugins-official
+/plugin install slack@claude-plugins-official
+/plugin install figma@claude-plugins-official
 ```
