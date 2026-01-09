@@ -22,7 +22,9 @@ npm install --save-dev @clipboard-health/ai-rules
 
 ### Quick Start
 
-1. Choose the profile that matches your project type:
+1. If you have an existing `AGENTS.md` and/or `CLAUDE.md` file in your repository, rename it to `OVERLAY.md`. The `sync-ai-rules` script you'll add below appends this file's contents to each generated file so it's loaded into LLM agent contexts.
+
+2. Choose the profile that matches your project type:
 
    | Profile        | Includes                    | Use For                                |
    | -------------- | --------------------------- | -------------------------------------- |
@@ -38,7 +40,7 @@ npm install --save-dev @clipboard-health/ai-rules
    - **backend**: NestJS APIs, three-tier architecture, controllers, services
    - **datamodeling**: data modeling, testing, yaml documentation, data cleaning, analytics
 
-2. Add it to your `package.json`:
+3. Add it to your `package.json`:
 
    ```json
    {
@@ -49,20 +51,18 @@ npm install --save-dev @clipboard-health/ai-rules
    }
    ```
 
-3. Run:
+4. Run:
 
    ```bash
    npm install  # Runs postinstall automatically
    ```
 
-4. Commit the generated files:
+5. Commit the generated files:
 
    ```bash
    git add .
    git commit -m "feat: add AI coding rules"
    ```
-
-5. Bonus: For repo-specific rules, create an `OVERLAY.md` file. The `sync` script appends its contents in each generated file to load the contents into AI agent context.
 
 ### Updating Rules
 
