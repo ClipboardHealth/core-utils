@@ -19,6 +19,9 @@
 
 <h2 id="usage" class="tsd-anchor-link">Usage<a href="#usage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2><h3 id="quick-start" class="tsd-anchor-link">Quick Start<a href="#quick-start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3><ol>
 <li>
+<p>If you have an existing <code>AGENTS.md</code> and/or <code>CLAUDE.md</code> file in your repository, rename it to <code>OVERLAY.md</code>. The <code>sync-ai-rules</code> script you'll add below appends this file's contents to each generated file so it's loaded into LLM agent contexts.</p>
+</li>
+<li>
 <p>Choose the profile that matches your project type:</p>
 <table>
 <thead>
@@ -81,9 +84,6 @@
 <pre><code class="bash"><span class="hl-1">git</span><span class="hl-2"> </span><span class="hl-3">add</span><span class="hl-2"> </span><span class="hl-3">.</span><br/><span class="hl-1">git</span><span class="hl-2"> </span><span class="hl-3">commit</span><span class="hl-2"> </span><span class="hl-4">-m</span><span class="hl-2"> </span><span class="hl-3">&quot;feat: add AI coding rules&quot;</span>
 </code><button type="button">Copy</button></pre>
 
-</li>
-<li>
-<p>Bonus: For repo-specific rules, create an <code>OVERLAY.md</code> file. The <code>sync</code> script appends its contents in each generated file to load the contents into AI agent context.</p>
 </li>
 </ol>
 <h3 id="updating-rules" class="tsd-anchor-link">Updating Rules<a href="#updating-rules" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3><p>When we release new rules or improvements:</p>
