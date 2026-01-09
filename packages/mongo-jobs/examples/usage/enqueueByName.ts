@@ -1,5 +1,6 @@
 // embedex: packages/mongo-jobs/README.md
 import { backgroundJobs } from "./jobsRegistry";
+import type { MyJobData } from "./myJob";
 
-// Enqueue by job name (when handler is already registered)
-await backgroundJobs.enqueue("MyJob", { userId: "123", action: "process" });
+// Enqueue by job name requires explicit generic for type safety
+await backgroundJobs.enqueue<MyJobData>("MyJob", { userId: "123", action: "process" });
