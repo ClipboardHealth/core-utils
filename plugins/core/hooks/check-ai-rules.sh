@@ -7,7 +7,13 @@ PACKAGE_NAME="@clipboard-health/ai-rules"
 README_URL="https://raw.githubusercontent.com/ClipboardHealth/core-utils/main/packages/ai-rules/README.md"
 
 output_message() {
-  printf '{\n  "result": "continue",\n  "message": "%s"\n}\n' "$1"
+  local msg="$1"
+  msg=${msg//\\/\\\\}
+  msg=${msg//\"/\\\"}
+  msg=${msg//$'\n'/\\n}
+  msg=${msg//$'\r'/\\r}
+  msg=${msg//$'\t'/\\t}
+  printf '{\n  "result": "continue",\n  "message": "%s"\n}\n' "$msg"
 }
 
 [[ ! -f "$PROJECT_DIR/package.json" ]] && exit 0
@@ -17,7 +23,9 @@ command -v node >/dev/null 2>&1 || {
 }
 
 # Get installation status and configuration in one pass
-read -r STATUS ERROR_JSON < <(
+STATUS=""
+ERROR_JSON=""
+if ! read -r STATUS ERROR_JSON < <(
   PROJECT_DIR="$PROJECT_DIR" PACKAGE_NAME="$PACKAGE_NAME" node - <<'NODE'
 const path = require('path');
 const fs = require('fs');
@@ -58,7 +66,10 @@ const postinstallCallsSync = (scripts.postinstall || '').includes('sync-ai-rules
 
 console.log(hasSyncScript && postinstallCallsSync ? 'configured' : 'incomplete');
 NODE
-)
+); then
+  output_message "Failed to validate $PACKAGE_NAME (unexpected error running Node)."
+  exit 0
+fi
 
 case "$STATUS" in
   configured)
@@ -76,5 +87,8 @@ case "$STATUS" in
     ;;
   incomplete)
     output_message "$PACKAGE_NAME is installed but not fully configured (missing sync-ai-rules script or postinstall hook). Ask the user if they'd like to configure it. If approved, fetch $README_URL and follow the Quick Start instructions to add the missing configuration. Ask the user which profile to use."
+    ;;
+  *)
+    output_message "Unexpected status while validating $PACKAGE_NAME: $STATUS"
     ;;
 esac

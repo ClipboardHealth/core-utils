@@ -7,7 +7,6 @@ Clipboard's core development tools.
 - [Installation](#installation)
 - [Recommended plugins](#recommended-plugins)
   - [claude-plugins-official](#claude-plugins-official)
-  - [anthropics/claude-code](#anthropicsclaude-code)
 
 ## Installation
 
@@ -26,15 +25,8 @@ Clipboard's core development tools.
 ```bash
 /plugin marketplace add claude-plugins-official
 
-/plugin install typescript-lsp@claude-plugins-official
+/plugin install commit-commands@claude-plugins-official
+/plugin install code-review@claude-plugins-official
 /plugin install code-simplifier@claude-plugins-official
-```
-
-### [anthropics/claude-code](https://github.com/anthropics/claude-code/blob/main/.claude-plugin/marketplace.json)
-
-```bash
-/plugin marketplace add anthropics/claude-code
-
-/plugin install code-review@anthropics/claude-code
-/plugin install commit-commands@anthropics/claude-code
+/plugin install typescript-lsp@claude-plugins-official
 ```
