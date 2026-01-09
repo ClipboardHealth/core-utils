@@ -14,8 +14,7 @@
       "author": {
         "name": "Clipboard"
       },
-      "source": "./plugins/core",
-      "category": "engineering"
+      "source": "./plugins/core"
     }
   ]
 }

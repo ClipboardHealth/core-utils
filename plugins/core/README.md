@@ -16,6 +16,9 @@ Clipboard's core development tools.
 
 # Install the plugin
 /plugin install core@clipboard
+
+# Update the marketplace
+/plugin marketplace update clipboard
 ```
 
 ## Recommended plugins
