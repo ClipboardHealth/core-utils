@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./plugins/core/hooks/check-ai-rules.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-ai-rules.sh"
           }
         ]
       }
@@ -13,42 +13,11 @@
   },
   "permissions": {
     "allow": [
-      "Bash(bun add:*)",
-      "Bash(bun install)",
-      "Bash(bun run:*)",
-      "Bash(bun update:*)",
-      "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(gh pr checks:*)",
-      "Bash(gh pr create:*)",
-      "Bash(gh pr view:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git fetch:*)",
-      "Bash(git log:*)",
-      "Bash(git show:*)",
-      "Bash(git stash:*)",
-      "Bash(grep:*)",
       "Bash(node --version)",
-      "Bash(npm install)",
       "Bash(npm list)",
-      "Bash(npm run all:*)",
       "Bash(npm run embed:*)",
-      "Bash(npm run service-test:*)",
-      "Bash(npm run test:*)",
-      "Bash(npm update:*)",
-      "Bash(npm view:*)",
-      "Bash(npx nx build:*)",
-      "Bash(npx nx lint:*)",
-      "Bash(npx nx run-many:*)",
-      "Bash(npx nx run:*)",
-      "Bash(npx nx test:*)",
-      "Bash(npx oxlint:*)",
-      "Bash(npx prettier:*)",
-      "Bash(rg:*)",
-      "mcp__ide__getDiagnostics",
-      "WebFetch(domain:code.claude.com)",
-      "WebSearch"
+      "Bash(npm view:*)"
     ],
     "deny": []
   }
