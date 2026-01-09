@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   coverageDirectory: "../../coverage/packages/embedex",
   coveragePathIgnorePatterns: ["<rootDir>/src/bin/cli.ts"],
   coverageThreshold: {
