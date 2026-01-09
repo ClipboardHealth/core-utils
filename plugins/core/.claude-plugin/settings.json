@@ -18,7 +18,6 @@
       "Bash(npm list)",
       "Bash(npm run embed:*)",
       "Bash(npm view:*)"
-    ],
-    "deny": []
+    ]
   }
 }

@@ -17,17 +17,27 @@ command -v node >/dev/null 2>&1 || {
 }
 
 # Get installation status and configuration in one pass
-read -r STATUS < <(
-  PROJECT_DIR="$PROJECT_DIR" PACKAGE_NAME="$PACKAGE_NAME" node - <<'NODE' 2>/dev/null || echo "not-installed"
+read -r STATUS ERROR_JSON < <(
+  PROJECT_DIR="$PROJECT_DIR" PACKAGE_NAME="$PACKAGE_NAME" node - <<'NODE'
 const path = require('path');
 const fs = require('fs');
 
 const projectDir = process.env.PROJECT_DIR || '.';
 const packageName = process.env.PACKAGE_NAME;
-
 const projectPath = path.resolve(projectDir);
 const pkgPath = path.join(projectPath, 'package.json');
-const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+let pkg;
+try {
+  pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+} catch (err) {
+  const errorJson = JSON.stringify({
+    result: 'continue',
+    message: `Could not read or parse package.json: ${err.message}. Please fix the file and try again.`
+  });
+  console.log(`error ${errorJson}`);
+  process.exit(0);
+}
 
 const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
 if (!deps[packageName]) {
@@ -53,6 +63,10 @@ NODE
 case "$STATUS" in
   configured)
     # 👍
+    ;;
+  error)
+    # ERROR_JSON is already properly escaped JSON from Node's JSON.stringify
+    echo "$ERROR_JSON"
     ;;
   not-installed)
     output_message "$PACKAGE_NAME is not installed. Ask the user if they'd like to install it. If approved, fetch $README_URL and follow the Quick Start instructions. Ask the user which profile to use."
