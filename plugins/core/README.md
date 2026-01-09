@@ -31,9 +31,9 @@ Clipboard's core development tools.
 /plugin install typescript-lsp@claude-plugins-official
 
 # Optional MCP servers
+# After adding them, restart Claude Code and then run `/mcp` to authenticate them.
 # Note: While Github and Playwright exist, having Claude use their CLIs is more context efficient.
 /plugin install linear@claude-plugins-official
 /plugin install Notion@claude-plugins-official
-/plugin install slack@claude-plugins-official
 /plugin install figma@claude-plugins-official
 ```
