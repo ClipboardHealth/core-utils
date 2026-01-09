@@ -1,0 +1,9 @@
+{
+  "name": "core",
+  "description": "Clipboard's core development tools.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Clipboard"
+  },
+  "category": "engineering"
+}
