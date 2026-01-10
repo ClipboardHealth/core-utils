@@ -22,11 +22,11 @@ command -v node >/dev/null 2>&1 || {
   exit 0
 }
 
-# Get installation status and configuration in one pass
-STATUS=""
-ERROR_JSON=""
-if ! read -r STATUS ERROR_JSON < <(
-  PROJECT_DIR="$PROJECT_DIR" PACKAGE_NAME="$PACKAGE_NAME" node - <<'NODE'
+# Create temp file for JS code (bash 3.2 compatibility - heredocs in process substitutions fail)
+TMP=$(mktemp)
+trap 'rm -f "$TMP"' EXIT
+
+cat > "$TMP" <<'NODE'
 const path = require('path');
 const fs = require('fs');
 
@@ -66,7 +66,11 @@ const postinstallCallsSync = (scripts.postinstall || '').includes('sync-ai-rules
 
 console.log(hasSyncScript && postinstallCallsSync ? 'configured' : 'incomplete');
 NODE
-); then
+
+# Get installation status and configuration in one pass
+STATUS=""
+ERROR_JSON=""
+if ! read -r STATUS ERROR_JSON < <(PROJECT_DIR="$PROJECT_DIR" PACKAGE_NAME="$PACKAGE_NAME" node "$TMP"); then
   output_message "Failed to validate $PACKAGE_NAME (unexpected error running Node)."
   exit 0
 fi
