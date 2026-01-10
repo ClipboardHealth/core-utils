@@ -13,7 +13,7 @@ output_message() {
   msg=${msg//$'\n'/\\n}
   msg=${msg//$'\r'/\\r}
   msg=${msg//$'\t'/\\t}
-  printf '{\n  "result": "continue",\n  "message": "%s"\n}\n' "$msg"
+  printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"}}\n' "$msg"
 }
 
 [[ ! -f "$PROJECT_DIR/package.json" ]] && exit 0
@@ -40,8 +40,10 @@ try {
   pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 } catch (err) {
   const errorJson = JSON.stringify({
-    result: 'continue',
-    message: `Could not read or parse package.json: ${err.message}. Please fix the file and try again.`
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: `Could not read or parse package.json: ${err.message}. Please fix the file and try again.`
+    }
   });
   console.log(`error ${errorJson}`);
   process.exit(0);
