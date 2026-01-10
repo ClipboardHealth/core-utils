@@ -23,4 +23,4 @@ Using the JSON data above:
    - Author and timestamp
    - Comment body (summarize if lengthy)
 
-After presenting comments, offer to review the code for each of them and decide whether you agree or disagree and why.
+After presenting comments, offer to review the corresponding code for each and let the user know whether you agree or disagree with the review comment and why.

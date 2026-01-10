@@ -5,10 +5,10 @@ Clipboard's core development tools.
 ## Table of contents <!-- omit from toc -->
 
 - [Installation](#installation)
-- [Commands](#commands)
-  - [/open-pr-comments](#open-pr-comments)
 - [Hooks](#hooks)
   - [SessionStart: check-ai-rules](#sessionstart-check-ai-rules)
+- [Commands](#commands)
+  - [/open-pr-comments](#open-pr-comments)
 - [Recommended plugins](#recommended-plugins)
   - [claude-plugins-official](#claude-plugins-official)
 
@@ -25,6 +25,12 @@ Clipboard's core development tools.
 /plugin marketplace update clipboard
 ```
 
+## Hooks
+
+### SessionStart: check-ai-rules
+
+Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md) is installed and configured in the current project. If issues are found, it prompts to install or configure the project.
+
 ## Commands
 
 ### /open-pr-comments
@@ -35,20 +41,7 @@ Fetches and displays unresolved review comments from a GitHub pull request. Limi
 /open-pr-comments [pr-number]
 ```
 
-Comments are grouped by file with file path, line number, author, and timestamp. After presenting the comments, Claude offers to review the code and provide analysis.
-
-## Hooks
-
-### SessionStart: check-ai-rules
-
-Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md) is installed and configured in the current project. Checks for:
-
-- Package listed in `package.json` dependencies
-- Package installed in `node_modules`
-- `sync-ai-rules` script defined
-- `postinstall` hook calling `sync-ai-rules`
-
-If any issues are found, prompts to install or configure the package.
+Claude Code offers to review the corresponding code and give its opinion.
 
 ## Recommended plugins
 
