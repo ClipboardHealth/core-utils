@@ -86,13 +86,13 @@ case "$STATUS" in
     echo "$ERROR_JSON"
     ;;
   not-installed)
-    output_message "$PACKAGE_NAME is not installed. Ask the user if they'd like to install it. If approved, fetch $README_URL and follow the Quick Start instructions. Ask the user which profile to use."
+    output_message "$PACKAGE_NAME is not installed. Ask the user if they'd like to install it. If approved, fetch $README_URL and follow the instructions. Ask the user: \"Which profile to use (common, frontend, backend, datamodeling)? See $README_URL for details.\""
     ;;
   not-in-node-modules)
-    output_message "$PACKAGE_NAME is listed in package.json but not installed in node_modules. Ask the user if they'd like to run \`npm install\` to install dependencies."
+    output_message "$PACKAGE_NAME is listed in package.json but not installed in node_modules. Ask the user if they'd like to run their package manager's install command."
     ;;
   incomplete)
-    output_message "$PACKAGE_NAME is installed but not fully configured (missing sync-ai-rules script or postinstall hook). Ask the user if they'd like to configure it. If approved, fetch $README_URL and follow the Quick Start instructions to add the missing configuration. Ask the user which profile to use."
+    output_message "$PACKAGE_NAME is installed but not fully configured (missing sync-ai-rules script or postinstall hook). Ask the user: \"Would you like to configure it? Which profile to use (common, frontend, backend, datamodeling)? See $README_URL for details.\". If approved, fetch $README_URL and follow the instructions to add the missing configuration."
     ;;
   *)
     output_message "Unexpected status while validating $PACKAGE_NAME: $STATUS"
