@@ -1,0 +1,15 @@
+{
+  "description": "Check if @clipboard-health/ai-rules is installed and configured",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-ai-rules.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

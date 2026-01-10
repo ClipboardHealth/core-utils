@@ -77,7 +77,7 @@ fi
 
 case "$STATUS" in
   configured)
-    # 👍
+    # Package is installed and configured correctly
     ;;
   error)
     # ERROR_JSON is already properly escaped JSON from Node's JSON.stringify
