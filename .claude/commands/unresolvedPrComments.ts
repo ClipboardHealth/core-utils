@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-import { execSync, spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncReturns } from "node:child_process";
+
+function runGh(args: readonly string[], timeout?: number): SpawnSyncReturns<string> {
+  return spawnSync("gh", args, { encoding: "utf8", timeout });
+}
 
 const NITPICK_SECTION_MARKER = "Nitpick comments";
 
@@ -121,38 +125,29 @@ function outputError(message: string): never {
 }
 
 function isGhCliInstalled(): boolean {
-  const result = spawnSync("gh", ["--version"], { encoding: "utf8" });
-  return result.status === 0;
+  return runGh(["--version"]).status === 0;
 }
 
 function isGhAuthenticated(): boolean {
-  const result = spawnSync("gh", ["auth", "status"], { encoding: "utf8" });
-  return result.status === 0;
+  return runGh(["auth", "status"]).status === 0;
 }
 
 function getPrNumberFromCurrentBranch(): number | undefined {
-  try {
-    const prJson = execSync("gh pr view --json number", {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-    const parsed = JSON.parse(prJson) as { number: number };
-    return parsed.number;
-  } catch {
+  const result = runGh(["pr", "view", "--json", "number"], 10_000);
+  if (result.status !== 0) {
     return undefined;
   }
-}
 
-function parsePrNumberArg(arg: string): number {
-  if (!/^\d+$/.test(arg)) {
-    outputError(`Invalid PR number: ${arg}`);
-  }
-  return Number.parseInt(arg, 10);
+  const parsed = JSON.parse(result.stdout.trim()) as { number: number };
+  return parsed.number;
 }
 
 function getPrNumber(prNumberArg: string | undefined): number {
   if (prNumberArg) {
-    return parsePrNumberArg(prNumberArg);
+    if (!/^\d+$/.test(prNumberArg)) {
+      outputError(`Invalid PR number: ${prNumberArg}`);
+    }
+    return Number.parseInt(prNumberArg, 10);
   }
 
   const prNumber = getPrNumberFromCurrentBranch();
@@ -164,35 +159,28 @@ function getPrNumber(prNumberArg: string | undefined): number {
 }
 
 function getRepoInfo(): RepoInfo {
-  try {
-    const repoJson = execSync("gh repo view --json owner,name", {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-    const parsed = JSON.parse(repoJson) as { name: string; owner: { login: string } };
-    return { name: parsed.name, owner: parsed.owner.login };
-  } catch {
+  const result = runGh(["repo", "view", "--json", "owner,name"], 10_000);
+  if (result.status !== 0) {
     outputError("Could not determine repository. Are you in a git repo with a GitHub remote?");
   }
+
+  const parsed = JSON.parse(result.stdout.trim()) as { name: string; owner: { login: string } };
+  return { name: parsed.name, owner: parsed.owner.login };
 }
 
 function executeGraphQLQuery(owner: string, repo: string, prNumber: number): GraphQLResponse {
-  const result = spawnSync(
-    "gh",
-    [
-      "api",
-      "graphql",
-      "-f",
-      `query=${GRAPHQL_QUERY}`,
-      "-f",
-      `owner=${owner}`,
-      "-f",
-      `repo=${repo}`,
-      "-F",
-      `pr=${prNumber}`,
-    ],
-    { encoding: "utf8" },
-  );
+  const result = runGh([
+    "api",
+    "graphql",
+    "-f",
+    `query=${GRAPHQL_QUERY}`,
+    "-f",
+    `owner=${owner}`,
+    "-f",
+    `repo=${repo}`,
+    "-F",
+    `pr=${prNumber}`,
+  ]);
 
   if (result.status !== 0) {
     outputError(`GraphQL query failed: ${result.stderr}`);

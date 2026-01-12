@@ -1,5 +1,4 @@
 # Alphabetical directories
-CLAUDE.local.md
 .idea/
 .nx/cache
 .nx/workspace-data
@@ -24,4 +23,5 @@ tmp/
 .github/instructions/nx.instructions.md
 .tool-versions
 *.bak
+CLAUDE.local.md
 npm-debug.log
