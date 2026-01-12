@@ -17,6 +17,14 @@ import { Worker, type WorkerOptions } from "./internal/worker";
 import { BackgroundJobSchema, BackgroundJobSchemaName, type BackgroundJobType } from "./job";
 import { ScheduleSchema, ScheduleSchemaName, type ScheduleType } from "./schedule";
 
+/**
+ * Helper type that forces explicit generic when using string handlers.
+ * Produces an error tuple when T is unknown (no generic provided).
+ */
+type StringHandlerData<T> = unknown extends T
+  ? [error: "Explicit generic required: use enqueue<YourDataType>('handler-name', data)"]
+  : T;
+
 export interface ConstructorOptions {
   logger?: Logger;
   dbConnection?: mongoose.Connection;
@@ -73,6 +81,18 @@ export class BackgroundJobs {
   ): Promise<void> {
     await this.cron.registerCron(handlerClassOrInstance, options);
   }
+
+  public async enqueue<T>(
+    handler: string,
+    data: NoInfer<StringHandlerData<T>>,
+    options?: EnqueueOptions,
+  ): Promise<BackgroundJobType<T> | undefined>;
+
+  public async enqueue<T>(
+    handler: AnyHandlerClassOrInstance<T>,
+    data: T,
+    options?: EnqueueOptions,
+  ): Promise<BackgroundJobType<T> | undefined>;
 
   public async enqueue<T>(
     handlerClassOrInstance: string | AnyHandlerClassOrInstance<T>,

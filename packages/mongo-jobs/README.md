@@ -254,9 +254,9 @@ export class EmailServiceJob implements HandlerInterface<EmailServiceJobData> {
 
 ```ts
 // All of these work, regardless of whether you registered a class or instance
-await backgroundJobs.enqueue(EmailServiceJob, data); // By class
-await backgroundJobs.enqueue(emailServiceJobInstance, data); // By instance
-await backgroundJobs.enqueue("EmailServiceJob", data); // By name
+await backgroundJobs.enqueue(EmailServiceJob, data); // By class (type inferred)
+await backgroundJobs.enqueue(emailServiceJobInstance, data); // By instance (type inferred)
+await backgroundJobs.enqueue<EmailServiceJobData>("EmailServiceJob", data); // By name (explicit generic required)
 ```
 
 The enqueued class/instance/name is only used to look up the registered handler. The **registered** instance is always used for execution, not the instance passed to `enqueue()`.
@@ -313,9 +313,10 @@ await backgroundJobs.enqueue(
 
 ```ts
 import { backgroundJobs } from "./jobsRegistry";
+import type { MyJobData } from "./myJob";
 
-// Enqueue by job name (when handler is already registered)
-await backgroundJobs.enqueue("MyJob", { userId: "123", action: "process" });
+// Enqueue by job name requires explicit generic for type safety
+await backgroundJobs.enqueue<MyJobData>("MyJob", { userId: "123", action: "process" });
 ```
 
 </embedex>
