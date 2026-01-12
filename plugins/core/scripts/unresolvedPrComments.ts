@@ -73,7 +73,7 @@ interface GraphQLResponse {
         title: string;
         url: string;
       } | null;
-    };
+    } | null;
   };
 }
 
@@ -121,7 +121,7 @@ function outputError(message: string): never {
 }
 
 function isGhCliInstalled(): boolean {
-  const result = spawnSync("which", ["gh"], { encoding: "utf8" });
+  const result = spawnSync("gh", ["--version"], { encoding: "utf8" });
   return result.status === 0;
 }
 
@@ -198,7 +198,11 @@ function executeGraphQLQuery(owner: string, repo: string, prNumber: number): Gra
     outputError(`GraphQL query failed: ${result.stderr}`);
   }
 
-  return JSON.parse(result.stdout) as GraphQLResponse;
+  try {
+    return JSON.parse(result.stdout) as GraphQLResponse;
+  } catch {
+    outputError(`Failed to parse GraphQL response: ${result.stdout.slice(0, 200)}`);
+  }
 }
 
 function formatComment(comment: Comment): UnresolvedComment {
@@ -214,7 +218,8 @@ function formatComment(comment: Comment): UnresolvedComment {
 function cleanCommentBody(body: string): string {
   return body
     .replaceAll(/<details>[\s\S]*?<\/details>/g, "")
-    .replaceAll(/<[^>]+>/g, "")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
     .trim();
 }
 
@@ -279,7 +284,12 @@ function main(): void {
   const { name: repo, owner } = getRepoInfo();
   const response = executeGraphQLQuery(owner, repo, prNumber);
 
-  const pr = response.data.repository.pullRequest;
+  const repository = response.data.repository;
+  if (!repository) {
+    outputError(`Repository ${owner}/${repo} not found or not accessible.`);
+  }
+
+  const pr = repository.pullRequest;
   if (!pr) {
     outputError(`PR #${prNumber} not found or not accessible.`);
   }

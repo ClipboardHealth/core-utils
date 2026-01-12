@@ -113,6 +113,10 @@ function getMessageForStatus(status: Status, errorMessage?: string): string | un
     case STATUS.incomplete: {
       return `${PACKAGE_NAME} is installed but not fully configured (missing sync-ai-rules script or postinstall hook). Ask the user: "Would you like to configure it? Which profile to use (common, frontend, backend, datamodeling)? See ${README_URL} for details.". If approved, fetch ${README_URL} and follow the instructions to add the missing configuration.`;
     }
+    default: {
+      const _exhaustiveCheck: never = status;
+      return _exhaustiveCheck;
+    }
   }
 }
 
