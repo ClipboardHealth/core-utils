@@ -10,7 +10,7 @@ Note: Limited to 100 review threads and 10 comments per thread.
 
 ## Data
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/unresolvedPrComments.ts" "${1:-}" 2>/dev/null`
+!`node ".claude/commands/unresolvedPrComments.ts" "${1:-}" 2>/dev/null`
 
 ## Instructions
 

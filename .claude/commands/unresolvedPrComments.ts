@@ -80,7 +80,7 @@ interface GraphQLResponse {
 interface UnresolvedComment {
   author: string;
   body: string;
-  created_at: string;
+  createdAt: string;
   file: string;
   line: number | null;
 }
@@ -88,20 +88,20 @@ interface UnresolvedComment {
 interface NitpickComment {
   author: string;
   body: string;
-  created_at: string;
+  createdAt: string;
   file: string;
   line: string;
 }
 
 interface OutputResult {
-  nitpick_comments: NitpickComment[];
+  nitpickComments: NitpickComment[];
   owner: string;
-  pr_number: number;
+  prNumber: number;
   repo: string;
   title: string;
-  total_nitpicks: number;
-  total_unresolved: number;
-  unresolved_threads: UnresolvedComment[];
+  totalNitpicks: number;
+  totalUnresolvedComments: number;
+  unresolvedComments: UnresolvedComment[];
   url: string;
 }
 
@@ -209,7 +209,7 @@ function formatComment(comment: Comment): UnresolvedComment {
   return {
     author: comment.author?.login ?? "deleted-user",
     body: comment.body,
-    created_at: comment.createdAt,
+    createdAt: comment.createdAt,
     file: comment.path,
     line: comment.line ?? comment.originalLine,
   };
@@ -236,7 +236,7 @@ function parseCommentsFromFileSection(
     return {
       author: review.author?.login ?? "deleted-user",
       body: `${title}\n\n${cleanBody}`,
-      created_at: review.createdAt,
+      createdAt: review.createdAt,
       file: fileName,
       line: lineRange,
     };
@@ -301,14 +301,14 @@ function main(): void {
   const nitpickComments = extractNitpickComments(pr.reviews.nodes);
 
   const output: OutputResult = {
-    nitpick_comments: nitpickComments,
+    nitpickComments,
     owner,
-    pr_number: prNumber,
+    prNumber,
     repo,
     title: pr.title,
-    total_nitpicks: nitpickComments.length,
-    total_unresolved: unresolvedThreads.length,
-    unresolved_threads: unresolvedComments,
+    totalNitpicks: nitpickComments.length,
+    totalUnresolvedComments: unresolvedComments.length,
+    unresolvedComments,
     url: pr.url,
   };
 

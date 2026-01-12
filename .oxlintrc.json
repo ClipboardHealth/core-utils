@@ -257,6 +257,7 @@
   "overrides": [
     {
       "files": [
+        "**/.claude/**/*.ts",
         "**/examples/**/*.js",
         "**/examples/**/*.ts",
         "**/plugins/**/*.ts",

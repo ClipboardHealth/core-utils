@@ -7,8 +7,6 @@ Clipboard's core development tools.
 - [Installation](#installation)
 - [Hooks](#hooks)
   - [SessionStart: check-ai-rules](#sessionstart-check-ai-rules)
-- [Commands](#commands)
-  - [/unresolved-pr-comments](#unresolved-pr-comments)
 - [Recommended plugins](#recommended-plugins)
   - [claude-plugins-official](#claude-plugins-official)
 
@@ -30,18 +28,6 @@ Clipboard's core development tools.
 ### SessionStart: check-ai-rules
 
 Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md) is installed and configured in the current project. If issues are found, it prompts to install or configure the project.
-
-## Commands
-
-### /unresolved-pr-comments
-
-Fetches and displays unresolved review comments from a GitHub pull request. Limited to 100 review threads and 10 comments per thread.
-
-```bash
-/unresolved-pr-comments [pr-number]
-```
-
-Claude Code offers to review the corresponding code and give its opinion.
 
 ## Recommended plugins
 
