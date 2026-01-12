@@ -7,8 +7,6 @@ Clipboard's core development tools.
 - [Installation](#installation)
 - [Hooks](#hooks)
   - [SessionStart: check-ai-rules](#sessionstart-check-ai-rules)
-- [Commands](#commands)
-  - [/open-pr-comments](#open-pr-comments)
 - [Recommended plugins](#recommended-plugins)
   - [claude-plugins-official](#claude-plugins-official)
 
@@ -19,10 +17,7 @@ Clipboard's core development tools.
 /plugin marketplace add ClipboardHealth/core-utils
 
 # Install the plugin
-/plugin install core@clipboard
-
-# Update the marketplace
-/plugin marketplace update clipboard
+/plugin install core@clipboard --scope user
 ```
 
 ## Hooks
@@ -31,18 +26,6 @@ Clipboard's core development tools.
 
 Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md) is installed and configured in the current project. If issues are found, it prompts to install or configure the project.
 
-## Commands
-
-### /open-pr-comments
-
-Fetches and displays unresolved review comments from a GitHub pull request. Limited to 100 review threads and 10 comments per thread.
-
-```bash
-/open-pr-comments [pr-number]
-```
-
-Claude Code offers to review the corresponding code and give its opinion.
-
 ## Recommended plugins
 
 ### [claude-plugins-official](https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json)
@@ -50,15 +33,18 @@ Claude Code offers to review the corresponding code and give its opinion.
 ```bash
 /plugin marketplace add claude-plugins-official
 
-/plugin install commit-commands@claude-plugins-official
-/plugin install code-review@claude-plugins-official
-/plugin install code-simplifier@claude-plugins-official
-/plugin install typescript-lsp@claude-plugins-official
+/plugin install commit-commands@claude-plugins-official --scope user
+/plugin install code-simplifier@claude-plugins-official --scope user
 
-# Optional MCP servers
-# After adding them, restart Claude Code and then run `/mcp` to authenticate them.
-# Note: While Github and Playwright exist, having Claude use their CLIs is more context efficient.
-/plugin install linear@claude-plugins-official
-/plugin install Notion@claude-plugins-official
-/plugin install figma@claude-plugins-official
+# Helpful MCP servers. Restart after install and run `/mcp` to authenticate.
+# Note: GitHub MCP exists, but having Claude use `gh` CLI is more context efficient.
+/plugin install linear@claude-plugins-official --scope user
+/plugin install Notion@claude-plugins-official --scope user
+# Note: typescript-lsp@claude-plugins-official exists; as of 2026-01-12, Serena is more powerful.
+# See https://github.com/oraios/serena/issues/858
+/plugin install serena@claude-plugins-official --scope user
+
+# Frontend
+# Note: Playwright MCP exists, but having Claude use `npx playwright` CLI is more context efficient.
+/plugin install figma@claude-plugins-official --scope user
 ```

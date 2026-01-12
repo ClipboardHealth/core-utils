@@ -1,5 +1,4 @@
 # Alphabetical directories
-.claude/
 .idea/
 .nx/cache
 .nx/workspace-data
@@ -17,9 +16,12 @@ tmp/
 !.vscode/launch.json
 !.vscode/settings.json
 !.vscode/tasks.json
+.claude/*.local.*
+.claude/settings.local.json
 .cursor/rules/nx-rules.mdc
 .DS_Store
 .github/instructions/nx.instructions.md
 .tool-versions
 *.bak
+CLAUDE.local.md
 npm-debug.log
