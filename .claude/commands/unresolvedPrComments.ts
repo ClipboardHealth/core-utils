@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 
-function runGh(args: readonly string[], timeout?: number): SpawnSyncReturns<string> {
+function runGh(args: readonly string[], timeout = 10_000): SpawnSyncReturns<string> {
   return spawnSync("gh", args, { encoding: "utf8", timeout });
 }
 
@@ -91,6 +91,14 @@ interface UnresolvedComment {
   line: number | null;
 }
 
+interface CodeScanningInstance {
+  state: string;
+}
+
+interface CodeScanningAlert {
+  most_recent_instance: CodeScanningInstance;
+}
+
 interface NitpickComment {
   author: string;
   body: string;
@@ -126,6 +134,25 @@ function outputError(message: string): never {
   process.exit(1);
 }
 
+function isCodeScanningAlertFixed(owner: string, repo: string, alertNumber: number): boolean {
+  const result = runGh(["api", `repos/${owner}/${repo}/code-scanning/alerts/${alertNumber}`]);
+  if (result.status !== 0) {
+    return false;
+  }
+
+  try {
+    const alert = JSON.parse(result.stdout) as CodeScanningAlert;
+    return alert.most_recent_instance.state === "fixed";
+  } catch {
+    return false;
+  }
+}
+
+function extractCodeScanningAlertNumber(body: string): number | undefined {
+  const match = /\/code-scanning\/(\d+)/.exec(body);
+  return match ? Number.parseInt(match[1], 10) : undefined;
+}
+
 function isGhCliInstalled(): boolean {
   return runGh(["--version"]).status === 0;
 }
@@ -135,7 +162,7 @@ function isGhAuthenticated(): boolean {
 }
 
 function getPrNumberFromCurrentBranch(): number | undefined {
-  const result = runGh(["pr", "view", "--json", "number"], 10_000);
+  const result = runGh(["pr", "view", "--json", "number"]);
   if (result.status !== 0) {
     return undefined;
   }
@@ -165,7 +192,7 @@ function getPrNumber(prNumberArg: string | undefined): number {
 }
 
 function getRepoInfo(): RepoInfo {
-  const result = runGh(["repo", "view", "--json", "owner,name"], 10_000);
+  const result = runGh(["repo", "view", "--json", "owner,name"]);
   if (result.status !== 0) {
     outputError("Could not determine repository. Are you in a git repo with a GitHub remote?");
   }
@@ -262,23 +289,35 @@ function extractNitpicksFromReview(review: Review): NitpickComment[] {
 }
 
 function getLatestCodeRabbitReview(reviews: Review[]): Review | undefined {
-  const codeRabbitReviews = reviews.filter(
-    (review) =>
-      review.author?.login === "coderabbitai" && review.body.includes(NITPICK_SECTION_MARKER),
-  );
-
-  if (codeRabbitReviews.length === 0) {
-    return undefined;
-  }
-
-  return codeRabbitReviews.reduce((latest, current) =>
-    new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest,
-  );
+  return reviews
+    .filter(
+      (review) =>
+        review.author?.login === "coderabbitai" && review.body.includes(NITPICK_SECTION_MARKER),
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .at(0);
 }
 
 function extractNitpickComments(reviews: Review[]): NitpickComment[] {
   const latestReview = getLatestCodeRabbitReview(reviews);
   return latestReview ? extractNitpicksFromReview(latestReview) : [];
+}
+
+function isUnresolvedSecurityComment(
+  comment: UnresolvedComment,
+  owner: string,
+  repo: string,
+): boolean {
+  if (comment.author !== "github-advanced-security") {
+    return true;
+  }
+
+  const alertNumber = extractCodeScanningAlertNumber(comment.body);
+  if (!alertNumber) {
+    return true;
+  }
+
+  return !isCodeScanningAlertFixed(owner, repo, alertNumber);
 }
 
 function validatePrerequisites(): void {
@@ -308,10 +347,11 @@ function main(): void {
     outputError(`PR #${prNumber} not found or not accessible.`);
   }
 
-  const unresolvedThreads = pr.reviewThreads.nodes.filter((thread) => !thread.isResolved);
-  const unresolvedComments = unresolvedThreads.flatMap((thread) =>
-    thread.comments.nodes.map(formatComment),
-  );
+  const unresolvedComments = pr.reviewThreads.nodes
+    .filter((thread) => !thread.isResolved)
+    .flatMap((thread) => thread.comments.nodes.map(formatComment))
+    .filter((comment) => isUnresolvedSecurityComment(comment, owner, repo));
+
   const nitpickComments = extractNitpickComments(pr.reviews.nodes);
 
   const output: OutputResult = {

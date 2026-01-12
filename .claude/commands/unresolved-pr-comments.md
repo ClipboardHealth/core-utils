@@ -27,12 +27,15 @@ Then, for EVERY comment (both `unresolvedComments` AND `nitpickComments`):
    - **Agree**: Explain why and offer to fix it
    - **Disagree**: Explain why the current code is acceptable
    - **Already fixed**: Note that the code already addresses this concern
-3. Present your assessment in table format:
-   | File | Line | Issue | Verdict |
-   | --------------- | ---- | ----------------------------- | ----------------------------------------- |
-   | `src/api.ts` | 118 | Wrap JSON.parse in try-catch | **Already fixed** ✅ |
-   | `src/api.ts` | 135 | Using `any` | **Already fixed** ✅ |
-   | `src/config.ts` | 23 | Use `const` instead of `let` | **Disagree** - Value is reassigned on L31 |
-   | `src/utils.ts` | 42 | Add null check for user input | **Agree** - Input isn't validated |
+3. Present your assessment in list format (renders reliably in terminals):
 
-Then, offer to fix any issue.
+   **1. `src/api.ts:118`** - Wrap JSON.parse in try-catch
+   **Verdict: Already fixed** - Try-catch added in recent commit
+
+   **2. `src/config.ts:23`** - Use `const` instead of `let`
+   **Verdict: Disagree** - Value is reassigned on L31
+
+   **3. `src/utils.ts:42`** - Add null check for user input
+   **Verdict: Agree** - Input isn't validated, could cause runtime error
+
+Then, offer to fix any issues where you agreed.
