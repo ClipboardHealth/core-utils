@@ -8,7 +8,7 @@ Clipboard's core development tools.
 - [Hooks](#hooks)
   - [SessionStart: check-ai-rules](#sessionstart-check-ai-rules)
 - [Commands](#commands)
-  - [/open-pr-comments](#open-pr-comments)
+  - [/unresolved-pr-comments](#unresolved-pr-comments)
 - [Recommended plugins](#recommended-plugins)
   - [claude-plugins-official](#claude-plugins-official)
 
@@ -33,12 +33,12 @@ Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md)
 
 ## Commands
 
-### /open-pr-comments
+### /unresolved-pr-comments
 
 Fetches and displays unresolved review comments from a GitHub pull request. Limited to 100 review threads and 10 comments per thread.
 
 ```bash
-/open-pr-comments [pr-number]
+/unresolved-pr-comments [pr-number]
 ```
 
 Claude Code offers to review the corresponding code and give its opinion.

@@ -17,7 +17,7 @@
       "rules": {}
     },
     {
-      "files": ["./examples/**/*.ts"],
+      "files": ["./examples/**/*.ts", "./plugins/**/*.ts"],
       "rules": {
         "no-console": "off"
       }

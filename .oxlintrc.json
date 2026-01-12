@@ -257,10 +257,11 @@
   "overrides": [
     {
       "files": [
-        "**/examples/**/*.ts",
         "**/examples/**/*.js",
-        "**/scripts/**/*.ts",
+        "**/examples/**/*.ts",
+        "**/plugins/**/*.ts",
         "**/scripts/**/*.js",
+        "**/scripts/**/*.ts",
         "populateLibraries.ts"
       ],
       "rules": {
