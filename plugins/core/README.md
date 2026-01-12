@@ -17,10 +17,7 @@ Clipboard's core development tools.
 /plugin marketplace add ClipboardHealth/core-utils
 
 # Install the plugin
-/plugin install core@clipboard
-
-# Update the marketplace
-/plugin marketplace update clipboard
+/plugin install core@clipboard --scope user
 ```
 
 ## Hooks
