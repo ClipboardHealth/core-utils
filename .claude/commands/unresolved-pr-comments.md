@@ -10,7 +10,7 @@ Note: Limited to 100 review threads and 10 comments per thread.
 
 ## Data
 
-!`node ".claude/commands/unresolvedPrComments.ts" $ARGUMENTS 2>/dev/null`
+!`node ".claude/commands/unresolvedPrComments.ts" "$ARGUMENTS" 2>/dev/null`
 
 ## Instructions
 
