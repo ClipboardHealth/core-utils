@@ -1,6 +1,16 @@
 #!/usr/bin/env node
-// Get unresolved review comments from a GitHub pull request
 import { execSync, spawnSync } from "node:child_process";
+
+const NITPICK_SECTION_MARKER = "Nitpick comments";
+
+const NITPICK_SECTION_REGEX =
+  /<summary>🧹 Nitpick comments \(\d+\)<\/summary>\s*<blockquote>([\s\S]*?)<\/blockquote>\s*<\/details>\s*<details>\s*<summary>📜 Review details/i;
+
+const FILE_SECTION_REGEX =
+  /<details>\s*<summary>([^<]+\.[^<]+)\s+\(\d+\)<\/summary>\s*<blockquote>([\s\S]*?)<\/blockquote>\s*<\/details>/g;
+
+const COMMENT_REGEX =
+  /`(\d+(?:-\d+)?)`:\s*\*\*([^*]+)\*\*\s*([\s\S]*?)(?=---|\n`\d|<\/details>|$)/g;
 
 const GRAPHQL_QUERY = `
 query($owner: String!, $repo: String!, $pr: Int!) {
@@ -23,6 +33,13 @@ query($owner: String!, $repo: String!, $pr: Int!) {
           }
         }
       }
+      reviews(first: 100) {
+        nodes {
+          body
+          author { login }
+          createdAt
+        }
+      }
     }
   }
 }`;
@@ -41,11 +58,18 @@ interface ReviewThread {
   isResolved: boolean;
 }
 
+interface Review {
+  author: { login: string } | null;
+  body: string;
+  createdAt: string;
+}
+
 interface GraphQLResponse {
   data: {
     repository: {
       pullRequest: {
         reviewThreads: { nodes: ReviewThread[] };
+        reviews: { nodes: Review[] };
         title: string;
         url: string;
       } | null;
@@ -61,11 +85,21 @@ interface UnresolvedComment {
   line: number | null;
 }
 
+interface NitpickComment {
+  author: string;
+  body: string;
+  created_at: string;
+  file: string;
+  line: string;
+}
+
 interface OutputResult {
+  nitpick_comments: NitpickComment[];
   owner: string;
   pr_number: number;
   repo: string;
   title: string;
+  total_nitpicks: number;
   total_unresolved: number;
   unresolved_threads: UnresolvedComment[];
   url: string;
@@ -177,10 +211,55 @@ function formatComment(comment: Comment): UnresolvedComment {
   };
 }
 
-function extractUnresolvedComments(threads: ReviewThread[]): UnresolvedComment[] {
-  return threads
-    .filter((thread) => !thread.isResolved)
-    .flatMap((thread) => thread.comments.nodes.map(formatComment));
+function cleanCommentBody(body: string): string {
+  return body
+    .replaceAll(/<details>[\s\S]*?<\/details>/g, "")
+    .replaceAll(/<[^>]+>/g, "")
+    .trim();
+}
+
+function parseCommentsFromFileSection(
+  fileContent: string,
+  fileName: string,
+  review: Review,
+): NitpickComment[] {
+  return [...fileContent.matchAll(COMMENT_REGEX)].map((match) => {
+    const lineRange = match[1];
+    const title = match[2].trim();
+    const cleanBody = cleanCommentBody(match[3].trim());
+
+    return {
+      author: review.author?.login ?? "deleted-user",
+      body: `${title}\n\n${cleanBody}`,
+      created_at: review.createdAt,
+      file: fileName,
+      line: lineRange,
+    };
+  });
+}
+
+function extractNitpicksFromReview(review: Review): NitpickComment[] {
+  if (!review.body.includes(NITPICK_SECTION_MARKER)) {
+    return [];
+  }
+
+  const nitpickSectionMatch = NITPICK_SECTION_REGEX.exec(review.body);
+  if (!nitpickSectionMatch) {
+    return [];
+  }
+
+  const nitpickSection = nitpickSectionMatch[1];
+  const fileSections = [...nitpickSection.matchAll(FILE_SECTION_REGEX)];
+
+  return fileSections.flatMap((fileMatch) => {
+    const fileName = fileMatch[1].trim();
+    const fileContent = fileMatch[2];
+    return parseCommentsFromFileSection(fileContent, fileName, review);
+  });
+}
+
+function extractNitpickComments(reviews: Review[]): NitpickComment[] {
+  return reviews.flatMap(extractNitpicksFromReview);
 }
 
 function validatePrerequisites(): void {
@@ -206,13 +285,18 @@ function main(): void {
   }
 
   const unresolvedThreads = pr.reviewThreads.nodes.filter((thread) => !thread.isResolved);
-  const unresolvedComments = extractUnresolvedComments(pr.reviewThreads.nodes);
+  const unresolvedComments = unresolvedThreads.flatMap((thread) =>
+    thread.comments.nodes.map(formatComment),
+  );
+  const nitpickComments = extractNitpickComments(pr.reviews.nodes);
 
   const output: OutputResult = {
+    nitpick_comments: nitpickComments,
     owner,
     pr_number: prNumber,
     repo,
     title: pr.title,
+    total_nitpicks: nitpickComments.length,
     total_unresolved: unresolvedThreads.length,
     unresolved_threads: unresolvedComments,
     url: pr.url,

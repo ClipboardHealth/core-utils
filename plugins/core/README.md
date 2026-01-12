@@ -50,15 +50,18 @@ Claude Code offers to review the corresponding code and give its opinion.
 ```bash
 /plugin marketplace add claude-plugins-official
 
-/plugin install commit-commands@claude-plugins-official
-/plugin install code-review@claude-plugins-official
-/plugin install code-simplifier@claude-plugins-official
-/plugin install typescript-lsp@claude-plugins-official
+/plugin install commit-commands@claude-plugins-official --scope user
+/plugin install code-simplifier@claude-plugins-official --scope user
 
-# Optional MCP servers
-# After adding them, restart Claude Code and then run `/mcp` to authenticate them.
-# Note: While Github and Playwright exist, having Claude use their CLIs is more context efficient.
-/plugin install linear@claude-plugins-official
-/plugin install Notion@claude-plugins-official
-/plugin install figma@claude-plugins-official
+# Helpful MCP servers. Restart after install and run `/mcp` to authenticate.
+# Note: GitHub MCP exists, but having Claude use `gh` CLI is more context efficient.
+/plugin install linear@claude-plugins-official --scope user
+/plugin install Notion@claude-plugins-official --scope user
+# Note: typescript-lsp@claude-plugins-official exists; as of 2026-01-12, Serena is more powerful.
+# See https://github.com/oraios/serena/issues/858
+/plugin install serena@claude-plugins-official --scope user
+
+# Frontend
+# Note: Playwright MCP exists, but having Claude use `npx playwright` CLI is more context efficient.
+/plugin install figma@claude-plugins-official --scope user
 ```
