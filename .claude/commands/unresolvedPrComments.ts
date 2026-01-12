@@ -16,6 +16,8 @@ const FILE_SECTION_REGEX =
 const COMMENT_REGEX =
   /`(\d+(?:-\d+)?)`:\s*\*\*([^*]+)\*\*\s*([\s\S]*?)(?=---|\n`\d|<\/details>|$)/g;
 
+// Pagination limits: 100 review threads, 10 comments per thread, 100 reviews.
+// Sufficient for typical PRs; data may be truncated on exceptionally active PRs.
 const GRAPHQL_QUERY = `
 query($owner: String!, $repo: String!, $pr: Int!) {
   repository(owner: $owner, name: $repo) {
@@ -138,8 +140,12 @@ function getPrNumberFromCurrentBranch(): number | undefined {
     return undefined;
   }
 
-  const parsed = JSON.parse(result.stdout.trim()) as { number: number };
-  return parsed.number;
+  try {
+    const parsed = JSON.parse(result.stdout.trim()) as { number: number };
+    return parsed.number;
+  } catch {
+    return undefined;
+  }
 }
 
 function getPrNumber(prNumberArg: string | undefined): number {
@@ -164,8 +170,12 @@ function getRepoInfo(): RepoInfo {
     outputError("Could not determine repository. Are you in a git repo with a GitHub remote?");
   }
 
-  const parsed = JSON.parse(result.stdout.trim()) as { name: string; owner: { login: string } };
-  return { name: parsed.name, owner: parsed.owner.login };
+  try {
+    const parsed = JSON.parse(result.stdout.trim()) as { name: string; owner: { login: string } };
+    return { name: parsed.name, owner: parsed.owner.login };
+  } catch {
+    outputError("Failed to parse repository info from gh CLI output.");
+  }
 }
 
 function executeGraphQLQuery(owner: string, repo: string, prNumber: number): GraphQLResponse {
@@ -251,8 +261,24 @@ function extractNitpicksFromReview(review: Review): NitpickComment[] {
   });
 }
 
+function getLatestCodeRabbitReview(reviews: Review[]): Review | undefined {
+  const codeRabbitReviews = reviews.filter(
+    (review) =>
+      review.author?.login === "coderabbitai" && review.body.includes(NITPICK_SECTION_MARKER),
+  );
+
+  if (codeRabbitReviews.length === 0) {
+    return undefined;
+  }
+
+  return codeRabbitReviews.reduce((latest, current) =>
+    new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest,
+  );
+}
+
 function extractNitpickComments(reviews: Review[]): NitpickComment[] {
-  return reviews.flatMap(extractNitpicksFromReview);
+  const latestReview = getLatestCodeRabbitReview(reviews);
+  return latestReview ? extractNitpicksFromReview(latestReview) : [];
 }
 
 function validatePrerequisites(): void {
