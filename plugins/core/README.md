@@ -36,6 +36,8 @@ Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md)
 /plugin install commit-commands@claude-plugins-official --scope user
 /plugin install code-simplifier@claude-plugins-official --scope user
 
+# === Fullstack ===
+
 # Helpful MCP servers. Restart after install and run `/mcp` to authenticate.
 # Note: GitHub MCP exists, but having Claude use `gh` CLI is more context efficient.
 /plugin install linear@claude-plugins-official --scope user
@@ -44,7 +46,8 @@ Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md)
 # See https://github.com/oraios/serena/issues/858
 /plugin install serena@claude-plugins-official --scope user
 
-# Frontend
+# === Frontend ===
+
 # Note: Playwright MCP exists, but having Claude use `npx playwright` CLI is more context efficient.
 /plugin install figma@claude-plugins-official --scope user
 ```
