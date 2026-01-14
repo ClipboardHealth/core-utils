@@ -14,6 +14,7 @@ describe("getOtaBuildIdAsNumber", () => {
   });
 
   it.each([
+    { input: undefined, description: "undefined" },
     { input: "", description: "empty string" },
     { input: "abc", description: "alphabetic string" },
     { input: "12.3", description: "decimal number" },
