@@ -17,10 +17,5 @@ export function getOtaBuildIdAsNumber(otaBuildId: string): number {
     return 0;
   }
 
-  const buildNumber = Number.parseInt(otaBuildId, 10);
-  if (Number.isNaN(buildNumber)) {
-    return 0;
-  }
-
-  return buildNumber;
+  return Number.parseInt(otaBuildId, 10);
 }
