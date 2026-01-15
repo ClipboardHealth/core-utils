@@ -7,6 +7,8 @@ Clipboard's core development tools.
 - [Installation](#installation)
 - [Hooks](#hooks)
   - [SessionStart: check-ai-rules](#sessionstart-check-ai-rules)
+- [Skills](#skills)
+  - [local-package](#local-package)
 - [Recommended plugins](#recommended-plugins)
   - [claude-plugins-official](#claude-plugins-official)
 
@@ -25,6 +27,14 @@ Clipboard's core development tools.
 ### SessionStart: check-ai-rules
 
 Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md) is installed and configured in the current project. If issues are found, it prompts to install or configure the project.
+
+## Skills
+
+### local-package
+
+Use Clipboard's internal CLI (`@clipboard-health/cli`) to link and unlink packages across repositories for local development. Invoke with `/local-package` or let Claude auto-trigger when discussing local package development.
+
+See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage details.
 
 ## Recommended plugins
 
