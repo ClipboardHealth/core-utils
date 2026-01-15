@@ -61,6 +61,7 @@
     "toplevel",
     "trunc",
     "TSESTree",
+    "tsgolint",
     "TTFB",
     "typedoc",
     "typeof",

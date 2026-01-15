@@ -27,6 +27,7 @@
     "markdownlint-cli2": "0.20.0",
     "nx": "22.3.3",
     "oxlint": "1.38.0",
+    "oxlint-tsgolint": "0.11.0",
     "prettier": "3.7.4",
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
@@ -44,7 +45,7 @@
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
-    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && oxlint",
+    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && npm run oxlint",
     "ci:install": "npm clean-install --audit false --fund false",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
@@ -52,6 +53,7 @@
     "embed:check": "npm run embed -- --check",
     "format": "prettier --write .",
     "knip": "NX_DAEMON=false knip",
+    "oxlint": "oxlint --type-aware --tsconfig=tsconfig.base.json",
     "postinstall": "npm run sync-ai-rules",
     "prepare": "husky",
     "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common"
