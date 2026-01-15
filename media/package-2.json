@@ -1,11 +1,11 @@
 {
   "name": "@clipboard-health/analytics",
   "description": "Type-safe analytics wrapper around our third-party analytics provider for user identification and event tracking.",
-  "version": "1.6.33",
+  "version": "1.6.34",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/phone-number": "1.6.33",
-    "@clipboard-health/util-ts": "4.6.33",
+    "@clipboard-health/phone-number": "1.6.34",
+    "@clipboard-health/util-ts": "4.6.34",
     "@segment/analytics-node": "2.3.0",
     "tslib": "2.8.1"
   },
