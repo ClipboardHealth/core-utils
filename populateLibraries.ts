@@ -40,4 +40,4 @@ async function updateReadme() {
   }
 }
 
-updateReadme();
+void updateReadme();

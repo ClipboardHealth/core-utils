@@ -120,7 +120,7 @@
     "typescript/require-array-sort-compare": "error",
     "typescript/restrict-template-expressions": "error",
     "typescript/triple-slash-reference": "error",
-    "typescript/unbound-method": "error",
+    "typescript/unbound-method": "off",
     "typescript/no-namespace": "error",
     "typescript/no-var-requires": "error",
     "typescript/prefer-literal-enum-member": "error",
