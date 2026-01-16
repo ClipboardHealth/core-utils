@@ -1,4 +1,5 @@
 # Alphabetical directories
+.claude/cache/
 .idea/
 .nx/cache
 .nx/workspace-data

@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-import { spawnSync, type SpawnSyncReturns } from "node:child_process";
-
-function runGh(args: readonly string[], timeout = 10_000): SpawnSyncReturns<string> {
-  return spawnSync("gh", args, { encoding: "utf8", timeout });
-}
+import { outputError, runGh, validatePrerequisites } from "../lib/ghClient.ts";
 
 const NITPICK_SECTION_MARKER = "Nitpick comments";
 
@@ -119,19 +115,9 @@ interface OutputResult {
   url: string;
 }
 
-interface ErrorResult {
-  error: string;
-}
-
 interface RepoInfo {
   name: string;
   owner: string;
-}
-
-function outputError(message: string): never {
-  const result: ErrorResult = { error: message };
-  console.log(JSON.stringify(result));
-  process.exit(1);
 }
 
 function isCodeScanningAlertFixed(owner: string, repo: string, alertNumber: number): boolean {
@@ -151,14 +137,6 @@ function isCodeScanningAlertFixed(owner: string, repo: string, alertNumber: numb
 function extractCodeScanningAlertNumber(body: string): number | undefined {
   const match = /\/code-scanning\/(\d+)/.exec(body);
   return match ? Number.parseInt(match[1], 10) : undefined;
-}
-
-function isGhCliInstalled(): boolean {
-  return runGh(["--version"]).status === 0;
-}
-
-function isGhAuthenticated(): boolean {
-  return runGh(["auth", "status"]).status === 0;
 }
 
 function getPrNumberFromCurrentBranch(): number | undefined {
@@ -318,16 +296,6 @@ function isUnresolvedSecurityComment(
   }
 
   return !isCodeScanningAlertFixed(owner, repo, alertNumber);
-}
-
-function validatePrerequisites(): void {
-  if (!isGhCliInstalled()) {
-    outputError("gh CLI not found. Install from https://cli.github.com");
-  }
-
-  if (!isGhAuthenticated()) {
-    outputError("Not authenticated with GitHub. Run: gh auth login");
-  }
 }
 
 function main(): void {
