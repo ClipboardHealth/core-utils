@@ -292,6 +292,10 @@ export class NotificationClient {
           return validated;
         }
 
+        if (validated.value.isExpired) {
+          return success({ responses: [] });
+        }
+
         this.logTriggerRequest({ logParams, body, keysToRedact });
 
         if (params.dryRun) {
@@ -620,7 +624,7 @@ export class NotificationClient {
     expiresAt: Date;
     span: Span | undefined;
     logParams: LogParams;
-  }): ServiceResult<{ expiresAt: Date }> {
+  }): ServiceResult<{ expiresAt: Date; isExpired: boolean }> {
     const { body, expiresAt, span, logParams } = params;
 
     if (body.recipients.length <= 0) {
@@ -646,8 +650,10 @@ export class NotificationClient {
     }
 
     const now = new Date();
-    if (now > expiresAt) {
-      return this.createAndLogError({
+    const isExpired = now > expiresAt;
+    if (isExpired) {
+      // Log only, ignore the return value.
+      this.createAndLogError({
         notificationError: {
           code: ERROR_CODES.expired,
           message: `Got ${now.toISOString()}; notification expires at ${expiresAt.toISOString()}.`,
@@ -658,7 +664,7 @@ export class NotificationClient {
       });
     }
 
-    return success({ expiresAt });
+    return success({ expiresAt, isExpired });
   }
 
   private async getExistingTokens(params: {

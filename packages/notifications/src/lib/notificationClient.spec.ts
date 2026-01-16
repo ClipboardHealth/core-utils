@@ -690,7 +690,7 @@ describe("NotificationClient", () => {
       );
     });
 
-    it("rejects expired request", async () => {
+    it("skips provider call when expired", async () => {
       const mockExpiredDate = new Date(Date.now() - 1000);
       const triggerSpy = jest.spyOn(provider.workflows, "trigger");
 
@@ -704,8 +704,7 @@ describe("NotificationClient", () => {
 
       const actual = await client.triggerChunked(input);
 
-      expectToBeFailure(actual);
-      expect(actual.error.message).toContain("notification expires at");
+      expectToBeSuccess(actual);
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
