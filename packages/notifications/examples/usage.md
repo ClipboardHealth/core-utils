@@ -144,7 +144,7 @@
 
    </embedex>
 
-3. Build your `SerializableTriggerChunkedRequest` and enqueue your job:
+3. Build your `SerializableTriggerChunkedRequest` and enqueue your job. Think of queuing `TriggerNotificationJob` as a function call to send notifications in a best practices way. You should NOT call `triggerChunked` directly. If, for example, your notification is delayed, create a background job that runs in the future, does any necessary checks to ensure you should notify, and then queue `TriggerNotificationJob`.
 
    <embedex source="packages/notifications/examples/enqueueTriggerNotificationJob.ts">
 
