@@ -241,6 +241,12 @@ module.exports = {
             message:
               "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
           },
+          {
+            importNames: ["format"],
+            message:
+              "Importing `format` from `date-fns` is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+            name: "date-fns",
+          },
         ],
       },
     ],
