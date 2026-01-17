@@ -11,17 +11,17 @@
         "assets": [
           "packages/nx-plugin/*.md",
           {
-            "input": "./packages/nx-plugin/src",
+            "input": "packages/nx-plugin/src",
             "glob": "**/!(*.ts)",
             "output": "./src"
           },
           {
-            "input": "./packages/nx-plugin/src",
+            "input": "packages/nx-plugin/src",
             "glob": "**/*.d.ts",
             "output": "./src"
           },
           {
-            "input": "./packages/nx-plugin",
+            "input": "packages/nx-plugin",
             "glob": "generators.json",
             "output": "."
           }

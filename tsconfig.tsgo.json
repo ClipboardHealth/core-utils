@@ -1,0 +1,37 @@
+{
+  "extends": ["@tsconfig/node24", "@tsconfig/strictest"],
+  "compileOnSave": false,
+  "compilerOptions": {
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "paths": {
+      "@clipboard-health/analytics": ["./packages/analytics/src/index.ts"],
+      "@clipboard-health/background-jobs-adapter": [
+        "./packages/background-jobs-adapter/src/index.ts"
+      ],
+      "@clipboard-health/config": ["./packages/config/src/index.ts"],
+      "@clipboard-health/contract-core": ["./packages/contract-core/src/index.ts"],
+      "@clipboard-health/eslint-config": ["./packages/eslint-config/src/index.js"],
+      "@clipboard-health/eslint-plugin": ["./packages/eslint-plugin/src/index.ts"],
+      "@clipboard-health/execution-context": ["./packages/execution-context/src/index.ts"],
+      "@clipboard-health/json-api": ["./packages/json-api/src/index.ts"],
+      "@clipboard-health/json-api-nestjs": ["./packages/json-api-nestjs/src/index.ts"],
+      "@clipboard-health/mongo-jobs": ["./packages/mongo-jobs/src/index.ts"],
+      "@clipboard-health/nx-plugin": ["./packages/nx-plugin/src/index.ts"],
+      "@clipboard-health/phone-number": ["./packages/phone-number/src/index.ts"],
+      "@clipboard-health/rules-engine": ["./packages/rules-engine/src/index.ts"],
+      "@clipboard-health/testing-core": ["./packages/testing-core/src/index.ts"],
+      "@clipboard-health/util-ts": ["./packages/util-ts/src/index.ts"],
+      "embedex": ["./packages/embedex/src/index.ts"]
+    },
+    "rootDir": ".",
+    "skipDefaultLibCheck": true,
+    "sourceMap": true
+  },
+  "include": ["packages/*/src/**/*.ts"],
+  "exclude": ["node_modules", "tmp", "dist", "**/*.spec.ts"]
+}
