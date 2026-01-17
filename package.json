@@ -14,7 +14,7 @@
     "@tsconfig/node24": "24.0.3",
     "@tsconfig/strictest": "2.0.8",
     "@types/jest": "30.0.0",
-    "@types/node": "24.10.7",
+    "@types/node": "24.10.8",
     "cspell": "9.6.0",
     "eslint": "8.57.1",
     "eslint-plugin-promise": "7.2.1",
