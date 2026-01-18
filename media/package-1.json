@@ -1,10 +1,10 @@
 {
   "name": "@clipboard-health/ai-rules",
   "description": "Pre-built AI agent rules for consistent coding standards.",
-  "version": "1.6.41",
+  "version": "1.6.42",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "devDependencies": {
-    "@intellectronica/ruler": "0.3.23"
+    "@intellectronica/ruler": "0.3.24"
   },
   "keywords": [
     "ai",
