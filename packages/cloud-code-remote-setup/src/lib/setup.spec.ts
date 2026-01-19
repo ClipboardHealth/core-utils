@@ -16,6 +16,7 @@ const KNOWN_ERROR_CODES = new Set([
   "EXTRACTION_FAILED",
   "INSTALLATION_FAILED",
   "INSTALLATION_VERIFICATION_FAILED",
+  "MISSING_GITHUB_TOKEN",
 ]);
 
 function isValidSuccessMessage(message: string): boolean {
@@ -68,13 +69,19 @@ describe("setup", () => {
   });
 
   describe("setup function", () => {
-    const originalEnvironment = process.env["CLAUDE_CODE_REMOTE"];
+    const originalRemoteEnvironment = process.env["CLAUDE_CODE_REMOTE"];
+    const originalGithubToken = process.env["GITHUB_TOKEN"];
 
     afterEach(() => {
-      if (originalEnvironment === undefined) {
+      if (originalRemoteEnvironment === undefined) {
         delete process.env["CLAUDE_CODE_REMOTE"];
       } else {
-        process.env["CLAUDE_CODE_REMOTE"] = originalEnvironment;
+        process.env["CLAUDE_CODE_REMOTE"] = originalRemoteEnvironment;
+      }
+      if (originalGithubToken === undefined) {
+        delete process.env["GITHUB_TOKEN"];
+      } else {
+        process.env["GITHUB_TOKEN"] = originalGithubToken;
       }
     });
 
@@ -96,8 +103,23 @@ describe("setup", () => {
       expect(actual.isRight && actual.right.message).toBe("Not a remote session, skipping setup");
     });
 
-    it("should return a valid result in remote session", async () => {
+    it("should return error when GITHUB_TOKEN is missing and gh is not installed", async () => {
       process.env["CLAUDE_CODE_REMOTE"] = "true";
+      delete process.env["GITHUB_TOKEN"];
+
+      const actual = await setup();
+
+      // If gh is already installed, it should succeed. Otherwise, it should fail with MISSING_GITHUB_TOKEN
+      const isValidResult = actual.isRight
+        ? isValidSuccessMessage(actual.right.message)
+        : actual.left.code === "MISSING_GITHUB_TOKEN";
+
+      expect(isValidResult).toBe(true);
+    });
+
+    it("should return a valid result in remote session with GITHUB_TOKEN", async () => {
+      process.env["CLAUDE_CODE_REMOTE"] = "true";
+      process.env["GITHUB_TOKEN"] = "test-token";
 
       const actual = await setup();
 

@@ -5,13 +5,14 @@ import {
   createWriteStream,
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readdirSync,
   renameSync,
   rmSync,
   unlinkSync,
 } from "node:fs";
 import { get as httpsGet } from "node:https";
-import { arch as osArch, homedir, platform as osPlatform } from "node:os";
+import { arch as osArch, homedir, platform as osPlatform, tmpdir as osTmpdir } from "node:os";
 import path from "node:path";
 
 import { either } from "@clipboard-health/util-ts";
@@ -20,6 +21,8 @@ import { createError, type GithubRelease, type PlatformInfo, type SetupResult } 
 
 const GITHUB_API_URL = "https://api.github.com/repos/cli/cli/releases/latest";
 const LOCAL_BIN_DIR = path.join(homedir(), ".local", "bin");
+const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_REDIRECTS = 5;
 
 export function isGhInstalled(): boolean {
   const result = spawnSync("gh", ["--version"], {
@@ -77,9 +80,9 @@ export function findAssetUrl(
   return asset?.browser_download_url;
 }
 
-async function fetchJson<T>(url: string): Promise<T> {
+async function fetchJson<T>(url: string, redirectCount = 0): Promise<T> {
   return await new Promise((resolve, reject) => {
-    httpsGet(
+    const request = httpsGet(
       url,
       {
         headers: {
@@ -90,13 +93,20 @@ async function fetchJson<T>(url: string): Promise<T> {
         if (response.statusCode === 302 || response.statusCode === 301) {
           const redirectUrl = response.headers.location;
           if (redirectUrl) {
+            if (redirectCount >= MAX_REDIRECTS) {
+              response.resume();
+              reject(new Error("Too many redirects"));
+              return;
+            }
+            response.resume();
             // eslint-disable-next-line promise/prefer-await-to-then -- recursive call inside Promise executor
-            fetchJson<T>(redirectUrl).then(resolve, reject);
+            fetchJson<T>(redirectUrl, redirectCount + 1).then(resolve, reject);
             return;
           }
         }
 
         if (response.statusCode !== 200) {
+          response.resume();
           reject(new Error(`HTTP ${response.statusCode ?? "unknown"}`));
           return;
         }
@@ -114,16 +124,26 @@ async function fetchJson<T>(url: string): Promise<T> {
         });
         response.on("error", reject);
       },
-    ).on("error", reject);
+    );
+    request.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      request.destroy(new Error("Request timeout"));
+    });
+    request.on("error", reject);
   });
+}
+
+function safeUnlink(filePath: string): void {
+  if (existsSync(filePath)) {
+    unlinkSync(filePath);
+  }
 }
 
 async function downloadFile(url: string, destination: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const file = createWriteStream(destination);
 
-    const makeRequest = (requestUrl: string): void => {
-      httpsGet(
+    const makeRequest = (requestUrl: string, redirectCount = 0): void => {
+      const request = httpsGet(
         requestUrl,
         {
           headers: {
@@ -134,14 +154,22 @@ async function downloadFile(url: string, destination: string): Promise<void> {
           if (response.statusCode === 302 || response.statusCode === 301) {
             const redirectUrl = response.headers.location;
             if (redirectUrl) {
-              makeRequest(redirectUrl);
+              if (redirectCount >= MAX_REDIRECTS) {
+                response.resume();
+                file.close();
+                safeUnlink(destination);
+                reject(new Error("Too many redirects"));
+                return;
+              }
+              response.resume();
+              makeRequest(redirectUrl, redirectCount + 1);
               return;
             }
           }
 
           if (response.statusCode !== 200) {
             file.close();
-            unlinkSync(destination);
+            safeUnlink(destination);
             reject(new Error(`HTTP ${response.statusCode ?? "unknown"}`));
             return;
           }
@@ -153,13 +181,17 @@ async function downloadFile(url: string, destination: string): Promise<void> {
           });
           file.on("error", (error) => {
             file.close();
-            unlinkSync(destination);
+            safeUnlink(destination);
             reject(error);
           });
         },
-      ).on("error", (error) => {
+      );
+      request.setTimeout(REQUEST_TIMEOUT_MS, () => {
+        request.destroy(new Error("Request timeout"));
+      });
+      request.on("error", (error) => {
         file.close();
-        unlinkSync(destination);
+        safeUnlink(destination);
         reject(error);
       });
     };
@@ -207,9 +239,7 @@ export async function installGh(): Promise<SetupResult> {
 
   mkdirSync(LOCAL_BIN_DIR, { recursive: true });
 
-  const temporaryDirectory = path.join(homedir(), ".local", "tmp");
-  mkdirSync(temporaryDirectory, { recursive: true });
-
+  const temporaryDirectory = mkdtempSync(path.join(osTmpdir(), "gh-install-"));
   const archivePath = path.join(temporaryDirectory, "gh.tar.gz");
   const extractDirectory = path.join(temporaryDirectory, "gh-extract");
 
@@ -251,11 +281,8 @@ export async function installGh(): Promise<SetupResult> {
       ),
     );
   } finally {
-    if (existsSync(archivePath)) {
-      unlinkSync(archivePath);
-    }
-    if (existsSync(extractDirectory)) {
-      rmSync(extractDirectory, { recursive: true, force: true });
+    if (existsSync(temporaryDirectory)) {
+      rmSync(temporaryDirectory, { recursive: true, force: true });
     }
   }
 }

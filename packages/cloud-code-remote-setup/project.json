@@ -9,7 +9,7 @@
       "executor": "@nx/js:tsc",
       "options": {
         "assets": ["packages/cloud-code-remote-setup/*.md"],
-        "main": "packages/cloud-code-remote-setup/src/index.js",
+        "main": "packages/cloud-code-remote-setup/src/index.ts",
         "outputPath": "dist/packages/cloud-code-remote-setup",
         "tsConfig": "packages/cloud-code-remote-setup/tsconfig.lib.json"
       },
