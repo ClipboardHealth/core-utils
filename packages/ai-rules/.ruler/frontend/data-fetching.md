@@ -21,7 +21,12 @@
 
 ```typescript
 // ✅ Server-side
-export function useGetItems(params: { page: number; pageSize: number; sortBy: string; sortOrder: "asc" | "desc" }) {
+export function useGetItems(params: {
+  page: number;
+  pageSize: number;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}) {
   return useQuery({ queryKey: ["items", params], queryFn: () => api.get("/items", { params }) });
 }
 
