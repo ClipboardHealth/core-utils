@@ -1,0 +1,10 @@
+# Local settings (per-project configuration)
+.claude/*.local.md
+
+# Temporary files
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

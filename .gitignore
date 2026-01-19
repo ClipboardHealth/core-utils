@@ -6,7 +6,6 @@
 .vscode/*
 coverage/
 dist/
-docs/
 gen/
 node_modules/
 out-tsc
