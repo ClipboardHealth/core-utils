@@ -12,6 +12,26 @@
 3. **Rely on React Query state** - Use `isLoading`, `isError`, `isSuccess`
 4. **Use `enabled` for conditional fetching**
 5. **Use `invalidateQueries` for disabled queries** - Not `refetch()` which ignores enabled state
+6. **Prefer server-side pagination and sorting** - When API supports it, avoid fetching all data client-side
+
+## Server-Side Pagination & Sorting
+
+- Check if API supports `page`, `pageSize`, `sortBy`, `sortOrder` params before implementing
+- Avoid client-side pagination/sorting of large datasets - doesn't scale
+
+```typescript
+// ✅ Server-side
+export function useGetItems(params: { page: number; pageSize: number; sortBy: string; sortOrder: "asc" | "desc" }) {
+  return useQuery({ queryKey: ["items", params], queryFn: () => api.get("/items", { params }) });
+}
+
+// ❌ Avoid: Fetching all data then paginating/sorting client-side
+export function useGetAllItems() {
+  return useQuery({ queryKey: ["items"], queryFn: () => api.get("/items") });
+}
+```
+
+**Use client-side only for:** small bounded datasets (<100 items), APIs without pagination support, or filtering already-fetched data.
 
 ## Hook Patterns
 
