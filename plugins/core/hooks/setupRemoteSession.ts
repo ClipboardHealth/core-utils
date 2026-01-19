@@ -5,12 +5,34 @@
  */
 
 import { execSync, spawnSync } from "node:child_process";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { arch as osArch, homedir, platform as osPlatform, tmpdir } from "node:os";
 import { join } from "node:path";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cli/cli/releases/latest";
 const LOCAL_BIN_DIR = join(homedir(), ".local", "bin");
+
+const STATUS = {
+  ghAvailable: "gh-available",
+  installed: "installed",
+  installFailed: "install-failed",
+  notRemote: "not-remote",
+  noToken: "no-token",
+} as const;
+
+type Status = (typeof STATUS)[keyof typeof STATUS];
+
+interface HookOutput {
+  hookSpecificOutput: {
+    additionalContext: string;
+    hookEventName: string;
+  };
+}
+
+interface SetupResult {
+  errorMessage?: string;
+  status: Status;
+}
 
 interface GithubRelease {
   assets: ReadonlyArray<{ browser_download_url: string; name: string }>;
@@ -18,11 +40,13 @@ interface GithubRelease {
 }
 
 function outputMessage(message: string): void {
-  console.log(
-    JSON.stringify({
-      hookSpecificOutput: { additionalContext: message, hookEventName: "SessionStart" },
-    }),
-  );
+  const output: HookOutput = {
+    hookSpecificOutput: {
+      additionalContext: message,
+      hookEventName: "SessionStart",
+    },
+  };
+  console.log(JSON.stringify(output));
 }
 
 function isGhAvailable(): boolean {
@@ -36,118 +60,113 @@ function isGhAvailable(): boolean {
   );
 }
 
-function getPlatformAssetName(tagName: string): string | undefined {
-  const platformMap: Record<string, string> = { darwin: "macOS", linux: "linux" };
-  const archMap: Record<string, string> = { arm64: "arm64", x64: "amd64" };
-
-  const platform = platformMap[osPlatform()];
-  const arch = archMap[osArch()];
-
-  if (!platform || !arch) {
-    return undefined;
-  }
-
-  return `gh_${tagName.replace("v", "")}_${platform}_${arch}.tar.gz`;
+function getAssetName(tagName: string): string | undefined {
+  const platforms: Record<string, string> = { darwin: "macOS", linux: "linux" };
+  const arches: Record<string, string> = { arm64: "arm64", x64: "amd64" };
+  const p = platforms[osPlatform()];
+  const a = arches[osArch()];
+  return p && a ? `gh_${tagName.replace("v", "")}_${p}_${a}.tar.gz` : undefined;
 }
 
-function curl(url: string): string {
-  return execSync(`curl -fsSL -H "User-Agent: claude-code-hook" "${url}"`, {
-    encoding: "utf8",
-    timeout: 30_000,
-  });
+function exec(cmd: string, timeout = 30_000): string {
+  return execSync(cmd, { encoding: "utf8", stdio: "pipe", timeout });
 }
 
 function installGh(): string | undefined {
-  const assetName = getPlatformAssetName("");
-  if (!assetName) {
+  if (!getAssetName("")) {
     return `Unsupported platform: ${osPlatform()} ${osArch()}`;
   }
 
   let release: GithubRelease;
   try {
-    release = JSON.parse(curl(GITHUB_API_URL)) as GithubRelease;
+    release = JSON.parse(exec(`curl -fsSL "${GITHUB_API_URL}"`)) as GithubRelease;
   } catch {
     return "Failed to fetch gh release info";
   }
 
-  const fullAssetName = getPlatformAssetName(release.tag_name);
-  const asset = release.assets.find((a) => a.name === fullAssetName);
+  const assetName = getAssetName(release.tag_name);
+  const asset = release.assets.find((a) => a.name === assetName);
   if (!asset) {
-    return `No gh CLI asset found for this platform`;
-  }
-
-  const checksumAsset = release.assets.find((a) => a.name === "checksums.txt");
-  let expectedChecksum: string | undefined;
-  if (checksumAsset) {
-    try {
-      const checksums = curl(checksumAsset.browser_download_url);
-      const match = checksums.split("\n").find((line) => line.includes(fullAssetName ?? ""));
-      expectedChecksum = match?.split(/\s+/)[0];
-    } catch {
-      // Continue without checksum
-    }
+    return "No gh CLI asset found for this platform";
   }
 
   const tempDir = join(tmpdir(), `gh-install-${Date.now()}`);
-  mkdirSync(tempDir, { recursive: true });
+  const archivePath = join(tempDir, "gh.tar.gz");
 
   try {
-    const archivePath = join(tempDir, "gh.tar.gz");
-    execSync(`curl -fsSL -o "${archivePath}" "${asset.browser_download_url}"`, { timeout: 60_000 });
+    mkdirSync(tempDir, { recursive: true });
+    exec(`curl -fsSL -o "${archivePath}" "${asset.browser_download_url}"`, 60_000);
+    exec(`tar -xzf "${archivePath}" -C "${tempDir}"`);
 
-    if (expectedChecksum) {
-      const actual = execSync(`sha256sum "${archivePath}"`, { encoding: "utf8" }).split(/\s+/)[0];
-      if (actual !== expectedChecksum) {
-        return `Checksum mismatch`;
-      }
+    const extracted = readdirSync(tempDir).find((d) => d !== "gh.tar.gz");
+    if (!extracted) {
+      return "No files extracted from archive";
     }
 
-    execSync(`tar -xzf "${archivePath}" -C "${tempDir}"`, { stdio: "pipe" });
-
-    const extractedDir = execSync(`ls "${tempDir}" | grep -v gh.tar.gz | head -1`, {
-      encoding: "utf8",
-    }).trim();
-    const ghBinPath = join(tempDir, extractedDir, "bin", "gh");
-    const destPath = join(LOCAL_BIN_DIR, "gh");
-
     mkdirSync(LOCAL_BIN_DIR, { recursive: true });
+    const destPath = join(LOCAL_BIN_DIR, "gh");
     if (existsSync(destPath)) {
       rmSync(destPath);
     }
-    copyFileSync(ghBinPath, destPath);
+    copyFileSync(join(tempDir, extracted, "bin", "gh"), destPath);
     chmodSync(destPath, 0o755);
 
-    if (spawnSync(destPath, ["--version"], { stdio: "pipe" }).status !== 0) {
-      return "gh CLI installed but not callable";
-    }
-
-    return undefined;
+    return spawnSync(destPath, ["--version"], { stdio: "pipe" }).status === 0
+      ? undefined
+      : "gh CLI installed but not callable";
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
 }
 
-function main(): void {
+function getSetupStatus(): SetupResult {
   if (process.env["CLAUDE_CODE_REMOTE"] !== "true") {
-    return;
+    return { status: STATUS.notRemote };
   }
 
   if (isGhAvailable()) {
-    return;
+    return { status: STATUS.ghAvailable };
   }
 
   if (!process.env["GITHUB_TOKEN"]) {
-    outputMessage("Remote session detected but GITHUB_TOKEN is not set.");
-    return;
+    return { status: STATUS.noToken };
   }
 
   const error = installGh();
-  if (error) {
-    outputMessage(`Failed to install gh CLI: ${error}`);
-    return;
-  }
+  return error
+    ? { errorMessage: error, status: STATUS.installFailed }
+    : { status: STATUS.installed };
+}
 
-  outputMessage(`Installed gh CLI to ${LOCAL_BIN_DIR}. Ensure it's in your PATH.`);
+function getMessageForStatus(status: Status, errorMessage?: string): string | undefined {
+  switch (status) {
+    case STATUS.notRemote:
+    case STATUS.ghAvailable: {
+      return undefined;
+    }
+    case STATUS.noToken: {
+      return "Remote session detected but GITHUB_TOKEN is not set.";
+    }
+    case STATUS.installed: {
+      return `Installed gh CLI to ${LOCAL_BIN_DIR}. Ensure it's in your PATH.`;
+    }
+    case STATUS.installFailed: {
+      return `Failed to install gh CLI: ${errorMessage}`;
+    }
+    default: {
+      const _exhaustiveCheck: never = status;
+      return _exhaustiveCheck;
+    }
+  }
+}
+
+function main(): void {
+  const { errorMessage, status } = getSetupStatus();
+  const message = getMessageForStatus(status, errorMessage);
+
+  if (message) {
+    outputMessage(message);
+  }
 }
 
 main();
