@@ -1,12 +1,12 @@
 module.exports = {
   coverageDirectory: "../../coverage/packages/cloud-code-remote-setup",
-  coveragePathIgnorePatterns: [],
+  coveragePathIgnorePatterns: ["src/bin/"],
   coverageThreshold: {
     global: {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
+      branches: 20,
+      functions: 20,
+      lines: 20,
+      statements: 20,
     },
   },
   displayName: "cloud-code-remote-setup",

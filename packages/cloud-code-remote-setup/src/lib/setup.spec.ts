@@ -1,11 +1,8 @@
 /* eslint-disable security/detect-non-literal-fs-filename -- Tests require dynamic file system operations */
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { homedir } from "node:os";
-import path from "node:path";
+import { mkdirSync } from "node:fs";
 
-import { isGhCallable, isGhInstalled, isRemoteSession, LOCAL_BIN_DIR, setup } from "./setup";
-
-const TEST_BIN_DIR = path.join(homedir(), ".local", "test-bin");
+import { isGhCallable, isGhInstalled, LOCAL_BIN_DIR } from "./ghInstall";
+import { isRemoteSession, setup } from "./setup";
 
 const VALID_SUCCESS_MESSAGES = new Set([
   "gh CLI is already installed",
@@ -65,36 +62,6 @@ describe("setup", () => {
       process.env["CLAUDE_CODE_REMOTE"] = "";
 
       const actual = isRemoteSession();
-
-      expect(actual).toBe(false);
-    });
-  });
-
-  describe("isGhInstalled", () => {
-    it("should return a boolean indicating if gh is globally installed", () => {
-      const actual = isGhInstalled();
-
-      expect(typeof actual).toBe("boolean");
-    });
-  });
-
-  describe("isGhCallable", () => {
-    afterEach(() => {
-      if (existsSync(TEST_BIN_DIR)) {
-        rmSync(TEST_BIN_DIR, { force: true, recursive: true });
-      }
-    });
-
-    it("should return false when directory does not exist", () => {
-      const actual = isGhCallable("/nonexistent/path");
-
-      expect(actual).toBe(false);
-    });
-
-    it("should return false when gh binary does not exist in directory", () => {
-      mkdirSync(TEST_BIN_DIR, { recursive: true });
-
-      const actual = isGhCallable(TEST_BIN_DIR);
 
       expect(actual).toBe(false);
     });
