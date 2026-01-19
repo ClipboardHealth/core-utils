@@ -2,12 +2,12 @@
 import { execSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  copyFileSync,
   createWriteStream,
   existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
-  renameSync,
   rmSync,
   unlinkSync,
 } from "node:fs";
@@ -142,6 +142,14 @@ async function downloadFile(url: string, destination: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const file = createWriteStream(destination);
 
+    const handleFileError = (error: Error): void => {
+      file.close();
+      safeUnlink(destination);
+      reject(error);
+    };
+
+    file.on("error", handleFileError);
+
     const makeRequest = (requestUrl: string, redirectCount = 0): void => {
       const request = httpsGet(
         requestUrl,
@@ -179,21 +187,12 @@ async function downloadFile(url: string, destination: string): Promise<void> {
             file.close();
             resolve();
           });
-          file.on("error", (error) => {
-            file.close();
-            safeUnlink(destination);
-            reject(error);
-          });
         },
       );
       request.setTimeout(REQUEST_TIMEOUT_MS, () => {
         request.destroy(new Error("Request timeout"));
       });
-      request.on("error", (error) => {
-        file.close();
-        safeUnlink(destination);
-        reject(error);
-      });
+      request.on("error", handleFileError);
     };
 
     makeRequest(url);
@@ -261,7 +260,7 @@ export async function installGh(): Promise<SetupResult> {
       unlinkSync(destinationPath);
     }
 
-    renameSync(ghBinPath, destinationPath);
+    copyFileSync(ghBinPath, destinationPath);
     chmodSync(destinationPath, 0o755);
 
     if (!isGhCallable(LOCAL_BIN_DIR)) {
