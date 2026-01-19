@@ -110,7 +110,7 @@ npm install --global embedex
 
 ## CLI reference
 
-```
+```text
 Usage: embedex [options]
 
 Embed shared text and code snippets from source files into destination files.

@@ -1,4 +1,4 @@
-// embedex: packages/ai-rules/.ruler/backend/notifications.md,packages/notifications/README.md
+// embedex: packages/notifications/README.md
 
 ### `triggerChunked`
 
