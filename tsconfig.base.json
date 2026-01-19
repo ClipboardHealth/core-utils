@@ -11,6 +11,9 @@
     "moduleResolution": "Node10",
     "paths": {
       "@clipboard-health/analytics": ["packages/analytics/src/index.ts"],
+      "@clipboard-health/cloud-code-remote-setup": [
+        "packages/cloud-code-remote-setup/src/index.ts"
+      ],
       "@clipboard-health/background-jobs-adapter": [
         "packages/background-jobs-adapter/src/index.ts"
       ],

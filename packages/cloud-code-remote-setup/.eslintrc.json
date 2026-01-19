@@ -1,0 +1,30 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
+  "parserOptions": {
+    "project": "packages/cloud-code-remote-setup/tsconfig.lint.json"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "unicorn/filename-case": ["error", { "case": "camelCase" }]
+      }
+    },
+    {
+      "files": ["./src/bin/**/*.ts"],
+      "rules": {
+        "n/no-process-exit": "off",
+        "n/shebang": "off",
+        "no-console": "off",
+        "unicorn/no-process-exit": "off",
+        "unicorn/prefer-top-level-await": "off"
+      }
+    }
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

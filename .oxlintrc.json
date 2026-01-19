@@ -280,6 +280,12 @@
       "rules": {
         "no-console": "off"
       }
+    },
+    {
+      "files": ["packages/cloud-code-remote-setup/src/bin/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
     }
   ]
 }

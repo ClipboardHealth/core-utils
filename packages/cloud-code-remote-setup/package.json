@@ -1,0 +1,27 @@
+{
+  "name": "@clipboard-health/cloud-code-remote-setup",
+  "description": "Setup utilities for Claude Code remote sessions.",
+  "version": "0.0.1",
+  "bin": {
+    "cloud-code-remote-setup": "./src/bin/cli.js"
+  },
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "dependencies": {
+    "@clipboard-health/util-ts": "4.6.43",
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {},
+  "keywords": [],
+  "license": "MIT",
+  "main": "./src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "packages/cloud-code-remote-setup",
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+  },
+  "type": "commonjs",
+  "typings": "./src/index.d.ts"
+}

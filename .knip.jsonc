@@ -21,6 +21,9 @@
   ],
   "webpack": false,
   "workspaces": {
+    "packages/cloud-code-remote-setup": {
+      "entry": ["src/bin/**/*.ts", "src/index.ts"],
+    },
     "packages/analytics": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
