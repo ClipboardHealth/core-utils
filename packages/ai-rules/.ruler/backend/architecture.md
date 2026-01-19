@@ -4,7 +4,7 @@
 
 All NestJS microservices follow a three-tier layered architecture:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Entrypoints (Controllers, message consumers)                   │
 │  - HTTP request/response, JSON:API DTO translation, auth        │
@@ -21,7 +21,7 @@ All NestJS microservices follow a three-tier layered architecture:
 
 **Module Structure:**
 
-```
+```text
 modules/
 └── example/
     ├── data/
@@ -42,7 +42,7 @@ modules/
 
 **File Patterns:**
 
-```
+```text
 *.controller.ts  - HTTP controllers (entrypoints)
 *.consumer.ts    - Message consumers (entrypoints)
 *.service.ts     - Business logic (logic)

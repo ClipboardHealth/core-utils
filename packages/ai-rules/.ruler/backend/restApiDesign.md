@@ -41,30 +41,29 @@ POST /workers/:workerId/referral-codes
 
 ## HTTP Status Codes
 
-| Code | Meaning                        |
-| ---- | ------------------------------ |
-| 200  | OK (GET, PATCH, DELETE)        |
-| 201  | Created (POST)                 |
-| 202  | Accepted (async started)       |
-| 400  | Bad Request (syntax error)     |
-| 401  | Unauthorized (auth failed)     |
-| 403  | Forbidden (authz failed)       |
-| 404  | Not Found                      |
-| 409  | Conflict (already exists)      |
-| 422  | Unprocessable (semantic error) |
-| 429  | Rate limited                   |
-| 500  | Server error                   |
+| Code | Meaning                                                 |
+| ---- | ------------------------------------------------------- |
+| 200  | OK (GET, PATCH, DELETE)                                 |
+| 201  | Created (POST)                                          |
+| 202  | Accepted (async started)                                |
+| 400  | Bad Request (syntax error)                              |
+| 401  | Unauthorized (auth failed)                              |
+| 403  | Forbidden (authz failed)                                |
+| 404  | Not Found                                               |
+| 409  | Conflict (already exists)                               |
+| 422  | Unprocessable (semantic error, unsupported filter/sort) |
+| 429  | Rate limited                                            |
+| 500  | Server error                                            |
 
 ## Filtering, Sorting, Pagination
 
-```
+```text
 GET /shifts?filter[verified]=true&sort=startDate,-urgency&page[cursor]=abc&page[size]=50
 ```
 
 - Cursor-based pagination only (not offset)
 - Avoid count totals (performance)
 - Only implement filters/sorts clients need
-- Return 400 for unsupported filter/sort
 
 ## Contracts
 

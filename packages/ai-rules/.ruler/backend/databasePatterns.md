@@ -42,7 +42,7 @@ const result = await Users.aggregate<ResultType>()
 - Set `autoIndex: false`
 - Design covering indexes for high-traffic queries
 
-```
+```text
 models/User/
 ├── schema.ts    # Schema only
 ├── indexes.ts   # Indexes only

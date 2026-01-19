@@ -1,6 +1,6 @@
 # Configuration
 
-```
+```text
 Contains secrets?
   └── Yes → SSM Parameter Store
   └── No → Engineers-only, tolerate 1hr propagation?

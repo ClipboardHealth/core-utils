@@ -27,7 +27,7 @@
 
 ## Spacing
 
-Use theme spacing indices 1-12 (4px-64px):
+Use theme spacing indices 1-12:
 
 ```typescript
 <Box sx={{ padding: 5 }} />
