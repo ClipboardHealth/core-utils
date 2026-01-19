@@ -23,7 +23,7 @@ Follow [JSON:API spec](https://jsonapi.org/).
 
 ## URLs
 
-```
+```text
 GET /urgent-shifts                    # lowercase kebab-case, plural nouns
 GET /workers/:workerId/shifts
 POST /workers/:workerId/referral-codes

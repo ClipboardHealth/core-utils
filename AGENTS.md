@@ -142,15 +142,7 @@ Use when: error handling hard to trigger black-box, concurrency scenarios, >5 va
 - Prefer `it.each` for multiple cases
 - No conditional logic in tests
 
-<!-- Source: .ruler/common/thirdPartyDependencies.md -->
-
-# Third-Party Dependencies
-
-**Criteria:** License (Apache, MIT safe; GPL not safe), test coverage, popularity, maintenance.
-
-Avoid duplicates (e.g., don't add `underscore` if using `lodash`).
-
-<!-- Source: .ruler/common/typescript.md -->
+<!-- Source: .ruler/common/typeScript.md -->
 
 # TypeScript
 
@@ -166,12 +158,14 @@ Avoid duplicates (e.g., don't add `underscore` if using `lodash`).
 
 - Strict-mode TypeScript; prefer interfaces over types
 - Avoid enums—use const maps
-- Avoid `any`—use `unknown` or generics
-- Avoid type assertions (`as`, `!`) unless necessary
+- NEVER use `any`—use `unknown` or generics
+- Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
 - Explicit return types on functions
 - Files read top-to-bottom: exports first, internal helpers below
+- Boolean props: `is*`, `has*`, `should*`, `can*`
+- Use const assertions for constants: `as const`
 
 ## Types
 

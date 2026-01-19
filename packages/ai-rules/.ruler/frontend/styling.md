@@ -30,8 +30,8 @@
 Use theme spacing indices 1-12 (4px-64px):
 
 ```typescript
-<Box sx={{ padding: 5 }} />    // → 16px
-<Box sx={{ marginX: 4 }} />    // → 12px horizontal
+<Box sx={{ padding: 5 }} />
+<Box sx={{ marginX: 4 }} />
 ```
 
 Use `rem` for fonts/heights (scales with user zoom), spacing indices for padding/margin.

@@ -20,8 +20,3 @@ output_path = "AGENTS.md"
 [agents.cursor]
 enabled = true
 output_path = "AGENTS.md"
-
-# Windsurf has a 10k character limit, but our frontend rules are 10x that
-[agents.windsurf]
-enabled = false
-output_path = "global_rules.md"
