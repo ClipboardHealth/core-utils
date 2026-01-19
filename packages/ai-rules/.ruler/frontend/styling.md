@@ -1,68 +1,45 @@
-# Styling Standards
+# Styling
 
-## Core Principles
+## Core Rules
 
-1. **Always use `sx` prop** - Never CSS/SCSS/SASS files
-2. **Use theme tokens** - Never hardcode colors/spacing
-3. **Type-safe theme access** - Use `sx={(theme) => ({...})}`
-4. **Use semantic names** - `theme.palette.text.primary`, not `common.white`
-5. **Check Storybook first** - It's the single source of truth
+1. **Always use `sx` prop**—never CSS/SCSS/SASS/styled()/makeStyles()
+2. **Use theme tokens**—never hardcode colors/spacing
+3. **Type-safe theme access**—use `sx={(theme) => ({...})}`
+4. **Use semantic token names**—`theme.palette.text.primary`, not `common.white`
 
-## Restricted Patterns
-
-❌ **DO NOT USE:**
-
-- `styled()` or `makeStyles()` from MUI
-- CSS/SCSS/SASS files
-- Inline `style` prop (use `sx` instead)
-- String paths for theme (`"text.secondary"` - not type-safe)
-
-## Type-Safe Theme Access
+## Patterns
 
 ```typescript
-// ✅ Always use function form for type safety
+// ✅ Correct
 <Box sx={(theme) => ({
   backgroundColor: theme.palette.background.primary,
   color: theme.palette.text.secondary,
-  padding: theme.spacing(4), // or just: 4
+  padding: theme.spacing(4), // or just: padding: 4
 })} />
 
-// ❌ Never hardcode
+// ❌ Wrong
 <Box sx={{
-  backgroundColor: "red", // ❌ Raw color
-  padding: "16px", // ❌ Raw size
-  color: "text.secondary", // ❌ String path
+  backgroundColor: "red",      // raw color
+  padding: "16px",             // raw size
+  color: "text.secondary",     // string path (not type-safe)
 }} />
 ```
 
-## Spacing System
+## Spacing
 
-Use indices 1-12 (4px-64px):
+Use theme spacing indices 1-12 (4px-64px):
 
 ```typescript
 <Box sx={{ padding: 5 }} />    // → 16px
-<Box sx={{ marginX: 4 }} />    // → 12px left and right
-<Box sx={{ gap: 3 }} />        // → 8px
+<Box sx={{ marginX: 4 }} />    // → 12px horizontal
 ```
 
-**Use `rem` for fonts/heights (scales with user zoom), `px` for spacing:**
+Use `rem` for fonts/heights (scales with user zoom), spacing indices for padding/margin.
 
-```typescript
-<Box sx={(theme) => ({
-  height: "3rem", // ✅ Scales
-  fontSize: theme.typography.body1.fontSize,
-  padding: 5, // ✅ Prevents overflow
-})} />
-```
+## Property Names
 
-## Responsive Styles
-
-```typescript
-<Box sx={{
-  width: { xs: "100%", md: "50%" },
-  padding: { xs: 1, md: 3 },
-}} />
-```
+- ✅ Use full names: `padding`, `paddingX`, `marginY`
+- ❌ Avoid abbreviations: `p`, `px`, `my`
 
 ## Pseudo-classes
 
@@ -70,25 +47,6 @@ Use indices 1-12 (4px-64px):
 <Box sx={(theme) => ({
   "&:hover": { backgroundColor: theme.palette.primary.dark },
   "&:disabled": { opacity: 0.5 },
-  "& .child": { color: theme.palette.text.secondary },
+  "& .MuiTypography-root": { color: theme.palette.text.secondary },
 })} />
 ```
-
-## Shorthand Properties
-
-✅ Use full names: `padding`, `paddingX`, `marginY`
-❌ Avoid abbreviations: `p`, `px`, `my`
-
-## Layout Components
-
-Safe to import directly from MUI:
-
-```typescript
-import { Box, Stack, Container, Grid } from "@mui/material";
-```
-
-## Best Practices
-
-- Type-safe access with `sx={(theme) => ({...})}`
-- Use semantic token names
-- Full property names, not abbreviations
