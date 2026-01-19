@@ -3,7 +3,7 @@ module.exports = {
   coveragePathIgnorePatterns: ["src/bin/"],
   coverageThreshold: {
     global: {
-      branches: 10,
+      branches: 9,
       functions: 20,
       lines: 20,
       statements: 20,

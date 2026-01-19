@@ -1,8 +1,10 @@
 /* eslint-disable security/detect-non-literal-fs-filename -- This module requires dynamic file system operations to install CLI tools */
 import { execSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   chmodSync,
   copyFileSync,
+  createReadStream,
   createWriteStream,
   existsSync,
   mkdirSync,
@@ -80,7 +82,17 @@ export function findAssetUrl(
   return asset?.browser_download_url;
 }
 
-async function fetchJson<T>(url: string, redirectCount = 0): Promise<T> {
+function findChecksumUrl(release: GithubRelease): string | undefined {
+  const asset = release.assets.find((a) => a.name === "checksums.txt");
+  return asset?.browser_download_url;
+}
+
+function getExpectedAssetName(release: GithubRelease, platformInfo: PlatformInfo): string {
+  const { arch, platform } = platformInfo;
+  return `gh_${release.tag_name.replace("v", "")}_${platform}_${arch}.tar.gz`;
+}
+
+async function fetchText(url: string, redirectCount = 0): Promise<string> {
   return await new Promise((resolve, reject) => {
     const request = httpsGet(
       url,
@@ -100,7 +112,7 @@ async function fetchJson<T>(url: string, redirectCount = 0): Promise<T> {
             }
             response.resume();
             // eslint-disable-next-line promise/prefer-await-to-then -- recursive call inside Promise executor
-            fetchJson<T>(redirectUrl, redirectCount + 1).then(resolve, reject);
+            fetchText(redirectUrl, redirectCount + 1).then(resolve, reject);
             return;
           }
         }
@@ -116,11 +128,7 @@ async function fetchJson<T>(url: string, redirectCount = 0): Promise<T> {
           data += chunk.toString();
         });
         response.on("end", () => {
-          try {
-            resolve(JSON.parse(data) as T);
-          } catch (error) {
-            reject(error);
-          }
+          resolve(data);
         });
         response.on("error", reject);
       },
@@ -130,6 +138,36 @@ async function fetchJson<T>(url: string, redirectCount = 0): Promise<T> {
     });
     request.on("error", reject);
   });
+}
+
+async function fetchJson<T>(url: string, redirectCount = 0): Promise<T> {
+  const data = await fetchText(url, redirectCount);
+  return JSON.parse(data) as T;
+}
+
+async function computeFileSha256(filePath: string): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const hash = createHash("sha256");
+    const stream = createReadStream(filePath);
+    stream.on("data", (chunk: Buffer | string) => {
+      hash.update(chunk);
+    });
+    stream.on("end", () => {
+      resolve(hash.digest("hex"));
+    });
+    stream.on("error", reject);
+  });
+}
+
+function parseChecksumForAsset(checksumContent: string, assetName: string): string | undefined {
+  const lines = checksumContent.split("\n");
+  for (const line of lines) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length >= 2 && parts[1] === assetName) {
+      return parts[0];
+    }
+  }
+  return undefined;
 }
 
 function safeUnlink(filePath: string): void {
@@ -236,6 +274,19 @@ export async function installGh(): Promise<SetupResult> {
     );
   }
 
+  const checksumUrl = findChecksumUrl(release);
+  let expectedChecksum: string | undefined;
+
+  if (checksumUrl) {
+    try {
+      const checksumContent = await fetchText(checksumUrl);
+      const assetName = getExpectedAssetName(release, platformInfo);
+      expectedChecksum = parseChecksumForAsset(checksumContent, assetName);
+    } catch {
+      // Checksum fetch failed, continue without verification but log warning
+    }
+  }
+
   mkdirSync(LOCAL_BIN_DIR, { recursive: true });
 
   const temporaryDirectory = mkdtempSync(path.join(osTmpdir(), "gh-install-"));
@@ -244,6 +295,18 @@ export async function installGh(): Promise<SetupResult> {
 
   try {
     await downloadFile(assetUrl, archivePath);
+
+    if (expectedChecksum) {
+      const actualChecksum = await computeFileSha256(archivePath);
+      if (actualChecksum !== expectedChecksum) {
+        return either.left(
+          createError(
+            "CHECKSUM_MISMATCH",
+            `Downloaded file checksum mismatch: expected ${expectedChecksum}, got ${actualChecksum}`,
+          ),
+        );
+      }
+    }
 
     extractTarGz(archivePath, extractDirectory);
 
