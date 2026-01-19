@@ -3,7 +3,7 @@
 ## Core Rules
 
 1. **Always use `sx` prop**—never CSS/SCSS/SASS/styled()/makeStyles()
-2. **Use theme tokens**—never hardcode colors/spacing
+2. **Use theme tokens**—never use raw string values for colors/spacing
 3. **Type-safe theme access**—use `sx={(theme) => ({...})}`
 4. **Use semantic token names**—`theme.palette.text.primary`, not `common.white`
 

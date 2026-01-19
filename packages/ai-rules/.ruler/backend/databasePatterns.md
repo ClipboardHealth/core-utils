@@ -5,7 +5,7 @@
 **ObjectId:**
 
 ```typescript
-import { Types, Schema } from "mongoose";
+import mongoose, { Types, Schema } from "mongoose";
 
 const id = new Types.ObjectId();
 
