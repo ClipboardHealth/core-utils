@@ -10,7 +10,7 @@ Follow Conventional Commits 1.0 spec for commit messages and PR titles.
 
 # Configuration
 
-```
+```text
 Contains secrets?
   └── Yes → SSM Parameter Store
   └── No → Engineers-only, tolerate 1hr propagation?
