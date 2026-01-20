@@ -76,7 +76,7 @@ Save tickets to `docs/YYYY-MM-feature-name/NN-ticket-slug.md` following the temp
 After creating tickets:
 
 - Human reviews ticket breakdown
-- Create Linear issues linked to markdown files
+- Create Linear issues linked to Markdown files
 - Begin implementation with `/code` command
 - Start with interface tickets first
 

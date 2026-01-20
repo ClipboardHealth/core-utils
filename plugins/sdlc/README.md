@@ -152,7 +152,7 @@ Before Claude stops on implementation tasks, verifies:
 
 - **Separation of concerns**: Agents cannot validate their own work
 - **Humans as final gate**: All production-affecting actions require approval
-- **Single source of truth**: Documentation lives in repos as markdown
+- **Single source of truth**: Documentation lives in repos as Markdown
 - **Semi-autonomous**: Agents propose actions and wait for approval
 - **Guided TDD**: Encourage test-first development with flexibility
 

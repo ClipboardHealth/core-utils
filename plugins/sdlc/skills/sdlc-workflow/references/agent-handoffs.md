@@ -318,7 +318,7 @@ Each handoff includes:
 Agents should record state in:
 
 1. **Git commits** - Code changes with clear messages
-2. **Ticket updates** - Progress notes in ticket markdown
+2. **Ticket updates** - Progress notes in ticket Markdown
 3. **PR description** - Cumulative work summary
 
 ## Human Intervention Points

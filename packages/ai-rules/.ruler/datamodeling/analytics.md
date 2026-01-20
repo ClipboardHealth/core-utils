@@ -28,8 +28,8 @@ Use the dbt-mcp server to:
 ## Output format
 
 - When running queries against snowflake and providing the user with a final answer, always show the final query that produced the result along with the result itself, so that the user is able to validate the query makes sense.
-- Once you've reached a final query that you need to show to the user, use get_metabase_playground_link to generate a playground link where the user can run the query themselves. Format it as a link with the 'metabase playground link' label as the link text, using slack's markdown format. This is A MUST
-- Include charts or tables formatted as markdown if needed
+- Once you've reached a final query that you need to show to the user, use get_metabase_playground_link to generate a playground link where the user can run the query themselves. Format it as a link with the 'metabase playground link' label as the link text, using slack's Markdown format. This is A MUST
+- Include charts or tables formatted as Markdown if needed
 - If the final result is a single number, make sure to show this prominently to the user so it's very easy to see
 
 ## Identifying the right columns to use and how to filter data

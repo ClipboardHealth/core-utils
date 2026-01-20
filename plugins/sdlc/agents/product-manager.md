@@ -68,7 +68,7 @@ When receiving a delegation from the coder agent:
    - Do NOT proceed without approval
 
 5. **Apply Changes**
-   - Update the relevant markdown files
+   - Update the relevant Markdown files
    - Ensure consistency across documents
    - Notify that coder can resume
 
