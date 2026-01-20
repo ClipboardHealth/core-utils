@@ -61,57 +61,11 @@ export interface HookOutput {
 }
 
 /**
- * PreToolUse hook input structure.
- * Passed to PreToolUse hooks via stdin as JSON.
- */
-export interface PreToolUseInput {
-  hook_event_name: "PreToolUse";
-  tool_name: string;
-  tool_input: Record<string, unknown>;
-}
-
-/**
- * SessionStart hook input structure.
- * Passed to SessionStart hooks via stdin as JSON.
- */
-export interface SessionStartInput {
-  hook_event_name: "SessionStart";
-  session_id: string;
-  project_dir: string;
-}
-
-/**
  * Outputs a hook response to stdout.
  * Must be called with exit code 0 for JSON to be processed.
  */
 export function outputHookResponse(output: HookOutput): void {
   console.log(JSON.stringify(output));
-}
-
-/**
- * Creates a PreToolUse allow response.
- */
-export function allowToolUse(systemMessage?: string): HookOutput {
-  return {
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "allow",
-      ...(systemMessage && { systemMessage }),
-    },
-  };
-}
-
-/**
- * Creates a PreToolUse deny response.
- */
-export function denyToolUse(reason: string): HookOutput {
-  return {
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: reason,
-    },
-  };
 }
 
 /**
@@ -124,29 +78,4 @@ export function addSessionContext(context: string): HookOutput {
       additionalContext: context,
     },
   };
-}
-
-/**
- * Reads and parses hook input from stdin.
- * Returns undefined if input is empty or invalid JSON.
- */
-export async function readHookInput<T>(): Promise<T | undefined> {
-  return new Promise((resolve) => {
-    let data = "";
-    process.stdin.setEncoding("utf8");
-    process.stdin.on("data", (chunk) => {
-      data += chunk;
-    });
-    process.stdin.on("end", () => {
-      if (!data.trim()) {
-        resolve(undefined);
-        return;
-      }
-      try {
-        resolve(JSON.parse(data) as T);
-      } catch {
-        resolve(undefined);
-      }
-    });
-  });
 }
