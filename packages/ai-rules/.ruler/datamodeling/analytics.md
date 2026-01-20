@@ -16,11 +16,11 @@ Use the dbt-mcp server to:
 - When using the Snowflake MCP to run queries, you must set the database context properly in your queries. Use fully qualified table names or set the database context to avoid connection errors.
 - The `describe_object` tool in the Snowflake MCP has a bug where it misinterprets the target_object structure, treating the table name as a database name and causing 404 "database does not exist" errors. Use `run_snowflake_query` with "DESCRIBE TABLE" instead to get table schema information successfully.
 
-## Guidelines when using this knowledge:
+## Guidelines when using this knowledge
 
 - Read all of the docs.yml files to learn about the analytics schema.
 - When in doubt, read the code in the data-modeling repo to learn how each column is calculated and where the data is coming from
-- Strongly prefer to use mart models (defined inside the mart folder, those that don't have an int* or stg* prefix) before int* and stg* models
+- Strongly prefer to use mart models (defined inside the mart folder, those that don't have an int- or stg- prefix) before int- and stg- models
 - Strongly prefer to query tables under the analytics schema, before querying any other schemas like airbyte_db/hevo_database
 - If unsure, confirm with the user. Providing suggestions of tables to use
 - If required, you might do some data analysis using python instead of pure SQL. Connect to snowflake using a python script and then use libraries like pandas, numpy, seaborn for visualization
@@ -28,8 +28,8 @@ Use the dbt-mcp server to:
 ## Output format
 
 - When running queries against snowflake and providing the user with a final answer, always show the final query that produced the result along with the result itself, so that the user is able to validate the query makes sense.
-- Once you've reached a final query that you need to show to the user, use get_metabase_playground_link to generate a playground link where the user can run the query themselves. Format it as a link with the 'metabase playground link' label as the link text, using slack's markdown format. This is A MUST
-- Include charts or tables formatted as markdown if needed
+- Once you've reached a final query that you need to show to the user, use get_metabase_playground_link to generate a playground link where the user can run the query themselves. Format it as a link with the 'metabase playground link' label as the link text, using slack's Markdown format. This is A MUST
+- Include charts or tables formatted as Markdown if needed
 - If the final result is a single number, make sure to show this prominently to the user so it's very easy to see
 
 ## Identifying the right columns to use and how to filter data

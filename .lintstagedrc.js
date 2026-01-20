@@ -12,12 +12,13 @@ module.exports = {
     `npm run cspell -- ${files.join(" ")}`,
     `npm run knip`,
     `npm run oxlint`,
+    `npm run lint:md`,
   ],
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
   ],
   "**/*.{ts,tsx,md,mdx}": async () => [`npm run embed:check`],
-  "**/*.{css,scss,graphql,js,json,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
+  "**/*.{css,scss,graphql,js,json,jsonc,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
     `prettier --write ${files.join(" ")}`,
   ],
   "**/package.json": async () => [

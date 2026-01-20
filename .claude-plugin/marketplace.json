@@ -15,6 +15,15 @@
         "name": "Clipboard"
       },
       "source": "./plugins/core"
+    },
+    {
+      "name": "sdlc",
+      "description": "AI-First Software Development Lifecycle with TDD methodology",
+      "version": "0.2.0",
+      "author": {
+        "name": "Clipboard"
+      },
+      "source": "./plugins/sdlc"
     }
   ]
 }

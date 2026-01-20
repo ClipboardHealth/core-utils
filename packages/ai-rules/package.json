@@ -28,7 +28,6 @@
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "scripts": {
-    "format": "prettier --write '.ruler/**/*.md'",
-    "lint:md": "markdownlint-cli2 '.ruler/**/*.md' 'README.md'"
+    "format": "prettier --write '.ruler/**/*.md'"
   }
 }

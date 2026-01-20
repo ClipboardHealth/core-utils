@@ -148,11 +148,13 @@ Use when: error handling hard to trigger black-box, concurrency scenarios, >5 va
 
 ## Naming Conventions
 
-| Element               | Convention            | Example                      |
-| --------------------- | --------------------- | ---------------------------- |
-| File-scope constants  | UPPER_SNAKE_CASE      | `MAX_RETRY_COUNT`            |
-| Acronyms in camelCase | Lowercase after first | `httpRequest`, `gpsPosition` |
-| Files                 | Singular, dotted      | `user.service.ts`            |
+- Avoid acronyms and abbreviations unless widely known
+
+| Element                            | Convention            | Example                      |
+| ---------------------------------- | --------------------- | ---------------------------- |
+| File-scope constants               | UPPER_SNAKE_CASE      | `MAX_RETRY_COUNT`            |
+| Widely known acronyms in camelCase | Lowercase after first | `httpRequest`, `gpsPosition` |
+| Files                              | Singular, dotted      | `user.service.ts`            |
 
 ## Core Rules
 
@@ -270,7 +272,7 @@ function formatUserName(first: string, last: string): string {
 
 # Architecture
 
-This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard Health. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
+This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
 
 ## Key Libraries
 

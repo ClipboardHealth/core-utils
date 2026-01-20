@@ -7,6 +7,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { addSessionContext, outputHookResponse } from "../../lib/hooks.ts";
+
 const PROJECT_DIR = process.env["CLAUDE_PROJECT_DIR"] ?? ".";
 const PACKAGE_NAME = "@clipboard-health/ai-rules";
 const README_URL =
@@ -22,13 +24,6 @@ const STATUS = {
 
 type Status = (typeof STATUS)[keyof typeof STATUS];
 
-interface HookOutput {
-  hookSpecificOutput: {
-    hookEventName: string;
-    additionalContext: string;
-  };
-}
-
 interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -41,13 +36,7 @@ interface InstallationResult {
 }
 
 function outputMessage(message: string): void {
-  const output: HookOutput = {
-    hookSpecificOutput: {
-      hookEventName: "SessionStart",
-      additionalContext: message,
-    },
-  };
-  console.log(JSON.stringify(output));
+  outputHookResponse(addSessionContext(message));
 }
 
 function parsePackageJson(pkgPath: string): InstallationResult | PackageJson {
