@@ -86,6 +86,8 @@ Throughput    | 1000 rps | 980 rps  | -2%      | ✅
 - P50 latency increase > 5%
 - Throughput decrease > 5%
 
+> **Note:** These thresholds are defaults. Customize based on your system's baseline metrics, business criticality, and rollout phase (tighter thresholds for canary vs. full rollout).
+
 #### Step 4: Rollout Management
 
 **Phase Progression:**
@@ -100,7 +102,11 @@ Typical rollout:
 
 **Before each progression:**
 
-1. Check metrics stable for defined period
+1. Check metrics stable for monitoring period:
+   - Canary: 24-48 hours
+   - Limited: 24 hours
+   - Expanded: 12-24 hours
+   - Broad: 12 hours
 2. No new issues reported
 3. Previous phase successful
 4. Propose progression with evidence

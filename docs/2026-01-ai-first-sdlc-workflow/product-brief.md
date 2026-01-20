@@ -59,7 +59,7 @@ Specialized agents implement the tickets. The separation of concerns reduces age
   - Refactor: Cleans up implementation and/or tests using a code-simplifier agent, verifying tests remain passing.
   - Commit changes to source control.
   - Repeat: Write the next failing test.
-- oduct-manager: If coder cannot match the spec, they delegate to this agent; coder agents cannot edit the spec or interfaces themselves.
+- product-manager: If coder cannot match the spec, they delegate to this agent; coder agents cannot edit the spec or interfaces themselves.
 
 When feature complete, the following agents run:
 

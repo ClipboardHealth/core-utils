@@ -280,6 +280,23 @@ After implementation complete:
 ### Ready for: Evidence collection, PR creation
 ```
 
+### From Evidence Bundler
+
+See `evidence-bundler.md` for the evidence bundle format. The handoff to human summarizes:
+
+- Evidence collected (test results, screenshots, logs, metrics)
+- Any missing evidence with explanation
+- Confirmation ready for PR creation via `/review`
+
+### From Deployment Monitor
+
+See `deployment-monitor.md` for detailed proposal formats:
+
+- **Rollback Proposal Format**: Issue detected, metrics comparison, evidence, recommended action
+- **Rollout Progression Format**: Current phase status, metrics summary, progression recommendation
+
+Both formats require human approval before any production-affecting action.
+
 ## Error Handling
 
 ### Verification Failure

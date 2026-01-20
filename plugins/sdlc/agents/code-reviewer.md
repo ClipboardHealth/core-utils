@@ -78,7 +78,7 @@ Check for:
 
 - Formatting inconsistencies
 - Import ordering
-- Simple refactors (rename for clarity)
+- Local variable renames for clarity
 - Missing/extra whitespace
 - Comment typos
 
