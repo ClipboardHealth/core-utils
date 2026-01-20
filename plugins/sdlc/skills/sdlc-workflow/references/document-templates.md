@@ -25,7 +25,6 @@ Feature: [Feature name]
     When [action]
     Then [expected result]
 ```
-````
 
 ### Non-Functional Requirements
 
@@ -61,12 +60,11 @@ Feature: [Feature name]
 
 - [ ] [Question 1]
 - [ ] [Question 2]
-
 ````
 
 ## Technical Design Template
 
-```markdown
+````markdown
 # Technical Design: [Feature Name]
 
 **Status:** Draft | In Review | Approved
@@ -96,7 +94,7 @@ type ServiceError =
   | { code: "NOT_FOUND"; message: string }
   | { code: "VALIDATION_ERROR"; errors: ValidationError[] }
   | { code: "INTERNAL_ERROR"; correlationId: string };
-````
+```
 
 ### Module A → Module B
 
@@ -207,7 +205,6 @@ type ServiceError =
 
 - [ ] [Question 1]
 - [ ] [Question 2]
-
 ````
 
 ## Ticket Template
@@ -251,11 +248,11 @@ type ServiceError =
 - [ ] Tests passing
 - [ ] Code reviewed locally
 - [ ] Documentation updated
-````
+```
 
 ## Evidence Bundle Structure
 
-```markdown
+````markdown
 # Evidence Bundle: [Feature/PR Name]
 
 ## Before State
@@ -287,37 +284,30 @@ _Description of after state_
 ## Test Results
 
 ### Unit Tests
-```
 
+```text
 Tests: XX passed, XX total
 Coverage: XX%
-
 ```
 
 ### Integration Tests
 
-```
-
+```text
 Tests: XX passed, XX total
-
 ```
 
 ### E2E Tests
 
-```
-
+```text
 Tests: XX passed, XX total
-
 ```
 
 ## Logs
 
 ### Relevant Log Excerpts
 
-```
-
+```text
 [Timestamp] [Level] [Message]
-
 ```
 
 ## Verification Checklist
@@ -326,4 +316,4 @@ Tests: XX passed, XX total
 - [ ] All tests passing
 - [ ] No regressions in monitoring
 - [ ] Manual verification complete
-```
+````

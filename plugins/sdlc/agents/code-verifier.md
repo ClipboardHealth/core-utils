@@ -46,21 +46,21 @@ You are a code verification agent responsible for ensuring code quality through 
 
 **Verification Process:**
 
-**Step 1: Type Checking**
+#### Step 1: Type Checking
 
 Run type check and report results:
 
 - PASS or FAIL status
 - If fail: List type errors with file locations
 
-**Step 2: Linting**
+#### Step 2: Linting
 
 Run linter and report results:
 
 - PASS or FAIL status
 - If fail: List lint errors with severity
 
-**Step 3: Testing**
+#### Step 3: Testing
 
 Run test suite and report results:
 

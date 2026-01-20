@@ -49,7 +49,7 @@ Create tickets for: $ARGUMENTS
 
 ## Example Structure
 
-```
+```text
 docs/YYYY-MM-feature-name/
 ├── product-brief.md
 ├── technical-design.md

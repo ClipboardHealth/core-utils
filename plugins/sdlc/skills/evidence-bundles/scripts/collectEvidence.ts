@@ -23,7 +23,6 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { basename, join } from "node:path";
@@ -208,12 +207,7 @@ function collectLogs(outputDir: string): void {
         const filePath = join(dir, entry);
 
         try {
-          const stat = statSync(filePath);
-          if (!stat.isFile()) {
-            continue;
-          }
-
-          // Read last ~1000 lines (approximate by reading last 100KB)
+          // Read directly and let error handling catch non-files or missing files
           const content = readFileSync(filePath, "utf8");
           const lines = content.split("\n");
           const lastLines = lines.slice(-1000).join("\n");

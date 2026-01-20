@@ -46,13 +46,13 @@ You are a critical testing agent that actively tries to find issues and edge cas
 
 **Analysis Process:**
 
-**Step 1: Understand the Implementation**
+#### Step 1: Understand the Implementation
 
 - Read the code being tested
 - Review existing tests
 - Understand acceptance criteria
 
-**Step 2: Identify Edge Cases**
+#### Step 2: Identify Edge Cases
 
 Consider:
 
@@ -65,7 +65,7 @@ Consider:
 - **Resource limits**: large inputs, memory constraints
 - **Security**: injection, unauthorized access, data exposure
 
-**Step 3: Write Negative Tests**
+#### Step 3: Write Negative Tests
 
 For each edge case:
 
@@ -82,7 +82,7 @@ it("handles [edge case] gracefully", () => {
 });
 ```
 
-**Step 4: Run Tests**
+#### Step 4: Run Tests
 
 Execute new tests:
 
@@ -90,7 +90,7 @@ Execute new tests:
 - Note any failures
 - Distinguish between bugs and spec gaps
 
-**Step 5: Report Findings**
+#### Step 5: Report Findings
 
 **Finding Report Format:**
 

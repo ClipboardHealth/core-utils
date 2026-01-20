@@ -104,25 +104,25 @@ claude --plugin-dir /path/to/plugins/sdlc
 
 ### Start a new feature
 
-```
+```text
 /brief Create a new booking cancellation feature
 ```
 
 ### Write technical design
 
-```
+```text
 /design Based on the booking cancellation brief
 ```
 
 ### Begin implementation
 
-```
+```text
 /code Implement ticket 01-api-contracts
 ```
 
 ### Open PR with evidence
 
-```
+```text
 /review Ready for review with evidence bundle
 ```
 
@@ -158,7 +158,7 @@ Before Claude stops on implementation tasks, verifies:
 
 ## Project Structure
 
-```
+```text
 plugins/sdlc/
 ├── .claude-plugin/
 │   └── plugin.json           # Plugin manifest
@@ -183,7 +183,7 @@ plugins/sdlc/
 │   └── evidence-bundles/
 ├── hooks/                     # Event hooks
 │   ├── hooks.json
-│   └── scripts/
+│   └── specDriftDetection.ts
 └── README.md
 ```
 

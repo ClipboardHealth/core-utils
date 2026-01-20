@@ -90,7 +90,7 @@ Include:
 
 Organize evidence in the PR or a dedicated directory:
 
-```
+```text
 evidence/
 ├── README.md          # Summary and index
 ├── test-results.txt   # Test output
@@ -108,7 +108,7 @@ evidence/
 
 Include evidence in PR description:
 
-```markdown
+````markdown
 ## Evidence Bundle
 
 ### Test Results
@@ -132,14 +132,12 @@ Include evidence in PR description:
 ### Logs
 
 Relevant log showing feature activation:
-```
 
+```log
 2024-01-15 10:23:45 INFO [BookingService] Feature flag enabled for user_123
 2024-01-15 10:23:46 INFO [BookingService] New booking flow completed successfully
-
 ```
-
-```
+````
 
 ## Automated Collection
 

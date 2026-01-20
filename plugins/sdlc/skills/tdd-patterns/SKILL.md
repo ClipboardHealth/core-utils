@@ -301,4 +301,4 @@ it("logs processing result", () => {});
 
 Working TDD examples in `examples/`:
 
-- **`tdd-cycle-example.ts`** - Complete Red-Green-Refactor cycle
+- **`tddCycleExample.ts`** - Complete Red-Green-Refactor cycle

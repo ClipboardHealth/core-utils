@@ -46,20 +46,20 @@ You are a code review agent that ensures code quality and design adherence befor
 
 **Review Process:**
 
-**Step 1: Gather Context**
+#### Step 1: Gather Context
 
 - Read the technical design
 - Read the ticket being implemented
 - Identify changed files
 
-**Step 2: Design Adherence Check**
+#### Step 2: Design Adherence Check
 
 - Compare implementation to design
 - Verify contracts match specifications
 - Check error handling matches error semantics
 - Validate rollout/rollback compatibility
 
-**Step 3: Code Quality Review**
+#### Step 3: Code Quality Review
 
 Check for:
 
@@ -72,7 +72,7 @@ Check for:
 - **Performance**: No obvious bottlenecks
 - **Testing**: Adequate coverage, meaningful tests
 
-**Step 4: Issue Classification**
+#### Step 4: Issue Classification
 
 **Minor Issues (Auto-Fix):**
 
@@ -91,7 +91,7 @@ Check for:
 - Missing error handling
 - Inadequate testing
 
-**Step 5: Apply Fixes and Report**
+#### Step 5: Apply Fixes and Report
 
 **Review Report Format:**
 

@@ -13,8 +13,8 @@ We’ll experiment with candidate workflows, measure impact, and graduate what w
 - Delegation rate: % of PRs with meaningful agent-authored diffs.
 - Agent usefulness: Acceptance rate of agent suggestions and PRs.
 - Quality guardrails:
-    - Random merged-pull request audits.
-    - Incident rate should not regress (lagging).
+  - Random merged-pull request audits.
+  - Incident rate should not regress (lagging).
 - Continuous integration pass rate (better local verification should drive this up).
 - Pull request iterations (better ai-rules should drive this down).
 
@@ -32,7 +32,7 @@ Engineers work with agents to draft a technical design that is informed by code 
 2. A rollout and rollback plan.
 3. A verification spec to prove we met success criteria.
 
-Upon human approval, the design is committed as markdown to the appropriate repository/repositories. The design document in the repo is the single source of truth; we link to it from Linear for tracking and discussion.
+Upon human approval, the design is committed as Markdown to the appropriate repository/repositories. The design document in the repo is the single source of truth; we link to it from Linear for tracking and discussion.
 
 Agents can propose edits as development learns new facts, but changes remain reviewable via source control.
 
@@ -43,7 +43,7 @@ Product and engineering work with agents to draft small tickets based on the tec
 - Order of operations.
 - What can be worked on in parallel vs. serially.
 
-Tickets live in markdown in repos (their single source of truth) with links from Linear for tracking.
+Tickets live in Markdown in repos (their single source of truth) with links from Linear for tracking.
 
 The highest priority tickets are the interfaces/contracts. Committing them early allows frontend and backend agents to work simultaneously.
 
@@ -54,12 +54,12 @@ Each parallel group of agents works in separate environments (e.g. git worktrees
 Specialized agents implement the tickets. The separation of concerns reduces agents validating their own hallucinations and allowing requirement drift. Agents:
 
 - coder: Implements the code with test-driven development.
-    - Red: Writes a test and verifies that it fails (red).
-    - Green: Writes minimal implementation to get tests passing.
-    - Refactor: Cleans up implementation and/or tests using a code-simplifier agent, verifying tests remain passing.
-    - Commit changes to source control.
-    - Repeat: Write the next failing test.
-- product-manager: If coder cannot match the spec, they delegate to this agent; coder agents cannot edit the spec or interfaces themselves.
+  - Red: Writes a test and verifies that it fails (red).
+  - Green: Writes minimal implementation to get tests passing.
+  - Refactor: Cleans up implementation and/or tests using a code-simplifier agent, verifying tests remain passing.
+  - Commit changes to source control.
+  - Repeat: Write the next failing test.
+- oduct-manager: If coder cannot match the spec, they delegate to this agent; coder agents cannot edit the spec or interfaces themselves.
 
 When feature complete, the following agents run:
 
@@ -83,11 +83,11 @@ A human is the final gate and bottleneck: we’re reviewing thousands of lines o
     2. A risk-weighted complexity score.
     3. Particular focus areas, including any technical design or ticket changes.
 
-Humans course correct as needed.
+Humans course-correct as needed.
 
 ### Deploy
 
-After human approval, agents merge the pull request, monitor the deployment for issues, and follow the rollout and rollback plans (e.g., toggle feature flags, roll back on error spikes). 
+After human approval, agents merge the pull request, monitor the deployment for issues, and follow the rollout and rollback plans (e.g., toggle feature flags, roll back on error spikes).
 
 Production-affecting actions default to “propose and request approval” until we explicitly graduate more autonomy.
 
@@ -95,7 +95,7 @@ Production-affecting actions default to “propose and request approval” until
 
 - We’ll create evals (possibly using [https://github.com/promptfoo/promptfoo](https://github.com/promptfoo/promptfoo)) for the workflow and its prompts to verify the model behaviors match our intent. See [https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents).
 - Repo structure:
-    - `docs/YYYY-MM-<feature>/`
-        - `product-brief.md`
-        - `technical-design.md`
-        - `NN-<ticket>.md`
+  - `docs/YYYY-MM-<feature>/`
+    - `product-brief.md`
+    - `technical-design.md`
+    - `NN-<ticket>.md`

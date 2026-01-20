@@ -253,6 +253,13 @@ describe("validateUser", () => {
       expect(actual.isValid).toBe(false);
       expect(actual.errors).toContain("Invalid email format");
     });
+
+    it("returns invalid for missing . in email", () => {
+      const input = { email: "user@domain" };
+      const actual = validateUserFinal(input);
+      expect(actual.isValid).toBe(false);
+      expect(actual.errors).toContain("Invalid email format");
+    });
   });
 
   describe("name validation", () => {

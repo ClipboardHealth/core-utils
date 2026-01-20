@@ -46,7 +46,7 @@ You are an evidence collection agent that creates comprehensive verification bun
 
 **Evidence Collection Process:**
 
-**Step 1: Test Results**
+#### Step 1: Test Results
 
 Run and capture test output. Extract key metrics:
 
@@ -55,11 +55,11 @@ Run and capture test output. Extract key metrics:
 - Coverage percentage
 - Execution time
 
-**Step 2: Coverage Reports**
+#### Step 2: Coverage Reports
 
 Copy coverage reports if they exist.
 
-**Step 3: Screenshots (if applicable)**
+#### Step 3: Screenshots (if applicable)
 
 For UI changes, request user to provide:
 
@@ -67,7 +67,7 @@ For UI changes, request user to provide:
 - After screenshot
 - Same viewport and state
 
-**Step 4: Logs (if applicable)**
+#### Step 4: Logs (if applicable)
 
 Extract relevant log entries ensuring:
 
@@ -75,7 +75,7 @@ Extract relevant log entries ensuring:
 - Relevant time window
 - Context preserved
 
-**Step 5: Metrics Comparison (if applicable)**
+#### Step 5: Metrics Comparison (if applicable)
 
 Document:
 
@@ -96,7 +96,7 @@ Create `evidence/README.md` with:
 
 **Output Structure:**
 
-```
+```text
 evidence/
 ├── README.md
 ├── test-results.txt

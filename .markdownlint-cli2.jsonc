@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/main/schema/markdownlint-config-schema.json",
+  "config": {
+    "MD013": false,
+    "MD025": false,
+    "MD029": false,
+    "MD033": false,
+    "MD041": false
+  },
+  "ignores": ["**/node_modules", "**/dist", "**/coverage", ".nx"]
+}

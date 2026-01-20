@@ -14,7 +14,7 @@ The AI-first SDLC shifts the bottleneck from writing code to specifying intent a
 
 1. **Separation of concerns** - Agents cannot validate their own work
 2. **Humans as final gate** - Production-affecting actions require approval
-3. **Single source of truth** - Documentation lives in repos as markdown
+3. **Single source of truth** - Documentation lives in repos as Markdown
 4. **Semi-autonomous operation** - Agents propose actions and wait for approval
 5. **Guided TDD** - Encourage test-first development with flexibility
 
@@ -100,7 +100,7 @@ After approval:
 
 All documentation follows the pattern:
 
-```
+```text
 docs/
 └── YYYY-MM-feature-name/
     ├── product-brief.md

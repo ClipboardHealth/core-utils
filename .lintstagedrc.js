@@ -12,6 +12,7 @@ module.exports = {
     `npm run cspell -- ${files.join(" ")}`,
     `npm run knip`,
     `npm run oxlint`,
+    `npm run lint:md`,
   ],
   "**/*.{ts,tsx,js,jsx}": async (files) => [
     `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
