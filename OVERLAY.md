@@ -1,6 +1,6 @@
 # Architecture
 
-This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard Health. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
+This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard. The codebase follows functional programming patterns with strict TypeScript and emphasizes type safety, immutability, and pure functions.
 
 ## Key Libraries
 
