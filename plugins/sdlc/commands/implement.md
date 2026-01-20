@@ -62,15 +62,7 @@ If the spec is unclear or needs changes:
 
 ## When Complete
 
-Run full verification:
-
-```bash
-npx nx run PROJECT:build  # Type check
-npx nx run PROJECT:lint   # Lint
-npx nx run PROJECT:test   # Tests
-```
-
-All must pass before PR.
+Run full project-specific verification.
 
 ## Output
 

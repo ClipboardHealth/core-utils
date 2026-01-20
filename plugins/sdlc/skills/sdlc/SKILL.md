@@ -79,20 +79,7 @@ If implementation reveals a spec gap or ambiguity:
 
 ## Verification Checklist
 
-Before opening a PR, verify:
-
-```bash
-# Type check
-npx nx run PROJECT:build
-
-# Lint
-npx nx run PROJECT:lint
-
-# Tests
-npx nx run PROJECT:test
-```
-
-All must pass. Fix any failures before proceeding.
+Run full project-specific verification. It must pass. Fix any failures before proceeding.
 
 ## Evidence Bundle
 
