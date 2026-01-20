@@ -20,6 +20,7 @@
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
+- Avoid acronyms and abbreviations unless very widely known
 
 ## Types
 
