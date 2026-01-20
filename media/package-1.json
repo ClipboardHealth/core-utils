@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/ai-rules",
   "description": "Pre-built AI agent rules for consistent coding standards.",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "devDependencies": {
     "@intellectronica/ruler": "0.3.24"
@@ -28,7 +28,6 @@
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "scripts": {
-    "format": "prettier --write '.ruler/**/*.md'",
-    "lint:md": "markdownlint-cli2 '.ruler/**/*.md' 'README.md'"
+    "format": "prettier --write '.ruler/**/*.md'"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/execution-context",
   "description": "A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.",
-  "version": "1.6.49",
+  "version": "1.6.50",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.1"
