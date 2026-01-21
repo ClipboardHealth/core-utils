@@ -20,6 +20,19 @@ const STATUS = {
   noToken: "no-token",
 } as const;
 
+/**
+ * Detects if running in a Claude Code remote session using multiple indicators.
+ * This is more robust than checking a single environment variable.
+ */
+function isRemoteSession(): boolean {
+  return (
+    process.env["CLAUDE_CODE_REMOTE"] === "true" ||
+    process.env["CLAUDE_CODE_ENTRYPOINT"] === "remote" ||
+    process.env["CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE"] !== undefined ||
+    (process.env["CLAUDE_CODE_CONTAINER_ID"]?.includes("claude_code_remote") ?? false)
+  );
+}
+
 type Status = (typeof STATUS)[keyof typeof STATUS];
 
 interface HookOutput {
@@ -120,7 +133,7 @@ function installGh(): string | undefined {
 }
 
 function getSetupStatus(): SetupResult {
-  if (process.env["CLAUDE_CODE_REMOTE"] !== "true") {
+  if (!isRemoteSession()) {
     return { status: STATUS.notRemote };
   }
 
