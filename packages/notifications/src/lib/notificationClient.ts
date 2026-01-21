@@ -192,6 +192,7 @@ export class NotificationClient {
    * // triggerNotification.job.ts
    * import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    * import {
+   *   ERROR_CODES,
    *   type SerializableTriggerChunkedRequest,
    *   toTriggerChunkedRequest,
    * } from "@clipboard-health/notifications";
@@ -249,10 +250,18 @@ export class NotificationClient {
    *       const request = toTriggerChunkedRequest(data, {
    *         attempt: metadata.attempt,
    *         idempotencyKey: job.uniqueKey ?? metadata.jobId,
+   *         // In case the tests are moving the time forward we need to ensure notifications don't expire.
+   *         // ...(isTestMode && { expiresAt: new Date(3000, 0, 1) }),
    *       });
    *       const result = await this.service.triggerChunked(request);
    *
    *       if (isFailure(result)) {
+   *         // Skip expired notifications, retrying the job won't help.
+   *         if (result.error.issues[0]?.code === ERROR_CODES.expired) {
+   *           this.logger.warn("TriggerNotificationJob skipped due to expiry", { ...metadata });
+   *           return;
+   *         }
+   *
    *         throw result.error;
    *       }
    *
