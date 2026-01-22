@@ -20,6 +20,8 @@ Contains secrets?
           └── No → LaunchDarkly feature flag
 ```
 
+**NPM package management**: Use exact versions: add `save-exact=true` to `.npmrc`
+
 <!-- Source: .ruler/common/featureFlags.md -->
 
 # Feature Flags
@@ -41,6 +43,8 @@ Contains secrets?
 - Validate staging before production
 - Always provide default values in code
 - Clean up after full launch
+
+**When making feature flag changes**: include LaunchDarkly link: `https://app.launchdarkly.com/projects/default/flags/{flag-key}`
 
 <!-- Source: .ruler/common/loggingObservability.md -->
 
@@ -70,13 +74,23 @@ logger.error("Exporting urgent shifts to CSV failed", {
 });
 ```
 
-**Never log:** PII, PHI, tokens, secrets, SSN, account numbers, entire request/response/headers.
+- **Never log:** PII, PHI, tokens, secrets, SSN, account numbers, entire request/response/headers.
+- Use metrics for counting:
 
-Use metrics for counting:
+  ```typescript
+  datadogMetrics.increment("negotiation.errors", { state: "New York" });
+  ```
 
-```typescript
-datadogMetrics.increment("negotiation.errors", { state: "New York" });
-```
+- Log IDs or specific fields instead of full objects:
+  - `workerId` (not `agent`, `hcp`, `worker`)
+  - `shiftId` (not `shift`)
+- When multiple log statements share context, create a reusable `logContext` object:
+
+  ```typescript
+  const logContext = { shiftId, workerId };
+  logger.info("Processing shift", logContext);
+  logger.info("Notification sent", logContext);
+  ```
 
 <!-- Source: .ruler/common/pullRequests.md -->
 
@@ -148,13 +162,11 @@ Use when: error handling hard to trigger black-box, concurrency scenarios, >5 va
 
 ## Naming Conventions
 
-- Avoid acronyms and abbreviations unless widely known
-
-| Element                            | Convention            | Example                      |
-| ---------------------------------- | --------------------- | ---------------------------- |
-| File-scope constants               | UPPER_SNAKE_CASE      | `MAX_RETRY_COUNT`            |
-| Widely known acronyms in camelCase | Lowercase after first | `httpRequest`, `gpsPosition` |
-| Files                              | Singular, dotted      | `user.service.ts`            |
+- Avoid acronyms and abbreviations; for those widely known, use camelCase: `httpRequest`, `gpsPosition`, `cliArguments`, `apiResponse`
+- File-scoped constants: `MAX_RETRY_COUNT`
+- Instead of `agentRequirement`, `agentReq`, `workerType`, use `qualification`
+- Instead of `agent`, `hcp`, `healthcareProvider`, use `worker`
+- Instead of `facility`, `hcf`, `healthcareFacility`, use `workplace`
 
 ## Core Rules
 
@@ -168,6 +180,26 @@ Use when: error handling hard to trigger black-box, concurrency scenarios, >5 va
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
+- Use `date-fns` for date/time manipulation and `@clipboard-health/date-time` for formatting
+
+## Null/Undefined Checks
+
+Use `isDefined` helper from `@clipboard-health/util-ts`:
+
+```typescript
+// Bad: truthy check fails for 0, "", false
+if (shiftId && facilityId) {
+}
+// Bad: use utility instead
+if (shift === null) {
+}
+if (facility === undefined) {
+}
+
+// Good: explicit defined check
+if (isDefined(shiftId) && isDefined(facilityId)) {
+}
+```
 
 ## Types
 
@@ -175,12 +207,6 @@ Use when: error handling hard to trigger black-box, concurrency scenarios, >5 va
 // Strong typing
 function process(arg: unknown) {} // Better than any
 function process<T>(arg: T) {} // Best
-
-// Nullable checks
-if (foo == null) {
-} // Clear intent
-if (isDefined(foo)) {
-} // Better with utility
 
 // Quantity values—always unambiguous
 const money = { amountInMinorUnits: 500, currencyCode: "USD" };

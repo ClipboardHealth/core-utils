@@ -16,6 +16,8 @@ throw new ServiceError({
 - Guard clauses for preconditions
 - Early returns for error conditions
 - Happy path last
+- Use `toError(unknownTypedError)` from `@clipboard-health/util-ts` over hardcoded strings or type casting (`as Error`)
+- Use `ERROR_CODES` from `@clipboard-health/util-ts`, not `HttpStatus` from NestJS
 
 ## Controller Translation
 

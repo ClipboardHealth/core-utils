@@ -9,14 +9,21 @@ Follow [JSON:API spec](https://jsonapi.org/).
   "data": [
     {
       "id": "1",
-      "type": "worker",
-      "attributes": { "firstName": "Alex", "lastName": "Smith" }
-    }
+      "type": "shift",
+      "attributes": { "qualification": "nurse" },
+      "relationships": {
+        "assignedWorker": {
+          "data": { "type": "worker", "id": "9" }
+        },
+        "location": {
+          "data": { "type": "workplace", "id": "17" }
+        }
+      }
   ]
 }
 ```
 
-- Singular `type` values: `"worker"` not `"workers"`
+- Singular `type` values: `shift` not `shifts`
 - Links optional (use only for pagination)
 - Use `include` for related resources
 - Avoid `meta` unless necessary

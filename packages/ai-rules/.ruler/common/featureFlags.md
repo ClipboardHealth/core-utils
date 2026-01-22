@@ -17,3 +17,5 @@
 - Validate staging before production
 - Always provide default values in code
 - Clean up after full launch
+
+**When making feature flag changes**: include LaunchDarkly link: `https://app.launchdarkly.com/projects/default/flags/{flag-key}`

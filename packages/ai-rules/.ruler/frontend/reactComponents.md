@@ -35,7 +35,6 @@ export function Component({ userId, onUpdate }: Props) {
 
 ## Naming Conventions
 
-- Components: `PascalCase`
 - Event handlers: `handle*` (e.g., `handleClick`)
 - Props interface: `Props` (co-located) or `ComponentNameProps` (exported)
 

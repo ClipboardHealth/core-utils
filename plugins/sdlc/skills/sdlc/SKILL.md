@@ -1,27 +1,24 @@
 ---
-description: AI-First SDLC workflow with TDD methodology. Use when implementing features, writing tests, or following the development lifecycle.
+description: SDLC workflow with test-driven development methodology. Use when implementing features, writing tests, or following the development lifecycle.
 ---
 
-# AI-First Software Development Lifecycle
+# Software development lifecycle (SDLC)
 
-AI moves the bottleneck from writing code to specifying intent and verifying quality.
-
-## Workflow Overview
+## Workflow overview
 
 1. **Product Brief** → Clear problem statement and success criteria
 2. **Technical Design** → Contracts, rollout plan, verification spec
 3. **Tickets** → Small, ordered implementation units
 4. **Implementation** → TDD Red-Green-Refactor
-5. **Verification** → Type check, lint, test, edge cases
-6. **Review** → PR with evidence bundle
-7. **Deploy** → Monitor and manage rollout
+5. **Verification** → Type check, lint, test, edge cases, review with evidence bundle
+6. **Deploy** → Monitor and manage rollout
 
-## Document Structure
+## Document structure
 
 All feature documentation lives in the repo:
 
 ```text
-docs/YYYY-MM-feature-name/
+.claude/docs/YYYY-MM-<feature>/
 ├── product-brief.md      # Problem, success criteria, evidence
 ├── technical-design.md   # Contracts, rollout plan, verification spec
 ├── 01-ticket-name.md     # First implementation ticket
@@ -29,44 +26,37 @@ docs/YYYY-MM-feature-name/
 └── ...
 ```
 
-## TDD Red-Green-Refactor
+## TDD: Red-green-refactor loop
 
 For each piece of functionality:
 
-### RED: Write a Failing Test
+### Red: Write a failing test
 
-1. Identify the next acceptance criterion
-2. Write a test describing expected behavior
-3. Run the test — confirm it fails
-4. Verify failure is for the right reason (not syntax error)
+1. Write a test describing expected behavior for the next acceptance criterion
+2. Run the test, confirm it fails for the right reason (e.g., not syntax error)
 
-### GREEN: Make It Pass
+### Green: Make it pass
 
-1. Write the simplest code to make the test pass
-2. Avoid premature optimization
-3. Focus only on the current test
-4. Run the test — confirm it passes
+1. Write the simplest code to make the test pass, avoiding premature optimization
+2. Run the test, confirm it passes
 
-### REFACTOR: Clean Up
+### Refactor: Clean up
 
-1. Improve code structure and readability
-2. Remove duplication
-3. Improve naming
-4. Run tests after each change — keep them green
+1. Spawn a code-simplifier:code-simplifier agent to improve code structure and readability (e.g., remove duplication, improve naming)
+2. Run tests after each change, keep them green
 
-### COMMIT: Save Progress
+### Commit: Save progress
 
-1. Stage relevant changes
-2. Write conventional commit message referencing the ticket
-3. Move to next acceptance criterion
+1. Commit changes with conventional commit message referencing the ticket
+2. Move to next acceptance criterion
 
-## Spec Change Protocol
+## Spec change protocol
 
-**Before editing these files, confirm with the user:**
+**Before editing the following files, confirm with the user:**
 
 - `product-brief.md`
 - `technical-design.md`
-- Interface/contract files (`interface.ts`, `contracts.ts`)
+- Interface/contract files (e.g., `<feature>.contract.ts`)
 - Acceptance criteria in tickets
 
 If implementation reveals a spec gap or ambiguity:
@@ -77,11 +67,11 @@ If implementation reveals a spec gap or ambiguity:
 4. **Wait** for user approval
 5. **Update** the spec, then resume implementation
 
-## Verification Checklist
+## Verification checklist
 
 Run full project-specific verification. It must pass. Fix any failures before proceeding.
 
-## Evidence Bundle
+## Evidence bundle
 
 For non-trivial changes, collect evidence:
 
@@ -92,36 +82,29 @@ For non-trivial changes, collect evidence:
 
 Include evidence links in the PR description.
 
-## PR Description Format
+## PR description format
 
 ```markdown
-## Summary
+# Summary
 
 [1-3 bullet points explaining the change]
 
-Implements: docs/YYYY-MM-feature/NN-ticket-name.md
-Design: docs/YYYY-MM-feature/technical-design.md
+Implements: .claude/docs/YYYY-MM-<feature>/NN-ticket-name.md
+Technical design: .claude/docs/YYYY-MM-<feature>/technical-design.md
 
 ## Changes
 
 - [List of key changes]
 
-## Verification
+## Videos/screenshots
 
-- [ ] Type check passes
-- [ ] Lint passes
-- [ ] Tests pass
-- [ ] Acceptance criteria met
+[Links to screenshots, logs, or test output validating acceptance criteria]
 
-## Evidence
-
-[Links to screenshots, logs, or test output]
-
-## Risk Assessment
+## Risk assessment
 
 [Low/Medium/High] - [Brief explanation]
 
-## Rollout Plan
+## Rollout plan
 
 [How this will be deployed - feature flag, gradual rollout, etc.]
 ```

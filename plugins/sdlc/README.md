@@ -1,16 +1,16 @@
-# SDLC Plugin
+# Software Development Lifecycle (SDLC) Plugin
 
-AI-First Software Development Lifecycle with TDD methodology.
+SDLC with test-driven development (TDD) methodology.
 
 ## Overview
 
-This plugin provides workflow guidance for AI-assisted development where the bottleneck shifts from writing code to specifying intent and verifying quality.
+This plugin provides workflow guidance for AI-first development.
 
 ## Commands
 
-| Command               | Purpose                              |
-| --------------------- | ------------------------------------ |
-| `/implement <ticket>` | Start TDD implementation of a ticket |
+| Command          | Purpose                              |
+| ---------------- | ------------------------------------ |
+| `/code <ticket>` | Start TDD implementation of a ticket |
 
 ## Skill
 
@@ -26,7 +26,7 @@ The `sdlc` skill provides methodology guidance:
 Features are documented in the repo:
 
 ```text
-docs/YYYY-MM-feature-name/
+.claude/docs/YYYY-MM-feature-name/
 ├── product-brief.md      # Problem and success criteria
 ├── technical-design.md   # Contracts and rollout plan
 ├── 01-ticket-name.md     # Implementation tickets
@@ -35,20 +35,18 @@ docs/YYYY-MM-feature-name/
 
 ## Usage
 
-```markdown
+```bash
 # Start implementing a ticket
-
-/implement docs/2026-01-feature/01-api-contracts.md
+/code .claude/docs/2026-01-feature/01-api-contracts.md
 
 # Or describe what to build
-
-/implement Add user authentication endpoint
+/code Add user authentication endpoint
 ```
 
 The workflow:
 
 1. Read the ticket/understand requirements
-2. TDD loop: RED → GREEN → REFACTOR → COMMIT
+2. TDD loop: Red → Green → Refactor → Commit
 3. If blocked by unclear spec, pause and ask
 4. Verify (typecheck, lint, test) before PR
 
@@ -67,13 +65,9 @@ plugins/sdlc/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── commands/
-│   └── implement.md
+│   └── code.md
 ├── skills/
 │   └── sdlc/
 │       └── SKILL.md
 └── README.md
 ```
-
-## License
-
-MIT

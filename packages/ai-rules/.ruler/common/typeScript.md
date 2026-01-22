@@ -2,13 +2,11 @@
 
 ## Naming Conventions
 
-- Avoid acronyms and abbreviations unless widely known
-
-| Element                            | Convention            | Example                      |
-| ---------------------------------- | --------------------- | ---------------------------- |
-| File-scope constants               | UPPER_SNAKE_CASE      | `MAX_RETRY_COUNT`            |
-| Widely known acronyms in camelCase | Lowercase after first | `httpRequest`, `gpsPosition` |
-| Files                              | Singular, dotted      | `user.service.ts`            |
+- Avoid acronyms and abbreviations; for those widely known, use camelCase: `httpRequest`, `gpsPosition`, `cliArguments`, `apiResponse`
+- File-scoped constants: `MAX_RETRY_COUNT`
+- Instead of `agentRequirement`, `agentReq`, `workerType`, use `qualification`
+- Instead of `agent`, `hcp`, `healthcareProvider`, use `worker`
+- Instead of `facility`, `hcf`, `healthcareFacility`, use `workplace`
 
 ## Core Rules
 
@@ -22,6 +20,26 @@
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
+- Use `date-fns` for date/time manipulation and `@clipboard-health/date-time` for formatting
+
+## Null/Undefined Checks
+
+Use `isDefined` helper from `@clipboard-health/util-ts`:
+
+```typescript
+// Bad: truthy check fails for 0, "", false
+if (shiftId && facilityId) {
+}
+// Bad: use utility instead
+if (shift === null) {
+}
+if (facility === undefined) {
+}
+
+// Good: explicit defined check
+if (isDefined(shiftId) && isDefined(facilityId)) {
+}
+```
 
 ## Types
 
@@ -29,12 +47,6 @@
 // Strong typing
 function process(arg: unknown) {} // Better than any
 function process<T>(arg: T) {} // Best
-
-// Nullable checks
-if (foo == null) {
-} // Clear intent
-if (isDefined(foo)) {
-} // Better with utility
 
 // Quantity values—always unambiguous
 const money = { amountInMinorUnits: 500, currencyCode: "USD" };

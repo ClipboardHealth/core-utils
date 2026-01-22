@@ -24,10 +24,20 @@ logger.error("Exporting urgent shifts to CSV failed", {
 });
 ```
 
-**Never log:** PII, PHI, tokens, secrets, SSN, account numbers, entire request/response/headers.
+- **Never log:** PII, PHI, tokens, secrets, SSN, account numbers, entire request/response/headers.
+- Use metrics for counting:
 
-Use metrics for counting:
+  ```typescript
+  datadogMetrics.increment("negotiation.errors", { state: "New York" });
+  ```
 
-```typescript
-datadogMetrics.increment("negotiation.errors", { state: "New York" });
-```
+- Log IDs or specific fields instead of full objects:
+  - `workerId` (not `agent`, `hcp`, `worker`)
+  - `shiftId` (not `shift`)
+- When multiple log statements share context, create a reusable `logContext` object:
+
+  ```typescript
+  const logContext = { shiftId, workerId };
+  logger.info("Processing shift", logContext);
+  logger.info("Notification sent", logContext);
+  ```

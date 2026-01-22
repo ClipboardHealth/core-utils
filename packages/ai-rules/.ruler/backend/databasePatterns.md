@@ -44,9 +44,10 @@ const result = await Users.aggregate<ResultType>()
 
 ```text
 models/User/
-├── schema.ts    # Schema only
-├── indexes.ts   # Indexes only
-└── index.ts     # Model export
+├── schema.ts    # Schema definition, schemaName, InferSchemaType
+├── indexes.ts   # Index definitions only
+├── types.ts     # Re-export types
+└── index.ts     # Model creation and export
 ```
 
 **Verify query plans:**

@@ -9,3 +9,5 @@ Contains secrets?
           └── Yes → Database
           └── No → LaunchDarkly feature flag
 ```
+
+**NPM package management**: Use exact versions: add `save-exact=true` to `.npmrc`

@@ -79,9 +79,9 @@ A human is the final gate and bottleneck: we’re reviewing thousands of lines o
 
 1. The evidence bundle.
 2. The pull request description, which includes:
-    1. A detailed summary of the changes with links to the appropriate technical design section and ticket.
-    2. A risk-weighted complexity score.
-    3. Particular focus areas, including any technical design or ticket changes.
+   1. A detailed summary of the changes with links to the appropriate technical design section and ticket.
+   2. A risk-weighted complexity score.
+   3. Particular focus areas, including any technical design or ticket changes.
 
 Humans course-correct as needed.
 
@@ -95,7 +95,7 @@ Production-affecting actions default to “propose and request approval” until
 
 - We’ll create evals (possibly using [https://github.com/promptfoo/promptfoo](https://github.com/promptfoo/promptfoo)) for the workflow and its prompts to verify the model behaviors match our intent. See [https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents).
 - Repo structure:
-  - `docs/YYYY-MM-<feature>/`
+  - `.claude/docs/YYYY-MM-<feature>/`
     - `product-brief.md`
     - `technical-design.md`
     - `NN-<ticket>.md`

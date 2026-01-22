@@ -21,23 +21,43 @@ All NestJS microservices follow a three-tier layered architecture:
 
 **Module Structure:**
 
+`ts-rest` contracts:
+
 ```text
-modules/
-└── example/
-    ├── data/
-    │   ├── example.dao.mapper.ts
-    │   ├── example.repo.ts
-    │   └── notification.gateway.ts
-    ├── entrypoints/
-    │   ├── example.controller.ts
-    │   ├── example.consumer.ts
-    │   └── example.dto.mapper.ts
-    ├── logic/
-    │   ├── jobs/
-    │   │   └── exampleCreated.job.ts
-    │   ├── example.do.ts
-    │   └── example.service.ts
-    └── example.module.ts
+packages/contract-<service>/src/
+├── index.ts
+└── lib
+    ├── constants.ts
+    └── contracts
+        ├── contract.ts
+        ├── health.contract.ts
+        ├── index.ts
+        └── user
+            ├── index.ts
+            ├── user.contract.ts
+            └── shared.ts
+```
+
+NestJS microservice modules:
+
+```text
+ src/modules/user
+ ├── user.module.ts
+ ├── data
+ │   ├── user.dao.mapper.ts
+ │   └── user.repo.ts
+ ├── entrypoints
+ │   ├── user.controller.ts
+ │   ├── user.dto.mapper.ts
+ │   └── userCreated.consumer.ts
+ └── logic
+     ├── user.do.ts
+     ├── user.service.ts
+     ├── userCreated.service.ts
+     └── jobs
+         ├── user.job.mapper.ts
+         ├── userCreated.job.spec.ts
+         └── userCreated.job.ts
 ```
 
 **File Patterns:**
@@ -57,7 +77,7 @@ modules/
 **Tier Rules:**
 
 - Controllers → Services (never repos directly)
-- Services → Repos/Gateways within module (never controllers)
+- Services → Repos/Gateways within module (never controllers and never Mongoose models directly)
 - Repos → Database only (never services/repos/controllers)
 - Entry points are thin layers calling services
 - Enforce with `dependency-cruiser`
