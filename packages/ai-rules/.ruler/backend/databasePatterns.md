@@ -73,6 +73,18 @@ try {
 }
 ```
 
+**Mongoose model structure:**
+
+```text
+models/User/
+├── schema.ts    # Schema definition, schemaName, InferSchemaType
+├── indexes.ts   # Index definitions only
+├── types.ts     # Re-export types
+└── index.ts     # Model creation and export
+```
+
+Schema options: `timestamps: true`, `autoIndex: false`, explicit `_id` field.
+
 ## Repository Pattern
 
 ```typescript

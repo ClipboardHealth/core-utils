@@ -337,5 +337,5 @@ module.exports = {
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
   },
-  settings: { node: { version: ">=22.15.0" } },
+  settings: { node: { version: ">=24.12.0" } },
 };
