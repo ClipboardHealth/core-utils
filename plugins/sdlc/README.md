@@ -37,7 +37,7 @@ Features are documented in the repo:
 
 ```bash
 # Start implementing a ticket
-/code docs/2026-01-feature/01-api-contracts.md
+/code .claude/docs/2026-01-feature/01-api-contracts.md
 
 # Or describe what to build
 /code Add user authentication endpoint
