@@ -62,7 +62,6 @@ const rule = createRule({
        * `TsRestHandler` decorator and return the result of `tsRestHandler` as the
        * only expression in it.
        */
-      // eslint-disable-next-line complexity
       MethodDefinition(node) {
         const symbolName =
           (node.key.type === AST_NODE_TYPES.Identifier && node.key.name) || "<unknown>";
@@ -111,8 +110,7 @@ const rule = createRule({
         // Check for returning the result of `tsRestHandler()` method (without any other statement present), and ensure it comes from `@ts-rest/nest` package
         const body = node.value?.body;
         if (
-          !body ||
-          body.type !== AST_NODE_TYPES.BlockStatement ||
+          body?.type !== AST_NODE_TYPES.BlockStatement ||
           body.body.length !== 1 ||
           body.body[0]?.type !== AST_NODE_TYPES.ReturnStatement
         ) {
@@ -128,8 +126,7 @@ const rule = createRule({
 
         const returnValueExpr = body.body[0].argument;
         if (
-          !returnValueExpr ||
-          returnValueExpr.type !== AST_NODE_TYPES.CallExpression ||
+          returnValueExpr?.type !== AST_NODE_TYPES.CallExpression ||
           returnValueExpr.callee.type !== AST_NODE_TYPES.Identifier ||
           returnValueExpr.callee.name !== "tsRestHandler"
         ) {

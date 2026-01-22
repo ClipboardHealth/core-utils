@@ -1,24 +1,24 @@
 {
   "name": "@clipboard-health/example-nestjs",
   "description": "A NestJS application using our libraries, primarily for end-to-end testing.",
-  "version": "0.0.10",
+  "version": "1.0.3",
   "dependencies": {
-    "@clipboard-health/contract-core": "1.1.1",
-    "@clipboard-health/json-api-nestjs": "0.24.1",
-    "@nestjs/common": "11.1.6",
-    "@nestjs/core": "11.1.6",
-    "@nestjs/platform-express": "11.1.6",
-    "@nx/webpack": "21.5.3",
+    "@clipboard-health/contract-core": "1.6.54",
+    "@clipboard-health/json-api-nestjs": "1.6.16",
+    "@nestjs/common": "11.1.12",
+    "@nestjs/core": "11.1.12",
+    "@nestjs/platform-express": "11.1.12",
+    "@nx/webpack": "22.3.3",
     "@ts-rest/core": "3.52.1",
     "@ts-rest/nest": "3.52.1",
-    "qs": "6.14.0",
+    "qs": "6.14.1",
     "reflect-metadata": "0.2.2",
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@nestjs/testing": "11.1.6",
+    "@nestjs/testing": "11.1.12",
     "@types/supertest": "6.0.3",
-    "supertest": "7.1.4",
+    "supertest": "7.2.2",
     "webpack-cli": "6.0.1"
   }
 }

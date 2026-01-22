@@ -1,6 +1,35 @@
 const path = require("node:path");
 const fs = require("node:fs");
 
+const baseNoRestrictedSyntax = [
+  "error",
+  {
+    // Adapted from Airbnb's config, but allows ForOfStatement.
+    // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
+    message:
+      "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
+    selector: "ForInStatement",
+  },
+  {
+    message:
+      "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.",
+    selector: "LabeledStatement",
+  },
+  {
+    message:
+      "`with` is disallowed in strict mode because it makes code difficult to predict and optimize.",
+    selector: "WithStatement",
+  },
+  {
+    selector: "TSEnumDeclaration",
+    message:
+      "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
+  },
+];
+
+const triggerIdempotencyKeyMessage =
+  "Do not assert to TriggerIdempotencyKey; use `NotificationJobEnqueuer.enqueueOneOrMore` instead. See https://github.com/ClipboardHealth/core-utils/blob/main/packages/notifications/README.md.";
+
 /*
  * Since the rules in the eslint-plugin project are in Typescript and are a package in this
  * monorepo, it's not straightforward to include that plugin when using the ESLint config to lint
@@ -25,11 +54,14 @@ const isOutsideCoreUtilsMonorepo = (() => {
 })();
 
 const plugins = [
+  "check-file",
   "expect-type",
   "jest",
+  "no-barrel-files",
   "no-only-tests",
   "simple-import-sort",
   "@typescript-eslint",
+  "promise",
 ];
 
 // Only add `@clipboard-health/eslint-plugin` if we're outside the core-utils monorepo
@@ -70,6 +102,19 @@ module.exports = {
       rules: {
         // Interferes with `jest`'s `expect.any`
         "@typescript-eslint/no-unsafe-assignment": "off",
+        "no-restricted-syntax": baseNoRestrictedSyntax,
+      },
+    },
+    {
+      // Enforce that job files are located under the logic folder to follow the three-tier architecture
+      files: ["src/modules/**/*.job.ts"],
+      rules: {
+        "check-file/folder-match-with-fex": [
+          "error",
+          {
+            "*.job.ts": "**/logic/**/",
+          },
+        ],
       },
     },
     ...(isOutsideCoreUtilsMonorepo
@@ -86,19 +131,10 @@ module.exports = {
               "@clipboard-health/require-http-module-factory": "error",
             },
           },
-          {
-            files: ["**/*.ts", "**/*.tsx"],
-            rules: {
-              "@clipboard-health/forbid-object-assign": "error",
-            },
-          },
         ]
       : []),
   ],
   parser: "@typescript-eslint/parser",
-  parserOptions: {
-    projectService: true,
-  },
   plugins,
   rules: {
     // Start: Deprecated rules removed in v8
@@ -177,11 +213,17 @@ module.exports = {
     // Allow PascalCase for Decorators
     "new-cap": ["warn", { capIsNew: false, newIsCap: true }],
 
+    // Prevent barrel files to improve build performance and tree-shaking
+    "no-barrel-files/no-barrel-files": "error",
+
     // Set to warn so LLMs to write worse code to get around it
     "no-await-in-loop": "warn",
 
     // Disallow `.only` in tests to prevent it from making it into `main`.
     "no-only-tests/no-only-tests": "error",
+
+    // Use isDefined() (or sometimes Boolean()) to be explicit and to clarify behavior for "" and 0
+    "no-extra-boolean-cast": ["error", { enforceForLogicalOperands: true }],
 
     "no-restricted-imports": [
       "error",
@@ -199,33 +241,35 @@ module.exports = {
             message:
               "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
           },
+          {
+            importNames: ["format"],
+            message:
+              "Importing `format` from `date-fns` is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+            name: "date-fns",
+          },
         ],
       },
     ],
 
-    "no-restricted-syntax": [
+    "no-restricted-properties": [
       "error",
       {
-        // Adapted from Airbnb's config, but allows ForOfStatement.
-        // See https://github.com/airbnb/javascript/blob/0f3ca32323b8d5770de3301036e65511c6d18e00/packages/eslint-config-airbnb-base/rules/style.js#L340-L358
+        object: "Object",
+        property: "assign",
         message:
-          "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
-        selector: "ForInStatement",
+          "Use the object spread operator. Object.assign mutates the first argument which is confusing. See https://www.notion.so/BP-TypeScript-Style-Guide-5d4c24aea08a4b9f9feb03550f2c5310?source=copy_link#2568643321f4805ba04ecce1082b2b38 for more information.",
+      },
+    ],
+
+    "no-restricted-syntax": [
+      ...baseNoRestrictedSyntax,
+      {
+        selector: "TSAsExpression TSTypeReference[typeName.name='TriggerIdempotencyKey']",
+        message: triggerIdempotencyKeyMessage,
       },
       {
-        message:
-          "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.",
-        selector: "LabeledStatement",
-      },
-      {
-        message:
-          "`with` is disallowed in strict mode because it makes code difficult to predict and optimize.",
-        selector: "WithStatement",
-      },
-      {
-        selector: "TSEnumDeclaration",
-        message:
-          "Enums are one of the few non-type-level extensions to JavaScript, have pitfalls, and require explicit mapping. Use const objects instead.",
+        selector: "TSTypeAssertion TSTypeReference[typeName.name='TriggerIdempotencyKey']",
+        message: triggerIdempotencyKeyMessage,
       },
     ],
 
@@ -258,6 +302,13 @@ module.exports = {
      * preventing accidental usage.
      */
     "object-shorthand": ["error", "properties"],
+
+    // Enforces array destructuring. Bad example: `const x = list[0]`, instead do `const [x] = list`
+    "prefer-destructuring": ["error", { object: false, array: true }],
+
+    // Force using async/await instead of .then()
+    "promise/prefer-await-to-then": ["error", { strict: true }],
+
     "security/detect-object-injection": "off",
 
     "simple-import-sort/exports": "warn",
@@ -286,5 +337,5 @@ module.exports = {
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
   },
-  settings: { node: { version: ">=22.15.0" } },
+  settings: { node: { version: ">=24.12.0" } },
 };

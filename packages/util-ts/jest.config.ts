@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   coverageDirectory: "../../coverage/packages/util-ts",
   coveragePathIgnorePatterns: [],
   coverageThreshold: {

@@ -42,7 +42,7 @@ npm install --global embedex
 2. In the destination file, add an `<embedex source="..."></embedex>` tag that includes the source file's path.
    - `./README.md`:
 
-     ```
+     ```markdown
      # greeter
 
      Greets a person by name.
@@ -70,7 +70,7 @@ npm install --global embedex
 4. The source is embedded!
    - `./README.md`:
 
-     ````
+     ````markdown
      # greeter
 
      Greets a person by name.
@@ -110,7 +110,7 @@ npm install --global embedex
 
 ## CLI reference
 
-```
+```text
 Usage: embedex [options]
 
 Embed shared text and code snippets from source files into destination files.

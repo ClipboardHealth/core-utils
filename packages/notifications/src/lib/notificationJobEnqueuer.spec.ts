@@ -1,9 +1,12 @@
 import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
 
-import { chunkRecipients } from "./internal/chunkRecipients";
+import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
-import { MAXIMUM_RECIPIENTS_COUNT } from "./notificationClient";
-import { NotificationJobEnqueuer } from "./notificationJobEnqueuer";
+import {
+  type EnqueueOneOrMoreOptions,
+  type IdempotencyKeyParts,
+  NotificationJobEnqueuer,
+} from "./notificationJobEnqueuer";
 import {
   DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
   type TriggerIdempotencyKeyParams,
@@ -34,11 +37,14 @@ describe("NotificationJobEnqueuer", () => {
     const mockHandler = "my-handler";
     const mockWorkflowKey = "my-workflow-key";
     const mockRecipients = Array.from({ length: 1001 }, (_, index) => `u${index + 1}`);
-    const mockIdempotencyKey = {
-      resourceId: "my-resource-id",
+    const mockIdempotencyKeyParts: IdempotencyKeyParts = {
+      resource: {
+        type: "my-resource-type",
+        id: "my-resource-id",
+      },
     };
     const mockTriggerIdempotencyKey: TriggerIdempotencyKeyParams = {
-      ...mockIdempotencyKey,
+      ...mockIdempotencyKeyParts,
       chunk: 1,
       recipients: mockRecipients,
       workflowKey: mockWorkflowKey,
@@ -61,7 +67,7 @@ describe("NotificationJobEnqueuer", () => {
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, {
-        idempotencyKey: mockIdempotencyKey,
+        idempotencyKeyParts: mockIdempotencyKeyParts,
         expiresAt: mockExpiresAt,
         recipients: mockRecipients,
         workflowKey: mockWorkflowKey,
@@ -97,13 +103,13 @@ describe("NotificationJobEnqueuer", () => {
       ];
 
       const mockKey1: TriggerIdempotencyKeyParams = {
-        ...mockIdempotencyKey,
+        ...mockIdempotencyKeyParts,
         chunk: 1,
         recipients: mockChunks[0]!.recipients,
         workflowKey: mockWorkflowKey,
       };
       const mockKey2: TriggerIdempotencyKeyParams = {
-        ...mockIdempotencyKey,
+        ...mockIdempotencyKeyParts,
         chunk: 2,
         recipients: mockChunks[1]!.recipients,
         workflowKey: mockWorkflowKey,
@@ -114,7 +120,7 @@ describe("NotificationJobEnqueuer", () => {
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, {
-        idempotencyKey: mockIdempotencyKey,
+        idempotencyKeyParts: mockIdempotencyKeyParts,
         expiresAt: mockExpiresAt,
         recipients: mockRecipients,
         workflowKey: mockWorkflowKey,
@@ -158,7 +164,7 @@ describe("NotificationJobEnqueuer", () => {
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, {
-        idempotencyKey: mockIdempotencyKey,
+        idempotencyKeyParts: mockIdempotencyKeyParts,
         expiresAt: mockExpiresAt,
         recipients: mockRecipients,
         workflowKey: mockWorkflowKey,
@@ -182,7 +188,7 @@ describe("NotificationJobEnqueuer", () => {
     });
 
     it("passes through enqueue options when provided", async () => {
-      const mockOptions = { delay: 5000, priority: 10 };
+      const mockOptions: EnqueueOneOrMoreOptions = { startAt: new Date("2025-12-31") };
       const mockChunks = [{ number: 1, recipients: mockRecipients }];
 
       (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
@@ -192,7 +198,7 @@ describe("NotificationJobEnqueuer", () => {
       await instance.enqueueOneOrMore(
         mockHandler,
         {
-          idempotencyKey: mockIdempotencyKey,
+          idempotencyKeyParts: mockIdempotencyKeyParts,
           expiresAt: mockExpiresAt,
           recipients: mockRecipients,
           workflowKey: mockWorkflowKey,
@@ -208,8 +214,7 @@ describe("NotificationJobEnqueuer", () => {
           expiresAt: mockExpiresAt,
         }),
         expect.objectContaining({
-          delay: 5000,
-          priority: 10,
+          startAt: new Date("2025-12-31"),
           idempotencyKey: mockTriggerIdempotencyKeyHash,
         }),
       );
@@ -228,7 +233,7 @@ describe("NotificationJobEnqueuer", () => {
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
       await instance.enqueueOneOrMore(mockHandler, {
-        idempotencyKey: mockIdempotencyKey,
+        idempotencyKeyParts: mockIdempotencyKeyParts,
         expiresAt: mockExpiresAt,
         recipients: [],
         workflowKey: mockWorkflowKey,

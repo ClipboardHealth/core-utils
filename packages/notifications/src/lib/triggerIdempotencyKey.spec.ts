@@ -79,12 +79,12 @@ describe("isTriggerIdempotencyKeyParams", () => {
     expect(actual).toBe(true);
   });
 
-  it("returns true for valid TriggerIdempotencyKeyParams with resourceId", () => {
+  it("returns true for valid TriggerIdempotencyKeyParams with resource", () => {
     const input: TriggerIdempotencyKeyParams = {
       chunk: 1,
       workflowKey: "test-workflow",
       recipients: ["user1", "user2"],
-      resourceId: "resource-123",
+      resource: { id: "resource-123", type: "account" },
     };
 
     const actual = isTriggerIdempotencyKeyParams(input);

@@ -2,7 +2,7 @@
   "extends": ["../../.eslintrc.json"],
   "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
   "parserOptions": {
-    "project": "tsconfig.lint.json"
+    "project": "packages/phone-number/tsconfig.lint.json"
   },
   "overrides": [
     {

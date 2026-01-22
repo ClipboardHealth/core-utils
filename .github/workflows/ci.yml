@@ -17,7 +17,7 @@ jobs:
   initialize:
     runs-on: [self-hosted, cbh-amazon-linux-2023]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: echo "nvmrc=$(cat .nvmrc)" >> $GITHUB_OUTPUT
         id: nvm
     outputs:
@@ -28,13 +28,13 @@ jobs:
     needs: [initialize]
     runs-on: [self-hosted, cbh-amazon-linux-2023]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         if: github.event_name == 'pull_request'
         with:
           fetch-depth: 0
           # GitHub checks PRs out based on the merge commit; we want the branch HEAD.
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         if: github.event_name != 'pull_request'
         with:
           fetch-depth: 0
@@ -65,7 +65,7 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
@@ -85,12 +85,12 @@ jobs:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           NX_RELEASE: true
         # Version package.json files at project roots
-        run: npm_config_legacy_peer_deps=false npx nx release --skip-publish
+        run: npx nx release --skip-publish
         # Run a build so package.json files in dist directories pick up new versions
       - run: npx nx run-many --target=build
       - env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm_config_legacy_peer_deps=false npx nx release publish
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: npx nx release publish
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         # Commit mismatched package.json versions and package-lock.json changes, if any

@@ -1,5 +1,6 @@
-import { getJestProjectsAsync } from "@nx/jest";
+// oxlint-disable-next-line no-var-requires
+const { getJestProjectsAsync } = require("@nx/jest");
 
-export default async () => ({
+module.exports = async () => ({
   projects: await getJestProjectsAsync(),
 });

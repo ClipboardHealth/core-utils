@@ -9,33 +9,43 @@ import {
 } from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
+import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKey";
 import { redact } from "./internal/redact";
+import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
 import { type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
-import type {
-  AppendPushTokenRequest,
-  AppendPushTokenResponse,
-  LogParams,
-  NotificationClientParams,
-  SignUserTokenRequest,
-  SignUserTokenResponse,
-  Span,
-  TriggerBody,
-  TriggerRequest,
-  TriggerResponse,
-  UpsertWorkplaceRequest,
-  UpsertWorkplaceResponse,
+import {
+  type AppendPushTokenRequest,
+  type AppendPushTokenResponse,
+  type LogParams,
+  type NotificationClientParams,
+  type SignUserTokenRequest,
+  type SignUserTokenResponse,
+  type Span,
+  type TriggerBody,
+  type TriggerChunkedRequest,
+  type TriggerChunkedResponse,
+  type TriggerRequest,
+  type TriggerResponse,
+  type UpsertUserPreferencesRequest,
+  type UpsertUserPreferencesResponse,
+  type UpsertWorkplaceRequest,
+  type UpsertWorkplaceResponse,
 } from "./types";
 
 const LOG_PARAMS = {
   trigger: {
     traceName: "notifications.trigger",
+    destination: "knock.workflows.trigger",
+  },
+  triggerChunked: {
+    traceName: "notifications.triggerChunked",
     destination: "knock.workflows.trigger",
   },
   appendPushToken: {
@@ -50,12 +60,14 @@ const LOG_PARAMS = {
     traceName: "notifications.signUserToken",
     destination: "knock.signUserToken",
   },
+  upsertUserPreferences: {
+    traceName: "notifications.upsertUserPreferences",
+    destination: "knock.users.setPreferences",
+  },
 };
-
-export const MAXIMUM_RECIPIENTS_COUNT = 1000;
-
 export const ERROR_CODES = {
   expired: "expired",
+  invalidExpiresAt: "invalidExpiresAt",
   invalidIdempotencyKey: "invalidIdempotencyKey",
   recipientCountBelowMinimum: "recipientCountBelowMinimum",
   recipientCountAboveMaximum: "recipientCountAboveMaximum",
@@ -106,44 +118,7 @@ export class NotificationClient {
    *
    * @returns Promise resolving to either an error or successful response.
    *
-   * @example
-   * <embedex source="packages/notifications/examples/exampleNotification.service.ts">
-   *
-   * ```ts
-   * import { type NotificationClient } from "@clipboard-health/notifications";
-   *
-   * import { type ExampleNotificationData } from "./exampleNotification.job";
-   *
-   * type ExampleNotificationDo = ExampleNotificationData["Job"] & { attempt: number };
-   *
-   * export class ExampleNotificationService {
-   *   constructor(private readonly client: NotificationClient) {}
-   *
-   *   async sendNotification(params: ExampleNotificationDo) {
-   *     const { attempt, expiresAt, idempotencyKey, recipients, workflowKey, workplaceId } = params;
-   *
-   *     // Assume this comes from a database and are used as template variables...
-   *     // Use @clipboard-health/date-time's formatShortDateTime in your service for consistency.
-   *     const data = { favoriteColor: "blue", favoriteAt: new Date().toISOString(), secret: "2" };
-   *
-   *     // Important: Read the TypeDoc documentation for additional context.
-   *     return await this.client.trigger({
-   *       attempt,
-   *       body: {
-   *         data,
-   *         recipients,
-   *         workplaceId,
-   *       },
-   *       expiresAt: new Date(expiresAt),
-   *       idempotencyKey,
-   *       keysToRedact: ["secret"],
-   *       workflowKey,
-   *     });
-   *   }
-   * }
-   * ```
-   *
-   * </embedex>
+   * @deprecated Use {@link triggerChunked} instead; see the README for details.
    */
   public async trigger(params: TriggerRequest): Promise<ServiceResult<TriggerResponse>> {
     const logParams = createTriggerLogParams({ ...params, ...LOG_PARAMS.trigger });
@@ -161,6 +136,11 @@ export class NotificationClient {
           const { workplaceId } = body;
           const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
+
+          if (params.dryRun) {
+            this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
+            return success({ id: "dry-run" });
+          }
 
           const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
             idempotencyKey: triggerIdempotencyKeyParamsToHash({
@@ -186,6 +166,208 @@ export class NotificationClient {
             metadata: { error },
           });
         }
+      },
+    );
+  }
+
+  /**
+   * Triggers a notification with automatic chunking for large recipient lists.
+   *
+   * This method handles:
+   * - Automatic chunking of recipients into groups of MAXIMUM_RECIPIENTS_COUNT.
+   * - Idempotency using `${idempotencyKey}-${chunkNumber}` for each chunk.
+   * - Stale notifications prevention through expiresAt.
+   * - Logging with sensitive data redaction.
+   * - Distributed tracing with notification metadata.
+   *
+   * Use this method from background jobs where you want to:
+   * - Store the full serializable request at enqueue time (no stale data issues).
+   * - Use the background job ID as the idempotency key base.
+   * - Not worry about recipient count limits.
+   *
+   * @example
+   * <embedex source="packages/notifications/examples/triggerNotification.job.ts">
+   *
+   * ```ts
+   * // triggerNotification.job.ts
+   * import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
+   * import {
+   *   ERROR_CODES,
+   *   type SerializableTriggerChunkedRequest,
+   *   toTriggerChunkedRequest,
+   * } from "@clipboard-health/notifications";
+   * import { isFailure } from "@clipboard-health/util-ts";
+   *
+   * import { type NotificationsService } from "./notifications.service";
+   * import { CBHLogger } from "./setup";
+   * import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
+   *
+   * /**
+   *  * For @clipboard-health/mongo-jobs:
+   *  * 1. Implement `HandlerInterface<SerializableTriggerChunkedRequest>`.
+   *  * 2. The 10 default `maxAttempts` with exponential backoff of `2^attemptsCount` means ~17 minutes
+   *  *    of cumulative delay. If your notification could be stale before this, set
+   *  *    `SerializableTriggerChunkedRequest.expiresAt` when enqueueing.
+   *  *
+   *  * For @clipboard-health/background-jobs-postgres:
+   *  * 1. Implement `Handler<SerializableTriggerChunkedRequest>`.
+   *  * 2. The 20 default `maxRetryAttempts` with exponential backoff of `10s * 2^(attempt - 1)` means
+   *  *    ~121 days of cumulative delay. If your notification could be stale before this, set
+   *  *    `maxRetryAttempts` (and `SerializableTriggerChunkedRequest.expiresAt`) when enqueueing.
+   *  *\/
+   * export class TriggerNotificationJob implements BaseHandler<SerializableTriggerChunkedRequest> {
+   *   // For background-jobs-postgres, use `public static queueName = TRIGGER_NOTIFICATION_JOB_NAME;`
+   *   public name = TRIGGER_NOTIFICATION_JOB_NAME;
+   *   private readonly logger = new CBHLogger({
+   *     defaultMeta: {
+   *       logContext: TRIGGER_NOTIFICATION_JOB_NAME,
+   *     },
+   *   });
+   *
+   *   public constructor(private readonly service: NotificationsService) {}
+   *
+   *   public async perform(
+   *     data: SerializableTriggerChunkedRequest,
+   *     /**
+   *      * For mongo-jobs, implement `BackgroundJobType<SerializableTriggerChunkedRequest>`, which has
+   *      *    `_id`, `attemptsCount`, and `uniqueKey`.
+   *      *
+   *      * For background-jobs-postgres, implement `Job<SerializableTriggerChunkedRequest>`, which has
+   *      *    `id`, `retryAttempts`, and `idempotencyKey`.
+   *      *\/
+   *     job: { _id: string; attemptsCount: number; uniqueKey?: string },
+   *   ) {
+   *     const metadata = {
+   *       // For background-jobs-postgres, this is called `retryAttempts`.
+   *       attempt: job.attemptsCount + 1,
+   *       jobId: job._id,
+   *       recipientCount: data.body.recipients.length,
+   *       workflowKey: data.workflowKey,
+   *     };
+   *     this.logger.info("TriggerNotificationJob processing", metadata);
+   *
+   *     try {
+   *       const request = toTriggerChunkedRequest(data, {
+   *         attempt: metadata.attempt,
+   *         idempotencyKey: job.uniqueKey ?? metadata.jobId,
+   *         // In case the tests are moving the time forward we need to ensure notifications don't expire.
+   *         // ...(isTestMode && { expiresAt: new Date(3000, 0, 1) }),
+   *       });
+   *       const result = await this.service.triggerChunked(request);
+   *
+   *       if (isFailure(result)) {
+   *         // Skip expired notifications, retrying the job won't help.
+   *         if (result.error.issues[0]?.code === ERROR_CODES.expired) {
+   *           this.logger.warn("TriggerNotificationJob skipped due to expiry", { ...metadata });
+   *           return;
+   *         }
+   *
+   *         throw result.error;
+   *       }
+   *
+   *       const success = "TriggerNotificationJob success";
+   *       this.logger.info(success, { ...metadata, response: result.value });
+   *       // For background-jobs-postgres, return the `success` string result.
+   *     } catch (error) {
+   *       this.logger.error("TriggerNotificationJob failure", { ...metadata, error });
+   *       throw error;
+   *     }
+   *   }
+   * }
+   * ```
+   *
+   * </embedex>
+   *
+   * @returns Promise resolving to either an error or successful response with all chunk results.
+   */
+  public async triggerChunked(
+    params: TriggerChunkedRequest,
+  ): Promise<ServiceResult<TriggerChunkedResponse>> {
+    const logParams = createTriggerLogParams({ ...params, ...LOG_PARAMS.triggerChunked });
+    return await this.tracer.trace(
+      logParams.traceName,
+      createTriggerTraceOptions(logParams),
+      async (span) => {
+        const { body, expiresAt, idempotencyKey, keysToRedact = [], workflowKey } = params;
+        const { workplaceId } = body;
+
+        const validated = this.validateTriggerChunkedRequest({
+          body,
+          expiresAt,
+          span,
+          logParams,
+        });
+        if (isFailure(validated)) {
+          return validated;
+        }
+
+        this.logTriggerRequest({ logParams, body, keysToRedact });
+
+        if (params.dryRun) {
+          this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
+          return success({ responses: [{ chunkNumber: 1, id: "dry-run" }] });
+        }
+
+        const chunks = chunkRecipients({ recipients: body.recipients });
+        const responses: Array<{ chunkNumber: number; id: string }> = [];
+
+        // Sequential execution is intentional - we want to fail fast on error and track progress
+        for (const recipientChunk of chunks) {
+          try {
+            const chunkIdempotencyKey = `${idempotencyKey}-${recipientChunk.number}`;
+            const chunkBody: TriggerBody = {
+              ...body,
+              recipients: recipientChunk.recipients,
+            };
+            const triggerBody = toTriggerBody(chunkBody);
+
+            // eslint-disable-next-line no-await-in-loop
+            const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
+              idempotencyKey: chunkIdempotencyKey,
+            });
+
+            const id = response.workflow_run_id;
+            this.logger.info(`${logParams.traceName} chunk response`, {
+              ...logParams,
+              chunkNumber: recipientChunk.number,
+              totalChunks: chunks.length,
+              id,
+            });
+
+            responses.push({ chunkNumber: recipientChunk.number, id });
+          } catch (maybeError) {
+            const error = toError(maybeError);
+            return this.createAndLogError({
+              notificationError: {
+                code: ERROR_CODES.unknown,
+                message: `Chunk ${recipientChunk.number}/${chunks.length} failed: ${error.message}`,
+              },
+              span,
+              logFunction: this.logger.error,
+              logParams,
+              metadata: {
+                error,
+                chunkNumber: recipientChunk.number,
+                totalChunks: chunks.length,
+                completedChunks: responses.length,
+                expiresAt: expiresAt.toISOString(),
+                workplaceId,
+              },
+            });
+          }
+        }
+
+        span?.addTags({
+          "response.chunks": responses.length,
+          success: true,
+        });
+
+        this.logger.info(`${logParams.traceName} response`, {
+          ...logParams,
+          responses,
+        });
+
+        return success({ responses });
       },
     );
   }
@@ -265,6 +447,7 @@ export class NotificationClient {
       const response = await signUserToken(userId, {
         signingKey: this.signingKey,
         expiresInSeconds,
+        shouldGenerateJti: true,
       });
 
       // Don't log the actual response; user tokens are sensitive.
@@ -309,6 +492,43 @@ export class NotificationClient {
       return success({
         workplaceId: response.id,
       });
+    } catch (maybeError) {
+      const error = toError(maybeError);
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.unknown,
+          message: error.message,
+        },
+        logFunction: this.logger.error,
+        logParams,
+        metadata: { error },
+      });
+    }
+  }
+
+  /**
+   * Creates or updates user notification preferences.
+   *
+   * @returns Promise resolving to either an error or successful response.
+   */
+  public async upsertUserPreferences(
+    params: UpsertUserPreferencesRequest,
+  ): Promise<ServiceResult<UpsertUserPreferencesResponse>> {
+    const { userId } = params;
+    const logParams = { ...LOG_PARAMS.upsertUserPreferences, userId, preferences: params };
+
+    try {
+      this.logger.info(`${logParams.traceName} request`, logParams);
+
+      const userPreferences = toKnockUserPreferences(params);
+      const response = await this.provider.users.setPreferences(userId, "default", userPreferences);
+
+      this.logger.info(`${logParams.traceName} response`, {
+        ...logParams,
+        response: { userId, preferenceSet: response },
+      });
+
+      return success({ userId });
     } catch (maybeError) {
       const error = toError(maybeError);
       return this.createAndLogError({
@@ -402,6 +622,52 @@ export class NotificationClient {
     }
 
     return success({ ...params, idempotencyKeyParams });
+  }
+
+  private validateTriggerChunkedRequest(params: {
+    body: TriggerBody;
+    expiresAt: Date;
+    span: Span | undefined;
+    logParams: LogParams;
+  }): ServiceResult<{ expiresAt: Date }> {
+    const { body, expiresAt, span, logParams } = params;
+
+    if (body.recipients.length <= 0) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.recipientCountBelowMinimum,
+          message: `Got ${body.recipients.length} recipients; must be > 0.`,
+        },
+        span,
+        logParams,
+      });
+    }
+
+    if (Number.isNaN(expiresAt.getTime())) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.invalidExpiresAt,
+          message: `Invalid expiresAt: ${String(expiresAt)}`,
+        },
+        span,
+        logParams,
+      });
+    }
+
+    const now = new Date();
+    if (now > expiresAt) {
+      return this.createAndLogError({
+        notificationError: {
+          code: ERROR_CODES.expired,
+          message: `Got ${now.toISOString()}; notification expires at ${expiresAt.toISOString()}.`,
+        },
+        span,
+        logParams,
+        metadata: { currentTime: now.toISOString(), expiresAt: expiresAt.toISOString() },
+      });
+    }
+
+    return success({ expiresAt });
   }
 
   private async getExistingTokens(params: {

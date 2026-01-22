@@ -31,16 +31,15 @@ export type NotificationClientParams = {
   signingKey?: string;
   /** Tracer instance for distributed tracing. */
   tracer: Tracer;
-} &
+} /**
+ * Pass the third-party provider's apiKey.
+ */ & (
+  | { provider?: never; apiKey: string }
   /**
-   * Pass the third-party provider's apiKey.
+   * Pass the third-party provider's instance (used by tests).
    */
-  (| { provider?: never; apiKey: string }
-    /**
-     * Pass the third-party provider's instance (used by tests).
-     */
-    | { provider: IdempotentKnock; apiKey?: never }
-  );
+  | { provider: IdempotentKnock; apiKey?: never }
+);
 
 export const MOBILE_PLATFORMS = ["android", "ios"] as const;
 
@@ -150,6 +149,9 @@ export interface TriggerRequest {
 
   /** Trigger payload. */
   body: TriggerBody;
+
+  /** If true, the notification will not be sent, but the request will be validated and logged. */
+  dryRun?: boolean;
 
   /**
    * `expiresAt` prevents stale notifications across retries by dropping the request when `now >
@@ -261,4 +263,153 @@ export interface UpsertWorkplaceResponse {
    * The workplace's unique identifier.
    */
   workplaceId: string;
+}
+
+/**
+ * Notification preferences for specific channel types.
+ */
+export interface ChannelTypePreferences {
+  chat?: boolean;
+  email?: boolean;
+  http?: boolean;
+  inAppFeed?: boolean;
+  push?: boolean;
+  sms?: boolean;
+}
+
+/**
+ * Notification preferences overrides for category, workflow or channel.
+ */
+export interface PreferenceOverrides {
+  /**
+   * Channel type-specific preferences.
+   */
+  channelTypes?: ChannelTypePreferences | null;
+
+  /**
+   * Channel-specific overrides keyed by channel UUIDs.
+   */
+  channels?: Record<string, boolean> | null;
+}
+
+/**
+ * Request parameters for upserting user notification preferences.
+ *
+ * When one of the fields is null, the preferences is cleared and Knock will fall back
+ * to default preferences. The fields are optional, so that we can support partial updates.
+ */
+export interface UpsertUserPreferencesRequest {
+  /**
+   * The user's unique identifier.
+   */
+  userId: string;
+
+  /**
+   * Channel type-specific preferences.
+   */
+  channelTypes?: ChannelTypePreferences | null;
+
+  /**
+   * Channel-specific overrides.
+   */
+  channels?: Record<string, boolean> | null;
+
+  /**
+   * Category-specific overrides keyed by category names.
+   */
+  categories?: Record<string, boolean | PreferenceOverrides> | null;
+
+  /**
+   * Workflow-specific overrides keyed by workflow IDs.
+   */
+  workflows?: Record<string, boolean | PreferenceOverrides> | null;
+
+  /**
+   * Whether the user opted-out from broadcast notification.
+   */
+  commercialSubscribed?: boolean | null;
+}
+
+/**
+ * Response after upserting user preferences.
+ */
+export interface UpsertUserPreferencesResponse {
+  userId: string;
+}
+
+/**
+ * Serializable version of InlineIdentifyUserRequest for background job payloads.
+ * The only change is `createdAt` is an ISO string instead of a Date.
+ */
+export interface SerializableInlineIdentifyUserRequest extends Omit<
+  InlineIdentifyUserRequest,
+  "createdAt"
+> {
+  /**
+   * The user's creation date as an ISO string.
+   */
+  createdAt?: string;
+}
+
+/**
+ * Serializable recipient request for background job payloads.
+ */
+export type SerializableRecipientRequest = string | SerializableInlineIdentifyUserRequest;
+
+/**
+ * Serializable TriggerBody for background job payloads.
+ * Recipients and actor use serializable types.
+ */
+export interface SerializableTriggerBody extends Omit<TriggerBody, "recipients" | "actor"> {
+  /**
+   * The recipients to trigger the workflow for.
+   */
+  recipients: SerializableRecipientRequest[];
+
+  /**
+   * The trigger actor.
+   */
+  actor?: SerializableRecipientRequest;
+}
+
+/**
+ * Request parameters for triggerChunked.
+ *
+ * Extends SerializableTriggerChunkedRequest with job-provided fields.
+ */
+export interface TriggerChunkedRequest extends Omit<TriggerRequest, "idempotencyKey"> {
+  /**
+   * Idempotency key base, typically the background job ID. Each chunk uses
+   * `${idempotencyKey}-${chunkNumber}`.
+   */
+  idempotencyKey: string;
+}
+
+/**
+ * Response from triggerChunked.
+ */
+export interface TriggerChunkedResponse {
+  /** Results for each chunk. */
+  responses: Array<TriggerResponse & { chunkNumber: number }>;
+}
+
+/**
+ * Serializable TriggerRequest for background job payloads.
+ *
+ * This is what gets enqueued in the background job. The job provides `attempt` and
+ * `idempotencyKey` at execution time, and `expiresAt` is an ISO string.
+ */
+export interface SerializableTriggerChunkedRequest extends Omit<
+  TriggerChunkedRequest,
+  "idempotencyKey" | "attempt" | "expiresAt" | "body"
+> {
+  /** Trigger payload. */
+  body: SerializableTriggerBody;
+
+  /**
+   * `expiresAt` as an ISO string. Set at enqueue-time so it remains stable across job retries.
+   *
+   * @see {@link TriggerRequest.expiresAt}
+   */
+  expiresAt: string;
 }

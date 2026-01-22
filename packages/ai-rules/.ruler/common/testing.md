@@ -1,7 +1,13 @@
 # Testing
 
-- Follow the Arrange-Act-Assert convention for tests with newlines between each section.
-- Name test variables using the `mockX`, `input`, `expected`, `actual` convention.
-- Aim for high test coverage, writing both positive and negative test cases.
-- Prefer `it.each` for multiple test cases.
-- Avoid conditional logic in tests.
+## Unit Tests
+
+Use when: error handling hard to trigger black-box, concurrency scenarios, >5 variations, pure function logic.
+
+## Conventions
+
+- Use `it` not `test`; `describe` for grouping
+- Arrange-Act-Assert with newlines between
+- Variables: `mockX`, `input`, `expected`, `actual`
+- Prefer `it.each` for multiple cases
+- No conditional logic in tests

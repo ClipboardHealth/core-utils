@@ -240,8 +240,8 @@ describe("dependencyGraph", () => {
       expect(result).toBeDefined();
       expect(result!.cycle).toHaveLength(4);
       // Could start from any node in the cycle
-      const first = result!.cycle[0];
-      expect(result!.cycle[result!.cycle.length - 1]).toBe(first);
+      const [first] = result!.cycle;
+      expect(result!.cycle.at(-1)).toBe(first);
     });
 
     it("detects cycle in larger graph with non-cyclic parts", () => {

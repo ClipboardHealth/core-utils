@@ -70,6 +70,19 @@ export class JobsRepository {
 
     return await withProducerTrace(handler, data, async (dataWithTrace) => {
       try {
+        if (session && uniqueKey) {
+          // Checking for existence here to prevent DuplicateKeyError from aborting the existing transaction
+          const existingJob = await this.jobModel
+            .exists({
+              uniqueKey,
+            })
+            .session(session);
+
+          if (existingJob) {
+            return;
+          }
+        }
+
         const backgroundJobCreateResult = await this.jobModel.create(
           [
             {
@@ -85,7 +98,7 @@ export class JobsRepository {
           { session },
         );
 
-        const createdJob = backgroundJobCreateResult[0];
+        const [createdJob] = backgroundJobCreateResult;
         return createdJob as unknown as BackgroundJobType<T>;
       } catch (error) {
         if (isMongoDuplicateError(error)) {

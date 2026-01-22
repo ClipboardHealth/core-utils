@@ -2,6 +2,6 @@
   "extends": ["../../.eslintrc.json"],
   "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
   "parserOptions": {
-    "project": "tsconfig.lint.json"
+    "project": "packages/contract-core/tsconfig.lint.json"
   }
 }

@@ -6,13 +6,18 @@
     "**/webpack.*.js",
     "**/cbhResponse.ts",
     "packages/ai-rules/scripts/sync.ts",
+    "packages/eslint-config/src/react.js",
+    "plugins/**/*.ts",
+    ".claude/**/*.ts",
   ],
   "ignoreDependencies": [
     "@intellectronica/ruler",
     "@nx/webpack",
+    "oxlint",
     "ts-node",
     "tslib",
     "webpack-cli",
+    "eslint-plugin-promise",
   ],
   "webpack": false,
   "workspaces": {

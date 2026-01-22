@@ -22,50 +22,50 @@ import {
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 
-export interface IdempotencyKey {
+export interface IdempotencyKeyParts {
   /**
-   * Prefer `resourceId` over `eventOccurredAt`; it's harder to misuse.
+   * Prefer `resource` over `eventOccurredAt`; it's harder to misuse.
    *
    * If an event triggered your workflow and it doesn't have a unique ID, you may decide to use its
    * occurrence timestamp. For example, if you have a daily CRON job, use the date it ran.
    *
    * Use `.toISOString()`.
    */
-  eventOccurredAt?: string | undefined;
+  eventOccurredAt?: string;
 
   /**
+   * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
+   * automatically.
+   *
    * If a resource triggered your workflow, include its unique ID.
    *
-   * Note: `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
-   * included in the idempotency key automatically.
-   *
    * @example
-   * 1. For a "meeting starts in one hour" notification, set resourceId to the meeting ID.
-   * 2. For a payout notification, set resourceId to the payment ID.
+   * 1. For a "meeting starts in one hour" notification, set resource.id to the meeting ID.
+   * 2. For a payout notification, set resource.id to the payment ID.
    */
-  resourceId?: string | undefined;
+  resource?: { type: string; id: string };
 }
 
 export interface NotificationEnqueueData {
   /**
+   * Do not include `workflowKey`, `recipients`, or `workplaceId`; they are included
+   * automatically.
+   *
    * Idempotency keys prevent duplicate notifications. They should be deterministic and remain the
    * same across retry logic.
    *
-   * If you retry a request with the same idempotency key within 24 hours, the client returns the same
-   * response as the original request.
-   *
-   * Note: `workflowKey`, `recipients`, and `workplaceId` (if it exists in the trigger body) are
-   * included in the idempotency key automatically.
+   * If you retry a request with the same idempotency key within 24 hours, the client returns the
+   * same response as the original request.
    *
    * We provide this class because idempotency keys can be difficult to use correctly. If the key
-   * changes on each retry (e.g., Date.now() or uuid.v4()), it won't prevent duplicate notifications.
-   * Conversely, if you don't provide enough information, you prevent recipients from receiving
-   * notifications they otherwise should have. For example, if you use the trigger key and the
-   * recipient's ID as the idempotency key, but it's possible the recipient could receive the same
-   * notification multiple times within the idempotency key's validity window, the recipient will only
-   * receive the first notification.
+   * changes on each retry (e.g., Date.now() or uuid.v4()), it won't prevent duplicate
+   * notifications. Conversely, if you don't provide enough information, you prevent recipients from
+   * receiving notifications they otherwise should have. For example, if you use the trigger key and
+   * the recipient's ID as the idempotency key, but it's possible the recipient could receive the
+   * same notification multiple times within the idempotency key's validity window, the recipient
+   * will only receive the first notification.
    */
-  idempotencyKey: IdempotencyKey;
+  idempotencyKeyParts: IdempotencyKeyParts;
 
   /** @see {@link TriggerRequest.expiresAt} */
   expiresAt: string;
@@ -77,7 +77,7 @@ export interface NotificationEnqueueData {
   workflowKey: string;
 }
 
-export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKey"> {
+export interface NotificationJobData extends Omit<NotificationEnqueueData, "idempotencyKeyParts"> {
   idempotencyKey: TriggerIdempotencyKey;
 }
 
@@ -116,10 +116,7 @@ export interface NotificationData<T> {
  * in a service the job calls) to validate the notification is still valid prior to triggering it.
  */
 export type EnqueueOneOrMoreOptions = Pick<EnqueueOptions, "startAt"> &
-  (
-    | Pick<MongoEnqueueOptions, "session" | "startAt">
-    | Pick<PostgresEnqueueOptions, "transaction" | "startAt">
-  );
+  (Pick<MongoEnqueueOptions, "session"> | Pick<PostgresEnqueueOptions, "transaction">);
 
 interface NotificationJobEnqueuerParams {
   adapter: BackgroundJobsAdapter;
@@ -161,47 +158,7 @@ export class NotificationJobEnqueuer {
    *
    * So please, use this method if not for customers, then to save fellow engineers time debugging!
    *
-   * @example
-   * <embedex source="packages/notifications/examples/enqueueNotificationJob.ts">
-   *
-   * ```ts
-   * import {
-   *   EXAMPLE_NOTIFICATION_JOB_NAME,
-   *   type ExampleNotificationData,
-   * } from "./exampleNotification.job";
-   * import { notificationJobEnqueuer } from "./notificationJobEnqueuer";
-   * import { WORKFLOW_KEYS } from "./workflowKeys";
-   *
-   * async function enqueueNotificationJob() {
-   *   await notificationJobEnqueuer.enqueueOneOrMore<ExampleNotificationData["Enqueue"]>(
-   *     EXAMPLE_NOTIFICATION_JOB_NAME,
-   *     // Important: Read the TypeDoc documentation for additional context.
-   *     {
-   *       /**
-   *        * Set expiresAt at enqueue-time so it remains stable across job retries. Use date-fns in your
-   *        * service instead of this manual calculation.
-   *        *\/
-   *       expiresAt: new Date(Date.now() + 60 * 60_000).toISOString(),
-   *       // Set idempotencyKey at enqueue-time so it remains stable across job retries.
-   *       idempotencyKey: {
-   *         resourceId: "event-123",
-   *       },
-   *       // Set recipients at enqueue-time so they respect our notification provider's limits.
-   *       recipients: ["userId-1"],
-   *
-   *       workflowKey: WORKFLOW_KEYS.eventStartingReminder,
-   *
-   *       // Any additional enqueue-time data passed to the job:
-   *       workplaceId: "workplaceId-123",
-   *     },
-   *   );
-   * }
-   *
-   * // eslint-disable-next-line unicorn/prefer-top-level-await
-   * void enqueueNotificationJob();
-   * ```
-   *
-   * </embedex>
+   * @deprecated Use {@link NotificationClient.triggerChunked} instead; see the README for details.
    */
   async enqueueOneOrMore<TEnqueueData extends NotificationEnqueueData>(
     handlerClassOrInstance: EnqueueParameters[0],
@@ -211,7 +168,7 @@ export class NotificationJobEnqueuer {
     await Promise.all(
       chunkRecipients({ recipients: data.recipients }).map(async ({ number, recipients }) => {
         const idempotencyKeyParams: TriggerIdempotencyKeyParams = {
-          ...data.idempotencyKey,
+          ...data.idempotencyKeyParts,
           chunk: number,
           recipients,
           workflowKey: data.workflowKey,

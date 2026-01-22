@@ -20,6 +20,6 @@
     }
   ],
   "parserOptions": {
-    "project": "tsconfig.lint.json"
+    "project": "packages/embedex/tsconfig.lint.json"
   }
 }

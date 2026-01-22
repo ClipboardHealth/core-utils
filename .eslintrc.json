@@ -5,6 +5,7 @@
       "extends": ["./packages/eslint-config/src/index.js"],
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
+        "no-barrel-files/no-barrel-files": "off",
         "unicorn/filename-case": ["error", { "case": "camelCase" }]
       }
     },
@@ -16,7 +17,7 @@
       "rules": {}
     },
     {
-      "files": ["./examples/**/*.ts"],
+      "files": ["./.claude/**/*.ts", "./examples/**/*.ts", "./plugins/**/*.ts"],
       "rules": {
         "no-console": "off"
       }

@@ -1,6 +1,15 @@
 // embedex: packages/contract-core/README.md
-import { apiErrors, booleanString, nonEmptyString, uuid } from "@clipboard-health/contract-core";
-import { type ZodError } from "zod";
+import {
+  apiErrors,
+  booleanString,
+  nonEmptyString,
+  optionalEnum,
+  optionalEnumWithFallback,
+  requiredEnum,
+  requiredEnumWithFallback,
+  uuid,
+} from "@clipboard-health/contract-core";
+import { type z, type ZodError } from "zod";
 
 function logError(error: unknown) {
   console.error((error as ZodError).issues[0]!.message);
@@ -42,4 +51,99 @@ try {
 } catch (error) {
   logError(error);
   // => Invalid UUID format
+}
+
+// Enum with fallback examples
+/* -- required -- */
+const requiredStatusEnumSchema = requiredEnumWithFallback(
+  ["unspecified", "pending", "completed", "failed"],
+  "unspecified",
+);
+// type RequiredStatusEnum = "unspecified" | "pending" | "completed" | "failed"
+type RequiredStatusEnum = z.infer<typeof requiredStatusEnumSchema>;
+
+const completedStatus: RequiredStatusEnum = requiredStatusEnumSchema.parse("completed");
+// => "completed"
+console.log(completedStatus);
+
+const additionalStatus = requiredStatusEnumSchema.parse("additional");
+// => "unspecified"
+console.log(additionalStatus);
+
+try {
+  // eslint-disable-next-line unicorn/no-useless-undefined
+  requiredStatusEnumSchema.parse(undefined);
+} catch (error) {
+  logError(error);
+  // => Validation error
+}
+
+/* -- optional -- */
+const optionalStatusEnumSchema = optionalEnumWithFallback(
+  ["unspecified", "pending", "completed", "failed"],
+  "unspecified",
+);
+// type OptionalStatusEnum = "unspecified" | "pending" | "completed" | "failed" | undefined
+type OptionalStatusEnum = z.infer<typeof optionalStatusEnumSchema>;
+
+const failedStatus: OptionalStatusEnum = optionalStatusEnumSchema.parse("failed");
+// => "failed"
+console.log(failedStatus);
+
+const extraStatus = optionalStatusEnumSchema.parse("extra");
+// => "unspecified"
+console.log(extraStatus);
+
+// eslint-disable-next-line unicorn/no-useless-undefined
+const undefinedStatus = optionalStatusEnumSchema.parse(undefined);
+// => undefined
+console.log(undefinedStatus);
+
+// Strict enum examples (no fallback behavior)
+// Use these when invalid values should fail validation rather than being coerced.
+// Ideal for user types, authentication, and critical business logic.
+
+/* -- required strict -- */
+const requiredUserTypeSchema = requiredEnum(["admin", "worker", "facility"]);
+// type RequiredUserType = "admin" | "worker" | "facility"
+type RequiredUserType = z.infer<typeof requiredUserTypeSchema>;
+
+const adminUser: RequiredUserType = requiredUserTypeSchema.parse("admin");
+// => "admin"
+console.log(adminUser);
+
+try {
+  requiredUserTypeSchema.parse("invalid");
+} catch (error) {
+  logError(error);
+  // => Invalid enum value. Expected 'admin' | 'worker' | 'facility', received 'invalid'
+}
+
+try {
+  // eslint-disable-next-line unicorn/no-useless-undefined
+  requiredUserTypeSchema.parse(undefined);
+} catch (error) {
+  logError(error);
+  // => Required
+}
+
+/* -- optional strict -- */
+const optionalUserTypeSchema = optionalEnum(["admin", "worker", "facility"]);
+// type OptionalUserType = "admin" | "worker" | "facility" | undefined
+type OptionalUserType = z.infer<typeof optionalUserTypeSchema>;
+
+const workerUser: OptionalUserType = optionalUserTypeSchema.parse("worker");
+// => "worker"
+console.log(workerUser);
+
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noUserType = optionalUserTypeSchema.parse(undefined);
+// => undefined
+console.log(noUserType);
+
+try {
+  optionalUserTypeSchema.parse("invalid");
+} catch (error) {
+  logError(error);
+  // => Invalid enum value. Expected 'admin' | 'worker' | 'facility', received 'invalid'
 }

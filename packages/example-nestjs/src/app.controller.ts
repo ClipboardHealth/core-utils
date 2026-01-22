@@ -1,7 +1,7 @@
 import { Controller, Logger } from "@nestjs/common";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 
-import { contract, UserDto } from "./contract";
+import { contract, type UserDto } from "./contract";
 
 @Controller()
 export class AppController {

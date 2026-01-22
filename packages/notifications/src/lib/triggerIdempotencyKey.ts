@@ -1,8 +1,8 @@
-import { isNil } from "@clipboard-health/util-ts";
+import { isNil, stringify } from "@clipboard-health/util-ts";
 import { type Tagged } from "type-fest";
 
 import {
-  type IdempotencyKey,
+  type IdempotencyKeyParts,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type NotificationJobEnqueuer,
 } from "./notificationJobEnqueuer";
@@ -18,7 +18,7 @@ import {
  */
 export type TriggerIdempotencyKey = Tagged<string, "TriggerIdempotencyKey">;
 
-export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
+export type TriggerIdempotencyKeyParams = IdempotencyKeyParts & {
   /**
    * The recipient chunk number.
    */
@@ -33,7 +33,7 @@ export interface TriggerIdempotencyKeyParams extends IdempotencyKey {
    * The workflow key.
    */
   workflowKey: string;
-}
+};
 
 /**
  * Type guard to check if a value is a valid TriggerIdempotencyKeyParams object.
@@ -62,5 +62,6 @@ export function isTriggerIdempotencyKeyParams(
 export function DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(
   params: TriggerIdempotencyKeyParams,
 ): TriggerIdempotencyKey {
-  return JSON.stringify(params) as TriggerIdempotencyKey;
+  // eslint-disable-next-line no-restricted-syntax -- allow test casts
+  return stringify(params) as TriggerIdempotencyKey;
 }

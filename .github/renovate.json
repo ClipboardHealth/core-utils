@@ -9,7 +9,7 @@
     "docker:enableMajor",
     "group:monorepos",
     "group:recommended",
-    "npm:unpublishSafe",
+    "security:minimumReleaseAgeNpm",
     "schedule:automergeDaily",
     "schedule:daily"
   ],
@@ -49,6 +49,11 @@
         "/ts-jest/",
         "/tslib/"
       ]
+    },
+    {
+      "automerge": true,
+      "automergeType": "branch",
+      "matchUpdateTypes": ["lockFileMaintenance"]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",

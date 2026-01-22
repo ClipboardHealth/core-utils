@@ -1,0 +1,29 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "clipboard",
+  "version": "1.0.0",
+  "description": "Clipboard's LLM tools.",
+  "owner": {
+    "name": "Clipboard"
+  },
+  "plugins": [
+    {
+      "name": "core",
+      "description": "Clipboard's core development tools.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Clipboard"
+      },
+      "source": "./plugins/core"
+    },
+    {
+      "name": "sdlc",
+      "description": "AI-First Software Development Lifecycle with TDD methodology",
+      "version": "0.2.0",
+      "author": {
+        "name": "Clipboard"
+      },
+      "source": "./plugins/sdlc"
+    }
+  ]
+}

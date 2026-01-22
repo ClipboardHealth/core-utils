@@ -72,9 +72,6 @@
     }
   },
   "targetDefaults": {
-    "nx:run-commands": {
-      "cache": true
-    },
     "@nx/eslint:lint": {
       "cache": true,
       "inputs": [

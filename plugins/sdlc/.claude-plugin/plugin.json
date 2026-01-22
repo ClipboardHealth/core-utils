@@ -1,0 +1,12 @@
+{
+  "name": "sdlc",
+  "version": "0.2.0",
+  "description": "AI-First Software Development Lifecycle with TDD methodology",
+  "author": {
+    "name": "Clipboard",
+    "url": "https://github.com/ClipboardHealth"
+  },
+  "repository": "https://github.com/ClipboardHealth/core-utils",
+  "license": "MIT",
+  "keywords": ["sdlc", "tdd", "workflow"]
+}

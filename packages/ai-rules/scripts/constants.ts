@@ -6,10 +6,16 @@ export const PATHS = {
   outputDirectory: path.join(packageRoot, "..", "..", "dist", "packages", "ai-rules"),
 };
 
+export const FILES = {
+  agents: "AGENTS.md",
+  claude: "CLAUDE.md",
+} as const;
+
 export const PROFILES = {
   frontend: ["common", "frontend"] as const,
   backend: ["common", "backend"] as const,
   fullstack: ["common", "frontend", "backend"] as const,
+  datamodeling: ["datamodeling"] as const,
   common: ["common"] as const,
 } as const;
 

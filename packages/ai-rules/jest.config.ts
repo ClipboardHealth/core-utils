@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   coverageDirectory: "../../coverage/packages/ai-rules",
   coveragePathIgnorePatterns: [],
   coverageThreshold: {
