@@ -1,4 +1,6 @@
 # Alphabetical directories
+.ai-rules/
+.claude/
 .claude/cache/
 .idea/
 .nx/cache
@@ -6,6 +8,7 @@
 .vscode/*
 coverage/
 dist/
+docs/
 gen/
 node_modules/
 out-tsc
