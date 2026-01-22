@@ -60,10 +60,7 @@ export function getResourceQueryKey(params: GetResourceParams) {
 }
 
 // 4. Export invalidation helper
-export function invalidateResourceQueries(
-  queryClient: QueryClient,
-  workplaceId: string
-) {
+export function invalidateResourceQueries(queryClient: QueryClient, workplaceId: string) {
   return queryClient.invalidateQueries({
     queryKey: ["resources", workplaceId],
   });
@@ -82,7 +79,7 @@ export function useGetResource(params: GetResourceParams) {
       });
       return response.data;
     },
-    enabled: !!params.workplaceId,  // Conditional fetching
+    enabled: !!params.workplaceId, // Conditional fetching
   });
 }
 ```
@@ -151,7 +148,7 @@ export function useGetResource(id: string) {
     queryKey: ["resource", id],
     queryFn: async () => {
       const response = await apiClient.get(`/resources/${id}`);
-      return response.data;  // No type safety!
+      return response.data; // No type safety!
     },
   });
 }
@@ -167,9 +164,9 @@ export function useGetResource(id: string) {
     queryFn: async () => {
       const response = await get({
         url: `/resources/${id}`,
-        responseSchema,  // Runtime validation
+        responseSchema, // Runtime validation
       });
-      return response.data;  // Type-safe!
+      return response.data; // Type-safe!
     },
   });
 }
@@ -181,13 +178,13 @@ export function useGetResource(id: string) {
 // ❌ WRONG: Hardcoded query keys
 export function useGetResource(id: string) {
   return useQuery({
-    queryKey: ["resource", id],  // Hardcoded
+    queryKey: ["resource", id], // Hardcoded
     // ...
   });
 }
 
 // When invalidating in another file:
-queryClient.invalidateQueries({ queryKey: ["resource", id] });  // Fragile!
+queryClient.invalidateQueries({ queryKey: ["resource", id] }); // Fragile!
 ```
 
 ```typescript
@@ -198,14 +195,14 @@ export function getResourceQueryKey(id: string) {
 
 export function useGetResource(id: string) {
   return useQuery({
-    queryKey: getResourceQueryKey(id),  // Consistent
+    queryKey: getResourceQueryKey(id), // Consistent
     // ...
   });
 }
 
 // When invalidating:
 queryClient.invalidateQueries({
-  queryKey: getResourceQueryKey(id)  // Type-safe
+  queryKey: getResourceQueryKey(id), // Type-safe
 });
 ```
 
@@ -249,7 +246,7 @@ const response = await get({
 // ✅ CORRECT: Always validate
 const response = await get({
   url: "/resources",
-  responseSchema,  // Mandatory
+  responseSchema, // Mandatory
 });
 ```
 
@@ -284,7 +281,7 @@ export function useGetResource(params: { id?: string }) {
       });
       return response.data;
     },
-    enabled: !!params.id,  // Only fetch when id exists
+    enabled: !!params.id, // Only fetch when id exists
   });
 }
 ```
@@ -374,7 +371,7 @@ FeatureName/
 const { data: user } = useGetUser(userId);
 const { data: posts } = useGetUserPosts(
   { userId: user?.id },
-  { enabled: !!user?.id }  // Wait for user data
+  { enabled: !!user?.id }, // Wait for user data
 );
 ```
 
@@ -423,5 +420,6 @@ This guide covers essential API patterns. For comprehensive details including:
 - Real examples from your codebase
 
 **See your repo's documentation:**
+
 - `src/appV2/redesign/docs/API_PATTERNS.md` - Complete API guide
 - `src/appV2/redesign/CLAUDE.md` - Quick API decision tree

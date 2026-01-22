@@ -187,20 +187,24 @@ function Card({ header, footer, children }: Props) {
 Common components available in `src/appV2/redesign/components/`:
 
 ### Layout Components
+
 - **Box, Stack, Container** - Layout primitives (from MUI)
 - **Card** - Container for content with elevation
 - **Divider** - Visual separator
 
 ### Typography
+
 - **Title** - Headings (h1-h6 variants)
 - **Text** - Body text with variants (body1, body2, caption)
 
 ### Actions
+
 - **Button** - All button variants (primary, secondary, outlined, link, etc.)
 - **IconButton** - Icon-only buttons
 - **Link** - Navigation links
 
 ### Display
+
 - **Badge** - Status indicators
 - **Pill** - Small status labels
 - **Tag** - Categorization labels
@@ -208,12 +212,14 @@ Common components available in `src/appV2/redesign/components/`:
 - **Icon** - 100+ Material Design icons
 
 ### Input
+
 - **TextField** - Text input with validation
 - **Select** - Dropdown selection
 - **Checkbox, Radio, Switch** - Boolean/multi-select inputs
 - **DatePicker, TimePicker** - Date/time selection
 
 ### Feedback
+
 - **Modal** - Dialogs and modals
 - **Drawer** - Side panels
 - **BottomSheet** - Mobile-optimized modals
@@ -221,6 +227,7 @@ Common components available in `src/appV2/redesign/components/`:
 - **Loading** - Loading indicators
 
 ### Data Display
+
 - **DataGrid** - Tables with sorting/filtering
 - **Tabs** - Tab navigation
 - **Timeline** - Chronological event display
@@ -292,5 +299,6 @@ This guide covers essential component patterns. For comprehensive details includ
 - Storybook documentation links
 
 **See your repo's documentation:**
+
 - `src/appV2/redesign/docs/COMPONENT_LIBRARY.md` - Complete component inventory
 - `src/appV2/redesign/CLAUDE.md` - Quick component decision tree

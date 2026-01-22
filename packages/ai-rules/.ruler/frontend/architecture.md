@@ -14,12 +14,14 @@
 ### Container Responsibilities
 
 **What Containers DO:**
+
 - Fetch data using React Query hooks
 - Manage local state (modals, pagination, filters)
 - Define event handlers
 - Pass **primitives** to View (strings, numbers, booleans, callbacks)
 
 **What Containers DON'T DO:**
+
 - Render complex UI (delegate to View)
 - Contain business logic (extract to utils)
 - Handle loading/error states (View handles these)
@@ -27,12 +29,14 @@
 ### View Responsibilities
 
 **What Views DO:**
+
 - Render UI based on props
 - Handle loading/error/empty states
 - Use shared components
 - Apply styling with theme tokens
 
 **What Views DON'T DO:**
+
 - Fetch data or make API calls
 - Manage state (except trivial UI state like hover)
 - Contain event handler logic (receive as props)
@@ -40,6 +44,7 @@
 ### Example: Complete Pattern
 
 **Container** (`ResourceContainer.tsx`):
+
 ```typescript
 export function ResourceContainer() {
   // 1. Fetch data
@@ -73,6 +78,7 @@ export function ResourceContainer() {
 ```
 
 **View** (`ResourceView.tsx`):
+
 ```typescript
 interface ResourceViewProps {
   resources: Resource[] | undefined;
@@ -117,6 +123,7 @@ export function ResourceView({
 ```
 
 **Page** (`ResourcePage.tsx`):
+
 ```typescript
 export function ResourcePage() {
   return (
@@ -164,16 +171,19 @@ FeatureName/
 ### When to Create What
 
 **Create a new feature folder when:**
+
 - Building a new user-facing feature
 - Feature has multiple related components
 - Feature needs dedicated API hooks
 
 **Use existing folders when:**
+
 - Adding to existing feature
 - Creating shared utility
 - Building reusable component
 
 **Extract to shared when:**
+
 - Component used in 3+ features
 - Utility used across features
 - Hook applies to multiple features
@@ -183,6 +193,7 @@ FeatureName/
 ### Props: Pass Primitives, Not Objects
 
 **❌ Don't pass entire API response:**
+
 ```typescript
 interface Props {
   shift: ShiftApiResponse;  // Couples to API shape
@@ -194,6 +205,7 @@ function ShiftCard({ shift }: Props) {
 ```
 
 **✅ Pass only what's needed:**
+
 ```typescript
 interface Props {
   shiftId: string;
@@ -212,6 +224,7 @@ function ShiftCard({ shiftId, workplaceName, startTime, payAmount }: Props) {
 ### One File Per Component
 
 **❌ Don't extract JSX to variables:**
+
 ```typescript
 function Component() {
   const header = <Header title="Title" />;
@@ -222,6 +235,7 @@ function Component() {
 ```
 
 **✅ Keep inline or extract to new file:**
+
 ```typescript
 // Inline for simple cases
 function Component() {
@@ -267,6 +281,7 @@ function ResourceContainer() {
 ```
 
 **✅ Separate concerns:**
+
 ```typescript
 // Good - Container handles data, View handles UI
 function ResourceContainer() {
@@ -295,6 +310,7 @@ function ResourceView() {
 ```
 
 **✅ Container makes API calls:**
+
 ```typescript
 // Good - Container fetches, View displays
 function ResourceContainer() {
@@ -311,6 +327,7 @@ function ResourceContainer() {
 ```
 
 **✅ Pass primitives:**
+
 ```typescript
 // Good - View only knows what it needs
 <ResourceView
@@ -332,5 +349,6 @@ function ResourceContainer() {
 ## Reference
 
 For complete examples from your codebase, see:
+
 - Your repo's `src/appV2/redesign/CLAUDE.md`
 - Example feature folders in your repo
