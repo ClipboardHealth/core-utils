@@ -8,11 +8,6 @@ import { execAndLog } from "./execAndLog";
 
 const { packageRoot, outputDirectory } = PATHS;
 
-const params = {
-  timeout: 60_000,
-  verbose: false,
-};
-
 async function build() {
   const scriptsOutput = path.join(outputDirectory, "scripts");
 
@@ -25,7 +20,7 @@ async function build() {
     Promise.all(
       Object.entries(PROFILES).map(
         async ([profileName, categories]) =>
-          await buildProfile({ ...params, categories, profileName: profileName as ProfileName }),
+          await buildProfile({ categories, profileName: profileName as ProfileName }),
       ),
     ),
     mkdir(scriptsOutput, { recursive: true }),
@@ -38,7 +33,8 @@ async function build() {
 
   await Promise.all([
     execAndLog({
-      ...params,
+      verbose: false,
+      timeout: 60_000,
       command: [
         "npx",
         "prettier",
@@ -49,7 +45,8 @@ async function build() {
       ],
     }),
     execAndLog({
-      ...params,
+      verbose: false,
+      timeout: 60_000,
       command: [
         "npx",
         "tsc",

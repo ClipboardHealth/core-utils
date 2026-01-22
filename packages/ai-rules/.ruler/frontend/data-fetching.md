@@ -1,320 +1,335 @@
-# Data Fetching Standards
+# Data Fetching
+
+## Core Rules
+
+1. **Use React Query** for all API calls (not local state)
+2. **Use provided query states** (`isLoading`, `isError`, `isSuccess`) - don't create custom state
+3. **Use `enabled` option** for conditional fetching
+4. **Use `invalidateQueries`** (not `refetch`) for disabled queries
+5. **Define Zod schemas** for all request/response types
+
+**Why?** React Query manages server state (caching, background updates, stale data) better than local state ever could. Use its built-in states instead of reinventing the wheel.
 
 ## Technology Stack
 
-- **React Query** (@tanstack/react-query) for all API calls
-- **Axios** for HTTP requests
-- **Zod** for response validation
+- **React Query** (@tanstack/react-query) for data fetching and caching
+- **parsedApi.ts** for type-safe HTTP client
+- **Zod** for runtime validation
 
-## Core Principles
+## Query States - Use What's Provided
 
-1. **Use URL and query parameters in query keys** - Makes cache invalidation predictable
-2. **Always use `useGetQuery` hook** - Provides consistent structure, logging, and validation
-3. **Define Zod schemas** for all API requests and responses
-4. **Log errors with centralized constants** - From `APP_V2_APP_EVENTS`, never inline strings
-5. **Rely on React Query state** - Use `isLoading`, `isError`, `isSuccess` - don't reinvent state management
-6. **Use `enabled` for conditional fetching** - With `isDefined()` helper
-7. **Use `invalidateQueries` for disabled queries** - Not `refetch()` which ignores enabled state
-
-## Hook Patterns
-
-### Simple Query
+React Query provides comprehensive states. Use them instead of creating your own:
 
 ```typescript
-export function useGetUser(userId: string) {
-  return useGetQuery({
-    url: `/api/users/${userId}`,
-    responseSchema: userSchema,
-    enabled: isDefined(userId),
-    staleTime: minutesToMilliseconds(5),
+export function DataComponent() {
+  const { data, isLoading, isError, isSuccess, error, refetch } = useGetData();
+
+  // ✅ Use provided states
+  if (isLoading) return <LoadingState />;
+  if (isError) return <ErrorState error={error} onRetry={refetch} />;
+  if (!data) return <EmptyState />;
+
+  return <DataDisplay data={data} />;
+}
+```
+
+### Available States
+
+```typescript
+const {
+  data,           // The fetched data
+  error,          // Error object if failed
+  isLoading,      // Initial load
+  isFetching,     // Any fetch (including background)
+  isError,        // Request failed
+  isSuccess,      // Request succeeded
+  isPending,      // Query not yet resolved
+  isStale,        // Data is stale (needs refresh)
+  refetch,        // Manual refetch function
+} = useQuery({ ... });
+```
+
+## Anti-Pattern: Custom Loading State
+
+```typescript
+// ❌ WRONG: Creating custom loading state
+export function DataComponent() {
+  const [isLoading, setIsLoading] = useState(true);  // Don't do this!
+  const { data } = useGetData();
+
+  useEffect(() => {
+    if (data) setIsLoading(false);
+  }, [data]);
+
+  if (isLoading) return <Loading />;
+  // ...
+}
+```
+
+```typescript
+// ✅ CORRECT: Use React Query's state
+export function DataComponent() {
+  const { data, isLoading } = useGetData();
+
+  if (isLoading) return <Loading />;
+  // ...
+}
+```
+
+## Conditional Fetching
+
+Use the `enabled` option to control when queries run:
+
+```typescript
+// Wait for dependency
+const { data: user } = useGetUser(userId);
+const { data: posts } = useGetUserPosts(
+  { userId: user?.id },
+  { enabled: !!user?.id }  // Only fetch when user exists
+);
+
+// Based on user interaction
+const [shouldFetch, setShouldFetch] = useState(false);
+const { data } = useGetData({ enabled: shouldFetch });
+
+// Based on permission
+const { hasPermission } = usePermissions();
+const { data } = useGetSensitiveData({ enabled: hasPermission });
+```
+
+## Refreshing Disabled Queries
+
+When a query is disabled, use `invalidateQueries` (not `refetch`) to trigger a fresh fetch:
+
+```typescript
+// ❌ WRONG: refetch doesn't work for disabled queries
+const { data, refetch } = useGetData({ enabled: false });
+refetch();  // Won't work!
+
+// ✅ CORRECT: Use invalidateQueries
+const queryClient = useQueryClient();
+const { data } = useGetData({ enabled: false });
+
+const handleRefresh = () => {
+  queryClient.invalidateQueries({ queryKey: ["data"] });
+};
+```
+
+## Query Configuration
+
+Common query options:
+
+```typescript
+export function useGetResource(id: string) {
+  return useQuery({
+    queryKey: getResourceQueryKey(id),
+    queryFn: fetchResource,
+    enabled: !!id,                    // Conditional fetching
+    staleTime: 5 * 60 * 1000,        // 5 minutes before stale
+    gcTime: 10 * 60 * 1000,          // 10 minutes before garbage collection
+    refetchOnWindowFocus: true,       // Refetch on tab focus
+    refetchOnReconnect: true,         // Refetch on reconnect
+    retry: 3,                         // Retry failed requests 3 times
     meta: {
-      logErrorMessage: APP_V2_APP_EVENTS.GET_USER_FAILURE,
+      logErrorMessage: "GET_RESOURCE_FAILURE",
     },
   });
 }
 ```
 
-### Infinite/Paginated Query
+## Mutations
+
+Mutations modify server data. Always invalidate related queries in `onSuccess`:
 
 ```typescript
-export function usePaginatedShifts(params: Params) {
-  return useInfiniteQuery({
-    queryKey: ["shifts", params],
-    queryFn: async ({ pageParam }) => {
-      const response = await get({
-        url: "/api/shifts",
-        queryParams: { cursor: pageParam, ...params },
-        responseSchema: shiftsResponseSchema,
+export function useCreateResource() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createResource,
+    onSuccess: (_data, variables) => {
+      // Invalidate related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: ["resources", variables.workplaceId],
       });
-      return response.data;
+
+      showSuccessToast("Resource created");
     },
-    getNextPageParam: (lastPage) => lastPage.links.nextCursor,
+    onError: (error) => {
+      logError("CREATE_RESOURCE_FAILURE", error);
+      showErrorToast("Failed to create resource");
+    },
   });
 }
 ```
 
-### Composite Data Fetching
+### Mutation States
 
 ```typescript
-// Hook that combines multiple queries
-export function useWorkerBookingsData() {
-  const { data: shifts, isLoading: isLoadingShifts, refetch: refetchShifts } = useGetShifts();
-  const { data: invites, isLoading: isLoadingInvites, refetch: refetchInvites } = useGetInvites();
+export function CreateResourceForm() {
+  const createMutation = useCreateResource();
 
-  // Combine data
-  const bookings = useMemo(() => {
-    return [...(shifts ?? []), ...(invites ?? [])];
-  }, [shifts, invites]);
-
-  // Combine loading states
-  const isLoading = isLoadingShifts || isLoadingInvites;
-
-  // Combine refetch functions
-  async function refreshAllData() {
-    await Promise.all([refetchShifts(), refetchInvites()]);
-  }
-
-  return {
-    bookings,
-    isLoading,
-    refreshAllData,
+  const handleSubmit = async (data: FormData) => {
+    await createMutation.mutateAsync(data);
   };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Button
+        type="submit"
+        disabled={createMutation.isPending}
+        loading={createMutation.isPending}
+      >
+        {createMutation.isPending ? "Creating..." : "Create"}
+      </Button>
+
+      {createMutation.isError && (
+        <ErrorMessage>{createMutation.error.message}</ErrorMessage>
+      )}
+    </form>
+  );
+}
+```
+
+## Cache Invalidation
+
+After mutations, invalidate related queries:
+
+```typescript
+// Invalidate all resources
+queryClient.invalidateQueries({ queryKey: ["resources"] });
+
+// Invalidate specific workplace's resources
+queryClient.invalidateQueries({ queryKey: ["resources", workplaceId] });
+
+// Invalidate multiple queries
+queryClient.invalidateQueries({ queryKey: ["resources"] });
+queryClient.invalidateQueries({ queryKey: ["users"] });
+```
+
+## Dependent Queries
+
+When one query depends on another:
+
+```typescript
+export function UserProfile({ userId }: Props) {
+  // First query
+  const { data: user, isLoading: userLoading } = useGetUser(userId);
+
+  // Second query waits for first
+  const { data: posts, isLoading: postsLoading } = useGetUserPosts(
+    { userId: user?.id },
+    { enabled: !!user?.id }  // Wait for user data
+  );
+
+  if (userLoading) return <Loading />;
+  if (!user) return <NotFound />;
+
+  return (
+    <div>
+      <UserHeader user={user} />
+      {postsLoading ? <PostsLoading /> : <PostsList posts={posts} />}
+    </div>
+  );
+}
+```
+
+## Background Refetching
+
+React Query automatically refetches stale data in the background:
+
+```typescript
+export function DataComponent() {
+  const { data, isFetching } = useGetData();
+
+  return (
+    <div>
+      {isFetching && <RefreshingIndicator />}  {/* Background fetch */}
+      <DataDisplay data={data} />
+    </div>
+  );
+}
+```
+
+## Manual Refetch
+
+```typescript
+export function DataComponent() {
+  const { data, refetch } = useGetData();
+
+  const handleRefresh = async () => {
+    await refetch();  // Manual refetch
+  };
+
+  return (
+    <div>
+      <Button onClick={handleRefresh}>Refresh</Button>
+      <DataDisplay data={data} />
+    </div>
+  );
 }
 ```
 
 ## Error Handling
 
-Always use centralized error constants and handle expected errors gracefully:
+### Query Errors
 
 ```typescript
-useGetQuery({
-  url: "/api/resource",
-  responseSchema: schema,
-  meta: {
-    logErrorMessage: APP_V2_APP_EVENTS.GET_RESOURCE_FAILURE, // ✅ Centralized
-    userErrorMessage: "Failed to load data", // Shows alert to user
-  },
-  useErrorBoundary: (error) => {
-    // Don't show error boundary for 404s (expected errors)
-    return !(axios.isAxiosError(error) && error.response?.status === 404);
-  },
-  retry: (failureCount, error) => {
-    // Don't retry 404s or 401s
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status;
-      return ![404, 401].includes(status ?? 0);
-    }
-    return failureCount < 3;
-  },
-});
-```
+export function DataComponent() {
+  const { data, isError, error, refetch } = useGetData();
 
-## State Management - Don't Reinvent the Wheel
-
-❌ **Don't** create your own loading/error state:
-
-```typescript
-const [data, setData] = useState();
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState();
-
-useEffect(() => {
-  async function fetchData() {
-    try {
-      setIsLoading(true);
-      const result = await api.get("/data");
-      setData(result);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
+  if (isError) {
+    return (
+      <ErrorState
+        message={error.message}
+        onRetry={refetch}
+      />
+    );
   }
-  fetchData();
-}, []);
-```
 
-✅ **Do** use React Query states:
-
-```typescript
-const { data, isLoading, isError, isSuccess } = useGetQuery({...});
-
-if (isLoading) return <Loading />;
-if (isError) return <Error />;
-if (isSuccess) return <div>{data.property}</div>;
-```
-
-## Mutations
-
-```typescript
-export function useCreateDocument() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateDocumentRequest) => {
-      return await post({
-        url: "/api/documents",
-        data,
-        responseSchema: documentSchema,
-      });
-    },
-    onSuccess: () => {
-      // Invalidate queries to refetch
-      queryClient.invalidateQueries(["documents"]);
-    },
-    onError: (error) => {
-      logEvent(APP_V2_APP_EVENTS.CREATE_DOCUMENT_FAILURE, { error });
-    },
-  });
+  return <DataDisplay data={data} />;
 }
 ```
 
-## Query Keys
-
-Always include URL and parameters in query keys:
+### Mutation Errors
 
 ```typescript
-// ❌ Don't use static strings
-useQuery({ queryKey: "users", ... });
+export function CreateForm() {
+  const createMutation = useCreateResource();
 
-// ✅ Do include URL and params
-useQuery({ queryKey: [`/api/users?${status}`, { status }], ... });
-
-// Consistent query key structure
-export const queryKeys = {
-  users: ["users"] as const,
-  user: (id: string) => ["users", id] as const,
-  userShifts: (id: string) => ["users", id, "shifts"] as const,
-};
-
-// Usage
-useQuery({
-  queryKey: queryKeys.user(userId),
-  // ...
-});
-```
-
-## Refetch Intervals
-
-```typescript
-useGetQuery({
-  url: "/api/resource",
-  responseSchema: schema,
-  refetchInterval: (data) => {
-    // Dynamic refetch based on data state
-    if (!data?.isComplete) {
-      return 1000; // Poll every second until complete
+  const handleSubmit = async (data: FormData) => {
+    try {
+      await createMutation.mutateAsync(data);
+      showSuccessToast("Created successfully");
+    } catch (error) {
+      // Error already logged by mutation's onError
+      // Just handle UI feedback here
+      showErrorToast("Failed to create");
     }
-    return 0; // Stop refetching
-  },
-});
-```
+  };
 
-## Conditional Fetching
-
-Use `enabled` option with `isDefined()` helper:
-
-```typescript
-import { isDefined } from "@/lib/utils";
-
-const { data } = useGetQuery({
-  url: "/api/resource",
-  responseSchema: schema,
-  // Only fetch when conditions are met
-  enabled: isDefined(userId) && isFeatureEnabled,
-});
-```
-
-## Refetch vs InvalidateQueries
-
-**Important:** For disabled queries, use `invalidateQueries` instead of `refetch`:
-
-❌ **Don't** use `refetch()` on disabled queries:
-
-```typescript
-const { refetch, data } = useGetQuery({
-  enabled: isDefined(shift.agentId),
-  ...
-});
-
-// Will fetch even if agentId is undefined!
-refetch();
-```
-
-✅ **Do** use `invalidateQueries`:
-
-```typescript
-const queryClient = useQueryClient();
-
-const { data } = useGetQuery({
-  enabled: isDefined(shift.agentId),
-  ...
-});
-
-// Respects the enabled state
-queryClient.invalidateQueries({ queryKey: [myQueryKey] });
-```
-
-## Query Cancellation
-
-```typescript
-export function usePaginatedData() {
-  const queryClient = useQueryClient();
-
-  return useInfiniteQuery({
-    queryKey: ["data"],
-    queryFn: async ({ pageParam }) => {
-      // Cancel previous in-flight requests
-      await queryClient.cancelQueries({ queryKey: ["data"] });
-
-      const response = await get({
-        url: "/api/data",
-        queryParams: { cursor: pageParam },
-      });
-      return response.data;
-    },
-    // ...
-  });
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+      {createMutation.isError && (
+        <ErrorMessage>{createMutation.error.message}</ErrorMessage>
+      )}
+    </form>
+  );
 }
 ```
 
-## Naming Conventions
+## Complete Data Fetching Reference
 
-- **useGet\*** - Simple queries: `useGetUser`, `useGetShift`
-- **usePaginated\*** - Infinite queries: `usePaginatedPlacements`
-- **useFetch\*** - Complex fetching logic: `useFetchPaginatedInterviews`
-- **Mutations**: `useCreateDocument`, `useUpdateShift`, `useDeletePlacement`
+This guide covers essential data fetching patterns. For comprehensive details including:
 
-## Response Transformation
+- Infinite queries with pagination
+- Optimistic updates
+- Query prefetching
+- Parallel queries
+- Advanced caching strategies
+- Real examples from your codebase
 
-```typescript
-export function useGetUser(userId: string) {
-  return useGetQuery({
-    url: `/api/users/${userId}`,
-    responseSchema: userResponseSchema,
-    select: (data) => {
-      // Transform response data
-      return {
-        ...data,
-        fullName: `${data.firstName} ${data.lastName}`,
-      };
-    },
-  });
-}
-```
-
-## Hook Location
-
-- **API hooks** → Place in `api/` folder within feature directory
-- **One endpoint = one hook** principle
-- Export types inferred from Zod: `export type User = z.infer<typeof userSchema>`
-
-Example:
-
-```text
-Feature/
-├── api/
-│   ├── useGetResource.ts
-│   ├── useCreateResource.ts
-│   └── schemas.ts  (optional)
-```
+**See your repo's documentation:**
+- `src/appV2/redesign/docs/API_PATTERNS.md` - Complete API guide
+- `src/appV2/redesign/CLAUDE.md` - Quick data fetching decision tree

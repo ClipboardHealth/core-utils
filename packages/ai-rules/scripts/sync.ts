@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { cp, readFile, writeFile } from "node:fs/promises";
+import { cp, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { type ProfileName, PROFILES } from "./constants";
@@ -14,15 +14,19 @@ async function sync() {
   try {
     const profile = getProfileFromArguments();
 
-    // Force copy files; rely on `git` if it overwrites files.
-    await cp(path.join(PATHS.rules, profile), PATHS.projectRoot, { force: true, recursive: true });
-    console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
+    // Copy all .md files from the built profile to .ai-rules
+    const sourcePath = path.join(PATHS.rules, profile);
+    const targetPath = path.join(PATHS.projectRoot, ".ai-rules", profile);
 
-    // Append OVERLAY.md content if it exists
-    await appendOverlayToFiles({
-      filesToUpdate: ["CLAUDE.md", "AGENTS.md"],
-      projectRoot: PATHS.projectRoot,
+    await cp(sourcePath, targetPath, {
+      force: true,
+      recursive: true,
     });
+
+    console.log(`✅ @clipboard-health/ai-rules synced ${profile} to .ai-rules/${profile}/`);
+
+    // Create CLAUDE.md and AGENTS.md that reference the individual rule files
+    await createRuleFiles({ profile, projectRoot: PATHS.projectRoot });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -44,45 +48,53 @@ function getProfileFromArguments(): ProfileName {
 }
 
 /**
- * Appends OVERLAY.md content to specified files if OVERLAY.md exists.
+ * Creates CLAUDE.md and AGENTS.md that reference individual rule files for progressive disclosure.
+ * Dynamically generates file list based on what exists in .ai-rules/{profile}/
  */
-async function appendOverlayToFiles(params: {
-  filesToUpdate: string[];
+async function createRuleFiles(params: {
+  profile: ProfileName;
   projectRoot: string;
 }): Promise<void> {
-  const { filesToUpdate, projectRoot } = params;
-  const overlayPath = path.join(projectRoot, "OVERLAY.md");
+  const { profile, projectRoot } = params;
 
-  const overlayContent = await readOverlayContent(overlayPath);
-  if (!overlayContent) {
-    // OVERLAY.md doesn't exist or can't be read, nothing to append
-    return;
-  }
+  // Read the .ai-rules/{profile}/ directory to get all .md files
+  const rulesDirectory = path.join(projectRoot, ".ai-rules", profile);
+  const files = await readdir(rulesDirectory);
+  const mdFiles = files.filter((file) => file.endsWith(".md")).sort();
 
-  // Append to each file
-  await Promise.all(
-    filesToUpdate.map(async (file) => {
-      const filePath = path.join(projectRoot, file);
+  // Generate file list
+  const fileList =
+    mdFiles.length > 0
+      ? mdFiles.map((file) => `- \`.ai-rules/${profile}/${file}\``).join("\n")
+      : "No rule files found.";
 
-      try {
-        const currentContent = await readFile(filePath, "utf8");
-        const updatedContent = `${currentContent}\n<!-- Source: ./OVERLAY.md -->\n\n${overlayContent}`;
-        await writeFile(filePath, updatedContent, "utf8");
-      } catch (error) {
-        console.warn(`⚠️ Could not append overlay to ${file}: ${toErrorMessage(error)}`);
-      }
-    }),
-  );
+  const content = `# AI Development Guidelines
 
-  console.log(`📎 Appended OVERLAY.md to ${filesToUpdate.join(", ")}`);
-}
+This project uses AI-assisted development with the following rule structure:
 
-async function readOverlayContent(overlayPath: string): Promise<string | undefined> {
-  try {
-    return await readFile(overlayPath, "utf8");
-  } catch {
-    return undefined;
-  }
+## Core Rules (Load on Demand)
+
+Universal patterns from @clipboard-health/ai-rules:
+
+${fileList}
+
+## Repo-Specific Instructions
+
+For commands, reference implementations, and repo-specific configuration:
+
+@OVERLAY.md
+`;
+
+  // Create both CLAUDE.md (for Claude Code) and AGENTS.md (for Cursor)
+  const claudePath = path.join(projectRoot, "CLAUDE.md");
+  const agentsPath = path.join(projectRoot, "AGENTS.md");
+
+  await Promise.all([
+    writeFile(claudePath, content, "utf8"),
+    writeFile(agentsPath, content, "utf8"),
+  ]);
+
+  console.log(`📝 Created CLAUDE.md and AGENTS.md with references to .ai-rules/${profile}/`);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

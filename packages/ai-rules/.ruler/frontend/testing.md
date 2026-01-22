@@ -31,30 +31,35 @@ Our testing strategy follows the **Testing Trophy** model:
 - **@testing-library/user-event** for user interactions
 - **Mock Service Worker (MSW)** for API mocking
 
-## Test File Structure
+## Core Rules
+
+1. **Use MockAppWrapper** for all component/hook tests (QueryClient, Router, Theme)
+2. **Use MSW handler factories** (not inline handlers per test)
+3. **Test user behavior** (not implementation details)
+4. **Use proper async** (act(), waitFor(), await)
+5. **Query priority:** getByRole > getByLabel > getByText > getByTestId (last resort)
+
+## Test Structure Template
 
 ```typescript
 import { render, screen, waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 describe("ComponentName", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Setup if needed
   });
 
-  it("should render correctly", () => {
-    render(<Component />);
-    expect(screen.getByText("Expected")).toBeInTheDocument();
-  });
-
-  it("should handle user interaction", async () => {
+  it("should [behavior] when [condition]", async () => {
+    // Arrange
     const user = userEvent.setup();
-    render(<Component />);
+    render(<Component />, { wrapper: MockAppWrapper });
 
+    // Act
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
+    // Assert
     await waitFor(() => {
       expect(screen.getByText("Success")).toBeInTheDocument();
     });
@@ -62,23 +67,188 @@ describe("ComponentName", () => {
 });
 ```
 
+## Before/After Anti-Patterns
+
+### Component Rendering
+
+```typescript
+// ❌ WRONG: Manual QueryClient setup
+const queryClient = new QueryClient();
+render(
+  <QueryClientProvider client={queryClient}>
+    <Component />
+  </QueryClientProvider>
+);
+
+// ✅ CORRECT: Use MockAppWrapper
+render(<Component />, { wrapper: MockAppWrapper });
+```
+
+### Hook Testing
+
+```typescript
+// ❌ WRONG: No wrapper
+const { result } = renderHook(() => useGetData());
+
+// ✅ CORRECT: Use MockAppWrapper
+const { result } = renderHook(() => useGetData(), { wrapper: MockAppWrapper });
+```
+
+### MSW Handlers
+
+```typescript
+// ❌ WRONG: Inline handler per test
+beforeEach(() => {
+  mockApiServer.use(
+    rest.get("/api/resource", (req, res, ctx) =>
+      res(ctx.json({ id: "1", name: "Test" }))
+    )
+  );
+});
+
+// ✅ CORRECT: Factory function
+// In api/testUtils/handlers.ts
+export const createResourceHandler = (data: Resource) =>
+  rest.get("/api/resource", (req, res, ctx) => res(ctx.json(data)));
+
+// In test file
+mockApiServer.use(createResourceHandler({ id: "1", name: "Test" }));
+```
+
+### Query Elements
+
+```typescript
+// ❌ WRONG: Testing implementation details
+expect(container.querySelector(".css-class")).toBeTruthy();
+expect(wrapper.find("UserCard").prop("user")).toBe(mockUser);
+
+// ✅ CORRECT: Test user-visible behavior
+expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
+expect(screen.getByText("John Doe")).toBeInTheDocument();
+```
+
+## Query Priority
+
+Follow Testing Library's query priority for accessibility:
+
+1. **`getByRole`** - Best for accessibility (buttons, links, inputs)
+2. **`getByLabelText`** - For form fields with labels
+3. **`getByPlaceholderText`** - For inputs without labels
+4. **`getByText`** - For non-interactive content
+5. **`getByTestId`** - ⚠️ **LAST RESORT** - Use only when no other option exists
+
+```typescript
+// ✅ Prefer accessible queries
+screen.getByRole("button", { name: /submit/i });
+screen.getByLabelText("Email address");
+screen.getByText("Welcome back");
+
+// ❌ Avoid CSS selectors and test IDs unless absolutely necessary
+screen.getByTestId("custom-element");  // Last resort only
+```
+
+## MSW Handler Factory Pattern
+
+**Always export factory functions, not static handlers**. This allows tests to customize mock responses.
+
+```typescript
+// api/testUtils/handlers.ts
+
+// ✅ GOOD: Factory function (flexible per test)
+export const createUserHandler = (userData: User) =>
+  rest.get("/api/user/:id", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json(userData));
+  });
+
+// Export default success scenario for convenience
+export const userHandlers = [
+  createUserHandler({ id: "1", name: "Default User" })
+];
+
+// ❌ BAD: Static handler (ties tests to single response)
+export const userSuccessHandler = rest.get("/api/user/:id",
+  (req, res, ctx) => res(ctx.json(fixedUser))
+);
+```
+
+**Usage in tests:**
+
+```typescript
+it("should display custom user data", async () => {
+  const customUser = { id: "2", name: "Custom User" };
+  mockApiServer.use(createUserHandler(customUser));
+
+  render(<UserProfile userId="2" />, { wrapper: MockAppWrapper });
+
+  expect(await screen.findByText("Custom User")).toBeInTheDocument();
+});
+```
+
+## Common Test Scenarios
+
+### Testing Loading States
+
+```typescript
+it("should show loading spinner when data is fetching", () => {
+  render(<Component />, { wrapper: MockAppWrapper });
+  expect(screen.getByRole("progressbar")).toBeInTheDocument();
+});
+```
+
+### Testing Error States
+
+```typescript
+it("should display error message when API call fails", async () => {
+  mockApiServer.use(
+    rest.get("/api/data", (req, res, ctx) =>
+      res(ctx.status(500), ctx.json({ error: "Server error" }))
+    )
+  );
+
+  render(<Component />, { wrapper: MockAppWrapper });
+
+  expect(await screen.findByText("Error loading data")).toBeInTheDocument();
+});
+```
+
+### Testing User Interactions
+
+```typescript
+it("should handle form submission", async () => {
+  const user = userEvent.setup();
+  render(<Form />, { wrapper: MockAppWrapper });
+
+  await user.type(screen.getByLabelText("Name"), "John Doe");
+  await user.click(screen.getByRole("button", { name: "Submit" }));
+
+  await waitFor(() => {
+    expect(screen.getByText("Success")).toBeInTheDocument();
+  });
+});
+```
+
+### Testing Conditional Rendering
+
+```typescript
+it("should show premium badge when user is premium", () => {
+  render(<UserCard isPremium={true} />, { wrapper: MockAppWrapper });
+  expect(screen.getByText("Premium")).toBeInTheDocument();
+});
+
+it("should not show premium badge when user is not premium", () => {
+  render(<UserCard isPremium={false} />, { wrapper: MockAppWrapper });
+  expect(screen.queryByText("Premium")).not.toBeInTheDocument();
+});
+```
+
 ## Test Naming Conventions
 
 ### Describe Blocks
 
-- Use the component/function name: `describe('ComponentName', ...)`
-- Nest describe blocks for complex scenarios
-
 ```typescript
-describe("ShiftCard", () => {
-  describe("when shift is urgent", () => {
-    it("should display urgent badge", () => {
-      // ...
-    });
-  });
-
-  describe("when shift is booked", () => {
-    it("should show booked status", () => {
+describe("ComponentName", () => {
+  describe("when condition is met", () => {
+    it("should display expected behavior", () => {
       // ...
     });
   });
@@ -87,256 +257,17 @@ describe("ShiftCard", () => {
 
 ### Test Names
 
-- Pattern: `'should [expected behavior] when [condition]'`
-- Be descriptive and specific
+Pattern: `'should [expected behavior] when [condition]'`
 
 ```typescript
-// Good
+// ✅ Good - descriptive and specific
 it("should show loading spinner when data is fetching", () => {});
 it("should display error message when API call fails", () => {});
 it("should enable submit button when form is valid", () => {});
 
-// Avoid
+// ❌ Avoid - vague or incomplete
 it("works", () => {});
 it("loading state", () => {});
-```
-
-## Parameterized Tests
-
-### Using it.each
-
-```typescript
-it.each([
-  { input: { isUrgent: true }, expected: "URGENT" },
-  { input: { isUrgent: false }, expected: "REGULAR" },
-])("should return $expected when isUrgent is $input.isUrgent", ({ input, expected }) => {
-  expect(getShiftType(input)).toBe(expected);
-});
-```
-
-### Table-Driven Tests
-
-```typescript
-describe("calculateShiftPay", () => {
-  it.each([
-    { hours: 8, rate: 30, expected: 240 },
-    { hours: 10, rate: 25, expected: 250 },
-    { hours: 12, rate: 35, expected: 420 },
-  ])("should calculate $expected for $hours hours at $rate/hr", ({ hours, rate, expected }) => {
-    expect(calculateShiftPay(hours, rate)).toBe(expected);
-  });
-});
-```
-
-## Component Testing (Integration Tests)
-
-Integration tests form the largest part of the Testing Trophy. Test features, not isolated components.
-
-### Rendering Components
-
-```typescript
-import { render, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-function renderWithProviders(component: ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-
-  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
-}
-
-it("should render user name", () => {
-  renderWithProviders(<UserProfile userId="123" />);
-  expect(screen.getByText("John Doe")).toBeInTheDocument();
-});
-```
-
-### Querying Elements - Priority Order
-
-Follow [Testing Library's query priority](https://testing-library.com/docs/queries/about#priority):
-
-1. **`getByRole`** - Best for accessibility (buttons, links, inputs)
-2. **`getByLabelText`** - For form fields with labels
-3. **`getByPlaceholderText`** - For inputs without labels
-4. **`getByText`** - For non-interactive content
-5. **`getByDisplayValue`** - For current input values
-6. **`getByAltText`** - For images
-7. **`getByTitle`** - Less common
-8. **`getByTestId`** - ⚠️ **LAST RESORT** - Use only when no other option exists
-
-```typescript
-// ✅ Prefer accessible queries
-screen.getByRole("button", { name: /submit/i });
-screen.getByLabelText("Email address");
-screen.getByText("Welcome back");
-
-// ❌ Avoid CSS selectors and implementation details
-screen.getByClassName("user-card"); // Users don't see classes
-wrapper.find("UserCard").prop("user"); // Testing implementation
-screen.getByTestId("custom-element"); // Last resort only
-```
-
-### User Interactions
-
-```typescript
-import userEvent from "@testing-library/user-event";
-
-it("should handle form submission", async () => {
-  const user = userEvent.setup();
-  const onSubmit = vi.fn();
-
-  render(<Form onSubmit={onSubmit} />);
-
-  // Type in input
-  await user.type(screen.getByLabelText("Name"), "John Doe");
-
-  // Click button
-  await user.click(screen.getByRole("button", { name: "Submit" }));
-
-  // Assert
-  expect(onSubmit).toHaveBeenCalledWith({ name: "John Doe" });
-});
-```
-
-## Hook Testing (Unit Tests)
-
-Only write unit tests for hooks that contain business logic, not for UI components.
-
-### Using renderHook
-
-```typescript
-import { renderHook, waitFor } from "@testing-library/react";
-
-describe("useCustomHook", () => {
-  it("should return loading state initially", () => {
-    const { result } = renderHook(() => useCustomHook());
-
-    expect(result.current.isLoading).toBe(true);
-  });
-
-  it("should return data after loading", async () => {
-    const { result } = renderHook(() => useCustomHook());
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.data).toEqual(expectedData);
-  });
-});
-```
-
-### Testing Hook Updates
-
-```typescript
-it("should update when dependencies change", async () => {
-  const { result, rerender } = renderHook(({ userId }) => useGetUser(userId), {
-    initialProps: { userId: "1" },
-  });
-
-  await waitFor(() => {
-    expect(result.current.data?.id).toBe("1");
-  });
-
-  // Update props
-  rerender({ userId: "2" });
-
-  await waitFor(() => {
-    expect(result.current.data?.id).toBe("2");
-  });
-});
-```
-
-## MSW (Mock Service Worker)
-
-### Factory Functions Pattern - IMPORTANT
-
-**Always export factory functions, not static handlers**. This allows tests to customize mock responses.
-
-❌ **Don't** export static handlers (ties tests to single response):
-
-```typescript
-// Bad - can only return this one mock
-export const facilityNotesSuccessScenario = rest.get(
-  `${TEST_API_URL}/facilityNotes`,
-  async (_, res, ctx) => res(ctx.status(200), ctx.json(mockFacilityNotes)),
-);
-```
-
-✅ **Do** export factory functions (flexible per test):
-
-```typescript
-// Good - each test can provide custom data
-export const createFacilityNotesTestHandler = (facilityNotes: FacilityNote[]) => {
-  return rest.get<string, Record<string, string>, FacilityNotesResponse>(
-    `${TEST_API_URL}/facilityNotes/:facilityId`,
-    async (_req, res, ctx) => {
-      return res(ctx.status(200), ctx.json(facilityNotes));
-    },
-  );
-};
-
-// Export default success scenario for convenience
-export const facilityNotesTestHandlers = [createFacilityNotesTestHandler(mockFacilityNotes)];
-```
-
-**Usage in tests:**
-
-```typescript
-// In test setup
-mockApiServer.use(
-  createFacilityNotesTestHandler(myCustomFacilityNotes),
-  createExtraTimePaySettingsTestHandler({ payload: customSettings }),
-);
-```
-
-**Rationale:** When endpoints need different responses for different test scenarios, factory functions avoid duplication and inline mocks that become hard to maintain.
-
-## Mocking
-
-### Mocking Modules
-
-```typescript
-import { vi } from "vitest";
-import * as useUserModule from "@/features/user/hooks/useUser";
-
-// Mock entire module
-vi.mock("@/features/user/hooks/useUser");
-
-// Spy on specific function
-const useDefinedWorkerSpy = vi.spyOn(useDefinedWorkerModule, "useDefinedWorker");
-useDefinedWorkerSpy.mockReturnValue(getMockWorker({ id: "123" }));
-```
-
-### Mocking Functions
-
-```typescript
-it("should call callback on success", async () => {
-  const onSuccess = vi.fn();
-
-  render(<Component onSuccess={onSuccess} />);
-
-  await user.click(screen.getByRole("button"));
-
-  await waitFor(() => {
-    expect(onSuccess).toHaveBeenCalledWith(expectedData);
-  });
-});
-```
-
-### Mocking API Calls
-
-```typescript
-import { vi } from "vitest";
-
-vi.mock("@/lib/api", () => ({
-  get: vi.fn().mockResolvedValue({
-    data: { id: "1", name: "Test" },
-  }),
-}));
 ```
 
 ## Async Testing
@@ -345,7 +276,7 @@ vi.mock("@/lib/api", () => ({
 
 ```typescript
 it("should display data after loading", async () => {
-  render(<AsyncComponent />);
+  render(<AsyncComponent />, { wrapper: MockAppWrapper });
 
   expect(screen.getByText("Loading...")).toBeInTheDocument();
 
@@ -359,43 +290,12 @@ it("should display data after loading", async () => {
 
 ```typescript
 it("should display user name", async () => {
-  render(<UserProfile />);
+  render(<UserProfile />, { wrapper: MockAppWrapper });
 
   // findBy automatically waits
   const name = await screen.findByText("John Doe");
   expect(name).toBeInTheDocument();
 });
-```
-
-## Test Organization
-
-### Co-location
-
-- Place test files next to source files
-- Use same name with `.test.ts` or `.test.tsx` extension
-
-```text
-Feature/
-├── Component.tsx
-├── Component.test.tsx
-├── utils.ts
-└── utils.test.ts
-```
-
-### Test Helpers
-
-- Create test utilities in `testUtils.ts` or `test-utils.ts`
-- Reusable mocks in `mocks/` folder
-
-```typescript
-// testUtils.ts
-export function getMockShift(overrides = {}): Shift {
-  return {
-    id: "1",
-    title: "Test Shift",
-    ...overrides,
-  };
-}
 ```
 
 ## What to Test
@@ -415,47 +315,27 @@ export function getMockShift(overrides = {}): Shift {
 - **Third-party libraries** - Trust they're tested
 - **Styles/CSS** - Visual regression tests are separate
 
-## Coverage Guidelines
-
-- Aim for high coverage on business logic and utilities
-- Don't obsess over 100% coverage on UI components
-- **Focus on testing behavior**, not implementation
-- If you can't query it the way a user would, you're testing wrong
-
-## Common Patterns
-
-### Testing Loading States
+## Parameterized Tests
 
 ```typescript
-it("should show loading state", () => {
-  render(<Component />);
-  expect(screen.getByRole("progressbar")).toBeInTheDocument();
+it.each([
+  { input: { isUrgent: true }, expected: "URGENT" },
+  { input: { isUrgent: false }, expected: "REGULAR" }
+])("should return $expected when isUrgent is $input.isUrgent", ({ input, expected }) => {
+  expect(getShiftType(input)).toBe(expected);
 });
 ```
 
-### Testing Error States
+## Complete Testing Reference
 
-```typescript
-it("should display error message on failure", async () => {
-  // Mock API error
-  vi.mocked(get).mockRejectedValue(new Error("API Error"));
+This guide covers essential testing patterns. For comprehensive details including:
 
-  render(<Component />);
+- MockAppWrapper internals and customization
+- Advanced MSW patterns (request verification, dynamic responses)
+- Testing complex scenarios (infinite queries, optimistic updates)
+- Hook testing patterns
+- E2E testing with Playwright
 
-  expect(await screen.findByText("Error loading data")).toBeInTheDocument();
-});
-```
-
-### Testing Conditional Rendering
-
-```typescript
-it("should show premium badge when user is premium", () => {
-  render(<UserCard user={{ ...mockUser, isPremium: true }} />);
-  expect(screen.getByText("Premium")).toBeInTheDocument();
-});
-
-it("should not show premium badge when user is not premium", () => {
-  render(<UserCard user={{ ...mockUser, isPremium: false }} />);
-  expect(screen.queryByText("Premium")).not.toBeInTheDocument();
-});
-```
+**See your repo's documentation:**
+- `src/appV2/redesign/docs/TESTING.md` - Complete testing guide
+- `src/appV2/redesign/CLAUDE.md` - Quick testing decision tree

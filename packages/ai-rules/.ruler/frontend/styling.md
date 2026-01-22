@@ -1,475 +1,299 @@
 # Styling Standards
 
-## Technology Stack
-
-- **Material UI (MUI)** with custom theme
-- **sx prop** for custom styles (NOT `styled()`)
-- Custom component wrappers for consistent UI
-- **Storybook** as single source of truth for UI components
-
 ## Core Principles
 
-1. **Always use `sx` prop** - Never CSS/SCSS/SASS files
-2. **Use theme tokens** - Never hardcode colors, spacing, or sizes
-3. **Leverage meaningful tokens** - Use semantic names like `theme.palette.text.primary`, not `common.white`
-4. **Type-safe theme access** - Use `sx={(theme) => ({...})}`, not string paths like `"text.secondary"`
-5. **Follow spacing system** - Use indices 1-12 (4px-64px)
-6. **Storybook is source of truth** - Check Storybook before Figma
+1. **Always use `sx` prop** - Never CSS/SCSS/SASS/styled()/makeStyles()
+2. **Always use theme tokens** - Never hardcode colors, spacing, or sizes
+3. **Type-safe theme access** - Use `sx={(theme) => ({...})}`, not string paths
+4. **Semantic token names** - Use `theme.palette.text.primary`, not `common.white`
+5. **Follow spacing system** - Use indices or theme.spacing()
 
-## Restricted Patterns
+**Why?** Theme tokens ensure consistency, enable theme switching, and provide compile-time safety. The `sx` prop integrates directly with MUI's theme system.
 
-### ❌ DO NOT USE
+## The Golden Rules
 
-- `styled()` from MUI (deprecated in our codebase)
-- `makeStyles()` from MUI (deprecated)
-- CSS/SCSS/SASS files
-- Direct MUI icons from `@mui/icons-material`
-- Direct MUI components without wrappers (except layout primitives; see list below)
-- Inline styles via `style` prop (use `sx` instead)
-- String paths for theme tokens (not type-safe)
-
-### Rationale
-
-1. Component wrappers provide consistent behavior and app-specific functionality
-2. `sx` prop provides type-safe access to theme tokens
-3. Project-specific dialog components ensure consistent UX patterns
-
-## Storybook as Source of Truth
-
-**Important:** Storybook reflects what's actually implemented, not Figma designs.
-
-### When Storybook Differs from Figma
-
-1. **Check Storybook first** - It shows real, implemented components
-2. **Use closest existing variant** - Don't create one-off font sizes/colors
-3. **Confirm changes are intentional** - Consult with team before updating components
-4. **Create follow-up ticket** - If component needs updating but you're short on time
-5. **Make changes system-wide** - Component updates should benefit entire app
-
-### Process
-
-- **Minor differences** (font sizes, colors) → Stick to Storybook
-- **Component looks different** → Confirm with team, update component intentionally
-- **Missing component** → Check with team - it may exist with a different name
-
-## Use Internal Components
-
-### ✅ ALWAYS USE Project Wrappers
-
-Instead of importing directly from `@mui/material`, use project wrappers:
+### ✅ ALWAYS Do This
 
 ```typescript
-// ❌ Don't
-import { Button, IconButton } from "@mui/material";
-
-// ✅ Do
-import { Button } from "@/components/Button";
-import { IconButton } from "@clipboard-health/ui-components";
+// Use sx prop with theme function for type safety
+<Box sx={(theme) => ({
+  backgroundColor: theme.palette.background.primary,
+  color: theme.palette.text.secondary,
+  padding: theme.spacing(5),  // or just: padding: 5
+  borderRadius: theme.borderRadius.medium,
+})} />
 ```
 
-### Component Wrapper List (Example)
-
-Common components that may have wrappers:
-
-- `Button`, `LoadingButton`, `IconButton`
-- `Avatar`, `Accordion`, `Badge`
-- `Card`, `Chip`, `Dialog`
-- `Drawer`, `List`, `ListItem`
-- `Rating`, `Slider`, `Switch`
-- `TextField`, `Typography`, `Tab`, `Tabs`
-
-Check your project's ESLint configuration for the full list.
-
-## Icons
-
-### Use Project Icon Component
+### ❌ NEVER Do This
 
 ```typescript
-// ❌ Don't use third-party icons directly
-import SearchIcon from '@mui/icons-material/Search';
+// Raw color values
+<Box sx={{ backgroundColor: "#17181E", color: "#FFFFFF" }} />
 
-// ✅ Use project's icon system
-import { CbhIcon } from '@clipboard-health/ui-components';
+// Raw spacing values
+<Box sx={{ padding: "20px", margin: "10px 15px" }} />
 
-<CbhIcon type="search" size="large" />
-<CbhIcon type="search-colored" size="medium" />
+// String paths (not type-safe)
+<Box sx={{ color: "text.secondary" }} />  // No TypeScript support!
+
+// makeStyles, styled(), CSS files
+const useStyles = makeStyles((theme) => ({ ... }));  // Deprecated
+const StyledBox = styled(Box)({ ... });  // Don't use
 ```
 
-### Icon Variants
+## Before/After Anti-Patterns
 
-- Many icon systems have variants for different states (e.g., `-colored` for active states)
-- Check your project's icon documentation for available variants
-
-## Styling with sx Prop
-
-### Basic Usage - Type-Safe Theme Access
-
-❌ **Never** hardcode values or use string paths:
+### Colors
 
 ```typescript
-<Box
-  sx={{
-    backgroundColor: "red", // ❌ Raw color
-    color: "#ADFF11", // ❌ Hex code
-    padding: "16px", // ❌ Raw size
-    color: "text.secondary", // ❌ String path (no TypeScript support)
-  }}
-/>
+// ❌ WRONG: Raw hex values
+<Box sx={{
+  backgroundColor: "#FFFFFF",
+  color: "#17181E",
+  borderColor: "#E5E5E5"
+}} />
+
+// ✅ CORRECT: Theme tokens with semantic names
+<Box sx={(theme) => ({
+  backgroundColor: theme.palette.background.standout,
+  color: theme.palette.base.strong,
+  borderColor: theme.palette.border.base
+})} />
 ```
 
-✅ **Always** use theme with type safety:
+### Spacing
 
 ```typescript
-<Box
-  sx={(theme) => ({
-    backgroundColor: theme.palette.background.primary, // ✅ Semantic token
-    color: theme.palette.text.secondary, // ✅ Type-safe
-    padding: theme.spacing(4), // or just: padding: 4   // ✅ Spacing system
-  })}
-/>
+// ❌ WRONG: Raw pixel/rem values
+<Box sx={{
+  padding: "20px",
+  marginX: "15px",
+  gap: "8px"
+}} />
+
+// ✅ CORRECT: Theme spacing
+<Box sx={(theme) => ({
+  padding: theme.spacing(5),  // 20px
+  marginX: theme.spacing(4),  // 15px
+  gap: theme.spacing(3)       // 8px
+})} />
+
+// ✅ ALSO CORRECT: Shorthand (when not using theme function for other props)
+<Box sx={{
+  padding: 5,
+  marginX: 4,
+  gap: 3
+}} />
 ```
 
-### Use Meaningful Tokens
-
-❌ **Avoid** non-descriptive tokens:
+### Responsive Design
 
 ```typescript
-theme.palette.common.white; // ❌ No context about usage
-theme.palette.green300; // ❌ Which green? When to use?
+// ❌ WRONG: Hardcoded breakpoints
+<Box sx={{
+  "@media (max-width: 640px)": { display: "none" }
+}} />
+
+// ✅ CORRECT: Use responsive hooks
+const isMobile = useIsMobile();
+return isMobile ? <MobileView /> : <DesktopView />;
+
+// ✅ ALSO CORRECT: Responsive sx values
+<Box sx={{
+  width: {
+    xs: "100%",  // Mobile
+    md: "50%"    // Desktop
+  }
+}} />
 ```
 
-✅ **Use** semantic tokens:
+## Quick Reference: Essential Theme Tokens
+
+These are the most commonly used tokens. See your repo's THEME.md for complete reference.
+
+### Colors
 
 ```typescript
-theme.palette.background.tertiary; // ✅ Clear purpose
-theme.palette.instantPay.background; // ✅ Intent is obvious
-theme.palette.text.primary; // ✅ Meaningful
+// Text colors
+theme.palette.base.strong          // Primary text (darkest)
+theme.palette.base.muted           // Secondary text (lighter)
+theme.palette.base.inverted.base   // Text on dark backgrounds
+
+// Background colors
+theme.palette.background.standout  // Card/elevated surfaces
+theme.palette.background.default   // Page background
+theme.palette.background.tertiary  // Subtle backgrounds
+
+// Border colors
+theme.palette.border.base          // Standard borders
+theme.palette.border.subtle        // Lighter borders
+
+// Semantic colors
+theme.palette.error.main           // Error states
+theme.palette.success.main         // Success states
+theme.palette.warning.main         // Warning states
 ```
 
-## Spacing System
-
-We use a strict index-based spacing system:
-
-| Index | 1   | 2   | 3   | 4    | 5    | 6    | 7    | 8    | 9    | 10   | 11   | 12   |
-| ----- | --- | --- | --- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| Size  | 4px | 6px | 8px | 12px | 16px | 20px | 24px | 32px | 40px | 48px | 56px | 64px |
-
-**Usage:**
+### Spacing Scale
 
 ```typescript
-<Box sx={{ padding: 5 }} />    // → 16px
-<Box sx={{ marginX: 4 }} />    // → 12px left and right
-<Box sx={{ gap: 3 }} />        // → 8px
+// Common spacing values
+theme.spacing(1)  // 4px  - Tiny gaps
+theme.spacing(2)  // 8px  - Small gaps
+theme.spacing(3)  // 12px - Medium gaps
+theme.spacing(4)  // 15px - Standard gaps
+theme.spacing(5)  // 20px - Large gaps, card padding
+theme.spacing(6)  // 30px - Section spacing
 ```
 
-**Use `rem` for fonts and heights:**
+### Border Radius
 
 ```typescript
-<Box
-  sx={(theme) => ({
-    height: "3rem", // ✅ Scales with user zoom
-    fontSize: theme.typography.body1.fontSize, // ✅ From theme
-    padding: 5, // ✅ px prevents overflow when zoomed
-  })}
-/>
+theme.borderRadius.small   // 6px  - Subtle rounding
+theme.borderRadius.medium  // 8px  - Standard components
+theme.borderRadius.large   // 12px - Cards, prominent elements
 ```
 
-**Reasoning:** Users who adjust device-wide zoom need `rem` for fonts/heights to scale properly, but `px` spacing prevents layout overflow.
+## Common Patterns
 
-## Theme Integration
-
-### Responsive Styles
+### Basic Box with Theme Styling
 
 ```typescript
-<Box
-  sx={{
-    width: {
-      xs: "100%", // Mobile
-      sm: "75%", // Tablet
-      md: "50%", // Desktop
-    },
-    padding: {
-      xs: 1,
-      md: 3,
-    },
-  }}
-/>
+<Box sx={(theme) => ({
+  backgroundColor: theme.palette.background.standout,
+  padding: theme.spacing(5),
+  borderRadius: theme.borderRadius.medium,
+  border: `1px solid ${theme.palette.border.base}`
+})} />
 ```
 
-### Pseudo-classes and Hover States
+### Hover States
 
 ```typescript
-<Box
-  sx={(theme) => ({
-    "&:hover": {
-      backgroundColor: theme.palette.primary.dark,
-      cursor: "pointer",
-    },
-    "&:disabled": {
-      opacity: 0.5,
-    },
-    "&.active": {
-      borderColor: theme.palette.primary.main,
-    },
-  })}
-/>
+<Box sx={(theme) => ({
+  backgroundColor: theme.palette.background.default,
+  "&:hover": {
+    backgroundColor: theme.palette.background.standout,
+    cursor: "pointer"
+  }
+})} />
 ```
 
 ### Nested Selectors
 
 ```typescript
-<Box
-  sx={(theme) => ({
-    "& .child-element": {
-      color: theme.palette.text.secondary,
-    },
-    "& > div": {
-      marginBottom: 1,
-    },
-    // Target nested MUI components
-    "& .MuiTypography-root": {
-      color: theme.palette.intent?.disabled.text,
-    },
-  })}
-/>
+<Box sx={(theme) => ({
+  "& .MuiTypography-root": {
+    color: theme.palette.text.secondary
+  },
+  "& > div": {
+    marginBottom: theme.spacing(2)
+  }
+})} />
 ```
 
-## Shorthand Properties
+## mergeSxProps Pattern
 
-MUI provides shorthand properties - use full names, not abbreviations:
-
-✅ **Use full names:**
+For components accepting custom `sx` prop, merge with default styles:
 
 ```typescript
-<Box
-  sx={{
-    padding: 2, // ✅ Clear
-    paddingX: 4, // ✅ Readable
-    marginY: 2, // ✅ Explicit
-  }}
-/>
-```
+interface Props {
+  sx?: SxProps<Theme>;
+}
 
-❌ **Avoid abbreviations** (per naming conventions best practice):
-
-```typescript
-<Box
-  sx={{
-    p: 2, // ❌ Too terse
-    px: 4, // ❌ Not clear
-    my: 2, // ❌ What does this mean?
-  }}
-/>
-```
-
-[Full list of shorthand properties](https://mui.com/system/properties/)
-
-## Merging sx Props
-
-For generic components accepting an `sx` prop, merge default styles with custom styles:
-
-```typescript
-// Option 1: Array syntax (MUI native)
-<Box
-  sx={[
-    (theme) => ({
-      backgroundColor: theme.palette.background.tertiary,
-      padding: 2,
-    }),
-    sx, // User's custom sx prop
-  ]}
-  {...restProps}
-/>
-
-// Option 2: Use a utility function if your project provides one
-import { mergeSxProps } from "@clipboard-health/ui-components";
-
-<Box
-  sx={mergeSxProps(defaultStyles, sx)}
-  {...restProps}
-/>;
-```
-
-## Theme Access
-
-### Using useTheme Hook
-
-```typescript
-import { useTheme } from "@mui/material";
-
-export function Component() {
-  const theme = useTheme();
-
+export function CustomCard({ sx, ...props }: Props) {
   return (
-    <Box sx={{ color: theme.palette.primary.main }}>
-      {/* Your components */}
-    </Box>
+    <Box
+      sx={[
+        (theme) => ({
+          backgroundColor: theme.palette.background.standout,
+          padding: theme.spacing(4),
+          borderRadius: theme.borderRadius.medium
+        }),
+        ...(Array.isArray(sx) ? sx : [sx])  // Merge user's sx
+      ]}
+      {...props}
+    />
   );
 }
 ```
 
-### Theme Properties
+## Responsive Design
+
+### Using Breakpoint Values
 
 ```typescript
-const theme = useTheme();
-
-// Colors
-theme.palette.primary.main;
-theme.palette.secondary.main;
-theme.palette.error.main;
-theme.palette.text.primary;
-theme.palette.background.default;
-
-// Spacing
-theme.spacing(1); // Project-defined (see spacing system above)
-theme.spacing(2); // Project-defined (see spacing system above)
-
-// Typography
-theme.typography.h1;
-theme.typography.body1;
-
-// Breakpoints
-theme.breakpoints.up("md");
-theme.breakpoints.down("sm");
-```
-
-## Modal Patterns
-
-### ❌ Avoid Generic Modal
-
-```typescript
-// Avoid generic Modal when project has specific dialog components
-import { Modal } from "@mui/material";
-```
-
-### ✅ Use Project-Specific Dialog Components
-
-```typescript
-// For mobile-friendly modals
-import { BottomSheet } from "@/components/BottomSheet";
-
-// For full-screen views
-import { FullScreenDialog } from "@/components/FullScreenDialog";
-
-// For standard dialogs
-import { Dialog } from "@/components/Dialog";
-```
-
-Check your project's component library for available dialog/modal components.
-
-## Layout Components
-
-### Use MUI Layout Components
-
-These are safe to import directly from MUI:
-
-```typescript
-import { Box, Stack, Container, Grid } from '@mui/material';
-
-// Stack for vertical/horizontal layouts
-<Stack spacing={2} direction="row">
-  <Item />
-  <Item />
-</Stack>
-
-// Box for flexible containers
-<Box sx={{ display: 'flex', gap: 2 }}>
-  <Child />
-</Box>
-
-// Grid for responsive layouts
-<Grid container spacing={2}>
-  <Grid item xs={12} md={6}>
-    <Content />
-  </Grid>
-</Grid>
-```
-
-## MUI Theme Augmentation
-
-### Type Safety
-
-Projects often augment MUI's theme with custom properties:
-
-```typescript
-// Example: Custom theme augmentation
-declare module "@mui/material/styles" {
-  interface Theme {
-    customSpacing: {
-      small: string;
-      large: string;
-    };
+<Box sx={{
+  width: {
+    xs: "100%",    // Mobile
+    sm: "75%",     // Tablet
+    md: "50%"      // Desktop
+  },
+  padding: {
+    xs: 2,
+    md: 5
   }
-  interface ThemeOptions {
-    customSpacing?: {
-      small?: string;
-      large?: string;
-    };
-  }
+}} />
+```
+
+### Using Responsive Hooks
+
+```typescript
+import { useIsMobile } from "@/hooks/useResponsive";
+
+export function ResponsiveComponent() {
+  const isMobile = useIsMobile();
+
+  return isMobile ? (
+    <MobileLayout />
+  ) : (
+    <DesktopLayout />
+  );
 }
 ```
 
-Check your project's type definitions for available theme augmentations.
+## Spacing Guidelines
 
-## Common Patterns
-
-### Card with Custom Styling
+### Use `rem` for Fonts and Heights
 
 ```typescript
-import { Card, CardContent } from "@mui/material";
-
-<Card
-  sx={{
-    borderRadius: 2,
-    boxShadow: 2,
-    "&:hover": {
-      boxShadow: 4,
-    },
-  }}
->
-  <CardContent>Content here</CardContent>
-</Card>;
+<Box sx={(theme) => ({
+  height: "3rem",     // ✅ Scales with user zoom
+  fontSize: "1rem",   // ✅ Accessible
+  padding: 5          // ✅ px prevents overflow when zoomed
+})} />
 ```
 
-### Buttons with Theme Colors
+**Why?** Users who adjust device-wide zoom need `rem` for fonts/heights to scale properly, but `px` spacing prevents layout overflow.
+
+## Property Names: Full Names, Not Abbreviations
 
 ```typescript
-import { Button } from "@/components/Button";
+// ✅ CORRECT: Full property names
+<Box sx={{
+  padding: 2,
+  paddingX: 4,
+  marginY: 2
+}} />
 
-<Button
-  variant="contained"
-  color="primary"
-  sx={{
-    textTransform: "none", // Override uppercase
-    fontWeight: "bold",
-  }}
->
-  Submit
-</Button>;
+// ❌ WRONG: Abbreviations
+<Box sx={{
+  p: 2,    // Too terse
+  px: 4,   // Not clear
+  my: 2    // What does this mean?
+}} />
 ```
 
-### Conditional Styles
+## Complete Theme Reference
 
-```typescript
-<Box
-  sx={(theme) => ({
-    backgroundColor: isActive
-      ? theme.palette.primary.main
-      : theme.palette.grey[200],
-    padding: 2,
-  })}
->
-  {content}
-</Box>
-```
+This guide covers the most essential tokens for day-to-day development. For the complete theme specification including:
 
-## Best Practices
+- Full color palette with all semantic tokens
+- Complete spacing scale
+- Typography scale (font sizes, weights, line heights)
+- Shadow tokens for elevation
+- Platform-specific interaction patterns
 
-- **Check Storybook first** - It's the single source of truth
-- **Use theme tokens** - Never hardcode colors/spacing
-- **Type-safe access** - Function form: `sx={(theme) => ({...})}`
-- **Meaningful tokens** - Semantic names over raw colors
-- **Spacing system** - Indices 1-12 (or `theme.spacing(n)`)
-- **Use shorthand props** - `paddingX`, `marginY` (full names, not `px`, `my`)
-- **Leverage pseudo-classes** - For hover, focus, disabled states
-- **Prefer `sx` over direct props** - `sx` takes priority and is more flexible
+**See your repo's documentation:**
+- `src/appV2/redesign/docs/THEME.md` - Complete theme reference
+- `src/appV2/redesign/CLAUDE.md` - Quick styling decision tree
