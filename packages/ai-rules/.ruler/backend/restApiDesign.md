@@ -19,6 +19,7 @@ Follow [JSON:API spec](https://jsonapi.org/).
           "data": { "type": "workplace", "id": "17" }
         }
       }
+    }
   ]
 }
 ```
