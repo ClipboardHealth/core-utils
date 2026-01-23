@@ -7,7 +7,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-import { addSessionContext, outputHookResponse } from "../../lib/hooks.ts";
+import { addSessionContext, outputHookResponse } from "../../lib/hooks.js";
 
 const PROJECT_DIR = process.env["CLAUDE_PROJECT_DIR"] ?? ".";
 const PACKAGE_NAME = "@clipboard-health/ai-rules";
