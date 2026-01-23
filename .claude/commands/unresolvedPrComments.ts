@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { outputError, runGh, validatePrerequisites } from "../../plugins/lib/ghClient.ts";
+import { outputError, runGh, validatePrerequisites } from "../../plugins/core/lib/ghClient.ts";
 
 const NITPICK_SECTION_MARKER = "Nitpick comments";
 
