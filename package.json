@@ -27,7 +27,7 @@
     "markdownlint-cli2": "0.20.0",
     "nx": "22.3.3",
     "oxlint": "1.41.0",
-    "prettier": "3.8.0",
+    "prettier": "3.8.1",
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
     "ts-node": "11.0.0-beta.1",
