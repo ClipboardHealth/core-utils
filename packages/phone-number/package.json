@@ -1,14 +1,14 @@
 {
   "name": "@clipboard-health/phone-number",
   "description": "Phone number utility functions.",
-  "version": "1.6.61",
+  "version": "1.6.62",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/util-ts": "4.6.61",
+    "@clipboard-health/util-ts": "4.6.62",
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@clipboard-health/testing-core": "1.6.61",
+    "@clipboard-health/testing-core": "1.6.62",
     "libphonenumber-js": "1.12.34"
   },
   "keywords": [],
