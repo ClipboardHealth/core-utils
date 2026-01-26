@@ -171,16 +171,17 @@ Use when: error handling hard to trigger black-box, concurrency scenarios, >5 va
 ## Core Rules
 
 - Strict-mode TypeScript; prefer interfaces over types
-- Avoid enums—use const maps
-- NEVER use `any`—use `unknown` or generics
+- Avoid enums: Use const maps
+- NEVER use `any`: Use `unknown` or generics
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
-- Explicit return types on functions
+- Explicitly define parameter types and return types on functions
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
 - Use `date-fns` for date/time manipulation and `@clipboard-health/date-time` for formatting
+- Prefer nullish coalescing (`??`) over logical OR (`||`) for defaults; use `||` when `0`, `""`, or `false` should trigger the default
 
 ## Null/Undefined Checks
 
@@ -220,7 +221,6 @@ const durationMinutes = 30;
 - `keyof`, index access types, discriminated unions
 - `as const`, `typeof`, `instanceof`, `satisfies`, type guards
 - Exhaustiveness checking with `never`
-- `readonly` for parameter immutability
 
 ## Functions
 
