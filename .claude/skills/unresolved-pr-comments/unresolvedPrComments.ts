@@ -1,16 +1,12 @@
 #!/usr/bin/env node
-import { outputError, runGh, validatePrerequisites } from "../../plugins/core/lib/ghClient.ts";
+import { outputError, runGh, validatePrerequisites } from "../../../plugins/core/lib/ghClient.ts";
 
-const NITPICK_SECTION_MARKER = "Nitpick comments";
-
-const NITPICK_SECTION_REGEX =
-  /<summary>🧹 Nitpick comments \(\d+\)<\/summary>\s*<blockquote>([\s\S]*?)<\/blockquote>\s*<\/details>\s*<details>\s*<summary>📜 Review details/i;
-
-const FILE_SECTION_REGEX =
-  /<details>\s*<summary>([^<]+\.[^<]+)\s+\(\d+\)<\/summary>\s*<blockquote>([\s\S]*?)<\/blockquote>\s*<\/details>/g;
-
-const COMMENT_REGEX =
-  /`(\d+(?:-\d+)?)`:\s*\*\*([^*]+)\*\*\s*([\s\S]*?)(?=---|\n`\d|<\/details>|$)/g;
+import {
+  extractCodeScanningAlertNumber,
+  extractNitpickComments,
+  type NitpickComment,
+  type Review,
+} from "./parseNitpicks.ts";
 
 // Pagination limits: 100 review threads, 10 comments per thread, 100 reviews.
 // Sufficient for typical PRs; data may be truncated on exceptionally active PRs.
@@ -60,12 +56,6 @@ interface ReviewThread {
   isResolved: boolean;
 }
 
-interface Review {
-  author: { login: string } | null;
-  body: string;
-  createdAt: string;
-}
-
 interface GraphQLResponse {
   data: {
     repository: {
@@ -93,14 +83,6 @@ interface CodeScanningInstance {
 
 interface CodeScanningAlert {
   most_recent_instance: CodeScanningInstance;
-}
-
-interface NitpickComment {
-  author: string;
-  body: string;
-  createdAt: string;
-  file: string;
-  line: string;
 }
 
 interface OutputResult {
@@ -132,11 +114,6 @@ function isCodeScanningAlertFixed(owner: string, repo: string, alertNumber: numb
   } catch {
     return false;
   }
-}
-
-function extractCodeScanningAlertNumber(body: string): number | undefined {
-  const match = /\/code-scanning\/(\d+)/.exec(body);
-  return match ? Number.parseInt(match[1], 10) : undefined;
 }
 
 function getPrNumberFromCurrentBranch(): number | undefined {
@@ -216,69 +193,6 @@ function formatComment(comment: Comment): UnresolvedComment {
     file: comment.path,
     line: comment.line ?? comment.originalLine,
   };
-}
-
-function cleanCommentBody(body: string): string {
-  return body
-    .replaceAll(/<details>[\s\S]*?<\/details>/g, "")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .trim();
-}
-
-function parseCommentsFromFileSection(
-  fileContent: string,
-  fileName: string,
-  review: Review,
-): NitpickComment[] {
-  return [...fileContent.matchAll(COMMENT_REGEX)].map((match) => {
-    const lineRange = match[1];
-    const title = match[2].trim();
-    const cleanBody = cleanCommentBody(match[3].trim());
-
-    return {
-      author: review.author?.login ?? "deleted-user",
-      body: `${title}\n\n${cleanBody}`,
-      createdAt: review.createdAt,
-      file: fileName,
-      line: lineRange,
-    };
-  });
-}
-
-function extractNitpicksFromReview(review: Review): NitpickComment[] {
-  if (!review.body.includes(NITPICK_SECTION_MARKER)) {
-    return [];
-  }
-
-  const nitpickSectionMatch = NITPICK_SECTION_REGEX.exec(review.body);
-  if (!nitpickSectionMatch) {
-    return [];
-  }
-
-  const nitpickSection = nitpickSectionMatch[1];
-  const fileSections = [...nitpickSection.matchAll(FILE_SECTION_REGEX)];
-
-  return fileSections.flatMap((fileMatch) => {
-    const fileName = fileMatch[1].trim();
-    const fileContent = fileMatch[2];
-    return parseCommentsFromFileSection(fileContent, fileName, review);
-  });
-}
-
-function getLatestCodeRabbitReview(reviews: Review[]): Review | undefined {
-  return reviews
-    .filter(
-      (review) =>
-        review.author?.login === "coderabbitai" && review.body.includes(NITPICK_SECTION_MARKER),
-    )
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .at(0);
-}
-
-function extractNitpickComments(reviews: Review[]): NitpickComment[] {
-  const latestReview = getLatestCodeRabbitReview(reviews);
-  return latestReview ? extractNitpicksFromReview(latestReview) : [];
 }
 
 function isUnresolvedSecurityComment(

@@ -1,20 +1,28 @@
 ---
+name: unresolved-pr-comments
 description: Get unresolved review comments from a GitHub pull request
-argument-hint: [pr-number]
-allowed-tools: Bash(node:*)
+argument-hint: "[pr-number]"
 ---
 
-Fetch and display unresolved review comments from a pull request.
+# Unresolved PR Comments
 
-Note: Limited to 100 review threads and 10 comments per thread.
+Fetch and analyze unresolved review comments from a GitHub pull request.
 
-## Data
+## Usage
 
-!`node ".claude/commands/unresolvedPrComments.ts" "$ARGUMENTS" 2>/dev/null`
+Run the script to fetch PR comment data:
 
-## Instructions
+```bash
+node ".claude/skills/unresolved-pr-comments/unresolvedPrComments.ts" [pr-number] 2>/dev/null
+```
 
-Using the JSON data above:
+If no PR number is provided, it uses the PR associated with the current branch.
+
+Note: Limited to 100 review threads, 10 comments per thread, and 100 reviews.
+
+## Processing Instructions
+
+Using the JSON output from the script:
 
 1. **If error**: Display the error message and suggest the fix
 2. **If no comments**: Report the PR has no pending feedback

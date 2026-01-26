@@ -44,7 +44,7 @@
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
-    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && npm run oxlint && npm run lint:md",
+    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && npm run oxlint && npm run lint:md && npm run test:claude",
     "ci:install": "npm clean-install --audit false --fund false",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
@@ -56,7 +56,8 @@
     "oxlint": "oxlint",
     "postinstall": "npm run sync-ai-rules",
     "prepare": "husky",
-    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common"
+    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common",
+    "test:claude": "tsx --test .claude/**/*.spec.ts"
   },
   "workspaces": [
     "packages/*"
