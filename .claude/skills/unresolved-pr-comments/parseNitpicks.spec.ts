@@ -183,6 +183,33 @@ Description 2`;
 });
 
 describe("extractNitpicksFromReview", () => {
+  it("extracts nitpicks for dotless filenames", () => {
+    const review: Review = {
+      author: { login: "coderabbitai" },
+      body: `<details>
+<summary>🧹 Nitpick comments (1)</summary><blockquote>
+
+<details>
+<summary>Dockerfile (1)</summary><blockquote>
+
+\`7\`: **Pin base image.**
+
+Use a digest for reproducibility.
+
+</blockquote></details>
+
+</blockquote></details>`,
+      createdAt: "2024-01-15T10:00:00Z",
+    };
+
+    const actual = extractNitpicksFromReview(review);
+
+    assert.equal(actual.length, 1);
+    assert.equal(actual[0].file, "Dockerfile");
+    assert.equal(actual[0].line, "7");
+    assert.ok(actual[0].body.includes("Pin base image."));
+  });
+
   it("returns empty array when review has no nitpick section", () => {
     const review: Review = {
       author: { login: "coderabbitai" },

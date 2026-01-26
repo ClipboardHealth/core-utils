@@ -16,12 +16,12 @@
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
-- Explicitly define parameter and return on functions
+- Explicitly define parameter types and return types on functions
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
 - Use `date-fns` for date/time manipulation and `@clipboard-health/date-time` for formatting
-- Use nullish coalescing (`??`) instead of logical OR (`||`) for defaults
+- Prefer nullish coalescing (`??`) over logical OR (`||`) for defaults; use `||` when `0`, `""`, or `false` should trigger the default
 
 ## Null/Undefined Checks
 

@@ -1,6 +1,6 @@
-// Matches file sections inside the nitpick block: <details><summary>filename.ext (count)</summary><blockquote>...</blockquote></details>
+// Matches file sections inside the nitpick block: <details><summary>filename (count)</summary><blockquote>...</blockquote></details>
 const FILE_SECTION_REGEX =
-  /<details>\s*<summary>([^<]+\.[^<]+)\s+\(\d+\)<\/summary>\s*<blockquote>([\s\S]*?)<\/blockquote>\s*<\/details>/g;
+  /<details>\s*<summary>([^<]+?)\s+\(\d+\)<\/summary>\s*<blockquote>([\s\S]*?)<\/blockquote>\s*<\/details>/g;
 
 // Matches individual comments: `line-range`: **title** body
 // Stops at: horizontal rule, next comment, end of blockquote section, or end of string
