@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { outputError, runGh, validatePrerequisites } from "../../../plugins/core/lib/ghClient.ts";
+import { outputError, runGh, validatePrerequisites } from "../../lib/ghClient.ts";
 
 import {
   extractCodeScanningAlertNumber,
