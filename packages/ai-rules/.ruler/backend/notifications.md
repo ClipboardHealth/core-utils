@@ -2,7 +2,7 @@
 
 Send via [Knock](https://docs.knock.app) using `@clipboard-health/notifications`.
 
-Use `triggerChunked` to store full trigger request at job enqueue time. See package documentation for setup of `triggerNotification.job.ts`, `notifications.service.ts`, and workflow keys.
+Use `triggerChunked` to store full trigger request at job enqueue time. See package documentation for setup of `triggerNotification.job.ts`, `notificationClient.provider.ts`, and workflow keys.
 
 **Job enqueue pattern:**
 

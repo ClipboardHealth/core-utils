@@ -193,12 +193,12 @@ export class NotificationClient {
    * import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    * import {
    *   ERROR_CODES,
+   *   type NotificationClient,
    *   type SerializableTriggerChunkedRequest,
    *   toTriggerChunkedRequest,
    * } from "@clipboard-health/notifications";
    * import { isFailure } from "@clipboard-health/util-ts";
    *
-   * import { type NotificationsService } from "./notifications.service";
    * import { CBHLogger } from "./setup";
    * import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
    *
@@ -224,7 +224,10 @@ export class NotificationClient {
    *     },
    *   });
    *
-   *   public constructor(private readonly service: NotificationsService) {}
+   *   public constructor(
+   *     // @Inject(NOTIFICATION_CLIENT_TOKEN)
+   *     private readonly client: NotificationClient,
+   *   ) {}
    *
    *   public async perform(
    *     data: SerializableTriggerChunkedRequest,
@@ -253,7 +256,7 @@ export class NotificationClient {
    *         // In case the tests are moving the time forward we need to ensure notifications don't expire.
    *         // ...(isTestMode && { expiresAt: new Date(3000, 0, 1) }),
    *       });
-   *       const result = await this.service.triggerChunked(request);
+   *       const result = await this.client.triggerChunked(request);
    *
    *       if (isFailure(result)) {
    *         // Skip expired notifications, retrying the job won't help.
