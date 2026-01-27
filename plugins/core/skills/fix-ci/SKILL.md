@@ -18,31 +18,45 @@ If no PR URL is provided, it uses the PR associated with the current branch.
 
 You are tasked with identifying and fixing CI failures for the provided pull request.
 
+### Step 0: Resolve PR Number
+
+If a PR URL is provided in `$ARGUMENTS`, extract the PR number from it. Otherwise, get the PR for the current branch:
+
+```bash
+# If no PR URL provided, get PR for current branch
+gh pr view --json number,url,headRefName
+```
+
+This will return the PR associated with the current branch. If a URL was provided, extract the PR number from the URL path (e.g., `https://github.com/owner/repo/pull/123` → PR number is `123`).
+
 ### Step 1: Get PR Information and CI Status
 
 Use the GitHub CLI to get the PR details and check status:
 
 ```bash
-gh pr view <PR_NUMBER> --json title,headRefName,statusCheckRollup,url
+gh pr view $PR_NUMBER --json title,headRefName,statusCheckRollup,url
 ```
 
-Identify any failed checks from the `statusCheckRollup`.
+Identify any failed checks from the `statusCheckRollup`. The `statusCheckRollup` contains check details including `detailsUrl` which links to the GitHub Actions run.
 
 ### Step 2: Get Failed Job Logs
 
-For each failed job, download and analyze the logs:
+Extract the run ID from the failed check's `detailsUrl` (e.g., `https://github.com/owner/repo/actions/runs/123456789` → run ID is `123456789`).
+
+Then get the failed jobs and stream their logs directly:
 
 ```bash
-# Get the run ID from the failed check URL
-gh run view <RUN_ID> --json jobs | jq '.jobs[] | select(.conclusion == "failure")'
+# Get failed job IDs from the run
+gh run view $RUN_ID --json jobs --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'
 
-# Download logs as zip and extract
-gh api repos/<OWNER>/<REPO>/actions/runs/<RUN_ID>/logs > /tmp/ci-logs.zip
-unzip -o /tmp/ci-logs.zip -d /tmp/ci-logs/
+# Stream logs for a specific failed job and search for errors
+gh run view --job $JOB_ID --log | grep -iE "FAIL|Error:|error:|Test Suites:|Tests:"
 
-# Search for errors in the logs
-grep -rE "FAIL|Error:|error:|Test Suites:|Tests:" /tmp/ci-logs/
+# Or view only failed steps' logs (more concise)
+gh run view --job $JOB_ID --log-failed
 ```
+
+Analyze the log output to identify the specific errors causing CI to fail.
 
 ### Step 3: Identify Root Cause
 
