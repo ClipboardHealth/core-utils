@@ -61,3 +61,8 @@ export function toLogger(logger: CBHLogger): Logger {
 export const tracer: Tracer = {
   trace: <T>(_name: string, _options: TraceOptions, fun: (span?: Span) => T): T => fun(),
 };
+
+export interface Provider<T = unknown> {
+  readonly provide: string;
+  useFactory: () => T;
+}

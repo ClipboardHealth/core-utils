@@ -4,7 +4,7 @@
 
 `triggerChunked` stores the full, immutable trigger request at job enqueue time, eliminating issues with stale data, chunking requests to stay under provider limits, and idempotency key conflicts that can occur if the request is updated at job execution time.
 
-1. Search your service for `triggerNotification.constants.ts`, `triggerNotification.job.ts` and `notifications.service.ts`. If they don't exist, create them:
+1. Search your service for `triggerNotification.constants.ts`, `triggerNotification.job.ts` and `notificationClient.provider.ts`. If they don't exist, create them:
 
    <embedex source="packages/notifications/examples/triggerNotification.constants.ts">
 
@@ -22,12 +22,12 @@
    import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import {
      ERROR_CODES,
+     type NotificationClient,
      type SerializableTriggerChunkedRequest,
      toTriggerChunkedRequest,
    } from "@clipboard-health/notifications";
    import { isFailure } from "@clipboard-health/util-ts";
 
-   import { type NotificationsService } from "./notifications.service";
    import { CBHLogger } from "./setup";
    import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
 
@@ -53,7 +53,10 @@
        },
      });
 
-     public constructor(private readonly service: NotificationsService) {}
+     public constructor(
+       // @Inject(NOTIFICATION_CLIENT_TOKEN)
+       private readonly client: NotificationClient,
+     ) {}
 
      public async perform(
        data: SerializableTriggerChunkedRequest,
@@ -82,7 +85,7 @@
            // In case the tests are moving the time forward we need to ensure notifications don't expire.
            // ...(isTestMode && { expiresAt: new Date(3000, 0, 1) }),
          });
-         const result = await this.service.triggerChunked(request);
+         const result = await this.client.triggerChunked(request);
 
          if (isFailure(result)) {
            // Skip expired notifications, retrying the job won't help.
@@ -107,31 +110,28 @@
 
    </embedex>
 
-   <embedex source="packages/notifications/examples/notifications.service.ts">
+   <embedex source="packages/notifications/examples/notificationClient.provider.ts">
 
    ```ts
-   // notifications.service.ts
    import { NotificationClient } from "@clipboard-health/notifications";
 
-   import { CBHLogger, toLogger, tracer } from "./setup";
+   import { CBHLogger, type Provider, toLogger, tracer } from "./setup";
 
-   export class NotificationsService {
-     private readonly client: NotificationClient;
+   export const NOTIFICATION_CLIENT_TOKEN = "NOTIFICATION_CLIENT";
 
-     constructor() {
-       this.client = new NotificationClient({
-         apiKey: "YOUR_KNOCK_API_KEY",
-         logger: toLogger(new CBHLogger()),
+   export const NotificationClientProvider: Provider<NotificationClient> = {
+     provide: NOTIFICATION_CLIENT_TOKEN,
+     useFactory: (): NotificationClient =>
+       new NotificationClient({
+         apiKey: process.env["KNOCK_API_KEY"]!,
+         logger: toLogger(
+           new CBHLogger({
+             defaultMeta: { context: "NotificationClient" },
+           }),
+         ),
          tracer,
-       });
-     }
-
-     async triggerChunked(
-       params: Parameters<NotificationClient["triggerChunked"]>[0],
-     ): ReturnType<NotificationClient["triggerChunked"]> {
-       return await this.client.triggerChunked(params);
-     }
-   }
+       }),
+   };
    ```
 
    </embedex>
