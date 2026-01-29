@@ -239,13 +239,30 @@ module.exports = {
           {
             name: "date-fns-tz",
             message:
-              "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+              "date-fns-tz is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
           },
           {
             importNames: ["format"],
             message:
-              "Importing `format` from `date-fns` is not allowed. Use @clipboard-health/date-time instead. If it doesn't have what you need then please add it there and open a PR.",
+              "Importing `format` from `date-fns` is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
             name: "date-fns",
+          },
+          {
+            name: "moment",
+            message:
+              "moment is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
+          },
+          {
+            name: "moment-timezone",
+            message:
+              "moment-timezone is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
+          },
+        ],
+        patterns: [
+          {
+            group: ["date-fns/tz", "date-fns/tz/*"],
+            message:
+              "date-fns/tz is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
           },
         ],
       },
