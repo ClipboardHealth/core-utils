@@ -95,9 +95,9 @@ Edit [`syncPlugins.ts`](../../scripts/syncPlugins.ts) and add an entry to `SYNC_
     {
       name: "plugin-name",
       components: [
-        { type: "agents", name: "agent-name" },
-        { type: "skills", name: "skill-name" },
-        { type: "hooks", name: "hook-name" },
+        { source: { type: "agents", name: "agent-name" } },
+        { source: { type: "skills", name: "skill-name" } },
+        { source: { type: "hooks", name: "hook-name" } },
       ],
     },
   ],

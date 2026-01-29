@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, lstatSync, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
@@ -107,31 +107,36 @@ function syncRepo(config: RepoConfig): void {
     rmSync(tempDir, { recursive: true, force: true });
   }
 
-  const refArg = config.ref ? `--branch ${config.ref}` : "";
-  execSync(`git clone --depth 1 ${refArg} ${config.repo} ${tempDir}`, {
-    stdio: "inherit",
-  });
-
-  for (const plugin of config.plugins) {
-    for (const { source, destination } of plugin.components) {
-      const destType = destination?.type ?? (source.type === "commands" ? "skills" : source.type);
-      const destName = destination?.name ?? source.name;
-      const basePath = path.join(tempDir, pluginsPath, plugin.name, source.type);
-      const sourceInfo = findSource(basePath, source.name);
-
-      if (!sourceInfo) {
-        console.warn(`  Warning: Source not found: ${basePath}/${source.name}`);
-        continue;
-      }
-
-      syncComponent(sourceInfo, destType, destName);
-      console.log(
-        `  Synced: ${plugin.name}/${source.type}/${source.name} -> ${destType}/${destName}`,
-      );
-    }
+  const cloneArgs = ["clone", "--depth", "1"];
+  if (config.ref) {
+    cloneArgs.push("--branch", config.ref);
   }
+  cloneArgs.push(config.repo, tempDir);
 
-  rmSync(tempDir, { recursive: true, force: true });
+  try {
+    execFileSync("git", cloneArgs, { stdio: "inherit" });
+
+    for (const plugin of config.plugins) {
+      for (const { source, destination } of plugin.components) {
+        const destType = destination?.type ?? (source.type === "commands" ? "skills" : source.type);
+        const destName = destination?.name ?? source.name;
+        const basePath = path.join(tempDir, pluginsPath, plugin.name, source.type);
+        const sourceInfo = findSource(basePath, source.name);
+
+        if (!sourceInfo) {
+          console.warn(`  Warning: Source not found: ${basePath}/${source.name}`);
+          continue;
+        }
+
+        syncComponent(sourceInfo, destType, destName);
+        console.log(
+          `  Synced: ${plugin.name}/${source.type}/${source.name} -> ${destType}/${destName}`,
+        );
+      }
+    }
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
 }
 
 function syncPlugins(): void {
