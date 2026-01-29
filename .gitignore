@@ -1,6 +1,7 @@
 # Alphabetical directories
 .claude/cache/
 .idea/
+.tmp-plugin-sync-*/
 .nx/cache
 .nx/workspace-data
 .vscode/*
@@ -17,7 +18,6 @@ tmp/
 !.vscode/settings.json
 !.vscode/tasks.json
 .claude/*.local.*
-.claude/settings.local.json
 .cursor/rules/nx-rules.mdc
 .DS_Store
 .github/instructions/nx.instructions.md

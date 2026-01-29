@@ -9,6 +9,7 @@
     "packages/eslint-config/src/react.js",
     "plugins/**/*.ts",
     ".claude/**/*.ts",
+    "scripts/**/*.ts",
   ],
   "ignoreDependencies": [
     "@intellectronica/ruler",
