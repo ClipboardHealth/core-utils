@@ -1,4 +1,5 @@
 ---
+name: learn-from-session
 description: Suggest CLAUDE.md, hook, skill, agent, or permission revisions based on learnings from this session
 allowed-tools: Read, Edit, Glob
 ---
@@ -24,7 +25,7 @@ What context was missing that would have helped Claude work more effectively?
 Decide where each addition belongs:
 
 - Team-shared (checked into git)
-- Personal/local only (gitignored)
+- Personal/local only (git-ignored)
 
 **Keep them concise**. Avoid:
 
