@@ -260,9 +260,9 @@ module.exports = {
         ],
         patterns: [
           {
-            group: ["date-fns/tz", "date-fns/tz/*"],
+            group: ["@date-fns/tz"],
             message:
-              "date-fns/tz is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
+              "@date-fns/tz is not allowed. Use @clipboard-health/date-time instead. See https://www.notion.so/BP-Date-Time-2ef8643321f48032ad80e8a5b30aa278 for more information.",
           },
         ],
       },
