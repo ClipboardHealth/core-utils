@@ -38,10 +38,6 @@ const SYNC_CONFIG: RepoConfig[] = [
         name: "commit-commands",
         components: [{ source: { type: "commands", name: "commit-push-pr" } }],
       },
-      {
-        name: "claude-md-management",
-        components: [{ source: { type: "commands", name: "revise-claude-md" } }],
-      },
     ],
   },
 ];
