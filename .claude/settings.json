@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "clipboard": {
+      "source": {
+        "source": "github",
+        "repo": "ClipboardHealth/core-utils"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "core@clipboard": true
+  }
+}
