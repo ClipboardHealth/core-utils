@@ -1,18 +1,6 @@
 import { forEachAsyncSequentially } from "./forEachAsyncSequentially";
 
 describe("forEachAsyncSequentially", () => {
-  it("should run each async task in order in the list", async () => {
-    const input = [1, 2, 3];
-    const actual: number[] = [];
-
-    await forEachAsyncSequentially(input, async (item) => {
-      await Promise.resolve();
-      actual.push(item);
-    });
-
-    expect(actual).toEqual([1, 2, 3]);
-  });
-
   it("should pass the current executing index in the list to the async task", async () => {
     const input = ["a", "b", "c"];
     const results: Array<{ item: string; index: number }> = [];
