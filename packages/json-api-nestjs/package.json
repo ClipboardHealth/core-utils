@@ -1,14 +1,14 @@
 {
   "name": "@clipboard-health/json-api-nestjs",
   "description": "TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.",
-  "version": "1.6.81",
+  "version": "1.6.82",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/contract-core": "1.6.81",
+    "@clipboard-health/contract-core": "1.6.82",
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@clipboard-health/testing-core": "1.6.81",
+    "@clipboard-health/testing-core": "1.6.82",
     "type-fest": "5.4.2",
     "zod": "3.25.76"
   },
