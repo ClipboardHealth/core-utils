@@ -28,6 +28,7 @@ When investigating an issue:
 ## Querying Logs
 
 Use the Logs Search API to query logs. Always ask the user for:
+
 - Service name or source
 - Time range (default to last 1 hour if not specified)
 - Search terms (error messages, trace IDs, user IDs, etc.)
@@ -184,6 +185,7 @@ When a user reports an issue:
 1. **Get context**: "What service? What time did this happen? Any error messages or IDs?"
 
 2. **Query logs first** (always include env:production):
+
 ```bash
 curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
   -H "Content-Type: application/json" \
