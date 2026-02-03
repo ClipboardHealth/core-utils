@@ -18,8 +18,10 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
+        "lintFilePatterns": ["packages/mongo-jobs/**/*.[jt]s?(x)"],
         "maxWarnings": 0
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
