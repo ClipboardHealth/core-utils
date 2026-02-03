@@ -39,6 +39,7 @@ Parse the JSON output and evaluate exit conditions.
 - No nitpicks (totalNitpicks == 0)
 
 **JSON Structure for Exit Evaluation:**
+
 ```json
 {
   "totalUnresolvedComments": number,
