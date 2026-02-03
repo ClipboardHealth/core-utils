@@ -120,7 +120,7 @@ curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
 
 ```bash
 # Get trace details
-curl -s -X GET "https://api.datadoghq.com/api/v2/traces/TRACE_ID" \
+curl -s -X GET "https://api.datadoghq.com/api/v1/trace/TRACE_ID" \
   -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
   -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" | jq '.'
 ```
@@ -208,7 +208,11 @@ For convenience, you can use these one-liners:
 # Quick log search function (defaults to env:production)
 
 dd_logs() {
-  local query="$1 env:production"
+  local query="$1"
+  # Only append env:production if no env: filter is already present
+  if [[ ! "$query" =~ env: ]]; then
+    query="$query env:production"
+  fi
   local limit="${3:-25}"
   jq -n --arg q "$query" --arg from "${2:-now-1h}" --argjson limit "$limit" \
     '{filter: {query: $q, from: $from, to: "now"}, sort: "-timestamp", page: {limit: $limit}}' | \
@@ -225,6 +229,7 @@ dd_logs() {
 
 ## Important Notes
 
+- **OS-specific commands**: The shell commands provided are examples and may need adjustment for your operating system (e.g., `date -v-1H` is macOS-specific; use `date -d '-1 hour'` on Linux)
 - **Always filter by `env:production`** unless the user explicitly specifies a different environment
 - Always use `jq` to format JSON output for readability
 - Default to the last 1 hour for time ranges unless specified
