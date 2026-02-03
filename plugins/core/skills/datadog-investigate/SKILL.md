@@ -103,14 +103,19 @@ Use the `dog` CLI for metrics:
 
 ```bash
 # Query a metric (last hour, production)
-dog --pretty metric query "avg:system.cpu.user{service:my-service,env:production}" $(date -v-1H +%s) $(date +%s)
+dog --pretty metric query "avg:system.cpu.user{service:my-service,env:production}" \
+  $(node -e "console.log(Math.floor(Date.now()/1000) - 3600)") \
+  $(node -e "console.log(Math.floor(Date.now()/1000))")
 
 # Query with specific tags
-dog --pretty metric query "avg:trace.http.request.duration{service:my-service,env:production}" $(date -v-1H +%s) $(date +%s)
+dog --pretty metric query "avg:trace.http.request.duration{service:my-service,env:production}" \
+  $(node -e "console.log(Math.floor(Date.now()/1000) - 3600)") \
+  $(node -e "console.log(Math.floor(Date.now()/1000))")
 
 # Common metric patterns
-dog --pretty metric query "sum:trace.http.request.errors{service:my-service,env:production}.as_count()" $(date -v-1H +%s) $(date +%s)
-dog --pretty metric query "avg:trace.http.request.duration{service:my-service,env:production}" $(date -v-1H +%s) $(date +%s)
+dog --pretty metric query "sum:trace.http.request.errors{service:my-service,env:production}.as_count()" \
+  $(node -e "console.log(Math.floor(Date.now()/1000) - 3600)") \
+  $(node -e "console.log(Math.floor(Date.now()/1000))")
 ```
 
 ## Querying APM Traces
