@@ -1,0 +1,228 @@
+---
+name: datadog-investigate
+description: Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase
+---
+
+# Datadog Investigation Skill
+
+Use this skill to investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase.
+
+## Prerequisites
+
+- Datadog CLI (`dog`) is installed and configured via `~/.dogrc`
+- API credentials are configured with `apikey` and `appkey`
+
+## Default Filters
+
+**Always filter by `env:production` unless the user specifies a different environment.**
+
+## Investigation Workflow
+
+When investigating an issue:
+
+1. **Clarify the problem** - Get service name, time range, error messages, or trace IDs from the user
+2. **Query relevant data** - Start with logs, then correlate with metrics and traces
+3. **Identify the code** - Use error messages, service names, and stack traces to find relevant code
+4. **Propose a fix** - After understanding the issue, suggest code changes
+
+## Querying Logs
+
+Use the Logs Search API to query logs. Always ask the user for:
+- Service name or source
+- Time range (default to last 1 hour if not specified)
+- Search terms (error messages, trace IDs, user IDs, etc.)
+
+```bash
+# Basic log search (last 15 minutes, production)
+curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
+  -H "Content-Type: application/json" \
+  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -d '{
+    "filter": {
+      "query": "service:SERVICE_NAME status:error env:production",
+      "from": "now-15m",
+      "to": "now"
+    },
+    "sort": "-timestamp",
+    "page": {
+      "limit": 50
+    }
+  }' | jq '.data[] | {timestamp: .attributes.timestamp, message: .attributes.message, status: .attributes.status, service: .attributes.service}'
+```
+
+### Common Log Queries
+
+All queries should include `env:production` by default:
+
+```bash
+# Search by service and error status
+"service:my-service status:error env:production"
+
+# Search by trace ID (for correlation)
+"trace_id:123456789 env:production"
+
+# Search by specific error message
+"service:my-service \"NullPointerException\" env:production"
+
+# Search by host
+"service:my-service host:ip-10-0-1-123 env:production"
+
+# Combine multiple conditions
+"service:my-service status:error env:production @http.status_code:500"
+```
+
+### Time Range Formats
+
+- Relative: `now-15m`, `now-1h`, `now-24h`, `now-7d`
+- Absolute ISO 8601: `2024-01-15T10:00:00Z`
+
+## Querying Metrics
+
+Use the `dog` CLI for metrics:
+
+```bash
+# Query a metric (last hour, production)
+dog --pretty metric query "avg:system.cpu.user{service:my-service,env:production}" $(date -v-1H +%s) $(date +%s)
+
+# Query with specific tags
+dog --pretty metric query "avg:trace.http.request.duration{service:my-service,env:production}" $(date -v-1H +%s) $(date +%s)
+
+# Common metric patterns
+dog --pretty metric query "sum:trace.http.request.errors{service:my-service,env:production}.as_count()" $(date -v-1H +%s) $(date +%s)
+dog --pretty metric query "avg:trace.http.request.duration{service:my-service,env:production}" $(date -v-1H +%s) $(date +%s)
+```
+
+## Querying APM Traces
+
+Use the Traces API to search for specific traces:
+
+```bash
+# Search traces by service (last 15 minutes, production)
+curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
+  -H "Content-Type: application/json" \
+  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -d '{
+    "filter": {
+      "query": "service:SERVICE_NAME @http.status_code:500 env:production",
+      "from": "now-15m",
+      "to": "now"
+    },
+    "sort": "-timestamp",
+    "page": {
+      "limit": 25
+    }
+  }' | jq '.data[] | {trace_id: .attributes.attributes.trace_id, resource: .attributes.resource_name, duration_ns: .attributes.duration, status: .attributes.attributes["http.status_code"]}'
+```
+
+### Get a Specific Trace by ID
+
+```bash
+# Get trace details
+curl -s -X GET "https://api.datadoghq.com/api/v2/traces/TRACE_ID" \
+  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" | jq '.'
+```
+
+## Querying Monitors
+
+Check monitor status for a service:
+
+```bash
+# List all monitors
+dog --pretty monitor show_all
+
+# Show specific monitor
+dog --pretty monitor show MONITOR_ID
+
+# Search monitors by tag or name (use jq to filter)
+dog --pretty monitor show_all | jq '.monitors[] | select(.name | contains("my-service"))'
+```
+
+## Querying Events
+
+Check events (deployments, alerts, etc.):
+
+```bash
+# Stream events from the last hour
+dog --pretty event stream --start 1h
+
+# Stream events with specific tags
+dog --pretty event stream --start 1h --tags "service:my-service,env:production"
+```
+
+## Correlating with the Codebase
+
+After finding errors in Datadog, correlate with code:
+
+1. **Extract service name** - Map to the correct repository/directory
+2. **Find error origin** - Search for:
+   - Error message text in the codebase
+   - Exception class names
+   - Resource/endpoint names from traces
+   - Log message patterns
+3. **Trace the call stack** - Use function/method names from stack traces to locate code
+
+### Search Patterns
+
+```bash
+# Search for error message in code
+grep -r "Error message from logs" src/
+
+# Search for endpoint/resource
+grep -r "/api/endpoint/path" src/
+
+# Search for exception handling
+grep -r "SpecificException" src/
+```
+
+## Example Investigation Flow
+
+When a user reports an issue:
+
+1. **Get context**: "What service? What time did this happen? Any error messages or IDs?"
+
+2. **Query logs first** (always include env:production):
+```bash
+curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
+  -H "Content-Type: application/json" \
+  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -d '{"filter": {"query": "service:SERVICE status:error env:production", "from": "now-1h", "to": "now"}, "sort": "-timestamp", "page": {"limit": 20}}' | jq '.data[].attributes | {timestamp, message, status}'
+```
+
+3. **Get trace IDs from logs**, then query traces for full context
+
+4. **Check metrics** for patterns (error rates, latency spikes)
+
+5. **Search codebase** for the error source using messages/stack traces
+
+6. **Propose fix** based on findings
+
+## Helper Functions
+
+For convenience, you can use these one-liners:
+
+```bash
+# Quick log search function (defaults to env:production)
+dd_logs() {
+  local query="$1 env:production"
+  curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
+    -H "Content-Type: application/json" \
+    -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+    -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+    -d "{\"filter\": {\"query\": \"$query\", \"from\": \"${2:-now-1h}\", \"to\": \"now\"}, \"sort\": \"-timestamp\", \"page\": {\"limit\": ${3:-25}}}"
+}
+
+# Usage: dd_logs "service:my-service status:error" "now-15m" 10
+```
+
+## Important Notes
+
+- **Always filter by `env:production`** unless the user explicitly specifies a different environment
+- Always use `jq` to format JSON output for readability
+- Default to the last 1 hour for time ranges unless specified
+- When correlating with code, prioritize Serena's symbolic tools (`find_symbol`, `search_for_pattern`) over grep
+- Log messages may contain sensitive data - summarize findings without exposing PII
+- If no results found, expand the time range or broaden the query
