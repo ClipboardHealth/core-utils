@@ -1,7 +1,7 @@
 {
   "name": "embedex",
   "description": "Embed shared text and code snippets from source files into destination files.",
-  "version": "1.6.83",
+  "version": "1.6.84",
   "bin": {
     "embedex": "./src/bin/cli.js"
   },
