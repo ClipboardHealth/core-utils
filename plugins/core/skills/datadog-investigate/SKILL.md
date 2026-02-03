@@ -16,6 +16,25 @@ Use this skill to investigate production issues by querying Datadog logs, metric
 
 **Always filter by `env:production` unless the user specifies a different environment.**
 
+## Cross-Platform Time Calculations
+
+Use Node.js for portable timestamp calculations (works on macOS and Linux):
+
+````bash
+# Seconds since epoch (now)
+node -e "console.log(Math.floor(Date.now()/1000))"
+
+# 1 hour ago
+node -e "console.log(Math.floor(Date.now()/1000) - 3600)"
+
+# 24 hours ago
+node -e "console.log(Math.floor(Date.now()/1000) - 86400)"
+
+# Example: query metrics for last hour
+dog --pretty metric query "avg:system.cpu.user{service:my-service,env:production}" \
+  $(node -e "console.log(Math.floor(Date.now()/1000) - 3600)") \
+  $(node -e "console.log(Math.floor(Date.now()/1000))")
+
 ## Investigation Workflow
 
 When investigating an issue:
@@ -50,7 +69,7 @@ curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
       "limit": 50
     }
   }' | jq '.data[] | {timestamp: .attributes.timestamp, message: .attributes.message, status: .attributes.status, service: .attributes.service}'
-```
+````
 
 ### Common Log Queries
 
@@ -229,9 +248,43 @@ dd_logs() {
 # Usage: dd_logs "service:my-service status:error" "now-15m" 10
 ```
 
+## Pagination
+
+API responses are paginated. To retrieve more results:
+
+```bash
+# First request returns a cursor in the response
+response=$(curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
+  -H "Content-Type: application/json" \
+  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -d '{"filter": {"query": "service:my-service env:production", "from": "now-1h", "to": "now"}, "page": {"limit": 50}}')
+
+# Extract cursor for next page
+cursor=$(echo "$response" | jq -r '.meta.page.after // empty')
+
+# If cursor exists, fetch next page
+if [ -n "$cursor" ]; then
+  curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
+    -H "Content-Type: application/json" \
+    -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+    -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+    -d '{"filter": {"query": "service:my-service env:production", "from": "now-1h", "to": "now"}, "page": {"limit": 50, "cursor": "'"$cursor"'"}}'
+fi
+```
+
+## Handling Common Issues
+
+| Error                   | Cause                                | Solution                                                    |
+| ----------------------- | ------------------------------------ | ----------------------------------------------------------- |
+| Empty results           | Query too narrow or wrong time range | Expand time range (`now-24h`), remove filters one at a time |
+| 401 Unauthorized        | Invalid or missing API key           | Verify `~/.dogrc` has valid `apikey` and `appkey`           |
+| 403 Forbidden           | API key lacks required permissions   | Check Datadog org settings for API key scopes               |
+| 429 Too Many Requests   | Rate limited                         | Wait 30 seconds, reduce `page.limit`, narrow time range     |
+| Timeout / slow response | Query spans too much data            | Narrow time range, add more specific filters                |
+
 ## Important Notes
 
-- **OS-specific commands**: The shell commands provided are examples and may need adjustment for your operating system (e.g., `date -v-1H` is macOS-specific; use `date -d '-1 hour'` on Linux)
 - **Always filter by `env:production`** unless the user explicitly specifies a different environment
 - Always use `jq` to format JSON output for readability
 - Default to the last 1 hour for time ranges unless specified
