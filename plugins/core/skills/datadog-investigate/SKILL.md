@@ -20,7 +20,7 @@ Use this skill to investigate production issues by querying Datadog logs, metric
 
 Use Node.js for portable timestamp calculations (works on macOS and Linux):
 
-````bash
+```bash
 # Seconds since epoch (now)
 node -e "console.log(Math.floor(Date.now()/1000))"
 
@@ -34,6 +34,7 @@ node -e "console.log(Math.floor(Date.now()/1000) - 86400)"
 dog --pretty metric query "avg:system.cpu.user{service:my-service,env:production}" \
   $(node -e "console.log(Math.floor(Date.now()/1000) - 3600)") \
   $(node -e "console.log(Math.floor(Date.now()/1000))")
+```
 
 ## Investigation Workflow
 
@@ -69,7 +70,7 @@ curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
       "limit": 50
     }
   }' | jq '.data[] | {timestamp: .attributes.timestamp, message: .attributes.message, status: .attributes.status, service: .attributes.service}'
-````
+```
 
 ### Common Log Queries
 
