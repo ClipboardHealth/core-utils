@@ -206,14 +206,19 @@ For convenience, you can use these one-liners:
 
 ```bash
 # Quick log search function (defaults to env:production)
+
 dd_logs() {
   local query="$1 env:production"
+  local limit="${3:-25}"
+  jq -n --arg q "$query" --arg from "${2:-now-1h}" --argjson limit "$limit" \
+    '{filter: {query: $q, from: $from, to: "now"}, sort: "-timestamp", page: {limit: $limit}}' | \
   curl -s -X POST "https://api.datadoghq.com/api/v2/logs/events/search" \
     -H "Content-Type: application/json" \
     -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
     -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
-    -d "{\"filter\": {\"query\": \"$query\", \"from\": \"${2:-now-1h}\", \"to\": \"now\"}, \"sort\": \"-timestamp\", \"page\": {\"limit\": ${3:-25}}}"
+    -d @-
 }
+
 
 # Usage: dd_logs "service:my-service status:error" "now-15m" 10
 ```
