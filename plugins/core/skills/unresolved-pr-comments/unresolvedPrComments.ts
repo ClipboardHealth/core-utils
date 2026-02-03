@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { outputError, runGh, validatePrerequisites } from "../../lib/ghClient.ts";
-import { getPrNumber, getRepoInfo, type RepoInfo } from "../../lib/prClient.ts";
+import { getPrNumber, getRepoInfo } from "../../lib/prClient.ts";
 
 import {
   extractCodeScanningAlertNumber,
