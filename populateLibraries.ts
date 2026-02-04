@@ -16,15 +16,14 @@ async function updateReadme() {
     ),
   ]);
 
-  const readmeLines = (
-    await Promise.allSettled(
-      dirNames.map(async (dirent) => {
-        const path = join(__dirname, "packages", dirent.name, "package.json");
-        const { description } = JSON.parse(await readFile(path, utf8));
-        return `- [${dirent.name}](./packages/${dirent.name}/README.md): ${description ?? ""}`;
-      }),
-    )
-  )
+  const readmeLinesRaw = await Promise.allSettled(
+    dirNames.map(async (dirent) => {
+      const path = join(__dirname, "packages", dirent.name, "package.json");
+      const { description } = JSON.parse(await readFile(path, utf8));
+      return `- [${dirent.name}](./packages/${dirent.name}/README.md): ${description ?? ""}`;
+    }),
+  );
+  const readmeLines = readmeLinesRaw
     .filter((result) => result.status === "fulfilled")
     .map((result) => (result as PromiseFulfilledResult<string>).value);
 
