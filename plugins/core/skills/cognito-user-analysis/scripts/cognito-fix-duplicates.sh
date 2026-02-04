@@ -122,11 +122,6 @@ update_user() {
 
   attrs+=("Name=custom:backend_sync_counter,Value=0")
 
-  if [[ ${#attrs[@]} -eq 0 ]]; then
-    echo "No attributes to update for $username"
-    return
-  fi
-
   if [[ -n "$DRY_RUN" ]]; then
     echo "[DRY-RUN] Would update user: $username"
     echo "  Attributes: ${attrs[*]}"
@@ -144,13 +139,13 @@ update_user() {
 deleted=0
 updated=0
 
-tail -n +2 "$ANALYSIS_FILE" | while IFS=, read -r sub username phone email cbh_user_id status created last_modified action match_score match_details backend_phone backend_email backend_cbh_user_id backend_name duplicate_group; do
+while IFS=, read -r sub username phone email cbh_user_id status created last_modified action match_score match_details backend_phone backend_email backend_cbh_user_id backend_name duplicate_group; do
   [[ -z "$sub" ]] && continue
 
   case "$action" in
     DELETE)
       delete_user "$username"
-      ((deleted++))
+      (( ++deleted ))
       ;;
     KEEP_AND_UPDATE)
       update_phone="${backend_phone:-$phone}"
@@ -158,13 +153,13 @@ tail -n +2 "$ANALYSIS_FILE" | while IFS=, read -r sub username phone email cbh_u
       update_cbh_user_id="${backend_cbh_user_id:-$cbh_user_id}"
 
       update_user "$username" "$update_phone" "$update_email" "$update_cbh_user_id"
-      ((updated++))
+      (( ++updated ))
       ;;
     *)
       echo "Unknown action: $action for $username"
       ;;
   esac
-done
+done < <(tail -n +2 "$ANALYSIS_FILE")
 
 echo ""
 echo "Summary:"

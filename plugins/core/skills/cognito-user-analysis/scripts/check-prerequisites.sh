@@ -52,8 +52,8 @@ NC='\033[0m'
 passed=0
 failed=0
 
-print_pass() { echo -e "${GREEN}✓${NC} $1"; ((passed++)); }
-print_fail() { echo -e "${RED}✗${NC} $1"; ((failed++)); }
+print_pass() { echo -e "${GREEN}✓${NC} $1"; (( ++passed )); }
+print_fail() { echo -e "${RED}✗${NC} $1"; (( ++failed )); }
 print_warn() { echo -e "${YELLOW}⚠${NC} $1"; }
 print_section() { echo ""; echo "━━━ $1 ━━━"; }
 
