@@ -4,6 +4,9 @@
       "analyzeSourceFiles": true
     }
   },
+  "sync": {
+    "disabledTaskSyncGenerators": ["@nx/js:typescript-sync"]
+  },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "extends": "nx/presets/npm.json",
   "namedInputs": {
@@ -30,15 +33,19 @@
   "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
   "plugins": [
     {
-      "plugin": "@nx/eslint/plugin",
+      "plugin": "@nx/js/typescript",
       "options": {
-        "targetName": "lint"
+        "compiler": "tsgo",
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": false
       }
     },
     {
-      "plugin": "@nx/jest/plugin",
+      "plugin": "@nx/eslint/plugin",
       "options": {
-        "targetName": "test"
+        "targetName": "lint"
       }
     },
     {
@@ -98,6 +105,16 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
+    },
+    "@clipboard-health/nx-plugin:oxc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
+    "typecheck": {
+      "options": {
+        "command": "tsgo --build --noEmit"
+      }
     },
     "nx-release-publish": {
       "options": {

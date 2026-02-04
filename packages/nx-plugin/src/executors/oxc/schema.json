@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Oxc",
+  "title": "Build TypeScript libraries using oxc-transform.",
+  "type": "object",
+  "properties": {
+    "assets": {
+      "type": "array",
+      "description": "List of static assets to copy to output.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "The input path glob or file"
+              },
+              "glob": {
+                "type": "string",
+                "description": "The pattern to match"
+              },
+              "output": {
+                "type": "string",
+                "description": "The output path"
+              }
+            },
+            "required": ["input", "glob", "output"]
+          }
+        ]
+      },
+      "default": []
+    },
+    "main": {
+      "type": "string",
+      "description": "The main entry point file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "main@(.js|.ts)"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path for the compiled files.",
+      "x-completion-type": "directory"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The path to the tsconfig file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig*.json"
+    }
+  },
+  "required": ["main", "outputPath", "tsConfig"]
+}

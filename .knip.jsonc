@@ -3,6 +3,7 @@
   "ignore": [
     "**/jest.config.ts",
     "**/generators/**/schema.d.ts",
+    "**/executors/**/schema.d.ts",
     "**/webpack.*.js",
     "**/cbhResponse.ts",
     "packages/ai-rules/scripts/sync.ts",
@@ -12,9 +13,12 @@
     "scripts/**/*.ts",
   ],
   "ignoreDependencies": [
+    "@clipboard-health/nx-plugin",
     "@intellectronica/ruler",
     "@nx/webpack",
-    "oxlint",
+    "@swc/helpers",
+    "@typescript/native-preview",
+    "oxc-transform",
     "ts-node",
     "tslib",
     "webpack-cli",
@@ -57,6 +61,9 @@
     },
     "packages/util-ts": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/nx-plugin": {
+      "entry": ["src/index.ts", "src/generators/**/generator.ts", "src/executors/**/executor.ts"],
     },
   },
 }

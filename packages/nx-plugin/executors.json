@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "oxc": {
+      "implementation": "./src/executors/oxc/executor",
+      "schema": "./src/executors/oxc/schema.json",
+      "description": "Build TypeScript libraries using oxc-transform for fast compilation."
+    }
+  }
+}

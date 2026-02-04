@@ -82,6 +82,7 @@
     "toplevel",
     "trunc",
     "TSESTree",
+    "tsgo",
     "TTFB",
     "typedoc",
     "typeof",

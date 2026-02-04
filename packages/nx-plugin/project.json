@@ -24,6 +24,11 @@
             "input": "./packages/nx-plugin",
             "glob": "generators.json",
             "output": "."
+          },
+          {
+            "input": "./packages/nx-plugin",
+            "glob": "executors.json",
+            "output": "."
           }
         ],
         "main": "packages/nx-plugin/src/index.js",

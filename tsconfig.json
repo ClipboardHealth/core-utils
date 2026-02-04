@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist/out-tsc"
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/ai-rules" },
+    { "path": "./packages/analytics" },
+    { "path": "./packages/background-jobs-adapter" },
+    { "path": "./packages/config" },
+    { "path": "./packages/contract-core" },
+    { "path": "./packages/embedex" },
+    { "path": "./packages/eslint-config" },
+    { "path": "./packages/eslint-plugin" },
+    { "path": "./packages/example-nestjs" },
+    { "path": "./packages/execution-context" },
+    { "path": "./packages/json-api" },
+    { "path": "./packages/json-api-nestjs" },
+    { "path": "./packages/mongo-jobs" },
+    { "path": "./packages/notifications" },
+    { "path": "./packages/nx-plugin" },
+    { "path": "./packages/phone-number" },
+    { "path": "./packages/rules-engine" },
+    { "path": "./packages/testing-core" },
+    { "path": "./packages/util-ts" }
+  ]
+}
