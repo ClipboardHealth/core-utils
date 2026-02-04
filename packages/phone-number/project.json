@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/phone-number/*.md"],
-        "main": "packages/phone-number/src/index.js",
-        "outputPath": "dist/packages/phone-number",
-        "tsConfig": "packages/phone-number/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project phone-number --outputPath dist/packages/phone-number --sourceRoot packages/phone-number/src --tsConfig packages/phone-number/tsconfig.lib.json --assets '[\"packages/phone-number/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/phone-number"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

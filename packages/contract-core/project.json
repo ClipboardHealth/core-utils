@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/contract-core/*.md"],
-        "main": "packages/contract-core/src/index.js",
-        "outputPath": "dist/packages/contract-core",
-        "tsConfig": "packages/contract-core/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project contract-core --outputPath dist/packages/contract-core --sourceRoot packages/contract-core/src --tsConfig packages/contract-core/tsconfig.lib.json --assets '[\"packages/contract-core/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/contract-core"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

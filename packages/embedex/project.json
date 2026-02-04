@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/embedex/*.md", "packages/embedex/static/**/*"],
-        "main": "packages/embedex/src/index.js",
-        "outputPath": "dist/packages/embedex",
-        "tsConfig": "packages/embedex/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project embedex --outputPath dist/packages/embedex --sourceRoot packages/embedex/src --tsConfig packages/embedex/tsconfig.lib.json --assets '[\"packages/embedex/*.md\", \"packages/embedex/static/**/*\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/embedex"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

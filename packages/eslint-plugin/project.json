@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/eslint-plugin/*.md"],
-        "main": "packages/eslint-plugin/src/index.js",
-        "outputPath": "dist/packages/eslint-plugin",
-        "tsConfig": "packages/eslint-plugin/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project eslint-plugin --outputPath dist/packages/eslint-plugin --sourceRoot packages/eslint-plugin/src --tsConfig packages/eslint-plugin/tsconfig.lib.json --assets '[\"packages/eslint-plugin/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/eslint-plugin"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

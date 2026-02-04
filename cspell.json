@@ -81,6 +81,7 @@
     "syncpack",
     "toplevel",
     "trunc",
+    "tsgo",
     "TSESTree",
     "TTFB",
     "typedoc",

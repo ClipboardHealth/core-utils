@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/notifications/*.md"],
-        "main": "packages/notifications/src/index.js",
-        "outputPath": "dist/packages/notifications",
-        "tsConfig": "packages/notifications/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project notifications --outputPath dist/packages/notifications --sourceRoot packages/notifications/src --tsConfig packages/notifications/tsconfig.lib.json --assets '[\"packages/notifications/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/notifications"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

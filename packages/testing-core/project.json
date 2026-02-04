@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/testing-core/*.md"],
-        "main": "packages/testing-core/src/index.js",
-        "outputPath": "dist/packages/testing-core",
-        "tsConfig": "packages/testing-core/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project testing-core --outputPath dist/packages/testing-core --sourceRoot packages/testing-core/src --tsConfig packages/testing-core/tsconfig.lib.json --assets '[\"packages/testing-core/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/testing-core"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

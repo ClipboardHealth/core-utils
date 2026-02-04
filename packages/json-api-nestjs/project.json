@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/json-api-nestjs/*.md"],
-        "main": "packages/json-api-nestjs/src/index.js",
-        "outputPath": "dist/packages/json-api-nestjs",
-        "tsConfig": "packages/json-api-nestjs/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project json-api-nestjs --outputPath dist/packages/json-api-nestjs --sourceRoot packages/json-api-nestjs/src --tsConfig packages/json-api-nestjs/tsconfig.lib.json --assets '[\"packages/json-api-nestjs/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/json-api-nestjs"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

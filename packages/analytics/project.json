@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/analytics/*.md"],
-        "main": "packages/analytics/src/index.js",
-        "outputPath": "dist/packages/analytics",
-        "tsConfig": "packages/analytics/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project analytics --outputPath dist/packages/analytics --sourceRoot packages/analytics/src --tsConfig packages/analytics/tsconfig.lib.json --assets '[\"packages/analytics/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/analytics"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

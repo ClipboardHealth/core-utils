@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/json-api/*.md"],
-        "main": "packages/json-api/src/index.js",
-        "outputPath": "dist/packages/json-api",
-        "tsConfig": "packages/json-api/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project json-api --outputPath dist/packages/json-api --sourceRoot packages/json-api/src --tsConfig packages/json-api/tsconfig.lib.json --assets '[\"packages/json-api/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/json-api"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

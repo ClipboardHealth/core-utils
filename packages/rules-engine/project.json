@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/rules-engine/*.md"],
-        "main": "packages/rules-engine/src/index.js",
-        "outputPath": "dist/packages/rules-engine",
-        "tsConfig": "packages/rules-engine/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project rules-engine --outputPath dist/packages/rules-engine --sourceRoot packages/rules-engine/src --tsConfig packages/rules-engine/tsconfig.lib.json --assets '[\"packages/rules-engine/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/rules-engine"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

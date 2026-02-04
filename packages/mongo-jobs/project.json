@@ -6,14 +6,14 @@
   "tags": ["scope:util"],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/mongo-jobs/*.md"],
-        "main": "packages/mongo-jobs/src/index.js",
-        "outputPath": "dist/packages/mongo-jobs",
-        "tsConfig": "packages/mongo-jobs/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project mongo-jobs --outputPath dist/packages/mongo-jobs --sourceRoot packages/mongo-jobs/src --tsConfig packages/mongo-jobs/tsconfig.lib.json --assets '[\"packages/mongo-jobs/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/mongo-jobs"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

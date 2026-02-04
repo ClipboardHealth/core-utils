@@ -6,31 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": [
-          "packages/nx-plugin/*.md",
-          {
-            "input": "./packages/nx-plugin/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/nx-plugin/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/nx-plugin",
-            "glob": "generators.json",
-            "output": "."
-          }
-        ],
-        "main": "packages/nx-plugin/src/index.js",
-        "outputPath": "dist/packages/nx-plugin",
-        "tsConfig": "packages/nx-plugin/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project nx-plugin --outputPath dist/packages/nx-plugin --sourceRoot packages/nx-plugin/src --tsConfig packages/nx-plugin/tsconfig.lib.json --assets '[\"packages/nx-plugin/*.md\", {\"input\": \"./packages/nx-plugin/src\", \"glob\": \"**/!(*.ts)\", \"output\": \"./src\"}, {\"input\": \"./packages/nx-plugin/src\", \"glob\": \"**/*.d.ts\", \"output\": \"./src\"}, {\"input\": \"./packages/nx-plugin\", \"glob\": \"generators.json\", \"output\": \".\"}]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/nx-plugin"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",

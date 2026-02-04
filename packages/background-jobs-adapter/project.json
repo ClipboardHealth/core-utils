@@ -6,14 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/background-jobs-adapter/*.md"],
-        "main": "packages/background-jobs-adapter/src/index.js",
-        "outputPath": "dist/packages/background-jobs-adapter",
-        "tsConfig": "packages/background-jobs-adapter/tsconfig.lib.json"
+        "command": "node scripts/oxc-build.mjs --project background-jobs-adapter --outputPath dist/packages/background-jobs-adapter --sourceRoot packages/background-jobs-adapter/src --tsConfig packages/background-jobs-adapter/tsconfig.lib.json --assets '[\"packages/background-jobs-adapter/*.md\"]'"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{workspaceRoot}/dist/packages/background-jobs-adapter"],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "lint": {
       "executor": "@nx/eslint:lint",
