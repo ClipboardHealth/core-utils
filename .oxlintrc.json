@@ -258,11 +258,14 @@
         "**/examples/**/*.ts",
         "**/plugins/**/*.ts",
         "**/scripts/**/*.js",
+        "**/scripts/**/*.mjs",
         "**/scripts/**/*.ts",
         "populateLibraries.ts"
       ],
       "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "no-await-in-loop": "off",
+        "curly": "off"
       }
     },
     {
