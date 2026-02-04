@@ -11,7 +11,17 @@
  */
 
 import { transform } from "oxc-transform";
-import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, readdirSync, statSync, unlinkSync, rmdirSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  cpSync,
+  existsSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+  rmdirSync,
+} from "node:fs";
 import { dirname, join, relative, resolve, extname, basename } from "node:path";
 import { parseArgs } from "node:util";
 import { execSync } from "node:child_process";
@@ -40,7 +50,13 @@ function findTsFiles(dir, files = []) {
 
     if (entry.isDirectory()) {
       findTsFiles(fullPath, files);
-    } else if (entry.isFile() && /\.tsx?$/.test(entry.name) && !entry.name.endsWith(".d.ts") && !entry.name.includes(".spec.") && !entry.name.includes(".test.")) {
+    } else if (
+      entry.isFile() &&
+      /\.tsx?$/.test(entry.name) &&
+      !entry.name.endsWith(".d.ts") &&
+      !entry.name.includes(".spec.") &&
+      !entry.name.includes(".test.")
+    ) {
       files.push(fullPath);
     }
   }
@@ -274,7 +290,9 @@ async function main() {
   const { project, outputPath, tsConfig, assets, sourceRoot } = args;
 
   if (!project || !outputPath) {
-    console.error("Usage: node scripts/oxc-build.mjs --project <project-name> --outputPath <output-path> --tsConfig <tsconfig-path>");
+    console.error(
+      "Usage: node scripts/oxc-build.mjs --project <project-name> --outputPath <output-path> --tsConfig <tsconfig-path>",
+    );
     process.exit(1);
   }
 
