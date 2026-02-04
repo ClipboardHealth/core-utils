@@ -48,6 +48,7 @@ fi
 
 echo "original_sub,original_username,search_type,search_value,duplicate_usernames,duplicate_subs" > "$OUTPUT_FILE"
 
+# shellcheck disable=SC2034 # cbh_user_id is read for CSV structure but unused
 tail -n +2 "$INPUT_FILE" | while IFS=, read -r sub username phone email cbh_user_id; do
   [[ -z "$sub" ]] && continue
 
@@ -59,10 +60,10 @@ tail -n +2 "$INPUT_FILE" | while IFS=, read -r sub username phone email cbh_user
       --query 'Users[].{Username:Username, Sub:Attributes[?Name==`sub`].Value|[0]}' \
       --output json 2>/dev/null) || phone_results="[]"
 
-    phone_count=$(echo "$phone_results" | jq 'length')
+    phone_count="$(echo "$phone_results" | jq 'length')"
     if [[ "$phone_count" -gt 1 ]]; then
-      other_usernames=$(echo "$phone_results" | jq -r --arg orig "$username" '[.[] | select(.Username != $orig) | .Username] | join(";")') || other_usernames=""
-      other_subs=$(echo "$phone_results" | jq -r --arg orig "$sub" '[.[] | select(.Sub != $orig) | .Sub] | join(";")') || other_subs=""
+      other_usernames="$(echo "$phone_results" | jq -r --arg orig "$username" '[.[] | select(.Username != $orig) | .Username] | join(";")')" || other_usernames=""
+      other_subs="$(echo "$phone_results" | jq -r --arg orig "$sub" '[.[] | select(.Sub != $orig) | .Sub] | join(";")')" || other_subs=""
       if [[ -n "$other_usernames" ]]; then
         echo "$sub,$username,phone,$phone,$other_usernames,$other_subs" >> "$OUTPUT_FILE"
         echo "✓ Duplicate phone: $phone ($phone_count users)"
@@ -78,10 +79,10 @@ tail -n +2 "$INPUT_FILE" | while IFS=, read -r sub username phone email cbh_user
       --query 'Users[].{Username:Username, Sub:Attributes[?Name==`sub`].Value|[0]}' \
       --output json 2>/dev/null) || email_results="[]"
 
-    email_count=$(echo "$email_results" | jq 'length')
+    email_count="$(echo "$email_results" | jq 'length')"
     if [[ "$email_count" -gt 1 ]]; then
-      other_usernames=$(echo "$email_results" | jq -r --arg orig "$username" '[.[] | select(.Username != $orig) | .Username] | join(";")') || other_usernames=""
-      other_subs=$(echo "$email_results" | jq -r --arg orig "$sub" '[.[] | select(.Sub != $orig) | .Sub] | join(";")') || other_subs=""
+      other_usernames="$(echo "$email_results" | jq -r --arg orig "$username" '[.[] | select(.Username != $orig) | .Username] | join(";")')" || other_usernames=""
+      other_subs="$(echo "$email_results" | jq -r --arg orig "$sub" '[.[] | select(.Sub != $orig) | .Sub] | join(";")')" || other_subs=""
       if [[ -n "$other_usernames" ]]; then
         echo "$sub,$username,email,$email,$other_usernames,$other_subs" >> "$OUTPUT_FILE"
         echo "✓ Duplicate email: $email ($email_count users)"

@@ -37,6 +37,32 @@ chmod 600 ~/.cbh_token
 
 Token expires periodically. If you get `403 Forbidden`, get a fresh token.
 
+## Cognito User Pool ID
+
+The scripts default to production pool ID. To find pool IDs for other environments:
+
+```bash
+# List all Cognito user pools
+aws cognito-idp list-user-pools \
+  --profile cbh-production-platform \
+  --max-results 10 \
+  --query 'UserPools[].{Name:Name, Id:Id}' \
+  --output table
+
+# Or filter by name pattern
+aws cognito-idp list-user-pools \
+  --profile cbh-production-platform \
+  --max-results 10 \
+  --query 'UserPools[?contains(Name, `production`)].{Name:Name, Id:Id}' \
+  --output table
+```
+
+Pass the pool ID as a parameter to override the default:
+
+```bash
+scripts/cognito-lookup.sh subs.txt results.csv cbh-staging-platform us-west-2_XXXXX
+```
+
 ## Troubleshooting
 
 | Error                    | Solution                                           |

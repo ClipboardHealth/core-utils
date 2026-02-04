@@ -64,10 +64,10 @@ while IFS= read -r sub || [[ -n "$sub" ]]; do
     phone=$(echo "$result" | jq -r '(.Attributes // [])[] | select(.Name=="phone_number") | .Value' 2>/dev/null) || phone=""
     email=$(echo "$result" | jq -r '(.Attributes // [])[] | select(.Name=="email") | .Value' 2>/dev/null) || email=""
     cbh_user_id=$(echo "$result" | jq -r '(.Attributes // [])[] | select(.Name=="custom:cbh_user_id") | .Value' 2>/dev/null) || cbh_user_id=""
-    echo "$sub,$username,$phone,$email,$cbh_user_id" >> "$OUTPUT_FILE"
+    printf '%s,"%s","%s","%s","%s"\n' "$sub" "$username" "$phone" "$email" "$cbh_user_id" >> "$OUTPUT_FILE"
     echo "[$count/$total] ✓ $sub"
   else
-    echo "$sub,NOT_FOUND,,," >> "$OUTPUT_FILE"
+    printf '%s,"NOT_FOUND","","",""\n' "$sub" >> "$OUTPUT_FILE"
     echo "[$count/$total] ✗ $sub (not found)"
   fi
 done < "$INPUT_FILE"

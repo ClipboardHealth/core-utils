@@ -44,17 +44,21 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
-ANALYSIS_FILE="${1:?Error: analysis_csv required. Run with --help for usage.}"
-PROFILE="${2:-cbh-production-platform}"
-USER_POOL_ID="${3:-us-west-2_in7ey5PCw}"
 DRY_RUN=""
+args=()
 
-# Check for --dry-run in any position
+# Check for --dry-run in any position and strip it from args
 for arg in "$@"; do
   if [[ "$arg" == "--dry-run" ]]; then
     DRY_RUN="--dry-run"
+  else
+    args+=("$arg")
   fi
 done
+
+ANALYSIS_FILE="${args[0]:?Error: analysis_csv required. Run with --help for usage.}"
+PROFILE="${args[1]:-cbh-production-platform}"
+USER_POOL_ID="${args[2]:-us-west-2_in7ey5PCw}"
 
 if [[ ! -f "$ANALYSIS_FILE" ]]; then
   echo "Error: Analysis file '$ANALYSIS_FILE' not found" >&2
@@ -69,7 +73,8 @@ fi
 normalize_phone_e164() {
   local phone="$1"
   # Extract digits only
-  local digits=$(echo "$phone" | tr -cd '0-9')
+  local digits
+  digits=$(echo "$phone" | tr -cd '0-9')
   # If 10 digits, assume US and add +1
   if [[ ${#digits} -eq 10 ]]; then
     echo "+1${digits}"
@@ -107,7 +112,8 @@ update_user() {
   local attrs=()
 
   if [[ -n "$phone" ]]; then
-    local normalized_phone=$(normalize_phone_e164 "$phone")
+    local normalized_phone
+    normalized_phone=$(normalize_phone_e164 "$phone")
     attrs+=("Name=phone_number,Value=$normalized_phone")
   fi
 
@@ -138,22 +144,30 @@ update_user() {
 
 deleted=0
 updated=0
+failed=0
 
+# shellcheck disable=SC2034 # Variables are read for CSV structure but some are unused
 while IFS=, read -r sub username phone email cbh_user_id status created last_modified action match_score match_details backend_phone backend_email backend_cbh_user_id backend_name duplicate_group; do
   [[ -z "$sub" ]] && continue
 
   case "$action" in
     DELETE)
-      delete_user "$username"
-      (( ++deleted ))
+      if delete_user "$username"; then
+        (( ++deleted ))
+      else
+        (( ++failed ))
+      fi
       ;;
     KEEP_AND_UPDATE)
       update_phone="${backend_phone:-$phone}"
       update_email="${backend_email:-$email}"
       update_cbh_user_id="${backend_cbh_user_id:-$cbh_user_id}"
 
-      update_user "$username" "$update_phone" "$update_email" "$update_cbh_user_id"
-      (( ++updated ))
+      if update_user "$username" "$update_phone" "$update_email" "$update_cbh_user_id"; then
+        (( ++updated ))
+      else
+        (( ++failed ))
+      fi
       ;;
     *)
       echo "Unknown action: $action for $username"
@@ -165,6 +179,7 @@ echo ""
 echo "Summary:"
 echo "  Deleted: $deleted users"
 echo "  Updated: $updated users"
+echo "  Failed:  $failed users"
 
 if [[ -n "$DRY_RUN" ]]; then
   echo ""

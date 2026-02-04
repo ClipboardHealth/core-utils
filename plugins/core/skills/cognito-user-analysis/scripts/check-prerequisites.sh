@@ -79,8 +79,11 @@ else
 fi
 
 if aws sts get-caller-identity --profile "$PROFILE" &> /dev/null; then
-  identity=$(aws sts get-caller-identity --profile "$PROFILE" --output json 2>/dev/null)
-  account=$(echo "$identity" | jq -r '.Account // "unknown"')
+  account=$(aws sts get-caller-identity \
+    --profile "$PROFILE" \
+    --query 'Account' \
+    --output text 2>/dev/null)
+  account=${account:-unknown}
   print_pass "Credentials valid (Account: $account)"
 else
   print_fail "Credentials expired or invalid"
@@ -129,8 +132,9 @@ print_section "CBH API Connectivity"
 
 if [[ -f "$TOKEN_FILE" ]]; then
   token=$(cat "$TOKEN_FILE" | tr -d '[:space:]')
-  response=$(curl -s -w "\n%{http_code}" "${API_BASE}?skip=0&limit=1&searchInput=test" \
-    -H "Authorization: ${token}" 2>/dev/null)
+  response=$(curl -s -w "\n%{http_code}" --connect-timeout 10 --max-time 30 \
+    "${API_BASE}?skip=0&limit=1&searchInput=test" \
+    -H "Authorization: ${token}" 2>/dev/null || true)
   http_code=$(echo "$response" | tail -1)
 
   case "$http_code" in

@@ -83,12 +83,22 @@ get_user_details() {
 query_backend() {
   local search_input="$1"
   local clean_input="${search_input#+1}"
-  curl -s "${API_BASE}?skip=0&limit=5&searchInput=${clean_input}" \
+  local encoded_input
+  encoded_input=$(printf '%s' "$clean_input" | jq -sRr '@uri')
+  curl -s "${API_BASE}?skip=0&limit=5&searchInput=${encoded_input}" \
     -H "Authorization: ${TOKEN}" 2>/dev/null
 }
 
 normalize_phone() {
   echo "$1" | tr -cd '0-9'
+}
+
+# Escape a value for CSV output (double quotes, wrap in quotes)
+csv_escape() {
+  local value="$1"
+  # Double any existing quotes, then wrap in quotes
+  value="${value//\"/\"\"}"
+  printf '"%s"' "$value"
 }
 
 calculate_match_score() {
@@ -115,8 +125,10 @@ calculate_match_score() {
   fi
 
   if [[ -n "$cognito_email" && -n "$backend_email" ]]; then
-    local cognito_email_lower=$(echo "$cognito_email" | tr '[:upper:]' '[:lower:]')
-    local backend_email_lower=$(echo "$backend_email" | tr '[:upper:]' '[:lower:]')
+    local cognito_email_lower
+    local backend_email_lower
+    cognito_email_lower=$(echo "$cognito_email" | tr '[:upper:]' '[:lower:]')
+    backend_email_lower=$(echo "$backend_email" | tr '[:upper:]' '[:lower:]')
     if [[ "$cognito_email_lower" == "$backend_email_lower" ]]; then
       score=$((score + 50))
       details="${details}email:MATCH;"
@@ -128,8 +140,10 @@ calculate_match_score() {
   fi
 
   if [[ -n "$cognito_phone" && -n "$backend_phone" ]]; then
-    local cognito_phone_norm=$(normalize_phone "$cognito_phone")
-    local backend_phone_norm=$(normalize_phone "$backend_phone")
+    local cognito_phone_norm
+    local backend_phone_norm
+    cognito_phone_norm=$(normalize_phone "$cognito_phone")
+    backend_phone_norm=$(normalize_phone "$backend_phone")
     cognito_phone_norm="${cognito_phone_norm: -10}"
     backend_phone_norm="${backend_phone_norm: -10}"
     if [[ "$cognito_phone_norm" == "$backend_phone_norm" ]]; then
@@ -261,8 +275,11 @@ tail -n +2 "$DUPLICATES_FILE" | while IFS=, read -r original_sub original_userna
       action="DELETE"
     fi
 
-    backend_name_escaped="${backend_name//,/ }"
-    echo "$sub,$username,$phone,$email,$cbh_user_id,$status,$created,$last_modified,$action,$score,$match_details,$backend_phone,$backend_email,$backend_cbh_user_id,$backend_name_escaped,$group_id" >> "$OUTPUT_FILE"
+    printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+      "$sub" "$username" "$(csv_escape "$phone")" "$(csv_escape "$email")" \
+      "$cbh_user_id" "$status" "$created" "$last_modified" "$action" "$score" \
+      "$match_details" "$(csv_escape "$backend_phone")" "$(csv_escape "$backend_email")" \
+      "$backend_cbh_user_id" "$(csv_escape "$backend_name")" "$group_id" >> "$OUTPUT_FILE"
   done
 
   unset user_data
