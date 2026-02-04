@@ -70,8 +70,14 @@ function findTsFiles(dir, files = []) {
 async function transformFile(filePath, sourceRoot, outputPath) {
   const sourceCode = readFileSync(filePath, "utf-8");
   const relativePath = relative(sourceRoot, filePath);
-  const outputFilePath = join(outputPath, relativePath.replace(/\.tsx?$/, ".js"));
-  const declarationFilePath = join(outputPath, relativePath.replace(/\.tsx?$/, ".d.ts"));
+  const outputFilePath = join(
+    outputPath,
+    relativePath.replace(".tsx", ".js").replace(".ts", ".js"),
+  );
+  const declarationFilePath = join(
+    outputPath,
+    relativePath.replace(".tsx", ".d.ts").replace(".ts", ".d.ts"),
+  );
 
   const result = await transform(filePath, sourceCode, {
     typescript: {
@@ -126,7 +132,7 @@ function copyAssets(assets, projectRoot, outputPath) {
         const files = readdirSync(assetDir);
         for (const file of files) {
           if (pattern.includes("*")) {
-            const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
+            const regex = new RegExp("^" + pattern.replaceAll("*", ".*") + "$");
             if (regex.test(file)) {
               const srcPath = join(assetDir, file);
               const destPath = join(outputPath, file);
@@ -172,7 +178,7 @@ function copyGlobAssets(inputDir, outputDir, glob, currentPath = "") {
       copyGlobAssets(inputDir, outputDir, glob, relativePath);
     } else if (entry.isFile()) {
       // Simple glob matching
-      const pattern = glob.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/!/g, "^");
+      const pattern = glob.replaceAll("**", ".*").replaceAll("*", "[^/]*").replaceAll("!", "^");
       const isNegated = glob.startsWith("!");
       const regex = new RegExp(isNegated ? pattern.slice(1) : pattern);
       const matches = regex.test(entry.name);
