@@ -31,7 +31,7 @@
 - [json-api-nestjs](./packages/json-api-nestjs/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.
 - [mongo-jobs](./packages/mongo-jobs/README.md): MongoDB-powered background jobs.
 - [notifications](./packages/notifications/README.md): Send notifications through third-party providers.
-- [nx-plugin](./packages/nx-plugin/README.md): An Nx plugin with generators to manage libraries and applications.
+- [nx-plugin](./packages/nx-plugin/README.md): An Nx plugin with generators and executors to manage libraries and applications.
 - [phone-number](./packages/phone-number/README.md): Phone number utility functions.
 - [rules-engine](./packages/rules-engine/README.md): A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 - [testing-core](./packages/testing-core/README.md): TypeScript-friendly testing utilities.
