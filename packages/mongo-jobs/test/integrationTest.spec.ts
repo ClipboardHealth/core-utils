@@ -81,7 +81,7 @@ describe("Background Jobs Worker", () => {
   it("can run a scheduled job using string", async () => {
     const myNumber = 5514;
     const jobName = "ExampleJob";
-    const job = await backgroundJobs.enqueue(jobName, { myNumber });
+    const job = await backgroundJobs.enqueue<{ myNumber: number }>(jobName, { myNumber });
 
     await backgroundJobs.start(["default"]);
     await setTimeout(100);
