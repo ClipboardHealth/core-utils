@@ -9,19 +9,26 @@ import { forAnyChildNode } from "../ruleUtilities";
 const STYLE_GUIDE_URL =
   "https://www.notion.so/BP-TypeScript-Style-Guide-5d4c24aea08a4b9f9feb03550f2c5310?source=copy_link#fb5599a17c4a456a839f2bb5654c371e";
 
-const isFunction = (node: TSESTree.Node): boolean =>
-  node.type === AST_NODE_TYPES.ArrowFunctionExpression ||
-  node.type === AST_NODE_TYPES.FunctionExpression ||
-  node.type === AST_NODE_TYPES.FunctionDeclaration;
+function isFunction(node: TSESTree.Node): boolean {
+  return (
+    node.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+    node.type === AST_NODE_TYPES.FunctionExpression ||
+    node.type === AST_NODE_TYPES.FunctionDeclaration
+  );
+}
 
-const isForLoop = (node: TSESTree.Node): boolean =>
-  node.type === AST_NODE_TYPES.ForStatement ||
-  node.type === AST_NODE_TYPES.ForOfStatement ||
-  node.type === AST_NODE_TYPES.ForInStatement;
+function isForLoop(node: TSESTree.Node): boolean {
+  return (
+    node.type === AST_NODE_TYPES.ForStatement ||
+    node.type === AST_NODE_TYPES.ForOfStatement ||
+    node.type === AST_NODE_TYPES.ForInStatement
+  );
+}
 
 // break inside switch doesn't exit the for loop, only the switch
-const isSwitchStatement = (node: TSESTree.Node): boolean =>
-  node.type === AST_NODE_TYPES.SwitchStatement;
+function isSwitchStatement(node: TSESTree.Node): boolean {
+  return node.type === AST_NODE_TYPES.SwitchStatement;
+}
 
 /**
  * Recursively checks if a node contains a break or continue statement at the outer level.
@@ -103,9 +110,9 @@ const rule = createRule({
   },
 
   create(context) {
-    const reportIfForLoopNotAllowed = (
+    function reportIfForLoopNotAllowed(
       node: TSESTree.ForStatement | TSESTree.ForOfStatement,
-    ): void => {
+    ): void {
       if (!node.body) {
         return;
       }
@@ -122,7 +129,7 @@ const rule = createRule({
         node,
         messageId,
       });
-    };
+    }
 
     return {
       ForStatement: reportIfForLoopNotAllowed,
