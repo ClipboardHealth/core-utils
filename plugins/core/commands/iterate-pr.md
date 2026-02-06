@@ -1,5 +1,5 @@
 ---
-name: iterate-pr-cmd
+name: core:iterate-pr
 description: Iteratively commit, push, and address PR feedback until CI passes and comments are resolved
 argument-hint: "[max-iterations]"
 allowed-tools: Skill(core:iterate-pr)
