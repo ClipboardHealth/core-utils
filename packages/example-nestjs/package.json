@@ -3,7 +3,7 @@
   "description": "A NestJS application using our libraries, primarily for end-to-end testing.",
   "version": "1.0.3",
   "dependencies": {
-    "@clipboard-health/contract-core": "1.7.4",
+    "@clipboard-health/contract-core": "1.7.5",
     "@clipboard-health/json-api-nestjs": "1.6.16",
     "@nestjs/common": "11.1.12",
     "@nestjs/core": "11.1.12",
