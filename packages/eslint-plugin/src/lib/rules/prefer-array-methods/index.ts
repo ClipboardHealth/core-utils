@@ -25,54 +25,65 @@ function isForLoop(node: TSESTree.Node): boolean {
   );
 }
 
-// break inside switch doesn't exit the for loop, only the switch
 function isSwitchStatement(node: TSESTree.Node): boolean {
   return node.type === AST_NODE_TYPES.SwitchStatement;
 }
 
+type ControlFlowType =
+  | AST_NODE_TYPES.BreakStatement
+  | AST_NODE_TYPES.ContinueStatement
+  | AST_NODE_TYPES.ReturnStatement;
+
+const ALL_CONTROL_FLOW_TYPES: readonly ControlFlowType[] = [
+  AST_NODE_TYPES.BreakStatement,
+  AST_NODE_TYPES.ContinueStatement,
+  AST_NODE_TYPES.ReturnStatement,
+];
+
 /**
- * Recursively checks if a node contains a break or continue statement at the outer level.
- * Does not traverse into nested functions, for loops, or switch statements (since break/continue
- * inside those don't exit the outer for loop).
+ * Recursively checks if a node contains any of the specified control flow statements, making sure
+ * to traverse the AST only once.
+ *
+ * As we traverse, boundary nodes narrow down which statements we're still looking for:
+ * - Function boundaries: stop looking for all statements (break, continue, return)
+ * - For loop boundaries: stop looking for break and continue
+ * - Switch boundaries: stop looking for break only
  */
-function hasOuterLevelBreakOrContinue(node: TSESTree.Node): boolean {
-  if (
-    node.type === AST_NODE_TYPES.BreakStatement ||
-    node.type === AST_NODE_TYPES.ContinueStatement
-  ) {
+function containsNodesThatWouldStopOuterForLoop(
+  node: TSESTree.Node,
+  nodeTypesThatCauseOuterLoopToStopEarly: readonly ControlFlowType[],
+): boolean {
+  // Found one of the control flow statements we're looking for
+  if (nodeTypesThatCauseOuterLoopToStopEarly.includes(node.type as ControlFlowType)) {
     return true;
   }
 
-  // break/continue inside these don't exit the outer for loop
-  if (isFunction(node) || isForLoop(node) || isSwitchStatement(node)) {
-    return false;
-  }
-
-  return forAnyChildNode(node, hasOuterLevelBreakOrContinue);
-}
-
-/**
- * Recursively checks if a node contains a return statement.
- * Only stops at function boundaries (since return inside a nested function doesn't exit the outer loop).
- */
-function hasOuterLevelReturn(node: TSESTree.Node): boolean {
-  if (node.type === AST_NODE_TYPES.ReturnStatement) {
-    return true;
-  }
-
-  // Only stop at function boundaries - return inside a nested function doesn't exit the outer loop
   if (isFunction(node)) {
+    // Function: control flow statements inside a function definition don't affect the outer loop
     return false;
   }
 
-  return forAnyChildNode(node, hasOuterLevelReturn);
+  if (isForLoop(node)) {
+    // For loop: break/continue statements don't affect the outer loop, but return still does
+    return forAnyChildNode(node, hasOuterLevelReturnStatement);
+  }
+
+  if (isSwitchStatement(node)) {
+    // Switch: break statements exit the switch, but not the for loop.
+    const nodeTypesWithoutBreakStatement = nodeTypesThatCauseOuterLoopToStopEarly.filter(
+      (nodeType) => nodeType !== AST_NODE_TYPES.BreakStatement,
+    );
+    return forAnyChildNode(node, (node: TSESTree.Node): boolean => containsNodesThatWouldStopOuterForLoop(node, nodeTypesWithoutBreakStatement));
+  }
+
+  // otherwise we scan for all control flow statements: break/continue/return.
+  return forAnyChildNode(node, (child) =>
+    containsNodesThatWouldStopOuterForLoop(child, nodeTypesThatCauseOuterLoopToStopEarly),
+  );
 }
 
-/**
- * Checks if the loop body has valid control flow that justifies using a for loop.
- */
-function hasAnOuterLevelControlFlowStatement(node: TSESTree.Node): boolean {
-  return hasOuterLevelBreakOrContinue(node) || hasOuterLevelReturn(node);
+function hasOuterLevelReturnStatement(node: TSESTree.Node): boolean {
+  return containsNodesThatWouldStopOuterForLoop(node, [AST_NODE_TYPES.ReturnStatement]);
 }
 
 /**
@@ -92,6 +103,10 @@ function hasOuterLevelAwait(node: TSESTree.Node): boolean {
   return forAnyChildNode(node, hasOuterLevelAwait);
 }
 
+function hasABreakInControlThatWouldStopOuterForLoop(node: TSESTree.Node) {
+  return containsNodesThatWouldStopOuterForLoop(node, ALL_CONTROL_FLOW_TYPES);
+}
+
 const rule = createRule({
   name: "prefer-array-methods",
   defaultOptions: [],
@@ -104,8 +119,10 @@ const rule = createRule({
     schema: [],
     messages: {
       preferArrayMethods: `Favor array methods over for loops (when not breaking early). See ${STYLE_GUIDE_URL}`,
-      awaitInLoop: `Favor array methods over for loops (when not breaking early); however, array method callbacks do not actually await like a for loop does.
-      Consider whether the promises can be executed in parallel, and use an array method to do so. If they can't be executed in parallel, use \`forEachAsyncSequentially\` from \`@clipboard-health/util-ts\`. See ${STYLE_GUIDE_URL}`,
+      awaitInLoop:
+        "Favor array methods over for loops (when not breaking early); however, array method callbacks do not actually await like a for loop does. " +
+        "Consider whether the promises can be executed in parallel, and use an array method to do so. If they can't be executed in parallel, use `forEachAsyncSequentially` from `@clipboard-health/util-ts`. " +
+        `See ${STYLE_GUIDE_URL}`,
     },
   },
 
@@ -117,18 +134,22 @@ const rule = createRule({
         return;
       }
 
-      // It is permissible to use for loops if there is a control flow statement, e.g. early return
-      if (hasAnOuterLevelControlFlowStatement(node.body)) {
+      /** It is permissible to use for loops if there is a control flow statement that causes the for loop to stop early
+       *  e.g. early return.
+       *
+       *  Those control statements don't work the same way with array methods.
+       *
+       *  Throws work the same in array methods, so those don't count as valid exceptions.
+       */
+
+      if (hasABreakInControlThatWouldStopOuterForLoop(node.body)) {
         return;
       }
 
       // Check for await to determine which message to show
       const messageId = hasOuterLevelAwait(node.body) ? "awaitInLoop" : "preferArrayMethods";
 
-      context.report({
-        node,
-        messageId,
-      });
+      context.report({ node, messageId });
     }
 
     return {

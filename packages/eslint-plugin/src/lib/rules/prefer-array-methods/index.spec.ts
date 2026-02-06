@@ -52,6 +52,14 @@ ruleTester.run("prefer-array-methods", rule, {
       name: "for...of loop with return inside switch statement",
       code: `for (const item of items) { switch (item.type) { case 'a': process(item); return; } }`,
     },
+    {
+      name: "traditional for loop with continue inside switch statement",
+      code: `for (let i = 0; i < items.length; i++) { switch (items[i].type) { case 'a': process(items[i]); continue; } }`,
+    },
+    {
+      name: "for...of loop with continue inside switch statement",
+      code: `for (const item of items) { switch (item.type) { case 'a': process(item); continue; } }`,
+    },
 
     /**
      * The following case are more defensive in the case of refactors, ensuring that more
@@ -129,16 +137,6 @@ ruleTester.run("prefer-array-methods", rule, {
     {
       name: "for...of loop with break inside switch statement",
       code: `for (const item of items) { switch (item.type) { case 'a': process(item); break; } }`,
-      errors: [{ messageId: "preferArrayMethods" }],
-    },
-    {
-      name: "traditional for loop with continue inside switch statement",
-      code: `for (let i = 0; i < items.length; i++) { switch (items[i].type) { case 'a': process(items[i]); continue; } }`,
-      errors: [{ messageId: "preferArrayMethods" }],
-    },
-    {
-      name: "for...of loop with continue inside switch statement",
-      code: `for (const item of items) { switch (item.type) { case 'a': process(item); continue; } }`,
       errors: [{ messageId: "preferArrayMethods" }],
     },
 
