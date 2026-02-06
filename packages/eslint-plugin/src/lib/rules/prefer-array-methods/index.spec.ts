@@ -81,11 +81,8 @@ ruleTester.run("prefer-array-methods", rule, {
   ],
   invalid: [
     /**
-     * Forbid "for loops" when there is no break in control flow (break, return, continue)
-     * Give a specific message in the case of async functions (since await in array methods
-     * does not work).
-     *
-     * Do not consider inner breaks in control flow to absolve an outer loop.
+     * Forbid "for loops" when there is no break in control flow of the outer loop (break, return, continue)
+     * Give a specific message in the case of async functions (since await in array methods does not work).
      */
 
     {
@@ -132,6 +129,16 @@ ruleTester.run("prefer-array-methods", rule, {
     {
       name: "for...of loop with break inside switch statement",
       code: `for (const item of items) { switch (item.type) { case 'a': process(item); break; } }`,
+      errors: [{ messageId: "preferArrayMethods" }],
+    },
+    {
+      name: "traditional for loop with continue inside switch statement",
+      code: `for (let i = 0; i < items.length; i++) { switch (items[i].type) { case 'a': process(items[i]); continue; } }`,
+      errors: [{ messageId: "preferArrayMethods" }],
+    },
+    {
+      name: "for...of loop with continue inside switch statement",
+      code: `for (const item of items) { switch (item.type) { case 'a': process(item); continue; } }`,
       errors: [{ messageId: "preferArrayMethods" }],
     },
 
