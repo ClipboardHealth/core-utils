@@ -400,6 +400,7 @@ export class Worker {
     attemptsCount: number,
     error: string,
   ): Promise<void> {
+    // Do not change this log message. It is used by monitors to detect job failures.
     this.logger?.error(`Background Job Failed: ${job.handlerName}`, {
       ...this.logContext(job),
       error,
