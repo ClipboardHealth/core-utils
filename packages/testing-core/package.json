@@ -1,10 +1,10 @@
 {
   "name": "@clipboard-health/testing-core",
   "description": "TypeScript-friendly testing utilities.",
-  "version": "1.7.5",
+  "version": "1.7.6",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
-    "@clipboard-health/util-ts": "4.8.5",
+    "@clipboard-health/util-ts": "4.8.6",
     "tslib": "2.8.1"
   },
   "devDependencies": {
