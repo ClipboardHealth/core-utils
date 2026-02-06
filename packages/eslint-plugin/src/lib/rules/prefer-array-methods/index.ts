@@ -23,33 +23,49 @@ const isForLoop = (node: TSESTree.Node): boolean =>
 const isSwitchStatement = (node: TSESTree.Node): boolean =>
   node.type === AST_NODE_TYPES.SwitchStatement;
 
-function isControlFlowStatement(node: TSESTree.Node): boolean {
-  return (
-    node.type === AST_NODE_TYPES.BreakStatement ||
-    node.type === AST_NODE_TYPES.ContinueStatement ||
-    node.type === AST_NODE_TYPES.ReturnStatement
-  );
-}
-
 /**
- * Recursively checks if a node contains a control flow statement (break, continue, return)
- * at the outer level. Does not traverse into nested functions, switch statements, or for loops.
+ * Recursively checks if a node contains a break or continue statement at the outer level.
+ * Does not traverse into nested functions, for loops, or switch statements (since break/continue
+ * inside those don't exit the outer for loop).
  */
-function hasAnOuterLevelControlFlowStatement(node: TSESTree.Node): boolean {
-  if (isControlFlowStatement(node)) {
+function hasOuterLevelBreakOrContinue(node: TSESTree.Node): boolean {
+  if (
+    node.type === AST_NODE_TYPES.BreakStatement ||
+    node.type === AST_NODE_TYPES.ContinueStatement
+  ) {
     return true;
   }
 
-  /**
-   * Control flow breaks inside a nested loop, function, and switch statement don't actually break
-   * control out of the outer loop, and therefore the outer loop can be rewritten with array
-   * methods. So, we skip looking here.
-   */
+  // break/continue inside these don't exit the outer for loop
   if (isFunction(node) || isForLoop(node) || isSwitchStatement(node)) {
     return false;
   }
 
-  return forAnyChildNode(node, hasAnOuterLevelControlFlowStatement);
+  return forAnyChildNode(node, hasOuterLevelBreakOrContinue);
+}
+
+/**
+ * Recursively checks if a node contains a return statement.
+ * Only stops at function boundaries (since return inside a nested function doesn't exit the outer loop).
+ */
+function hasOuterLevelReturn(node: TSESTree.Node): boolean {
+  if (node.type === AST_NODE_TYPES.ReturnStatement) {
+    return true;
+  }
+
+  // Only stop at function boundaries - return inside a nested function doesn't exit the outer loop
+  if (isFunction(node)) {
+    return false;
+  }
+
+  return forAnyChildNode(node, hasOuterLevelReturn);
+}
+
+/**
+ * Checks if the loop body has valid control flow that justifies using a for loop.
+ */
+function hasAnOuterLevelControlFlowStatement(node: TSESTree.Node): boolean {
+  return hasOuterLevelBreakOrContinue(node) || hasOuterLevelReturn(node);
 }
 
 /**

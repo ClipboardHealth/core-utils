@@ -44,6 +44,14 @@ ruleTester.run("prefer-array-methods", rule, {
       name: "traditional for with continue",
       code: `for (let i = 0; i < items.length; i++) { if (!items[i].valid) continue; process(items[i]); }`,
     },
+    {
+      name: "traditional for loop with return inside switch statement",
+      code: `for (let i = 0; i < items.length; i++) { switch (items[i].type) { case 'a': process(items[i]); return; } }`,
+    },
+    {
+      name: "for...of loop with return inside switch statement",
+      code: `for (const item of items) { switch (item.type) { case 'a': process(item); return; } }`,
+    },
 
     /**
      * The following case are more defensive in the case of refactors, ensuring that more
@@ -65,6 +73,10 @@ ruleTester.run("prefer-array-methods", rule, {
     {
       name: "multiple control flow statements",
       code: `for (const item of items) { if (item.skip) continue; if (item.done) break; process(item); }`,
+    },
+    {
+      name: "nested for loops where inner loop has return exits all loops",
+      code: `for (const outer of items) { for (const inner of outer.children) { if (inner.done) return inner; } }`,
     },
   ],
   invalid: [
@@ -112,6 +124,16 @@ ruleTester.run("prefer-array-methods", rule, {
       code: `for (const item of items) { callback(function() { return 42; }); }`,
       errors: [{ messageId: "preferArrayMethods" }],
     },
+    {
+      name: "traditional for loop with break inside switch statement",
+      code: `for (let i = 0; i < items.length; i++) { switch (items[i].type) { case 'a': process(items[i]); break; } }`,
+      errors: [{ messageId: "preferArrayMethods" }],
+    },
+    {
+      name: "for...of loop with break inside switch statement",
+      code: `for (const item of items) { switch (item.type) { case 'a': process(item); break; } }`,
+      errors: [{ messageId: "preferArrayMethods" }],
+    },
 
     /**
      * The following case are more defensive in the case of refactors, ensuring that more
@@ -131,11 +153,6 @@ ruleTester.run("prefer-array-methods", rule, {
       name: "await in nested expression without control flow",
       code: `async function test() { for (const item of items) { const result = await fetch(item.url); log(result); } }`,
       errors: [{ messageId: "awaitInLoop" }],
-    },
-    {
-      name: "break inside switch does not count for the for loop",
-      code: `for (const item of items) { switch (item.type) { case 'a': process(item); break; } }`,
-      errors: [{ messageId: "preferArrayMethods" }],
     },
   ],
 });
