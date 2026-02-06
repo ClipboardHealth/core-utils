@@ -73,7 +73,13 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 >    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool, report what was fixed, and exit
 > 6. **Check Comments**: Get unresolved comments:
 >    !`node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts" 2>/dev/null`
->    - If unresolved comments or nitpicks exist, address those you agree with and exit (next iteration will commit fixes)
+>    - If unresolved comments or nitpicks exist, for EVERY comment:
+>      1. Read the relevant code at the file path and line number
+>      2. Assess the comment with an explicit verdict:
+>         - **Agree**: Explain why, then fix it
+>         - **Disagree**: Explain why the current code is acceptable; do NOT change the code
+>         - **Already fixed**: Note that the code already addresses this concern
+>      3. After assessing all comments, fix only those you agreed with and exit (next iteration will commit fixes)
 > 7. **Report**: Include whether commits were made (!`git rev-parse HEAD` != `startCommit`), PR status, CI status, and comments addressed
 
 ### Step 4: Loop
