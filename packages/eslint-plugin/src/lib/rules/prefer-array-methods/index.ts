@@ -73,7 +73,9 @@ function containsNodesThatWouldStopOuterForLoop(
     const nodeTypesWithoutBreakStatement = nodeTypesThatCauseOuterLoopToStopEarly.filter(
       (nodeType) => nodeType !== AST_NODE_TYPES.BreakStatement,
     );
-    return forAnyChildNode(node, (node: TSESTree.Node): boolean => containsNodesThatWouldStopOuterForLoop(node, nodeTypesWithoutBreakStatement));
+    return forAnyChildNode(node, (node: TSESTree.Node): boolean =>
+      containsNodesThatWouldStopOuterForLoop(node, nodeTypesWithoutBreakStatement),
+    );
   }
 
   // otherwise we scan for all control flow statements: break/continue/return.
