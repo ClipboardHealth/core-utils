@@ -203,3 +203,36 @@ describe("optionalEnum", () => {
     });
   });
 });
+
+describe("accepts readonly values directly without spreading", () => {
+  it("requiredEnumWithFallback", () => {
+    const schema = requiredEnumWithFallback(VALUES, FALLBACK);
+
+    expectToBeSafeParseSuccess(schema.safeParse("b"));
+    expectToBeSafeParseSuccess(schema.safeParse("invalid"));
+    expectToBeSafeParseError(schema.safeParse());
+  });
+
+  it("optionalEnumWithFallback", () => {
+    const schema = optionalEnumWithFallback(VALUES, FALLBACK);
+
+    expectToBeSafeParseSuccess(schema.safeParse("b"));
+    expectToBeSafeParseSuccess(schema.safeParse("invalid"));
+    expectToBeSafeParseSuccess(schema.safeParse());
+  });
+
+  it("requiredEnum", () => {
+    const schema = requiredEnum(VALUES);
+
+    expectToBeSafeParseSuccess(schema.safeParse("b"));
+    expectToBeSafeParseError(schema.safeParse("invalid"));
+  });
+
+  it("optionalEnum", () => {
+    const schema = optionalEnum(VALUES);
+
+    expectToBeSafeParseSuccess(schema.safeParse("b"));
+    expectToBeSafeParseSuccess(schema.safeParse());
+    expectToBeSafeParseError(schema.safeParse("invalid"));
+  });
+});
