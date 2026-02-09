@@ -137,4 +137,31 @@ describe("toTriggerChunkedRequest", () => {
     expect(actual.dryRun).toBe(true);
     expect(actual.keysToRedact).toEqual(["secret"]);
   });
+
+  it("preserves attachments in body", () => {
+    const input: SerializableTriggerChunkedRequest = {
+      workflowKey: "test-workflow",
+      body: {
+        recipients: ["user-1"],
+        attachments: [
+          {
+            name: "report.pdf",
+            contentType: "application/pdf",
+            content: "base64content",
+          },
+        ],
+      },
+      expiresAt: "2024-01-01T00:00:00.000Z",
+    };
+
+    const actual = toTriggerChunkedRequest(input, mockParams);
+
+    expect(actual.body.attachments).toEqual([
+      {
+        name: "report.pdf",
+        contentType: "application/pdf",
+        content: "base64content",
+      },
+    ]);
+  });
 });
