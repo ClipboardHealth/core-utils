@@ -4,9 +4,10 @@ import type { Attachment, RecipientRequest, TriggerBody } from "../types";
 import { toInlineIdentifyUserRequest } from "./toInlineIdentifyUserRequest";
 
 export function toTriggerBody(body: TriggerBody): Knock.Workflows.WorkflowTriggerParams {
-  const { actor, attachments, cancellationKey, data, recipients, workplaceId } = body;
+  const { actor, attachments, cancellationKey, data, recipients, workplaceId, ...rest } = body;
 
   return {
+    ...rest,
     ...(actor ? { actor: toRecipient(actor) } : {}),
     ...(cancellationKey ? { cancellation_key: cancellationKey } : {}),
     ...(workplaceId ? { tenant: workplaceId } : {}),
