@@ -13,8 +13,8 @@ import { parseArgs } from "node:util";
 
 import { releaseChangelog, releaseVersion } from "nx/release";
 
-const MAX_RETRIES = 3;
-const INITIAL_BACKOFF_MS = 1000;
+const MAX_RETRY_COUNT = 3;
+const INITIAL_BACKOFF_MILLISECONDS = 1000;
 const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
 
 const { values: flags } = parseArgs({
@@ -34,15 +34,17 @@ interface GitHubReleaseFailure {
   error: string;
 }
 
-function resolveGitHubRepo(): { owner: string; repo: string } {
-  const remoteUrl = execFileSync("git", ["remote", "get-url", "origin"], {
-    encoding: "utf8",
-  }).trim();
-  const match = remoteUrl.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/);
-  if (!match) {
-    throw new Error(`Could not parse GitHub owner/repo from remote URL: ${remoteUrl}`);
-  }
-  return { owner: match[1], repo: match[2] };
+interface GitHubReleaseRequest {
+  owner: string;
+  repo: string;
+  token: string;
+  tag: string;
+  body: string;
+  commitSha: string;
+}
+
+interface GitHubReleaseResponse {
+  id: number;
 }
 
 function log(message: string): void {
@@ -55,23 +57,85 @@ function verbose(message: string): void {
   }
 }
 
-async function createGitHubRelease(
-  owner: string,
-  repo: string,
-  token: string,
-  tag: string,
-  body: string,
-  commitSha: string,
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function resolveGitHubRepo(): { owner: string; repo: string } {
+  const remoteUrl = execFileSync("git", ["remote", "get-url", "origin"], {
+    encoding: "utf8",
+  }).trim();
+
+  const match = remoteUrl.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/);
+  if (!match) {
+    throw new Error(`Could not parse GitHub owner/repo from remote URL: ${remoteUrl}`);
+  }
+
+  return { owner: match[1], repo: match[2] };
+}
+
+function gitHubHeaders(token: string): Record<string, string> {
+  return {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+}
+
+function gitHubReleasesUrl(owner: string, repo: string): string {
+  return `https://api.github.com/repos/${owner}/${repo}/releases`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isGitHubReleaseResponse(value: unknown): value is GitHubReleaseResponse {
+  return isRecord(value) && typeof value.id === "number";
+}
+
+async function updateExistingRelease(
+  request: Pick<GitHubReleaseRequest, "owner" | "repo" | "token" | "tag" | "body">,
 ): Promise<void> {
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+  const { owner, repo, token, tag, body } = request;
+
+  const getResponse = await fetch(
+    `${gitHubReleasesUrl(owner, repo)}/tags/${encodeURIComponent(tag)}`,
+    { headers: gitHubHeaders(token) },
+  );
+
+  if (!getResponse.ok) {
+    throw new Error(`Failed to fetch existing release for ${tag}: ${getResponse.status}`);
+  }
+
+  const releaseData: unknown = await getResponse.json();
+  if (!isGitHubReleaseResponse(releaseData)) {
+    throw new Error(`Unexpected release response shape for ${tag}`);
+  }
+
+  const patchResponse = await fetch(`${gitHubReleasesUrl(owner, repo)}/${releaseData.id}`, {
+    method: "PATCH",
+    headers: gitHubHeaders(token),
+    body: JSON.stringify({ body }),
+  });
+
+  if (!patchResponse.ok) {
+    throw new Error(`Failed to update existing release for ${tag}: ${patchResponse.status}`);
+  }
+
+  verbose(`  Updated existing release for ${tag}`);
+}
+
+async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void> {
+  const { owner, repo, token, tag, body, commitSha } = request;
+
+  for (let attempt = 1; attempt <= MAX_RETRY_COUNT; attempt++) {
     // oxlint-disable-next-line no-await-in-loop
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
+    const response = await fetch(gitHubReleasesUrl(owner, repo), {
       method: "POST",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${token}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
+      headers: gitHubHeaders(token),
       body: JSON.stringify({
         tag_name: tag,
         target_commitish: commitSha,
@@ -88,88 +152,39 @@ async function createGitHubRelease(
     // Handle "already exists" by updating the existing release (makes re-runs safe)
     if (response.status === 422) {
       // oxlint-disable-next-line no-await-in-loop
-      const errorBody = (await response.json()) as { errors?: Array<{ code?: string }> };
-      const alreadyExists = errorBody.errors?.some((e) => e.code === "already_exists");
+      const errorBody: unknown = await response.json();
+      const alreadyExists =
+        isRecord(errorBody) &&
+        Array.isArray(errorBody.errors) &&
+        errorBody.errors.some((entry) => isRecord(entry) && entry.code === "already_exists");
       if (alreadyExists) {
         verbose(`  Release for ${tag} already exists, updating...`);
         // oxlint-disable-next-line no-await-in-loop
-        await updateExistingRelease(owner, repo, token, tag, body);
+        await updateExistingRelease({ owner, repo, token, tag, body });
         return;
       }
-      throw new Error(`GitHub API 422: ${JSON.stringify(errorBody)}`);
+
+      throw new Error(`GitHub API returned 422 for ${tag}`);
     }
 
-    if (RETRYABLE_STATUS_CODES.has(response.status)) {
-      const backoffMs = INITIAL_BACKOFF_MS * 2 ** (attempt - 1);
-      console.warn(
-        `  GitHub API returned ${response.status} for ${tag} (attempt ${attempt}/${MAX_RETRIES}), retrying in ${backoffMs}ms...`,
-      );
-      if (attempt < MAX_RETRIES) {
-        // oxlint-disable-next-line no-await-in-loop
-        await sleep(backoffMs);
-        continue;
-      }
+    if (!RETRYABLE_STATUS_CODES.has(response.status)) {
+      throw new Error(`GitHub API returned ${response.status} for ${tag}`);
+    }
+
+    if (attempt === MAX_RETRY_COUNT) {
       throw new Error(
-        `GitHub API returned ${response.status} after ${MAX_RETRIES} attempts for ${tag}`,
+        `GitHub API returned ${response.status} after ${MAX_RETRY_COUNT} attempts for ${tag}`,
       );
     }
+
+    const backoffMs = INITIAL_BACKOFF_MILLISECONDS * 2 ** (attempt - 1);
+    console.warn(
+      `  GitHub API returned ${response.status} for ${tag} (attempt ${attempt}/${MAX_RETRY_COUNT}), retrying in ${backoffMs}ms...`,
+    );
 
     // oxlint-disable-next-line no-await-in-loop
-    const text = await response.text();
-    throw new Error(`GitHub API returned ${response.status}: ${text}`);
+    await sleep(backoffMs);
   }
-}
-
-async function updateExistingRelease(
-  owner: string,
-  repo: string,
-  token: string,
-  tag: string,
-  body: string,
-): Promise<void> {
-  const getResponse = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases/tags/${encodeURIComponent(tag)}`,
-    {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${token}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-    },
-  );
-
-  if (!getResponse.ok) {
-    throw new Error(`Failed to fetch existing release for ${tag}: ${getResponse.status}`);
-  }
-
-  const release = (await getResponse.json()) as { id: number };
-  const patchResponse = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases/${release.id}`,
-    {
-      method: "PATCH",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${token}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      body: JSON.stringify({ body }),
-    },
-  );
-
-  if (!patchResponse.ok) {
-    const text = await patchResponse.text();
-    throw new Error(
-      `Failed to update existing release for ${tag}: ${patchResponse.status} ${text}`,
-    );
-  }
-
-  verbose(`  Updated existing release for ${tag}`);
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 }
 
 async function main(): Promise<void> {
@@ -199,7 +214,6 @@ async function main(): Promise<void> {
 
   // Phase 2: Changelog generation
   log("Phase 2: Generating changelogs...");
-  // Suppress duplicate filter output (matching release.js behavior)
   process.env.NX_RELEASE_INTERNAL_SUPPRESS_FILTER_LOG = "true";
   const { projectChangelogs } = await releaseChangelog({
     dryRun: isDryRun,
@@ -234,18 +248,15 @@ async function main(): Promise<void> {
     }
     log("  [dry-run] Would push with --follow-tags --no-verify --atomic");
   } else {
-    // Commit with multiple --message flags to match Nx's format
     const messageArgs = commitMessages.flatMap((msg) => ["--message", msg]);
     execFileSync("git", ["commit", "--allow-empty", ...messageArgs, "--no-verify"], {
       stdio: "inherit",
     });
 
-    // Create annotated tags
     for (const tag of tags) {
       execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
     }
 
-    // Push commit and tags atomically
     execFileSync("git", ["push", "--follow-tags", "--no-verify", "--atomic"], {
       stdio: "inherit",
     });
@@ -272,13 +283,13 @@ async function main(): Promise<void> {
   const failures: GitHubReleaseFailure[] = [];
 
   for (const [projectName, changelog] of Object.entries(projectChangelogs)) {
-    const { releaseVersion: rv, contents } = changelog;
+    const { releaseVersion: projectReleaseVersion, contents } = changelog;
     const versionData = projectsVersionData[projectName];
     if (!versionData?.newVersion) {
       continue;
     }
 
-    const tag = rv.gitTag;
+    const tag = projectReleaseVersion.gitTag;
     if (isDryRun) {
       log(`  [dry-run] Would create GitHub release for ${tag}`);
       continue;
@@ -287,7 +298,7 @@ async function main(): Promise<void> {
     try {
       log(`  Creating release for ${tag}...`);
       // oxlint-disable-next-line no-await-in-loop
-      await createGitHubRelease(owner, repo, ghToken, tag, contents, commitSha);
+      await createGitHubRelease({ owner, repo, token: ghToken, tag, body: contents, commitSha });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`  Failed to create release for ${tag}: ${message}`);
