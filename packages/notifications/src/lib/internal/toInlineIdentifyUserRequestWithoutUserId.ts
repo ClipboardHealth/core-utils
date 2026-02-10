@@ -8,8 +8,17 @@ type RecipientWithoutUserId = Omit<InlineIdentifyUserRequest, "userId">;
 export function toInlineIdentifyUserRequestWithoutUserId(
   recipient: RecipientWithoutUserId,
 ): Omit<Knock.Users.InlineIdentifyUserRequest, "id"> {
-  const { channelData, createdAt, email, name, phoneNumber, timeZone, customProperties, ...rest } =
-    recipient;
+  const {
+    channelData,
+    createdAt,
+    email,
+    name,
+    phoneNumber,
+    timeZone,
+    customProperties,
+    triggerData,
+    ...rest
+  } = recipient;
 
   return {
     ...rest,
@@ -20,5 +29,6 @@ export function toInlineIdentifyUserRequestWithoutUserId(
     ...(name ? { name } : {}),
     ...(phoneNumber ? { phone_number: formatPhoneNumber({ phoneNumber }) } : {}),
     ...(timeZone ? { timezone: timeZone } : {}),
+    ...(triggerData ? { $trigger_data: triggerData } : {}),
   };
 }
