@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-type EnumValues = [string, ...string[]];
+type EnumValues = readonly [string, ...string[]];
 
 /**
  * @internal Do not use this function directly.
@@ -14,20 +14,20 @@ export function enumWithFallback<const V extends EnumValues, const F extends V[n
   values: V,
   fallback: F,
   options?: { optional?: false },
-): z.ZodEffects<z.ZodEnum<V>, V[number], unknown>;
+): z.ZodEffects<z.ZodEnum<[...V]>, V[number], unknown>;
 
 export function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
   values: V,
   fallback: F,
   options: { optional: true },
-): z.ZodEffects<z.ZodOptional<z.ZodEnum<V>>, V[number] | undefined, unknown>;
+): z.ZodEffects<z.ZodOptional<z.ZodEnum<[...V]>>, V[number] | undefined, unknown>;
 
 export function enumWithFallback<const V extends EnumValues, const F extends V[number]>(
   values: V,
   fallback: F,
   options: { optional?: boolean } = {},
 ) {
-  const Enum = z.enum(values);
+  const Enum = z.enum([...values]);
   const optional = options.optional ?? false;
   const schema = optional ? Enum.optional() : Enum;
 
@@ -49,10 +49,12 @@ export const requiredEnumWithFallback = <const V extends EnumValues, const F ext
   fallback: F,
 ) => enumWithFallback(values, fallback, { optional: false });
 
-export function requiredEnum<const V extends EnumValues>(values: V): z.ZodEnum<V> {
-  return z.enum(values);
+export function requiredEnum<const V extends EnumValues>(values: V): z.ZodEnum<[...V]> {
+  return z.enum([...values]);
 }
 
-export function optionalEnum<const V extends EnumValues>(values: V): z.ZodOptional<z.ZodEnum<V>> {
-  return z.enum(values).optional();
+export function optionalEnum<const V extends EnumValues>(
+  values: V,
+): z.ZodOptional<z.ZodEnum<[...V]>> {
+  return z.enum([...values]).optional();
 }
