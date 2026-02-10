@@ -292,6 +292,42 @@ describe("NotificationClient", () => {
       });
     });
 
+    it("passes recipient triggerData to provider as $trigger_data", async () => {
+      const mockBody = {
+        recipients: [
+          { userId: "user-1", triggerData: { shiftId: "shift-1", role: "nurse" } },
+          { userId: "user-2" },
+        ],
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [
+            { id: "user-1", $trigger_data: { shiftId: "shift-1", role: "nurse" } },
+            { id: "user-2" },
+          ],
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
+    });
+
     it("handles string recipients in trigger body", async () => {
       const mockBody = { recipients: ["user-1", "user-2"] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };

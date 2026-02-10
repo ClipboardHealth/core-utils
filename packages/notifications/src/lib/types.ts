@@ -103,6 +103,15 @@ export interface InlineIdentifyUserRequest {
    * Custom user properties.
    */
   customProperties?: Record<string, unknown>;
+
+  /**
+   * Per-recipient data. Useful when you want to notify an array of recipients with a single trigger,
+   * but include custom data per-recipient.
+   *
+   * Any data provided under this property will be merged with the data passed in the data property
+   * to produce the final data available for the recipient's workflow run.
+   */
+  triggerData?: Record<string, unknown>;
 }
 
 /**

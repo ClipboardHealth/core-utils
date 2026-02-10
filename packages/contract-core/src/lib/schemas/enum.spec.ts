@@ -203,3 +203,67 @@ describe("optionalEnum", () => {
     });
   });
 });
+
+describe("accepts readonly values directly without spreading", () => {
+  const STATUSES = ["unspecified", "active", "inactive"] as const;
+  // Simulates a new enum value the producer added but this consumer
+  // doesn't recognize yet; fallback helpers coerce it to "unspecified".
+  const UNRECOGNIZED_VALUE = "deleted";
+
+  it("requiredEnumWithFallback coerces unknown values to fallback", () => {
+    const schema = requiredEnumWithFallback(STATUSES, "unspecified");
+
+    const valid = schema.safeParse("active");
+    expectToBeSafeParseSuccess(valid);
+    expect(valid.data).toBe("active");
+
+    const unknown = schema.safeParse(UNRECOGNIZED_VALUE);
+    expectToBeSafeParseSuccess(unknown);
+    expect(unknown.data).toBe("unspecified");
+
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    expectToBeSafeParseError(schema.safeParse(undefined));
+  });
+
+  it("optionalEnumWithFallback coerces unknown values to fallback and allows undefined", () => {
+    const schema = optionalEnumWithFallback(STATUSES, "unspecified");
+
+    const valid = schema.safeParse("active");
+    expectToBeSafeParseSuccess(valid);
+    expect(valid.data).toBe("active");
+
+    const unknown = schema.safeParse(UNRECOGNIZED_VALUE);
+    expectToBeSafeParseSuccess(unknown);
+    expect(unknown.data).toBe("unspecified");
+
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    const undef = schema.safeParse(undefined);
+    expectToBeSafeParseSuccess(undef);
+    expect(undef.data).toBeUndefined();
+  });
+
+  it("requiredEnum rejects unknown values", () => {
+    const schema = requiredEnum(STATUSES);
+
+    const valid = schema.safeParse("active");
+    expectToBeSafeParseSuccess(valid);
+    expect(valid.data).toBe("active");
+
+    expectToBeSafeParseError(schema.safeParse(UNRECOGNIZED_VALUE));
+  });
+
+  it("optionalEnum allows undefined but rejects unknown values", () => {
+    const schema = optionalEnum(STATUSES);
+
+    const valid = schema.safeParse("active");
+    expectToBeSafeParseSuccess(valid);
+    expect(valid.data).toBe("active");
+
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    const undef = schema.safeParse(undefined);
+    expectToBeSafeParseSuccess(undef);
+    expect(undef.data).toBeUndefined();
+
+    expectToBeSafeParseError(schema.safeParse(UNRECOGNIZED_VALUE));
+  });
+});
