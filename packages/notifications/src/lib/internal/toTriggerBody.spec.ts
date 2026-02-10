@@ -209,4 +209,40 @@ describe("toTriggerBody", () => {
 
     expect(actual).toEqual(expected);
   });
+
+  it("typed attachments parameter takes precedence over data.attachments", () => {
+    // When both data.attachments and the typed attachments parameter are provided,
+    // the typed attachments parameter wins because it is spread after data.
+    const input: TriggerBody = {
+      recipients: ["user-1"],
+      data: {
+        message: "Hello",
+        attachments: [{ name: "ignored.txt", content: "should-be-ignored" }],
+      },
+      attachments: [
+        {
+          name: "typed.pdf",
+          contentType: "application/pdf",
+          content: "typed-content",
+        },
+      ],
+    };
+    const expected = {
+      recipients: ["user-1"],
+      data: {
+        message: "Hello",
+        attachments: [
+          {
+            name: "typed.pdf",
+            content_type: "application/pdf",
+            content: "typed-content",
+          },
+        ],
+      },
+    };
+
+    const actual = toTriggerBody(input);
+
+    expect(actual).toEqual(expected);
+  });
 });
