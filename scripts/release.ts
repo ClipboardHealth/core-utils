@@ -88,13 +88,12 @@ function gitHubReleasesUrl(owner: string, repo: string): string {
   return `https://api.github.com/repos/${owner}/${repo}/releases`;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 function isGitHubReleaseResponse(value: unknown): value is GitHubReleaseResponse {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof (value as Record<string, unknown>).id === "number"
-  );
+  return isRecord(value) && typeof value.id === "number";
 }
 
 async function updateExistingRelease(
@@ -153,8 +152,11 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
     // Handle "already exists" by updating the existing release (makes re-runs safe)
     if (response.status === 422) {
       // oxlint-disable-next-line no-await-in-loop
-      const errorBody = (await response.json()) as { errors?: Array<{ code?: string }> };
-      const alreadyExists = errorBody.errors?.some((e) => e.code === "already_exists");
+      const errorBody: unknown = await response.json();
+      const alreadyExists =
+        isRecord(errorBody) &&
+        Array.isArray(errorBody.errors) &&
+        errorBody.errors.some((entry) => isRecord(entry) && entry.code === "already_exists");
       if (alreadyExists) {
         verbose(`  Release for ${tag} already exists, updating...`);
         // oxlint-disable-next-line no-await-in-loop
@@ -169,16 +171,16 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
       throw new Error(`GitHub API returned ${response.status} for ${tag}`);
     }
 
-    const backoffMs = INITIAL_BACKOFF_MILLISECONDS * 2 ** (attempt - 1);
-    console.warn(
-      `  GitHub API returned ${response.status} for ${tag} (attempt ${attempt}/${MAX_RETRY_COUNT}), retrying in ${backoffMs}ms...`,
-    );
-
     if (attempt === MAX_RETRY_COUNT) {
       throw new Error(
         `GitHub API returned ${response.status} after ${MAX_RETRY_COUNT} attempts for ${tag}`,
       );
     }
+
+    const backoffMs = INITIAL_BACKOFF_MILLISECONDS * 2 ** (attempt - 1);
+    console.warn(
+      `  GitHub API returned ${response.status} for ${tag} (attempt ${attempt}/${MAX_RETRY_COUNT}), retrying in ${backoffMs}ms...`,
+    );
 
     // oxlint-disable-next-line no-await-in-loop
     await sleep(backoffMs);
