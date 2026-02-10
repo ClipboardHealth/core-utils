@@ -33,30 +33,25 @@ describe("forEachAsyncSequentially", () => {
 
   it("should propagates errors from the async task", async () => {
     const input = [1, 2, 3];
+    const callback = jest
+      .fn<Promise<void>, [number, number]>()
+      .mockResolvedValueOnce()
+      .mockRejectedValueOnce(new Error("Test error"));
 
-    await expect(
-      forEachAsyncSequentially(input, async (item) => {
-        // eslint-disable-next-line jest/no-conditional-in-test
-        if (item === 2) {
-          throw new Error("Test error");
-        }
-      }),
-    ).rejects.toThrow("Test error");
+    await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow("Test error");
   });
 
   it("should stop processing after an error", async () => {
     const input = [1, 2, 3];
     const actual: number[] = [];
-
-    await expect(
-      forEachAsyncSequentially(input, async (item) => {
-        // eslint-disable-next-line jest/no-conditional-in-test
-        if (item === 2) {
-          throw new Error("Test error");
-        }
+    const callback = jest
+      .fn<Promise<void>, [number, number]>()
+      .mockImplementationOnce(async (item) => {
         actual.push(item);
-      }),
-    ).rejects.toThrow();
+      })
+      .mockRejectedValueOnce(new Error("Test error"));
+
+    await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow();
 
     expect(actual).toEqual([1]);
   });

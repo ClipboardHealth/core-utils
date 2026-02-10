@@ -171,8 +171,6 @@ module.exports = {
     // Not worthwhile in TypeScript
     "consistent-return": "off",
 
-    "func-style": ["error", "declaration", { allowArrowFunctions: true }],
-
     // Prevent bugs
     curly: ["error", "all"],
 

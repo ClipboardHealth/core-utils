@@ -11,7 +11,7 @@
 ## Core Rules
 
 - Strict-mode TypeScript
-- Avoid type assertions (`as`) unless absolutely necessary
+- Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
 - Files read top-to-bottom: exports first, internal helpers below
