@@ -22,13 +22,11 @@ export function toTriggerBody(body: TriggerBody): Knock.Workflows.WorkflowTrigge
   };
 }
 
-function toKnockAttachment(attachment: Attachment): Record<string, string | undefined> {
+function toKnockAttachment(attachment: Attachment): Record<string, string> {
   return {
     name: attachment.name,
     content_type: attachment.contentType,
     content: attachment.content,
-    ...(attachment.contentId ? { content_id: attachment.contentId } : {}),
-    ...(attachment.disposition ? { disposition: attachment.disposition } : {}),
   };
 }
 

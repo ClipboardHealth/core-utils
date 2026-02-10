@@ -104,8 +104,6 @@ describe("toTriggerBody", () => {
           name: "image.png",
           contentType: "image/png",
           content: "base64data",
-          contentId: "cid-123",
-          disposition: "inline",
         },
       ],
     };
@@ -121,8 +119,6 @@ describe("toTriggerBody", () => {
             name: "image.png",
             content_type: "image/png",
             content: "base64data",
-            content_id: "cid-123",
-            disposition: "inline",
           },
         ],
       },
@@ -156,7 +152,7 @@ describe("toTriggerBody", () => {
     expect(result).not.toHaveProperty("data");
   });
 
-  it("maps multiple attachments with optional fields", () => {
+  it("maps multiple attachments", () => {
     const input: TriggerBody = {
       recipients: ["user-1"],
       attachments: [
@@ -169,14 +165,11 @@ describe("toTriggerBody", () => {
           name: "logo.png",
           contentType: "image/png",
           content: "base64png",
-          contentId: "logo-cid",
-          disposition: "inline",
         },
         {
           name: "invite.ics",
           contentType: "text/calendar",
           content: "base64ics",
-          disposition: "inline",
         },
       ],
     };
@@ -196,14 +189,11 @@ describe("toTriggerBody", () => {
             name: "logo.png",
             content_type: "image/png",
             content: "base64png",
-            content_id: "logo-cid",
-            disposition: "inline",
           },
           {
             name: "invite.ics",
             content_type: "text/calendar",
             content: "base64ics",
-            disposition: "inline",
           },
         ],
       },

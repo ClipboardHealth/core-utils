@@ -139,17 +139,6 @@ export interface Attachment {
    * The base64-encoded file content. Must be less than 10MB.
    */
   content: string;
-
-  /**
-   * An optional unique Content-ID for the attachment, used for inline referencing.
-   * Currently only supported for SendGrid and Postmark.
-   */
-  contentId?: string;
-
-  /**
-   * An optional disposition for the attachment. Currently only supported for SendGrid and Postmark.
-   */
-  disposition?: "inline" | "attachment";
 }
 
 export interface TriggerBody {
