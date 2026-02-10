@@ -85,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           NX_RELEASE: true
         # Version package.json files at project roots
-        run: npx nx release --skip-publish
+        run: npx tsx scripts/release.ts
         # Run a build so package.json files in dist directories pick up new versions
       - run: npx nx run-many --target=build
       - env:
