@@ -183,6 +183,7 @@ describe("ServiceResult", () => {
       const serviceError = new ServiceError("original error");
       const failureResult = failure(serviceError);
       const transformError = mapFailure(
+        // eslint-disable-next-line jest/no-conditional-in-test
         (error: ServiceError) => error.issues[0]?.message ?? "no message",
       );
 
@@ -195,6 +196,7 @@ describe("ServiceResult", () => {
     it("leaves success unchanged", () => {
       const successResult = success("success data");
       const transformError = mapFailure(
+        // eslint-disable-next-line jest/no-conditional-in-test
         (error: ServiceError) => error.issues[0]?.message ?? "no message",
       );
 

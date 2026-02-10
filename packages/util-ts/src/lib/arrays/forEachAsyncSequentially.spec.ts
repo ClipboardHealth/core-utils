@@ -36,6 +36,7 @@ describe("forEachAsyncSequentially", () => {
 
     await expect(
       forEachAsyncSequentially(input, async (item) => {
+        // eslint-disable-next-line jest/no-conditional-in-test
         if (item === 2) {
           throw new Error("Test error");
         }
@@ -49,6 +50,7 @@ describe("forEachAsyncSequentially", () => {
 
     await expect(
       forEachAsyncSequentially(input, async (item) => {
+        // eslint-disable-next-line jest/no-conditional-in-test
         if (item === 2) {
           throw new Error("Test error");
         }

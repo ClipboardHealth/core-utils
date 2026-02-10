@@ -171,6 +171,8 @@ module.exports = {
     // Not worthwhile in TypeScript
     "consistent-return": "off",
 
+    "func-style": ["error", "declaration", { allowArrowFunctions: true }],
+
     // Prevent bugs
     curly: ["error", "all"],
 
@@ -187,6 +189,8 @@ module.exports = {
 
     // Prefer named exports
     "import/prefer-default-export": "off",
+    "jest/consistent-test-it": ["error", { fn: "it" }],
+    "jest/no-conditional-in-test": "error",
     "jest/expect-expect": [
       "error",
       {

@@ -108,6 +108,7 @@ describe("BackgroundJobMetrics", () => {
 
     const reportedTimings = metricsReporter.timingFor("ExampleJob", "delay");
 
+    // eslint-disable-next-line jest/no-conditional-in-test
     if (!reportedTimings) {
       throw new Error("timings were not reported");
     }
