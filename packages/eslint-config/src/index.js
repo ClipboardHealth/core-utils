@@ -187,6 +187,8 @@ module.exports = {
 
     // Prefer named exports
     "import/prefer-default-export": "off",
+    "jest/consistent-test-it": ["error", { fn: "it" }],
+    "jest/no-conditional-in-test": "error",
     "jest/expect-expect": [
       "error",
       {

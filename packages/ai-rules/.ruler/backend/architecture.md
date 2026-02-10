@@ -74,14 +74,6 @@ NestJS microservice modules:
 *.dao.mapper.ts  - DAO transformation
 ```
 
-**Tier Rules:**
-
-- Controllers → Services (never repos directly)
-- Services → Repos/Gateways within module (never controllers and never Mongoose models directly)
-- Repos → Database only (never services/repos/controllers)
-- Entry points are thin layers calling services
-- Enforce with `dependency-cruiser`
-
 **Microservices Principles:**
 
 - One domain = one module (bounded contexts)
