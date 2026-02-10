@@ -10,18 +10,14 @@
 
 ## Core Rules
 
-- Strict-mode TypeScript; prefer interfaces over types
-- Avoid enums: Use const maps
-- NEVER use `any`: Use `unknown` or generics
+- Strict-mode TypeScript
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
-- Explicitly define parameter types and return types on functions
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
 - Use `date-fns` for date/time manipulation and `@clipboard-health/date-time` for formatting
-- Prefer nullish coalescing (`??`) over logical OR (`||`) for defaults; use `||` when `0`, `""`, or `false` should trigger the default
 
 ## Null/Undefined Checks
 
@@ -45,10 +41,6 @@ if (isDefined(shiftId) && isDefined(facilityId)) {
 ## Types
 
 ```typescript
-// Strong typing
-function process(arg: unknown) {} // Better than any
-function process<T>(arg: T) {} // Best
-
 // Quantity values—always unambiguous
 const money = { amountInMinorUnits: 500, currencyCode: "USD" };
 const durationMinutes = 30;
@@ -88,9 +80,6 @@ function processOrder(order: Order): Result {
 ## Objects & Arrays
 
 ```typescript
-// Spread over Object.assign
-const updated = { ...original, name: "New Name" };
-
 // Array methods over loops (unless breaking early)
 const doubled = items.map((item) => item * 2);
 const sorted = items.toSorted((a, b) => a - b); // Immutable
@@ -104,12 +93,6 @@ for (const item of items) {
 ## Async
 
 ```typescript
-// async/await over .then()
-async function fetchData(): Promise<Data> {
-  const response = await api.get("/data");
-  return response.data;
-}
-
 // Parallel
 const results = await Promise.all(items.map(processItem));
 

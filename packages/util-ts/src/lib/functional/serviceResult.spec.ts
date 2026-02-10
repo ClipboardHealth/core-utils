@@ -15,6 +15,10 @@ import {
   tryCatchAsync,
 } from "./serviceResult";
 
+function getServiceErrorMessage(error: ServiceError): string {
+  return error.issues[0]?.message ?? "no message";
+}
+
 describe("ServiceResult", () => {
   describe("success", () => {
     it("creates success result", () => {
@@ -182,9 +186,7 @@ describe("ServiceResult", () => {
     it("transforms error when ServiceResult is failure", () => {
       const serviceError = new ServiceError("original error");
       const failureResult = failure(serviceError);
-      const transformError = mapFailure(
-        (error: ServiceError) => error.issues[0]?.message ?? "no message",
-      );
+      const transformError = mapFailure(getServiceErrorMessage);
 
       const actual = transformError(failureResult) as Left<string>;
 
@@ -194,9 +196,7 @@ describe("ServiceResult", () => {
 
     it("leaves success unchanged", () => {
       const successResult = success("success data");
-      const transformError = mapFailure(
-        (error: ServiceError) => error.issues[0]?.message ?? "no message",
-      );
+      const transformError = mapFailure(getServiceErrorMessage);
 
       const actual = transformError(successResult) as Right<string>;
 

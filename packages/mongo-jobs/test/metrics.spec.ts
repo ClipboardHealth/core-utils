@@ -1,6 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 
 import { BackgroundJobs, type BackgroundJobType } from "../src";
+import { ensureExistence } from "./support/ensureExistence";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { createTestContext, type TestContext } from "./support/testContext";
@@ -106,11 +107,7 @@ describe("BackgroundJobMetrics", () => {
     await setTimeout(100);
     await backgroundJobs.stop();
 
-    const reportedTimings = metricsReporter.timingFor("ExampleJob", "delay");
-
-    if (!reportedTimings) {
-      throw new Error("timings were not reported");
-    }
+    const reportedTimings = ensureExistence(metricsReporter.timingFor("ExampleJob", "delay"));
 
     expect(reportedTimings).toHaveLength(2);
 
