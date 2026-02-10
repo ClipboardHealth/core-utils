@@ -54,4 +54,16 @@ describe("toTriggerBody", () => {
       recipients: ["user-1", { id: "user-2", email: "test@example.com", stage: "ENROLLED" }],
     });
   });
+
+  it("maps recipient triggerData to trigger_data", () => {
+    const input: TriggerBody = {
+      recipients: [{ userId: "user-1", triggerData: { shiftId: "shift-1" } }],
+    };
+
+    const result = toTriggerBody(input);
+
+    expect(result).toEqual({
+      recipients: [{ id: "user-1", $trigger_data: { shiftId: "shift-1" } }],
+    });
+  });
 });
