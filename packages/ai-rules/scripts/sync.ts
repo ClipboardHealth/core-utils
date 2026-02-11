@@ -1,28 +1,55 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { cp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { FILES, type ProfileName, PROFILES } from "./constants";
+import {
+  CATEGORIES,
+  FILES,
+  type ProfileName,
+  PROFILES,
+  RULE_FILES,
+  type RuleId,
+} from "./constants";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {
   projectRoot: path.join(__dirname, "../../../.."),
-  rules: path.join(__dirname, ".."),
+  packageRoot: path.join(__dirname, ".."),
 };
+
+interface ParsedArguments {
+  profile: ProfileName;
+  extraIncludes: RuleId[];
+  excludes: RuleId[];
+}
 
 async function sync() {
   try {
-    const profile = getProfileFromArguments();
+    const parsedArguments = parseArguments();
+    const ruleIds = resolveRuleIds(parsedArguments);
 
-    // Force copy files; rely on `git` if it overwrites files.
-    await cp(path.join(PATHS.rules, profile), PATHS.projectRoot, { force: true, recursive: true });
-    console.log(`✅ @clipboard-health/ai-rules synced ${profile}`);
+    // Clean and recreate rules directory
+    const rulesOutput = path.join(PATHS.projectRoot, "rules");
+    await rm(rulesOutput, { recursive: true, force: true });
+
+    // Copy selected rule files
+    await copyRuleFiles(ruleIds, rulesOutput);
+
+    // Generate AGENTS.md index
+    const agentsContent = await generateAgentsIndex(ruleIds);
+    const agentsPath = path.join(PATHS.projectRoot, FILES.agents);
+    await writeFile(agentsPath, agentsContent, "utf8");
+
+    // Generate CLAUDE.md
+    const claudePath = path.join(PATHS.projectRoot, FILES.claude);
+    await writeFile(claudePath, "@AGENTS.md\n", "utf8");
+
+    console.log(
+      `✅ @clipboard-health/ai-rules synced ${parsedArguments.profile} (${ruleIds.length} rules)`,
+    );
 
     // Append OVERLAY.md content if it exists
-    await appendOverlayToFiles({
-      filesToUpdate: [FILES.agents],
-      projectRoot: PATHS.projectRoot,
-    });
+    await appendOverlay(PATHS.projectRoot);
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -30,59 +57,152 @@ async function sync() {
   }
 }
 
-function getProfileFromArguments(): ProfileName {
-  const [_firstArgument, _secondArgument, profile] = process.argv;
+function parseArguments(): ParsedArguments {
+  const arguments_ = process.argv.slice(2);
 
-  if (!profile || !(profile in PROFILES)) {
-    console.error("❌ Error: Invalid profile argument");
-    console.error(`Usage: npm run sync <profile>`);
-    console.error(`Available profiles: ${Object.keys(PROFILES).join(", ")}`);
-    process.exit(1);
+  if (arguments_.length === 0) {
+    printUsageAndExit();
   }
 
-  return profile as ProfileName;
+  const profile = arguments_[0]!;
+  if (!(profile in PROFILES)) {
+    console.error(`❌ Error: Unknown profile "${profile}"`);
+    printUsageAndExit();
+  }
+
+  const extraIncludes: RuleId[] = [];
+  const excludes: RuleId[] = [];
+  let mode: "include" | "exclude" | undefined;
+
+  for (const argument of arguments_.slice(1)) {
+    if (argument === "--include") {
+      mode = "include";
+      continue;
+    }
+
+    if (argument === "--exclude") {
+      mode = "exclude";
+      continue;
+    }
+
+    if (!mode) {
+      console.error(`❌ Error: Unexpected argument "${argument}"`);
+      printUsageAndExit();
+    }
+
+    if (!(argument in RULE_FILES)) {
+      console.error(`❌ Error: Unknown rule "${argument}"`);
+      console.error(`Available rules: ${Object.keys(RULE_FILES).join(", ")}`);
+      process.exit(1);
+    }
+
+    if (mode === "include") {
+      extraIncludes.push(argument as RuleId);
+    } else {
+      excludes.push(argument as RuleId);
+    }
+  }
+
+  return { profile: profile as ProfileName, extraIncludes, excludes };
 }
 
-/**
- * Appends OVERLAY.md content to specified files if OVERLAY.md exists.
- */
-async function appendOverlayToFiles(params: {
-  filesToUpdate: string[];
-  projectRoot: string;
-}): Promise<void> {
-  const { filesToUpdate, projectRoot } = params;
-  const overlayPath = path.join(projectRoot, "OVERLAY.md");
+function printUsageAndExit(): never {
+  console.error(`Usage: node sync.js <profile> [--include <ruleId>...] [--exclude <ruleId>...]`);
+  console.error(`\nProfiles: ${Object.keys(PROFILES).join(", ")}`);
+  console.error(`\nExamples:`);
+  console.error(`  node sync.js backend`);
+  console.error(`  node sync.js backend --exclude backend/mongodb`);
+  console.error(`  node sync.js common --include backend/architecture`);
+  process.exit(1);
+}
 
-  const overlayContent = await readOverlayContent(overlayPath);
-  if (!overlayContent) {
-    // OVERLAY.md doesn't exist or can't be read, nothing to append
-    return;
+function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
+  const { profile, extraIncludes, excludes } = parsedArguments;
+  const profileConfig = PROFILES[profile];
+
+  // Expand profile categories into rule IDs
+  const ruleSet = new Set<RuleId>();
+  for (const category of profileConfig.include) {
+    for (const ruleId of CATEGORIES[category]) {
+      ruleSet.add(ruleId);
+    }
   }
 
-  // Append to each file
-  await Promise.all(
-    filesToUpdate.map(async (file) => {
-      const filePath = path.join(projectRoot, file);
+  // Add extra includes
+  for (const ruleId of extraIncludes) {
+    ruleSet.add(ruleId);
+  }
 
-      try {
-        const currentContent = await readFile(filePath, "utf8");
-        const updatedContent = `${currentContent}\n<!-- Source: ./OVERLAY.md -->\n\n${overlayContent}`;
-        await writeFile(filePath, updatedContent, "utf8");
-      } catch (error) {
-        console.warn(`⚠️ Could not append overlay to ${file}: ${toErrorMessage(error)}`);
-      }
+  // Remove excludes
+  for (const ruleId of excludes) {
+    ruleSet.delete(ruleId);
+  }
+
+  return [...ruleSet];
+}
+
+async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<void> {
+  await Promise.all(
+    ruleIds.map(async (ruleId) => {
+      const rule = RULE_FILES[ruleId];
+      const source = path.join(PATHS.packageRoot, "rules", rule.path);
+      const destination = path.join(rulesOutput, rule.path);
+      await mkdir(path.dirname(destination), { recursive: true });
+      await cp(source, destination);
+    }),
+  );
+}
+
+async function extractHeading(filePath: string): Promise<string> {
+  try {
+    const content = await readFile(filePath, "utf8");
+    const match = /^#\s+(.+)$/m.exec(content);
+    return match?.[1] ?? path.basename(filePath, ".md");
+  } catch {
+    return path.basename(filePath, ".md");
+  }
+}
+
+async function generateAgentsIndex(ruleIds: RuleId[]): Promise<string> {
+  const rows = await Promise.all(
+    ruleIds.map(async (ruleId) => {
+      const rule = RULE_FILES[ruleId];
+      const heading = await extractHeading(path.join(PATHS.packageRoot, "rules", rule.path));
+      return `| ${heading} | rules/${rule.path} | ${rule.whenToRead} |`;
     }),
   );
 
-  console.log(`📎 Appended OVERLAY.md to ${filesToUpdate.join(", ")}`);
+  return [
+    "<!-- Generated by @clipboard-health/ai-rules -->",
+    "",
+    "# Coding Rules",
+    "",
+    "IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning.",
+    "Read the relevant rule files below before writing or reviewing code.",
+    "",
+    "| Rule | File | When to Read |",
+    "|------|------|-------------|",
+    ...rows,
+    "",
+  ].join("\n");
 }
 
-async function readOverlayContent(overlayPath: string): Promise<string | undefined> {
+async function appendOverlay(projectRoot: string): Promise<void> {
+  const overlayPath = path.join(projectRoot, "OVERLAY.md");
+
+  let overlayContent: string;
   try {
-    return await readFile(overlayPath, "utf8");
+    overlayContent = await readFile(overlayPath, "utf8");
   } catch {
-    return undefined;
+    return;
   }
+
+  const agentsPath = path.join(projectRoot, FILES.agents);
+  const currentContent = await readFile(agentsPath, "utf8");
+  const updatedContent = `${currentContent}\n<!-- Source: ./OVERLAY.md -->\n\n${overlayContent}`;
+  await writeFile(agentsPath, updatedContent, "utf8");
+
+  console.log(`📎 Appended OVERLAY.md to ${FILES.agents}`);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

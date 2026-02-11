@@ -11,7 +11,7 @@
       "inputs": [
         "default",
         "{projectRoot}/scripts/**/*",
-        "{projectRoot}/.ruler/**/*",
+        "{projectRoot}/rules/**/*",
         "{projectRoot}/README.md",
         "{projectRoot}/package.json"
       ],
