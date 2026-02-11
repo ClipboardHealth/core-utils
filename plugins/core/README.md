@@ -5,8 +5,6 @@ Clipboard's core development tools.
 ## Table of contents <!-- omit from toc -->
 
 - [Installation](#installation)
-- [Hooks](#hooks)
-  - [SessionStart: check-ai-rules](#sessionstart-check-ai-rules)
 - [Skills](#skills)
   - [commit-push-pr](#commit-push-pr)
   - [fix-ci](#fix-ci)
@@ -31,12 +29,6 @@ Clipboard's core development tools.
 # Install the plugin
 /plugin install core@clipboard --scope user
 ```
-
-## Hooks
-
-### SessionStart: check-ai-rules
-
-Validates that [`@clipboard-health/ai-rules`](../../packages/ai-rules/README.md) is installed and configured in the current project. If issues are found, it prompts to install or configure the project.
 
 ## Skills
 
