@@ -1,9 +1,9 @@
 # Alphabetical directories
 .claude/cache/
 .idea/
-.tmp-plugin-sync-*/
 .nx/cache
 .nx/workspace-data
+.tmp-plugin-sync-*/
 .vscode/*
 coverage/
 dist/

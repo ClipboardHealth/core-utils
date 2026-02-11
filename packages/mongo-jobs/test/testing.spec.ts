@@ -95,8 +95,8 @@ describe("Testing helpers", () => {
     it("should allow enqueueing new job with same enqueuedKey after first job starts running (advanced unique options)", async () => {
       jest.spyOn(testContext.backgroundJobs.jobModel, "updateOne");
       const uniqueOptions = {
-        enqueuedKey: "facility-cache-update",
-        runningKey: "facility-cache-update-running",
+        enqueuedKey: "workplace-cache-update",
+        runningKey: "workplace-cache-update-running",
       };
 
       // Enqueue a job that will enqueue itself while running
@@ -110,13 +110,13 @@ describe("Testing helpers", () => {
 
       const jobs = await backgroundJobs.jobModel.find({});
 
-      expect(jobs[0]?.uniqueKey).toBe("facility-cache-update");
+      expect(jobs[0]?.uniqueKey).toBe("workplace-cache-update");
 
       await drainHandlers(backgroundJobs, [ExampleJob]);
 
       expect(backgroundJobs.jobModel.updateOne).toHaveBeenCalledWith(
         { _id: expect.any(Types.ObjectId) },
-        { $set: { uniqueKey: "facility-cache-update-running" } },
+        { $set: { uniqueKey: "workplace-cache-update-running" } },
       );
     });
 

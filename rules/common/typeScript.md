@@ -25,16 +25,16 @@ Use `isDefined` helper from `@clipboard-health/util-ts`:
 
 ```typescript
 // Bad: truthy check fails for 0, "", false
-if (shiftId && facilityId) {
+if (shiftId && workplaceId) {
 }
 // Bad: use utility instead
 if (shift === null) {
 }
-if (facility === undefined) {
+if (workplace === undefined) {
 }
 
 // Good: explicit defined check
-if (isDefined(shiftId) && isDefined(facilityId)) {
+if (isDefined(shiftId) && isDefined(workplaceId)) {
 }
 ```
 

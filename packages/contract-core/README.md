@@ -141,8 +141,8 @@ console.log(undefinedStatus);
 // Ideal for user types, authentication, and critical business logic.
 
 /* -- required strict -- */
-const requiredUserTypeSchema = requiredEnum(["admin", "worker", "facility"]);
-// type RequiredUserType = "admin" | "worker" | "facility"
+const requiredUserTypeSchema = requiredEnum(["admin", "worker", "workplace"]);
+// type RequiredUserType = "admin" | "worker" | "workplace"
 type RequiredUserType = z.infer<typeof requiredUserTypeSchema>;
 
 const adminUser: RequiredUserType = requiredUserTypeSchema.parse("admin");
@@ -153,7 +153,7 @@ try {
   requiredUserTypeSchema.parse("invalid");
 } catch (error) {
   logError(error);
-  // => Invalid enum value. Expected 'admin' | 'worker' | 'facility', received 'invalid'
+  // => Invalid enum value. Expected 'admin' | 'worker' | 'workplace', received 'invalid'
 }
 
 try {
@@ -165,8 +165,8 @@ try {
 }
 
 /* -- optional strict -- */
-const optionalUserTypeSchema = optionalEnum(["admin", "worker", "facility"]);
-// type OptionalUserType = "admin" | "worker" | "facility" | undefined
+const optionalUserTypeSchema = optionalEnum(["admin", "worker", "workplace"]);
+// type OptionalUserType = "admin" | "worker" | "workplace" | undefined
 type OptionalUserType = z.infer<typeof optionalUserTypeSchema>;
 
 const workerUser: OptionalUserType = optionalUserTypeSchema.parse("worker");
@@ -182,7 +182,7 @@ try {
   optionalUserTypeSchema.parse("invalid");
 } catch (error) {
   logError(error);
-  // => Invalid enum value. Expected 'admin' | 'worker' | 'facility', received 'invalid'
+  // => Invalid enum value. Expected 'admin' | 'worker' | 'workplace', received 'invalid'
 }
 ```
 

@@ -3,9 +3,6 @@
   "description": "Pre-built AI agent rules for consistent coding standards.",
   "version": "1.8.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
-  "devDependencies": {
-    "@intellectronica/ruler": "0.3.32"
-  },
   "keywords": [
     "ai",
     "best-practices",
@@ -28,6 +25,6 @@
     "url": "git+https://github.com/ClipboardHealth/core-utils.git"
   },
   "scripts": {
-    "format": "prettier --write '.ruler/**/*.md'"
+    "format": "prettier --write 'rules/**/*.md'"
   }
 }

@@ -8,7 +8,9 @@ interface ExecAndLogParams extends ExecFileOptions {
   verbose: boolean;
 }
 
-export async function execAndLog(params: ExecAndLogParams) {
+export async function execAndLog(
+  params: ExecAndLogParams,
+): Promise<{ stdout: string; stderr: string }> {
   const { command, verbose, ...rest } = params;
 
   const [cmd, ...execArguments] = command;

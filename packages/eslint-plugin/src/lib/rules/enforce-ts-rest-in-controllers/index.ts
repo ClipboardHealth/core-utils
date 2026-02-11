@@ -3,7 +3,7 @@
  */
 import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 
-import createRule from "../../createRule";
+import { createRule } from "../../createRule";
 
 const rule = createRule({
   name: "enforce-ts-rest-in-controllers",
