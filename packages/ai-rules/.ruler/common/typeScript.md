@@ -46,14 +46,6 @@ const money = { amountInMinorUnits: 500, currencyCode: "USD" };
 const durationMinutes = 30;
 ```
 
-**Type Techniques:**
-
-- Union, intersection, conditional types for complex definitions
-- Mapped types: `Partial<T>`, `Pick<T>`, `Omit<T>`
-- `keyof`, index access types, discriminated unions
-- `as const`, `typeof`, `instanceof`, `satisfies`, type guards
-- Exhaustiveness checking with `never`
-
 ## Functions
 
 ```typescript
@@ -68,7 +60,7 @@ function createUser(request: CreateUserRequest): User {
   // ...
 }
 
-// Guard clauses for early returns
+// Guard clauses for early returns; happy path last
 function processOrder(order: Order): Result {
   if (!order.isValid) {
     return { error: "Invalid order" };
@@ -77,42 +69,18 @@ function processOrder(order: Order): Result {
 }
 ```
 
-## Objects & Arrays
+## Error Handling
+
+- Favor `Either` type (`ServiceResult` from `@clipboard-health/util-ts`) for expected errors over `try/catch`
+- Use `toError(unknownTypedError)` from `@clipboard-health/util-ts` over hardcoded strings or type casting (`as Error`)
+- Use `ERROR_CODES` from `@clipboard-health/util-ts`, not `HttpStatus` from NestJS
 
 ```typescript
-// Array methods over loops (unless breaking early)
-const doubled = items.map((item) => item * 2);
-const sorted = items.toSorted((a, b) => a - b); // Immutable
+import { ServiceError } from "@clipboard-health/util-ts";
 
-// For early exit
-for (const item of items) {
-  if (condition) break;
-}
-```
-
-## Async
-
-```typescript
-// Parallel
-const results = await Promise.all(items.map(processItem));
-
-// Sequential (when needed)
-for (const item of items) {
-  // eslint-disable-next-line no-await-in-loop
-  await processItem(item);
-}
-```
-
-## Classes
-
-```typescript
-class UserService {
-  public async findById(request: FindByIdRequest): Promise<User> {}
-  private validateUser(user: User): boolean {}
-}
-
-// Extract pure functions outside classes
-function formatUserName(first: string, last: string): string {
-  return `${first} ${last}`;
-}
+throw new ServiceError({
+  code: "SHIFT_NOT_FOUND",
+  message: `Shift ${shiftId} not found`,
+  httpStatus: 404,
+});
 ```
