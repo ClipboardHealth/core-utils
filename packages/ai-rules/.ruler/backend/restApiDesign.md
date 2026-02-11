@@ -37,31 +37,11 @@ GET /workers/:workerId/shifts
 POST /workers/:workerId/referral-codes
 ```
 
-## HTTP Methods
+## HTTP Conventions
 
-| Method | Usage                              |
-| ------ | ---------------------------------- |
-| GET    | Retrieve (idempotent)              |
-| POST   | Create single resource, return DTO |
-| PATCH  | Update, return updated resource    |
-| DELETE | Remove                             |
-| PUT    | Not supported                      |
-
-## HTTP Status Codes
-
-| Code | Meaning                                                 |
-| ---- | ------------------------------------------------------- |
-| 200  | OK (GET, PATCH, DELETE)                                 |
-| 201  | Created (POST)                                          |
-| 202  | Accepted (async started)                                |
-| 400  | Bad Request (syntax error)                              |
-| 401  | Unauthorized (auth failed)                              |
-| 403  | Forbidden (authz failed)                                |
-| 404  | Not Found                                               |
-| 409  | Conflict (already exists)                               |
-| 422  | Unprocessable (semantic error, unsupported filter/sort) |
-| 429  | Rate limited                                            |
-| 500  | Server error                                            |
+- No PUT support — use PATCH for updates
+- POST returns the created resource DTO
+- 422 for unsupported filters/sorts (not 400)
 
 ## Filtering, Sorting, Pagination
 

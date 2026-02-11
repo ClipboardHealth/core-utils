@@ -57,7 +57,6 @@ Each package in `packages/` has:
 
 # Development Notes
 
-- The repo uses conventional commits with automated releases
 - Code must pass lint, typecheck, and tests before commits
 - Use `npm run affected` before opening PRs to verify changes
 
