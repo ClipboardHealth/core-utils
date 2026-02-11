@@ -5,14 +5,14 @@
 IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning.
 Read the relevant rule files below before writing or reviewing code.
 
-| Rule | File | When to Read |
-|------|------|-------------|
-| Configuration | rules/common/configuration.md | Adding config: secrets, SSM, feature flags, DB vs hardcoded |
-| Feature Flags | rules/common/featureFlags.md | Creating or managing feature flags: naming, lifecycle, cleanup |
-| Git Workflow | rules/common/gitWorkflow.md | Writing commit messages, PR titles, or reviewing pull requests |
+| Rule                    | File                                 | When to Read                                                               |
+| ----------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| Configuration           | rules/common/configuration.md        | Adding config: secrets, SSM, feature flags, DB vs hardcoded                |
+| Feature Flags           | rules/common/featureFlags.md         | Creating or managing feature flags: naming, lifecycle, cleanup             |
+| Git Workflow            | rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests             |
 | Logging & Observability | rules/common/loggingObservability.md | Adding logging, metrics, or observability: levels, structured context, PII |
-| Testing | rules/common/testing.md | Writing unit tests: conventions, naming, structure |
-| TypeScript | rules/common/typeScript.md | Writing any TypeScript code: naming, types, functions, error handling |
+| Testing                 | rules/common/testing.md              | Writing unit tests: conventions, naming, structure                         |
+| TypeScript              | rules/common/typeScript.md           | Writing any TypeScript code: naming, types, functions, error handling      |
 
 <!-- Source: ./OVERLAY.md -->
 

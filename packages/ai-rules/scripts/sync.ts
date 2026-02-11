@@ -9,7 +9,9 @@ import {
   PROFILES,
   RULE_FILES,
   type RuleId,
+  toRulePath,
 } from "./constants";
+import { execAndLog } from "./execAndLog";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {
@@ -27,29 +29,25 @@ async function sync() {
   try {
     const parsedArguments = parseArguments();
     const ruleIds = resolveRuleIds(parsedArguments);
+    if (ruleIds.length === 0) {
+      console.error("❌ Error: No rules remaining after excludes");
+      process.exit(1);
+    }
 
-    // Clean and recreate rules directory
     const rulesOutput = path.join(PATHS.projectRoot, "rules");
     await rm(rulesOutput, { recursive: true, force: true });
-
-    // Copy selected rule files
     await copyRuleFiles(ruleIds, rulesOutput);
 
-    // Generate AGENTS.md index
     const agentsContent = await generateAgentsIndex(ruleIds);
-    const agentsPath = path.join(PATHS.projectRoot, FILES.agents);
-    await writeFile(agentsPath, agentsContent, "utf8");
-
-    // Generate CLAUDE.md
-    const claudePath = path.join(PATHS.projectRoot, FILES.claude);
-    await writeFile(claudePath, "@AGENTS.md\n", "utf8");
+    await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
+    await writeFile(path.join(PATHS.projectRoot, FILES.claude), "@AGENTS.md\n", "utf8");
 
     console.log(
       `✅ @clipboard-health/ai-rules synced ${parsedArguments.profile} (${ruleIds.length} rules)`,
     );
 
-    // Append OVERLAY.md content if it exists
     await appendOverlay(PATHS.projectRoot);
+    await formatOutputFiles(PATHS.projectRoot);
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -57,15 +55,23 @@ async function sync() {
   }
 }
 
-function parseArguments(): ParsedArguments {
-  const arguments_ = process.argv.slice(2);
+function isRuleId(value: string): value is RuleId {
+  return value in RULE_FILES;
+}
 
-  if (arguments_.length === 0) {
+function isProfileName(value: string): value is ProfileName {
+  return value in PROFILES;
+}
+
+function parseArguments(): ParsedArguments {
+  const processArguments = process.argv.slice(2);
+
+  if (processArguments.length === 0) {
     printUsageAndExit();
   }
 
-  const profile = arguments_[0]!;
-  if (!(profile in PROFILES)) {
+  const [profile] = processArguments;
+  if (!profile || !isProfileName(profile)) {
     console.error(`❌ Error: Unknown profile "${profile}"`);
     printUsageAndExit();
   }
@@ -74,7 +80,7 @@ function parseArguments(): ParsedArguments {
   const excludes: RuleId[] = [];
   let mode: "include" | "exclude" | undefined;
 
-  for (const argument of arguments_.slice(1)) {
+  for (const argument of processArguments.slice(1)) {
     if (argument === "--include") {
       mode = "include";
       continue;
@@ -90,20 +96,20 @@ function parseArguments(): ParsedArguments {
       printUsageAndExit();
     }
 
-    if (!(argument in RULE_FILES)) {
+    if (!isRuleId(argument)) {
       console.error(`❌ Error: Unknown rule "${argument}"`);
       console.error(`Available rules: ${Object.keys(RULE_FILES).join(", ")}`);
       process.exit(1);
     }
 
     if (mode === "include") {
-      extraIncludes.push(argument as RuleId);
+      extraIncludes.push(argument);
     } else {
-      excludes.push(argument as RuleId);
+      excludes.push(argument);
     }
   }
 
-  return { profile: profile as ProfileName, extraIncludes, excludes };
+  return { profile, extraIncludes, excludes };
 }
 
 function printUsageAndExit(): never {
@@ -118,22 +124,10 @@ function printUsageAndExit(): never {
 
 function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
   const { profile, extraIncludes, excludes } = parsedArguments;
-  const profileConfig = PROFILES[profile];
 
-  // Expand profile categories into rule IDs
-  const ruleSet = new Set<RuleId>();
-  for (const category of profileConfig.include) {
-    for (const ruleId of CATEGORIES[category]) {
-      ruleSet.add(ruleId);
-    }
-  }
+  const profileRules = PROFILES[profile].include.flatMap((category) => [...CATEGORIES[category]]);
+  const ruleSet = new Set<RuleId>([...profileRules, ...extraIncludes]);
 
-  // Add extra includes
-  for (const ruleId of extraIncludes) {
-    ruleSet.add(ruleId);
-  }
-
-  // Remove excludes
   for (const ruleId of excludes) {
     ruleSet.delete(ruleId);
   }
@@ -144,11 +138,10 @@ function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
 async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<void> {
   await Promise.all(
     ruleIds.map(async (ruleId) => {
-      const rule = RULE_FILES[ruleId];
-      const source = path.join(PATHS.packageRoot, "rules", rule.path);
-      const destination = path.join(rulesOutput, rule.path);
+      const rulePath = toRulePath(ruleId);
+      const destination = path.join(rulesOutput, rulePath);
       await mkdir(path.dirname(destination), { recursive: true });
-      await cp(source, destination);
+      await cp(path.join(PATHS.packageRoot, "rules", rulePath), destination);
     }),
   );
 }
@@ -166,9 +159,9 @@ async function extractHeading(filePath: string): Promise<string> {
 async function generateAgentsIndex(ruleIds: RuleId[]): Promise<string> {
   const rows = await Promise.all(
     ruleIds.map(async (ruleId) => {
-      const rule = RULE_FILES[ruleId];
-      const heading = await extractHeading(path.join(PATHS.packageRoot, "rules", rule.path));
-      return `| ${heading} | rules/${rule.path} | ${rule.whenToRead} |`;
+      const rulePath = toRulePath(ruleId);
+      const heading = await extractHeading(path.join(PATHS.packageRoot, "rules", rulePath));
+      return `| ${heading} | rules/${rulePath} | ${RULE_FILES[ruleId]} |`;
     }),
   );
 
@@ -203,6 +196,20 @@ async function appendOverlay(projectRoot: string): Promise<void> {
   await writeFile(agentsPath, updatedContent, "utf8");
 
   console.log(`📎 Appended OVERLAY.md to ${FILES.agents}`);
+}
+
+async function formatOutputFiles(projectRoot: string): Promise<void> {
+  await execAndLog({
+    command: [
+      "npx",
+      "prettier",
+      "--write",
+      path.join(projectRoot, FILES.agents),
+      path.join(projectRoot, "rules"),
+    ],
+    timeout: 60_000,
+    verbose: false,
+  });
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

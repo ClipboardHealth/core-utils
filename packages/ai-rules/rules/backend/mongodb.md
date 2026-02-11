@@ -47,7 +47,7 @@ const explanation = await ShiftModel.find(query).explain("executionStats");
 // Good: stage 'IXSCAN'; Bad: stage 'COLLSCAN'
 ```
 
-### Repository Pattern
+## Repository Pattern
 
 ```typescript
 class UserRepo {

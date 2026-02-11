@@ -118,15 +118,15 @@ git commit -m "chore: update AI coding rules"
 
 ### backend
 
-| Rule ID                   | Description                                          |
-| ------------------------- | ---------------------------------------------------- |
-| `backend/architecture`    | Three-tier pattern: modules, services, controllers   |
-| `backend/asyncMessaging`  | Queues, async messaging, background jobs             |
-| `backend/mongodb`         | MongoDB/Mongoose: schemas, indexes, queries          |
-| `backend/notifications`   | Notification and messaging patterns                  |
-| `backend/postgres`        | Postgres queries: Prisma, subqueries, feature flags  |
-| `backend/restApiDesign`   | REST API design: JSON:API, endpoints, contracts      |
-| `backend/serviceTests`    | Service-level integration tests                      |
+| Rule ID                  | Description                                         |
+| ------------------------ | --------------------------------------------------- |
+| `backend/architecture`   | Three-tier pattern: modules, services, controllers  |
+| `backend/asyncMessaging` | Queues, async messaging, background jobs            |
+| `backend/mongodb`        | MongoDB/Mongoose: schemas, indexes, queries         |
+| `backend/notifications`  | Notification and messaging patterns                 |
+| `backend/postgres`       | Postgres queries: Prisma, subqueries, feature flags |
+| `backend/restApiDesign`  | REST API design: JSON:API, endpoints, contracts     |
+| `backend/serviceTests`   | Service-level integration tests                     |
 
 ### frontend
 

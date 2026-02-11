@@ -100,7 +100,7 @@ function getMessageForStatus(status: Status, errorMessage?: string): string | un
       return `${PACKAGE_NAME} is listed in package.json but not installed in node_modules. Ask the user if they'd like to run their package manager's install command.`;
     }
     case STATUS.incomplete: {
-      return `${PACKAGE_NAME} is installed but not fully configured (missing sync-ai-rules script or postinstall hook). Ask the user: "Would you like to configure it? Which profile to use (common, frontend, backend, datamodeling)? You can also use --include/--exclude to fine-tune individual rules. See ${README_URL} for details.". If approved, fetch ${README_URL} and follow the instructions to add the missing configuration.`;
+      return `${PACKAGE_NAME} is installed but not fully configured (missing sync-ai-rules script or postinstall hook). Ask the user: "Would you like to configure it? Which profile to use (common, frontend, backend, datamodeling)? You can also use --include/--exclude to fine-tune individual rules. See ${README_URL} for details." If approved, fetch ${README_URL} and follow the instructions to add the missing configuration.`;
     }
     default: {
       const _exhaustiveCheck: never = status;

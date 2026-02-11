@@ -12,7 +12,7 @@ const params = {
   verbose: false,
 };
 
-async function build() {
+async function build(): Promise<void> {
   const scriptsOutput = path.join(outputDirectory, "scripts");
 
   console.log(`🚀 Building ai-rules...\n`);
