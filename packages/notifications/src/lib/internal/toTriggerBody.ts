@@ -1,17 +1,33 @@
 import { type Knock } from "@knocklabs/node";
 
-import type { RecipientRequest, TriggerBody } from "../types";
+import type { Attachment, RecipientRequest, TriggerBody } from "../types";
 import { toInlineIdentifyUserRequest } from "./toInlineIdentifyUserRequest";
 
 export function toTriggerBody(body: TriggerBody): Knock.Workflows.WorkflowTriggerParams {
-  const { actor, cancellationKey, recipients, workplaceId, ...rest } = body;
+  const { actor, attachments, cancellationKey, data, recipients, workplaceId, ...rest } = body;
 
   return {
+    ...rest,
     ...(actor ? { actor: toRecipient(actor) } : {}),
     ...(cancellationKey ? { cancellation_key: cancellationKey } : {}),
     ...(workplaceId ? { tenant: workplaceId } : {}),
     recipients: recipients.map(toRecipient),
-    ...rest,
+    ...((data ?? attachments)
+      ? {
+          data: {
+            ...data,
+            ...(attachments ? { attachments: attachments.map(toKnockAttachment) } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+function toKnockAttachment(attachment: Attachment): Record<string, string> {
+  return {
+    name: attachment.name,
+    content_type: attachment.contentType,
+    content: attachment.content,
   };
 }
 

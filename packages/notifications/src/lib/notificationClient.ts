@@ -708,6 +708,14 @@ export class NotificationClient {
         ...body,
         // Don't log potentially sensitive recipient data.
         recipients: body.recipients.length,
+        ...(body.attachments
+          ? {
+              attachments: body.attachments.map(({ content: _, ...rest }) => ({
+                ...rest,
+                content: "[REDACTED]",
+              })),
+            }
+          : {}),
         data: redact({ data: body.data ?? undefined, keysToRedact }),
       },
     });

@@ -119,6 +119,28 @@ export interface InlineIdentifyUserRequest {
  */
 export type RecipientRequest = string | InlineIdentifyUserRequest;
 
+/**
+ * A file attachment to include with the notification (e.g. for email).
+ *
+ * @see {@link https://docs.knock.app/integrations/email/attachments}
+ */
+export interface Attachment {
+  /**
+   * The name of the file.
+   */
+  name: string;
+
+  /**
+   * A MIME type for the file (e.g. "application/pdf", "image/png").
+   */
+  contentType: string;
+
+  /**
+   * The base64-encoded file content. Must be less than 10MB.
+   */
+  content: string;
+}
+
 export interface TriggerBody {
   /**
    * The recipients to trigger the workflow for. Limited to 1,000 recipients.
@@ -129,6 +151,14 @@ export interface TriggerBody {
    * The trigger actor.
    */
   actor?: RecipientRequest;
+
+  /**
+   * File attachments to include with the notification (e.g. for email). Each attachment object must
+   * be less than 10MB.
+   *
+   * @see {@link https://docs.knock.app/integrations/email/attachments}
+   */
+  attachments?: Attachment[];
 
   /**
    * An optional key used to reference a specific trigger request when issuing a cancellation

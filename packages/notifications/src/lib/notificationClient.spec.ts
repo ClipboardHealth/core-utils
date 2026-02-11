@@ -982,6 +982,91 @@ describe("NotificationClient", () => {
         }),
       );
     });
+
+    it("passes attachments to provider in data payload", async () => {
+      const mockBody = {
+        recipients: [{ userId: "user-1" }],
+        data: { message: "See attached" },
+        attachments: [
+          {
+            name: "report.pdf",
+            contentType: "application/pdf",
+            content: "base64content",
+          },
+        ],
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [{ id: "user-1" }],
+          data: {
+            message: "See attached",
+            attachments: [
+              {
+                name: "report.pdf",
+                content_type: "application/pdf",
+                content: "base64content",
+              },
+            ],
+          },
+        },
+        { idempotencyKey: `${mockIdempotencyKey}-1` },
+      );
+    });
+
+    it("redacts attachment content in logs", async () => {
+      const mockBody = {
+        recipients: [{ userId: "user-1" }],
+        attachments: [
+          {
+            name: "report.pdf",
+            contentType: "application/pdf",
+            content: "sensitive-base64-data",
+          },
+        ],
+      };
+      const mockResponse = { workflow_run_id: mockWorkflowRunId };
+      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: mockBody,
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      await client.triggerChunked(input);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.triggerChunked request",
+        expect.objectContaining({
+          redactedBody: expect.objectContaining({
+            attachments: [
+              {
+                name: "report.pdf",
+                contentType: "application/pdf",
+                content: "[REDACTED]",
+              },
+            ],
+          }),
+        }),
+      );
+    });
   });
 
   describe("appendPushToken", () => {
