@@ -10,7 +10,7 @@
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "@clipboard-health/eslint-plugin": "^1.2.0",
+    "@clipboard-health/eslint-plugin": "^1.2.0 || ^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
     "eslint": "^8",
