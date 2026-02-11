@@ -3,6 +3,7 @@
   "version": "0.2",
   "ignorePaths": [
     ".github/CODEOWNERS",
+    ".serena",
     ".vscode",
     "coverage",
     "default.json",
