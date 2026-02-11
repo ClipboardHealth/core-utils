@@ -1,13 +1,13 @@
 {
   "name": "@clipboard-health/contract-core",
   "description": "Shared Zod schemas for Clipboard's contracts.",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@clipboard-health/testing-core": "1.8.0",
+    "@clipboard-health/testing-core": "2.0.0",
     "zod": "3.25.76"
   },
   "keywords": [
