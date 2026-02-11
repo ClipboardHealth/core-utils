@@ -18,6 +18,11 @@ module.exports = {
       label: "Nx isn't ready for eslint 9 upgrade yet.",
     },
     {
+      dependencies: ["@swc/core"],
+      isIgnored: true,
+      label: "Override uses $ reference syntax unsupported by syncpack.",
+    },
+    {
       dependencyTypes: ["peer"],
       specifierTypes: "range",
       label: "Allow for flexible peer dependency versions.",
