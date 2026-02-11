@@ -37,6 +37,7 @@
   },
   "license": "MIT",
   "overrides": {
+    "@swc/core": "$@swc/core",
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0"
   },
