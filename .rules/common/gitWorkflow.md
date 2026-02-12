@@ -10,4 +10,8 @@ Follow Conventional Commits 1.0 spec for commit messages and PR titles.
 4. Tested: service tests + validation proof
 5. Passing CI
 
-Link ticket, context, reasoning, and areas of concern in description.
+Link Linear ticket in PR description. Include context, reasoning, and areas of concern.
+
+Include proof of validation: tests, screenshots, telemetry, or Loom video.
+
+Split large non-functional changes (refactors, dependency upgrades) into separate PRs from feature work.

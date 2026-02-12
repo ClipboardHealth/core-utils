@@ -26,7 +26,7 @@ export default {
     },
   ],
 
-  prompts: ["file://prompts/generate-code.txt"],
+  prompts: ["file://prompts/generateCode.txt"],
 
   tests: [
     {

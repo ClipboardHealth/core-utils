@@ -4,9 +4,8 @@
 
 1. Use React Query for all API calls
 2. Define Zod schemas for all request/response types
-3. Use `isLoading`, `isError`, `isSuccess`—don't create custom state
-4. Use `enabled` option for conditional fetching
-5. Use `invalidateQueries` (not `refetch`) for disabled queries
+3. Use `enabled` option for conditional fetching
+4. Use `invalidateQueries` (not `refetch`) for disabled queries
 
 ## Hook Pattern
 
@@ -24,11 +23,20 @@ export function useGetFeature(id: string, options = {}) {
     url: `feature/${id}`,
     responseSchema,
     enabled: !!id,
-    meta: { logErrorMessage: APP_EVENTS.GET_FEATURE_FAILURE },
+    meta: {
+      logErrorMessage: APP_EVENTS.GET_FEATURE_FAILURE,
+      userErrorMessage: "Failed to load feature",
+    },
     ...options,
   });
 }
 ```
+
+## Error Handling
+
+- Log errors via `meta.logErrorMessage` using centralized event constants
+- Display user-facing errors via `meta.userErrorMessage`
+- Do not use the deprecated `onError` callback; for mutations, use the `meta` pattern (same as queries) to handle errors
 
 ## Query Keys
 
@@ -56,7 +64,10 @@ export function useCreateItem() {
   return useMutation({
     mutationFn: (data: CreateItemRequest) => api.post("/items", data),
     onSuccess: () => queryClient.invalidateQueries(["items"]),
-    onError: (error) => logError("CREATE_ITEM_FAILURE", error),
   });
 }
 ```
+
+## Test Utilities
+
+Co-locate MSW handlers and mock data in adjacent `testUtils/` folders alongside data-fetching hooks.

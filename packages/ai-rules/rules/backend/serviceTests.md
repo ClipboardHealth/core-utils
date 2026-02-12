@@ -1,6 +1,6 @@
 # Service Tests (Primary Testing Approach)
 
-Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (Zendesk, Stripe).
+Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (LaunchDarkly, Firebase, Stripe, Zendesk) and other microservices with fakes; fake the event bus.
 
 ```typescript
 describe("Documents", () => {
@@ -23,6 +23,18 @@ describe("Documents", () => {
 ```
 
 **Qualities:** One behavior per test, no shared setup, no mocking, <1 second, parallelizable.
+
+## Test Data
+
+Arrange test data via the public contract (API calls), not direct database inserts or ORM usage.
+
+## Bug Handling
+
+If a test reveals a critical bug, fix it before merging. If non-critical, assert current behavior with a comment documenting the bug, why it's a bug, and the owning team.
+
+## Migration Files
+
+Migration files that need NestJS providers must use `getFromContainer(SomeService)`.
 
 **Testing Background Jobs:**
 

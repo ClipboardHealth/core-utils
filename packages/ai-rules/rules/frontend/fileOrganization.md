@@ -1,5 +1,7 @@
 # File Organization
 
+Organize frontend code by concept/feature (e.g., `Shifts/`, `Invites/`), not by type (e.g., `components/`, `hooks/`).
+
 ```text
 FeatureName/
 ├── api/                    # Data fetching hooks
@@ -16,10 +18,3 @@ FeatureName/
 ├── paths.ts                # Route constants
 └── types.ts                # Shared types
 ```
-
-## Naming
-
-- Components: `PascalCase.tsx`
-- Hooks: `camelCase.ts` (prefixed with `use`)
-- Utils: `camelCase.ts`
-- Tests: `*.test.tsx`
