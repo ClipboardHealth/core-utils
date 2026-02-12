@@ -25,6 +25,32 @@
 }} />
 ```
 
+## Merging Styles
+
+Use `mergeSxProps` from `@clipboard-health/ui-react` to merge default styles with consumer-provided sx props in generic components:
+
+```typescript
+import { mergeSxProps } from "@clipboard-health/ui-react";
+
+interface CardProps {
+  sx?: SxProps<Theme>;
+}
+
+function Card({ sx }: CardProps) {
+  return (
+    <Box
+      sx={mergeSxProps(
+        (theme) => ({
+          padding: theme.spacing(2),
+          borderRadius: theme.shape.borderRadius,
+        }),
+        sx,
+      )}
+    />
+  );
+}
+```
+
 ## Spacing
 
 Use theme spacing indices 1-12:

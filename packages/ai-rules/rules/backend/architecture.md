@@ -19,9 +19,14 @@ All NestJS microservices follow a three-tier layered architecture:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Module Structure:**
+## Module Organization
 
-`ts-rest` contracts:
+- Define one NestJS module per folder at `src/modules/` root (no nesting)
+- List only owned providers/controllers/exports in `@Module`; import the module that exports a service rather than providing it directly
+- Use dependency-cruiser to enforce tiered architecture constraints
+- When joining across DB tables, do not join on tables owned by another module — fetch via the owning module's service instead
+
+**`ts-rest` contracts:**
 
 ```text
 packages/contract-<service>/src/
@@ -38,7 +43,7 @@ packages/contract-<service>/src/
             └── shared.ts
 ```
 
-NestJS microservice modules:
+**NestJS microservice modules:**
 
 ```text
  src/modules/user
@@ -74,8 +79,14 @@ NestJS microservice modules:
 *.dao.mapper.ts  - DAO transformation
 ```
 
-**Microservices Principles:**
+## Repository Naming
+
+- Name repo methods `findBy*` (single) and `listBy*` (multiple) with meaningful names (not generic CRUD)
+- Expose storage-decoupled filter params; split modules/services/repos by operation as complexity grows
+
+## Microservices Principles
 
 - One domain = one module (bounded contexts)
 - Specific modules know about generic, not vice versa
 - Don't block Node.js thread—use background jobs for expensive operations
+- Isolate resource-intensive jobs in dedicated ECS tasks

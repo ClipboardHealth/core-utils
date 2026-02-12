@@ -24,11 +24,20 @@ export function useGetFeature(id: string, options = {}) {
     url: `feature/${id}`,
     responseSchema,
     enabled: !!id,
-    meta: { logErrorMessage: APP_EVENTS.GET_FEATURE_FAILURE },
+    meta: {
+      logErrorMessage: APP_EVENTS.GET_FEATURE_FAILURE,
+      userErrorMessage: "Failed to load feature",
+    },
     ...options,
   });
 }
 ```
+
+## Error Handling
+
+- Log errors via `meta.logErrorMessage` using centralized event constants
+- Display user-facing errors via `meta.userErrorMessage`
+- Do not use the deprecated `onError` callback
 
 ## Query Keys
 
@@ -56,7 +65,10 @@ export function useCreateItem() {
   return useMutation({
     mutationFn: (data: CreateItemRequest) => api.post("/items", data),
     onSuccess: () => queryClient.invalidateQueries(["items"]),
-    onError: (error) => logError("CREATE_ITEM_FAILURE", error),
   });
 }
 ```
+
+## Test Utilities
+
+Co-locate MSW handlers and mock data in adjacent `testUtils/` folders alongside data-fetching hooks.

@@ -60,6 +60,15 @@ interface Props {
 }
 ```
 
+## Navigation & Layout
+
+- Show bottom navigation on all top-level tabs/pages; hide it on nested or drilled-in views
+- Use `Title` with correct heading levels (`h1`-`h6`) and maintain a structured `h1`→`h2`→`h3` hierarchy per page
+
+## Storybook
+
+Register every new or updated shared UI component in Storybook before merging; include a `Default` story first with all relevant props exposed via controls.
+
 ## Inline JSX and Handlers
 
 ```typescript

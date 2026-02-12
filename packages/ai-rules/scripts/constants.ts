@@ -25,6 +25,7 @@ export const RULE_FILES = {
   "backend/notifications": "Implementing notifications or messaging to users",
   "backend/postgres": "Writing Postgres queries: Prisma, subqueries, feature flags",
   "backend/restApiDesign": "Designing REST APIs: JSON:API, endpoints, responses, contracts",
+  "backend/infrastructure": "Provisioning infrastructure: Terraform, Docker, ECS, DNS",
   "backend/serviceTests": "Writing service-level integration tests",
   "frontend/customHooks": "Creating or refactoring React custom hooks",
   "frontend/dataFetching": "Implementing data fetching: React Query, API calls, caching",
@@ -61,6 +62,7 @@ export const CATEGORIES = {
   backend: [
     "backend/architecture",
     "backend/asyncMessaging",
+    "backend/infrastructure",
     "backend/mongodb",
     "backend/notifications",
     "backend/postgres",

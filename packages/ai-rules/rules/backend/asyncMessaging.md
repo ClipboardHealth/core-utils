@@ -52,11 +52,17 @@ class ShiftReminderJob implements Handler<ShiftReminderPayload> {
 
 **Key Practices:**
 
-- Pass minimal arguments (IDs, not objects)
+- Pass minimal, serializable arguments (IDs, not objects); take care with Dates and classes since arguments are written to a database and read back out
 - Fetch fresh data in handler
-- Implement idempotency
-- Check state before action
+- Implement idempotency (use an idempotency/unique key when duplication must be prevented)
+- Check state before action; return a descriptive skip-reason string for non-retryable conditions; throw only for retryable errors
 - Use Expand/Contract for job code updates
+- Keep jobs short-lived (under 15 minutes for Postgres, under 10 minutes for Mongo); split longer work into multiple jobs
+
+**File Organization:**
+
+- Name job handler files `<class-name>.job.ts` and place them near their owning module (not centralized into `src/jobs`)
+- Migration jobs must live in `src/migrations/jobs`, be registered in `src/backgroundJobs/registerJobs`, keep batch sizes small, and be retry-safe
 
 **Avoid Circular Dependencies:**
 
@@ -73,6 +79,13 @@ await jobs.enqueue<NotificationJobPayload>(NOTIFICATION_JOB, { shiftId });
 
 ## SQS/EventBridge
 
-**Producer:** Single producer per message type, publish atomically (use jobs as outbox), deterministic message IDs, don't rely on strict ordering.
+- Use `@clipboard-health/message-producer`, `@clipboard-health/message-consumer`, `terraform-aws-event-bridge` module for async messaging; do not build custom frameworks
+- Each publishing microservice has its own EventBridge event bus; each message type has a single producing microservice
 
-**Consumer:** Own queue per consumer, must be idempotent, separate process from API, don't auto-consume DLQs.
+**Producer:** Publish atomically with database writes using an outbox background job enqueued inside the same transaction; use deterministic message IDs so retries publish the same ID; include clock skew-resistant time or order information in published messages.
+
+**Consumer:** Assign each consumer its own dedicated SQS queue in a separate process from the API server; consumers must be idempotent and deduplicate using producer-provided message IDs via `@clipboard-health/message-consumer`'s `idempotencyKey` utility; for batch handlers, return a list of successfully processed messages instead of throwing to fail the entire batch.
+
+**Dead-Letter Queues:** Configure a DLQ for every SQS queue with up to 14-day retention; do not auto-consume DLQ messages — retain until root cause is fixed, then replay.
+
+If a design depends on strict message ordering, consult #eng-staff-plus before proceeding.

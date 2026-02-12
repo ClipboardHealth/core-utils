@@ -17,7 +17,10 @@
 - Files read top-to-bottom: exports first, internal helpers below
 - Boolean props: `is*`, `has*`, `should*`, `can*`
 - Use const assertions for constants: `as const`
-- Use `date-fns` for date/time manipulation and `@clipboard-health/date-time` for formatting
+- Use immutable array methods (`toSorted`, `toReversed`) instead of mutating methods (`sort`, `reverse`)
+- Return Prisma decimal values as strings in API responses to avoid floating-point precision issues
+- Use explicit access modifiers (`public`, `private`, `protected`) on all class methods and properties
+- Use a `for` loop with `// eslint-disable-next-line no-await-in-loop` for intentional sequential execution
 
 ## Null/Undefined Checks
 
@@ -84,3 +87,21 @@ throw new ServiceError({
   httpStatus: ERROR_CODES.notFound,
 });
 ```
+
+## Date & Time
+
+- Use `@clipboard-health/date-time` for all user-facing date formatting and all timezone-dependent operations (start-of-day-in-timezone, business hours, `setHours`, etc.) with an explicit `timeZone` parameter
+- Use `date-fns` only for timezone-agnostic timestamp math and parsing
+- Never import `date-fns-tz`, `@date-fns/tz`, `moment`, or `moment-timezone`
+
+## Internal Libraries
+
+- Use object arguments and object return types in library APIs; wrap exported responses in `ServiceResult`; return errors via `ServiceResult` instead of throwing in core logic
+- Library API types must not contain `any`, `unknown`, or `object`; use TypeScript generics; define the public API exclusively through `src/index.ts` exports; place non-public code in `internal/`
+- Strive for 100% test coverage in library code (`/* istanbul ignore next */` only for genuinely untestable lines)
+- When wrapping another library, design the API from first principles for our use cases; do not mirror the wrapped library's API or leak implementation details through interface names
+
+## Rules Engine
+
+- Do not mutate instance or static variables inside `@clipboard-health/rules-engine` rule functions
+- Do not perform side effects (DB writes, variable mutation) inside rules — pull side effects up to the caller
