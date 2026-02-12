@@ -86,6 +86,6 @@ await jobs.enqueue<NotificationJobPayload>(NOTIFICATION_JOB, { shiftId });
 
 **Consumer:** Assign each consumer its own dedicated SQS queue in a separate process from the API server; consumers must be idempotent and deduplicate using producer-provided message IDs via `@clipboard-health/message-consumer`'s `idempotencyKey` utility; for batch handlers, return a list of successfully processed messages instead of throwing to fail the entire batch.
 
-**Dead-Letter Queues:** Configure a DLQ for every SQS queue with up to 14-day retention; do not auto-consume DLQ messages — retain until root cause is fixed, then replay.
+**Dead-Letter Queues:** Configure a DLQ for every SQS queue with 14-day retention; do not auto-consume DLQ messages — retain until root cause is fixed, then replay.
 
 If a design depends on strict message ordering, consult #eng-staff-plus before proceeding.

@@ -64,7 +64,7 @@ Run `explain("executionStats")` on new or changed queries; verify `$lookup` stag
 
 ## Query Patterns
 
-- Prefer `$ne: null` over `$exists: true` and `$eq: null` over `$exists: false`; never combine `$exists: true` with `$ne: null`
+- Use `$exists: true` to check field presence (matches even if value is `null`); use `$ne: null` to check field is present and not `null`; use `$eq: null` to match missing or explicitly `null` fields; do not combine `$exists: true` with `$ne: null`
 - Include partial/sparse index constraints in queries that rely on those indexes
 - Avoid `$expr` in `$lookup` pipelines except for simple comparisons (`$eq`, `$lt`, `$lte`, `$gt`, `$gte`)
 - Limit `$in` to tens of values

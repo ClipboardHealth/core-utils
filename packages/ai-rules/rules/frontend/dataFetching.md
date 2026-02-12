@@ -37,7 +37,7 @@ export function useGetFeature(id: string, options = {}) {
 
 - Log errors via `meta.logErrorMessage` using centralized event constants
 - Display user-facing errors via `meta.userErrorMessage`
-- Do not use the deprecated `onError` callback
+- Do not use the deprecated `onError` callback; for mutations, use the `meta` pattern (same as queries) to handle errors
 
 ## Query Keys
 
