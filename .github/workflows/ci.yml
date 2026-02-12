@@ -32,8 +32,11 @@ jobs:
       - run: git fetch origin main:main
       - uses: ./.github/actions/setup-node
 
-      - run: docker compose up -d --wait --wait-timeout 120
-      - run: npm run ci:install
+      - name: Install dependencies and start services
+        run: |
+          docker compose up -d --wait --wait-timeout 120 &
+          npm run ci:install
+          wait
       - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: npx nx affected --configuration ci --targets build,lint,test
@@ -61,9 +64,11 @@ jobs:
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/setup-node
 
-      - run: docker compose up -d --wait --wait-timeout 120
-      - run: npm run ci:install
-      - run: npm run ci:check
+      - name: Install dependencies and start services
+        run: |
+          docker compose up -d --wait --wait-timeout 120 &
+          npm run ci:install
+          wait
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
       - run: npx nx affected --configuration ci --skip-nx-cache --target build
         env:
