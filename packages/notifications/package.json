@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "2.0.2",
-    "type-fest": "5.4.3"
+    "type-fest": "5.4.4"
   },
   "keywords": [],
   "license": "MIT",
