@@ -64,7 +64,7 @@
     "oxlint": "oxlint",
     "postinstall": "npm run sync-ai-rules",
     "prepare": "husky",
-    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common",
+    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "test:claude": "tsx --test .claude/**/*.spec.ts"
   },
   "workspaces": [
