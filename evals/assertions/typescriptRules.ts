@@ -36,10 +36,10 @@ function checkEnumDeclarations(output: string, issues: string[]): void {
 
 /* cspell:disable -- regex word boundaries */
 const PROHIBITED_NAMING_PATTERNS = [
-  { pattern: /\bagent(?!s?\.)(?=[A-Z]|\b)/gi, term: "agent" },
-  { pattern: /\bhcp\b/gi, term: "hcp" },
-  { pattern: /\bfacility(?=[A-Z]|\b)/gi, term: "facility" },
-  { pattern: /\bhcf\b/gi, term: "hcf" },
+  { pattern: /\bagent(?!s?\.)(?=[A-Z]|\b)/i, term: "agent" },
+  { pattern: /\bhcp\b/i, term: "hcp" },
+  { pattern: /\bfacility(?=[A-Z]|\b)/i, term: "facility" },
+  { pattern: /\bhcf\b/i, term: "hcf" },
 ] as const;
 /* cspell:enable */
 
