@@ -18,9 +18,9 @@ module.exports = {
       label: "Nx isn't ready for eslint 9 upgrade yet.",
     },
     {
-      dependencies: ["@swc/core"],
+      dependencies: ["@swc/core", "@anthropic-ai/claude-agent-sdk"],
       isIgnored: true,
-      label: "Override uses $ reference syntax unsupported by syncpack.",
+      label: "Override uses syntax unsupported by syncpack.",
     },
     {
       dependencyTypes: ["peer"],

@@ -14,18 +14,8 @@ env:
   NX_BRANCH: ${{ github.event.number || github.ref_name }}
 
 jobs:
-  initialize:
-    runs-on: [self-hosted, cbh-amazon-linux-2023]
-    steps:
-      - uses: actions/checkout@v6
-      - run: echo "nvmrc=$(cat .nvmrc)" >> $GITHUB_OUTPUT
-        id: nvm
-    outputs:
-      node-version: ${{ steps.nvm.outputs.nvmrc }}
-
   pull-request:
     if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
-    needs: [initialize]
     runs-on: [self-hosted, cbh-amazon-linux-2023]
     steps:
       - uses: actions/checkout@v6
@@ -40,8 +30,6 @@ jobs:
           fetch-depth: 0
       - run: git fetch origin main:main
       - uses: ./.github/actions/setup-node
-        with:
-          node-version: ${{ needs.initialize.outputs.node-version }}
 
       - run: docker compose up -d --wait --wait-timeout 120
       - run: npm run ci:install
@@ -52,7 +40,6 @@ jobs:
 
   main:
     if: github.ref == 'refs/heads/main'
-    needs: [initialize]
     permissions:
       actions: read
       contents: write
@@ -70,8 +57,6 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/setup-node
-        with:
-          node-version: ${{ needs.initialize.outputs.node-version }}
       - run: npm run ci:install
       - run: npm run ci:check
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact

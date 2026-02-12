@@ -21,7 +21,7 @@
 
 ## Null/Undefined Checks
 
-Use `isDefined` helper from `@clipboard-health/util-ts`:
+Use `isDefined` helper from `@clipboard-health/util-ts` for `null` and `undefined` checks:
 
 ```typescript
 // Bad: truthy check fails for 0, "", false

@@ -1,9 +1,5 @@
 name: Setup Node
 description: "Setup Node.js environment"
-inputs:
-  node-version:
-    description: "Node version to use."
-    required: true
 
 runs:
   using: "composite"
@@ -12,12 +8,10 @@ runs:
     - uses: actions/cache@v5
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-node-${{ inputs.node-version }}-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-${{ inputs.node-version }}-
+          ${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-
     - uses: actions/setup-node@v6
       with:
-        node-version: ${{ inputs.node-version }}
+        node-version-file: .nvmrc
         registry-url: https://registry.npmjs.org
-    - run: npm install --global npm@11.1.0
-      shell: bash
