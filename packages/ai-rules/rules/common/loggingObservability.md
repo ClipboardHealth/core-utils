@@ -26,7 +26,7 @@ logger.error("Exporting urgent shifts to CSV failed", {
 
 - **Never log:** PII, PHI, tokens, secrets, SSN, account numbers, entire request/response/headers.
 - Ship all application logs to Datadog; do not log server errors in client-side code
-- Use metrics for counting:
+- Use Datadog custom metrics with context tags for rates and totals instead of log-based counting:
 
   ```typescript
   datadogMetrics.increment("negotiation.errors", { state: "New York" });

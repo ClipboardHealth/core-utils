@@ -34,7 +34,7 @@ async function sync() {
       process.exit(1);
     }
 
-    const rulesOutput = path.join(PATHS.projectRoot, "rules");
+    const rulesOutput = path.join(PATHS.projectRoot, ".rules");
     await rm(rulesOutput, { recursive: true, force: true });
     await copyRuleFiles(ruleIds, rulesOutput);
 
@@ -161,7 +161,7 @@ async function generateAgentsIndex(ruleIds: RuleId[]): Promise<string> {
     ruleIds.map(async (ruleId) => {
       const rulePath = toRulePath(ruleId);
       const heading = await extractHeading(path.join(PATHS.packageRoot, "rules", rulePath));
-      return `| ${heading} | rules/${rulePath} | ${RULE_FILES[ruleId]} |`;
+      return `| ${heading} | .rules/${rulePath} | ${RULE_FILES[ruleId]} |`;
     }),
   );
 
@@ -204,7 +204,7 @@ async function formatOutputFiles(projectRoot: string): Promise<void> {
       "prettier",
       "--write",
       path.join(projectRoot, FILES.agents),
-      path.join(projectRoot, "rules"),
+      path.join(projectRoot, ".rules"),
     ],
     timeout: 60_000,
     verbose: false,

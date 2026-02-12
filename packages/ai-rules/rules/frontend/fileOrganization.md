@@ -1,5 +1,7 @@
 # File Organization
 
+Organize frontend code by concept/feature (e.g., `Shifts/`, `Invites/`), not by type (e.g., `components/`, `hooks/`).
+
 ```text
 FeatureName/
 ├── api/                    # Data fetching hooks

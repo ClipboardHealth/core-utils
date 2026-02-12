@@ -2,12 +2,12 @@
 
 ## Log Levels
 
-| Level | When                                       |
-| ----- | ------------------------------------------ |
-| ERROR | Required functionality broken (2am pager?) |
-| WARN  | Optional broken OR recovered from failure  |
-| INFO  | Informative, ignorable during normal ops   |
-| DEBUG | Local only, not production                 |
+| Level | When                                                        |
+| ----- | ----------------------------------------------------------- |
+| ERROR | Required functionality broken, worth an Incident.io page    |
+| WARN  | Recovered required failure OR broken optional functionality |
+| INFO  | Informative, ignorable during normal ops                    |
+| DEBUG | Local only, not production                                  |
 
 ## Best Practices
 
@@ -25,7 +25,8 @@ logger.error("Exporting urgent shifts to CSV failed", {
 ```
 
 - **Never log:** PII, PHI, tokens, secrets, SSN, account numbers, entire request/response/headers.
-- Use metrics for counting:
+- Ship all application logs to Datadog; do not log server errors in client-side code
+- Use Datadog custom metrics with context tags for rates and totals instead of log-based counting:
 
   ```typescript
   datadogMetrics.increment("negotiation.errors", { state: "New York" });
@@ -41,3 +42,7 @@ logger.error("Exporting urgent shifts to CSV failed", {
   logger.info("Processing shift", logContext);
   logger.info("Notification sent", logContext);
   ```
+
+## Monitoring
+
+- Create Datadog monitors for `background_jobs.queue.created > 0` and `background_jobs.queue.failed > 0` for every service that uses background jobs
