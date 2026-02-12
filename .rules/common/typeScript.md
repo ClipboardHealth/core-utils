@@ -20,7 +20,7 @@
 - Use immutable array methods (`toSorted`, `toReversed`) instead of mutating methods (`sort`, `reverse`)
 - Return Prisma decimal values as strings in API responses to avoid floating-point precision issues
 - Use explicit access modifiers (`public`, `private`, `protected`) on all class methods and properties
-- Use a `for` loop with `// eslint-disable-next-line no-await-in-loop` for intentional sequential execution
+- Use a `for` loop with `// eslint-disable-next-line no-await-in-loop` for intentional sequential execution (e.g., rate limiting, ordered processing, or resource constraints); prefer `Promise.all` when operations are independent
 
 ## Null/Undefined Checks
 
@@ -74,13 +74,15 @@ function processOrder(order: Order): Result {
 
 ## Error Handling
 
-- Favor `Either` type (`ServiceResult` from `@clipboard-health/util-ts`) for expected errors over `try/catch`
+- **Expected errors** (not found, validation failures): return `ServiceResult` (Either type) from `@clipboard-health/util-ts` instead of `try/catch`
+- **Unexpected/unrecoverable errors**: throw `ServiceError` from `@clipboard-health/util-ts`
 - Use `toError(maybeError)` from `@clipboard-health/util-ts` over hardcoded strings or type casting (`as Error`)
 - Use `ERROR_CODES` from `@clipboard-health/util-ts`, not `HttpStatus` from NestJS
 
 ```typescript
-import { ServiceError } from "@clipboard-health/util-ts";
+import { ServiceError, ERROR_CODES } from "@clipboard-health/util-ts";
 
+// Unexpected/unrecoverable — throw
 throw new ServiceError({
   code: "SHIFT_NOT_FOUND",
   message: `Shift ${shiftId} not found`,
@@ -96,8 +98,8 @@ throw new ServiceError({
 
 ## Internal Libraries
 
-- Use object arguments and object return types in library APIs; wrap exported responses in `ServiceResult`; return errors via `ServiceResult` instead of throwing in core logic
-- Library API types must not contain `any`, `unknown`, or `object`; use TypeScript generics; define the public API exclusively through `src/index.ts` exports; place non-public code in `internal/`
+- Use object arguments and object return types in library APIs; wrap exported responses in `ServiceResult`; prefer `ServiceResult` for expected errors and reserve throwing for unexpected/unrecoverable failures
+- Library API types must not contain `any` or bare `object`; prefer specific types over `unknown`, but allow `unknown` when type safety requires caller-side narrowing; use TypeScript generics; define the public API exclusively through `src/index.ts` exports; place non-public code in `internal/`
 - Strive for 100% test coverage in library code (`/* istanbul ignore next */` only for genuinely untestable lines)
 - When wrapping another library, design the API from first principles for our use cases; do not mirror the wrapped library's API or leak implementation details through interface names
 

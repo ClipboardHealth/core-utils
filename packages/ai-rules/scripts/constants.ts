@@ -12,33 +12,46 @@ export const FILES = {
 } as const;
 
 export const RULE_FILES = {
-  "common/configuration": "Adding config: secrets, SSM, feature flags, DB vs hardcoded",
-  "common/featureFlags": "Creating or managing feature flags: naming, lifecycle, cleanup",
+  "common/configuration":
+    "Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages",
+  "common/featureFlags":
+    "Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas",
   "common/gitWorkflow": "Writing commit messages, PR titles, or reviewing pull requests",
   "common/loggingObservability":
-    "Adding logging, metrics, or observability: levels, structured context, PII",
+    "Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog",
   "common/testing": "Writing unit tests: conventions, naming, structure",
   "common/typeScript": "Writing ANY TypeScript code",
-  "backend/architecture": "Creating modules, services, controllers: three-tier pattern",
+  "backend/architecture":
+    "Structuring NestJS modules, services, repos: three-tier, microservices, ts-rest contracts",
   "backend/asyncMessaging": "Working with queues, async messaging, or background jobs",
-  "backend/mongodb": "Working with MongoDB/Mongoose: schemas, indexes, queries",
-  "backend/notifications": "Implementing notifications or messaging to users",
-  "backend/postgres": "Writing Postgres queries: Prisma, subqueries, feature flags",
-  "backend/restApiDesign": "Designing REST APIs: JSON:API, endpoints, responses, contracts",
+  "backend/mongodb":
+    "Working with MongoDB/Mongoose: schemas, indexes, queries, transactions, migrations",
+  "backend/notifications":
+    "Implementing notifications via Knock: push notifications, deep links, workflow design",
+  "backend/postgres":
+    "Working with Postgres: column types, schema changes, query patterns, Prisma TypedSQL",
+  "backend/restApiDesign":
+    "Designing REST APIs: JSON:API, auth, validation, pagination, ts-rest contracts, DTOs",
   "backend/infrastructure": "Provisioning infrastructure: Terraform, Docker, ECS, DNS",
-  "backend/serviceTests": "Writing service-level integration tests",
-  "frontend/customHooks": "Creating or refactoring React custom hooks",
+  "backend/serviceTests":
+    "Writing service tests: test data, background jobs, bug handling, migrations",
+  "frontend/customHooks":
+    "Creating React custom hooks: naming, structure, shared state with constate",
   "frontend/dataFetching": "Implementing data fetching: React Query, API calls, caching",
   "frontend/e2eTesting": "Writing E2E tests with Playwright",
-  "frontend/errorHandling": "Implementing error handling in React components",
+  "frontend/errorHandling":
+    "Handling errors in React: component, mutation (meta pattern), Zod validation",
   "frontend/fileOrganization": "Organizing files and folders in a frontend project",
   "frontend/frontendTechnologyStack": "Choosing frontend libraries, frameworks, or tools",
-  "frontend/interactiveElements": "Building interactive UI elements: forms, buttons, inputs",
+  "frontend/interactiveElements":
+    "Adding interactive elements: semantic HTML, a11y, keyboard accessibility",
   "frontend/modalRoutes": "Implementing modals or route-based dialogs",
-  "frontend/reactComponents": "Writing React components: patterns, props, composition",
-  "frontend/styling": "Styling components: CSS, themes, responsive design",
+  "frontend/reactComponents":
+    "Writing React components: structure, composition, navigation, Storybook, inline JSX",
+  "frontend/styling": "Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS",
   "frontend/testing": "Writing frontend tests: React Testing Library, component tests",
-  "datamodeling/analytics": "Working with analytics data models",
+  "datamodeling/analytics":
+    "Querying analytics data: dbt-mcp, Snowflake, source columns, output formatting",
   "datamodeling/castingDbtStagingModels": "Casting data types in dbt staging models",
   "datamodeling/dbtModelDevelopment": "Developing dbt models: naming, structure, testing",
   "datamodeling/dbtYamlDocumentation": "Writing dbt YAML documentation and schema files",
