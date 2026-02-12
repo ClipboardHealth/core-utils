@@ -74,13 +74,15 @@ function processOrder(order: Order): Result {
 
 ## Error Handling
 
-- Favor `Either` type (`ServiceResult` from `@clipboard-health/util-ts`) for expected errors over `try/catch`
+- **Expected errors** (not found, validation failures): return `ServiceResult` (Either type) from `@clipboard-health/util-ts` instead of `try/catch`
+- **Unexpected/unrecoverable errors**: throw `ServiceError` from `@clipboard-health/util-ts`
 - Use `toError(maybeError)` from `@clipboard-health/util-ts` over hardcoded strings or type casting (`as Error`)
 - Use `ERROR_CODES` from `@clipboard-health/util-ts`, not `HttpStatus` from NestJS
 
 ```typescript
-import { ServiceError } from "@clipboard-health/util-ts";
+import { ServiceError, ERROR_CODES } from "@clipboard-health/util-ts";
 
+// Unexpected/unrecoverable — throw
 throw new ServiceError({
   code: "SHIFT_NOT_FOUND",
   message: `Shift ${shiftId} not found`,

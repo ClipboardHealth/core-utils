@@ -79,20 +79,10 @@ return <>{content}</>;
 // ✅ Keep inline or extract to new component file
 return <p>Content</p>;
 
-// ❌ Don't extract handlers unnecessarily
-const handleChange = (e) => { ... };
-return <Input onChange={handleChange} />;
+// ✅ Simple handlers: keep inline
+return <Input onChange={(e) => setValue(e.target.value)} />;
 
-// ✅ Keep inline
-return <Input onChange={(e) => { ... }} />;
-```
-
-## List Rendering
-
-```typescript
-// ✅ Always use stable keys
-{users.map((user) => <UserCard key={user.id} user={user} />)}
-
-// ❌ Never use index as key for dynamic lists
-{items.map((item, i) => <Item key={i} />)}
+// ✅ Complex handlers with deps or passed to memoized children: extract with useCallback
+const handleSave = useCallback(async () => { ... }, [deps]);
+return <MemoizedChild onSave={handleSave} />;
 ```

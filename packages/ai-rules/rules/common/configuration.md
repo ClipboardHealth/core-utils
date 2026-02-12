@@ -19,7 +19,6 @@ Contains secrets?
 - `.env` locally (gitignored)
 - Production: AWS SSM Parameter Store
 - Prefer short-lived tokens
-- Never hardcode secrets or credentials in source code; never commit secrets to Git
 
 **Naming:** `[ENV]_[VENDOR]_[TYPE]_usedBy_[CLIENT]_[SCOPE]_[CREATED_AT]_[OWNER]`
 

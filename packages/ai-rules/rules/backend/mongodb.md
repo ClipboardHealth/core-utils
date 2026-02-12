@@ -67,11 +67,11 @@ Run `explain("executionStats")` on new or changed queries; verify `$lookup` stag
 - Use `$exists: true` to check field presence (matches even if value is `null`); use `$ne: null` to check field is present and not `null`; use `$eq: null` to match missing or explicitly `null` fields; combining `$exists: true` with `$ne: null` is valid but redundant since `$ne: null` already excludes missing and null fields
 - Include partial/sparse index constraints in queries that rely on those indexes
 - Avoid `$expr` in `$lookup` pipelines except for simple comparisons (`$eq`, `$lt`, `$lte`, `$gt`, `$gte`)
-- Limit `$in` to tens of values
+- Limit `$in` to fewer than 100 values
 
 ## Transactions
 
-- Do not use parallel promise execution (`Promise.all`, `Promise.allSettled`, `Promise.race`) inside a MongoDB transaction
+- Do not use parallel promise execution (`Promise.all`, `Promise.allSettled`, `Promise.race`) inside a MongoDB transaction — sessions are not thread-safe; concurrent operations on the same session cause undefined behavior
 - For atomic operations: include both reads and writes in the same transaction, pass the session explicitly to downstream functions, commit/abort in try/catch, and call `session.endSession()` in `finally`
 
 ## Batch Migrations

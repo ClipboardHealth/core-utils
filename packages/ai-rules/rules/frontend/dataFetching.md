@@ -4,9 +4,8 @@
 
 1. Use React Query for all API calls
 2. Define Zod schemas for all request/response types
-3. Use `isLoading`, `isError`, `isSuccess`—don't create custom state
-4. Use `enabled` option for conditional fetching
-5. Use `invalidateQueries` (not `refetch`) for disabled queries
+3. Use `enabled` option for conditional fetching
+4. Use `invalidateQueries` (not `refetch`) for disabled queries
 
 ## Hook Pattern
 

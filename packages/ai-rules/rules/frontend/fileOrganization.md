@@ -18,10 +18,3 @@ FeatureName/
 ├── paths.ts                # Route constants
 └── types.ts                # Shared types
 ```
-
-## Naming
-
-- Components: `PascalCase.tsx`
-- Hooks: `camelCase.ts` (prefixed with `use`)
-- Utils: `camelCase.ts`
-- Tests: `*.test.tsx`

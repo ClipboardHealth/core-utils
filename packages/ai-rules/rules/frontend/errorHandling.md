@@ -19,9 +19,9 @@ export function DataComponent() {
 useMutation({
   mutationFn: createItem,
   onSuccess: () => showSuccessToast("Created"),
-  onError: (error) => {
-    logError("CREATE_FAILURE", error);
-    showErrorToast("Failed to create");
+  meta: {
+    logErrorMessage: APP_EVENTS.CREATE_FAILURE,
+    userErrorMessage: "Failed to create",
   },
 });
 ```

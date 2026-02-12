@@ -46,7 +46,21 @@ async function getLibraryEntries(): Promise<LibraryEntry[]> {
     }),
   );
 
-  return results.filter((result) => result.status === "fulfilled").map((result) => result.value);
+  const rejected = results.filter(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+  if (rejected.length > 0) {
+    console.warn(
+      `Skipped ${rejected.length} package.json file(s):`,
+      rejected.map((r) => String(r.reason)),
+    );
+  }
+
+  return results
+    .filter(
+      (result): result is PromiseFulfilledResult<LibraryEntry> => result.status === "fulfilled",
+    )
+    .map((result) => result.value);
 }
 
 async function updateFile(file: FileUpdate, entries: readonly LibraryEntry[]): Promise<void> {

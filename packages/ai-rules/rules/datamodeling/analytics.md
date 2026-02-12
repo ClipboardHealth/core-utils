@@ -22,7 +22,7 @@ Use the dbt-mcp server to:
 - When in doubt, read the code in the data-modeling repo to learn how each column is calculated and where the data is coming from
 - Strongly prefer to use mart models (defined inside the mart folder, those that don't have an int- or stg- prefix) before int- and stg- models
 - Strongly prefer to query tables under the analytics schema, before querying any other schemas like airbyte_db/hevo_database
-- If unsure, confirm with the user. Providing suggestions of tables to use
+- If unsure, confirm with the user and suggest candidate tables
 - If required, you might do some data analysis using python instead of pure SQL. Connect to snowflake using a python script and then use libraries like pandas, numpy, seaborn for visualization
 
 ## Output format

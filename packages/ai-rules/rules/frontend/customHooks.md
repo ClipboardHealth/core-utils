@@ -2,7 +2,6 @@
 
 ## Naming
 
-- Prefix with `use`
 - Boolean: `useIs*`, `useHas*`, `useCan*`
 - Data: `useGet*`, `use*Data`
 - Actions: `useSubmit*`, `useCreate*`

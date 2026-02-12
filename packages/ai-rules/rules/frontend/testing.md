@@ -55,4 +55,3 @@ mockServer.use(createUserHandler(customData));
 ## What to Test
 
 ✅ Test: user interactions, all states (loading/success/error), integration between components
-❌ Don't test: implementation details, third-party libraries, styles
