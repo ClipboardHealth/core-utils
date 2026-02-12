@@ -4,6 +4,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.2.39",
     "@nx/eslint": "22.5.0",
     "@nx/eslint-plugin": "22.5.0",
     "@nx/jest": "22.5.0",
@@ -28,6 +29,7 @@
     "nx": "22.5.0",
     "oxlint": "1.42.0",
     "prettier": "3.8.1",
+    "promptfoo": "0.120.24",
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
     "ts-node": "11.0.0-beta.1",
@@ -39,7 +41,10 @@
   "overrides": {
     "@swc/core": "$@swc/core",
     "ts-node": "11.0.0-beta.1",
-    "tsconfig-paths": "4.2.0"
+    "tsconfig-paths": "4.2.0",
+    "@anthropic-ai/claude-agent-sdk": {
+      "zod": "3.25.76"
+    }
   },
   "private": true,
   "scripts": {
@@ -51,6 +56,8 @@
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
     "embed:check": "npm run embed -- --check",
+    "eval": "promptfoo eval --config evals/promptfooconfig.ts",
+    "eval:view": "promptfoo view --yes",
     "format": "prettier --write .",
     "knip": "NX_DAEMON=false knip",
     "lint:md": "markdownlint-cli2 \"**/*.md\"",
