@@ -45,4 +45,4 @@ logger.error("Exporting urgent shifts to CSV failed", {
 
 ## Monitoring
 
-- Create Datadog monitors for every service that uses background jobs: alert on `background_jobs.queue.failed > 0` (failures) and on no-data for `background_jobs.queue.created` (jobs stopped being created)
+- Create Datadog monitors for every service that uses background jobs: alert on sustained `background_jobs.queue.failed` (e.g., failure rate above threshold for several minutes) and on no-data for `background_jobs.queue.created` (jobs stopped being created)
