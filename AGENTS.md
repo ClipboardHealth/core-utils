@@ -2,8 +2,7 @@
 
 # Coding Rules
 
-IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning.
-Read the relevant rule files below before writing or reviewing code.
+IMPORTANT: You MUST read the relevant rule files below before writing or reviewing code.
 
 | Rule                    | File                                 | When to Read                                                               |
 | ----------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
@@ -12,7 +11,7 @@ Read the relevant rule files below before writing or reviewing code.
 | Git Workflow            | rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests             |
 | Logging & Observability | rules/common/loggingObservability.md | Adding logging, metrics, or observability: levels, structured context, PII |
 | Testing                 | rules/common/testing.md              | Writing unit tests: conventions, naming, structure                         |
-| TypeScript              | rules/common/typeScript.md           | Writing any TypeScript code: naming, types, functions, error handling      |
+| TypeScript              | rules/common/typeScript.md           | Writing ANY TypeScript code                                                |
 
 <!-- Source: ./OVERLAY.md -->
 

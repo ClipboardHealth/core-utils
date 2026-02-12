@@ -1,0 +1,5 @@
+# promptfoo output and cache
+output/
+.cache/
+*.json
+!package.json

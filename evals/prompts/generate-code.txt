@@ -1,0 +1,3 @@
+{{task}}
+
+In your final response, output ONLY the code directly in a single fenced code block.

@@ -18,7 +18,7 @@ export const RULE_FILES = {
   "common/loggingObservability":
     "Adding logging, metrics, or observability: levels, structured context, PII",
   "common/testing": "Writing unit tests: conventions, naming, structure",
-  "common/typeScript": "Writing any TypeScript code: naming, types, functions, error handling",
+  "common/typeScript": "Writing ANY TypeScript code",
   "backend/architecture": "Creating modules, services, controllers: three-tier pattern",
   "backend/asyncMessaging": "Working with queues, async messaging, or background jobs",
   "backend/mongodb": "Working with MongoDB/Mongoose: schemas, indexes, queries",

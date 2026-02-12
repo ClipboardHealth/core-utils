@@ -6,6 +6,7 @@
     "**/jest.config.ts",
     "**/webpack.*.js",
     ".claude/**/*.ts",
+    "evals/**/*.ts",
     "packages/ai-rules/scripts/*.ts",
     "packages/eslint-config/src/react.js",
     "packages/eslint-plugin/src/lib/createRule.ts",
@@ -13,6 +14,7 @@
     "scripts/**/*.ts",
   ],
   "ignoreDependencies": [
+    "@anthropic-ai/claude-agent-sdk",
     "@nx/webpack",
     "@typescript-eslint/parser",
     "eslint-plugin-promise",
