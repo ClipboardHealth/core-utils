@@ -17,6 +17,7 @@ jobs:
   pull-request:
     if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
     runs-on: [self-hosted, cbh-amazon-linux-2023]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
         if: github.event_name == 'pull_request'
@@ -35,8 +36,9 @@ jobs:
       - run: npm run ci:install
       - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
-      - run: npx nx affected --configuration ci --parallel 3 --targets build,lint,test
+      - run: npx nx affected --configuration ci --targets build,lint,test
       - run: docker compose down --volumes
+        if: always()
 
   main:
     if: github.ref == 'refs/heads/main'
@@ -45,6 +47,7 @@ jobs:
       contents: write
       id-token: write
     runs-on: [self-hosted, cbh-amazon-linux-2023]
+    timeout-minutes: 15
     steps:
       - id: token
         uses: actions/create-github-app-token@v2
@@ -57,12 +60,21 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/setup-node
+
+      - run: docker compose up -d --wait --wait-timeout 120
       - run: npm run ci:install
       - run: npm run ci:check
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
-      - run: npx nx affected --configuration ci --parallel 3 --skip-nx-cache --target build
+      - run: npx nx affected --configuration ci --skip-nx-cache --target build
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+      # Lint and test can use the cache; only build needs --skip-nx-cache for deployment artifact integrity
+      - run: npx nx affected --configuration ci --targets lint,test
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+      - run: docker compose down --volumes
+        if: always()
+
       - run: |
           git config user.name "GitHub Bot"
           git config user.email "open-source@clipboardhealth.com"
@@ -75,6 +87,7 @@ jobs:
       - run: npx nx run-many --target=build
       - env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        # Re-publishing an existing version is a no-op, so re-running this workflow recovers from transient NPM registry failures
         run: npx nx release publish
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
@@ -82,7 +95,7 @@ jobs:
         run: |
           npx syncpack fix-mismatches &&
           npm install &&
-          git add . &&
+          git add package.json packages/*/package.json package-lock.json &&
           git diff --staged --quiet || git commit -m "chore(release): sync package versions [skip actions]" --no-verify &&
           git push
       - run: npm run docs
@@ -90,4 +103,3 @@ jobs:
         with:
           branch: gh-pages
           folder: docs
-    timeout-minutes: 10
