@@ -142,7 +142,7 @@ export default {
       assert: [
         { type: "regex", value: "SSM|Parameter Store" },
         { type: "contains", value: "Zod" },
-        { type: "regex", value: "LaunchDarkly|feature.flag" },
+        { type: "regex", value: "LaunchDarkly|feature\\.flag" },
         {
           type: "llm-rubric",
           value: [
