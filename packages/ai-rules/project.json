@@ -8,13 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": [
-        "default",
-        "{projectRoot}/scripts/**/*",
-        "{projectRoot}/rules/**/*",
-        "{projectRoot}/README.md",
-        "{projectRoot}/package.json"
-      ],
+      "inputs": ["{projectRoot}/**/*", "sharedGlobals", "!{workspaceRoot}/package-lock.json"],
       "options": {
         "command": "tsx scripts/build.ts",
         "cwd": "{projectRoot}",
