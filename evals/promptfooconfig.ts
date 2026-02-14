@@ -31,10 +31,6 @@ export default {
 
   prompts: ["file://prompts/generateCode.txt"],
 
-  defaultTest: {
-    assert: [{ type: "javascript", value: "file://assertions/typescriptRules.ts" }],
-  },
-
   tests: [
     // Test 1: TypeScript rules (code gen)
     {
@@ -56,6 +52,7 @@ export default {
           value: "\\bis[A-Z]\\w*|\\bhas[A-Z]\\w*|\\bshould[A-Z]\\w*",
         },
         { type: "not-contains", value: " as " },
+        { type: "javascript", value: "file://assertions/typescriptRules.ts" },
         {
           type: "llm-rubric",
           value: [
@@ -83,6 +80,7 @@ export default {
         { type: "not-contains", value: "test(" },
         { type: "regex", value: "\\bexpected\\b" },
         { type: "regex", value: "\\bactual\\b" },
+        { type: "javascript", value: "file://assertions/typescriptRules.ts" },
         { type: "javascript", value: "file://assertions/testingRules.ts" },
         {
           type: "llm-rubric",
@@ -113,6 +111,7 @@ export default {
         { type: "regex", value: "logger\\.error" },
         { type: "regex", value: "logContext" },
         { type: "regex", value: "datadogMetrics\\.increment" },
+        { type: "javascript", value: "file://assertions/typescriptRules.ts" },
         { type: "javascript", value: "file://assertions/loggingRules.ts" },
         {
           type: "llm-rubric",
