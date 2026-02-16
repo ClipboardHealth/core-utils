@@ -117,5 +117,13 @@ After generating the review:
 
 1. Display the human-readable sections to the user.
 2. If there is an open PR for the current branch, ask: 'Would you like me to add this as a comment on the PR? The structured JSON block will be included for your team's aggregation pipeline.'
-3. If the user agrees, run: gh pr comment <PR_NUMBER> --repo <REPO> --body '<the full review including JSON block>'
+3. If the user agrees, write the full review (including JSON block) to a temp file and post it:
+
+   ```bash
+   cat <<'EOF' > /tmp/session-review.md
+   <the full review including JSON block>
+   EOF
+   gh pr comment <PR_NUMBER> --repo <REPO> --body-file /tmp/session-review.md
+   ```
+
 4. If the user declines, say: 'No problem. The review is in your session transcript if you want it later.'
