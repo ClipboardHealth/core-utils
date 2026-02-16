@@ -16,7 +16,7 @@ Score each dimension 1-5 (1=poor, 5=excellent):
 - **Tool precision**: Did the agent use the right tools for each task, or did it flail between tools, run unnecessary reads, or use grep when it should have used targeted file reads?
 - **Iteration efficiency**: How many attempts did it take to get things right? Count tool retries, failed bash commands, and edit-then-re-edit cycles.
 - **Context utilization**: Did the agent leverage CLAUDE.md, AGENTS.md, and project conventions, or did it ignore available context and make assumptions?
-- **Human intervention rate**: How often did the user need to course-correct, reject tool calls, abort operations, or redirect the agent? Each rejection/abort is a friction event.
+- **Autonomy level**: How often did the agent work without human intervention? Lower intervention needs indicate better agent calibration. Each rejection/abort/course-correction is a friction event.
 - **Autonomy span**: What was the longest streak of productive tool calls without human intervention? Longer spans indicate better agent calibration.
 
 Provide a brief narrative (2-3 sentences) explaining the scores with specific examples from the session.
@@ -87,7 +87,7 @@ After the human-readable review, emit a fenced JSON block that a scraper can par
       "tool_precision": <1-5>,
       "iteration_efficiency": <1-5>,
       "context_utilization": <1-5>,
-      "human_intervention_rate": <1-5>,
+      "autonomy_level": <1-5>,
       "autonomy_span": <1-5>,
       "friction_events": <count of rejections/aborts/redirects>,
       "total_tool_calls": <count>,
