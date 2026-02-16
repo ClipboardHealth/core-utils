@@ -25,7 +25,7 @@ Provide a brief narrative (2-3 sentences) explaining the scores with specific ex
 
 Evaluate how well the agent followed project coding standards and CLAUDE.md rules.
 
-Score each dimension 1-5:
+Score each dimension 1-5 (1=poor, 5=excellent):
 
 - **CLAUDE.md compliance**: Did the agent follow the rules and conventions defined in CLAUDE.md and AGENTS.md? Flag specific violations.
 - **Code pattern adherence**: Did the generated code follow established project patterns (naming conventions, error handling, file organization, test structure)?
