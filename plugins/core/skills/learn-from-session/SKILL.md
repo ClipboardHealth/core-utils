@@ -51,6 +51,8 @@ Based on the full analysis, produce recommendations in these categories. Skip an
 
 ### CLAUDE.md updates
 
+**Do not suggest rules that duplicate existing automated enforcement.** If a lint rule, pre-commit hook, CI check, or other tooling already catches an issue, documenting it in CLAUDE.md/AGENTS.md is redundant. Before suggesting a rule, check whether the session transcript shows the error was already caught and blocked by automated tooling (e.g. a pre-commit hook rejected the commit, a linter flagged the issue). If so, skip it — the tooling is already doing its job.
+
 For each suggestion, specify whether it belongs in:
 
 - **Team-shared** (checked into git, e.g. `./CLAUDE.md` or `./AGENTS.md`)
@@ -74,7 +76,7 @@ One concrete thing the engineer could do differently in their prompts to get bet
 
 One observation about how the agent behaved that the team should know about — a strength to replicate or a weakness to work around.
 
-## STRUCTURED DATA BLOCK
+## Structured data block
 
 After the human-readable review, emit a fenced JSON block that a scraper can parse:
 
@@ -89,7 +91,7 @@ After the human-readable review, emit a fenced JSON block that a scraper can par
       "context_utilization": <1-5>,
       "autonomy_level": <1-5>,
       "autonomy_span": <1-5>,
-      "friction_events": <count of rejections/aborts/redirects>,
+      "friction_events": <count of rejections/aborts/course-corrections>,
       "total_tool_calls": <count>,
       "failed_tool_calls": <count>
     },
@@ -111,7 +113,7 @@ After the human-readable review, emit a fenced JSON block that a scraper can par
 }
 ```
 
-## INSTRUCTIONS FOR PRESENTING TO USER
+## Instructions for presenting to user
 
 After generating the review:
 
