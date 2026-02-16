@@ -11,6 +11,7 @@ Clipboard's core development tools.
   - [iterate-pr](#iterate-pr)
   - [local-package](#local-package)
   - [revise-claude-md](#revise-claude-md)
+  - [learn-from-session](#learn-from-session)
   - [unresolved-pr-comments](#unresolved-pr-comments)
 - [Agents](#agents)
   - [code-simplifier](#code-simplifier)
@@ -43,6 +44,10 @@ Analyze and fix CI failures for a GitHub pull request. Invoke with `/fix-ci` or 
 ### iterate-pr
 
 Autonomously iterate on a pull request until CodeRabbit review passes and all CI checks succeed. Each iteration commits changes, waits for CI, and addresses feedback. Invoke with `/iterate-pr` or `/iterate-pr <max-iterations>`.
+
+### learn-from-session
+
+Analyze the current session for agent efficiency, quality, and actionable improvements. Produces scored dimensions, a session reflection, and concrete suggestions for CLAUDE.md updates, hooks, skills, and prompt techniques. Invoke with `/learn-from-session`.
 
 ### local-package
 

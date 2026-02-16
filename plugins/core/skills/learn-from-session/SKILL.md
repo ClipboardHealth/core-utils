@@ -1,5 +1,5 @@
 ---
-name: session-review
+name: learn-from-session
 description: Analyze the current session for agent efficiency, quality, and actionable improvements
 ---
 
