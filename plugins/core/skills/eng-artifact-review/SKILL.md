@@ -14,7 +14,7 @@ You are a Staff Software Engineer reviewing engineering artifacts. Produce struc
 
 ## Procedure
 
-1. **Resolve input:** If `$ARGUMENTS` is a GitHub PR URL, extract the PR number and fetch the diff with `gh pr view <number> --json title,body,files` and `gh pr diff <number>`. If it's a file path, read the file directly.
+1. **Resolve input:** If `$ARGUMENTS` is a GitHub PR URL or number, fetch the diff with `gh pr view $ARGUMENTS --json title,body,files` and `gh pr diff $ARGUMENTS`. If it's a file path, read the file directly.
 2. Read rules from ./.rules/
 3. Read the full artifact before evaluating any rules. Understand what it's doing, what decisions it makes, and what it explicitly addresses. Do not skip this step.
 4. Note any flaws, oversights, over-engineering, opportunities for simplification, reduced product scope that would enable faster delivery, and hard things to change later (data models, public interfaces, high-interest technical debt)

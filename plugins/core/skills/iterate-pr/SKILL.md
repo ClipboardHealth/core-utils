@@ -28,7 +28,7 @@ Get the PR for the current branch:
 
 **If PR exists:** Get unresolved comments data:
 
-!`node ${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts 2>/dev/null`
+!`node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts" 2>/dev/null`
 
 Parse the JSON output and evaluate exit conditions.
 
@@ -72,7 +72,7 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 > 5. **Check CI Status**: !`gh pr checks --json name,state,bucket`
 >    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool, report what was fixed, and exit
 > 6. **Check Comments**: Get unresolved comments:
->    !`node ${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts 2>/dev/null`
+>    !`node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts" 2>/dev/null`
 >    - If unresolved comments or nitpicks exist, for EVERY comment:
 >      1. Read the relevant code at the file path and line number
 >      2. Assess the comment with an explicit verdict:
@@ -88,7 +88,7 @@ After the subagent completes:
 
 1. Increment iteration counter
 2. If no commits were made this iteration:
-   - Get unresolved comments: !`node ${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts 2>/dev/null`
+   - Get unresolved comments: !`node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts" 2>/dev/null`
    - If unresolved comments remain, exit with: "Comments addressed, awaiting reviewer resolution. Run `/iterate-pr` after reviewer responds."
 3. Report: "Iteration [N]/[max] complete. Checking state..."
 4. Return to Step 2
