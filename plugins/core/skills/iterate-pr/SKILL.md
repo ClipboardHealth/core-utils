@@ -32,9 +32,11 @@ Get the PR for the current branch:
 
 Parse the JSON output and evaluate exit conditions.
 
-**Exit with success** when all conditions are met:
+**If any CI checks are still PENDING, QUEUED, or IN_PROGRESS:** Proceed to Step 3 regardless of comment count. Automated reviewers (e.g. CodeRabbit) may not have posted comments yet, so comment data is unreliable until all checks complete.
 
-- All CI checks pass (no failures in statusCheckRollup)
+**Exit with success** when ALL conditions are met:
+
+- All CI checks have completed (no PENDING, QUEUED, or IN_PROGRESS statuses in statusCheckRollup) and none have failed
 - No unresolved comments (totalUnresolvedComments == 0)
 - No nitpicks (totalNitpicks == 0)
 
@@ -69,10 +71,9 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 > 2. **Commit and Push**: Invoke `core:commit-push-pr` via the Skill tool
 > 3. **Get PR Number**: !`gh pr view --json number --jq '.number'`
 > 4. **Wait for CI**: !`gh pr checks --watch`
-> 5. **Check CI Status**: !`gh pr checks --json name,state,bucket`
+> 5. **Check CI Status**: Run `gh pr checks --json name,state,bucket` and parse the output
 >    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool, report what was fixed, and exit
-> 6. **Check Comments**: Get unresolved comments:
->    !`node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts" 2>/dev/null`
+> 6. **Check Comments**: Run `node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts"` and parse the JSON output
 >    - If unresolved comments or nitpicks exist, for EVERY comment:
 >      1. Read the relevant code at the file path and line number
 >      2. Assess the comment with an explicit verdict:
@@ -80,7 +81,7 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 >         - **Disagree**: Explain why the current code is acceptable; do NOT change the code
 >         - **Already fixed**: Note that the code already addresses this concern
 >      3. After assessing all comments, fix only those you agreed with and exit (next iteration will commit fixes)
-> 7. **Report**: Include whether commits were made (!`git rev-parse HEAD` != `startCommit`), PR status, CI status, and comments addressed
+> 7. **Report**: Run `git rev-parse HEAD` and compare to `startCommit` to determine if commits were made. Include PR status, CI status, and comments addressed
 
 ### Step 4: Loop
 
@@ -88,7 +89,7 @@ After the subagent completes:
 
 1. Increment iteration counter
 2. If no commits were made this iteration:
-   - Get unresolved comments: !`node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts" 2>/dev/null`
+   - Get unresolved comments by running: `node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts"`
    - If unresolved comments remain, exit with: "Comments addressed, awaiting reviewer resolution. Run `/iterate-pr` after reviewer responds."
 3. Report: "Iteration [N]/[max] complete. Checking state..."
 4. Return to Step 2

@@ -14,6 +14,8 @@ export const FILES = {
 export const RULE_FILES = {
   "common/configuration":
     "Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages",
+  "common/coreLibraries":
+    "Adding dependencies or implementing functionality that may exist in a @clipboard-health/* library",
   "common/featureFlags":
     "Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas",
   "common/gitWorkflow": "Writing commit messages, PR titles, or reviewing pull requests",
@@ -66,6 +68,7 @@ export function toRulePath(ruleId: RuleId): string {
 export const CATEGORIES = {
   common: [
     "common/configuration",
+    "common/coreLibraries",
     "common/featureFlags",
     "common/gitWorkflow",
     "common/loggingObservability",
