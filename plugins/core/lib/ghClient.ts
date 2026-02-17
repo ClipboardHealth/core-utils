@@ -28,7 +28,10 @@ export function isGhCliInstalled(): boolean {
 }
 
 export function isGhAuthenticated(): boolean {
-  return runGh(["auth", "status"]).status === 0;
+  // `gh auth status` returns non-zero when *any* stored account is invalid,
+  // even if the active account (e.g. via GITHUB_TOKEN) works fine.
+  // Use `gh api user` to verify actual API access instead.
+  return runGh(["api", "user", "--jq", ".login"]).status === 0;
 }
 
 export function validatePrerequisites(): void {
