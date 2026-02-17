@@ -26,8 +26,8 @@ const FILES: FileUpdate[] = [
       `- [${entry.name}](./packages/${entry.name}/README.md): ${entry.description}`,
   },
   {
-    path: join(__dirname, "OVERLAY.md"),
-    label: "OVERLAY.md '## Key Libraries'",
+    path: join(__dirname, "packages", "ai-rules", "rules", "common", "coreLibraries.md"),
+    label: "ai-rules coreLibraries.md",
     formatLine: (entry) => `- **${entry.name}**: ${entry.description}`,
   },
 ];

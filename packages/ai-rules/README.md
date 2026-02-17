@@ -110,6 +110,7 @@ git commit -m "chore: update AI coding rules"
 | Rule ID                       | Description                                                    |
 | ----------------------------- | -------------------------------------------------------------- |
 | `common/configuration`        | Config decisions: secrets, SSM, feature flags, DB vs hardcoded |
+| `common/coreLibraries`        | Available `@clipboard-health/*` shared libraries               |
 | `common/featureFlags`         | Feature flag naming, lifecycle, and cleanup                    |
 | `common/gitWorkflow`          | Commit messages, PR titles, and pull request guidelines        |
 | `common/loggingObservability` | Log levels, structured context, PII avoidance                  |
