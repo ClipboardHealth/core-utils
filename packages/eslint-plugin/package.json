@@ -19,9 +19,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/eslint-plugin",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/eslint-plugin"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

@@ -13,9 +13,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/background-jobs-adapter",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/background-jobs-adapter"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

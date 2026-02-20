@@ -26,9 +26,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/mongo-jobs",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/mongo-jobs"
   },
   "scripts": {
     "build": "nx build mongo-jobs",

@@ -31,9 +31,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/json-api-nestjs",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/json-api-nestjs"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

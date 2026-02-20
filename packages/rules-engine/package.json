@@ -24,9 +24,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/rules-engine",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/rules-engine"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

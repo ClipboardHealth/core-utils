@@ -24,9 +24,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/testing-core",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/testing-core"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

@@ -19,7 +19,7 @@ module.exports = {
   ],
   "**/*.{ts,tsx,md,mdx}": async () => [`npm run embed:check`],
   "**/*.{css,scss,graphql,js,json,jsonc,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
-    `prettier --write ${files.join(" ")}`,
+    `oxfmt ${files.join(" ")}`,
   ],
   "**/package.json": async () => [
     process.env.NX_RELEASE === "true" ? `syncpack fix-mismatches` : `syncpack lint`,
