@@ -30,7 +30,17 @@ Parse the `spanID` query parameter from the Datadog UI URL. This is a decimal sp
 
 If the URL does not contain a `spanID` parameter, inform the user that the test run has no associated trace (this typically happens when Datadog RUM is active during E2E tests, which suppresses CI test traces).
 
-### Step 2: Fetch the span to get the `trace_id`
+### Step 2: Check if the span is in the CI Visibility index
+
+Parse the `index` query parameter from the URL. If `index=citest`, the `spanID` points to a **CI Visibility span** (e.g., the top-level Playwright test span or a browser-side HTTP request span). These spans are stored in Datadog's CI test index and are **not accessible** via the public APM Spans Events Search API.
+
+In this case, **do not attempt to query the Spans API**. Instead, inform the user:
+
+> The `spanID` in this URL points to a CI Visibility span (index: `citest`), which is not accessible via the Datadog Spans API. To fetch the backend APM trace, open the trace flamegraph in the Datadog UI, click on a **backend span** (e.g., an API endpoint or service span, not a browser/HTTP client span), and copy the updated URL. Then run this skill again with the new URL.
+
+Then stop — do not proceed to Step 3.
+
+### Step 3: Fetch the span to get the `trace_id` (APM spans only)
 
 Query the Datadog Spans API using the **wrapped data format** (the flat format returns 400):
 
@@ -60,7 +70,7 @@ Extract `trace_id` from `.data[0].attributes.trace_id`.
 
 If `DD_API_KEY` / `DD_APP_KEY` env vars are available, use those instead of reading from `~/.dogrc`.
 
-### Step 3: Fetch the full trace
+### Step 4: Fetch the full trace
 
 Use the `trace_id` to retrieve all spans in the trace:
 
@@ -89,7 +99,7 @@ curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
 
 If there are more than 50 spans, paginate using the cursor from `.meta.page.after`.
 
-### Step 4: Display the results
+### Step 5: Display the results
 
 Present a summary table of the trace, grouped by type:
 
@@ -104,3 +114,4 @@ Highlight any spans with error status or non-2xx status codes.
 - The Spans API **requires the wrapped `data` format**: `{"data": {"type": "search_request", "attributes": {"filter": ...}}}`. The flat `{"filter": ...}` format that works for CI test events will return a 400 error for spans.
 - The `spanID` in the Datadog UI URL is the bridge between CI Visibility and APM traces.
 - If no `spanID` is present in the URL, the test has no associated trace data.
+- If `index=citest` in the URL, the selected span is a **CI Visibility span** (not an APM span). The public Spans API cannot query the `citest` index. The user must click on a backend span in the flamegraph and provide the updated URL.
