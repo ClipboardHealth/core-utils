@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 
-import { stringify } from "@clipboard-health/util-ts";
-
 import { createDeterministicHash } from "./createDeterministicHash";
+import { stringify } from "./stringify";
 
 function createExpectedResult(value: unknown): string {
   const normalized = typeof value === "string" ? value : stringify(value);

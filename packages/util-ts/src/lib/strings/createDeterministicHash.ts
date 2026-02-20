@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { stringify } from "@clipboard-health/util-ts";
+import { stringify } from "./stringify";
 
 /**
  * Creates a deterministic hash.
