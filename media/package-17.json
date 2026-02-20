@@ -1,7 +1,7 @@
 {
   "name": "embedex",
   "description": "Embed shared text and code snippets from source files into destination files.",
-  "version": "2.0.16",
+  "version": "2.1.0",
   "bin": {
     "embedex": "./src/bin/cli.js"
   },
@@ -27,9 +27,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/embedex",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/embedex"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

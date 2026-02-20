@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/eslint-config",
   "description": "Our ESLint configuration.",
-  "version": "7.0.16",
+  "version": "7.1.0",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
@@ -37,9 +37,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/eslint-config",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/eslint-config"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
