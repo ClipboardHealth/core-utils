@@ -30,25 +30,29 @@ Parse the `spanID` query parameter from the Datadog UI URL. This is a decimal sp
 
 If the URL does not contain a `spanID` parameter, inform the user that the test run has no associated trace (this typically happens when Datadog RUM is active during E2E tests, which suppresses CI test traces).
 
-### Step 2: Check if the span is in the CI Visibility index
+### Step 2: Resolve API credentials
 
-Parse the `index` query parameter from the URL. If `index=citest`, the `spanID` points to a **CI Visibility span** (e.g., the top-level Playwright test span or a browser-side HTTP request span). These spans are stored in Datadog's CI test index and are **not accessible** via the public APM Spans Events Search API.
+```bash
+if [ -n "$DD_API_KEY" ] && [ -n "$DD_APP_KEY" ]; then
+  API_KEY="$DD_API_KEY"
+  APP_KEY="$DD_APP_KEY"
+else
+  API_KEY=$(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')
+  APP_KEY=$(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')
+fi
+```
 
-In this case, **do not attempt to query the Spans API**. Instead, inform the user:
+Use `$API_KEY` and `$APP_KEY` in all subsequent curl commands.
 
-> The `spanID` in this URL points to a CI Visibility span (index: `citest`), which is not accessible via the Datadog Spans API. To fetch the backend APM trace, open the trace flamegraph in the Datadog UI, click on a **backend span** (e.g., an API endpoint or service span, not a browser/HTTP client span), and copy the updated URL. Then run this skill again with the new URL.
-
-Then stop — do not proceed to Step 3.
-
-### Step 3: Fetch the span to get the `trace_id` (APM spans only)
+### Step 3: Fetch the span to get the `trace_id`
 
 Query the Datadog Spans API using the **wrapped data format** (the flat format returns 400):
 
 ```bash
 curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
   -H "Content-Type: application/json" \
-  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
-  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
+  -H "DD-API-KEY: ${API_KEY}" \
+  -H "DD-APPLICATION-KEY: ${APP_KEY}" \
   -d '{
     "data": {
       "type": "search_request",
@@ -68,36 +72,57 @@ curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
 
 Extract `trace_id` from `.data[0].attributes.trace_id`.
 
-If `DD_API_KEY` / `DD_APP_KEY` env vars are available, use those instead of reading from `~/.dogrc`.
+If the query returns no results (empty `.data` array), the span exists only in the CI Visibility index and is not available in APM. Inform the user:
+
+> The span was not found in the APM Spans index — it likely exists only in CI Visibility (e.g., a browser-side or Playwright test span). To fetch a backend trace, open the flamegraph in the Datadog UI, click on a **backend span** (e.g., an API endpoint from a server-side service, not a browser HTTP request), copy the updated URL, and run this skill again.
+
+Then stop.
 
 ### Step 4: Fetch the full trace
 
-Use the `trace_id` to retrieve all spans in the trace:
+Use the `trace_id` to retrieve all spans in the trace. Paginate until all spans are collected:
 
 ```bash
-curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
-  -H "Content-Type: application/json" \
-  -H "DD-API-KEY: $(grep apikey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
-  -H "DD-APPLICATION-KEY: $(grep appkey ~/.dogrc | cut -d= -f2 | tr -d ' ')" \
-  -d '{
-    "data": {
-      "type": "search_request",
-      "attributes": {
-        "filter": {
-          "query": "trace_id:<TRACE_ID>",
-          "from": "now-30d",
-          "to": "now"
-        },
-        "sort": "timestamp",
-        "page": {
-          "limit": 50
+ALL_SPANS="[]"
+CURSOR=""
+
+while true; do
+  if [ -n "$CURSOR" ]; then
+    PAGE_PARAM="\"cursor\": \"${CURSOR}\","
+  else
+    PAGE_PARAM=""
+  fi
+
+  RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v2/spans/events/search" \
+    -H "Content-Type: application/json" \
+    -H "DD-API-KEY: ${API_KEY}" \
+    -H "DD-APPLICATION-KEY: ${APP_KEY}" \
+    -d "{
+      \"data\": {
+        \"type\": \"search_request\",
+        \"attributes\": {
+          \"filter\": {
+            \"query\": \"trace_id:<TRACE_ID>\",
+            \"from\": \"now-30d\",
+            \"to\": \"now\"
+          },
+          \"sort\": \"timestamp\",
+          \"page\": {
+            ${PAGE_PARAM}
+            \"limit\": 50
+          }
         }
       }
-    }
-  }'
-```
+    }")
 
-If there are more than 50 spans, paginate using the cursor from `.meta.page.after`.
+  ALL_SPANS=$(echo "$ALL_SPANS" | jq --argjson new "$(echo "$RESPONSE" | jq '.data')" '. + $new')
+  CURSOR=$(echo "$RESPONSE" | jq -r '.meta.page.after // empty')
+
+  if [ -z "$CURSOR" ]; then
+    break
+  fi
+done
+```
 
 ### Step 5: Display the results
 
@@ -114,4 +139,4 @@ Highlight any spans with error status or non-2xx status codes.
 - The Spans API **requires the wrapped `data` format**: `{"data": {"type": "search_request", "attributes": {"filter": ...}}}`. The flat `{"filter": ...}` format that works for CI test events will return a 400 error for spans.
 - The `spanID` in the Datadog UI URL is the bridge between CI Visibility and APM traces.
 - If no `spanID` is present in the URL, the test has no associated trace data.
-- If `index=citest` in the URL, the selected span is a **CI Visibility span** (not an APM span). The public Spans API cannot query the `citest` index. The user must click on a backend span in the flamegraph and provide the updated URL.
+- The `index=citest` parameter in the URL only indicates the Datadog UI view — it does **not** mean the span is inaccessible via the Spans API. Backend spans (e.g., `express.request` on a server service) are often present in both the CI Visibility flamegraph and the APM spans index. Always attempt the Spans API query regardless of the `index` parameter.
