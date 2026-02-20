@@ -15,7 +15,7 @@ export const RULE_FILES = {
   "common/configuration":
     "Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages",
   "common/coreLibraries":
-    "Adding dependencies or implementing functionality that may exist in a @clipboard-health/* library",
+    "Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library",
   "common/featureFlags":
     "Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas",
   "common/gitWorkflow": "Writing commit messages, PR titles, or reviewing pull requests",

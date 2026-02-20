@@ -1,6 +1,13 @@
 # Core Libraries
 
-Clipboard's shared `@clipboard-health/*` libraries. Check here before adding new dependencies or implementing functionality from scratch.
+Clipboard's shared `@clipboard-health/*` libraries. Check here before adding new dependencies or implementing functionality from scratch. For details on each library:
+
+- For installed packages, check `node_modules/@clipboard-health/{LIBRARY_NAME}/README.md`
+- For those not installed, use `gh api -H "Accept: application/vnd.github.raw" repos/ClipboardHealth/{core-utils OR cbh-core}/contents/packages/{LIBRARY_NAME}/README.md`
+
+## Debugging
+
+When a bug traces into a `@clipboard-health/*` library, read the source code in `node_modules/@clipboard-health/{LIBRARY_NAME}/` to find the root cause. Do not stop at the library boundary.
 
 ## core-utils
 
