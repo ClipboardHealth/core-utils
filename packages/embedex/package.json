@@ -27,9 +27,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/embedex",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/embedex"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

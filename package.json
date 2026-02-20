@@ -27,8 +27,8 @@
     "lint-staged": "16.2.7",
     "markdownlint-cli2": "0.21.0",
     "nx": "22.5.0",
+    "oxfmt": "0.34.0",
     "oxlint": "1.42.0",
-    "prettier": "3.8.1",
     "promptfoo": "0.120.24",
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
@@ -39,18 +39,18 @@
   },
   "license": "MIT",
   "overrides": {
-    "@swc/core": "$@swc/core",
-    "ts-node": "11.0.0-beta.1",
-    "tsconfig-paths": "4.2.0",
     "@anthropic-ai/claude-agent-sdk": {
       "zod": "3.25.76"
-    }
+    },
+    "@swc/core": "$@swc/core",
+    "ts-node": "11.0.0-beta.1",
+    "tsconfig-paths": "4.2.0"
   },
   "private": true,
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
-    "ci:check": "prettier --check . && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && npm run oxlint && npm run lint:md && npm run test:claude",
+    "ci:check": "oxfmt --check && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && npm run oxlint && npm run lint:md && npm run test:claude",
     "ci:install": "npm clean-install --audit false --fund false",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
@@ -58,7 +58,7 @@
     "embed:check": "npm run embed -- --check",
     "eval": "promptfoo eval --config evals/promptfooconfig.ts",
     "eval:view": "promptfoo view --yes",
-    "format": "prettier --write .",
+    "format": "oxfmt",
     "knip": "NX_DAEMON=false knip",
     "lint:md": "markdownlint-cli2 \"**/*.md\"",
     "oxlint": "oxlint",

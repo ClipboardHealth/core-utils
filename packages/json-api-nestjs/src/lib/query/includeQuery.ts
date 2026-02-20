@@ -21,7 +21,7 @@ export type RelationshipPaths<
   Prefix extends string = "",
 > =
   GreaterThan<Depth, 0> extends true
-    ? DocumentT["data"] extends Array<infer Data> | infer Data
+    ? DocumentT["data"] extends Array<infer Data> | (infer Data)
       ? Data extends { relationships?: infer Relation }
         ? Relation extends Relationships
           ? {

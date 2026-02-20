@@ -25,9 +25,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/contract-core",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/contract-core"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

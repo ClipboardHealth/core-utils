@@ -18,9 +18,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/execution-context",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/execution-context"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

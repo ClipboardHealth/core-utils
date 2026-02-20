@@ -2,7 +2,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.renderFinalNewline": "on",
   "eslint.validate": ["typescript", "json"],
   "files.watcherExclude": {

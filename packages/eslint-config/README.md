@@ -10,7 +10,7 @@ Our [ESLint](https://eslint.org/) configuration.
 ## Install
 
 ```bash
-npm install -D @clipboard-health/eslint-config eslint-config-prettier prettier
+npm install -D @clipboard-health/eslint-config eslint-config-prettier oxfmt
 ```
 
 Then, modify your `.eslintrc.js` file:

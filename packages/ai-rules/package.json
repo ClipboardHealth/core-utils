@@ -20,11 +20,11 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/ai-rules",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/ai-rules"
   },
   "scripts": {
-    "format": "prettier --write 'rules/**/*.md'"
+    "format": "oxfmt 'rules/**/*.md'"
   }
 }

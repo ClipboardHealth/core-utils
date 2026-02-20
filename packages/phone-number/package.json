@@ -21,9 +21,9 @@
     "access": "public"
   },
   "repository": {
-    "directory": "packages/phone-number",
     "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git"
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/phone-number"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"

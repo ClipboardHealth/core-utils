@@ -1,0 +1,12 @@
+{
+  "ignorePatterns": [
+    ".nx/cache",
+    ".nx/workspace-data",
+    "coverage/",
+    "dist/",
+    "docs/",
+    ".github/CODEOWNERS",
+    "*.toml",
+    "**/package.json"
+  ]
+}
