@@ -68,7 +68,7 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 > 1. **Record Starting Commit**: !`git rev-parse HEAD` (save as `startCommit`)
 > 2. **Commit and Push**: Invoke `core:commit-push-pr` via the Skill tool
 > 3. **Get PR Number**: !`gh pr view --json number --jq '.number'`
-> 4. **Wait for CI**: !`gh pr checks --watch`
+> 4. **Wait for CI**: !`gh pr checks --watch || true`
 > 5. **Check CI Status**: !`gh pr checks --json name,state,bucket`
 >    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool, report what was fixed, and exit
 > 6. **Check Comments**: Get unresolved comments:
