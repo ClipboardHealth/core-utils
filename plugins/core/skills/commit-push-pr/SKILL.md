@@ -16,7 +16,7 @@ allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*
 
 ## Instructions
 
-Execute all steps in a **single message** using parallel tool calls. No extra commentary.
+Execute all steps in a **single message** using sequential tool calls. No extra commentary.
 
 1. **Branch**: If on `main`, create and check out a branch (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`). Use a short, descriptive name matching the change.
 
