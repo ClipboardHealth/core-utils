@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -196,18 +196,79 @@ async function appendOverlay(projectRoot: string): Promise<void> {
   console.log(`📎 Appended OVERLAY.md to ${FILES.agents}`);
 }
 
-async function formatOutputFiles(projectRoot: string): Promise<void> {
-  const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
+const PRETTIER_CONFIG_FILES = [
+  ".prettierrc",
+  ".prettierrc.json",
+  ".prettierrc.js",
+  ".prettierrc.cjs",
+  ".prettierrc.yaml",
+  ".prettierrc.yml",
+  "prettier.config.js",
+  "prettier.config.cjs",
+  "prettier.config.mjs",
+] as const;
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier" | undefined> {
+  if (await fileExists(path.join(projectRoot, ".oxfmtrc.json"))) {
+    return "oxfmt";
+  }
+
+  const prettierChecks = await Promise.all(
+    PRETTIER_CONFIG_FILES.map(
+      async (configFile) => await fileExists(path.join(projectRoot, configFile)),
+    ),
+  );
+  if (prettierChecks.some(Boolean)) {
+    return "prettier";
+  }
 
   try {
-    await execAndLog({
-      command: ["npx", "oxfmt", ...filesToFormat],
-      timeout: 60_000,
-      verbose: false,
-    });
+    const packageJson = JSON.parse(
+      await readFile(path.join(projectRoot, "package.json"), "utf8"),
+    ) as { devDependencies?: Record<string, string> };
+    const devDependencies = packageJson.devDependencies ?? {};
+
+    if ("oxfmt" in devDependencies) {
+      return "oxfmt";
+    }
+
+    if ("prettier" in devDependencies) {
+      return "prettier";
+    }
   } catch {
-    // oxfmt not available — skip formatting
+    // package.json not found or unreadable
   }
+
+  return undefined;
+}
+
+async function formatOutputFiles(projectRoot: string): Promise<void> {
+  const formatter = await detectFormatter(projectRoot);
+
+  if (!formatter) {
+    throw new Error("No formatter detected (oxfmt or prettier). Install one as a devDependency.");
+  }
+
+  const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
+  const command =
+    formatter === "oxfmt"
+      ? ["npx", "oxfmt", ...filesToFormat]
+      : ["npx", "prettier", "--write", ...filesToFormat];
+
+  await execAndLog({
+    command,
+    timeout: 60_000,
+    verbose: false,
+  });
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
