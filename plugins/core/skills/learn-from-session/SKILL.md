@@ -1,9 +1,12 @@
 ---
 name: learn-from-session
-description: Analyze the current session for agent efficiency, quality, and actionable improvements
+description: |
+  Analyze the current session for agent efficiency, quality, and actionable improvements. Use this skill when the user says things like "learn from this session", "session retro", "what went well", "how did the agent do", "what should I improve", "review this session", "session review", or any request to reflect on how the current session went. Also use when the user wants to extract learnings, identify friction, or improve their workflow based on what just happened.
 ---
 
-You are a session review agent analyzing the current Claude Code session transcript. Your job is to produce a concise, actionable review covering agent efficiency, agent quality, and concrete improvements for future sessions.
+You are reviewing the current Claude Code session. Your job is to surface the 2-3 most impactful findings — things that would actually change how the next session goes — not to produce an exhaustive report card.
+
+Be candid. A session where everything scores 4/5 but you have nothing concrete to suggest is a wasted review. Prioritize specificity over coverage: one sharp observation beats five generic ones.
 
 Analyze the session transcript and produce the following:
 
@@ -11,13 +14,13 @@ Analyze the session transcript and produce the following:
 
 Evaluate how well the agent used tools and how much human course-correction was needed.
 
-Score each dimension 1-5 (1=poor, 5=excellent):
+Score each dimension 1-5. Calibration: 1=actively harmful or completely wrong approach, 2=significant waste or frequent missteps, 3=adequate but with clear room for improvement, 4=good with minor issues, 5=genuinely impressive and hard to improve on. Reserve 5 for sessions that would make you say "I wish the agent always worked like this."
 
 - **Tool precision**: Did the agent use the right tools for each task, or did it flail between tools, run unnecessary reads, or use grep when it should have used targeted file reads?
 - **Iteration efficiency**: How many attempts did it take to get things right? Count tool retries, failed bash commands, and edit-then-re-edit cycles.
 - **Context utilization**: Did the agent leverage CLAUDE.md, AGENTS.md, and project conventions, or did it ignore available context and make assumptions?
-- **Autonomy level**: How often did the agent work without human intervention? Lower intervention needs indicate better agent calibration. Each rejection/abort/course-correction is a friction event.
-- **Autonomy span**: What was the longest streak of productive tool calls without human intervention? Longer spans indicate better agent calibration.
+- **Autonomy level**: How often did the agent work without human intervention? Each rejection/abort/course-correction is a friction event.
+- **Autonomy span**: What was the longest streak of productive tool calls without human intervention?
 
 Provide a brief narrative (2-3 sentences) explaining the scores with specific examples from the session.
 
@@ -25,7 +28,7 @@ Provide a brief narrative (2-3 sentences) explaining the scores with specific ex
 
 Evaluate how well the agent followed project coding standards and CLAUDE.md rules.
 
-Score each dimension 1-5 (1=poor, 5=excellent):
+Use the same 1-5 calibration as above.
 
 - **CLAUDE.md compliance**: Did the agent follow the rules and conventions defined in CLAUDE.md and AGENTS.md? Flag specific violations.
 - **Code pattern adherence**: Did the generated code follow established project patterns (naming conventions, error handling, file organization, test structure)?
@@ -37,7 +40,7 @@ Provide a brief narrative (2-3 sentences) explaining the scores with specific ex
 
 ## Session reflection
 
-Review the session for missing context and discoveries that would help future sessions:
+Surface things that would save time if known at the start of the next session. The bar for inclusion: "would I tell a teammate about this before they start working on this codebase?" Skip categories with nothing worth noting.
 
 - **Bash commands**: Commands that were used, discovered, or would have been useful to know upfront.
 - **Code style patterns**: Patterns followed or discovered that aren't yet documented.
@@ -47,7 +50,7 @@ Review the session for missing context and discoveries that would help future se
 
 ## Actionable improvements
 
-Based on the full analysis, produce recommendations in these categories. Skip any category with nothing actionable.
+This is the most important section. Produce recommendations in these categories, but only if genuinely actionable — a suggestion the user can apply in under 5 minutes. Skip any category with nothing worth doing.
 
 ### CLAUDE.md updates
 
@@ -113,19 +116,8 @@ After the human-readable review, emit a fenced JSON block that a scraper can par
 }
 ```
 
-## Instructions for presenting to user
+## Presenting the review
 
-After generating the review:
-
-1. Display the human-readable sections to the user.
-2. If there is an open PR for the current branch, ask: 'Would you like me to add this as a comment on the PR? The structured JSON block will be included for your team's aggregation pipeline.'
-3. If the user agrees, write the full review (including JSON block) to a temp file and post it:
-
-   ```bash
-   cat <<'EOF' > /tmp/session-review.md
-   <the full review including JSON block>
-   EOF
-   gh pr comment <PR_NUMBER> --repo <REPO> --body-file /tmp/session-review.md
-   ```
-
-4. If the user declines, say: 'No problem. The review is in your session transcript if you want it later.'
+1. Display the human-readable sections.
+2. If there is an open PR for the current branch, offer to post the review as a PR comment (using `gh pr comment` with `--body-file`).
+3. If the user has CLAUDE.md updates to apply, offer to apply them directly.
