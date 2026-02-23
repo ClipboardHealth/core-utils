@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { PATHS } from "./constants";
 import { execAndLog } from "./execAndLog";
+import { runAvailableFormatter } from "./formatMarkdown";
 
 const { packageRoot, outputDirectory } = PATHS;
 
@@ -46,6 +47,8 @@ async function build(): Promise<void> {
       "--skipLibCheck",
     ],
   });
+
+  await runAvailableFormatter(packageRoot, [`${outputDirectory}/**/*.md`]);
 
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
 }
