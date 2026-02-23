@@ -2,6 +2,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { runAvailableFormatter } from "./availableFormatters";
 import {
   CATEGORIES,
   FILES,
@@ -11,7 +12,6 @@ import {
   type RuleId,
   toRulePath,
 } from "./constants";
-import { runAvailableFormatter } from "./formatMarkdown";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {

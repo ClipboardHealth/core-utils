@@ -1,9 +1,9 @@
 import { copyFile, cp, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
+import { runAvailableFormatter } from "./availableFormatters";
 import { PATHS } from "./constants";
 import { execAndLog } from "./execAndLog";
-import { runAvailableFormatter } from "./formatMarkdown";
 
 const { packageRoot, outputDirectory } = PATHS;
 
