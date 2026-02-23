@@ -27,11 +27,11 @@
     "buildable",
     "cipe",
     "citest",
+    "clickops",
     "clipboardhealth",
     "CODEOWNERS",
     "coderabbit",
     "coderabbitai",
-    "clickops",
     "COLLSCAN",
     "combomark",
     "commitish",
@@ -41,6 +41,7 @@
     "datetime",
     "decamelize",
     "devkit",
+    "Dinero",
     "doesn",
     "dogrc",
     "dotless",
@@ -77,6 +78,7 @@
     "oneline",
     "overcomplicate",
     "oxfmt",
+    "oxfmtrc",
     "oxlint",
     "parallelizable",
     "promptfoo",
@@ -105,7 +107,6 @@
     "xlarge",
     "yalc",
     "yoctocolors",
-    "zricethezav",
-    "Dinero"
+    "zricethezav"
   ]
 }
