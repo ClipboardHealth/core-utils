@@ -1,116 +1,84 @@
 ---
 name: fix-ci
-description: Analyze and fix CI failures for a GitHub pull request
+description: "Analyze and fix CI failures for a GitHub pull request. Use this when CI checks are failing, the build is red, or you need to diagnose GitHub Actions failures. Triggers on: 'fix CI', 'CI is failing', 'checks failed', 'build is broken', 'tests failing in CI', 'why is CI red', or any request to investigate and resolve PR check failures."
 argument-hint: "[pr-url]"
 ---
 
-# Fix CI Errors
+# Fix CI Failures
 
-Analyze and fix CI failures for a GitHub pull request.
+Diagnose and fix CI failures for a GitHub pull request by retrieving logs, identifying root causes, and applying targeted fixes.
 
 ## Arguments
 
-- `$ARGUMENTS` - The GitHub pull request URL (e.g., `https://github.com/owner/repo/pull/123`)
-
-If no PR URL is provided, it uses the PR associated with the current branch.
+- `$ARGUMENTS` - GitHub PR URL (e.g., `https://github.com/owner/repo/pull/123`). If omitted, uses the PR for the current branch.
 
 ## Instructions
 
-You are tasked with identifying and fixing CI failures for the provided pull request.
-
-### Step 0: Resolve PR Number
-
-If a PR URL is provided in `$ARGUMENTS`, extract the PR number from it. Otherwise, get the PR for the current branch:
+### Step 1: Get PR and Identify Failed Checks
 
 ```bash
-# If no PR URL provided, get PR for current branch
-gh pr view --json number,url,headRefName
+# If $ARGUMENTS contains a PR URL, extract the PR number from the path.
+# Otherwise, get the PR for the current branch:
+gh pr view --json number,url,headRefName,statusCheckRollup
 ```
 
-This will return the PR associated with the current branch. If a URL was provided, extract the PR number from the URL path (e.g., `https://github.com/owner/repo/pull/123` → PR number is `123`).
+From `statusCheckRollup`, find checks where `conclusion` is `"failure"` or `state` is `"FAILURE"`. If no checks have failed, report that CI is green and stop.
 
-### Step 1: Get PR Information and CI Status
+When multiple checks failed, prioritize **build/compile checks over test checks** — build errors are often the root cause of downstream test failures, so fixing them first may resolve multiple failures at once.
 
-Use the GitHub CLI to get the PR details and check status:
+### Step 2: Retrieve Failed Job Logs
 
-```bash
-gh pr view $PR_NUMBER --json title,headRefName,statusCheckRollup,url
-```
-
-Identify any failed checks from the `statusCheckRollup`. The `statusCheckRollup` contains check details including `detailsUrl` which links to the GitHub Actions run.
-
-### Step 2: Get Failed Job Logs
-
-Extract the run ID from the failed check's `detailsUrl` (e.g., `https://github.com/owner/repo/actions/runs/123456789` → run ID is `123456789`).
-
-Then get the failed jobs and stream their logs directly:
+Extract the run ID from the failed check's `detailsUrl` (the numeric suffix of the GitHub Actions URL, e.g., `.../actions/runs/123456789`).
 
 ```bash
-# Get failed job IDs from the run
+# List failed job IDs for the run
 gh run view $RUN_ID --json jobs --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'
 
-# Stream logs for a specific failed job and search for errors
-gh run view --job $JOB_ID --log | grep -iE "FAIL|Error:|error:|Test Suites:|Tests:"
-
-# Or view only failed steps' logs (more concise)
+# Get only failed step output (concise)
 gh run view --job $JOB_ID --log-failed
 ```
 
-Analyze the log output to identify the specific errors causing CI to fail.
+Start with `--log-failed` because it shows only the output from failed steps, cutting through potentially thousands of lines of passing output. Only fall back to `--log` with targeted grep if `--log-failed` doesn't provide enough context.
 
-### Step 3: Identify Root Cause
+When parsing large log output, focus on:
 
-Analyze the error messages to determine:
+- **The first error message** — later failures often cascade from this
+- **Summary lines** like "Test Suites:", "FAILED", build error counts
+- **Stack traces** immediately after assertion or compilation errors
 
-- Is it a compilation error (TypeScript, build failure)?
-- Is it a test failure?
-- Is it an infrastructure/configuration issue?
+### Step 3: Diagnose Root Cause
 
-For test failures, identify:
+Read the relevant source files and tests to understand the failure in context.
 
-- Which test files are failing
-- What assertions are failing
-- Whether tests reference code/endpoints that were modified or removed
+**Build/compilation errors** — type errors, missing imports, syntax issues. These block everything else.
+**Test failures** — read both the failing test and the code it exercises. The fix could be in either place; don't assume the test is wrong just because it's failing.
+**Lint/format errors** — usually auto-fixable with project formatting tools.
+**Infrastructure issues** — missing env vars, CI config problems, dependency resolution failures.
 
-### Step 4: Present Plan and Wait for Approval
+### Step 4: Present Findings and Proposed Fix
 
-Before making any changes, present:
+Before changing code, present:
 
-1. **Root Cause**: Clear explanation of why CI is failing
-2. **Affected Files**: List of files that need to be modified
-3. **Proposed Changes**: Specific changes to fix the issue
+1. **Root cause** — what's failing and why
+2. **Proposed fix** — which files to change and what the changes are
 
-Ask the user: "Do you want me to proceed with these changes?"
+Then ask the user whether to proceed. This confirmation step matters because CI failures can be ambiguous — what looks like a test bug might actually be the test correctly catching a real regression.
 
-### Step 5: Implement Fixes (After Approval)
+### Step 5: Apply Fix and Verify
 
-Only after user approval:
+After approval, implement the changes. Then run the relevant checks locally (build, test, lint for the affected project/files) to verify the fix before pushing. Report the local results.
 
-1. Make the necessary code changes
-2. Run the affected tests locally to verify the fix
-3. Report the test results
+### Failure Patterns
 
-### Common CI Failure Patterns
+**Removed code but tests still reference it:** Delete or update the tests. Check for leftover references in shared test fixtures or configurations.
 
-**Removed endpoint/feature but tests remain:**
+**Missing mocks/providers after adding a dependency:** Add the mock to test module setup. Update existing mocks when signatures change.
 
-- Delete test files that test removed functionality
-- Remove references from shared test configurations (e.g., endpoint constants, test matrices)
+**Type errors from interface changes:** Fix in the changed files. If the type change is intentional, update downstream consumers too.
 
-**Missing mocks/providers:**
+**Snapshot mismatches:** Check if the change is expected (you modified rendering/output). If so, update snapshots. If not, investigate the regression.
 
-- Add missing provider mocks to test module setup
-- Update unit test mocks for new dependencies
-
-**TypeScript compilation errors:**
-
-- Fix type errors in the changed files
-- Update interfaces/types as needed
-
-**Test assertion failures:**
-
-- Update test expectations to match new behavior
-- Fix test data setup if needed
+**Flaky/intermittent failures:** If the test passes locally, the failure looks timing-dependent, or it's unrelated to the PR's changes, flag this to the user rather than making speculative changes.
 
 ## Input
 

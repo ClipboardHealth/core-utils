@@ -1,6 +1,6 @@
 ---
 name: iterate-pr
-description: Iteratively commit, push, and address PR feedback until CI passes and comments are resolved
+description: "Iteratively commit, push, and address PR feedback until CI passes and comments are resolved. Use this skill when the user wants to get a PR to a mergeable state, fix CI and address review comments in a loop, or says things like 'iterate on my PR', 'make this PR pass', 'fix everything on the PR', 'get this PR ready to merge', or 'keep going until CI is green'."
 argument-hint: "[max-iterations]"
 ---
 
@@ -34,9 +34,11 @@ Parse the JSON output and evaluate exit conditions.
 
 **If any CI checks are still PENDING, QUEUED, or IN_PROGRESS:** Proceed to Step 3 regardless of comment count. Automated reviewers (e.g. CodeRabbit) may not have posted comments yet, so comment data is unreliable until all checks complete.
 
+**If statusCheckRollup is empty or null:** Treat CI as passing (some PRs have no required checks configured).
+
 **Exit with success** when ALL conditions are met:
 
-- All CI checks have completed (no PENDING, QUEUED, or IN_PROGRESS statuses in statusCheckRollup) and none have failed
+- All CI checks have completed (no PENDING, QUEUED, or IN_PROGRESS statuses in statusCheckRollup) and none have failed (or no checks exist)
 - No unresolved comments (totalUnresolvedComments == 0)
 - No nitpicks (totalNitpicks == 0)
 
@@ -70,17 +72,18 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 > 1. **Record Starting Commit**: !`git rev-parse HEAD` (save as `startCommit`)
 > 2. **Commit and Push**: Invoke `core:commit-push-pr` via the Skill tool
 > 3. **Get PR Number**: !`gh pr view --json number --jq '.number'`
-> 4. **Wait for CI**: !`gh pr checks --watch`
+> 4. **Wait for CI**: !`timeout 600 gh pr checks --watch` (10 minute timeout; if it times out, proceed to check current status anyway)
 > 5. **Check CI Status**: Run `gh pr checks --json name,state,bucket` and parse the output
->    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool, report what was fixed, and exit
+>    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool. Since you are running autonomously, do NOT wait for user approval — apply the fixes directly. Report what was fixed and exit.
 > 6. **Check Comments**: Run `node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts"` and parse the JSON output
->    - If unresolved comments or nitpicks exist, for EVERY comment:
->      1. Read the relevant code at the file path and line number
->      2. Assess the comment with an explicit verdict:
+>    - If unresolved comments or nitpicks exist:
+>      1. Group comments by file path and read each file once (not per-comment)
+>      2. If a file no longer exists, note the comment may be outdated and skip it
+>      3. Assess each comment with an explicit verdict:
 >         - **Agree**: Explain why, then fix it
 >         - **Disagree**: Explain why the current code is acceptable; do NOT change the code
 >         - **Already fixed**: Note that the code already addresses this concern
->      3. After assessing all comments, fix only those you agreed with and exit (next iteration will commit fixes)
+>      4. After assessing all comments, fix only those you agreed with and exit (next iteration will commit fixes)
 > 7. **Report**: Run `git rev-parse HEAD` and compare to `startCommit` to determine if commits were made. Include PR status, CI status, and comments addressed
 
 ### Step 4: Loop

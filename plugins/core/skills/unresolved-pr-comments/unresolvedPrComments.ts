@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { outputError, runGh, validatePrerequisites } from "../../lib/ghClient.ts";
+import { executeGraphQL, outputError, runGh, validatePrerequisites } from "../../lib/ghClient.ts";
 import { getPrNumber, getRepoInfo } from "../../lib/prClient.ts";
 
 import {
@@ -113,28 +113,7 @@ function isCodeScanningAlertFixed(owner: string, repo: string, alertNumber: numb
 }
 
 function executeGraphQLQuery(owner: string, repo: string, prNumber: number): GraphQLResponse {
-  const result = runGh([
-    "api",
-    "graphql",
-    "-f",
-    `query=${GRAPHQL_QUERY}`,
-    "-f",
-    `owner=${owner}`,
-    "-f",
-    `repo=${repo}`,
-    "-F",
-    `pr=${prNumber}`,
-  ]);
-
-  if (result.status !== 0) {
-    outputError(`GraphQL query failed: ${result.stderr}`);
-  }
-
-  try {
-    return JSON.parse(result.stdout) as GraphQLResponse;
-  } catch {
-    outputError(`Failed to parse GraphQL response: ${result.stdout.slice(0, 200)}`);
-  }
+  return executeGraphQL<GraphQLResponse>(GRAPHQL_QUERY, { owner, repo, pr: prNumber });
 }
 
 function formatComment(comment: Comment): UnresolvedComment {

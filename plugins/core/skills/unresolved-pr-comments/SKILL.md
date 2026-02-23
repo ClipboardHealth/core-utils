@@ -1,6 +1,6 @@
 ---
 name: unresolved-pr-comments
-description: Get unresolved review comments from a GitHub pull request
+description: "Get unresolved review comments from a GitHub pull request. Use this skill when the user asks about PR feedback, review comments, unresolved threads, what reviewers said, CodeRabbit nitpicks, or wants to address PR review feedback. Also use when the user says 'check my PR', 'what's left on my PR', or 'resolve comments'."
 argument-hint: "[pr-number]"
 ---
 
@@ -30,12 +30,14 @@ Using the JSON output from the script:
 
 Then, for EVERY comment (both `unresolvedComments` AND `nitpickComments`):
 
-1. Read the relevant code at the file path and line number
-2. Assess the comment and provide your opinion:
+1. Group comments by file path and read each file once (not per-comment)
+2. If a file no longer exists, note that the comment may be outdated
+3. Assess the comment against the current code and provide your opinion:
    - **Agree**: Explain why and offer to fix it
    - **Disagree**: Explain why the current code is acceptable
    - **Already fixed**: Note that the code already addresses this concern
-3. Present your assessment in list format (renders reliably in terminals):
+4. When multiple comments appear at the same file and line, they are part of the same review thread — read them together as a conversation and assess the original feedback
+5. Present your assessment in list format (renders reliably in terminals):
 
    **1. `src/api.ts:118`** - Wrap JSON.parse in try-catch
    **Verdict: Already fixed** - Try-catch added in recent commit
