@@ -47,11 +47,14 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot);
   } catch (error) {
+    // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
-    process.exit(1);
+    process.exit(0);
   }
+
+  // Run formatters outside the try/catch so their errors propagate with non-zero exit codes
+  await runAvailableFormatters(PATHS.projectRoot);
 }
 
 function isRuleId(value: string): value is RuleId {
@@ -251,11 +254,12 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-async function formatOutputFiles(projectRoot: string): Promise<void> {
+async function runAvailableFormatters(projectRoot: string): Promise<void> {
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
-    throw new Error("No formatter detected (oxfmt or prettier). Install one as a devDependency.");
+    console.warn("⚠️ No formatter detected (oxfmt or prettier). Skipping formatting.");
+    return;
   }
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
