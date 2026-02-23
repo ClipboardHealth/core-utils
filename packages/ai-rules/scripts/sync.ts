@@ -54,7 +54,7 @@ async function sync() {
   }
 
   // Run formatters outside the try/catch so their errors propagate with non-zero exit codes
-  await runAvailableFormatters(PATHS.projectRoot);
+  await runAvailableFormatter(PATHS.projectRoot);
 }
 
 function isRuleId(value: string): value is RuleId {
@@ -254,7 +254,7 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-async function runAvailableFormatters(projectRoot: string): Promise<void> {
+async function runAvailableFormatter(projectRoot: string): Promise<void> {
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
