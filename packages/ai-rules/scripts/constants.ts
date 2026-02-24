@@ -37,6 +37,8 @@ export const RULE_FILES = {
   "backend/infrastructure": "Provisioning infrastructure: Terraform, Docker, ECS, DNS",
   "backend/serviceTests":
     "Writing service tests: test data, background jobs, bug handling, migrations",
+  "frontend/businessLogicPlacement":
+    "Implementing or reviewing business logic: flag logic that should live on the backend",
   "frontend/customHooks":
     "Creating React custom hooks: naming, structure, shared state with constate",
   "frontend/dataFetching": "Implementing data fetching: React Query, API calls, caching",
@@ -86,6 +88,7 @@ export const CATEGORIES = {
     "backend/serviceTests",
   ] as const,
   frontend: [
+    "frontend/businessLogicPlacement",
     "frontend/customHooks",
     "frontend/dataFetching",
     "frontend/e2eTesting",
