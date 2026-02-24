@@ -1,10 +1,7 @@
 # Git Workflow
 
-Follow Conventional Commits 1.0 spec for commit messages and PR titles.
-
-## Branching
-
-The default branch is always named `main`. When creating PRs, always target `main` as the base branch.
+- Follow Conventional Commits 1.0 spec for commit messages and PR titles.
+- `main` is the default branch.
 
 ## Pull Requests
 
