@@ -17,6 +17,7 @@ These define our modeling rules, patterns, and safety constraints.
 - When adding new fields to tables keep the original source field name format, but remove any custom field prefix (**c). For example assignment_type**c should be renamed to assignment_type. Please do not hallucinate the column field names as this is misleading for users.
 - If a source table doesn't exist. Please tell the user to ask the data-team to ingest it via the relevant ETL tool.
 - A model must always have a primary/unique key. If there's no obvious one, please create a surrogate key using a combination of fields and by looking at the data. Use `dbt_utils.generate_surrogate_key` to do so.
+- Snapshots must be configured in YAML files (dbt 1.9+ style), not in SQL files. Define the `config` block and `relation` property in the snapshot's `.yml` file instead of using `{% snapshot %}` blocks in `.sql` files.
 
 # When creating PR's for the data-modeling repo
 
