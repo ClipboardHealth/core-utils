@@ -68,6 +68,12 @@ export function useCreateItem() {
 }
 ```
 
+## Business Logic Placement
+
+When implementing or reviewing business logic in frontend code, flag whether it should live on the backend instead — even slight discrepancies between frontend and backend implementations of the same logic cause bugs.
+
+Examples include eligibility checks, pricing or pay calculations, scheduling constraints, and status derivations. For instance, calculating the Clipboard score penalty a professional receives when cancelling a shift should be a backend API call, not frontend logic.
+
 ## Test Utilities
 
 Co-locate MSW handlers and mock data in adjacent `testUtils/` folders alongside data-fetching hooks.
