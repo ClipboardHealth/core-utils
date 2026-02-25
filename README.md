@@ -33,7 +33,7 @@
 - [notifications](./packages/notifications/README.md): Send notifications through third-party providers.
 - [nx-plugin](./packages/nx-plugin/README.md): An Nx plugin with generators to manage libraries and applications.
 - [phone-number](./packages/phone-number/README.md): Phone number utility functions.
-- [playwright-reporter-llm](./packages/playwright-reporter-llm/README.md): An LLM-friendly Playwright test reporter that outputs structured JSON for AI-powered failure analysis.
+- [playwright-reporter-llm](./packages/playwright-reporter-llm/README.md): Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.
 - [rules-engine](./packages/rules-engine/README.md): A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 - [testing-core](./packages/testing-core/README.md): TypeScript-friendly testing utilities.
 - [util-ts](./packages/util-ts/README.md): TypeScript utilities.

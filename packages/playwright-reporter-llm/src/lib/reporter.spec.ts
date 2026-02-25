@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -100,7 +100,7 @@ describe("LlmReporter", () => {
   let outputFile: string;
 
   beforeEach(() => {
-    outputDirectory = path.join(tmpdir(), `llm-reporter-test-${Date.now()}`);
+    outputDirectory = mkdtempSync(path.join(tmpdir(), "llm-reporter-test-"));
     outputFile = path.join(outputDirectory, "llm-report.json");
     jest.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
@@ -345,15 +345,22 @@ describe("LlmReporter", () => {
   });
 
   it("uses default outputFile when none provided", () => {
-    const reporter = new LlmReporter();
-    reporter.onBegin(createMockConfig(), createMockSuite());
-    reporter.onTestEnd(createMockTestCase(), createMockResult());
-    reporter.onEnd({ status: "passed" } as FullResult);
+    const sandboxDirectory = mkdtempSync(path.join(tmpdir(), "llm-reporter-default-"));
+    const originalCwd = process.cwd();
+    process.chdir(sandboxDirectory);
+    try {
+      const reporter = new LlmReporter();
+      reporter.onBegin(createMockConfig(), createMockSuite());
+      reporter.onTestEnd(createMockTestCase(), createMockResult());
+      reporter.onEnd({ status: "passed" } as FullResult);
 
-    const report = readReport("test-results/llm-report.json");
+      const report = readReport(path.join(sandboxDirectory, "test-results/llm-report.json"));
 
-    expect(report.schemaVersion).toBe(1);
-    rmSync("test-results/llm-report.json", { force: true });
+      expect(report.schemaVersion).toBe(1);
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(sandboxDirectory, { recursive: true, force: true });
+    }
   });
 
   it("builds full title from describe suites only", () => {

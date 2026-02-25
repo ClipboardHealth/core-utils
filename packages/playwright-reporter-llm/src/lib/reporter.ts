@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -66,18 +67,23 @@ function filterStackToUserCode(stack: string): string {
 }
 
 function extractDiff(message: string): { expected: string; actual: string } | undefined {
-  const expectedMatch = /Expected:\s*(.+)/i.exec(message);
-  const receivedMatch = /Received:\s*(.+)/i.exec(message);
-  if (expectedMatch?.[1] && receivedMatch?.[1]) {
-    return {
-      expected: stripAnsi(expectedMatch[1]).trim(),
-      actual: stripAnsi(receivedMatch[1]).trim(),
-    };
+  const lines = message.split("\n");
+  let expectedValue: string | undefined;
+  let actualValue: string | undefined;
+
+  for (const line of lines) {
+    const expectedMatch = /^Expected\b[^:]*:[ \t]*(.+)/i.exec(line);
+    if (expectedMatch?.[1]) {
+      expectedValue = stripAnsi(expectedMatch[1]).trim();
+    }
+    const receivedMatch = /^Received\b[^:]*:[ \t]*(.+)/i.exec(line);
+    if (receivedMatch?.[1]) {
+      actualValue = stripAnsi(receivedMatch[1]).trim();
+    }
   }
 
-  const toBeMatch = /Expected.*?:\s*(.+)\s*Received.*?:\s*(.+)/is.exec(message);
-  if (toBeMatch?.[1] && toBeMatch?.[2]) {
-    return { expected: stripAnsi(toBeMatch[1]).trim(), actual: stripAnsi(toBeMatch[2]).trim() };
+  if (expectedValue && actualValue) {
+    return { expected: expectedValue, actual: actualValue };
   }
 
   return undefined;
@@ -135,7 +141,7 @@ function collectStdio(result: TestResult, channel: "stdout" | "stderr"): string 
   const text = result[channel]
     .map((chunk) => (typeof chunk === "string" ? chunk : chunk.toString("utf8")))
     .join("");
-  return capOutput(text);
+  return capOutput(stripAnsi(text));
 }
 
 export default class LlmReporter implements Reporter {
@@ -257,7 +263,7 @@ export default class LlmReporter implements Reporter {
     const directory = path.dirname(this.outputFile);
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     mkdirSync(directory, { recursive: true });
-    const temporaryFile = path.join(directory, `.llm-report-${Date.now()}.tmp`);
+    const temporaryFile = path.join(directory, `.llm-report-${randomUUID()}.tmp`);
     try {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       writeFileSync(temporaryFile, JSON.stringify(report, undefined, 2));

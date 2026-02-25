@@ -6,7 +6,7 @@ export type {
   TestAttachment,
   TestEnvironment,
   TestError,
-  TestErrorLocation,
+  TestLocation,
   TestStatus,
   TestSummary,
 } from "./lib/types";

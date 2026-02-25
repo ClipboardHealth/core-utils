@@ -24,7 +24,7 @@ export interface GlobalError {
 
 export type TestStatus = "passed" | "failed" | "timedOut" | "skipped" | "interrupted";
 
-export interface TestErrorLocation {
+export interface TestLocation {
   file: string;
   line: number;
   column: number;
@@ -35,7 +35,7 @@ export interface TestError {
   stack?: string;
   snippet?: string;
   diff?: { expected: string; actual: string };
-  location?: TestErrorLocation;
+  location?: TestLocation;
 }
 
 export interface TestAttachment {
@@ -50,7 +50,7 @@ export interface LlmTestEntry {
   status: TestStatus;
   flaky: boolean;
   durationMs: number;
-  location: TestErrorLocation;
+  location: TestLocation;
   project: string;
   tags: string[];
   annotations: Array<{ type: string; description?: string }>;
