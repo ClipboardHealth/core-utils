@@ -224,12 +224,12 @@ describe("Cron jobs", () => {
     const job1 = await backgroundJobs.jobModel.findOne({}, undefined, { sort: { nextRunAt: 1 } });
     const job2 = await backgroundJobs.jobModel.findOne({}, undefined, { sort: { nextRunAt: -1 } });
 
-    expect(job1?.data).toStrictEqual({ resolvePromise: 1, waitPromise: 2 });
+    expect(job1?.data).toStrictEqual({ _traceHeaders: {}, resolvePromise: 1, waitPromise: 2 });
     expect(job1?.nextRunAt).toStrictEqual(new Date("2023-07-04T15:10:00.000Z"));
     expect(job1?.scheduleName).toBe("cron-semaphores-1");
     expect(job1?.queue).toBe("SemaphoreJob");
 
-    expect(job2?.data).toStrictEqual({ resolvePromise: 4, waitPromise: 5 });
+    expect(job2?.data).toStrictEqual({ _traceHeaders: {}, resolvePromise: 4, waitPromise: 5 });
     expect(job2?.nextRunAt).toStrictEqual(new Date("2023-07-04T15:20:00.000Z"));
     expect(job2?.scheduleName).toBe("cron-semaphores-2");
     expect(job2?.queue).toBe("SemaphoreJob");

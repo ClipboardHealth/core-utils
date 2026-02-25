@@ -9,6 +9,7 @@ import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { JobRun } from "./support/jobRun";
 import { LongJob } from "./support/longJob";
+import { NestedDataJob } from "./support/nestedDataJob";
 import { NoRetryJob } from "./support/noRetryJob";
 import { OtherQueueJob } from "./support/otherQueueJob";
 import { Semaphore } from "./support/semaphore";
@@ -35,8 +36,11 @@ describe("Background Jobs Worker", () => {
     backgroundJobs.register(EmptyExampleJob, "default");
     backgroundJobs.register(FailingJob, "default");
     backgroundJobs.register(LongJob, "default");
+    backgroundJobs.register(new NestedDataJob(), "default");
     backgroundJobs.register(NoRetryJob, "default");
     backgroundJobs.register(OtherQueueJob, "other-queue");
+
+    NestedDataJob.reset();
   });
 
   afterEach(async () => {
@@ -143,6 +147,33 @@ describe("Background Jobs Worker", () => {
 
     const jobRun = await JobRun.findOne();
     expect(jobRun?.myNumber).toBe(0);
+  });
+
+  it("preserves empty nested objects in job data after enqueue", async () => {
+    const job = await backgroundJobs.enqueue(new NestedDataJob(), {
+      someField: "value",
+      metadata: {},
+    });
+
+    const storedJob = await backgroundJobs.jobModel.findById(job?._id);
+    const data = storedJob?.data as { someField: string; metadata: Record<string, unknown> };
+    expect(data.someField).toBe("value");
+    expect(data.metadata).toStrictEqual({});
+  });
+
+  it("delivers empty nested objects to the handler perform method", async () => {
+    await backgroundJobs.enqueue(new NestedDataJob(), {
+      someField: "value",
+      metadata: {},
+    });
+
+    await backgroundJobs.start(["default"]);
+    await setTimeout(100);
+    await backgroundJobs.stop();
+
+    expect(NestedDataJob.receivedData).toBeDefined();
+    expect(NestedDataJob.receivedData?.someField).toBe("value");
+    expect(NestedDataJob.receivedData?.metadata).toStrictEqual({});
   });
 
   it("when the job fails it is rescheduled for later time", async () => {
