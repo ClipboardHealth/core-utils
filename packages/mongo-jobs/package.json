@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/mongo-jobs",
   "description": "MongoDB-powered background jobs.",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "cron-parser": "5.5.0",
