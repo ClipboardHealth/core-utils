@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "playwright-reporter-llm",
+  "projectType": "library",
+  "sourceRoot": "packages/playwright-reporter-llm/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": ["packages/playwright-reporter-llm/*.md"],
+        "main": "packages/playwright-reporter-llm/src/index.js",
+        "outputPath": "dist/packages/playwright-reporter-llm",
+        "tsConfig": "packages/playwright-reporter-llm/tsconfig.lib.json"
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/playwright-reporter-llm/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/playwright-reporter-llm/jest.config.ts"
+      }
+    }
+  }
+}
