@@ -53,6 +53,7 @@ const BackgroundJobSchema = new mongoose.Schema<BackgroundJobType<unknown>>(
   },
   {
     timestamps: true,
+    minimize: false,
   },
 );
 
