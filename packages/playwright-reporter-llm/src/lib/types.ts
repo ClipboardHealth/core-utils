@@ -61,6 +61,10 @@ export interface LlmTestEntry {
   stderr: string;
 }
 
+export interface LlmReporterOptions {
+  outputFile?: string;
+}
+
 export interface LlmTestReport {
   schemaVersion: 1;
   timestamp: string;

@@ -19,7 +19,9 @@ npm install @clipboard-health/playwright-reporter-llm
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  reporter: [["playwright-reporter-llm", { outputFile: "test-results/llm-report.json" }]],
+  reporter: [
+    ["@clipboard-health/playwright-reporter-llm", { outputFile: "test-results/llm-report.json" }],
+  ],
 });
 ```
 

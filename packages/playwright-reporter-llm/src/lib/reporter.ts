@@ -14,6 +14,7 @@ import type {
 
 import type {
   GlobalError,
+  LlmReporterOptions,
   LlmTestEntry,
   LlmTestReport,
   TestAttachment,
@@ -24,10 +25,6 @@ import type {
 
 const STDOUT_CAP = 4096;
 const TRUNCATION_MARKER = "[truncated]";
-
-interface LlmReporterOptions {
-  outputFile?: string;
-}
 
 function stripAnsi(text: string): string {
   // eslint-disable-next-line no-control-regex

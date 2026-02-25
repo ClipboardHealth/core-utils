@@ -1,6 +1,7 @@
 export { default } from "./lib/reporter";
 export type {
   GlobalError,
+  LlmReporterOptions,
   LlmTestEntry,
   LlmTestReport,
   TestAttachment,

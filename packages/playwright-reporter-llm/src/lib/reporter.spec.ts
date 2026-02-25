@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -111,8 +111,6 @@ describe("LlmReporter", () => {
   });
 
   it("deletes stale report on begin", () => {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    mkdirSync(outputDirectory, { recursive: true });
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(outputFile, "stale");
 
