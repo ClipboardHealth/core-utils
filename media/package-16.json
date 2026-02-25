@@ -1,23 +1,23 @@
 {
-  "name": "@clipboard-health/util-ts",
-  "description": "TypeScript utilities.",
-  "version": "5.2.8",
+  "name": "@clipboard-health/testing-core",
+  "description": "TypeScript-friendly testing utilities.",
+  "version": "2.2.9",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
+    "@clipboard-health/util-ts": "5.2.9",
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "type-fest": "5.4.4",
     "zod": "3.25.76"
   },
   "keywords": [
-    "typescript",
-    "utility"
+    "expect",
+    "testing",
+    "typescript"
   ],
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "type-fest": "^4 || ^5.0.0",
     "zod": "^3"
   },
   "publishConfig": {
@@ -26,7 +26,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
-    "directory": "packages/util-ts"
+    "directory": "packages/testing-core"
   },
   "type": "commonjs",
   "typings": "./src/index.d.ts"
