@@ -25,6 +25,11 @@
       "matchUpdateTypes": ["patch", "minor"]
     },
     {
+      "automerge": true,
+      "automergeType": "branch",
+      "matchUpdateTypes": ["lockFileMaintenance"]
+    },
+    {
       "groupName": "Clipboard",
       "matchPackageNames": ["/^@clipboard-health/"]
     },
@@ -49,11 +54,6 @@
         "/ts-jest/",
         "/tslib/"
       ]
-    },
-    {
-      "automerge": true,
-      "automergeType": "branch",
-      "matchUpdateTypes": ["lockFileMaintenance"]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
