@@ -10,6 +10,7 @@ dist/
 gen/
 node_modules/
 out-tsc
+test-results/
 tmp/
 
 # Alphabetical files

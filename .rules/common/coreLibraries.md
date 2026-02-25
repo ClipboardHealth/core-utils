@@ -29,6 +29,7 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **notifications**: Send notifications through third-party providers.
 - **nx-plugin**: An Nx plugin with generators to manage libraries and applications.
 - **phone-number**: Phone number utility functions.
+- **playwright-reporter-llm**: An LLM-friendly Playwright test reporter that outputs structured JSON for AI-powered failure analysis.
 - **rules-engine**: A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 - **testing-core**: TypeScript-friendly testing utilities.
 - **util-ts**: TypeScript utilities.

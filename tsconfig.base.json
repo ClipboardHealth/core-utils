@@ -24,6 +24,9 @@
       "@clipboard-health/mongo-jobs": ["packages/mongo-jobs/src/index.ts"],
       "@clipboard-health/nx-plugin": ["packages/nx-plugin/src/index.ts"],
       "@clipboard-health/phone-number": ["packages/phone-number/src/index.ts"],
+      "@clipboard-health/playwright-reporter-llm": [
+        "packages/playwright-reporter-llm/src/index.ts"
+      ],
       "@clipboard-health/rules-engine": ["packages/rules-engine/src/index.ts"],
       "@clipboard-health/testing-core": ["packages/testing-core/src/index.ts"],
       "@clipboard-health/util-ts": ["packages/util-ts/src/index.ts"],

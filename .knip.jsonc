@@ -60,5 +60,8 @@
     "packages/util-ts": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
+    "packages/playwright-reporter-llm": {
+      "entry": ["src/index.ts", "test/e2e/playwright.config.ts"],
+    },
   },
 }
