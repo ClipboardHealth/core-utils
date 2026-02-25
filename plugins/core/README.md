@@ -36,6 +36,7 @@ Clipboard's core development tools.
 
 - [GitHub CLI](https://cli.github.com/) (`gh`) — used by CI check and PR skills
 - GNU coreutils `timeout` — used by `iterate-pr` for CI watch timeout
+
   ```bash
   # macOS (via Homebrew)
   brew install coreutils
