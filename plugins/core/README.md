@@ -5,6 +5,7 @@ Clipboard's core development tools.
 ## Table of contents <!-- omit from toc -->
 
 - [Installation](#installation)
+- [Prerequisites](#prerequisites)
 - [Skills](#skills)
   - [commit-push-pr](#commit-push-pr)
   - [fix-ci](#fix-ci)
@@ -30,6 +31,15 @@ Clipboard's core development tools.
 # Install the plugin
 /plugin install core@clipboard --scope user
 ```
+
+## Prerequisites
+
+- [GitHub CLI](https://cli.github.com/) (`gh`) — used by CI check and PR skills
+- GNU coreutils `timeout` — used by `iterate-pr` for CI watch timeout
+  ```bash
+  # macOS (via Homebrew)
+  brew install coreutils
+  ```
 
 ## Skills
 

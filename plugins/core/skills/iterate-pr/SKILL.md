@@ -72,7 +72,7 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 > 1. **Record Starting Commit**: !`git rev-parse HEAD` (save as `startCommit`)
 > 2. **Commit and Push**: Invoke `core:commit-push-pr` via the Skill tool
 > 3. **Get PR Number**: !`gh pr view --json number --jq '.number'`
-> 4. **Wait for CI**: !`timeout 600 gh pr checks --watch` (10 minute timeout; if it times out, proceed to check current status anyway)
+> 4. **Wait for CI**: !`timeout 600 gh pr checks --watch || true` (10 minute timeout; if it times out or checks fail, proceed to check current status anyway)
 > 5. **Check CI Status**: Run `gh pr checks --json name,state,bucket` and parse the output
 >    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool. Since you are running autonomously, do NOT wait for user approval — apply the fixes directly. Report what was fixed and exit.
 > 6. **Check Comments**: Run `node "${CLAUDE_PLUGIN_ROOT}/skills/unresolved-pr-comments/unresolvedPrComments.ts"` and parse the JSON output
