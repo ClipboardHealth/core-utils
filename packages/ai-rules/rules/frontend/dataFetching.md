@@ -36,6 +36,7 @@ export function useGetFeature(id: string, options = {}) {
 
 - Log errors via `meta.logErrorMessage` using centralized event constants
 - Display user-facing errors via `meta.userErrorMessage`
+- Do not use the deprecated `onError` callback; for queries, use the `meta` pattern to handle errors. This rule doesn't apply to useMutation, using onError for useMutation is a valid pattern
 
 ## Query Keys
 
