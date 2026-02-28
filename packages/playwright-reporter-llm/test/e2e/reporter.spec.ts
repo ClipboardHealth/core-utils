@@ -81,6 +81,14 @@ describe("LLM Reporter E2E", () => {
       expect(test.location.line).toBeGreaterThan(0);
       expect(test.project).toBe("chromium");
       expect(test.attachments).toBeInstanceOf(Array);
+      expect(test.attempts.length).toBeGreaterThan(0);
+
+      const finalAttempt = test.attempts.at(-1);
+      expect(finalAttempt?.status).toBe(test.status);
+      expect(test.steps).toEqual(finalAttempt?.steps);
+      expect(test.network).toEqual(finalAttempt?.network);
+      expect(finalAttempt?.consoleMessages).toBeInstanceOf(Array);
+      expect(test.error).toEqual(test.errors[0]);
     }
   });
 
@@ -97,11 +105,17 @@ describe("LLM Reporter E2E", () => {
 
   it("detects flaky tests correctly", () => {
     const flakyTests = report.tests.filter((t) => t.flaky);
+    const [flakyTest] = flakyTests;
 
     expect(flakyTests).toHaveLength(1);
-    expect(flakyTests[0]?.status).toBe("passed");
-    expect(flakyTests[0]?.retries).toBeGreaterThan(0);
-    expect(flakyTests[0]?.title).toContain("passes on retry");
+    expect(flakyTest?.status).toBe("passed");
+    expect(flakyTest?.retries).toBeGreaterThan(0);
+    expect(flakyTest?.title).toContain("passes on retry");
+    expect(flakyTest?.attempts).toHaveLength(2);
+    expect(flakyTest?.attempts.map((attempt) => attempt.attempt)).toEqual([1, 2]);
+    expect(flakyTest?.attempts.map((attempt) => attempt.status)).toEqual(["failed", "passed"]);
+    expect(flakyTest?.steps).toEqual(flakyTest?.attempts.at(1)?.steps);
+    expect(flakyTest?.network).toEqual(flakyTest?.attempts.at(1)?.network);
   });
 
   it("has attachment entries with paths", () => {
@@ -119,5 +133,22 @@ describe("LLM Reporter E2E", () => {
     const ids = report.tests.map((t) => t.id);
 
     expect(ids).toHaveLength(new Set(ids).size);
+  });
+
+  it("defaults network to empty arrays when no trace attachment is present", () => {
+    for (const test of report.tests) {
+      expect(test.network).toEqual([]);
+      for (const attempt of test.attempts) {
+        expect(attempt.network).toEqual([]);
+      }
+    }
+  });
+
+  it("defaults consoleMessages to empty arrays when no warnings/errors/page errors exist", () => {
+    for (const test of report.tests) {
+      for (const attempt of test.attempts) {
+        expect(attempt.consoleMessages).toEqual([]);
+      }
+    }
   });
 });

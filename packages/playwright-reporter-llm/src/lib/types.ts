@@ -44,6 +44,45 @@ export interface TestAttachment {
   path?: string;
 }
 
+export interface FlatStep {
+  title: string;
+  category: string;
+  durationMs: number;
+  depth: number;
+  error?: string;
+}
+
+export interface NetworkRequest {
+  method: string;
+  url: string;
+  status: number;
+  durationMs?: number;
+  resourceType?: string;
+  requestBody?: string;
+  responseBody?: string;
+}
+
+export interface ConsoleEntry {
+  type: string;
+  text: string;
+}
+
+export interface AttemptResult {
+  attempt: number;
+  status: TestStatus;
+  durationMs: number;
+  startTime: string;
+  workerIndex: number;
+  parallelIndex: number;
+  error?: TestError;
+  steps: FlatStep[];
+  stdout: string;
+  stderr: string;
+  attachments: TestAttachment[];
+  network: NetworkRequest[];
+  consoleMessages?: ConsoleEntry[];
+}
+
 export interface LlmTestEntry {
   id: string;
   title: string;
@@ -59,6 +98,10 @@ export interface LlmTestEntry {
   attachments: TestAttachment[];
   stdout: string;
   stderr: string;
+  attempts: AttemptResult[];
+  error?: TestError;
+  steps?: FlatStep[];
+  network?: NetworkRequest[];
 }
 
 export interface LlmReporterOptions {

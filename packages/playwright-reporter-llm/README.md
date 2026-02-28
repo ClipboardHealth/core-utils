@@ -68,28 +68,78 @@ Report: test-results/llm-report.json
   "tests": [
     {
       "id": "abc123",
-      "title": "Suite > should work",
-      "status": "failed",
-      "flaky": false,
-      "durationMs": 150,
+      "title": "Suite > passes on retry",
+      "status": "passed",
+      "flaky": true,
+      "durationMs": 88,
       "location": { "file": "tests/example.spec.ts", "line": 10, "column": 5 },
       "project": "chromium",
       "tags": [],
       "annotations": [],
       "retries": 1,
-      "errors": [
-        {
-          "message": "Expected: 1, Received: 2",
-          "stack": "...",
-          "diff": { "expected": "1", "actual": "2" },
-          "location": { "file": "tests/example.spec.ts", "line": 12, "column": 5 }
-        }
-      ],
-      "attachments": [
-        { "name": "screenshot", "contentType": "image/png", "path": "screenshot.png" }
-      ],
+      "errors": [],
+      "attachments": [],
       "stdout": "",
-      "stderr": ""
+      "stderr": "",
+      "steps": [],
+      "network": [],
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "failed",
+          "durationMs": 44,
+          "startTime": "2026-02-25T19:00:00.000Z",
+          "workerIndex": 0,
+          "parallelIndex": 0,
+          "error": {
+            "message": "Expected: 1, Received: 2"
+          },
+          "steps": [
+            { "title": "outer step", "category": "test.step", "durationMs": 20, "depth": 0 },
+            {
+              "title": "inner assertion",
+              "category": "pw:api",
+              "durationMs": 6,
+              "depth": 1,
+              "error": "Expected: 1, Received: 2"
+            }
+          ],
+          "stdout": "",
+          "stderr": "",
+          "consoleMessages": [
+            { "type": "warning", "text": "deprecated API used" },
+            { "type": "error", "text": "failed to fetch" },
+            { "type": "pageerror", "text": "Uncaught TypeError: x is undefined" }
+          ],
+          "attachments": [
+            { "name": "trace", "contentType": "application/zip", "path": "trace.zip" }
+          ],
+          "network": [
+            {
+              "method": "POST",
+              "url": "https://api.example.com/v1/orders",
+              "status": 201,
+              "durationMs": 37,
+              "requestBody": "{\"orderId\":\"123\"}",
+              "responseBody": "{\"ok\":true}"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "status": "passed",
+          "durationMs": 88,
+          "startTime": "2026-02-25T19:00:01.000Z",
+          "workerIndex": 0,
+          "parallelIndex": 0,
+          "steps": [],
+          "stdout": "",
+          "stderr": "",
+          "consoleMessages": [],
+          "attachments": [],
+          "network": []
+        }
+      ]
     }
   ],
   "globalErrors": []
@@ -103,6 +153,10 @@ Key fields for agents:
 - **`tests[].errors[].diff`** -- extracted expected/actual from assertion errors
 - **`tests[].errors[].location`** -- exact file and line of failure
 - **`tests[].flaky`** -- true if test passed after retry
+- **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
+- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror trace console entries only (2KB text cap, max 50 per attempt)
+- **`tests[].steps` / `tests[].network`** -- convenience aliases from the final attempt
+- **`tests[].attempts[].network[].requestBody/responseBody`** -- JSON/text only, capped at 2KB
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`stdout`/`stderr`** -- capped at 4KB with `[truncated]` marker
 
