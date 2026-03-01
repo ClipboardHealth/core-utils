@@ -80,7 +80,7 @@ export interface AttemptResult {
   stderr: string;
   attachments: TestAttachment[];
   network: NetworkRequest[];
-  consoleMessages?: ConsoleEntry[];
+  consoleMessages: ConsoleEntry[];
 }
 
 export interface LlmTestEntry {

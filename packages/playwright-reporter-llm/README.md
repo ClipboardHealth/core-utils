@@ -154,9 +154,9 @@ Key fields for agents:
 - **`tests[].errors[].location`** -- exact file and line of failure
 - **`tests[].flaky`** -- true if test passed after retry
 - **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
-- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror trace console entries only (2KB text cap, max 50 per attempt)
+- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror trace console entries only (2KB text cap with `[truncated]` marker, max 50 per attempt)
 - **`tests[].steps` / `tests[].network`** -- convenience aliases from the final attempt
-- **`tests[].attempts[].network[].requestBody/responseBody`** -- JSON/text only, capped at 2KB
+- **`tests[].attempts[].network[]`** -- max 200 per attempt; `requestBody`/`responseBody` JSON/text only, capped at 2KB with `[truncated]` marker
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`stdout`/`stderr`** -- capped at 4KB with `[truncated]` marker
 

@@ -32,6 +32,7 @@ import type {
 const STDOUT_CAP = 4096;
 const NETWORK_BODY_CAP = 2048;
 const CONSOLE_MESSAGES_CAP = 50;
+const NETWORK_REQUESTS_CAP = 200;
 const TRUNCATION_MARKER = "[truncated]";
 const ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE = 101_010_256;
 const ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIGNATURE = 33_639_248;
@@ -193,14 +194,14 @@ function capNetworkBody(body: string): string {
   if (body.length <= NETWORK_BODY_CAP) {
     return body;
   }
-  return body.slice(0, NETWORK_BODY_CAP);
+  return `${body.slice(0, NETWORK_BODY_CAP - TRUNCATION_MARKER.length)}${TRUNCATION_MARKER}`;
 }
 
 function capConsoleMessageText(text: string): string {
   if (text.length <= NETWORK_BODY_CAP) {
     return text;
   }
-  return text.slice(0, NETWORK_BODY_CAP);
+  return `${text.slice(0, NETWORK_BODY_CAP - TRUNCATION_MARKER.length)}${TRUNCATION_MARKER}`;
 }
 
 function isJsonOrTextContentType(contentType: string | undefined): boolean {
@@ -522,7 +523,7 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
           continue;
         }
 
-        if (traceLineDiagnostics.networkRequest) {
+        if (traceLineDiagnostics.networkRequest && networkRequests.length < NETWORK_REQUESTS_CAP) {
           networkRequests.push(traceLineDiagnostics.networkRequest);
         }
         if (traceLineDiagnostics.consoleEntry && consoleMessages.length < CONSOLE_MESSAGES_CAP) {
@@ -568,7 +569,10 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
 
   for (const tracePath of tracePaths) {
     const traceDiagnostics = parseTraceDiagnostics(tracePath);
-    networkRequests.push(...traceDiagnostics.networkRequests);
+    if (networkRequests.length < NETWORK_REQUESTS_CAP) {
+      const remainingNetworkCapacity = NETWORK_REQUESTS_CAP - networkRequests.length;
+      networkRequests.push(...traceDiagnostics.networkRequests.slice(0, remainingNetworkCapacity));
+    }
 
     if (consoleMessages.length >= CONSOLE_MESSAGES_CAP) {
       continue;

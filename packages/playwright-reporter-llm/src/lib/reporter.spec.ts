@@ -613,8 +613,12 @@ describe("LlmReporter", () => {
     const report = readReport(outputFile);
     const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
 
-    expect(attempt?.network[0]?.requestBody).toBe(largeRequestBody.slice(0, 2048));
-    expect(attempt?.network[0]?.responseBody).toBe(largeResponseBody.slice(0, 2048));
+    expect(attempt?.network[0]?.requestBody).toBe(
+      `${largeRequestBody.slice(0, 2048 - "[truncated]".length)}[truncated]`,
+    );
+    expect(attempt?.network[0]?.responseBody).toBe(
+      `${largeResponseBody.slice(0, 2048 - "[truncated]".length)}[truncated]`,
+    );
     expect(attempt?.network[0]?.requestBody).toHaveLength(2048);
     expect(attempt?.network[0]?.responseBody).toHaveLength(2048);
   });
@@ -686,7 +690,9 @@ describe("LlmReporter", () => {
 
     expect(attempt?.consoleMessages).toHaveLength(50);
     expect(attempt?.consoleMessages[0]?.type).toBe("error");
-    expect(attempt?.consoleMessages[0]?.text).toBe(`0-${largeConsoleText}`.slice(0, 2048));
+    expect(attempt?.consoleMessages[0]?.text).toBe(
+      `${`0-${largeConsoleText}`.slice(0, 2048 - "[truncated]".length)}[truncated]`,
+    );
     expect(attempt?.consoleMessages[0]?.text).toHaveLength(2048);
   });
 
