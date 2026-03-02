@@ -1,7 +1,7 @@
 {
   "name": "@clipboard-health/nx-plugin",
   "description": "An Nx plugin with generators to manage libraries and applications.",
-  "version": "2.1.14",
+  "version": "2.1.15",
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "dependencies": {
     "tslib": "2.8.1"
