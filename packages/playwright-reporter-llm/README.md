@@ -132,7 +132,7 @@ Report: test-results/llm-report.json
               ],
               "timings": {
                 "dnsMs": 2,
-                "connectMs": 3,
+                "connectMs": 7,
                 "sslMs": 4,
                 "sendMs": 1,
                 "waitMs": 12,

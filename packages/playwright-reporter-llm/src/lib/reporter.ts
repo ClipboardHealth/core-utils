@@ -60,6 +60,7 @@ const RESPONSE_HEADER_ALLOWLIST = new Set([
   "x-datadog-parent-id",
   "x-datadog-span-id",
 ]);
+const HIGH_SIGNAL_CONSOLE_ENTRY_TYPES = new Set(["warning", "error", "pageerror"]);
 
 function stripAnsi(text: string): string {
   // eslint-disable-next-line no-control-regex
@@ -347,7 +348,6 @@ function deriveNetworkDurationMs(timings: NetworkTimingBreakdown | undefined): n
     timings.receiveMs,
     timings.dnsMs,
     timings.connectMs,
-    timings.sslMs,
   ];
   let totalDurationMs = 0;
   let hasDurationValue = false;
@@ -364,6 +364,41 @@ function deriveNetworkDurationMs(timings: NetworkTimingBreakdown | undefined): n
     return undefined;
   }
   return totalDurationMs;
+}
+
+function isHighSignalConsoleEntry(entry: ConsoleEntry): boolean {
+  return HIGH_SIGNAL_CONSOLE_ENTRY_TYPES.has(entry.type);
+}
+
+function canImproveConsoleSignal(consoleMessages: ConsoleEntry[]): boolean {
+  if (consoleMessages.length < CONSOLE_MESSAGES_CAP) {
+    return true;
+  }
+  return consoleMessages.some((entry) => !isHighSignalConsoleEntry(entry));
+}
+
+function appendConsoleEntryWithPriority(
+  consoleMessages: ConsoleEntry[],
+  consoleEntry: ConsoleEntry,
+): void {
+  if (consoleMessages.length < CONSOLE_MESSAGES_CAP) {
+    consoleMessages.push(consoleEntry);
+    return;
+  }
+
+  if (!isHighSignalConsoleEntry(consoleEntry)) {
+    return;
+  }
+
+  const firstLowSignalIndex = consoleMessages.findIndex(
+    (entry) => !isHighSignalConsoleEntry(entry),
+  );
+  if (firstLowSignalIndex === -1) {
+    return;
+  }
+
+  consoleMessages.splice(firstLowSignalIndex, 1);
+  consoleMessages.push(consoleEntry);
 }
 
 function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
@@ -790,7 +825,7 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
   for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
     if (
       networkRequests.length >= NETWORK_REQUESTS_CAP &&
-      consoleMessages.length >= CONSOLE_MESSAGES_CAP
+      !canImproveConsoleSignal(consoleMessages)
     ) {
       break;
     }
@@ -806,7 +841,7 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
       for (const line of lines) {
         if (
           networkRequests.length >= NETWORK_REQUESTS_CAP &&
-          consoleMessages.length >= CONSOLE_MESSAGES_CAP
+          !canImproveConsoleSignal(consoleMessages)
         ) {
           break;
         }
@@ -827,8 +862,8 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
         if (traceLineDiagnostics.networkRequest && networkRequests.length < NETWORK_REQUESTS_CAP) {
           networkRequests.push(traceLineDiagnostics.networkRequest);
         }
-        if (traceLineDiagnostics.consoleEntry && consoleMessages.length < CONSOLE_MESSAGES_CAP) {
-          consoleMessages.push(traceLineDiagnostics.consoleEntry);
+        if (traceLineDiagnostics.consoleEntry) {
+          appendConsoleEntryWithPriority(consoleMessages, traceLineDiagnostics.consoleEntry);
         }
       }
     } catch {
@@ -875,7 +910,7 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
   for (const tracePath of tracePaths) {
     if (
       networkRequests.length >= NETWORK_REQUESTS_CAP &&
-      consoleMessages.length >= CONSOLE_MESSAGES_CAP
+      !canImproveConsoleSignal(consoleMessages)
     ) {
       break;
     }
@@ -886,12 +921,9 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
       networkRequests.push(...traceDiagnostics.networkRequests.slice(0, remainingNetworkCapacity));
     }
 
-    if (consoleMessages.length >= CONSOLE_MESSAGES_CAP) {
-      continue;
+    for (const consoleEntry of traceDiagnostics.consoleMessages) {
+      appendConsoleEntryWithPriority(consoleMessages, consoleEntry);
     }
-
-    const remainingCapacity = CONSOLE_MESSAGES_CAP - consoleMessages.length;
-    consoleMessages.push(...traceDiagnostics.consoleMessages.slice(0, remainingCapacity));
   }
 
   annotateRedirectChains(networkRequests);

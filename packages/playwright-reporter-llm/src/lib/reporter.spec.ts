@@ -780,7 +780,7 @@ describe("LlmReporter", () => {
               ],
               content: { mimeType: "application/json", _sha1: "response-body.json" },
             },
-            timings: { send: 1, wait: 12, receive: 5, dns: 2, connect: 3, ssl: 4 },
+            timings: { send: 1, wait: 12, receive: 5, dns: 2, connect: 7, ssl: 4 },
           },
         },
         {
@@ -844,7 +844,7 @@ describe("LlmReporter", () => {
         waitMs: 12,
         receiveMs: 5,
         dnsMs: 2,
-        connectMs: 3,
+        connectMs: 7,
         sslMs: 4,
       },
       requestHeaders: {
@@ -869,6 +869,61 @@ describe("LlmReporter", () => {
       status: -1,
       failureText: "net::ERR_FAILED",
       wasAborted: true,
+    });
+  });
+
+  it("derives network duration without double-counting ssl time", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-ssl-timing.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/ssl-duration",
+            },
+            response: {
+              status: 200,
+            },
+            timings: {
+              dns: 2,
+              connect: 7,
+              ssl: 4,
+              send: 1,
+              wait: 12,
+              receive: 5,
+            },
+          },
+        },
+      ],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+    const [networkRequest] = attempt.network;
+
+    expect(networkRequest?.durationMs).toBe(27);
+    expect(networkRequest?.timings).toEqual({
+      dnsMs: 2,
+      connectMs: 7,
+      sslMs: 4,
+      sendMs: 1,
+      waitMs: 12,
+      receiveMs: 5,
     });
   });
 
@@ -905,6 +960,100 @@ describe("LlmReporter", () => {
       `${`0-${largeConsoleText}`.slice(0, 2048 - "[truncated]".length)}[truncated]`,
     );
     expect(attempt?.consoleMessages[0]?.text).toHaveLength(2048);
+  });
+
+  it("prioritizes warning/error/pageerror over page lifecycle messages when console cap is reached", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const traceEvents = [
+      ...Array.from({ length: 51 }, (_, index) => ({
+        type: "event",
+        method: "pageClosed",
+        params: { pageId: `page-${index}` },
+      })),
+      { type: "console", messageType: "error", text: "critical error after page closes" },
+    ];
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-console-priority.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      traceEvents,
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.consoleMessages).toHaveLength(50);
+    expect(attempt.consoleMessages).toContainEqual({
+      type: "error",
+      text: "critical error after page closes",
+    });
+    expect(
+      attempt.consoleMessages.filter((message) => message.type === "page-closed"),
+    ).toHaveLength(49);
+  });
+
+  it("keeps improving console signal after network cap is reached", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const traceEvents = [
+      ...Array.from({ length: 50 }, (_, index) => ({
+        type: "event",
+        method: "pageClosed",
+        params: { pageId: `page-${index}` },
+      })),
+      { type: "console", messageType: "error", text: "error retained after network cap" },
+    ];
+    const networkEvents = Array.from({ length: NETWORK_REQUESTS_CAP + 10 }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "fetch",
+        request: {
+          method: "GET",
+          url: `https://api.example.com/network-cap/${index}`,
+        },
+        response: {
+          status: 200,
+        },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(
+      outputDirectory,
+      "trace-console-priority-network-cap.zip",
+      {
+        requestBody: JSON.stringify({ request: "hello" }),
+        responseBody: JSON.stringify({ response: "world" }),
+        traceEvents,
+        networkEvents,
+      },
+    );
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+    expect(attempt.consoleMessages).toContainEqual({
+      type: "error",
+      text: "error retained after network cap",
+    });
   });
 
   it("caps console messages across multiple trace attachments", () => {
