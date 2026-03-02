@@ -17,12 +17,14 @@ import type {
 import type {
   AttemptResult,
   ConsoleEntry,
+  FailureArtifacts,
   FlatStep,
   GlobalError,
   LlmReporterOptions,
   LlmTestEntry,
   LlmTestReport,
   NetworkRequest,
+  NetworkTimingBreakdown,
   TestAttachment,
   TestError,
   TestStatus,
@@ -34,12 +36,30 @@ const NETWORK_BODY_CAP = 2048;
 const CONSOLE_TEXT_CAP = 2048;
 const CONSOLE_MESSAGES_CAP = 50;
 const NETWORK_REQUESTS_CAP = 200;
+const HEADER_VALUE_CAP = 256;
 const TRUNCATION_MARKER = "[truncated]";
 const ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE = 101_010_256;
 const ZIP_CENTRAL_DIRECTORY_FILE_HEADER_SIGNATURE = 33_639_248;
 const ZIP_LOCAL_FILE_HEADER_SIGNATURE = 67_324_752;
 const ZIP_COMPRESSION_STORED = 0;
 const ZIP_COMPRESSION_DEFLATE = 8;
+const REQUEST_HEADER_ALLOWLIST = new Set([
+  "content-type",
+  "x-request-id",
+  "x-correlation-id",
+  "x-datadog-trace-id",
+  "x-datadog-parent-id",
+  "x-datadog-span-id",
+]);
+const RESPONSE_HEADER_ALLOWLIST = new Set([
+  "content-type",
+  "location",
+  "x-request-id",
+  "x-correlation-id",
+  "x-datadog-trace-id",
+  "x-datadog-parent-id",
+  "x-datadog-span-id",
+]);
 
 function stripAnsi(text: string): string {
   // eslint-disable-next-line no-control-regex
@@ -240,6 +260,172 @@ function asNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function asBoolean(value: unknown): boolean | undefined {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  return undefined;
+}
+
+function extractAllowlistedHeaders(
+  headersValue: unknown,
+  allowlist: ReadonlySet<string>,
+): Record<string, string> | undefined {
+  if (!Array.isArray(headersValue)) {
+    return undefined;
+  }
+
+  const headers: Record<string, string> = {};
+  for (const headerValue of headersValue) {
+    const headerRecord = asRecord(headerValue);
+    const headerName = asString(headerRecord?.["name"])?.trim().toLowerCase();
+    if (!headerName || !allowlist.has(headerName)) {
+      continue;
+    }
+
+    const headerText = asString(headerRecord?.["value"]);
+    if (!headerText) {
+      continue;
+    }
+    headers[headerName] = capText(stripAnsi(headerText), HEADER_VALUE_CAP);
+  }
+
+  if (Object.keys(headers).length === 0) {
+    return undefined;
+  }
+  return headers;
+}
+
+function extractNetworkTimings(
+  snapshotRecord: Record<string, unknown>,
+): NetworkTimingBreakdown | undefined {
+  const timingsRecord = asRecord(snapshotRecord["timings"]);
+  if (!timingsRecord) {
+    return undefined;
+  }
+
+  const timings: NetworkTimingBreakdown = {};
+  const sendMs = asNumber(timingsRecord["send"]);
+  if (sendMs !== undefined && sendMs >= 0) {
+    timings.sendMs = sendMs;
+  }
+  const waitMs = asNumber(timingsRecord["wait"]);
+  if (waitMs !== undefined && waitMs >= 0) {
+    timings.waitMs = waitMs;
+  }
+  const receiveMs = asNumber(timingsRecord["receive"]);
+  if (receiveMs !== undefined && receiveMs >= 0) {
+    timings.receiveMs = receiveMs;
+  }
+  const dnsMs = asNumber(timingsRecord["dns"]);
+  if (dnsMs !== undefined && dnsMs >= 0) {
+    timings.dnsMs = dnsMs;
+  }
+  const connectMs = asNumber(timingsRecord["connect"]);
+  if (connectMs !== undefined && connectMs >= 0) {
+    timings.connectMs = connectMs;
+  }
+  const sslMs = asNumber(timingsRecord["ssl"]);
+  if (sslMs !== undefined && sslMs >= 0) {
+    timings.sslMs = sslMs;
+  }
+
+  if (Object.keys(timings).length === 0) {
+    return undefined;
+  }
+  return timings;
+}
+
+function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
+  for (const [index, request] of networkRequests.entries()) {
+    if (!request.redirectToUrl) {
+      continue;
+    }
+
+    const redirectChain = [{ url: request.url, status: request.status }];
+    const visitedRequestIndexes = new Set([index]);
+    let previousRequest = request;
+    let currentIndex = index;
+    let nextUrl: string | undefined = request.redirectToUrl;
+
+    while (nextUrl) {
+      let nextIndex = -1;
+      for (
+        let candidateIndex = currentIndex + 1;
+        candidateIndex < networkRequests.length;
+        candidateIndex++
+      ) {
+        if (visitedRequestIndexes.has(candidateIndex)) {
+          continue;
+        }
+
+        const candidateRequest = networkRequests[candidateIndex];
+        if (candidateRequest?.url !== nextUrl) {
+          continue;
+        }
+
+        nextIndex = candidateIndex;
+        break;
+      }
+
+      if (nextIndex < 0) {
+        break;
+      }
+
+      const nextRequest = networkRequests[nextIndex];
+      if (!nextRequest) {
+        break;
+      }
+
+      nextRequest.redirectFromUrl ??= previousRequest.url;
+      redirectChain.push({ url: nextRequest.url, status: nextRequest.status });
+      visitedRequestIndexes.add(nextIndex);
+      previousRequest = nextRequest;
+      currentIndex = nextIndex;
+      nextUrl = nextRequest.redirectToUrl;
+    }
+
+    if (redirectChain.length > 1) {
+      request.redirectChain = redirectChain;
+    }
+  }
+}
+
+function extractFailureArtifacts(
+  status: TestStatus,
+  attachments: TestAttachment[],
+): FailureArtifacts | undefined {
+  if (status === "passed" || status === "skipped") {
+    return undefined;
+  }
+
+  const failureArtifacts: FailureArtifacts = {};
+  for (const attachment of attachments) {
+    if (!attachment.path) {
+      continue;
+    }
+
+    const attachmentName = attachment.name.toLowerCase();
+    if (
+      !failureArtifacts.screenshotPath &&
+      (attachment.contentType.startsWith("image/") || attachmentName.includes("screenshot"))
+    ) {
+      failureArtifacts.screenshotPath = attachment.path;
+    }
+    if (
+      !failureArtifacts.videoPath &&
+      (attachment.contentType.startsWith("video/") || attachmentName.includes("video"))
+    ) {
+      failureArtifacts.videoPath = attachment.path;
+    }
+  }
+
+  if (!failureArtifacts.screenshotPath && !failureArtifacts.videoPath) {
+    return undefined;
+  }
+  return failureArtifacts;
+}
+
 function readTraceResourceBody(
   archiveEntries: Record<string, Uint8Array>,
   traceBodyRecord: Record<string, unknown> | undefined,
@@ -393,6 +579,42 @@ function buildNetworkRequestFromEvent(
     networkRequest.resourceType = resourceType;
   }
 
+  const timings = extractNetworkTimings(snapshotRecord);
+  if (timings) {
+    networkRequest.timings = timings;
+  }
+
+  const failureText = asString(responseRecord["_failureText"]);
+  if (failureText) {
+    networkRequest.failureText = capNetworkBody(stripAnsi(failureText));
+  }
+
+  const wasAborted = asBoolean(snapshotRecord["_wasAborted"]);
+  if (wasAborted !== undefined) {
+    networkRequest.wasAborted = wasAborted;
+  }
+
+  const redirectToUrl = asString(responseRecord["redirectURL"]);
+  if (redirectToUrl) {
+    networkRequest.redirectToUrl = redirectToUrl;
+  }
+
+  const requestHeaders = extractAllowlistedHeaders(
+    requestRecord["headers"],
+    REQUEST_HEADER_ALLOWLIST,
+  );
+  if (requestHeaders) {
+    networkRequest.requestHeaders = requestHeaders;
+  }
+
+  const responseHeaders = extractAllowlistedHeaders(
+    responseRecord["headers"],
+    RESPONSE_HEADER_ALLOWLIST,
+  );
+  if (responseHeaders) {
+    networkRequest.responseHeaders = responseHeaders;
+  }
+
   const requestBody = readTraceResourceBody(archiveEntries, asRecord(requestRecord["postData"]));
   if (requestBody !== undefined) {
     networkRequest.requestBody = requestBody;
@@ -451,6 +673,24 @@ function buildConsoleEntryFromEvent(
     return {
       type: "pageerror",
       text: capConsoleMessageText(stripAnsi(pageErrorText)),
+    };
+  }
+
+  if (eventRecord["type"] === "event" && eventRecord["method"] === "pageClosed") {
+    return {
+      type: "page-closed",
+      text: "Page closed",
+    };
+  }
+
+  if (
+    eventRecord["type"] === "event" &&
+    (eventRecord["method"] === "pageCrashed" || eventRecord["method"] === "pageCrash")
+  ) {
+    const pageCrashText = extractPageErrorText(eventRecord) ?? "Page crashed";
+    return {
+      type: "page-crashed",
+      text: capConsoleMessageText(stripAnsi(pageCrashText)),
     };
   }
 
@@ -588,6 +828,7 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
     consoleMessages.push(...traceDiagnostics.consoleMessages.slice(0, remainingCapacity));
   }
 
+  annotateRedirectChains(networkRequests);
   return { networkRequests, consoleMessages };
 }
 
@@ -601,6 +842,7 @@ interface BuildAttemptResultInput {
 
 function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
   const { result, errors, attachments, network, consoleMessages } = input;
+  const failureArtifacts = extractFailureArtifacts(result.status, attachments);
   const attemptResult: AttemptResult = {
     attempt: result.retry + 1,
     status: result.status,
@@ -614,6 +856,7 @@ function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
     attachments,
     network,
     consoleMessages,
+    ...(failureArtifacts && { failureArtifacts }),
   };
 
   const [firstError] = errors;

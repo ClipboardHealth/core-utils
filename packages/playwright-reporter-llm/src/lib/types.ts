@@ -52,6 +52,20 @@ export interface FlatStep {
   error?: string;
 }
 
+export interface NetworkTimingBreakdown {
+  sendMs?: number;
+  waitMs?: number;
+  receiveMs?: number;
+  dnsMs?: number;
+  connectMs?: number;
+  sslMs?: number;
+}
+
+export interface NetworkRedirectHop {
+  url: string;
+  status: number;
+}
+
 export interface NetworkRequest {
   method: string;
   url: string;
@@ -60,6 +74,19 @@ export interface NetworkRequest {
   resourceType?: string;
   requestBody?: string;
   responseBody?: string;
+  failureText?: string;
+  wasAborted?: boolean;
+  redirectFromUrl?: string;
+  redirectToUrl?: string;
+  redirectChain?: NetworkRedirectHop[];
+  timings?: NetworkTimingBreakdown;
+  requestHeaders?: Record<string, string>;
+  responseHeaders?: Record<string, string>;
+}
+
+export interface FailureArtifacts {
+  screenshotPath?: string;
+  videoPath?: string;
 }
 
 export interface ConsoleEntry {
@@ -81,6 +108,7 @@ export interface AttemptResult {
   attachments: TestAttachment[];
   network: NetworkRequest[];
   consoleMessages: ConsoleEntry[];
+  failureArtifacts?: FailureArtifacts;
 }
 
 export interface LlmTestEntry {

@@ -109,19 +109,42 @@ Report: test-results/llm-report.json
           "consoleMessages": [
             { "type": "warning", "text": "deprecated API used" },
             { "type": "error", "text": "failed to fetch" },
-            { "type": "pageerror", "text": "Uncaught TypeError: x is undefined" }
+            { "type": "pageerror", "text": "Uncaught TypeError: x is undefined" },
+            { "type": "page-closed", "text": "Page closed" }
           ],
           "attachments": [
             { "name": "trace", "contentType": "application/zip", "path": "trace.zip" }
           ],
+          "failureArtifacts": {
+            "screenshotPath": "failure-1.png",
+            "videoPath": "retry-video.webm"
+          },
           "network": [
             {
-              "method": "POST",
-              "url": "https://api.example.com/v1/orders",
-              "status": 201,
+              "method": "GET",
+              "url": "https://app.example.com/start",
+              "status": 302,
               "durationMs": 37,
-              "requestBody": "{\"orderId\":\"123\"}",
-              "responseBody": "{\"ok\":true}"
+              "redirectToUrl": "https://app.example.com/final",
+              "redirectChain": [
+                { "url": "https://app.example.com/start", "status": 302 },
+                { "url": "https://app.example.com/final", "status": 200 }
+              ],
+              "timings": {
+                "dnsMs": 2,
+                "connectMs": 3,
+                "sslMs": 4,
+                "sendMs": 1,
+                "waitMs": 12,
+                "receiveMs": 5
+              },
+              "requestHeaders": {
+                "x-datadog-trace-id": "12345",
+                "x-datadog-span-id": "67890"
+              },
+              "responseHeaders": {
+                "location": "https://app.example.com/final"
+              }
             }
           ]
         },
@@ -154,9 +177,11 @@ Key fields for agents:
 - **`tests[].errors[].location`** -- exact file and line of failure
 - **`tests[].flaky`** -- true if test passed after retry
 - **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
-- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror trace console entries only (2KB text cap with `[truncated]` marker, max 50 per attempt)
+- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt)
 - **`tests[].steps` / `tests[].network`** -- convenience aliases from the final attempt
-- **`tests[].attempts[].network[]`** -- max 200 per attempt; `requestBody`/`responseBody` JSON/text only, capped at 2KB with `[truncated]` marker
+- **`tests[].attempts[].network[]`** -- max 200 per attempt with failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), and allowlisted headers (`requestHeaders`, `responseHeaders`)
+- **`tests[].attempts[].network[].requestHeaders`** -- includes `x-datadog-trace-id` and `x-datadog-span-id` when present (values capped to 256 chars)
+- **`tests[].attempts[].failureArtifacts`** -- first screenshot/video attachment paths for failing/timed-out/interrupted attempts
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`stdout`/`stderr`** -- capped at 4KB with `[truncated]` marker
 

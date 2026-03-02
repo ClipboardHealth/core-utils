@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { deflateRawSync } from "node:zlib";
+import { crc32, deflateRawSync } from "node:zlib";
 
 import type {
   FullConfig,
@@ -14,6 +14,8 @@ import type {
 
 import LlmReporter from "./reporter";
 import type { LlmTestReport } from "./types";
+
+const NETWORK_REQUESTS_CAP = 200 as const;
 
 function createMockConfig(overrides: Partial<FullConfig> = {}): FullConfig {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -57,7 +59,7 @@ function createMockTestCase(
   };
   const rootSuite = { title: "", parent: undefined, type: "root" };
   const projectSuite = {
-    title: "chromium",
+    title: mockProject.name,
     parent: rootSuite,
     project: () => mockProject,
     type: "project",
@@ -142,11 +144,33 @@ interface ReportTestAttempt {
     resourceType?: string;
     requestBody?: string;
     responseBody?: string;
+    failureText?: string;
+    wasAborted?: boolean;
+    redirectFromUrl?: string;
+    redirectToUrl?: string;
+    redirectChain?: Array<{
+      url: string;
+      status: number;
+    }>;
+    timings?: {
+      sendMs?: number;
+      waitMs?: number;
+      receiveMs?: number;
+      dnsMs?: number;
+      connectMs?: number;
+      sslMs?: number;
+    };
+    requestHeaders?: Record<string, string>;
+    responseHeaders?: Record<string, string>;
   }>;
   consoleMessages: Array<{
     type: string;
     text: string;
   }>;
+  failureArtifacts?: {
+    screenshotPath?: string;
+    videoPath?: string;
+  };
 }
 
 type ReportTestWithAttempts = LlmTestReport["tests"][number] & {
@@ -175,6 +199,8 @@ function createStoredZipArchive(entries: ZipFixtureEntry[]): Buffer {
     const compressionMethod = entry.compressionMethod ?? 0;
     const compressedContent =
       compressionMethod === 8 ? deflateRawSync(fileContent) : Buffer.from(fileContent);
+    const crc32Value = crc32(fileContent);
+    const contentCrc32 = crc32Value >= 0 ? crc32Value : crc32Value + 4_294_967_296;
 
     const localFileHeader = Buffer.alloc(30);
     localFileHeader.writeUInt32LE(67_324_752, 0);
@@ -183,7 +209,7 @@ function createStoredZipArchive(entries: ZipFixtureEntry[]): Buffer {
     localFileHeader.writeUInt16LE(compressionMethod, 8);
     localFileHeader.writeUInt16LE(0, 10);
     localFileHeader.writeUInt16LE(0, 12);
-    localFileHeader.writeUInt32LE(0, 14);
+    localFileHeader.writeUInt32LE(contentCrc32, 14);
     localFileHeader.writeUInt32LE(compressedContent.length, 18);
     localFileHeader.writeUInt32LE(fileContent.length, 22);
     localFileHeader.writeUInt16LE(fileName.length, 26);
@@ -199,7 +225,7 @@ function createStoredZipArchive(entries: ZipFixtureEntry[]): Buffer {
     centralDirectoryHeader.writeUInt16LE(compressionMethod, 10);
     centralDirectoryHeader.writeUInt16LE(0, 12);
     centralDirectoryHeader.writeUInt16LE(0, 14);
-    centralDirectoryHeader.writeUInt32LE(0, 16);
+    centralDirectoryHeader.writeUInt32LE(contentCrc32, 16);
     centralDirectoryHeader.writeUInt32LE(compressedContent.length, 20);
     centralDirectoryHeader.writeUInt32LE(fileContent.length, 24);
     centralDirectoryHeader.writeUInt16LE(fileName.length, 28);
@@ -233,6 +259,7 @@ interface WriteTraceZipFixtureInput {
   requestBody: string;
   responseBody: string;
   traceEvents?: unknown[];
+  networkEvents?: unknown[];
   traceRawLines?: string[];
   useDeflateCompression?: boolean;
 }
@@ -246,10 +273,29 @@ function writeTraceZipFixture(
     requestBody,
     responseBody,
     traceEvents = [],
+    networkEvents,
     traceRawLines = [],
     useDeflateCompression = false,
   } = input;
   const traceLines = [...traceEvents.map((event) => JSON.stringify(event)), ...traceRawLines];
+  const resolvedNetworkEvents = networkEvents ?? [
+    {
+      type: "resource-snapshot",
+      snapshot: {
+        time: 37,
+        _resourceType: "fetch",
+        request: {
+          method: "POST",
+          url: "https://api.example.com/v1/orders",
+          postData: { mimeType: "application/json", _sha1: "request-body.json" },
+        },
+        response: {
+          status: 201,
+          content: { mimeType: "application/json", _sha1: "response-body.json" },
+        },
+      },
+    },
+  ];
   const entryCompressionMethod = useDeflateCompression ? 8 : 0;
 
   const archive = createStoredZipArchive([
@@ -260,22 +306,7 @@ function writeTraceZipFixture(
     },
     {
       fileName: "test.network",
-      content: `${JSON.stringify({
-        type: "resource-snapshot",
-        snapshot: {
-          time: 37,
-          _resourceType: "fetch",
-          request: {
-            method: "POST",
-            url: "https://api.example.com/v1/orders",
-            postData: { mimeType: "application/json", _sha1: "request-body.json" },
-          },
-          response: {
-            status: 201,
-            content: { mimeType: "application/json", _sha1: "response-body.json" },
-          },
-        },
-      })}\n`,
+      content: `${resolvedNetworkEvents.map((event) => JSON.stringify(event)).join("\n")}\n`,
       compressionMethod: entryCompressionMethod,
     },
     {
@@ -647,6 +678,52 @@ describe("LlmReporter", () => {
     expect(attempt?.network[0]?.responseBody).toHaveLength(2048);
   });
 
+  it("caps network requests at 200 and keeps the earliest requests", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const totalNetworkEvents = NETWORK_REQUESTS_CAP + 20;
+    const networkEvents = Array.from({ length: totalNetworkEvents }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        time: index,
+        _resourceType: "fetch",
+        request: {
+          method: "GET",
+          url: `https://api.example.com/network/${index}`,
+        },
+        response: {
+          status: 200,
+        },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-many-network-events.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents,
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const entry = report.tests[0] as ReportTestWithAttempts;
+    const [attempt] = entry.attempts;
+    const expectedUrls = Array.from(
+      { length: NETWORK_REQUESTS_CAP },
+      (_, index) => `https://api.example.com/network/${index}`,
+    );
+
+    expect(attempt?.network).toHaveLength(NETWORK_REQUESTS_CAP);
+    expect(attempt?.network.map((request) => request.url)).toEqual(expectedUrls);
+    expect(entry.network).toEqual(attempt?.network);
+  });
+
   it("extracts warning/error/pageerror console messages from traces", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
@@ -683,6 +760,159 @@ describe("LlmReporter", () => {
       { type: "error", text: "failed to fetch" },
       { type: "pageerror", text: "Uncaught TypeError: x is undefined" },
     ]);
+  });
+
+  it("extracts page close and crash events from traces", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-page-events.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      traceEvents: [
+        { type: "event", method: "pageClosed", params: { pageId: "page-1" } },
+        { type: "event", method: "pageCrashed", params: { error: "Target page crashed" } },
+      ],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+
+    expect(attempt?.consoleMessages).toEqual(
+      expect.arrayContaining([
+        { type: "page-closed", text: "Page closed" },
+        { type: "page-crashed", text: "Target page crashed" },
+      ]),
+    );
+  });
+
+  it("extracts request failure, timings, redirects, and allowlisted headers from trace network events", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-network-details.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            time: 50,
+            _resourceType: "document",
+            _wasAborted: false,
+            request: {
+              method: "GET",
+              url: "https://app.example.com/start",
+              headers: [
+                { name: "x-datadog-trace-id", value: "12345" },
+                { name: "x-datadog-span-id", value: "67890" },
+                { name: "x-ignore-me", value: "ignore" },
+              ],
+            },
+            response: {
+              status: 302,
+              redirectURL: "https://app.example.com/final",
+              headers: [
+                { name: "location", value: "https://app.example.com/final" },
+                { name: "x-ignore-me", value: "ignore" },
+              ],
+              content: { mimeType: "application/json", _sha1: "response-body.json" },
+            },
+            timings: { send: 1, wait: 12, receive: 5, dns: 2, connect: 3, ssl: 4 },
+          },
+        },
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            time: 90,
+            _resourceType: "document",
+            request: {
+              method: "GET",
+              url: "https://app.example.com/final",
+            },
+            response: {
+              status: 200,
+              headers: [{ name: "content-type", value: "text/html" }],
+              content: { mimeType: "application/json", _sha1: "response-body.json" },
+            },
+            timings: { wait: 8, receive: 2 },
+          },
+        },
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            time: 10,
+            _resourceType: "fetch",
+            _wasAborted: true,
+            request: {
+              method: "GET",
+              url: "https://api.example.com/flaky",
+            },
+            response: {
+              status: -1,
+              _failureText: "net::ERR_FAILED",
+              content: { mimeType: "application/json", _sha1: "response-body.json" },
+            },
+            timings: { wait: -1, receive: -1 },
+          },
+        },
+      ],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = (report.tests[0] as ReportTestWithAttempts).attempts[0] as ReportTestAttempt;
+    const [redirectStart, redirectEnd, failedRequest] = attempt.network;
+
+    expect(redirectStart).toMatchObject({
+      method: "GET",
+      url: "https://app.example.com/start",
+      status: 302,
+      redirectToUrl: "https://app.example.com/final",
+      timings: {
+        sendMs: 1,
+        waitMs: 12,
+        receiveMs: 5,
+        dnsMs: 2,
+        connectMs: 3,
+        sslMs: 4,
+      },
+      requestHeaders: {
+        "x-datadog-trace-id": "12345",
+        "x-datadog-span-id": "67890",
+      },
+      responseHeaders: {
+        location: "https://app.example.com/final",
+      },
+      redirectChain: [
+        { url: "https://app.example.com/start", status: 302 },
+        { url: "https://app.example.com/final", status: 200 },
+      ],
+    });
+    expect(redirectStart?.requestHeaders?.["x-ignore-me"]).toBeUndefined();
+    expect(redirectStart?.responseHeaders?.["x-ignore-me"]).toBeUndefined();
+    expect(redirectEnd?.redirectFromUrl).toBe("https://app.example.com/start");
+    expect(failedRequest).toMatchObject({
+      url: "https://api.example.com/flaky",
+      status: -1,
+      failureText: "net::ERR_FAILED",
+      wasAborted: true,
+    });
   });
 
   it("caps console message text at 2KB and console message count at 50", () => {
@@ -943,6 +1173,49 @@ describe("LlmReporter", () => {
     expect(report.tests[0]?.attachments).toHaveLength(1);
     expect(report.tests[0]?.attachments[0]?.path).toBe("screenshot.png");
     expect(report.tests[0]?.attachments[0]?.name).toBe("screenshot");
+  });
+
+  it("captures first screenshot and video paths for failed attempts", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    reporter.onTestEnd(
+      createMockTestCase(),
+      createMockResult({
+        status: "failed",
+        attachments: [
+          {
+            name: "trace",
+            contentType: "application/zip",
+            path: "/project/test-results/trace.zip",
+          },
+          {
+            name: "failure-screenshot",
+            contentType: "image/png",
+            path: "/project/test-results/failure-1.png",
+          },
+          {
+            name: "retry-video",
+            contentType: "video/webm",
+            path: "/project/test-results/retry-video.webm",
+          },
+          {
+            name: "later-screenshot",
+            contentType: "image/png",
+            path: "/project/test-results/failure-2.png",
+          },
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "failed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+
+    expect(attempt?.failureArtifacts).toEqual({
+      screenshotPath: "failure-1.png",
+      videoPath: "retry-video.webm",
+    });
   });
 
   it("prints dot progress and summary to stdout", () => {
