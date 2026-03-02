@@ -591,6 +591,30 @@ describe("LlmReporter", () => {
     expect(entry.network).toEqual([]);
   });
 
+  it("ignores zip attachments that are not trace artifacts", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const zipPath = writeTraceZipFixture(outputDirectory, "artifact.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "artifact", contentType: "application/zip", path: zipPath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const entry = report.tests[0] as ReportTestWithAttempts;
+
+    expect(entry.attempts[0]?.network).toEqual([]);
+    expect(entry.attempts[0]?.consoleMessages).toEqual([]);
+  });
+
   it("caps JSON request and response bodies from traces at 2KB", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());

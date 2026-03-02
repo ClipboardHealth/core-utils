@@ -31,6 +31,7 @@ import type {
 
 const STDOUT_CAP = 4096;
 const NETWORK_BODY_CAP = 2048;
+const CONSOLE_TEXT_CAP = 2048;
 const CONSOLE_MESSAGES_CAP = 50;
 const NETWORK_REQUESTS_CAP = 200;
 const TRUNCATION_MARKER = "[truncated]";
@@ -190,18 +191,19 @@ function flattenSteps(steps: readonly TestStep[], depth = 0): FlatStep[] {
   return flattenedSteps;
 }
 
-function capNetworkBody(body: string): string {
-  if (body.length <= NETWORK_BODY_CAP) {
-    return body;
+function capText(value: string, limit: number): string {
+  if (value.length <= limit) {
+    return value;
   }
-  return `${body.slice(0, NETWORK_BODY_CAP - TRUNCATION_MARKER.length)}${TRUNCATION_MARKER}`;
+  return `${value.slice(0, limit - TRUNCATION_MARKER.length)}${TRUNCATION_MARKER}`;
+}
+
+function capNetworkBody(body: string): string {
+  return capText(body, NETWORK_BODY_CAP);
 }
 
 function capConsoleMessageText(text: string): string {
-  if (text.length <= NETWORK_BODY_CAP) {
-    return text;
-  }
-  return `${text.slice(0, NETWORK_BODY_CAP - TRUNCATION_MARKER.length)}${TRUNCATION_MARKER}`;
+  return capText(text, CONSOLE_TEXT_CAP);
 }
 
 function isJsonOrTextContentType(contentType: string | undefined): boolean {
@@ -555,7 +557,11 @@ function collectAttachments(result: TestResult, outputDirectory: string): Attach
       ...(attachment.path && { path: path.relative(outputDirectory, attachment.path) }),
     });
 
-    if (contentType === "application/zip" && attachment.path) {
+    if (
+      contentType === "application/zip" &&
+      attachment.path &&
+      attachment.name.toLowerCase().includes("trace")
+    ) {
       tracePaths.push(attachment.path);
     }
   }

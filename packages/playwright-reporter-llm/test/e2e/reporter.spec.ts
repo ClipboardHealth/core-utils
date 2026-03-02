@@ -88,7 +88,14 @@ describe("LLM Reporter E2E", () => {
       expect(test.steps).toEqual(finalAttempt?.steps);
       expect(test.network).toEqual(finalAttempt?.network);
       expect(finalAttempt?.consoleMessages).toBeInstanceOf(Array);
-      expect(test.error).toEqual(test.errors[0]);
+      const expectedTopLevelErrorByStatus = {
+        failed: test.errors[0],
+        interrupted: test.errors[0],
+        passed: undefined,
+        skipped: undefined,
+        timedOut: test.errors[0],
+      };
+      expect(test.error).toEqual(expectedTopLevelErrorByStatus[test.status]);
     }
   });
 
