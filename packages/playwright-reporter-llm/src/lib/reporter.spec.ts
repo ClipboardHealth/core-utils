@@ -1194,17 +1194,19 @@ describe("LlmReporter", () => {
       throw new Error("stringify failed");
     });
 
-    reporter.onBegin(createMockConfig(), createMockSuite());
-    reporter.onTestEnd(createMockTestCase(), createMockResult());
-    reporter.onEnd({ status: "passed" } as FullResult);
+    try {
+      reporter.onBegin(createMockConfig(), createMockSuite());
+      reporter.onTestEnd(createMockTestCase(), createMockResult());
+      reporter.onEnd({ status: "passed" } as FullResult);
 
-    expect(mockError).toHaveBeenCalledWith(
-      expect.stringContaining(`LlmReporter: Failed to write report to ${outputFile}`),
-      expect.any(Error),
-    );
-
-    stringifySpy.mockRestore();
-    mockError.mockRestore();
+      expect(mockError).toHaveBeenCalledWith(
+        expect.stringContaining(`LlmReporter: Failed to write report to ${outputFile}`),
+        expect.any(Error),
+      );
+    } finally {
+      stringifySpy.mockRestore();
+      mockError.mockRestore();
+    }
   });
 
   it("resets state when onBegin is called again", () => {
