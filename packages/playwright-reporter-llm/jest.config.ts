@@ -14,6 +14,7 @@ module.exports = {
   preset: "../../jest.preset.js",
   testEnvironment: "node",
   testPathIgnorePatterns: ["/test/e2e/fixtures/"],
+  watchman: false,
   transform: {
     "^.+\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
   },

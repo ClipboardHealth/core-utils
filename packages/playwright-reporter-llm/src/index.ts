@@ -1,9 +1,16 @@
 export { default } from "./lib/reporter";
 export type {
+  AttemptResult,
+  ConsoleEntry,
+  FailureArtifacts,
+  FlatStep,
   GlobalError,
   LlmReporterOptions,
   LlmTestEntry,
   LlmTestReport,
+  NetworkRedirectHop,
+  NetworkRequest,
+  NetworkTimingBreakdown,
   TestAttachment,
   TestEnvironment,
   TestError,
