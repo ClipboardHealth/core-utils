@@ -124,7 +124,7 @@ Report: test-results/llm-report.json
               "method": "GET",
               "url": "https://app.example.com/start",
               "status": 302,
-              "durationMs": 37,
+              "durationMs": 27,
               "redirectToUrl": "https://app.example.com/final",
               "redirectChain": [
                 { "url": "https://app.example.com/start", "status": 302 },
@@ -179,11 +179,11 @@ Key fields for agents:
 - **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
 - **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt)
 - **`tests[].steps` / `tests[].network`** -- convenience aliases from the final attempt
-- **`tests[].attempts[].network[]`** -- max 200 per attempt with failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), and allowlisted headers (`requestHeaders`, `responseHeaders`)
+- **`tests[].attempts[].network[]`** -- max 200 per attempt with failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), `durationMs` derived from available timing components, and allowlisted headers (`requestHeaders`, `responseHeaders`)
 - **`tests[].attempts[].network[].requestHeaders`** -- includes `x-datadog-trace-id` and `x-datadog-span-id` when present (values capped to 256 chars)
 - **`tests[].attempts[].failureArtifacts`** -- first screenshot/video attachment paths for failing/timed-out/interrupted attempts
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
-- **`stdout`/`stderr`** -- capped at 4KB with `[truncated]` marker
+- **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
 
 ## Local development commands
 

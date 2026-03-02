@@ -336,6 +336,36 @@ function extractNetworkTimings(
   return timings;
 }
 
+function deriveNetworkDurationMs(timings: NetworkTimingBreakdown | undefined): number | undefined {
+  if (!timings) {
+    return undefined;
+  }
+
+  const timingValues = [
+    timings.sendMs,
+    timings.waitMs,
+    timings.receiveMs,
+    timings.dnsMs,
+    timings.connectMs,
+    timings.sslMs,
+  ];
+  let totalDurationMs = 0;
+  let hasDurationValue = false;
+
+  for (const value of timingValues) {
+    if (value === undefined) {
+      continue;
+    }
+    totalDurationMs += value;
+    hasDurationValue = true;
+  }
+
+  if (!hasDurationValue) {
+    return undefined;
+  }
+  return totalDurationMs;
+}
+
 function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
   for (const [index, request] of networkRequests.entries()) {
     if (!request.redirectToUrl) {
@@ -528,7 +558,12 @@ function readZipArchiveEntries(zipPath: string): Record<string, Uint8Array> {
     if (compressionMethod === ZIP_COMPRESSION_STORED) {
       entryContent = Buffer.from(compressedData);
     } else if (compressionMethod === ZIP_COMPRESSION_DEFLATE) {
-      entryContent = inflateRawSync(compressedData);
+      try {
+        entryContent = inflateRawSync(compressedData);
+      } catch {
+        cursor += 46 + fileNameLength + extraFieldLength + fileCommentLength;
+        continue;
+      }
     }
 
     if (entryContent) {
@@ -569,11 +604,6 @@ function buildNetworkRequestFromEvent(
     status,
   };
 
-  const durationMs = asNumber(snapshotRecord["time"]);
-  if (durationMs !== undefined && durationMs >= 0) {
-    networkRequest.durationMs = durationMs;
-  }
-
   const resourceType = asString(snapshotRecord["_resourceType"]);
   if (resourceType) {
     networkRequest.resourceType = resourceType;
@@ -582,6 +612,11 @@ function buildNetworkRequestFromEvent(
   const timings = extractNetworkTimings(snapshotRecord);
   if (timings) {
     networkRequest.timings = timings;
+  }
+
+  const durationMs = deriveNetworkDurationMs(timings);
+  if (durationMs !== undefined) {
+    networkRequest.durationMs = durationMs;
   }
 
   const failureText = asString(responseRecord["_failureText"]);
@@ -742,12 +777,25 @@ interface TraceDiagnostics {
 }
 
 function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
-  try {
-    const archiveEntries = readZipArchiveEntries(tracePath);
-    const networkRequests: NetworkRequest[] = [];
-    const consoleMessages: ConsoleEntry[] = [];
+  const networkRequests: NetworkRequest[] = [];
+  const consoleMessages: ConsoleEntry[] = [];
+  let archiveEntries: Record<string, Uint8Array>;
 
-    for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
+  try {
+    archiveEntries = readZipArchiveEntries(tracePath);
+  } catch {
+    return { networkRequests, consoleMessages };
+  }
+
+  for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
+    if (
+      networkRequests.length >= NETWORK_REQUESTS_CAP &&
+      consoleMessages.length >= CONSOLE_MESSAGES_CAP
+    ) {
+      break;
+    }
+
+    try {
       if (!entryName.endsWith(".trace") && !entryName.endsWith(".network")) {
         continue;
       }
@@ -756,11 +804,22 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
       const lines = entryText.split("\n");
 
       for (const line of lines) {
+        if (
+          networkRequests.length >= NETWORK_REQUESTS_CAP &&
+          consoleMessages.length >= CONSOLE_MESSAGES_CAP
+        ) {
+          break;
+        }
         if (!line.trim()) {
           continue;
         }
 
-        const traceLineDiagnostics = parseTraceLine(line, archiveEntries);
+        let traceLineDiagnostics: TraceLineDiagnostics | undefined;
+        try {
+          traceLineDiagnostics = parseTraceLine(line, archiveEntries);
+        } catch {
+          continue;
+        }
         if (!traceLineDiagnostics) {
           continue;
         }
@@ -772,12 +831,12 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
           consoleMessages.push(traceLineDiagnostics.consoleEntry);
         }
       }
+    } catch {
+      continue;
     }
-
-    return { networkRequests, consoleMessages };
-  } catch {
-    return { networkRequests: [], consoleMessages: [] };
   }
+
+  return { networkRequests, consoleMessages };
 }
 
 interface AttachmentsCollection {
@@ -814,6 +873,13 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
   const consoleMessages: ConsoleEntry[] = [];
 
   for (const tracePath of tracePaths) {
+    if (
+      networkRequests.length >= NETWORK_REQUESTS_CAP &&
+      consoleMessages.length >= CONSOLE_MESSAGES_CAP
+    ) {
+      break;
+    }
+
     const traceDiagnostics = parseTraceDiagnostics(tracePath);
     if (networkRequests.length < NETWORK_REQUESTS_CAP) {
       const remainingNetworkCapacity = NETWORK_REQUESTS_CAP - networkRequests.length;

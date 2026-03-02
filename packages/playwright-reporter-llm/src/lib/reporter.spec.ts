@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { crc32, deflateRawSync } from "node:zlib";
+import { deflateRawSync } from "node:zlib";
 
 import type {
   FullConfig,
@@ -13,7 +13,7 @@ import type {
 } from "@playwright/test/reporter";
 
 import LlmReporter from "./reporter";
-import type { LlmTestReport } from "./types";
+import type { AttemptResult, LlmTestEntry, LlmTestReport } from "./types";
 
 const NETWORK_REQUESTS_CAP = 200 as const;
 
@@ -121,64 +121,13 @@ function readReport(filePath: string): LlmTestReport {
   return JSON.parse(readFileSync(filePath, "utf8")) as LlmTestReport;
 }
 
-interface ReportTestAttempt {
-  attempt: number;
-  status: TestResult["status"];
-  durationMs: number;
-  startTime: string;
-  workerIndex: number;
-  parallelIndex: number;
-  error?: { message: string };
-  steps: Array<{
-    title: string;
-    category: string;
-    durationMs: number;
-    depth: number;
-    error?: string;
-  }>;
-  network: Array<{
-    method: string;
-    url: string;
-    status: number;
-    durationMs?: number;
-    resourceType?: string;
-    requestBody?: string;
-    responseBody?: string;
-    failureText?: string;
-    wasAborted?: boolean;
-    redirectFromUrl?: string;
-    redirectToUrl?: string;
-    redirectChain?: Array<{
-      url: string;
-      status: number;
-    }>;
-    timings?: {
-      sendMs?: number;
-      waitMs?: number;
-      receiveMs?: number;
-      dnsMs?: number;
-      connectMs?: number;
-      sslMs?: number;
-    };
-    requestHeaders?: Record<string, string>;
-    responseHeaders?: Record<string, string>;
-  }>;
-  consoleMessages: Array<{
-    type: string;
-    text: string;
-  }>;
-  failureArtifacts?: {
-    screenshotPath?: string;
-    videoPath?: string;
-  };
+function firstTestEntry(report: LlmTestReport): LlmTestEntry {
+  return report.tests[0]!;
 }
 
-type ReportTestWithAttempts = LlmTestReport["tests"][number] & {
-  attempts: ReportTestAttempt[];
-  error?: { message: string };
-  steps?: ReportTestAttempt["steps"];
-  network?: ReportTestAttempt["network"];
-};
+function firstAttempt(report: LlmTestReport): AttemptResult {
+  return firstTestEntry(report).attempts[0]!;
+}
 
 interface ZipFixtureEntry {
   fileName: string;
@@ -199,8 +148,7 @@ function createStoredZipArchive(entries: ZipFixtureEntry[]): Buffer {
     const compressionMethod = entry.compressionMethod ?? 0;
     const compressedContent =
       compressionMethod === 8 ? deflateRawSync(fileContent) : Buffer.from(fileContent);
-    const crc32Value = crc32(fileContent);
-    const contentCrc32 = crc32Value >= 0 ? crc32Value : crc32Value + 4_294_967_296;
+    const contentCrc32 = 0;
 
     const localFileHeader = Buffer.alloc(30);
     localFileHeader.writeUInt32LE(67_324_752, 0);
@@ -293,6 +241,7 @@ function writeTraceZipFixture(
           status: 201,
           content: { mimeType: "application/json", _sha1: "response-body.json" },
         },
+        timings: { send: 10, wait: 20, receive: 7 },
       },
     },
   ];
@@ -454,7 +403,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
 
     expect(report.tests).toHaveLength(1);
     expect(report.summary.total).toBe(1);
@@ -547,7 +496,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "failed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
     const [attempt] = entry.attempts;
 
     expect(attempt?.steps).toEqual([
@@ -584,7 +533,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
     const [attempt] = entry.attempts;
 
     expect(attempt?.network).toEqual([
@@ -594,6 +543,11 @@ describe("LlmReporter", () => {
         status: 201,
         durationMs: 37,
         resourceType: "fetch",
+        timings: {
+          sendMs: 10,
+          waitMs: 20,
+          receiveMs: 7,
+        },
         requestBody: '{"request":"hello"}',
         responseBody: '{"response":"world"}',
       },
@@ -616,7 +570,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
 
     expect(entry.attempts[0]?.network).toEqual([]);
     expect(entry.network).toEqual([]);
@@ -640,7 +594,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
 
     expect(entry.attempts[0]?.network).toEqual([]);
     expect(entry.attempts[0]?.consoleMessages).toEqual([]);
@@ -666,7 +620,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.network[0]?.requestBody).toBe(
       `${largeRequestBody.slice(0, 2048 - "[truncated]".length)}[truncated]`,
@@ -712,7 +666,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
     const [attempt] = entry.attempts;
     const expectedUrls = Array.from(
       { length: NETWORK_REQUESTS_CAP },
@@ -753,7 +707,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.consoleMessages).toEqual([
       { type: "warning", text: "deprecated API used" },
@@ -784,7 +738,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.consoleMessages).toEqual(
       expect.arrayContaining([
@@ -876,13 +830,14 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const attempt = (report.tests[0] as ReportTestWithAttempts).attempts[0] as ReportTestAttempt;
+    const attempt = firstAttempt(report);
     const [redirectStart, redirectEnd, failedRequest] = attempt.network;
 
     expect(redirectStart).toMatchObject({
       method: "GET",
       url: "https://app.example.com/start",
       status: 302,
+      durationMs: 27,
       redirectToUrl: "https://app.example.com/final",
       timings: {
         sendMs: 1,
@@ -907,6 +862,8 @@ describe("LlmReporter", () => {
     expect(redirectStart?.requestHeaders?.["x-ignore-me"]).toBeUndefined();
     expect(redirectStart?.responseHeaders?.["x-ignore-me"]).toBeUndefined();
     expect(redirectEnd?.redirectFromUrl).toBe("https://app.example.com/start");
+    expect(redirectEnd?.durationMs).toBe(10);
+    expect(failedRequest?.durationMs).toBeUndefined();
     expect(failedRequest).toMatchObject({
       url: "https://api.example.com/flaky",
       status: -1,
@@ -940,7 +897,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.consoleMessages).toHaveLength(50);
     expect(attempt?.consoleMessages[0]?.type).toBe("error");
@@ -981,7 +938,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.consoleMessages).toHaveLength(50);
     expect(attempt?.consoleMessages[0]?.text).toBe("first-0");
@@ -1011,7 +968,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.network[0]?.requestBody).toBe('{"request":"compressed"}');
     expect(attempt?.network[0]?.responseBody).toBe('{"response":"compressed"}');
@@ -1087,7 +1044,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.consoleMessages).toContainEqual({ type: "pageerror", text: "page exploded" });
     expect(attempt?.network).toEqual(
@@ -1127,7 +1084,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "passed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.network).toEqual([]);
     expect(attempt?.consoleMessages).toEqual([]);
@@ -1210,7 +1167,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "failed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.failureArtifacts).toEqual({
       screenshotPath: "failure-1.png",
@@ -1405,7 +1362,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "failed" } as FullResult);
 
     const report = readReport(outputFile);
-    const entry = report.tests[0] as ReportTestWithAttempts;
+    const entry = firstTestEntry(report);
 
     expect(entry.status).toBe("failed");
     expect(entry.error?.message).toBe("final attempt failed");
@@ -1432,7 +1389,7 @@ describe("LlmReporter", () => {
     reporter.onEnd({ status: "failed" } as FullResult);
 
     const report = readReport(outputFile);
-    const [attempt] = (report.tests[0] as ReportTestWithAttempts).attempts;
+    const attempt = firstAttempt(report);
 
     expect(attempt?.steps[0]).toEqual({
       title: "step-with-blank-error-line",
