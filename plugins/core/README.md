@@ -14,8 +14,6 @@ Clipboard's core development tools.
   - [revise-claude-md](#revise-claude-md)
   - [learn-from-session](#learn-from-session)
   - [unresolved-pr-comments](#unresolved-pr-comments)
-- [Agents](#agents)
-  - [code-simplifier](#code-simplifier)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
   - [Keeping in sync](#keeping-in-sync)
@@ -74,12 +72,6 @@ Review the current session for learnings and update CLAUDE.md with context that 
 
 Fetch and analyze unresolved review comments from a GitHub pull request. Invoke with `/unresolved-pr-comments` or `/unresolved-pr-comments <pr-number>`.
 
-## Agents
-
-### code-simplifier
-
-Simplifies and refines code for clarity, consistency, and maintainability while preserving functionality. Focuses on recently modified code unless instructed otherwise.
-
 ## Syncing external plugins
 
 This plugin syncs components from external repositories using a sync script. This works around the limitation that [Claude Code plugins do not support dependencies](https://github.com/anthropics/claude-code/issues/9444).
@@ -124,7 +116,6 @@ Run `npm run sync-plugins` periodically or when upstream repositories have chang
 /plugin marketplace add claude-plugins-official
 
 /plugin install commit-commands@claude-plugins-official --scope user
-/plugin install code-simplifier@claude-plugins-official --scope user
 
 # === Fullstack ===
 

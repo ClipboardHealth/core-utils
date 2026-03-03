@@ -31,10 +31,6 @@ const SYNC_CONFIG: RepoConfig[] = [
     pluginsPath: "plugins",
     plugins: [
       {
-        name: "code-simplifier",
-        components: [{ source: { type: "agents", name: "code-simplifier" } }],
-      },
-      {
         name: "commit-commands",
         components: [{ source: { type: "commands", name: "commit-push-pr" } }],
       },
