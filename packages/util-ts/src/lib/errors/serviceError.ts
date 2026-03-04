@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-
 import { type ZodError, type ZodIssue } from "zod";
 
 import { deepFreeze } from "../deepFreeze";
@@ -228,7 +226,7 @@ export class ServiceError extends Error {
 
     const { cause, id, issues, source } = params;
     this.cause = cause;
-    this.id = id ?? randomUUID();
+    this.id = id ?? crypto.randomUUID();
     this.issues = deepFreeze(issues);
     this.name = this.constructor.name;
     this.source = source ?? "pointer";
