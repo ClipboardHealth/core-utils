@@ -24,12 +24,14 @@
         "assertFunctionNames": [
           "expect",
           "expectToBeDefined",
+          "expectToBeFailure",
           "expectToBeLeft",
           "expectToBeNone",
           "expectToBeRight",
           "expectToBeSafeParseError",
           "expectToBeSafeParseSuccess",
           "expectToBeSome",
+          "expectToBeSuccess",
           "expectTypeOf"
         ]
       }
