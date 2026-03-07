@@ -43,6 +43,11 @@ describe("queryFilterPreprocessor", () => {
       expected: { eq: "20", gt: "10" },
     },
     {
+      name: "handles numeric-keyed object with nested operator object",
+      input: { "0": { gt: "10" }, "1": "20" },
+      expected: { gt: "10", eq: "20" },
+    },
+    {
       name: "handles complex object input",
       input: { "0": "10", "1": "20", gt: "5" },
       expected: { eq: "10,20", gt: "5" },

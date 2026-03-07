@@ -63,6 +63,14 @@ function normalizeObjectFilter(value: Record<string, unknown>): Record<string, s
     }
 
     if (/^\d+$/.test(key)) {
+      if (Array.isArray(filterValue)) {
+        return mergeFilters(filter, normalizeArrayFilter(filterValue));
+      }
+
+      if (isObject(filterValue)) {
+        return mergeFilters(filter, normalizeObjectFilter(filterValue));
+      }
+
       return appendFilterValue(filter, "eq", String(filterValue));
     }
 
