@@ -4,4 +4,5 @@ module.exports = {
   ...nxPreset,
   collectCoverageFrom: ["src/**", "!src/**/index.ts", "!src/generators/**/files/**"],
   coverageReporters: ["lcov", "text"],
+  watchman: false,
 };

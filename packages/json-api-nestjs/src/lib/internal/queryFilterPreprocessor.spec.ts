@@ -23,8 +23,18 @@ describe("queryFilterPreprocessor", () => {
       expected: { eq: "20", gt: "10" },
     },
     {
+      name: "handles mixed array and object values from qs",
+      input: [{ gt: "10" }, "20"],
+      expected: { eq: "20", gt: "10" },
+    },
+    {
       name: "handles array input",
       input: ["10", "20"],
+      expected: { eq: "10,20" },
+    },
+    {
+      name: "handles nested array values from qs",
+      input: [["10", "20"]],
       expected: { eq: "10,20" },
     },
     {
