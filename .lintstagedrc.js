@@ -22,7 +22,7 @@ module.exports = {
     `oxfmt ${files.join(" ")}`,
   ],
   "**/package.json": async () => [
-    process.env.NX_RELEASE === "true" ? `syncpack fix-mismatches` : `syncpack lint`,
+    process.env.NX_RELEASE === "true" ? `syncpack fix` : `syncpack lint`,
     "tsx ./populateLibraries.ts",
   ],
 };

@@ -98,7 +98,7 @@ jobs:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         # Commit mismatched package.json versions and package-lock.json changes, if any
         run: |
-          npx syncpack fix-mismatches &&
+          npx syncpack fix &&
           npm install &&
           git add package.json packages/*/package.json package-lock.json &&
           git diff --staged --quiet || git commit -m "chore(release): sync package versions [skip actions]" --no-verify &&
