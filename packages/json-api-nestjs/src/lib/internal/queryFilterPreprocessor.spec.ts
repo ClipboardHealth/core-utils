@@ -23,9 +23,34 @@ describe("queryFilterPreprocessor", () => {
       expected: { eq: "20", gt: "10" },
     },
     {
+      name: "handles mixed array and object values from qs",
+      input: [{ gt: "10" }, "20"],
+      expected: { eq: "20", gt: "10" },
+    },
+    {
       name: "handles array input",
       input: ["10", "20"],
       expected: { eq: "10,20" },
+    },
+    {
+      name: "handles nested array values from qs",
+      input: [["10", "20"]],
+      expected: { eq: "10,20" },
+    },
+    {
+      name: "handles nested array with operator objects from qs",
+      input: [[{ gt: "10" }, "20"]],
+      expected: { eq: "20", gt: "10" },
+    },
+    {
+      name: "handles numeric-keyed object with nested operator object",
+      input: { "0": { gt: "10" }, "1": "20" },
+      expected: { gt: "10", eq: "20" },
+    },
+    {
+      name: "handles numeric-keyed object with nested array value",
+      input: { "0": ["10", "20"], gt: "5" },
+      expected: { eq: "10,20", gt: "5" },
     },
     {
       name: "handles complex object input",

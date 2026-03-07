@@ -19,10 +19,10 @@ module.exports = {
   ],
   "**/*.{ts,tsx,md,mdx}": async () => [`npm run embed:check`],
   "**/*.{css,scss,graphql,js,json,jsonc,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
-    `oxfmt ${files.join(" ")}`,
+    `oxfmt --no-error-on-unmatched-pattern ${files.join(" ")}`,
   ],
   "**/package.json": async () => [
-    process.env.NX_RELEASE === "true" ? `syncpack fix-mismatches` : `syncpack lint`,
+    process.env.NX_RELEASE === "true" ? `syncpack fix` : `syncpack lint`,
     "tsx ./populateLibraries.ts",
   ],
 };

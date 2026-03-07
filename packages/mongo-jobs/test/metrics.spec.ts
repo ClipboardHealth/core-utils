@@ -1,10 +1,10 @@
-import { setTimeout } from "node:timers/promises";
-
 import { BackgroundJobs, type BackgroundJobType } from "../src";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { createTestContext, type TestContext } from "./support/testContext";
 import { TestMetricsReporter } from "./support/testMetricsReporter";
+import { waitForJobCount } from "./support/waitForJobCount";
+import { waitForMetric } from "./support/waitForMetric";
 import { waitForTimings } from "./support/waitForTimings";
 
 describe("BackgroundJobMetrics", () => {
@@ -29,10 +29,9 @@ describe("BackgroundJobMetrics", () => {
   it("reports a pending job", async () => {
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 123 });
 
-    void backgroundJobs.start(["other_group"]); // Consuming other group so that the default group won't get consumed before metrics are reported
+    await backgroundJobs.start(["other_group"]); // Consuming other group so that the default group won't get consumed before metrics are reported
 
-    // We don't await reportMetrics in startReporting; wait for completion.
-    await setTimeout(200);
+    await waitForMetric(metricsReporter, "ExampleJob", "created", 1);
     await backgroundJobs.stop();
 
     expect(metricsReporter.metricFor("ExampleJob", "pending")).toBe(1);
@@ -48,8 +47,8 @@ describe("BackgroundJobMetrics", () => {
       { startAt: new Date(Date.now() + 60_000) },
     );
 
-    void backgroundJobs.start(["default"]);
-    await setTimeout(100);
+    await backgroundJobs.start(["default"]);
+    await waitForMetric(metricsReporter, "ExampleJob", "created", 1);
     await backgroundJobs.stop();
 
     expect(metricsReporter.metricFor("ExampleJob", "pending")).toBe(0);
@@ -68,13 +67,21 @@ describe("BackgroundJobMetrics", () => {
       { attemptsCount: 10 },
     );
 
-    void backgroundJobs.start(["default"]);
-    await setTimeout(100);
+    await backgroundJobs.start(["default"]);
+    await waitForJobCount({
+      backgroundJobs,
+      expectedCount: 1,
+      description: "failed background jobs",
+      query: {
+        _id: (job as BackgroundJobType<unknown>)._id,
+        failedAt: { $exists: true, $ne: null },
+      },
+    });
     await backgroundJobs.stop();
 
     // Running again to make sure that the job failed and will be reported as failed
-    void backgroundJobs.start(["default"]);
-    await setTimeout(100);
+    await backgroundJobs.start(["default"]);
+    await waitForMetric(metricsReporter, "FailingJob", "failed", 1);
     await backgroundJobs.stop();
 
     expect(metricsReporter.metricFor("FailingJob", "pending")).toBe(0);
@@ -86,8 +93,8 @@ describe("BackgroundJobMetrics", () => {
   it("reports a retry", async () => {
     await backgroundJobs.enqueue(FailingJob, { myNumber: 123 });
 
-    void backgroundJobs.start(["default"]);
-    await setTimeout(100);
+    await backgroundJobs.start(["default"]);
+    await waitForMetric(metricsReporter, "FailingJob", "retry", 1);
     await backgroundJobs.stop();
 
     expect(metricsReporter.metricFor("FailingJob", "retry")).toBe(1);

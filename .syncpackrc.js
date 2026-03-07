@@ -2,7 +2,6 @@
 
 /** @type {import("syncpack").RcFile} */
 module.exports = {
-  dependencyTypes: ["!local"],
   semverGroups: [
     {
       dependencyTypes: ["dev", "prod", "resolutions"],
@@ -12,6 +11,12 @@ module.exports = {
     },
   ],
   versionGroups: [
+    {
+      dependencies: ["@clipboard-health/**"],
+      specifierTypes: ["latest"],
+      isIgnored: true,
+      label: "Ignore local workspace dependencies using * version.",
+    },
     {
       dependencies: ["eslint", "@typescript-eslint/**"],
       isIgnored: true,
@@ -24,7 +29,7 @@ module.exports = {
     },
     {
       dependencyTypes: ["peer"],
-      specifierTypes: "range",
+      specifierTypes: ["range", "range-complex", "range-major", "range-minor"],
       label: "Allow for flexible peer dependency versions.",
     },
     {
