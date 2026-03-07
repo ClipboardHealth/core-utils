@@ -29,7 +29,7 @@
     "nx": "22.5.2",
     "oxfmt": "0.36.0",
     "oxlint": "1.51.0",
-    "promptfoo": "0.120.25",
+    "promptfoo": "0.120.26",
     "syncpack": "13.0.4",
     "ts-jest": "29.4.2",
     "ts-node": "11.0.0-beta.1",
