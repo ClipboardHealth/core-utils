@@ -64,7 +64,7 @@ npx nx run [PROJECT_NAME]:[COMMAND]
 
 # Upgrade Nx
 npx nx migrate latest && \
-  npx syncpack fix-mismatches && \
+  npx syncpack fix && \
   npm install && \
   npx nx migrate --runMigrations --ifExists
 ```
