@@ -38,6 +38,11 @@ describe("queryFilterPreprocessor", () => {
       expected: { eq: "10,20" },
     },
     {
+      name: "handles nested array with operator objects from qs",
+      input: [[{ gt: "10" }, "20"]],
+      expected: { eq: "20", gt: "10" },
+    },
+    {
       name: "handles complex object input",
       input: { "0": "10", "1": "20", gt: "5" },
       expected: { eq: "10,20", gt: "5" },

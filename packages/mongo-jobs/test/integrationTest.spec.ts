@@ -17,36 +17,11 @@ import { SemaphoreJob } from "./support/semaphoreJob";
 import { createTestContext, type TestContext } from "./support/testContext";
 import { TestLogger } from "./support/testLogger";
 import { waitForJobCount } from "./support/waitForJobCount";
+import { waitForJobRunCount } from "./support/waitForJobRunCount";
 
 async function getMappedJobRuns() {
   const runs = await JobRun.find({}, {}, { sort: { _id: 1 } });
   return runs.map((run) => run.myNumber);
-}
-
-interface WaitForJobRunCountOptions {
-  expectedCount: number;
-  timeoutMilliseconds?: number;
-}
-
-async function waitForJobRunCount(options: WaitForJobRunCountOptions): Promise<void> {
-  const { expectedCount, timeoutMilliseconds = 5000 } = options;
-  const timeoutAt = Date.now() + timeoutMilliseconds;
-
-  for (;;) {
-    // eslint-disable-next-line no-await-in-loop
-    const jobRunCount = await JobRun.countDocuments();
-
-    if (jobRunCount === expectedCount) {
-      return;
-    }
-
-    if (Date.now() >= timeoutAt) {
-      throw new Error(`Timed out waiting for ${expectedCount} job runs, found ${jobRunCount}`);
-    }
-
-    // eslint-disable-next-line no-await-in-loop
-    await setTimeout(10);
-  }
 }
 
 interface WaitForFailedJobsOptions {

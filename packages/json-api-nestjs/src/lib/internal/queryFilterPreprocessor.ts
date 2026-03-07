@@ -42,17 +42,17 @@ function mergeFilters(currentFilter: Record<string, string>, newFilter: Record<s
   );
 }
 
-function normalizeArrayFilter(value: readonly unknown[]) {
+function normalizeArrayFilter(value: readonly unknown[]): Record<string, string> {
   return value.reduce<Record<string, string>>((filter, filterValue) => {
-    if (isObject(filterValue) && !Array.isArray(filterValue)) {
+    if (Array.isArray(filterValue)) {
+      return mergeFilters(filter, normalizeArrayFilter(filterValue));
+    }
+
+    if (isObject(filterValue)) {
       return mergeFilters(filter, normalizeObjectFilter(filterValue));
     }
 
-    return appendFilterValue(
-      filter,
-      "eq",
-      Array.isArray(filterValue) ? filterValue.join(",") : String(filterValue),
-    );
+    return appendFilterValue(filter, "eq", String(filterValue));
   }, {});
 }
 
