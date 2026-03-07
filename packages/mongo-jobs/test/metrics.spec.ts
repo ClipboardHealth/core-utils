@@ -1,11 +1,11 @@
 import { setTimeout } from "node:timers/promises";
 
 import { BackgroundJobs, type BackgroundJobType } from "../src";
-import { ensureExistence } from "./support/ensureExistence";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
 import { createTestContext, type TestContext } from "./support/testContext";
 import { TestMetricsReporter } from "./support/testMetricsReporter";
+import { waitForTimings } from "./support/waitForTimings";
 
 describe("BackgroundJobMetrics", () => {
   let testContext: TestContext;
@@ -104,10 +104,10 @@ describe("BackgroundJobMetrics", () => {
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 555 });
 
     await backgroundJobs.start(["default"]);
-    await setTimeout(100);
-    await backgroundJobs.stop();
 
-    const reportedTimings = ensureExistence(metricsReporter.timingFor("ExampleJob", "delay"));
+    const reportedTimings = await waitForTimings(metricsReporter, "ExampleJob", "delay", 2);
+
+    await backgroundJobs.stop();
 
     expect(reportedTimings).toHaveLength(2);
 
