@@ -13,8 +13,9 @@ module.exports = {
   versionGroups: [
     {
       dependencies: ["@clipboard-health/**"],
+      specifierTypes: ["latest"],
       isIgnored: true,
-      label: "Ignore local workspace dependencies.",
+      label: "Ignore local workspace dependencies using * version.",
     },
     {
       dependencies: ["eslint", "@typescript-eslint/**"],
