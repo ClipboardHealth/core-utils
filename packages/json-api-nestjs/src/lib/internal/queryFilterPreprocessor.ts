@@ -56,7 +56,7 @@ function normalizeArrayFilter(value: readonly unknown[]): Record<string, string>
   }, {});
 }
 
-function normalizeObjectFilter(value: Record<string, unknown>) {
+function normalizeObjectFilter(value: Record<string, unknown>): Record<string, string> {
   return Object.entries(value).reduce<Record<string, string>>((filter, [key, filterValue]) => {
     if (typeof filterValue === "boolean") {
       return appendFilterValue(filter, "eq", key);
