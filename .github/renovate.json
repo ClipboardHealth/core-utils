@@ -1,15 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
+    "config:best-practices",
     ":combinePatchMinorReleases",
     ":enableVulnerabilityAlertsWithLabel(SECURITY)",
-    ":maintainLockFilesWeekly",
     ":preserveSemverRanges",
     "config:js-lib",
     "docker:enableMajor",
-    "group:monorepos",
-    "group:recommended",
-    "security:minimumReleaseAgeNpm",
     "schedule:automergeDaily",
     "schedule:daily"
   ],
