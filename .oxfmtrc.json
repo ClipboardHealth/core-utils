@@ -2,6 +2,7 @@
   "ignorePatterns": [
     ".nx/cache",
     ".nx/workspace-data",
+    ".serena",
     "coverage/",
     "dist/",
     "docs/",
