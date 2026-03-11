@@ -37,6 +37,10 @@
     "typedoc": "0.28.17",
     "typescript": "5.9.3"
   },
+  "engines": {
+    "node": "24.14.0",
+    "npm": "11.9.0"
+  },
   "license": "MIT",
   "overrides": {
     "@anthropic-ai/claude-agent-sdk": {
@@ -46,12 +50,13 @@
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0"
   },
+  "packageManager": "npm@11.9.0+sha512.04166853ddba142ca98f86fb57b1258a7c6c59ccb82acb3cf141b77a315898acaaed47395e74f7e0c7b69c486008e68be6a6381ef1aee5a23dd82e0e61decd68",
   "private": true,
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
     "ci:check": "oxfmt --check && npm run cspell -- . && syncpack lint && npm run embed:check && npm run knip && npm run oxlint && npm run lint:md && npm run test:claude",
-    "ci:install": "npm clean-install --audit false --fund false",
+    "ci:install": "npm clean-install",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
