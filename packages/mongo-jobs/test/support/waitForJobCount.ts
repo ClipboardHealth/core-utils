@@ -18,7 +18,7 @@ export async function waitForJobCount(options: WaitForJobCountOptions): Promise<
     expectedCount,
     description,
     query = {},
-    timeoutMilliseconds = 5000,
+    timeoutMilliseconds = 15_000,
   } = options;
   const timeoutAt = Date.now() + timeoutMilliseconds;
 

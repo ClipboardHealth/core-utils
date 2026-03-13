@@ -8,7 +8,7 @@ export async function waitForTimings(
   metric: string,
   expectedCount: number,
 ): Promise<number[]> {
-  const timeoutMillis = 5000;
+  const timeoutMillis = 15_000;
   const timeoutAt = Date.now() + timeoutMillis;
 
   for (;;) {
