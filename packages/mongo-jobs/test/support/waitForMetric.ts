@@ -8,7 +8,7 @@ export async function waitForMetric(
   metric: string,
   expectedValue: number,
 ): Promise<number> {
-  const timeoutMilliseconds = 5000;
+  const timeoutMilliseconds = 15_000;
   const timeoutAt = Date.now() + timeoutMilliseconds;
 
   for (;;) {

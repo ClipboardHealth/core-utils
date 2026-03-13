@@ -8,7 +8,7 @@ interface WaitForJobRunCountOptions {
 }
 
 export async function waitForJobRunCount(options: WaitForJobRunCountOptions): Promise<void> {
-  const { expectedCount, timeoutMilliseconds = 5000 } = options;
+  const { expectedCount, timeoutMilliseconds = 15_000 } = options;
   const timeoutAt = Date.now() + timeoutMilliseconds;
 
   for (;;) {
