@@ -15,3 +15,5 @@ runs:
       with:
         node-version-file: .nvmrc
         registry-url: https://registry.npmjs.org
+    - run: corepack enable npm
+      shell: bash
