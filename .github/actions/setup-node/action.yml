@@ -1,6 +1,11 @@
 name: Setup Node
 description: "Setup Node.js environment"
 
+inputs:
+  npm_token:
+    description: The `NPM_TOKEN` to download private NPM packages.
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -11,9 +16,6 @@ runs:
         key: ${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-
-    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+    - uses: ClipboardHealth/action-build-nodejs@v3
       with:
-        node-version-file: .nvmrc
-        registry-url: https://registry.npmjs.org
-    - run: corepack enable npm
-      shell: bash
+        npm_token: ${{ inputs.npm_token }}

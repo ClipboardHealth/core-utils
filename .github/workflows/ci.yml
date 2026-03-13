@@ -31,6 +31,8 @@ jobs:
           fetch-depth: 0
       - run: git fetch origin main:main
       - uses: ./.github/actions/setup-node
+        with:
+          npm_token: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
       - name: Install dependencies and start services
         run: |
@@ -63,6 +65,8 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/setup-node
+        with:
+          npm_token: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
       - name: Install dependencies and start services
         run: |
@@ -91,7 +95,7 @@ jobs:
         # Run a build so package.json files in dist directories pick up new versions
       - run: npx nx run-many --target=build
       - env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          NODE_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
         # Re-publishing an existing version is a no-op, so re-running this workflow recovers from transient NPM registry failures
         run: npx nx release publish
       - env:
