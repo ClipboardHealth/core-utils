@@ -39,7 +39,7 @@
   },
   "engines": {
     "node": "24.14.0",
-    "npm": "11.9.0"
+    "npm": "11.11.0"
   },
   "license": "MIT",
   "overrides": {
@@ -50,7 +50,7 @@
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0"
   },
-  "packageManager": "npm@11.9.0+sha512.04166853ddba142ca98f86fb57b1258a7c6c59ccb82acb3cf141b77a315898acaaed47395e74f7e0c7b69c486008e68be6a6381ef1aee5a23dd82e0e61decd68",
+  "packageManager": "npm@11.11.0+sha512.f36811c4aae1fde639527368ae44c571d050006a608d67a191f195a801a52637a312d259186254aa3a3799b05335b7390539cf28656d18f0591a1125ba35f973",
   "private": true,
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
