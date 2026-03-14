@@ -7,5 +7,5 @@
     "MD033": false,
     "MD041": false,
   },
-  "ignores": ["**/node_modules", "**/dist", "**/coverage", ".nx"],
+  "ignores": ["**/node_modules", "**/dist", "**/coverage", ".nx", "plugins/core/skills/*/SKILL.md"],
 }
