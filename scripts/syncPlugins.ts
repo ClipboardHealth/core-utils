@@ -48,10 +48,6 @@ const SYNC_CONFIG: RepoConfig[] = [
             source: { type: "skills", name: "simplify" },
             sourcePath: "system-prompts/skill-simplify.md",
           },
-          {
-            source: { type: "skills", name: "loop" },
-            sourcePath: "system-prompts/skill-loop-slash-command.md",
-          },
         ],
       },
     ],

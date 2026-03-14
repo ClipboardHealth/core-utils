@@ -1,10 +1,8 @@
-<!--
-name: 'Skill: Simplify'
-description: Instructions for simplifying code
-ccVersion: 2.1.72
-variables:
-  - AGENT_TOOL_NAME
--->
+---
+description: Instructions for simplifying code.
+# variables:
+#   - AGENT_TOOL_NAME
+---
 
 # Simplify: Code Review and Cleanup
 
@@ -16,7 +14,7 @@ Run \`git diff\` (or \`git diff HEAD\` if there are staged changes) to see what 
 
 ## Phase 2: Launch Three Review Agents in Parallel
 
-Use the ${AGENT_TOOL_NAME} tool to launch all three agents concurrently in a single message. Pass each agent the full diff so it has the complete context.
+If you can, use the ${AGENT_TOOL_NAME} tool to launch all three agents concurrently in a single message; otherwise, perform the following yourself. Pass each agent the full diff so it has the complete context.
 
 ### Agent 1: Code Reuse Review
 
