@@ -11,6 +11,8 @@ interface Component {
 
 interface SyncComponent {
   source: Component;
+  /** Repo-relative path to the source file/directory. Overrides the computed path. */
+  sourcePath?: string;
   /** Defaults to source, with commands -> skills type mapping */
   destination?: Partial<Component>;
 }
@@ -33,6 +35,20 @@ const SYNC_CONFIG: RepoConfig[] = [
       {
         name: "commit-commands",
         components: [{ source: { type: "commands", name: "commit-push-pr" } }],
+      },
+    ],
+  },
+  {
+    repo: "https://github.com/Piebald-AI/claude-code-system-prompts.git",
+    plugins: [
+      {
+        name: "claude-code-system-prompts",
+        components: [
+          {
+            source: { type: "skills", name: "simplify" },
+            sourcePath: "system-prompts/skill-simplify.md",
+          },
+        ],
       },
     ],
   },
@@ -109,14 +125,25 @@ function syncRepo(config: RepoConfig): void {
     execFileSync("git", cloneArgs, { stdio: "inherit" });
 
     for (const plugin of config.plugins) {
-      for (const { source, destination } of plugin.components) {
+      for (const { source, destination, sourcePath } of plugin.components) {
         const destType = destination?.type ?? (source.type === "commands" ? "skills" : source.type);
         const destName = destination?.name ?? source.name;
-        const basePath = path.join(tempDir, pluginsPath, plugin.name, source.type);
-        const sourceInfo = findSource(basePath, source.name);
+
+        let sourceInfo: SourceInfo | undefined;
+        if (sourcePath) {
+          const fullPath = path.join(tempDir, sourcePath);
+          if (existsSync(fullPath)) {
+            sourceInfo = { path: fullPath, isFile: lstatSync(fullPath).isFile() };
+          }
+        } else {
+          const basePath = path.join(tempDir, pluginsPath, plugin.name, source.type);
+          sourceInfo = findSource(basePath, source.name);
+        }
 
         if (!sourceInfo) {
-          console.warn(`  Warning: Source not found: ${basePath}/${source.name}`);
+          const location =
+            sourcePath ?? `${pluginsPath}/${plugin.name}/${source.type}/${source.name}`;
+          console.warn(`  Warning: Source not found: ${location}`);
           continue;
         }
 
