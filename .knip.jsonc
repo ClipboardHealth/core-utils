@@ -5,6 +5,7 @@
     "**/generators/**/schema.d.ts",
     "**/jest.config.ts",
     "**/webpack.*.js",
+    ".agents/**/*.ts",
     ".claude/**/*.ts",
     "evals/**/*.ts",
     "packages/ai-rules/scripts/*.ts",
