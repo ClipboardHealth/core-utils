@@ -39,12 +39,16 @@ These terms appear in scenario names and user requests:
    ```
 
    - If the run **succeeds**, download the logs artifact and display its contents:
+
      ```bash
      gh run download <RUN_ID> --repo ClipboardHealth/cbh-core --name seed-data-logs --dir /tmp/seed-data-logs
      cat /tmp/seed-data-logs/logs.json
      ```
+
      Parse the JSON and present the key results to the user (e.g., created entity IDs, names, environment).
+
    - If the run **fails**, fetch the failed step logs and surface the error:
+
      ```bash
      gh run view <RUN_ID> --repo ClipboardHealth/cbh-core --log-failed
      ```
@@ -73,6 +77,8 @@ gh workflow run "Generate Seed Data" \
 ```
 
 ## Scenario Lookup Table
+
+<!-- cspell:ignore usecase -->
 
 > **Note:** Scenario numbers 13 and 18 do not exist. If a user references them, let them know and present the full list below.
 
