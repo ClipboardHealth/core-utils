@@ -1,6 +1,5 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { Dirent } from "node:fs";
-import { access, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -41,7 +40,10 @@ async function sync() {
       rm(rulesOutput, { recursive: true, force: true }),
       rm(skillsOutput, { recursive: true, force: true }),
     ]);
-    await Promise.all([copyRuleFiles(ruleIds, rulesOutput), copySkillFiles(skillsOutput)]);
+    const [, skillsCopied] = await Promise.all([
+      copyRuleFiles(ruleIds, rulesOutput),
+      copySkillFiles(skillsOutput),
+    ]);
 
     const agentsContent = await generateAgentsIndex(ruleIds);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
@@ -52,7 +54,7 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot);
+    await formatOutputFiles(PATHS.projectRoot, { skillsCopied });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -151,26 +153,18 @@ async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<vo
   );
 }
 
-async function copySkillFiles(skillsOutput: string): Promise<void> {
+async function copySkillFiles(skillsOutput: string): Promise<boolean> {
   const skillsSource = path.join(PATHS.packageRoot, "skills");
 
-  if (!(await fileExists(skillsSource))) {
-    return;
-  }
-
-  const entries: Dirent[] = await readdir(skillsSource, { withFileTypes: true });
-  const skillDirectories = entries.filter((entry: Dirent) => entry.isDirectory());
-
-  await Promise.all(
-    skillDirectories.map(async (directory: Dirent) => {
-      const source = path.join(skillsSource, directory.name);
-      const destination = path.join(skillsOutput, directory.name);
-      await cp(source, destination, { recursive: true });
-    }),
-  );
-
-  if (skillDirectories.length > 0) {
-    console.log(`📋 Synced ${skillDirectories.length} skills to .agents/skills/`);
+  try {
+    await cp(skillsSource, skillsOutput, { recursive: true });
+    console.log(`📋 Synced skills to .agents/skills/`);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
+    }
+    throw error;
   }
 }
 
@@ -280,7 +274,11 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-async function formatOutputFiles(projectRoot: string): Promise<void> {
+interface FormatOptions {
+  skillsCopied: boolean;
+}
+
+async function formatOutputFiles(projectRoot: string, options: FormatOptions): Promise<void> {
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
@@ -290,9 +288,8 @@ async function formatOutputFiles(projectRoot: string): Promise<void> {
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
 
-  const agentsSkills = path.join(projectRoot, ".agents", "skills");
-  if (await fileExists(agentsSkills)) {
-    filesToFormat.push(agentsSkills);
+  if (options.skillsCopied) {
+    filesToFormat.push(path.join(projectRoot, ".agents", "skills"));
   }
 
   const command =
