@@ -7,6 +7,8 @@ import { execAndLog } from "./execAndLog";
 
 const { packageRoot, outputDirectory } = PATHS;
 
+const SKILLS_SOURCE = path.join(packageRoot, "..", "..", "plugins", "core", "skills");
+
 const params = {
   timeout: 60_000,
   verbose: false,
@@ -22,12 +24,13 @@ async function build(): Promise<void> {
 
   await Promise.all([
     cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), { recursive: true }),
+    cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), { recursive: true }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
     copyFile(path.join(packageRoot, "package.json"), path.join(outputDirectory, "package.json")),
   ]);
 
-  console.log(`📦 Copied rules/ to dist`);
+  console.log(`📦 Copied rules/ and skills/ to dist`);
 
   await Promise.all([
     execAndLog({

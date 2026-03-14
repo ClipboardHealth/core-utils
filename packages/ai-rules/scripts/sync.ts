@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { Dirent } from "node:fs";
+import { access, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -35,8 +36,12 @@ async function sync() {
     }
 
     const rulesOutput = path.join(PATHS.projectRoot, ".rules");
-    await rm(rulesOutput, { recursive: true, force: true });
-    await copyRuleFiles(ruleIds, rulesOutput);
+    const skillsOutput = path.join(PATHS.projectRoot, ".agents", "skills");
+    await Promise.all([
+      rm(rulesOutput, { recursive: true, force: true }),
+      rm(skillsOutput, { recursive: true, force: true }),
+    ]);
+    await Promise.all([copyRuleFiles(ruleIds, rulesOutput), copySkillFiles(skillsOutput)]);
 
     const agentsContent = await generateAgentsIndex(ruleIds);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
@@ -144,6 +149,29 @@ async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<vo
       await cp(path.join(PATHS.packageRoot, "rules", rulePath), destination);
     }),
   );
+}
+
+async function copySkillFiles(skillsOutput: string): Promise<void> {
+  const skillsSource = path.join(PATHS.packageRoot, "skills");
+
+  if (!(await fileExists(skillsSource))) {
+    return;
+  }
+
+  const entries: Dirent[] = await readdir(skillsSource, { withFileTypes: true });
+  const skillDirectories = entries.filter((entry: Dirent) => entry.isDirectory());
+
+  await Promise.all(
+    skillDirectories.map(async (directory: Dirent) => {
+      const source = path.join(skillsSource, directory.name);
+      const destination = path.join(skillsOutput, directory.name);
+      await cp(source, destination, { recursive: true });
+    }),
+  );
+
+  if (skillDirectories.length > 0) {
+    console.log(`📋 Synced ${skillDirectories.length} skills to .agents/skills/`);
+  }
 }
 
 async function extractHeading(filePath: string): Promise<string> {
@@ -261,6 +289,12 @@ async function formatOutputFiles(projectRoot: string): Promise<void> {
   }
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
+
+  const agentsSkills = path.join(projectRoot, ".agents", "skills");
+  if (await fileExists(agentsSkills)) {
+    filesToFormat.push(agentsSkills);
+  }
+
   const command =
     formatter === "oxfmt"
       ? ["npx", "oxfmt", ...filesToFormat]
