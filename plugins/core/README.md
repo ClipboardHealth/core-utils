@@ -13,6 +13,7 @@ Clipboard's core development tools.
   - [local-package](#local-package)
   - [revise-claude-md](#revise-claude-md)
   - [learn-from-session](#learn-from-session)
+  - [seed-data](#seed-data)
   - [unresolved-pr-comments](#unresolved-pr-comments)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
@@ -67,6 +68,10 @@ See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage d
 ### revise-claude-md
 
 Review the current session for learnings and update CLAUDE.md with context that would help future sessions. Invoke with `/revise-claude-md`.
+
+### seed-data
+
+Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HCPs, facilities, shifts) in development, staging, or prod-shadow environments. Invoke with `/seed-data` or by asking to seed/create test data.
 
 ### unresolved-pr-comments
 
