@@ -7,12 +7,16 @@ import { execAndLog } from "./execAndLog";
 
 const { packageRoot, outputDirectory } = PATHS;
 
-const SKILLS_SOURCE = path.join(packageRoot, "..", "..", "plugins", "core", "skills");
+const PLUGIN_ROOT = path.join(packageRoot, "..", "..", "plugins", "core");
+const SKILLS_SOURCE = path.join(PLUGIN_ROOT, "skills");
+const LIB_SOURCE = path.join(PLUGIN_ROOT, "lib");
 
 const params = {
   timeout: 60_000,
   verbose: false,
 };
+
+const isTestFile = (source: string): boolean => /\.(spec|test)\.ts$/.test(source);
 
 async function build(): Promise<void> {
   const scriptsOutput = path.join(outputDirectory, "scripts");
@@ -24,13 +28,17 @@ async function build(): Promise<void> {
 
   await Promise.all([
     cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), { recursive: true }),
-    cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), { recursive: true }),
+    cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), {
+      recursive: true,
+      filter: (source) => !isTestFile(source),
+    }),
+    cp(LIB_SOURCE, path.join(outputDirectory, "lib"), { recursive: true }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
     copyFile(path.join(packageRoot, "package.json"), path.join(outputDirectory, "package.json")),
   ]);
 
-  console.log(`📦 Copied rules/ and skills/ to dist`);
+  console.log(`📦 Copied rules/, skills/, and lib/ to dist`);
 
   await Promise.all([
     execAndLog({

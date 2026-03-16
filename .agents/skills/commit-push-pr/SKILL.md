@@ -1,0 +1,23 @@
+---
+allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr view:*), Bash(gh pr create:*), Bash(git diff:*)
+description: Commit, push, and open a PR. Use when the user wants to ship changes, create a pull request, or says things like 'commit and push', 'open a PR', 'ship it', 'send it', 'create a PR for this', or 'push this up'.
+---
+
+## Context
+
+- Current branch: !`git branch --show-current`
+- Git status: !`git status --short`
+- Diff summary: !`git diff HEAD --stat`
+- Full diff: !`git diff HEAD`
+
+## Your task
+
+Based on the above changes:
+
+1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`)
+2. Create a single conventional commit message
+3. Push the branch to origin
+4. Check for an existing PR with `gh pr view`.
+   - No PR exists: Create with `gh pr create`. Title = commit subject line. Description = brief explanation of **why**, not what.
+   - PR exists: Report the URL and move on.
+5. You have the capability to call multiple tools in a single response. You MUST do all of the above in a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.

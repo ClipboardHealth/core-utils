@@ -35,14 +35,18 @@ async function sync() {
     }
 
     const rulesOutput = path.join(PATHS.projectRoot, ".rules");
-    const skillsOutput = path.join(PATHS.projectRoot, ".agents", "skills");
+    const agentsOutput = path.join(PATHS.projectRoot, ".agents");
+    const skillsOutput = path.join(agentsOutput, "skills");
+    const libraryOutput = path.join(agentsOutput, "lib");
     await Promise.all([
       rm(rulesOutput, { recursive: true, force: true }),
       rm(skillsOutput, { recursive: true, force: true }),
+      rm(libraryOutput, { recursive: true, force: true }),
     ]);
-    const [, skillsCopied] = await Promise.all([
+    const [, skillsCopied, libraryCopied] = await Promise.all([
       copyRuleFiles(ruleIds, rulesOutput),
       copySkillFiles(skillsOutput),
+      copyLibraryFiles(libraryOutput),
     ]);
 
     const agentsContent = await generateAgentsIndex(ruleIds);
@@ -54,7 +58,7 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot, { skillsCopied });
+    await formatOutputFiles(PATHS.projectRoot, { skillsCopied, libCopied: libraryCopied });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -159,6 +163,21 @@ async function copySkillFiles(skillsOutput: string): Promise<boolean> {
   try {
     await cp(skillsSource, skillsOutput, { recursive: true });
     console.log(`📋 Synced skills to .agents/skills/`);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function copyLibraryFiles(libraryOutput: string): Promise<boolean> {
+  const librarySource = path.join(PATHS.packageRoot, "lib");
+
+  try {
+    await cp(librarySource, libraryOutput, { recursive: true });
+    console.log(`📋 Synced lib to .agents/lib/`);
     return true;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -276,6 +295,7 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
 
 interface FormatOptions {
   skillsCopied: boolean;
+  libCopied: boolean;
 }
 
 async function formatOutputFiles(projectRoot: string, options: FormatOptions): Promise<void> {
@@ -290,6 +310,10 @@ async function formatOutputFiles(projectRoot: string, options: FormatOptions): P
 
   if (options.skillsCopied) {
     filesToFormat.push(path.join(projectRoot, ".agents", "skills"));
+  }
+
+  if (options.libCopied) {
+    filesToFormat.push(path.join(projectRoot, ".agents", "lib"));
   }
 
   const command =
