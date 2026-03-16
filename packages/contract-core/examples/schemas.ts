@@ -2,6 +2,7 @@
 import {
   apiErrors,
   booleanString,
+  dateTimeSchema,
   nonEmptyString,
   optionalEnum,
   optionalEnumWithFallback,
@@ -52,6 +53,39 @@ try {
   logError(error);
   // => Invalid UUID format
 }
+
+// DateTime schema examples
+// Validates strict ISO-8601 datetime strings and transforms to Date objects.
+// Composable with .optional(), .nullable(), etc.
+const createdAt = dateTimeSchema().parse("2026-03-15T10:30:00.000Z");
+// => Date object
+console.log(createdAt instanceof Date); // true
+console.log(createdAt.toISOString()); // "2026-03-15T10:30:00.000Z"
+
+try {
+  dateTimeSchema().parse("2026-03-15"); // date-only string
+} catch (error) {
+  logError(error);
+  // => Invalid datetime
+}
+
+try {
+  dateTimeSchema().parse(1_773_340_050_000); // epoch number
+} catch (error) {
+  logError(error);
+  // => Expected string, received number
+}
+
+// Optional usage — compose at the call site
+const schema = dateTimeSchema().optional();
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noDate = schema.parse(undefined);
+// => undefined
+console.log(noDate);
+
+const someDate = schema.parse("2026-03-15T10:30:00.000Z");
+// => Date object
+console.log(someDate);
 
 // Enum with fallback examples
 /* -- required -- */
