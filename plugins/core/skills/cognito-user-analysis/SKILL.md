@@ -26,19 +26,19 @@ Analyze and fix duplicate Cognito users in clipboard-production by comparing aga
 SKILL_DIR="<path-to-this-skill>"
 
 # 1. Verify prerequisites
-$SKILL_DIR/scripts/check-prerequisites.sh
+scripts/check-prerequisites.sh
 
 # 2. Create input file (one sub per line)
 echo "68e1e380-d0c1-7028-4256-3361fd833080" > subs.txt
 
 # 3. Pipeline: lookup → find duplicates → analyze → fix
-$SKILL_DIR/scripts/cognito-lookup.sh subs.txt results.csv
-$SKILL_DIR/scripts/cognito-find-duplicates.sh results.csv duplicates.csv
-$SKILL_DIR/scripts/cognito-analyze-duplicates.sh duplicates.csv analysis.csv
+scripts/cognito-lookup.sh subs.txt results.csv
+scripts/cognito-find-duplicates.sh results.csv duplicates.csv
+scripts/cognito-analyze-duplicates.sh duplicates.csv analysis.csv
 
 # 4. Review analysis.csv, then fix (ALWAYS dry-run first!)
-$SKILL_DIR/scripts/cognito-fix-duplicates.sh analysis.csv --dry-run
-$SKILL_DIR/scripts/cognito-fix-duplicates.sh analysis.csv
+scripts/cognito-fix-duplicates.sh analysis.csv --dry-run
+scripts/cognito-fix-duplicates.sh analysis.csv
 ```
 
 ## Prerequisites

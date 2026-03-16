@@ -16,8 +16,6 @@ const params = {
   verbose: false,
 };
 
-const isTestFile = (source: string): boolean => /\.(spec|test)\.ts$/.test(source);
-
 async function build(): Promise<void> {
   const scriptsOutput = path.join(outputDirectory, "scripts");
 
@@ -73,6 +71,10 @@ async function build(): Promise<void> {
   ]);
 
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
+}
+
+function isTestFile(source: string): boolean {
+  return /\.(spec|test)\.ts$/.test(source);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
