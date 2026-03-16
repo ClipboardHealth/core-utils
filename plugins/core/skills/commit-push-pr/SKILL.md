@@ -1,10 +1,7 @@
 ---
-name: commit-push-pr
-description: "Commit, push, and open a PR. Use when the user wants to ship changes, create a pull request, or says things like 'commit and push', 'open a PR', 'ship it', 'send it', 'create a PR for this', or 'push this up'."
 allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr view:*), Bash(gh pr create:*), Bash(git diff:*)
+description: Commit, push, and open a PR. Use when the user wants to ship changes, create a pull request, or says things like 'commit and push', 'open a PR', 'ship it', 'send it', 'create a PR for this', or 'push this up'.
 ---
-
-# Commit, Push, and PR
 
 ## Context
 
@@ -12,23 +9,15 @@ allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*
 - Git status: !`git status --short`
 - Diff summary: !`git diff HEAD --stat`
 - Full diff: !`git diff HEAD`
-- Recent commits (match this style): !`git log --oneline -5`
 
-## Instructions
+## Your task
 
-Execute all steps in a **single message** using sequential tool calls. No extra commentary.
+Based on the above changes:
 
-1. **Branch**: If on `main`, create and check out a branch (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`). Use a short, descriptive name matching the change.
-
-2. **Stage and Commit**: Stage the relevant changed files and create a commit.
-   - Write a Conventional Commits message: `type(scope): description`
-   - Match the style of recent commits shown above.
-   - Keep the subject line under 72 characters.
-   - Pass the message via a HEREDOC.
-   - End with `Co-Authored-By: Claude <noreply@anthropic.com>`
-
-3. **Push**: `git push -u origin HEAD`
-
-4. **PR**: Check for an existing PR with `gh pr view`.
-   - **No PR exists**: Create with `gh pr create`. Title = commit subject line. Description = brief explanation of **why**, not what. Use a HEREDOC for the body.
-   - **PR exists**: Report the URL and move on.
+1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`)
+2. Create a single conventional commit message
+3. Push the branch to origin
+4. Check for an existing PR with `gh pr view`.
+   - No PR exists: Create with `gh pr create`. Title = commit subject line. Description = brief explanation of **why**, not what.
+   - PR exists: Report the URL and move on.
+5. You have the capability to call multiple tools in a single response. You MUST do all of the above in a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.

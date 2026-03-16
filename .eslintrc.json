@@ -17,7 +17,12 @@
       "rules": {}
     },
     {
-      "files": ["./.claude/**/*.ts", "./examples/**/*.ts", "./plugins/**/*.ts"],
+      "files": [
+        "./.agents/**/*.ts",
+        "./.claude/**/*.ts",
+        "./examples/**/*.ts",
+        "./plugins/**/*.ts"
+      ],
       "rules": {
         "no-console": "off"
       }

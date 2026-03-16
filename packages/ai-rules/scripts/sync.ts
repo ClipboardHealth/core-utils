@@ -35,8 +35,15 @@ async function sync() {
     }
 
     const rulesOutput = path.join(PATHS.projectRoot, ".rules");
-    await rm(rulesOutput, { recursive: true, force: true });
-    await copyRuleFiles(ruleIds, rulesOutput);
+    const skillsOutput = path.join(PATHS.projectRoot, ".agents", "skills");
+    await Promise.all([
+      rm(rulesOutput, { recursive: true, force: true }),
+      rm(skillsOutput, { recursive: true, force: true }),
+    ]);
+    const [, skillsCopied] = await Promise.all([
+      copyRuleFiles(ruleIds, rulesOutput),
+      copySkillFiles(skillsOutput),
+    ]);
 
     const agentsContent = await generateAgentsIndex(ruleIds);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
@@ -47,7 +54,7 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot);
+    await formatOutputFiles(PATHS.projectRoot, { skillsCopied });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -144,6 +151,21 @@ async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<vo
       await cp(path.join(PATHS.packageRoot, "rules", rulePath), destination);
     }),
   );
+}
+
+async function copySkillFiles(skillsOutput: string): Promise<boolean> {
+  const skillsSource = path.join(PATHS.packageRoot, "skills");
+
+  try {
+    await cp(skillsSource, skillsOutput, { recursive: true });
+    console.log(`📋 Synced skills to .agents/skills/`);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
 }
 
 async function extractHeading(filePath: string): Promise<string> {
@@ -252,7 +274,11 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-async function formatOutputFiles(projectRoot: string): Promise<void> {
+interface FormatOptions {
+  skillsCopied: boolean;
+}
+
+async function formatOutputFiles(projectRoot: string, options: FormatOptions): Promise<void> {
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
@@ -261,6 +287,11 @@ async function formatOutputFiles(projectRoot: string): Promise<void> {
   }
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
+
+  if (options.skillsCopied) {
+    filesToFormat.push(path.join(projectRoot, ".agents", "skills"));
+  }
+
   const command =
     formatter === "oxfmt"
       ? ["npx", "oxfmt", ...filesToFormat]

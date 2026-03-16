@@ -255,6 +255,7 @@
   "overrides": [
     {
       "files": [
+        "**/.agents/**/*.ts",
         "**/.claude/**/*.ts",
         "**/examples/**/*.js",
         "**/examples/**/*.ts",
