@@ -96,12 +96,17 @@ try {
 }
 
 // DateTime schema examples
-// Validates strict ISO-8601 datetime strings and transforms to Date objects.
+// Accepts ISO-8601 datetime strings and Date objects, normalizes to Date.
 // Composable with .optional(), .nullable(), etc.
 const createdAt = dateTimeSchema().parse("2026-03-15T10:30:00.000Z");
 // => Date object
 console.log(createdAt instanceof Date); // true
 console.log(createdAt.toISOString()); // "2026-03-15T10:30:00.000Z"
+
+// Date objects pass through as-is
+const fromDate = dateTimeSchema().parse(new Date("2026-03-15T10:30:00.000Z"));
+// => Date object
+console.log(fromDate instanceof Date); // true
 
 try {
   dateTimeSchema().parse("2026-03-15"); // date-only string
@@ -114,7 +119,7 @@ try {
   dateTimeSchema().parse(1_773_340_050_000); // epoch number
 } catch (error) {
   logError(error);
-  // => Expected string, received number
+  // => Invalid union
 }
 
 // Optional usage — compose at the call site

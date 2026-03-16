@@ -20,6 +20,11 @@ describe("dateTimeSchema", () => {
         input: "2026-03-15T10:30:00Z",
         expected: "2026-03-15T10:30:00.000Z",
       },
+      {
+        name: "accepts Date object",
+        input: new Date("2026-03-15T10:30:00.000Z"),
+        expected: "2026-03-15T10:30:00.000Z",
+      },
     ])("$name", ({ input, expected }) => {
       const actual = schema.safeParse(input);
 
