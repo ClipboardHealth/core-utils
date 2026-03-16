@@ -20,4 +20,5 @@ Based on the above changes:
 4. Check for an existing PR with `gh pr view`.
    - No PR exists: Create with `gh pr create`. Title = commit subject line. Description = brief explanation of **why**, not what.
    - PR exists: Report the URL and move on.
-5. You have the capability to call multiple tools in a single response. You MUST do all of the above in a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.
+5. You have the capability to call multiple tools in a single response. You MUST do all of the above in a single message. Do not use any other tools or do anything else.
+6. After tool calls complete, send one short final text response with the branch name and PR URL (or the reason PR creation was skipped).

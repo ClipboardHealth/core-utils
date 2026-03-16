@@ -67,7 +67,7 @@ if [[ ! -f "$TOKEN_FILE" ]]; then
   exit 1
 fi
 
-TOKEN=$(cat "$TOKEN_FILE")
+TOKEN=$(tr -d '\n\r' < "$TOKEN_FILE")
 
 echo "sub,username,phone,email,cbh_user_id,status,created,last_modified,action,match_score,match_details,backend_phone,backend_email,backend_cbh_user_id,backend_name,duplicate_group" > "$OUTPUT_FILE"
 
