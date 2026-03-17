@@ -67,7 +67,11 @@ if [[ ! -f "$TOKEN_FILE" ]]; then
   exit 1
 fi
 
-TOKEN=$(tr -d '\n\r' < "$TOKEN_FILE")
+TOKEN=$(tr -d '\r\n' < "$TOKEN_FILE" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+if [[ -z "$TOKEN" ]]; then
+  echo "Error: Token file '$TOKEN_FILE' is empty or whitespace-only" >&2
+  exit 1
+fi
 
 echo "sub,username,phone,email,cbh_user_id,status,created,last_modified,action,match_score,match_details,backend_phone,backend_email,backend_cbh_user_id,backend_name,duplicate_group" > "$OUTPUT_FILE"
 
@@ -185,32 +189,38 @@ tail -n +2 "$DUPLICATES_FILE" | while IFS=, read -r original_sub original_userna
     all_subs+=("${dup_subs[$i]}")
   done
 
-  backend_response=$(query_backend "$search_value")
+  backend_response=$(query_backend "$search_value") || backend_response=""
   backend_phone=""
   backend_email=""
   backend_cbh_user_id=""
   backend_name=""
 
-  if [[ -n "$backend_response" ]]; then
-    error_status=$(echo "$backend_response" | jq -r '.statusCode // ""' 2>/dev/null)
-    if [[ -n "$error_status" && "$error_status" != "null" ]]; then
-      echo "  Warning: Backend API error: $(echo "$backend_response" | jq -r '.message // "Unknown"')"
-    else
-      backend_phone=$(echo "$backend_response" | jq -r '.list[0].phone // ""' 2>/dev/null) || backend_phone=""
-      backend_email=$(echo "$backend_response" | jq -r '.list[0].email // ""' 2>/dev/null) || backend_email=""
-      backend_cbh_user_id=$(echo "$backend_response" | jq -r '.list[0].userId // ""' 2>/dev/null) || backend_cbh_user_id=""
-      backend_name=$(echo "$backend_response" | jq -r '.list[0].name // ""' 2>/dev/null) || backend_name=""
+  if [[ -z "$backend_response" ]]; then
+    echo "  Error: Backend lookup failed for '$search_value'; skipping group $group_id" >&2
+    continue
+  fi
 
-      if [[ -n "$backend_cbh_user_id" && "$backend_cbh_user_id" != "null" ]]; then
-        echo "  Backend: $backend_name ($backend_email) - userId: $backend_cbh_user_id"
-      else
-        echo "  Warning: No backend user found for $search_value"
-      fi
-    fi
+  error_status=$(echo "$backend_response" | jq -r '.statusCode // ""' 2>/dev/null)
+  if [[ -n "$error_status" && "$error_status" != "null" ]]; then
+    echo "  Error: Backend API error: $(echo "$backend_response" | jq -r '.message // "Unknown"'); skipping group $group_id" >&2
+    continue
+  fi
+
+  backend_phone=$(echo "$backend_response" | jq -r '.list[0].phone // ""' 2>/dev/null) || backend_phone=""
+  backend_email=$(echo "$backend_response" | jq -r '.list[0].email // ""' 2>/dev/null) || backend_email=""
+  backend_cbh_user_id=$(echo "$backend_response" | jq -r '.list[0].userId // ""' 2>/dev/null) || backend_cbh_user_id=""
+  backend_name=$(echo "$backend_response" | jq -r '.list[0].name // ""' 2>/dev/null) || backend_name=""
+
+  if [[ -n "$backend_cbh_user_id" && "$backend_cbh_user_id" != "null" ]]; then
+    echo "  Backend: $backend_name ($backend_email) - userId: $backend_cbh_user_id"
+  else
+    echo "  Error: No backend user found for '$search_value'; skipping group $group_id" >&2
+    continue
   fi
 
   declare -A user_data
   declare -A user_scores
+  resolved_usernames=()
   best_score=-1
   best_username=""
 
@@ -241,6 +251,7 @@ tail -n +2 "$DUPLICATES_FILE" | while IFS=, read -r original_sub original_userna
 
       user_scores["${username}_score"]="$score"
       user_scores["${username}_details"]="$match_details"
+      resolved_usernames+=("$username")
 
       echo "  User $username: score=$score ($match_details)"
 
@@ -256,9 +267,14 @@ tail -n +2 "$DUPLICATES_FILE" | while IFS=, read -r original_sub original_userna
     fi
   done
 
+  if [[ ${#resolved_usernames[@]} -eq 0 ]]; then
+    echo "  Error: No Cognito user details resolved for group $group_id; skipping" >&2
+    continue
+  fi
+
   echo "  Decision: KEEP $best_username (score: $best_score)"
 
-  for username in "${all_usernames[@]}"; do
+  for username in "${resolved_usernames[@]}"; do
     sub="${user_data["${username}_sub"]}"
     phone="${user_data["${username}_phone"]}"
     email="${user_data["${username}_email"]}"
