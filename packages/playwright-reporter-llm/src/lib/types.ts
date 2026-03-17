@@ -86,6 +86,7 @@ export interface NetworkRequest {
 
 export interface FailureArtifacts {
   screenshotPath?: string;
+  screenshotBase64?: string;
   videoPath?: string;
 }
 

@@ -632,7 +632,7 @@ describe("LlmReporter", () => {
     expect(attempt?.network[0]?.responseBody).toHaveLength(2048);
   });
 
-  it("caps network requests at 200 and keeps the earliest requests", () => {
+  it("caps network requests at 200 when all are high signal", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -1586,6 +1586,187 @@ describe("LlmReporter", () => {
       stringifySpy.mockRestore();
       mockError.mockRestore();
     }
+  });
+
+  it("prioritizes fetch/xhr requests over static assets when network cap is reached", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const scriptEvents = Array.from({ length: NETWORK_REQUESTS_CAP }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "script",
+        request: {
+          method: "GET",
+          url: `https://cdn.example.com/chunk-${index}.js`,
+        },
+        response: {
+          status: 200,
+        },
+      },
+    }));
+    const fetchEvents = Array.from({ length: 50 }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "fetch",
+        request: {
+          method: "GET",
+          url: `https://api.example.com/data/${index}`,
+        },
+        response: {
+          status: 200,
+        },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-priority-network.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [...scriptEvents, ...fetchEvents],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+
+    const fetchUrls = attempt.network
+      .filter((request) => request.resourceType === "fetch")
+      .map((request) => request.url);
+    expect(fetchUrls).toHaveLength(50);
+
+    const scriptUrls = attempt.network
+      .filter((request) => request.resourceType === "script")
+      .map((request) => request.url);
+    expect(scriptUrls).toHaveLength(150);
+    const expectedScriptUrls = Array.from(
+      { length: 150 },
+      (_, index) => `https://cdn.example.com/chunk-${index + 50}.js`,
+    );
+    expect(scriptUrls).toEqual(expectedScriptUrls);
+  });
+
+  it("prioritizes error responses regardless of resource type", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const okScriptEvents = Array.from({ length: NETWORK_REQUESTS_CAP }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "script",
+        request: {
+          method: "GET",
+          url: `https://cdn.example.com/ok-${index}.js`,
+        },
+        response: {
+          status: 200,
+        },
+      },
+    }));
+    const errorScriptEvents = Array.from({ length: 10 }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "script",
+        request: {
+          method: "GET",
+          url: `https://cdn.example.com/error-${index}.js`,
+        },
+        response: {
+          status: 500,
+        },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-priority-errors.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [...okScriptEvents, ...errorScriptEvents],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+
+    const errorRequests = attempt.network.filter((request) => request.status === 500);
+    expect(errorRequests).toHaveLength(10);
+  });
+
+  it("embeds screenshot as base64 for failed attempts", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const screenshotPath = path.join(outputDirectory, "failure-screenshot.png");
+    const pngContent = Buffer.from("fake-png-content-for-test");
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    writeFileSync(screenshotPath, pngContent);
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        status: "failed",
+        errors: [{ message: "test failed" }],
+        attachments: [
+          {
+            name: "screenshot",
+            contentType: "image/png",
+            path: screenshotPath,
+          },
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "failed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.failureArtifacts?.screenshotBase64).toBe(pngContent.toString("base64"));
+  });
+
+  it("skips screenshot embedding when base64 exceeds cap", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const screenshotPath = path.join(outputDirectory, "large-screenshot.png");
+    const largeContent = Buffer.alloc(600_000, "x");
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    writeFileSync(screenshotPath, largeContent);
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        status: "failed",
+        errors: [{ message: "test failed" }],
+        attachments: [
+          {
+            name: "screenshot",
+            contentType: "image/png",
+            path: screenshotPath,
+          },
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "failed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.failureArtifacts?.screenshotPath).toBeDefined();
+    expect(attempt.failureArtifacts?.screenshotBase64).toBeUndefined();
   });
 
   it("resets state when onBegin is called again", () => {

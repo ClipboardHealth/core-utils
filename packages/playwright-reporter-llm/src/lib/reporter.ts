@@ -61,6 +61,8 @@ const RESPONSE_HEADER_ALLOWLIST = new Set([
   "x-datadog-span-id",
 ]);
 const HIGH_SIGNAL_CONSOLE_ENTRY_TYPES = new Set(["warning", "error", "pageerror"]);
+const HIGH_SIGNAL_RESOURCE_TYPES = new Set(["fetch", "xhr"]);
+const SCREENSHOT_BASE64_CAP = 524_288;
 
 function stripAnsi(text: string): string {
   // eslint-disable-next-line no-control-regex
@@ -401,6 +403,46 @@ function appendConsoleEntryWithPriority(
   consoleMessages.push(consoleEntry);
 }
 
+function isHighSignalNetworkRequest(request: NetworkRequest): boolean {
+  return (
+    (request.resourceType !== undefined && HIGH_SIGNAL_RESOURCE_TYPES.has(request.resourceType)) ||
+    request.status >= 400 ||
+    request.failureText !== undefined ||
+    request.wasAborted === true
+  );
+}
+
+function canImproveNetworkSignal(networkRequests: NetworkRequest[]): boolean {
+  if (networkRequests.length < NETWORK_REQUESTS_CAP) {
+    return true;
+  }
+  return networkRequests.some((request) => !isHighSignalNetworkRequest(request));
+}
+
+function appendNetworkRequestWithPriority(
+  networkRequests: NetworkRequest[],
+  networkRequest: NetworkRequest,
+): void {
+  if (networkRequests.length < NETWORK_REQUESTS_CAP) {
+    networkRequests.push(networkRequest);
+    return;
+  }
+
+  if (!isHighSignalNetworkRequest(networkRequest)) {
+    return;
+  }
+
+  const firstLowSignalIndex = networkRequests.findIndex(
+    (request) => !isHighSignalNetworkRequest(request),
+  );
+  if (firstLowSignalIndex === -1) {
+    return;
+  }
+
+  networkRequests.splice(firstLowSignalIndex, 1);
+  networkRequests.push(networkRequest);
+}
+
 function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
   for (const [index, request] of networkRequests.entries()) {
     if (!request.redirectToUrl) {
@@ -489,6 +531,30 @@ function extractFailureArtifacts(
     return undefined;
   }
   return failureArtifacts;
+}
+
+function embedScreenshot(
+  failureArtifacts: FailureArtifacts,
+  resultAttachments: ReadonlyArray<{ name: string; contentType: string; path?: string | null }>,
+): void {
+  const screenshotAttachment = resultAttachments.find(
+    (a) =>
+      a.path && (a.contentType.startsWith("image/") || a.name.toLowerCase().includes("screenshot")),
+  );
+  if (!screenshotAttachment?.path) {
+    return;
+  }
+
+  try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const raw = readFileSync(screenshotAttachment.path);
+    const base64 = raw.toString("base64");
+    if (base64.length <= SCREENSHOT_BASE64_CAP) {
+      failureArtifacts.screenshotBase64 = base64;
+    }
+  } catch {
+    // Screenshot file may not exist or be readable — silently skip
+  }
 }
 
 function readTraceResourceBody(
@@ -823,10 +889,7 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
   }
 
   for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
-    if (
-      networkRequests.length >= NETWORK_REQUESTS_CAP &&
-      !canImproveConsoleSignal(consoleMessages)
-    ) {
+    if (!canImproveNetworkSignal(networkRequests) && !canImproveConsoleSignal(consoleMessages)) {
       break;
     }
 
@@ -840,7 +903,7 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
 
       for (const line of lines) {
         if (
-          networkRequests.length >= NETWORK_REQUESTS_CAP &&
+          !canImproveNetworkSignal(networkRequests) &&
           !canImproveConsoleSignal(consoleMessages)
         ) {
           break;
@@ -859,8 +922,8 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
           continue;
         }
 
-        if (traceLineDiagnostics.networkRequest && networkRequests.length < NETWORK_REQUESTS_CAP) {
-          networkRequests.push(traceLineDiagnostics.networkRequest);
+        if (traceLineDiagnostics.networkRequest) {
+          appendNetworkRequestWithPriority(networkRequests, traceLineDiagnostics.networkRequest);
         }
         if (traceLineDiagnostics.consoleEntry) {
           appendConsoleEntryWithPriority(consoleMessages, traceLineDiagnostics.consoleEntry);
@@ -908,17 +971,13 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
   const consoleMessages: ConsoleEntry[] = [];
 
   for (const tracePath of tracePaths) {
-    if (
-      networkRequests.length >= NETWORK_REQUESTS_CAP &&
-      !canImproveConsoleSignal(consoleMessages)
-    ) {
+    if (!canImproveNetworkSignal(networkRequests) && !canImproveConsoleSignal(consoleMessages)) {
       break;
     }
 
     const traceDiagnostics = parseTraceDiagnostics(tracePath);
-    if (networkRequests.length < NETWORK_REQUESTS_CAP) {
-      const remainingNetworkCapacity = NETWORK_REQUESTS_CAP - networkRequests.length;
-      networkRequests.push(...traceDiagnostics.networkRequests.slice(0, remainingNetworkCapacity));
+    for (const request of traceDiagnostics.networkRequests) {
+      appendNetworkRequestWithPriority(networkRequests, request);
     }
 
     for (const consoleEntry of traceDiagnostics.consoleMessages) {
@@ -941,6 +1000,11 @@ interface BuildAttemptResultInput {
 function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
   const { result, errors, attachments, network, consoleMessages } = input;
   const failureArtifacts = extractFailureArtifacts(result.status, attachments);
+
+  if (failureArtifacts) {
+    embedScreenshot(failureArtifacts, result.attachments);
+  }
+
   const attemptResult: AttemptResult = {
     attempt: result.retry + 1,
     status: result.status,
