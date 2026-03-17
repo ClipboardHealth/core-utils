@@ -3,7 +3,7 @@
 ## Quick Check
 
 ```bash
-scripts/check-prerequisites.sh
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/check-prerequisites.sh"
 ```
 
 This validates all requirements and shows how to fix failures.
@@ -60,7 +60,7 @@ aws cognito-idp list-user-pools \
 Pass the pool ID as a parameter to override the default:
 
 ```bash
-scripts/cognito-lookup.sh subs.txt results.csv cbh-staging-platform us-west-2_XXXXX
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/cognito-lookup.sh" subs.txt results.csv cbh-staging-platform us-west-2_XXXXX
 ```
 
 ## Troubleshooting

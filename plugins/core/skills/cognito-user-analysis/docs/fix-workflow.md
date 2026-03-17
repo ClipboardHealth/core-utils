@@ -5,7 +5,7 @@ Execute fixes after reviewing `analysis.csv`.
 ## Always Dry-Run First
 
 ```bash
-scripts/cognito-fix-duplicates.sh analysis.csv --dry-run
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/cognito-fix-duplicates.sh" analysis.csv --dry-run
 ```
 
 Review output to confirm correct users will be deleted/updated.
@@ -13,7 +13,7 @@ Review output to confirm correct users will be deleted/updated.
 ## Execute
 
 ```bash
-scripts/cognito-fix-duplicates.sh analysis.csv
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/cognito-fix-duplicates.sh" analysis.csv
 ```
 
 Run `--help` for all options.

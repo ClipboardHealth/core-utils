@@ -5,7 +5,7 @@ Pipeline: `subs.txt → lookup → find-duplicates → analyze → analysis.csv`
 ## Step 1: Lookup Users
 
 ```bash
-scripts/cognito-lookup.sh <input_file> [output_file]
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/cognito-lookup.sh" <input_file> [output_file]
 ```
 
 Converts Cognito subs to user details. Run `--help` for all options.
@@ -16,7 +16,7 @@ Converts Cognito subs to user details. Run `--help` for all options.
 ## Step 2: Find Duplicates
 
 ```bash
-scripts/cognito-find-duplicates.sh <results_csv> [output_file]
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/cognito-find-duplicates.sh" <results_csv> [output_file]
 ```
 
 Searches for other accounts sharing phone or email. Run `--help` for all options.
@@ -26,7 +26,7 @@ Searches for other accounts sharing phone or email. Run `--help` for all options
 ## Step 3: Analyze Duplicates
 
 ```bash
-scripts/cognito-analyze-duplicates.sh <duplicates_csv> [output_file]
+"${CLAUDE_PLUGIN_ROOT:-.agents}/skills/cognito-user-analysis/scripts/cognito-analyze-duplicates.sh" <duplicates_csv> [output_file]
 ```
 
 Compares each duplicate against backend API. Run `--help` for all options.
