@@ -1,6 +1,11 @@
 #!/usr/bin/env node
-import { executeGraphQL, outputError, runGh, validatePrerequisites } from "../../lib/ghClient.ts";
-import { getPrNumber, getRepoInfo } from "../../lib/prClient.ts";
+import {
+  executeGraphQL,
+  outputError,
+  runGh,
+  validatePrerequisites,
+} from "../../../lib/ghClient.ts";
+import { getPrNumber, getRepoInfo } from "../../../lib/prClient.ts";
 
 import {
   extractCodeScanningAlertNumber,
