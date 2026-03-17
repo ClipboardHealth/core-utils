@@ -533,21 +533,10 @@ function extractFailureArtifacts(
   return failureArtifacts;
 }
 
-function embedScreenshot(
-  failureArtifacts: FailureArtifacts,
-  resultAttachments: ReadonlyArray<{ name: string; contentType: string; path?: string | null }>,
-): void {
-  const screenshotAttachment = resultAttachments.find(
-    (a) =>
-      a.path && (a.contentType.startsWith("image/") || a.name.toLowerCase().includes("screenshot")),
-  );
-  if (!screenshotAttachment?.path) {
-    return;
-  }
-
+function embedScreenshot(failureArtifacts: FailureArtifacts, absoluteScreenshotPath: string): void {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    const raw = readFileSync(screenshotAttachment.path);
+    const raw = readFileSync(absoluteScreenshotPath);
     const base64 = raw.toString("base64");
     if (base64.length <= SCREENSHOT_BASE64_CAP) {
       failureArtifacts.screenshotBase64 = base64;
@@ -1001,8 +990,15 @@ function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
   const { result, errors, attachments, network, consoleMessages } = input;
   const failureArtifacts = extractFailureArtifacts(result.status, attachments);
 
-  if (failureArtifacts) {
-    embedScreenshot(failureArtifacts, result.attachments);
+  if (failureArtifacts?.screenshotPath) {
+    const absoluteScreenshotPath = result.attachments.find(
+      (a) =>
+        a.path &&
+        (a.contentType.startsWith("image/") || a.name.toLowerCase().includes("screenshot")),
+    )?.path;
+    if (absoluteScreenshotPath) {
+      embedScreenshot(failureArtifacts, absoluteScreenshotPath);
+    }
   }
 
   const attemptResult: AttemptResult = {
