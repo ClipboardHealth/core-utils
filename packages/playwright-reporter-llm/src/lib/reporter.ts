@@ -498,11 +498,22 @@ function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
   }
 }
 
-function isScreenshotAttachment(attachment: { name: string; contentType: string }): boolean {
-  return (
-    attachment.contentType.startsWith("image/") ||
-    attachment.name.toLowerCase().includes("screenshot")
-  );
+function findScreenshotAttachment<T extends { name: string; contentType: string; path?: string }>(
+  attachments: readonly T[],
+): T | undefined {
+  let firstImageFallback: T | undefined;
+  for (const attachment of attachments) {
+    if (!attachment.path) {
+      continue;
+    }
+    if (attachment.name.toLowerCase().includes("screenshot")) {
+      return attachment;
+    }
+    if (!firstImageFallback && attachment.contentType.startsWith("image/")) {
+      firstImageFallback = attachment;
+    }
+  }
+  return firstImageFallback;
 }
 
 function extractFailureArtifacts(
@@ -518,10 +529,6 @@ function extractFailureArtifacts(
     if (!attachment.path) {
       continue;
     }
-
-    if (!failureArtifacts.screenshotPath && isScreenshotAttachment(attachment)) {
-      failureArtifacts.screenshotPath = attachment.path;
-    }
     if (
       !failureArtifacts.videoPath &&
       (attachment.contentType.startsWith("video/") ||
@@ -531,9 +538,6 @@ function extractFailureArtifacts(
     }
   }
 
-  if (!failureArtifacts.screenshotPath && !failureArtifacts.videoPath) {
-    return undefined;
-  }
   return failureArtifacts;
 }
 
@@ -998,10 +1002,8 @@ function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
   const { result, errors, attachments, network, consoleMessages } = input;
   const failureArtifacts = extractFailureArtifacts(result.status, attachments);
 
-  if (failureArtifacts?.screenshotPath) {
-    const absoluteScreenshotPath = result.attachments.find(
-      (a) => a.path && isScreenshotAttachment(a),
-    )?.path;
+  if (failureArtifacts) {
+    const absoluteScreenshotPath = findScreenshotAttachment(result.attachments)?.path;
     if (absoluteScreenshotPath) {
       embedScreenshot(failureArtifacts, absoluteScreenshotPath);
     }

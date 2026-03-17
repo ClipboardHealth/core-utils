@@ -116,7 +116,7 @@ Report: test-results/llm-report.json
             { "name": "trace", "contentType": "application/zip", "path": "trace.zip" }
           ],
           "failureArtifacts": {
-            "screenshotPath": "failure-1.png",
+            "screenshotBase64": "iVBORw0KGgo...",
             "videoPath": "retry-video.webm"
           },
           "network": [
@@ -177,11 +177,11 @@ Key fields for agents:
 - **`tests[].errors[].location`** -- exact file and line of failure
 - **`tests[].flaky`** -- true if test passed after retry
 - **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
-- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt)
+- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt, high-signal entries prioritized over low-signal)
 - **`tests[].steps` / `tests[].network`** -- convenience aliases from the final attempt
-- **`tests[].attempts[].network[]`** -- max 200 per attempt with failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), `durationMs` derived from available timing components, and allowlisted headers (`requestHeaders`, `responseHeaders`)
+- **`tests[].attempts[].network[]`** -- max 200 per attempt, priority-based: fetch/xhr requests, error responses (status >= 400), failed, and aborted requests are retained over static assets (script, stylesheet, image, font). Includes failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), `durationMs` derived from available timing components, and allowlisted headers (`requestHeaders`, `responseHeaders`)
 - **`tests[].attempts[].network[].requestHeaders`** -- includes `x-datadog-trace-id` and `x-datadog-span-id` when present (values capped to 256 chars)
-- **`tests[].attempts[].failureArtifacts`** -- first screenshot/video attachment paths for failing/timed-out/interrupted attempts
+- **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path)
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
 

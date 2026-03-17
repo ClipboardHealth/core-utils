@@ -1319,7 +1319,6 @@ describe("LlmReporter", () => {
     const attempt = firstAttempt(report);
 
     expect(attempt?.failureArtifacts).toEqual({
-      screenshotPath: "failure-1.png",
       videoPath: "retry-video.webm",
     });
   });
@@ -1765,7 +1764,7 @@ describe("LlmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt.failureArtifacts?.screenshotPath).toBeDefined();
+    expect(attempt.failureArtifacts).toBeDefined();
     expect(attempt.failureArtifacts?.screenshotBase64).toBeUndefined();
   });
 
