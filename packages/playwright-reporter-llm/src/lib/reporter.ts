@@ -498,6 +498,13 @@ function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
   }
 }
 
+function isScreenshotAttachment(attachment: { name: string; contentType: string }): boolean {
+  return (
+    attachment.contentType.startsWith("image/") ||
+    attachment.name.toLowerCase().includes("screenshot")
+  );
+}
+
 function extractFailureArtifacts(
   status: TestStatus,
   attachments: TestAttachment[],
@@ -512,16 +519,13 @@ function extractFailureArtifacts(
       continue;
     }
 
-    const attachmentName = attachment.name.toLowerCase();
-    if (
-      !failureArtifacts.screenshotPath &&
-      (attachment.contentType.startsWith("image/") || attachmentName.includes("screenshot"))
-    ) {
+    if (!failureArtifacts.screenshotPath && isScreenshotAttachment(attachment)) {
       failureArtifacts.screenshotPath = attachment.path;
     }
     if (
       !failureArtifacts.videoPath &&
-      (attachment.contentType.startsWith("video/") || attachmentName.includes("video"))
+      (attachment.contentType.startsWith("video/") ||
+        attachment.name.toLowerCase().includes("video"))
     ) {
       failureArtifacts.videoPath = attachment.path;
     }
@@ -992,9 +996,7 @@ function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
 
   if (failureArtifacts?.screenshotPath) {
     const absoluteScreenshotPath = result.attachments.find(
-      (a) =>
-        a.path &&
-        (a.contentType.startsWith("image/") || a.name.toLowerCase().includes("screenshot")),
+      (a) => a.path && isScreenshotAttachment(a),
     )?.path;
     if (absoluteScreenshotPath) {
       embedScreenshot(failureArtifacts, absoluteScreenshotPath);
