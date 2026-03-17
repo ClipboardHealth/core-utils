@@ -1,7 +1,5 @@
 ---
 description: Instructions for simplifying code.
-# variables:
-#   - AGENT_TOOL_NAME
 ---
 
 # Simplify: Code Review and Cleanup
