@@ -22,9 +22,6 @@ Analyze and fix duplicate Cognito users in clipboard-production by comparing aga
 ## Quick Start
 
 ```bash
-# Set SKILL_DIR to wherever this skill is installed
-SKILL_DIR="<path-to-this-skill>"
-
 # 1. Verify prerequisites
 scripts/check-prerequisites.sh
 
