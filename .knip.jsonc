@@ -13,6 +13,7 @@
     "packages/eslint-plugin/src/lib/createRule.ts",
     "plugins/**/*.ts",
     "scripts/**/*.ts",
+    "packages/mongo-jobs/test/support/emulateCompletionOfBackgroundJobs.ts",
   ],
   "ignoreDependencies": [
     "@anthropic-ai/claude-agent-sdk",

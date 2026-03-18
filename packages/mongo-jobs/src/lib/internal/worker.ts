@@ -70,10 +70,13 @@ function fromNow(millis: number): Date {
   return new Date(Date.now() + millis);
 }
 
-async function delay(time: number): Promise<void> {
-  await new Promise((resolve) => {
-    setTimeout(resolve, time);
+function delay(time: number): { promise: Promise<void>; timeout: NodeJS.Timeout | undefined } {
+  let timeout: NodeJS.Timeout | undefined;
+  const promise = new Promise<void>((resolve) => {
+    timeout = setTimeout(resolve, time);
   });
+
+  return { promise, timeout };
 }
 
 function removeItemFromArray<T>(array: T[], item: T) {
@@ -184,14 +187,21 @@ export class Worker {
 
     await this.queueConsumer.stop();
 
-    const shutdownWaitPromise = delay(waitTime ?? GRACEFUL_SHUTDOWN_WAIT);
+    const { promise: shutdownWaitPromise, timeout: gracefulShutdownTimer } = delay(
+      waitTime ?? GRACEFUL_SHUTDOWN_WAIT,
+    );
     const jobsWaitPromise = Promise.all(this.runningJobs.values());
 
     await Promise.race([shutdownWaitPromise, jobsWaitPromise]);
+    clearTimeout(gracefulShutdownTimer);
 
     if (this.runningJobs.size > 0) {
       const runningJobsIds = [...this.runningJobs.keys()].join(", ");
       this.logger?.error(`Following jobs didn't end on time during shutdown: ${runningJobsIds}`);
+      this.logger?.error(
+        "Background Jobs: Stopped with pending jobs (Node.js process will not exit gracefully)",
+      );
+      return;
     }
 
     this.logger?.info("Background Jobs: Stopped");
