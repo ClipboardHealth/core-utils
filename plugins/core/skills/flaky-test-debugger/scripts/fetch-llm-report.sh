@@ -29,7 +29,7 @@ echo "Repo: ${owner}/${repo}, Run ID: ${run_id}"
 
 # Find the playwright-llm-report artifact ID
 artifact_json=$(gh api "repos/${owner}/${repo}/actions/runs/${run_id}/artifacts" \
-  --jq '[.artifacts[] | select(.name == "playwright-llm-report" and (.expired | not))] | sort_by(.created_at) | last | {id, name, size_in_bytes, expired}')
+  --jq '[.artifacts[] | select(.name == "playwright-llm-report" and (.expired | not))] | sort_by(.created_at) | last // empty | {id, name, size_in_bytes, expired}')
 
 if [[ -z "$artifact_json" ]]; then
   echo "Error: No 'playwright-llm-report' artifact found for run ${run_id}" >&2
