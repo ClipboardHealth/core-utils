@@ -45,7 +45,7 @@ Report: test-results/llm-report.json
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "timestamp": "2026-02-25T19:00:00.000Z",
   "durationMs": 4200,
   "summary": {
@@ -83,6 +83,7 @@ Report: test-results/llm-report.json
       "stderr": "",
       "steps": [],
       "network": [],
+      "timeline": [],
       "attempts": [
         {
           "attempt": 1,
@@ -95,22 +96,29 @@ Report: test-results/llm-report.json
             "message": "Expected: 1, Received: 2"
           },
           "steps": [
-            { "title": "outer step", "category": "test.step", "durationMs": 20, "depth": 0 },
+            {
+              "title": "outer step",
+              "category": "test.step",
+              "durationMs": 20,
+              "depth": 0,
+              "offsetMs": 100
+            },
             {
               "title": "inner assertion",
               "category": "pw:api",
               "durationMs": 6,
               "depth": 1,
+              "offsetMs": 120,
               "error": "Expected: 1, Received: 2"
             }
           ],
           "stdout": "",
           "stderr": "",
           "consoleMessages": [
-            { "type": "warning", "text": "deprecated API used" },
-            { "type": "error", "text": "failed to fetch" },
-            { "type": "pageerror", "text": "Uncaught TypeError: x is undefined" },
-            { "type": "page-closed", "text": "Page closed" }
+            { "type": "warning", "text": "deprecated API used", "offsetMs": 150 },
+            { "type": "error", "text": "failed to fetch", "offsetMs": 200 },
+            { "type": "pageerror", "text": "Uncaught TypeError: x is undefined", "offsetMs": 250 },
+            { "type": "page-closed", "text": "Page closed", "offsetMs": 300 }
           ],
           "attachments": [
             { "name": "trace", "contentType": "application/zip", "path": "trace.zip" }
@@ -125,6 +133,8 @@ Report: test-results/llm-report.json
               "url": "https://app.example.com/start",
               "status": 302,
               "durationMs": 27,
+              "offsetMs": 50,
+              "traceId": "12345",
               "redirectToUrl": "https://app.example.com/final",
               "redirectChain": [
                 { "url": "https://app.example.com/start", "status": 302 },
@@ -146,6 +156,48 @@ Report: test-results/llm-report.json
                 "location": "https://app.example.com/final"
               }
             }
+          ],
+          "timeline": [
+            {
+              "kind": "network",
+              "offsetMs": 50,
+              "method": "GET",
+              "url": "https://app.example.com/start",
+              "status": 302,
+              "durationMs": 27,
+              "traceId": "12345"
+            },
+            {
+              "kind": "step",
+              "offsetMs": 100,
+              "title": "outer step",
+              "category": "test.step",
+              "durationMs": 20,
+              "depth": 0
+            },
+            {
+              "kind": "step",
+              "offsetMs": 120,
+              "title": "inner assertion",
+              "category": "pw:api",
+              "durationMs": 6,
+              "depth": 1,
+              "error": "Expected: 1, Received: 2"
+            },
+            {
+              "kind": "console",
+              "offsetMs": 150,
+              "type": "warning",
+              "text": "deprecated API used"
+            },
+            { "kind": "console", "offsetMs": 200, "type": "error", "text": "failed to fetch" },
+            {
+              "kind": "console",
+              "offsetMs": 250,
+              "type": "pageerror",
+              "text": "Uncaught TypeError: x is undefined"
+            },
+            { "kind": "console", "offsetMs": 300, "type": "page-closed", "text": "Page closed" }
           ]
         },
         {
@@ -160,7 +212,8 @@ Report: test-results/llm-report.json
           "stderr": "",
           "consoleMessages": [],
           "attachments": [],
-          "network": []
+          "network": [],
+          "timeline": []
         }
       ]
     }
@@ -178,10 +231,13 @@ Key fields for agents:
 - **`tests[].flaky`** -- true if test passed after retry
 - **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
 - **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt, high-signal entries prioritized over low-signal)
-- **`tests[].steps` / `tests[].network`** -- convenience aliases from the final attempt
+- **`tests[].steps` / `tests[].network` / `tests[].timeline`** -- convenience aliases from the final attempt
+- **`tests[].attempts[].timeline[]`** -- unified, sorted-by-`offsetMs` array of all events (`kind: "step" | "network" | "console"`). Slimmed-down entries for quick temporal scanning; full details remain in the source arrays
+- **`offsetMs`** -- milliseconds since the attempt's `startTime`. Always present on steps (from `TestStep.startTime`). Optional on network and console entries (from trace `wallTime` or `time` fields). Entries without `offsetMs` are excluded from the timeline
+- **`tests[].attempts[].network[].traceId`** -- promoted from `requestHeaders["x-datadog-trace-id"]` for direct access
 - **`tests[].attempts[].network[]`** -- max 200 per attempt, priority-based: fetch/xhr requests, error responses (status >= 400), failed, and aborted requests are retained over static assets (script, stylesheet, image, font). Includes failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), `durationMs` derived from available timing components, and allowlisted headers (`requestHeaders`, `responseHeaders`)
 - **`tests[].attempts[].network[].requestHeaders`** -- includes `x-datadog-trace-id` and `x-datadog-span-id` when present (values capped to 256 chars)
-- **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path)
+- **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path). Omitted entirely when neither screenshot nor video is available
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
 

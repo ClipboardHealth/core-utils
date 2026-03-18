@@ -312,7 +312,7 @@ describe("LlmReporter", () => {
 
     const report = readReport(outputFile);
 
-    expect(report.schemaVersion).toBe(1);
+    expect(report.schemaVersion).toBe(2);
     expect(report.timestamp).toBeDefined();
     expect(report.durationMs).toBeGreaterThanOrEqual(0);
     expect(report.summary).toEqual({
@@ -474,17 +474,21 @@ describe("LlmReporter", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
     const result = createMockResult({
+      startTime: attemptStart,
       steps: [
         createMockStep({
           title: "outer step",
           category: "test.step",
           duration: 40,
+          startTime: new Date("2026-01-01T00:00:00.100Z"),
           steps: [
             createMockStep({
               title: "inner step",
               category: "pw:api",
               duration: 20,
+              startTime: new Date("2026-01-01T00:00:00.120Z"),
               error: { message: "inner failure line\nstack line 1\nstack line 2" },
             }),
           ],
@@ -505,12 +509,14 @@ describe("LlmReporter", () => {
         category: "test.step",
         durationMs: 40,
         depth: 0,
+        offsetMs: 100,
       },
       {
         title: "inner step",
         category: "pw:api",
         durationMs: 20,
         depth: 1,
+        offsetMs: 120,
         error: "inner failure line",
       },
     ]);
@@ -542,6 +548,7 @@ describe("LlmReporter", () => {
         url: "https://api.example.com/v1/orders",
         status: 201,
         durationMs: 37,
+        offsetMs: 37,
         resourceType: "fetch",
         timings: {
           sendMs: 10,
@@ -1379,7 +1386,7 @@ describe("LlmReporter", () => {
 
       const report = readReport(path.join(sandboxDirectory, "test-results/llm-report.json"));
 
-      expect(report.schemaVersion).toBe(1);
+      expect(report.schemaVersion).toBe(2);
     } finally {
       process.chdir(originalCwd);
       rmSync(sandboxDirectory, { recursive: true, force: true });
@@ -1539,12 +1546,13 @@ describe("LlmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt?.steps[0]).toEqual({
+    expect(attempt?.steps[0]).toMatchObject({
       title: "step-with-blank-error-line",
       category: "test.step",
       durationMs: 25,
       depth: 0,
     });
+    expect(attempt?.steps[0]?.error).toBeUndefined();
   });
 
   it("handles skipped tests in progress output and summary", () => {
@@ -1764,8 +1772,7 @@ describe("LlmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt.failureArtifacts).toBeDefined();
-    expect(attempt.failureArtifacts?.screenshotBase64).toBeUndefined();
+    expect(attempt.failureArtifacts).toBeUndefined();
   });
 
   it("resets state when onBegin is called again", () => {
@@ -1787,5 +1794,206 @@ describe("LlmReporter", () => {
     expect(report.tests).toHaveLength(0);
     expect(report.summary.total).toBe(0);
     expect(report.globalErrors).toHaveLength(0);
+  });
+
+  it("includes offsetMs on steps relative to attempt startTime", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const result = createMockResult({
+      startTime: attemptStart,
+      steps: [
+        createMockStep({
+          title: "first step",
+          startTime: new Date("2026-01-01T00:00:00.500Z"),
+          duration: 100,
+        }),
+        createMockStep({
+          title: "second step",
+          startTime: new Date("2026-01-01T00:00:01.200Z"),
+          duration: 50,
+        }),
+      ],
+    });
+
+    reporter.onTestEnd(createMockTestCase(), result);
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.steps[0]).toMatchObject({ title: "first step", offsetMs: 500 });
+    expect(attempt.steps[1]).toMatchObject({ title: "second step", offsetMs: 1200 });
+  });
+
+  it("extracts traceId from x-datadog-trace-id request header", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-trace-id.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            time: 100,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/data",
+              headers: [{ name: "x-datadog-trace-id", value: "abc-trace-123" }],
+            },
+            response: {
+              status: 200,
+            },
+          },
+        },
+      ],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network[0]?.traceId).toBe("abc-trace-123");
+    expect(attempt.network[0]?.requestHeaders?.["x-datadog-trace-id"]).toBe("abc-trace-123");
+  });
+
+  it("builds sorted timeline from steps, network, and console entries", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-timeline.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            time: 200,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/timeline",
+            },
+            response: { status: 200 },
+            timings: { send: 1, wait: 10, receive: 2 },
+          },
+        },
+      ],
+      traceEvents: [{ type: "console", messageType: "error", text: "timeline error", time: 300 }],
+    });
+
+    const result = createMockResult({
+      startTime: attemptStart,
+      steps: [
+        createMockStep({
+          title: "timeline step",
+          startTime: new Date("2026-01-01T00:00:00.100Z"),
+          duration: 50,
+        }),
+      ],
+      attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+    });
+
+    reporter.onTestEnd(createMockTestCase({}, { outputDirectory }), result);
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.timeline).toHaveLength(3);
+    expect(attempt.timeline[0]).toMatchObject({
+      kind: "step",
+      offsetMs: 100,
+      title: "timeline step",
+    });
+    expect(attempt.timeline[1]).toMatchObject({ kind: "network", offsetMs: 200, method: "GET" });
+    expect(attempt.timeline[2]).toMatchObject({ kind: "console", offsetMs: 300, type: "error" });
+
+    const entry = firstTestEntry(report);
+    expect(entry.timeline).toEqual(attempt.timeline);
+  });
+
+  it("excludes entries without offsetMs from timeline", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-timeline-no-offset.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/no-time",
+            },
+            response: { status: 200 },
+          },
+        },
+      ],
+      traceEvents: [{ type: "console", messageType: "error", text: "no-time error" }],
+    });
+
+    const result = createMockResult({
+      startTime: attemptStart,
+      steps: [
+        createMockStep({
+          title: "has offset",
+          startTime: new Date("2026-01-01T00:00:00.050Z"),
+          duration: 10,
+        }),
+      ],
+      attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+    });
+
+    reporter.onTestEnd(createMockTestCase({}, { outputDirectory }), result);
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.timeline).toHaveLength(1);
+    expect(attempt.timeline[0]).toMatchObject({ kind: "step", offsetMs: 50 });
+  });
+
+  it("omits failureArtifacts when no screenshot or video is present", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    reporter.onTestEnd(
+      createMockTestCase(),
+      createMockResult({
+        status: "failed",
+        errors: [{ message: "test failed" }],
+        attachments: [
+          {
+            name: "trace",
+            contentType: "application/zip",
+            path: "/project/test-results/trace.zip",
+          },
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "failed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.failureArtifacts).toBeUndefined();
   });
 });

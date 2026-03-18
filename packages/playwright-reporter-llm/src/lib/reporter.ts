@@ -29,6 +29,10 @@ import type {
   TestError,
   TestStatus,
   TestSummary,
+  TimelineConsoleEntry,
+  TimelineEntry,
+  TimelineNetworkEntry,
+  TimelineStepEntry,
 } from "./types";
 
 const STDOUT_CAP = 4096;
@@ -192,7 +196,11 @@ function extractFirstLine(text: string | undefined): string | undefined {
   return firstLine;
 }
 
-function flattenSteps(steps: readonly TestStep[], depth = 0): FlatStep[] {
+function flattenSteps(
+  steps: readonly TestStep[],
+  attemptStartTimeMs: number,
+  depth = 0,
+): FlatStep[] {
   const flattenedSteps: FlatStep[] = [];
 
   for (const step of steps) {
@@ -201,6 +209,7 @@ function flattenSteps(steps: readonly TestStep[], depth = 0): FlatStep[] {
       category: step.category,
       durationMs: step.duration,
       depth,
+      offsetMs: step.startTime.getTime() - attemptStartTimeMs,
     };
 
     const error = extractFirstLine(step.error?.message);
@@ -208,7 +217,7 @@ function flattenSteps(steps: readonly TestStep[], depth = 0): FlatStep[] {
       flatStep.error = error;
     }
 
-    flattenedSteps.push(flatStep, ...flattenSteps(step.steps, depth + 1));
+    flattenedSteps.push(flatStep, ...flattenSteps(step.steps, attemptStartTimeMs, depth + 1));
   }
 
   return flattenedSteps;
@@ -678,9 +687,28 @@ function readZipArchiveEntries(zipPath: string): Record<string, Uint8Array> {
   return archiveEntries;
 }
 
+function computeNetworkOffsetMs(
+  eventRecord: Record<string, unknown>,
+  snapshotRecord: Record<string, unknown>,
+  attemptStartTimeMs: number,
+): number | undefined {
+  const wallTime = asNumber(eventRecord["wallTime"]);
+  if (wallTime !== undefined) {
+    return Math.round(wallTime * 1000) - attemptStartTimeMs;
+  }
+
+  const snapshotTime = asNumber(snapshotRecord["time"]);
+  if (snapshotTime !== undefined) {
+    return Math.round(snapshotTime);
+  }
+
+  return undefined;
+}
+
 function buildNetworkRequestFromEvent(
   eventRecord: Record<string, unknown>,
   archiveEntries: Record<string, Uint8Array>,
+  attemptStartTimeMs: number,
 ): NetworkRequest | undefined {
   if (eventRecord["type"] !== "resource-snapshot") {
     return undefined;
@@ -736,12 +764,21 @@ function buildNetworkRequestFromEvent(
     networkRequest.redirectToUrl = redirectToUrl;
   }
 
+  const networkOffsetMs = computeNetworkOffsetMs(eventRecord, snapshotRecord, attemptStartTimeMs);
+  if (networkOffsetMs !== undefined) {
+    networkRequest.offsetMs = networkOffsetMs;
+  }
+
   const requestHeaders = extractAllowlistedHeaders(
     requestRecord["headers"],
     REQUEST_HEADER_ALLOWLIST,
   );
   if (requestHeaders) {
     networkRequest.requestHeaders = requestHeaders;
+    const traceId = requestHeaders["x-datadog-trace-id"];
+    if (traceId) {
+      networkRequest.traceId = traceId;
+    }
   }
 
   const responseHeaders = extractAllowlistedHeaders(
@@ -781,9 +818,29 @@ function extractPageErrorText(eventRecord: Record<string, unknown>): string | un
   return asString(errorRecord?.["message"]);
 }
 
+function computeConsoleOffsetMs(
+  eventRecord: Record<string, unknown>,
+  attemptStartTimeMs: number,
+): number | undefined {
+  const wallTime = asNumber(eventRecord["wallTime"]);
+  if (wallTime !== undefined) {
+    return Math.round(wallTime * 1000) - attemptStartTimeMs;
+  }
+
+  const time = asNumber(eventRecord["time"]);
+  if (time !== undefined) {
+    return Math.round(time);
+  }
+
+  return undefined;
+}
+
 function buildConsoleEntryFromEvent(
   eventRecord: Record<string, unknown>,
+  attemptStartTimeMs: number,
 ): ConsoleEntry | undefined {
+  const offsetMs = computeConsoleOffsetMs(eventRecord, attemptStartTimeMs);
+
   if (eventRecord["type"] === "console") {
     const messageType = asString(eventRecord["messageType"])?.toLowerCase();
     if (messageType !== "warning" && messageType !== "error") {
@@ -798,6 +855,7 @@ function buildConsoleEntryFromEvent(
     return {
       type: messageType,
       text: capConsoleMessageText(stripAnsi(text)),
+      ...(offsetMs !== undefined && { offsetMs }),
     };
   }
 
@@ -810,6 +868,7 @@ function buildConsoleEntryFromEvent(
     return {
       type: "pageerror",
       text: capConsoleMessageText(stripAnsi(pageErrorText)),
+      ...(offsetMs !== undefined && { offsetMs }),
     };
   }
 
@@ -817,6 +876,7 @@ function buildConsoleEntryFromEvent(
     return {
       type: "page-closed",
       text: "Page closed",
+      ...(offsetMs !== undefined && { offsetMs }),
     };
   }
 
@@ -828,6 +888,7 @@ function buildConsoleEntryFromEvent(
     return {
       type: "page-crashed",
       text: capConsoleMessageText(stripAnsi(pageCrashText)),
+      ...(offsetMs !== undefined && { offsetMs }),
     };
   }
 
@@ -842,6 +903,7 @@ interface TraceLineDiagnostics {
 function parseTraceLine(
   line: string,
   archiveEntries: Record<string, Uint8Array>,
+  attemptStartTimeMs: number,
 ): TraceLineDiagnostics | undefined {
   let parsedLine: unknown;
   try {
@@ -856,12 +918,16 @@ function parseTraceLine(
   }
 
   const traceLineDiagnostics: TraceLineDiagnostics = {};
-  const networkRequest = buildNetworkRequestFromEvent(eventRecord, archiveEntries);
+  const networkRequest = buildNetworkRequestFromEvent(
+    eventRecord,
+    archiveEntries,
+    attemptStartTimeMs,
+  );
   if (networkRequest) {
     traceLineDiagnostics.networkRequest = networkRequest;
   }
 
-  const consoleEntry = buildConsoleEntryFromEvent(eventRecord);
+  const consoleEntry = buildConsoleEntryFromEvent(eventRecord, attemptStartTimeMs);
   if (consoleEntry) {
     traceLineDiagnostics.consoleEntry = consoleEntry;
   }
@@ -878,7 +944,7 @@ interface TraceDiagnostics {
   consoleMessages: ConsoleEntry[];
 }
 
-function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
+function parseTraceDiagnostics(tracePath: string, attemptStartTimeMs: number): TraceDiagnostics {
   const networkRequests: NetworkRequest[] = [];
   const consoleMessages: ConsoleEntry[] = [];
   let archiveEntries: Record<string, Uint8Array>;
@@ -915,7 +981,7 @@ function parseTraceDiagnostics(tracePath: string): TraceDiagnostics {
 
         let traceLineDiagnostics: TraceLineDiagnostics | undefined;
         try {
-          traceLineDiagnostics = parseTraceLine(line, archiveEntries);
+          traceLineDiagnostics = parseTraceLine(line, archiveEntries, attemptStartTimeMs);
         } catch {
           continue;
         }
@@ -967,7 +1033,10 @@ function collectAttachments(result: TestResult, outputDirectory: string): Attach
   return { attachments, tracePaths };
 }
 
-function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiagnostics {
+function collectTraceDiagnosticsFromAttachments(
+  tracePaths: string[],
+  attemptStartTimeMs: number,
+): TraceDiagnostics {
   const networkRequests: NetworkRequest[] = [];
   const consoleMessages: ConsoleEntry[] = [];
 
@@ -976,7 +1045,7 @@ function collectTraceDiagnosticsFromAttachments(tracePaths: string[]): TraceDiag
       break;
     }
 
-    const traceDiagnostics = parseTraceDiagnostics(tracePath);
+    const traceDiagnostics = parseTraceDiagnostics(tracePath, attemptStartTimeMs);
     for (const request of traceDiagnostics.networkRequests) {
       appendNetworkRequestWithPriority(networkRequests, request);
     }
@@ -998,6 +1067,52 @@ interface BuildAttemptResultInput {
   consoleMessages: ConsoleEntry[];
 }
 
+function buildTimeline(
+  steps: FlatStep[],
+  network: NetworkRequest[],
+  consoleMessages: ConsoleEntry[],
+): TimelineEntry[] {
+  const stepEntries: TimelineStepEntry[] = steps.map((step) => ({
+    kind: "step" as const,
+    offsetMs: step.offsetMs,
+    title: step.title,
+    category: step.category,
+    durationMs: step.durationMs,
+    depth: step.depth,
+    ...(step.error && { error: step.error }),
+  }));
+
+  const networkEntries: TimelineNetworkEntry[] = network
+    .filter(
+      (request): request is NetworkRequest & { offsetMs: number } => request.offsetMs !== undefined,
+    )
+    .map((request) => ({
+      kind: "network" as const,
+      offsetMs: request.offsetMs,
+      method: request.method,
+      url: request.url,
+      status: request.status,
+      ...(request.durationMs !== undefined && { durationMs: request.durationMs }),
+      ...(request.resourceType && { resourceType: request.resourceType }),
+      ...(request.traceId && { traceId: request.traceId }),
+      ...(request.failureText && { failureText: request.failureText }),
+      ...(request.wasAborted !== undefined && { wasAborted: request.wasAborted }),
+    }));
+
+  const consoleEntries: TimelineConsoleEntry[] = consoleMessages
+    .filter((entry): entry is ConsoleEntry & { offsetMs: number } => entry.offsetMs !== undefined)
+    .map((entry) => ({
+      kind: "console" as const,
+      offsetMs: entry.offsetMs,
+      type: entry.type,
+      text: entry.text,
+    }));
+
+  const entries = [...stepEntries, ...networkEntries, ...consoleEntries];
+  entries.sort((a, b) => a.offsetMs - b.offsetMs);
+  return entries;
+}
+
 function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
   const { result, errors, attachments, network, consoleMessages } = input;
   const failureArtifacts = extractFailureArtifacts(result.status, attachments);
@@ -1009,6 +1124,14 @@ function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
     }
   }
 
+  const hasFailureContent =
+    failureArtifacts !== undefined &&
+    (failureArtifacts.screenshotBase64 !== undefined || failureArtifacts.videoPath !== undefined);
+
+  const attemptStartTimeMs = result.startTime.getTime();
+  const steps = flattenSteps(result.steps, attemptStartTimeMs);
+  const timeline = buildTimeline(steps, network, consoleMessages);
+
   const attemptResult: AttemptResult = {
     attempt: result.retry + 1,
     status: result.status,
@@ -1016,13 +1139,14 @@ function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
     startTime: result.startTime.toISOString(),
     workerIndex: result.workerIndex,
     parallelIndex: result.parallelIndex,
-    steps: flattenSteps(result.steps),
+    steps,
     stdout: collectStdio(result, "stdout"),
     stderr: collectStdio(result, "stderr"),
     attachments,
     network,
     consoleMessages,
-    ...(failureArtifacts && { failureArtifacts }),
+    timeline,
+    ...(hasFailureContent && { failureArtifacts }),
   };
 
   const [firstError] = errors;
@@ -1070,7 +1194,8 @@ export default class LlmReporter implements Reporter {
     const outputDirectory = test.parent.project()?.outputDir ?? config.rootDir;
     const { attachments, tracePaths } = collectAttachments(result, outputDirectory);
     const errors = result.errors.map(buildTestError);
-    const traceDiagnostics = collectTraceDiagnosticsFromAttachments(tracePaths);
+    const attemptStartTimeMs = result.startTime.getTime();
+    const traceDiagnostics = collectTraceDiagnosticsFromAttachments(tracePaths, attemptStartTimeMs);
     const attemptResult = buildAttemptResult({
       result,
       errors,
@@ -1101,6 +1226,7 @@ export default class LlmReporter implements Reporter {
       existingEntry.stderr = attemptResult.stderr;
       existingEntry.steps = attemptResult.steps;
       existingEntry.network = attemptResult.network;
+      existingEntry.timeline = attemptResult.timeline;
       existingEntry.attempts.push(attemptResult);
       return;
     }
@@ -1124,6 +1250,7 @@ export default class LlmReporter implements Reporter {
       attempts: [attemptResult],
       steps: attemptResult.steps,
       network: attemptResult.network,
+      timeline: attemptResult.timeline,
     };
 
     this.entriesById.set(test.id, entry);
@@ -1168,7 +1295,7 @@ export default class LlmReporter implements Reporter {
     }
 
     const report: LlmTestReport = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       timestamp: new Date(this.startTimeMs).toISOString(),
       durationMs,
       summary,
