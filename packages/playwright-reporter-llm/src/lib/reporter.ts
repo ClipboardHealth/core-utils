@@ -1108,9 +1108,10 @@ function buildTimeline(
       text: entry.text,
     }));
 
-  const entries = [...stepEntries, ...networkEntries, ...consoleEntries];
-  entries.sort((a, b) => a.offsetMs - b.offsetMs);
-  return entries;
+  // eslint-disable-next-line no-use-extend-native/no-use-extend-native
+  return [...stepEntries, ...networkEntries, ...consoleEntries].toSorted(
+    (a, b) => a.offsetMs - b.offsetMs,
+  );
 }
 
 function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {

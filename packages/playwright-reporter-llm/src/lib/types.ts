@@ -167,7 +167,7 @@ export interface LlmTestEntry {
   error?: TestError;
   steps?: FlatStep[];
   network?: NetworkRequest[];
-  timeline?: TimelineEntry[];
+  timeline: TimelineEntry[];
 }
 
 export interface LlmReporterOptions {
