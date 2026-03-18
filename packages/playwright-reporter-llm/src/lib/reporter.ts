@@ -687,19 +687,61 @@ function readZipArchiveEntries(zipPath: string): Record<string, Uint8Array> {
   return archiveEntries;
 }
 
+interface MonotonicAnchor {
+  wallTimeMs: number;
+  monotonicTimeMs: number;
+}
+
+function monotonicToOffsetMs(
+  monotonicTimeMs: number,
+  anchor: MonotonicAnchor,
+  attemptStartTimeMs: number,
+): number {
+  const wallTimeMs = anchor.wallTimeMs + (monotonicTimeMs - anchor.monotonicTimeMs);
+  return Math.round(wallTimeMs) - attemptStartTimeMs;
+}
+
+function extractMonotonicAnchor(lines: string[]): MonotonicAnchor | undefined {
+  for (const line of lines) {
+    if (!line.trim()) {
+      continue;
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    const record = asRecord(parsed);
+    if (record?.["type"] !== "context-options") {
+      continue;
+    }
+    const wallTimeMs = asNumber(record["wallTime"]);
+    const monotonicTimeMs = asNumber(record["monotonicTime"]);
+    if (wallTimeMs !== undefined && monotonicTimeMs !== undefined) {
+      return { wallTimeMs, monotonicTimeMs };
+    }
+    break;
+  }
+  return undefined;
+}
+
 function computeNetworkOffsetMs(
-  eventRecord: Record<string, unknown>,
   snapshotRecord: Record<string, unknown>,
+  anchor: MonotonicAnchor | undefined,
   attemptStartTimeMs: number,
 ): number | undefined {
-  const wallTime = asNumber(eventRecord["wallTime"]);
-  if (wallTime !== undefined) {
-    return Math.round(wallTime * 1000) - attemptStartTimeMs;
+  const monotonicTimeMs = asNumber(snapshotRecord["_monotonicTime"]);
+  if (monotonicTimeMs !== undefined && anchor) {
+    return monotonicToOffsetMs(monotonicTimeMs, anchor, attemptStartTimeMs);
   }
 
-  const snapshotTime = asNumber(snapshotRecord["time"]);
-  if (snapshotTime !== undefined) {
-    return Math.round(snapshotTime);
+  const startedDateTime = asString(snapshotRecord["startedDateTime"]);
+  if (startedDateTime) {
+    const parsedMs = new Date(startedDateTime).getTime();
+    if (!Number.isNaN(parsedMs)) {
+      return parsedMs - attemptStartTimeMs;
+    }
   }
 
   return undefined;
@@ -708,6 +750,7 @@ function computeNetworkOffsetMs(
 function buildNetworkRequestFromEvent(
   eventRecord: Record<string, unknown>,
   archiveEntries: Record<string, Uint8Array>,
+  anchor: MonotonicAnchor | undefined,
   attemptStartTimeMs: number,
 ): NetworkRequest | undefined {
   if (eventRecord["type"] !== "resource-snapshot") {
@@ -764,7 +807,7 @@ function buildNetworkRequestFromEvent(
     networkRequest.redirectToUrl = redirectToUrl;
   }
 
-  const networkOffsetMs = computeNetworkOffsetMs(eventRecord, snapshotRecord, attemptStartTimeMs);
+  const networkOffsetMs = computeNetworkOffsetMs(snapshotRecord, anchor, attemptStartTimeMs);
   if (networkOffsetMs !== undefined) {
     networkRequest.offsetMs = networkOffsetMs;
   }
@@ -820,26 +863,22 @@ function extractPageErrorText(eventRecord: Record<string, unknown>): string | un
 
 function computeConsoleOffsetMs(
   eventRecord: Record<string, unknown>,
+  anchor: MonotonicAnchor | undefined,
   attemptStartTimeMs: number,
 ): number | undefined {
-  const wallTime = asNumber(eventRecord["wallTime"]);
-  if (wallTime !== undefined) {
-    return Math.round(wallTime * 1000) - attemptStartTimeMs;
-  }
-
   const time = asNumber(eventRecord["time"]);
-  if (time !== undefined) {
-    return Math.round(time);
+  if (time !== undefined && anchor) {
+    return monotonicToOffsetMs(time, anchor, attemptStartTimeMs);
   }
-
   return undefined;
 }
 
 function buildConsoleEntryFromEvent(
   eventRecord: Record<string, unknown>,
+  anchor: MonotonicAnchor | undefined,
   attemptStartTimeMs: number,
 ): ConsoleEntry | undefined {
-  const offsetMs = computeConsoleOffsetMs(eventRecord, attemptStartTimeMs);
+  const offsetMs = computeConsoleOffsetMs(eventRecord, anchor, attemptStartTimeMs);
 
   if (eventRecord["type"] === "console") {
     const messageType = asString(eventRecord["messageType"])?.toLowerCase();
@@ -903,6 +942,7 @@ interface TraceLineDiagnostics {
 function parseTraceLine(
   line: string,
   archiveEntries: Record<string, Uint8Array>,
+  anchor: MonotonicAnchor | undefined,
   attemptStartTimeMs: number,
 ): TraceLineDiagnostics | undefined {
   let parsedLine: unknown;
@@ -921,13 +961,14 @@ function parseTraceLine(
   const networkRequest = buildNetworkRequestFromEvent(
     eventRecord,
     archiveEntries,
+    anchor,
     attemptStartTimeMs,
   );
   if (networkRequest) {
     traceLineDiagnostics.networkRequest = networkRequest;
   }
 
-  const consoleEntry = buildConsoleEntryFromEvent(eventRecord, attemptStartTimeMs);
+  const consoleEntry = buildConsoleEntryFromEvent(eventRecord, anchor, attemptStartTimeMs);
   if (consoleEntry) {
     traceLineDiagnostics.consoleEntry = consoleEntry;
   }
@@ -955,6 +996,24 @@ function parseTraceDiagnostics(tracePath: string, attemptStartTimeMs: number): T
     return { networkRequests, consoleMessages };
   }
 
+  // First pass: extract monotonic anchor from .trace files
+  let anchor: MonotonicAnchor | undefined;
+  for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
+    if (!entryName.endsWith(".trace")) {
+      continue;
+    }
+    try {
+      const entryText = Buffer.from(entryContent).toString("utf8");
+      anchor = extractMonotonicAnchor(entryText.split("\n"));
+      if (anchor) {
+        break;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  // Second pass: parse events
   for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
     if (!canImproveNetworkSignal(networkRequests) && !canImproveConsoleSignal(consoleMessages)) {
       break;
@@ -981,7 +1040,7 @@ function parseTraceDiagnostics(tracePath: string, attemptStartTimeMs: number): T
 
         let traceLineDiagnostics: TraceLineDiagnostics | undefined;
         try {
-          traceLineDiagnostics = parseTraceLine(line, archiveEntries, attemptStartTimeMs);
+          traceLineDiagnostics = parseTraceLine(line, archiveEntries, anchor, attemptStartTimeMs);
         } catch {
           continue;
         }

@@ -210,6 +210,7 @@ interface WriteTraceZipFixtureInput {
   networkEvents?: unknown[];
   traceRawLines?: string[];
   useDeflateCompression?: boolean;
+  contextOptions?: { wallTimeMs: number; monotonicTimeMs: number };
 }
 
 function writeTraceZipFixture(
@@ -224,8 +225,19 @@ function writeTraceZipFixture(
     networkEvents,
     traceRawLines = [],
     useDeflateCompression = false,
+    contextOptions,
   } = input;
-  const traceLines = [...traceEvents.map((event) => JSON.stringify(event)), ...traceRawLines];
+  const allTraceLines = [...traceEvents.map((event) => JSON.stringify(event)), ...traceRawLines];
+  if (contextOptions) {
+    allTraceLines.unshift(
+      JSON.stringify({
+        type: "context-options",
+        wallTime: contextOptions.wallTimeMs,
+        monotonicTime: contextOptions.monotonicTimeMs,
+      }),
+    );
+  }
+  const traceLines = allTraceLines;
   const resolvedNetworkEvents = networkEvents ?? [
     {
       type: "resource-snapshot",
@@ -527,11 +539,34 @@ describe("LlmReporter", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
     const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-network.zip", {
       requestBody: JSON.stringify({ request: "hello" }),
       responseBody: JSON.stringify({ response: "world" }),
+      contextOptions: { wallTimeMs: 1_767_225_600_000, monotonicTimeMs: 5000 },
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            time: 37,
+            _monotonicTime: 5500,
+            _resourceType: "fetch",
+            request: {
+              method: "POST",
+              url: "https://api.example.com/v1/orders",
+              postData: { mimeType: "application/json", _sha1: "request-body.json" },
+            },
+            response: {
+              status: 201,
+              content: { mimeType: "application/json", _sha1: "response-body.json" },
+            },
+            timings: { send: 10, wait: 20, receive: 7 },
+          },
+        },
+      ],
     });
     const result = createMockResult({
+      startTime: attemptStart,
       attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
     });
 
@@ -548,7 +583,7 @@ describe("LlmReporter", () => {
         url: "https://api.example.com/v1/orders",
         status: 201,
         durationMs: 37,
-        offsetMs: 37,
+        offsetMs: 500,
         resourceType: "fetch",
         timings: {
           sendMs: 10,
@@ -1876,11 +1911,13 @@ describe("LlmReporter", () => {
     const tracePath = writeTraceZipFixture(outputDirectory, "trace-timeline.zip", {
       requestBody: JSON.stringify({ request: "hello" }),
       responseBody: JSON.stringify({ response: "world" }),
+      contextOptions: { wallTimeMs: 1_767_225_600_000, monotonicTimeMs: 1000 },
       networkEvents: [
         {
           type: "resource-snapshot",
           snapshot: {
             time: 200,
+            _monotonicTime: 1200,
             _resourceType: "fetch",
             request: {
               method: "GET",
@@ -1891,7 +1928,7 @@ describe("LlmReporter", () => {
           },
         },
       ],
-      traceEvents: [{ type: "console", messageType: "error", text: "timeline error", time: 300 }],
+      traceEvents: [{ type: "console", messageType: "error", text: "timeline error", time: 1300 }],
     });
 
     const result = createMockResult({
@@ -1969,6 +2006,101 @@ describe("LlmReporter", () => {
 
     expect(attempt.timeline).toHaveLength(1);
     expect(attempt.timeline[0]).toMatchObject({ kind: "step", offsetMs: 50 });
+  });
+
+  it("falls back to startedDateTime for network offsetMs when _monotonicTime is absent", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-startedDateTime.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      contextOptions: { wallTimeMs: 1_767_225_600_000, monotonicTimeMs: 1000 },
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            startedDateTime: "2026-01-01T00:00:00.750Z",
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/fallback",
+            },
+            response: { status: 200 },
+          },
+        },
+      ],
+    });
+
+    const result = createMockResult({
+      startTime: attemptStart,
+      attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+    });
+
+    reporter.onTestEnd(createMockTestCase({}, { outputDirectory }), result);
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network[0]).toMatchObject({
+      method: "GET",
+      url: "https://api.example.com/fallback",
+      status: 200,
+      offsetMs: 750,
+    });
+  });
+
+  it("returns undefined offsetMs when no context-options anchor is available", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-no-anchor.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _monotonicTime: 5500,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/no-anchor",
+            },
+            response: { status: 200 },
+          },
+        },
+      ],
+      traceEvents: [
+        { type: "console", messageType: "error", text: "no anchor error", time: 12_345_678.123 },
+      ],
+    });
+
+    const result = createMockResult({
+      startTime: attemptStart,
+      attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+    });
+
+    reporter.onTestEnd(createMockTestCase({}, { outputDirectory }), result);
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network[0]).toMatchObject({
+      method: "GET",
+      url: "https://api.example.com/no-anchor",
+      status: 200,
+    });
+    expect(attempt.network[0]?.offsetMs).toBeUndefined();
+    expect(attempt.consoleMessages[0]).toMatchObject({
+      type: "error",
+      text: "no anchor error",
+    });
+    expect(attempt.consoleMessages[0]?.offsetMs).toBeUndefined();
   });
 
   it("omits failureArtifacts when no screenshot or video is present", () => {
