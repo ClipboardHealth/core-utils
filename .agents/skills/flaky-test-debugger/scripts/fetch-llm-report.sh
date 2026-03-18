@@ -63,11 +63,13 @@ if [[ -d "$out_dir" ]] && ls "$out_dir"/*.json &>/dev/null; then
 fi
 
 echo "Downloading to: ${zip_path}"
-gh api "repos/${owner}/${repo}/actions/artifacts/${artifact_id}/zip" > "$zip_path"
+tmp_zip="${zip_path}.tmp"
+gh api "repos/${owner}/${repo}/actions/artifacts/${artifact_id}/zip" > "$tmp_zip" && mv "$tmp_zip" "$zip_path"
 
 echo "Extracting to: ${out_dir}"
 mkdir -p "$out_dir"
 unzip -o "$zip_path" -d "$out_dir"
+rm -f "$zip_path"
 
 echo ""
 echo "Done! Files:"

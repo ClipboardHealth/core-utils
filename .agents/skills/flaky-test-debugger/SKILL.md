@@ -1,6 +1,6 @@
 ---
 name: flaky-test-debugger
-description: Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Use this skill when investigating intermittent Playwright test failures, triaging a flaky E2E tests, or fixing test instability.
+description: Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Use this skill when investigating intermittent Playwright test failures, triaging flaky E2E tests, or fixing test instability.
 ---
 
 Work through these phases in order. Skip phases only when you already have the information they produce.
@@ -158,7 +158,7 @@ Apply fixes in this order of priority:
 
 4. **Both** if user impact exists _and_ tests are fragile.
 
-## Phase 7: Verification
+## Phase 6: Verification
 
 Lint and type-check touched files
 

@@ -28,9 +28,9 @@ pup traces search --query="span_id:<SPAN_ID>" --from=30d --limit=1
 
 Display the span's details (service, operation, resource, duration, status, error if any) before proceeding to fetch the full trace.
 
-If the query returns no results, tell the user the span was not found in the APM Spans index. Continue to step 3 using the trace ID from the arguments.
+If the query returns no results, tell the user the span was not found in the APM Spans index. Continue to step 2 using the trace ID from the arguments.
 
-### 3. Fetch the full trace
+### 2. Fetch the full trace
 
 Use the `trace_id` to retrieve all spans in the trace:
 
@@ -40,7 +40,7 @@ pup traces search --query="trace_id:<TRACE_ID>" --from=30d --limit=1000
 
 If the trace has more than 1000 spans, the response will be truncated. In that case, narrow the query by adding filters like `service:<name>` or `status:error` to focus on relevant spans.
 
-### 4. Parse and summarize the results
+### 3. Parse and summarize the results
 
 The response JSON has this structure per span:
 
