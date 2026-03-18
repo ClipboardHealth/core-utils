@@ -23,6 +23,15 @@ function log(message: string) {
   process.stderr.write(`[processExitScript] ${message}\n`);
 }
 
+const logger = {
+  info: (...arguments_: unknown[]) => {
+    log(`[info] ${arguments_.join(" ")}`);
+  },
+  error: (...arguments_: unknown[]) => {
+    log(`[error] ${arguments_.join(" ")}`);
+  },
+};
+
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -48,10 +57,6 @@ async function main() {
   const mongooseInstance = await mongoose.connect(DATABASE_URL, { maxPoolSize: 2 });
 
   log("Creating BackgroundJobs...");
-  const logger = {
-    info: (...arguments_: unknown[]) => { log(`[info] ${arguments_.join(" ")}`); },
-    error: (...arguments_: unknown[]) => { log(`[error] ${arguments_.join(" ")}`); },
-  };
   const backgroundJobs = new BackgroundJobs({ dbConnection: mongooseInstance.connection, logger });
   await backgroundJobs.jobModel.createIndexes();
 
@@ -91,4 +96,6 @@ async function main() {
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
-void main().catch((error) => { log(`Error: ${error}`); });
+void main().catch((error) => {
+  log(`Error: ${error}`);
+});
