@@ -701,28 +701,33 @@ function monotonicToOffsetMs(
   return Math.round(wallTimeMs) - attemptStartTimeMs;
 }
 
-function extractMonotonicAnchor(lines: string[]): MonotonicAnchor | undefined {
-  for (const line of lines) {
-    if (!line.trim()) {
-      continue;
-    }
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    const record = asRecord(parsed);
-    if (record?.["type"] !== "context-options") {
-      continue;
-    }
-    const wallTimeMs = asNumber(record["wallTime"]);
-    const monotonicTimeMs = asNumber(record["monotonicTime"]);
-    if (wallTimeMs !== undefined && monotonicTimeMs !== undefined) {
-      return { wallTimeMs, monotonicTimeMs };
-    }
-    break;
+function extractMonotonicAnchor(traceContent: string): MonotonicAnchor | undefined {
+  const firstNewlineIndex = traceContent.indexOf("\n");
+  const firstLine = (
+    firstNewlineIndex === -1 ? traceContent : traceContent.slice(0, firstNewlineIndex)
+  ).trim();
+  if (!firstLine) {
+    return undefined;
   }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(firstLine);
+  } catch {
+    return undefined;
+  }
+
+  const record = asRecord(parsed);
+  if (record?.["type"] !== "context-options") {
+    return undefined;
+  }
+
+  const wallTimeMs = asNumber(record["wallTime"]);
+  const monotonicTimeMs = asNumber(record["monotonicTime"]);
+  if (wallTimeMs !== undefined && monotonicTimeMs !== undefined) {
+    return { wallTimeMs, monotonicTimeMs };
+  }
+
   return undefined;
 }
 
@@ -1004,7 +1009,7 @@ function parseTraceDiagnostics(tracePath: string, attemptStartTimeMs: number): T
     }
     try {
       const entryText = Buffer.from(entryContent).toString("utf8");
-      anchor = extractMonotonicAnchor(entryText.split("\n"));
+      anchor = extractMonotonicAnchor(entryText);
       if (anchor) {
         break;
       }

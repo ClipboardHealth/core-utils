@@ -227,9 +227,9 @@ function writeTraceZipFixture(
     useDeflateCompression = false,
     contextOptions,
   } = input;
-  const allTraceLines = [...traceEvents.map((event) => JSON.stringify(event)), ...traceRawLines];
+  const traceLines = [...traceEvents.map((event) => JSON.stringify(event)), ...traceRawLines];
   if (contextOptions) {
-    allTraceLines.unshift(
+    traceLines.unshift(
       JSON.stringify({
         type: "context-options",
         wallTime: contextOptions.wallTimeMs,
@@ -237,7 +237,6 @@ function writeTraceZipFixture(
       }),
     );
   }
-  const traceLines = allTraceLines;
   const resolvedNetworkEvents = networkEvents ?? [
     {
       type: "resource-snapshot",
