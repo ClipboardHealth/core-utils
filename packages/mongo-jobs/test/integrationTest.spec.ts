@@ -353,14 +353,22 @@ describe("Background Jobs Worker", () => {
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 123 });
 
     await waitForJobRunCount({ expectedCount: 1 });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(0);
+    await waitForJobCount({
+      backgroundJobs,
+      expectedCount: 0,
+      description: "remaining background jobs after first change stream job",
+    });
     expect(await JobRun.countDocuments()).toBe(1);
 
     await setTimeout(100);
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 555 });
 
     await waitForJobRunCount({ expectedCount: 2 });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(0);
+    await waitForJobCount({
+      backgroundJobs,
+      expectedCount: 0,
+      description: "remaining background jobs after second change stream job",
+    });
     expect(await JobRun.countDocuments()).toBe(2);
   });
 
