@@ -28,7 +28,7 @@ describe("Process exit after stop", () => {
   it(
     "should log running jobs when there are long running background jobs (longer than graceful shutdown period)",
     async () => {
-      // Job takes 10s, but shutdown timeout is only 1s
+      // Job takes 3s, but shutdown timeout is only 0.5s
       const shutdownTimeoutMs = "500";
       const jobDurationMs = "3000";
 
@@ -37,8 +37,6 @@ describe("Process exit after stop", () => {
         ["tsx", emulateScript, shutdownTimeoutMs, jobDurationMs],
         { timeout: EXIT_TIMEOUT_MS },
       );
-
-      process.stdout.write(stderr);
 
       expect(stderr).toContain(
         "Background Jobs: Stopped with pending jobs (Node.js process will not exit gracefully)",
