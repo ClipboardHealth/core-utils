@@ -752,6 +752,13 @@ function computeNetworkOffsetMs(
   return undefined;
 }
 
+function extractTraceId(
+  requestHeaders: Record<string, string> | undefined,
+  responseHeaders: Record<string, string> | undefined,
+): string | undefined {
+  return responseHeaders?.["x-datadog-trace-id"] ?? requestHeaders?.["x-datadog-trace-id"];
+}
+
 function buildNetworkRequestFromEvent(
   eventRecord: Record<string, unknown>,
   archiveEntries: Record<string, Uint8Array>,
@@ -823,10 +830,6 @@ function buildNetworkRequestFromEvent(
   );
   if (requestHeaders) {
     networkRequest.requestHeaders = requestHeaders;
-    const traceId = requestHeaders["x-datadog-trace-id"];
-    if (traceId) {
-      networkRequest.traceId = traceId;
-    }
   }
 
   const responseHeaders = extractAllowlistedHeaders(
@@ -835,6 +838,11 @@ function buildNetworkRequestFromEvent(
   );
   if (responseHeaders) {
     networkRequest.responseHeaders = responseHeaders;
+  }
+
+  const traceId = extractTraceId(requestHeaders, responseHeaders);
+  if (traceId) {
+    networkRequest.traceId = traceId;
   }
 
   const requestBody = readTraceResourceBody(archiveEntries, asRecord(requestRecord["postData"]));

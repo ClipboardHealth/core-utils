@@ -1902,6 +1902,87 @@ describe("LlmReporter", () => {
     expect(attempt.network[0]?.requestHeaders?.["x-datadog-trace-id"]).toBe("abc-trace-123");
   });
 
+  it("extracts traceId from x-datadog-trace-id response header", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-response-trace-id.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _resourceType: "fetch",
+            request: {
+              method: "PUT",
+              url: "https://api.example.com/update",
+            },
+            response: {
+              status: 409,
+              headers: [{ name: "x-datadog-trace-id", value: "resp-trace-456" }],
+            },
+          },
+        },
+      ],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network[0]?.traceId).toBe("resp-trace-456");
+    expect(attempt.network[0]?.responseHeaders?.["x-datadog-trace-id"]).toBe("resp-trace-456");
+    expect(attempt.network[0]?.requestHeaders).toBeUndefined();
+  });
+
+  it("prefers response traceId over request traceId", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-both-trace-ids.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/both",
+              headers: [{ name: "x-datadog-trace-id", value: "req-trace" }],
+            },
+            response: {
+              status: 200,
+              headers: [{ name: "x-datadog-trace-id", value: "resp-trace" }],
+            },
+          },
+        },
+      ],
+    });
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network[0]?.traceId).toBe("resp-trace");
+  });
+
   it("builds sorted timeline from steps, network, and console entries", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
