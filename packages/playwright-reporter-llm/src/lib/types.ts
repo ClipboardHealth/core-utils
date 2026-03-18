@@ -49,6 +49,7 @@ export interface FlatStep {
   category: string;
   durationMs: number;
   depth: number;
+  offsetMs: number;
   error?: string;
 }
 
@@ -72,6 +73,8 @@ export interface NetworkRequest {
   status: number;
   durationMs?: number;
   resourceType?: string;
+  offsetMs?: number;
+  traceId?: string;
   requestBody?: string;
   responseBody?: string;
   failureText?: string;
@@ -92,7 +95,40 @@ export interface FailureArtifacts {
 export interface ConsoleEntry {
   type: string;
   text: string;
+  offsetMs?: number;
 }
+
+export interface TimelineStepEntry {
+  kind: "step";
+  offsetMs: number;
+  title: string;
+  category: string;
+  durationMs: number;
+  depth: number;
+  error?: string;
+}
+
+export interface TimelineNetworkEntry {
+  kind: "network";
+  offsetMs: number;
+  method: string;
+  url: string;
+  status: number;
+  durationMs?: number;
+  resourceType?: string;
+  traceId?: string;
+  failureText?: string;
+  wasAborted?: boolean;
+}
+
+export interface TimelineConsoleEntry {
+  kind: "console";
+  offsetMs: number;
+  type: string;
+  text: string;
+}
+
+export type TimelineEntry = TimelineStepEntry | TimelineNetworkEntry | TimelineConsoleEntry;
 
 export interface AttemptResult {
   attempt: number;
@@ -108,6 +144,7 @@ export interface AttemptResult {
   attachments: TestAttachment[];
   network: NetworkRequest[];
   consoleMessages: ConsoleEntry[];
+  timeline: TimelineEntry[];
   failureArtifacts?: FailureArtifacts;
 }
 
@@ -130,6 +167,7 @@ export interface LlmTestEntry {
   error?: TestError;
   steps?: FlatStep[];
   network?: NetworkRequest[];
+  timeline: TimelineEntry[];
 }
 
 export interface LlmReporterOptions {
@@ -137,7 +175,7 @@ export interface LlmReporterOptions {
 }
 
 export interface LlmTestReport {
-  schemaVersion: 1;
+  schemaVersion: 2;
   timestamp: string;
   durationMs: number;
   summary: TestSummary;

@@ -38,7 +38,7 @@ describe("LLM Reporter E2E", () => {
   }, 90_000);
 
   it("has valid schema version and timestamp", () => {
-    expect(report.schemaVersion).toBe(1);
+    expect(report.schemaVersion).toBe(2);
     expect(report.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(report.durationMs).toBeGreaterThan(0);
   });

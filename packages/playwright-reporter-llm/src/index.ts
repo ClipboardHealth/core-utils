@@ -17,4 +17,8 @@ export type {
   TestLocation,
   TestStatus,
   TestSummary,
+  TimelineConsoleEntry,
+  TimelineEntry,
+  TimelineNetworkEntry,
+  TimelineStepEntry,
 } from "./lib/types";
