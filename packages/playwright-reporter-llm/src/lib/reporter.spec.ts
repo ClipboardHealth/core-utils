@@ -2015,7 +2015,6 @@ describe("LlmReporter", () => {
     const tracePath = writeTraceZipFixture(outputDirectory, "trace-startedDateTime.zip", {
       requestBody: JSON.stringify({ request: "hello" }),
       responseBody: JSON.stringify({ response: "world" }),
-      contextOptions: { wallTimeMs: 1_767_225_600_000, monotonicTimeMs: 1000 },
       networkEvents: [
         {
           type: "resource-snapshot",
