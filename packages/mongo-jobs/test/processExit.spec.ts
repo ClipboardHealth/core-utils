@@ -4,7 +4,7 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 const emulateScript = path.join(__dirname, "support", "emulateCompletionOfBackgroundJobs.ts");
-const EXIT_TIMEOUT_MS = 15_000;
+const EXIT_TIMEOUT_MS = 5000;
 
 describe("Process exit after stop", () => {
   it(
@@ -22,7 +22,7 @@ describe("Process exit after stop", () => {
 
       expect(stderr).toContain("Process should exit now.");
     },
-    EXIT_TIMEOUT_MS + 5000,
+    EXIT_TIMEOUT_MS + 1000,
   );
 
   it(
@@ -44,6 +44,6 @@ describe("Process exit after stop", () => {
         "Background Jobs: Stopped with pending jobs (Node.js process will not exit gracefully)",
       );
     },
-    EXIT_TIMEOUT_MS + 5000,
+    EXIT_TIMEOUT_MS + 1000,
   );
 });
