@@ -63,7 +63,7 @@ async function main() {
   log("Registering handler...");
   backgroundJobs.register(SimpleJob, "default");
 
-  log("Registering cron job (new run every second)...");
+  log("Registering cron job (new run every minute)...");
   await backgroundJobs.registerCron(SimpleJob, {
     group: "default",
     cronExpression: "* * * * *",
@@ -81,8 +81,8 @@ async function main() {
   log("Enqueueing job...");
   await backgroundJobs.enqueue(SimpleJob, { value: 1 });
 
-  log("Waiting for job to process and let cron run few times before stopping...");
-  await sleep(2000);
+  log("Waiting for job to process...");
+  await sleep(1000);
 
   log(`Stopping worker with ${shutdownTimeoutMs}ms timeout...`);
   await backgroundJobs.stop(shutdownTimeoutMs);
