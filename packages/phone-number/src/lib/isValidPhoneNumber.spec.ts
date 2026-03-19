@@ -8,6 +8,12 @@ const TEST_CASES = {
     { phoneNumber: "+1 212-555-1234", name: "phone number with +1 country code" },
     { phoneNumber: " (212) 555-1234 ", name: "phone number with leading/trailing whitespace" },
     { phoneNumber: "+44 20 7946 0958", name: "international phone number" },
+    { phoneNumber: "7872034310", name: "Puerto Rico phone number (787)" },
+    { phoneNumber: "+17872034310", name: "Puerto Rico phone number with +1 prefix" },
+    { phoneNumber: "6711234567", name: "Guam phone number (671)" },
+    { phoneNumber: "3401234567", name: "US Virgin Islands phone number (340)" },
+    { phoneNumber: "6841234567", name: "American Samoa phone number (684)" },
+    { phoneNumber: "6701234567", name: "Northern Mariana Islands phone number (670)" },
   ],
   invalid: [
     { phoneNumber: "invalid", name: "invalid phone number" },
