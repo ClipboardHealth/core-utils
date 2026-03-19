@@ -65,8 +65,8 @@ scripts/cognito-lookup.sh subs.txt results.csv cbh-staging-platform us-west-2_XX
 
 ## Troubleshooting
 
-| Error                    | Solution                                           |
-| ------------------------ | -------------------------------------------------- |
-| "Credentials expired"    | `aws sso login --profile cbh-production-platform`  |
-| "403 Forbidden" from API | Get fresh token from web app                       |
-| "Cannot access Cognito"  | Check IAM permissions or contact platform team     |
+| Error                    | Solution                                          |
+| ------------------------ | ------------------------------------------------- |
+| "Credentials expired"    | `aws sso login --profile cbh-production-platform` |
+| "403 Forbidden" from API | Get fresh token from web app                      |
+| "Cannot access Cognito"  | Check IAM permissions or contact platform team    |

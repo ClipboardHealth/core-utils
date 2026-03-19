@@ -2,7 +2,7 @@
 
 ## Core Rules
 
-- Test critical user flows only—not exhaustive scenarios
+- Test critical user flows only—not exhaustive scenarios; when in doubt, write a component test instead
 - Each test sets up its own data (no shared state between tests)
 - Mock feature flags and third-party services
 - Use user-centric locators (role, label, text)—avoid CSS selectors
