@@ -47,7 +47,7 @@ Run `scripts/check-prerequisites.sh` to verify. Requirements:
 | AWS profile `cbh-production-platform` | `aws sso login --profile cbh-production-platform`           |
 | `~/.cbh_token`                        | Get from web app dev tools → Network → Authorization header |
 
-See [docs/setup.md](docs/setup.md) for detailed setup.
+See [references/setup.md](references/setup.md) for detailed setup.
 
 ## Scripts
 
@@ -84,6 +84,6 @@ Highest score = `KEEP_AND_UPDATE`. Others = `DELETE`.
 
 ## Detailed Docs
 
-- [docs/setup.md](docs/setup.md) - Prerequisites setup guide
-- [docs/analysis-workflow.md](docs/analysis-workflow.md) - Pipeline details
-- [docs/fix-workflow.md](docs/fix-workflow.md) - Fix execution details
+- [references/setup.md](references/setup.md) - Prerequisites setup guide
+- [references/analysis-workflow.md](references/analysis-workflow.md) - Pipeline details
+- [references/fix-workflow.md](references/fix-workflow.md) - Fix execution details
