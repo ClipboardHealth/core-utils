@@ -550,6 +550,38 @@ await backgroundJobs.enqueue(
 - Uniqueness is enforced via MongoDB unique index on the `uniqueKey` field
 - Cron jobs automatically use unique keys based on schedule name and timestamp
 
+### Lifecycle hooks
+
+Use lifecycle hooks to run custom logic before jobs are enqueued or performed. Hooks are configured once at the `BackgroundJobs` constructor and apply to all jobs.
+
+- **`onBeforeEnqueue`**: Fires inside the producer span before the job is persisted. Use `setContext` to attach data to the job document under the `_context` key.
+- **`onBeforePerform`**: Fires inside the consumer span before the handler runs. The `data._context` field contains any context set during enqueue.
+
+#### Example: Datadog Data Streams Monitoring
+
+To set up [Datadog Data Streams Monitoring](https://docs.datadoghq.com/data_streams), use the lifecycle hooks to produce and consume checkpoints:
+
+```ts
+import { BackgroundJobs } from "@clipboard-health/mongo-jobs";
+import tracer from "dd-trace";
+
+const DSM_TYPE = "mongo-jobs";
+
+const backgroundJobs = new BackgroundJobs({
+  onBeforeEnqueue: ({ handlerName, setContext }) => {
+    const dsmContext: Record<string, string> = {};
+    tracer.dataStreamsCheckpointer.setProduceCheckpoint(DSM_TYPE, handlerName, dsmContext);
+    setContext("_dsmContext", dsmContext);
+  },
+  onBeforePerform: ({ handlerName, data }) => {
+    const dsmContext = data._context._dsmContext as Record<string, string> | undefined;
+    if (dsmContext) {
+      tracer.dataStreamsCheckpointer.setConsumeCheckpoint(DSM_TYPE, handlerName, dsmContext);
+    }
+  },
+});
+```
+
 ## Observability
 
 ### Metrics

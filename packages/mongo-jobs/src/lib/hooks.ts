@@ -6,5 +6,5 @@ export interface BeforeEnqueueEvent {
 
 export interface BeforePerformEvent {
   handlerName: string;
-  data: Readonly<Record<string, unknown>>;
+  data: Readonly<Record<string, unknown> & { _context: Record<string, unknown> }>;
 }

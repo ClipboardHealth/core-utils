@@ -233,7 +233,7 @@ export async function withConsumerTrace(
 
   onBeforePerform?.({
     handlerName: job.handlerName,
-    data: Object.freeze({ ...job.data }) as Readonly<Record<string, unknown>>,
+    data: Object.freeze({ ...job.data }) as BeforePerformEvent["data"],
   });
 
   await executeJobTrace(tracer, attributes, parentContext, callback);
