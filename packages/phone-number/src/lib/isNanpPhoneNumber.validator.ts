@@ -1,5 +1,5 @@
 import { registerDecorator, type ValidationOptions } from "class-validator";
-import { parsePhoneNumber } from "libphonenumber-js";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 import { isValidPhoneNumber } from "./isValidPhoneNumber";
 
@@ -35,7 +35,7 @@ export function IsNanpPhoneNumber(validationOptions?: ValidationOptions): Proper
             return false;
           }
 
-          const parsed = parsePhoneNumber(value, "US");
+          const parsed = parsePhoneNumberFromString(value.trim(), "US");
 
           return parsed?.countryCallingCode === NANP_COUNTRY_CALLING_CODE;
         },
