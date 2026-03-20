@@ -13,6 +13,7 @@ You are implementing a UI from a Figma design in the CBH Admin Frontend codebase
 Extract `fileKey` and `nodeId` from the Figma URL and call `mcp__claude_ai_Figma__get_design_context`.
 
 URL patterns:
+
 - `figma.com/design/:fileKey/:fileName?node-id=:nodeId` → convert `-` to `:` in nodeId
 - `figma.com/design/:fileKey/branch/:branchKey/:fileName` → use branchKey as fileKey
 
@@ -23,6 +24,7 @@ Always include `clientFrameworks: "react"` and `clientLanguages: "typescript"`.
 The Figma MCP returns React+Tailwind reference code. **NEVER use Tailwind.** This output is a reference only.
 
 Before writing any code:
+
 1. Read the screenshot returned by the MCP carefully
 2. **Ignore hidden elements** — Figma nodes with `visible: false` or `opacity: 0` are design-time helpers (e.g., bounding boxes, redline guides, hidden variants). Do NOT implement them.
 3. Read any `data-annotations` attributes — they contain implementation hints (e.g., menu items, behaviors)
@@ -36,31 +38,32 @@ Before writing any code:
 
 ### Component Mapping
 
-| Figma Element | Codebase Component | Import Path |
-|---|---|---|
-| Button (any variant) | `<Button>` | `redesign/components/Button` |
-| Icon-only button | `<IconButton>` | `redesign/components/IconButton` |
-| Icon | `<Icon>` | `redesign/components/Icon` |
-| Avatar / profile image | `<Avatar>` | `redesign/components/Avatar` |
-| Text / label | `<Text>` | `redesign/components/Text` |
-| Heading | `<Title>` | `redesign/components/Title` |
-| Chip / filter pill | `<Chip>` | `redesign/components/Chip` |
-| Tag / status badge | `<Tag>` | `redesign/components/Tag` |
-| Pill | `<Pill>` | `redesign/components/Pill` |
-| Input field | `<TextInput>` | `redesign/components/TextInput` |
-| Checkbox | `<Checkbox>` | `redesign/components/Checkbox` |
-| Tabs | `<Tabs>` + `<Tab>` | `redesign/components/Tabs` |
-| Modal/dialog (desktop) | `<Dialog>` | `redesign/components/Dialog` |
+| Figma Element             | Codebase Component   | Import Path                            |
+| ------------------------- | -------------------- | -------------------------------------- |
+| Button (any variant)      | `<Button>`           | `redesign/components/Button`           |
+| Icon-only button          | `<IconButton>`       | `redesign/components/IconButton`       |
+| Icon                      | `<Icon>`             | `redesign/components/Icon`             |
+| Avatar / profile image    | `<Avatar>`           | `redesign/components/Avatar`           |
+| Text / label              | `<Text>`             | `redesign/components/Text`             |
+| Heading                   | `<Title>`            | `redesign/components/Title`            |
+| Chip / filter pill        | `<Chip>`             | `redesign/components/Chip`             |
+| Tag / status badge        | `<Tag>`              | `redesign/components/Tag`              |
+| Pill                      | `<Pill>`             | `redesign/components/Pill`             |
+| Input field               | `<TextInput>`        | `redesign/components/TextInput`        |
+| Checkbox                  | `<Checkbox>`         | `redesign/components/Checkbox`         |
+| Tabs                      | `<Tabs>` + `<Tab>`   | `redesign/components/Tabs`             |
+| Modal/dialog (desktop)    | `<Dialog>`           | `redesign/components/Dialog`           |
 | Modal/dialog (responsive) | `<ResponsiveDialog>` | `redesign/components/ResponsiveDialog` |
-| Bottom sheet (mobile) | `<BottomSheet>` | `redesign/components/BottomSheet` |
-| Side panel | `<SidePanel>` | `redesign/components/SidePanel` |
-| Drawer (full-height) | `<Drawer>` | `redesign/components/Drawer` |
-| Divider line | `<Divider>` | `redesign/components/Divider` |
-| Loading spinner | `<Loader>` | `redesign/components/Loader` |
-| Notification dot | `<Badge>` | `redesign/components/Badge` |
-| Data table | `<DataGrid>` | `redesign/components/DataGrid` |
+| Bottom sheet (mobile)     | `<BottomSheet>`      | `redesign/components/BottomSheet`      |
+| Side panel                | `<SidePanel>`        | `redesign/components/SidePanel`        |
+| Drawer (full-height)      | `<Drawer>`           | `redesign/components/Drawer`           |
+| Divider line              | `<Divider>`          | `redesign/components/Divider`          |
+| Loading spinner           | `<Loader>`           | `redesign/components/Loader`           |
+| Notification dot          | `<Badge>`            | `redesign/components/Badge`            |
+| Data table                | `<DataGrid>`         | `redesign/components/DataGrid`         |
 
 ### Button Variants
+
 - Figma solid blue button → `variant="primary"`
 - Figma dark/black button → `variant="secondary"`
 - Figma outlined button → `variant="outlined"`
@@ -70,15 +73,19 @@ Before writing any code:
 - Figma ghost/no-border button → `variant="muted"`
 
 ### Button Sizes
+
 - Figma small (24px height) → `size="small"`
 - Figma medium (38px height) → `size="medium"`
 - Figma large (54px height) → `size="large"`
 
 ### Button with icon
+
 Use `startIconType` or `endIconType` prop with the icon name from the Icon type registry.
 
 ### Icon Names
+
 Before using an icon, verify it exists in `src/appV2/redesign/components/Icon.types.tsx`. Search for the closest match. Common mappings:
+
 - Chain link / hyperlink icon → `"hyperlink"`
 - Key / credential icon → `"key-outline"`
 - Three dots horizontal → `"ellipsis"`
@@ -110,6 +117,7 @@ Before using an icon, verify it exists in `src/appV2/redesign/components/Icon.ty
 - Cogwheel / settings → `"cogwheel"`
 
 ### Text Variants
+
 - Figma 24px → `variant="h5"` (x-large)
 - Figma 18px → `variant="h6"` (large)
 - Figma 16px → `variant="body1"` (normal, default)
@@ -236,10 +244,10 @@ Before using an icon, verify it exists in `src/appV2/redesign/components/Icon.ty
 
 ## Step 7: Breakpoints
 
-| Name | Width | Hook |
-|---|---|---|
-| Mobile | < 640px (md) | `useIsMobile()` |
-| Tablet | < 1024px (lg) | `useIsTablet()` |
+| Name    | Width          | Hook             |
+| ------- | -------------- | ---------------- |
+| Mobile  | < 640px (md)   | `useIsMobile()`  |
+| Tablet  | < 1024px (lg)  | `useIsTablet()`  |
 | Desktop | >= 1024px (lg) | `useIsDesktop()` |
 
 Mobile renders BottomSheet for overlays. Desktop renders SidePanel/Dialog.
@@ -247,6 +255,7 @@ Mobile renders BottomSheet for overlays. Desktop renders SidePanel/Dialog.
 ## Step 8: Implementation Checklist
 
 Before writing code, confirm:
+
 - [ ] Fetched Figma design context with screenshot
 - [ ] Identified ALL existing components to reuse
 - [ ] Mapped ALL Figma tokens to theme tokens
@@ -255,6 +264,7 @@ Before writing code, confirm:
 - [ ] Identified responsive differences (mobile vs desktop)
 
 After writing code, verify:
+
 - [ ] No hardcoded colors (grep for `#`, `rgb`, `rgba` in new code)
 - [ ] No JSX local variables — only inline JSX or extracted components
 - [ ] No Tailwind classes
