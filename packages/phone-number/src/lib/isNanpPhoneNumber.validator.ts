@@ -1,14 +1,18 @@
 import { registerDecorator, type ValidationOptions } from "class-validator";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 import { isValidPhoneNumber } from "./isValidPhoneNumber";
+
+const NANP_COUNTRY_CALLING_CODE = "1";
 
 /**
  * Validates that a phone number is a valid NANP (North American Numbering Plan) phone number.
  *
  * Unlike class-validator's `@IsPhoneNumber("US")`, this validator does not perform a strict
- * country-code match. It uses `libphonenumber-js`'s `isValidPhoneNumber` with `defaultCountry: "US"`,
- * which correctly accepts phone numbers from US territories (Puerto Rico, Guam, US Virgin Islands,
- * American Samoa, Northern Mariana Islands) in addition to mainland US numbers.
+ * country-code match. It validates that the number is both a valid phone number and belongs to
+ * the NANP region (country calling code "1"), which correctly accepts phone numbers from US
+ * territories (Puerto Rico, Guam, US Virgin Islands, American Samoa, Northern Mariana Islands)
+ * in addition to mainland US and Canadian numbers.
  */
 export function IsNanpPhoneNumber(validationOptions?: ValidationOptions): PropertyDecorator {
   return function (object: object, propertyName: string | symbol): void {
@@ -27,7 +31,13 @@ export function IsNanpPhoneNumber(validationOptions?: ValidationOptions): Proper
             return false;
           }
 
-          return isValidPhoneNumber({ phoneNumber: value });
+          if (!isValidPhoneNumber({ phoneNumber: value })) {
+            return false;
+          }
+
+          const parsed = parsePhoneNumber(value, "US");
+
+          return parsed?.countryCallingCode === NANP_COUNTRY_CALLING_CODE;
         },
       },
     });

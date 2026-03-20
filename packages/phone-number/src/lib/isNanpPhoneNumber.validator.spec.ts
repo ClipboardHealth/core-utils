@@ -26,7 +26,9 @@ describe("IsNanpPhoneNumber", () => {
     { phone: "6701234567", name: "Northern Mariana Islands phone number (670)" },
   ])("should accept a valid $name", async ({ phone }) => {
     const dto = createDto(phone);
+
     const errors = await validate(dto);
+
     expect(errors).toHaveLength(0);
   });
 
@@ -36,14 +38,30 @@ describe("IsNanpPhoneNumber", () => {
     { phone: "", name: "empty string" },
   ])("should reject an invalid phone number ($name)", async ({ phone }) => {
     const dto = createDto(phone);
+
     const errors = await validate(dto);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.constraints).toHaveProperty("IsNanpPhoneNumber");
+  });
+
+  it.each([
+    { phone: "+442079460958", name: "UK phone number" },
+    { phone: "+4930123456", name: "German phone number" },
+  ])("should reject a non-NANP international number ($name)", async ({ phone }) => {
+    const dto = createDto(phone);
+
+    const errors = await validate(dto);
+
     expect(errors).toHaveLength(1);
     expect(errors[0]?.constraints).toHaveProperty("IsNanpPhoneNumber");
   });
 
   it("should reject non-string values", async () => {
     const dto = createDto(12_345);
+
     const errors = await validate(dto);
+
     expect(errors).toHaveLength(1);
   });
 });
