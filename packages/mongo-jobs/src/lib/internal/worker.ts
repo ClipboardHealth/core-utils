@@ -1,5 +1,6 @@
 import type mongoose from "mongoose";
 
+import type { BeforePerformEvent } from "../hooks";
 import type { BackgroundJobType } from "../job";
 import { withConsumerTrace, withInternalsTrace } from "../tracing";
 import type { Cron } from "./cron";
@@ -29,6 +30,7 @@ interface ConstructorOptions extends WorkerOptions {
   jobsRepo: JobsRepository;
   registry: Registry;
   cron: Cron;
+  onBeforePerform?: (event: BeforePerformEvent) => void;
 }
 
 const MILLIS_IN_SECOND = 1000;
@@ -102,6 +104,7 @@ export class Worker {
   private readonly registry: Registry;
   private readonly cron: Cron;
   private readonly logger: Logger | undefined;
+  private readonly onBeforePerform: ((event: BeforePerformEvent) => void) | undefined;
   private readonly queueConsumer: QueueConsumer;
 
   private unlockJobsInterval?: NodeJS.Timeout;
@@ -123,6 +126,7 @@ export class Worker {
     this.registry = options.registry;
     this.cron = options.cron;
     this.logger = options.logger;
+    this.onBeforePerform = options.onBeforePerform;
 
     const queues = this.registry.getQueuesForGroups(options.groups);
 
@@ -168,12 +172,16 @@ export class Worker {
   public async runJobHandler(job: BackgroundJobType<unknown>) {
     this.reportExecutionDelay(job);
 
-    await withConsumerTrace(job, async () => {
-      const { handlerName } = job;
-      const { handler } = this.registry.getRegisteredHandler(handlerName);
-      const { data } = job;
-      await handler.perform(data, job);
-    });
+    await withConsumerTrace(
+      job,
+      async () => {
+        const { handlerName } = job;
+        const { handler } = this.registry.getRegisteredHandler(handlerName);
+        const { data } = job;
+        await handler.perform(data, job);
+      },
+      this.onBeforePerform,
+    );
   }
 
   public async stop(waitTime?: number) {

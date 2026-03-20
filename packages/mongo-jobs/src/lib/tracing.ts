@@ -10,6 +10,7 @@ import {
 } from "@opentelemetry/api";
 
 import type { HandlerInterface } from "./handler";
+import type { BeforeEnqueueEvent, BeforePerformEvent } from "./hooks";
 import type { BackgroundJobType } from "./job";
 
 export interface TraceHeaders {
@@ -123,6 +124,7 @@ export async function withProducerTrace<T>(
   handler: HandlerInterface<T>,
   data: T,
   callback: (data: T & TraceHeaders) => Promise<BackgroundJobType<T> | undefined>,
+  onBeforeEnqueue?: (event: BeforeEnqueueEvent) => void,
 ): Promise<BackgroundJobType<T> | undefined> {
   const tracer = trace.getTracer(TRACER_NAME);
   const handlerName = handler.name;
@@ -139,7 +141,23 @@ export async function withProducerTrace<T>(
       try {
         // Inject trace context for distributed tracing
         const traceHeaders = injectTraceHeaders();
-        const job = await callback({ ...data, _traceHeaders: traceHeaders });
+
+        // Allow callers to add context to the job data that can be later picked up on the consumer
+        let context: Record<string, unknown> = {};
+        onBeforeEnqueue?.({
+          handlerName,
+          data: Object.freeze({ ...data }) as Readonly<Record<string, unknown>>,
+          setContext: (key: string, value: unknown) => {
+            context = { ...context, [key]: value };
+          },
+        });
+
+        const params: T & TraceHeaders = {
+          ...data,
+          _context: { ...context },
+          _traceHeaders: traceHeaders,
+        };
+        const job = await callback(params);
 
         if (job) {
           span.setAttributes(producerAttributes(job));
@@ -195,6 +213,7 @@ async function executeJobTrace(
 export async function withConsumerTrace(
   job: BackgroundJobType<unknown>,
   callback: () => Promise<void>,
+  onBeforePerform?: (event: BeforePerformEvent) => void,
 ): Promise<void> {
   const tracer = trace.getTracer(TRACER_NAME);
   const attributes = consumerAttributes(job);
@@ -211,6 +230,11 @@ export async function withConsumerTrace(
     const jobData = job.data || {};
     parentContext = extractTraceContext(jobData._traceHeaders);
   }
+
+  onBeforePerform?.({
+    handlerName: job.handlerName,
+    data: Object.freeze({ ...job.data }) as Readonly<Record<string, unknown>>,
+  });
 
   await executeJobTrace(tracer, attributes, parentContext, callback);
 }

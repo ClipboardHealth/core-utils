@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+import type { BeforeEnqueueEvent, BeforePerformEvent } from "./hooks";
 import { Cron, type RegisterCronOptions } from "./internal/cron";
 import {
   type EnqueueOptions,
@@ -30,6 +31,8 @@ export interface ConstructorOptions {
   dbConnection?: mongoose.Connection;
   metricsReporter?: MetricsReporter;
   allowHandlerOverride?: boolean;
+  onBeforeEnqueue?: (event: BeforeEnqueueEvent) => void;
+  onBeforePerform?: (event: BeforePerformEvent) => void;
 }
 
 export class BackgroundJobs {
@@ -41,10 +44,12 @@ export class BackgroundJobs {
   private readonly connection: mongoose.Connection;
   private readonly metrics: Metrics;
   private readonly cron: Cron;
+  private readonly onBeforePerform: ((event: BeforePerformEvent) => void) | undefined;
   private worker?: Worker;
 
   public constructor(options: ConstructorOptions = {}) {
     this.logger = options.logger;
+    this.onBeforePerform = options.onBeforePerform;
     this.connection = options.dbConnection ?? mongoose.connection;
     this.jobModel = this.connection.model<BackgroundJobType<unknown>>(
       BackgroundJobSchemaName,
@@ -60,7 +65,11 @@ export class BackgroundJobs {
     const metricsReporter = options.metricsReporter ?? defaultMetricsReporter();
     this.metrics = new Metrics(metricsReporter, this.jobModel, this.registry);
 
-    this.jobsRepo = new JobsRepository({ jobModel: this.jobModel, registry: this.registry });
+    this.jobsRepo = new JobsRepository({
+      jobModel: this.jobModel,
+      registry: this.registry,
+      ...(options.onBeforeEnqueue && { onBeforeEnqueue: options.onBeforeEnqueue }),
+    });
     this.cron = new Cron({
       registry: this.registry,
       scheduleModel: this.scheduleModel,
@@ -129,6 +138,7 @@ export class BackgroundJobs {
       logger: this.logger,
       metrics: this.metrics,
       jobsRepo: this.jobsRepo,
+      ...(this.onBeforePerform && { onBeforePerform: this.onBeforePerform }),
       ...workerOptions,
     });
   }

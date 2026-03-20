@@ -1,8 +1,9 @@
 import type { ChangeStream, ClientSession } from "mongodb";
 import type mongoose from "mongoose";
 
+import type { BeforeEnqueueEvent } from "../hooks";
 import type { BackgroundJobType, JobUniqueOptions } from "../job";
-import { withInternalsTrace, withProducerTrace } from "../tracing";
+import { type TraceHeaders, withInternalsTrace, withProducerTrace } from "../tracing";
 import { isMongoDuplicateError } from "./mongoDuplicate";
 import type { AnyHandlerClassOrInstance, RegisteredHandlerType, Registry } from "./registry";
 
@@ -31,6 +32,7 @@ interface CreateJobParameters<T> extends EnqueueOptions {
 interface ConstructorOptions {
   registry: Registry;
   jobModel: mongoose.Model<BackgroundJobType<unknown>>;
+  onBeforeEnqueue?: (event: BeforeEnqueueEvent) => void;
 }
 
 function normalizeUniqueOptions(
@@ -49,10 +51,12 @@ function normalizeUniqueOptions(
 export class JobsRepository {
   private readonly registry: Registry;
   private readonly jobModel: mongoose.Model<BackgroundJobType<unknown>>;
+  private readonly onBeforeEnqueue: ((event: BeforeEnqueueEvent) => void) | undefined;
 
   constructor(options: ConstructorOptions) {
     this.registry = options.registry;
     this.jobModel = options.jobModel;
+    this.onBeforeEnqueue = options.onBeforeEnqueue;
   }
 
   public async createJob<T>(parameters: CreateJobParameters<T>) {
@@ -68,7 +72,7 @@ export class JobsRepository {
     const uniqueOptions = normalizeUniqueOptions(unique);
     const uniqueKey = uniqueOptions?.enqueuedKey;
 
-    return await withProducerTrace(handler, data, async (dataWithTrace) => {
+    const callback = async <T>(dataWithTrace: T & TraceHeaders) => {
       try {
         if (session && uniqueKey) {
           // Checking for existence here to prevent DuplicateKeyError from aborting the existing transaction
@@ -107,7 +111,9 @@ export class JobsRepository {
 
         throw error;
       }
-    });
+    };
+
+    return await withProducerTrace(handler, data, callback, this.onBeforeEnqueue);
   }
 
   public async fetchAndLockNextJob(
