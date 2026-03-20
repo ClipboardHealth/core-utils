@@ -9,14 +9,12 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "2.2.50",
-    "class-validator": "0.14.1",
     "libphonenumber-js": "1.12.40"
   },
   "keywords": [],
   "license": "MIT",
   "main": "./src/index.js",
   "peerDependencies": {
-    "class-validator": "^0.14",
     "libphonenumber-js": "^1.12"
   },
   "publishConfig": {
