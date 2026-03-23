@@ -15,6 +15,9 @@ Clipboard's core development tools.
   - [learn-from-session](#learn-from-session)
   - [seed-data](#seed-data)
   - [unresolved-pr-comments](#unresolved-pr-comments)
+  - [write-bug-ticket](#write-bug-ticket)
+  - [write-feature-ticket](#write-feature-ticket)
+  - [write-tech-debt-ticket](#write-tech-debt-ticket)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
   - [Keeping in sync](#keeping-in-sync)
@@ -76,6 +79,18 @@ Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HC
 ### unresolved-pr-comments
 
 Fetch and analyze unresolved review comments from a GitHub pull request. Invoke with `/unresolved-pr-comments` or `/unresolved-pr-comments <pr-number>`.
+
+### write-bug-ticket
+
+Draft Linear bug report tickets from user reports, customer complaints, monitoring alerts, or production investigation. Searches Datadog for evidence, checks for duplicates in Linear, and presents a draft for review before creating. Invoke with `/write-bug-ticket`.
+
+### write-feature-ticket
+
+Draft Linear feature request tickets from conversation context, descriptions, or code/PR analysis. Clarifies the problem, assesses scope for sub-issue decomposition, and presents a draft for review before creating. Invoke with `/write-feature-ticket`.
+
+### write-tech-debt-ticket
+
+Draft Linear tech debt tickets from code review, PR comments, codebase audits, or post-incident findings. Classifies debt type, gathers evidence (Datadog for perf/reliability, git history for maintainability), assesses interest and risk, and presents a draft for review before creating. Invoke with `/write-tech-debt-ticket`.
 
 ## Syncing external plugins
 
