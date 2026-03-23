@@ -7,7 +7,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "type-fest": "5.4.4"
+    "type-fest": "5.5.0"
   },
   "keywords": [
     "engine",
