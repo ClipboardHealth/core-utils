@@ -1,4 +1,4 @@
-import { isNanpPhoneNumber } from "./isNanpPhoneNumber";
+import { isUsPhoneNumber } from "./isUsPhoneNumber";
 
 const TEST_CASES = {
   valid: [
@@ -16,27 +16,29 @@ const TEST_CASES = {
     { phoneNumber: "notaphone", name: "non-numeric" },
     { phoneNumber: "", name: "empty string" },
   ],
-  nonNanp: [
+  nonUs: [
+    { phoneNumber: "+14165551234", name: "Canadian phone number (Toronto 416)" },
+    { phoneNumber: "+16045551234", name: "Canadian phone number (Vancouver 604)" },
     { phoneNumber: "+442079460958", name: "UK phone number" },
     { phoneNumber: "+4930123456", name: "German phone number" },
   ],
 } as const;
 
-describe("isNanpPhoneNumber", () => {
+describe("isUsPhoneNumber", () => {
   it.each(TEST_CASES.valid)("should return true for $name", ({ phoneNumber }) => {
-    const actual = isNanpPhoneNumber({ phoneNumber });
+    const actual = isUsPhoneNumber({ phoneNumber });
 
     expect(actual).toBe(true);
   });
 
   it.each(TEST_CASES.invalid)("should return false for $name", ({ phoneNumber }) => {
-    const actual = isNanpPhoneNumber({ phoneNumber });
+    const actual = isUsPhoneNumber({ phoneNumber });
 
     expect(actual).toBe(false);
   });
 
-  it.each(TEST_CASES.nonNanp)("should return false for non-NANP $name", ({ phoneNumber }) => {
-    const actual = isNanpPhoneNumber({ phoneNumber });
+  it.each(TEST_CASES.nonUs)("should return false for non-US $name", ({ phoneNumber }) => {
+    const actual = isUsPhoneNumber({ phoneNumber });
 
     expect(actual).toBe(false);
   });
