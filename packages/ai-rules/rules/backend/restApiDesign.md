@@ -91,6 +91,26 @@ GET /shifts?filter[verified]=true&sort=startDate,-urgency&page[cursor]=abc&page[
 - Add contracts to `contract-<microservice-name>` package
 - Use `ts-rest` with composable Zod schemas (enforced by `enforce-ts-rest-in-controllers`)
 
+### Schema rules
+
+Use helpers from `@clipboard-health/contract-core` instead of raw Zod methods in contract packages:
+
+- Use `dateTimeSchema()` for date fields — not `z.coerce.date()` (too permissive), `z.string().datetime()` (gives string, not Date), or `z.date()` (won't parse JSON strings)
+- Use `requiredEnumWithFallback`/`optionalEnumWithFallback` for enums — not bare `z.enum()` (breaks old mobile clients when new values are added) or `z.enum().catch()` (doesn't compose with `.optional()`)
+- Do not use `.default()` in contracts — client and server can drift on defaults. Set defaults in the service layer.
+- Name schemas with a `Schema` suffix: `ShiftAttributeSchema`, not `shiftAttribute`
+- Export at the DTO boundary (request/response schemas), not every intermediate schema
+- Compose relationships from shared schemas — don't redefine `type` literals per contract
+
+### `parsedApi.ts` vs `api.ts`
+
+Frontend repos have two API layers:
+
+- **`api.ts`** (legacy) — does not parse responses through Zod schemas. Inferred types say `Date` for `dateTimeSchema()` fields but the runtime value is still a string. Zod transforms (`.transform()`, `dateTimeSchema()`, enum fallbacks) produce **incorrect types at runtime**.
+- **`parsedApi.ts`** — parses both inputs (`z.input`) and outputs (`z.output`) through schemas. Types match runtime values.
+
+Use `parsedApi.ts` for all new API calls. However, `parsedApi.ts` means invalid contract schemas will fail at runtime — ensure contracts are forwards-compatible. Do not use `parsedApi.ts` if the contract contains bare `z.enum()` values that the backend may extend, as new enum values will cause parse failures on old clients. Migrate bare `z.enum()` to `requiredEnumWithFallback`/`optionalEnumWithFallback` first.
+
 ## Data Transfer
 
 - Do not return database models through APIs or events; map to DTOs exposing only what clients need

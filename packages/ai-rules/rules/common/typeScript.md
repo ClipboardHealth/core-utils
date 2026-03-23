@@ -95,6 +95,7 @@ throw new ServiceError({
 - Use `@clipboard-health/date-time` for all user-facing date formatting and all timezone-dependent operations (start-of-day-in-timezone, business hours, `setHours`, etc.) with an explicit `timeZone` parameter
 - Use `date-fns` only for timezone-agnostic timestamp math and parsing
 - Never import `date-fns-tz`, `@date-fns/tz`, `moment`, or `moment-timezone`
+- In contracts, use `dateTimeSchema()` from `contract-core` for date fields — not `z.coerce.date()`, `z.string().datetime()`, or `z.date()`
 
 ## Internal Libraries
 
