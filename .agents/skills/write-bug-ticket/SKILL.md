@@ -9,6 +9,10 @@ Draft Linear bug report tickets that clearly document symptoms and provide Datad
 
 ## Process
 
+> **Investigation first?** If the bug needs research before a ticket can be written (unclear root cause, insufficient evidence, vague symptom), use the `investigate-ticket` skill first. It will hand off back here with structured findings.
+>
+> **Already investigated?** If the conversation already contains investigation findings (Datadog links, code path traces, root cause analysis), treat that as sufficient context — don't re-ask for information that's already been established.
+
 1. **Gather context** — assess what's known from conversation, user input, customer complaints, or ongoing investigation
 2. **Search Datadog** — ALWAYS search Datadog proactively before drafting, even if the user didn't mention it. Use whatever clues are available: error messages, user IDs, timeframes, service names, endpoint paths. Search logs, RUM sessions, errors, monitors, and spans. If searches yield nothing useful, note "No relevant monitoring data found" and proceed.
 3. **Check for duplicates** — search Linear for existing tickets describing the same symptom. If a match exists, surface it to the user.
