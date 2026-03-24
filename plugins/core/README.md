@@ -38,6 +38,38 @@ Clipboard's core development tools.
 /plugin install core@clipboard --scope user
 ```
 
+### How plugins work
+
+Installing a plugin caches its files to `~/.claude/plugins/cache/` and adds it to a settings file. Claude Code auto-discovers all skills and agents from the plugin at runtime — no manual registration needed.
+
+The `--scope` flag controls where the plugin is enabled:
+
+| Scope     | Settings file                 | Shared?         | Use case                                         |
+| --------- | ----------------------------- | --------------- | ------------------------------------------------ |
+| `user`    | `~/.claude/settings.json`     | No              | Personal — available in all your projects        |
+| `project` | `.claude/settings.json`       | Yes (committed) | Team-wide — everyone who clones the repo gets it |
+| `local`   | `.claude/settings.local.json` | No (gitignored) | Personal, project-specific                       |
+
+**For this repo:** The plugin is already enabled in `.claude/settings.json`, so anyone working in core-utils gets it automatically.
+
+**For other repos:** Engineers install with `--scope user` to get the skills everywhere, or `--scope project` to share with the team.
+
+### Testing a branch before merge
+
+Point the marketplace at a branch with `#branch-name`:
+
+```bash
+/plugin marketplace add ClipboardHealth/core-utils#branch-name
+/plugin install core@clipboard --scope user
+```
+
+Switch back to main after testing:
+
+```bash
+/plugin marketplace add ClipboardHealth/core-utils
+/plugin install core@clipboard --scope user
+```
+
 ## Prerequisites
 
 - [GitHub CLI](https://cli.github.com/) (`gh`) — used by CI check and PR skills
