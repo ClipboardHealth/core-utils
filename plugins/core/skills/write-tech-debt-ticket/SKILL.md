@@ -74,6 +74,7 @@ Each: High/Medium/Low with a one-line justification backed by evidence.
 - **Always ask for team/assignee.** Never guess.
 - **Tech debt only.** Redirect bugs to `write-bug-ticket`, features to `write-feature-ticket`.
 - **Clean titles.** No bracket prefixes like `[TECH DEBT]` or `[Perf]`. Describe the debt.
+- **Always document the repository.** Every ticket must specify which repo contains the debt. If the debt spans multiple repos, flag this to the user — it likely needs to be split into separate tickets, one per repo.
 
 ## Ticket Format
 

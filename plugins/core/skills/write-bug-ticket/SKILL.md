@@ -31,6 +31,7 @@ Draft Linear bug report tickets that clearly document symptoms and provide Datad
 - **Always ask for team/assignee.** NEVER guess or assign a team. Ask the user.
 - **Bug reports only.** Redirect feature requests to the `write-feature-ticket` skill.
 - **Clean titles.** No bracket prefixes like `[BUG]`, `[Mobile]`, `[API]`. Just describe the symptom.
+- **Always document the repository.** Every ticket must specify which repo the bug lives in. If investigation reveals the bug spans multiple repos, flag this to the user — it likely needs to be split into separate tickets, one per repo.
 
 ## Ticket Format
 

@@ -28,6 +28,7 @@ Draft Linear feature request tickets that describe what users need and why — n
 - **One ticket, one PR.** If work requires multiple PRs (backend + frontend, sequenced migrations, independent workstreams), create a parent ticket with sub-issues. Note blocking relationships explicitly.
 - **Feature requests only.** Redirect bug reports to `write-bug-ticket`, tech debt to `write-tech-debt-ticket`.
 - **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves. If the user requests changes, revise and re-present before creating.
+- **Always document the repository.** Every ticket must specify which repo the work belongs in. If the feature spans multiple repos, flag this to the user — it likely needs to be split into separate tickets (or parent + sub-issues), one per repo.
 
 ## Ticket Format
 
