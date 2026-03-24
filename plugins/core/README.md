@@ -15,9 +15,13 @@ Clipboard's core development tools.
   - [learn-from-session](#learn-from-session)
   - [seed-data](#seed-data)
   - [unresolved-pr-comments](#unresolved-pr-comments)
+  - [investigate-ticket](#investigate-ticket)
   - [write-bug-ticket](#write-bug-ticket)
   - [write-feature-ticket](#write-feature-ticket)
   - [write-tech-debt-ticket](#write-tech-debt-ticket)
+- [Agents](#agents)
+  - [hld-architect](#hld-architect)
+  - [hld-reviewer](#hld-reviewer)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
   - [Keeping in sync](#keeping-in-sync)
@@ -80,6 +84,10 @@ Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HC
 
 Fetch and analyze unresolved review comments from a GitHub pull request. Invoke with `/unresolved-pr-comments` or `/unresolved-pr-comments <pr-number>`.
 
+### investigate-ticket
+
+Research-only workflow for bugs, incidents, or issues. Gathers context, searches Datadog, traces code paths, and presents structured findings with evidence links. Hands off to a ticket-writing skill or implementation. Invoke with `/investigate-ticket`.
+
 ### write-bug-ticket
 
 Draft Linear bug report tickets from user reports, customer complaints, monitoring alerts, or production investigation. Searches Datadog for evidence, checks for duplicates in Linear, and presents a draft for review before creating. Invoke with `/write-bug-ticket`.
@@ -91,6 +99,18 @@ Draft Linear feature request tickets from conversation context, descriptions, or
 ### write-tech-debt-ticket
 
 Draft Linear tech debt tickets from code review, PR comments, codebase audits, or post-incident findings. Classifies debt type, gathers evidence (Datadog for perf/reliability, git history for maintainability), assesses interest and risk, and presents a draft for review before creating. Invoke with `/write-tech-debt-ticket`.
+
+## Agents
+
+Agents are autonomous subagents that run with their own context and model selection — suited for heavyweight tasks.
+
+### hld-architect
+
+Creates High-Level Design documents following the org's Notion guide. Runs discovery (codebase analysis, Linear history, assumption validation), designs with all required HLD sections, and self-reviews before presenting. Uses Opus.
+
+### hld-reviewer
+
+Grades and reviews HLDs against the official Notion grading guide. Searches for relevant "BP: [Topic]" best practices, validates claims against the codebase, checks AGENTS.md alignment, and outputs a structured review with grading breakdown and prioritized next steps. Uses Opus.
 
 ## Syncing external plugins
 
