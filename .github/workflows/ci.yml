@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
       - run: git fetch origin main:main
-      - uses: ClipboardHealth/action-build-nodejs@v4
+      - uses: ./.github/actions/setup-node
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
       - run: docker compose up -d --wait --wait-timeout 120
@@ -59,7 +59,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
-      - uses: ClipboardHealth/action-build-nodejs@v4
+      - uses: ./.github/actions/setup-node
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
       - run: docker compose up -d --wait --wait-timeout 120
