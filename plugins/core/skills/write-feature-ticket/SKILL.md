@@ -9,8 +9,12 @@ Draft Linear feature request tickets that describe what users need and why — n
 
 ## Process
 
+> **Investigation first?** If the feature request stems from a production issue or unclear problem, use the `investigate-ticket` skill first to understand the current state. It will hand off back here with structured findings.
+>
+> **Already investigated?** If the conversation already contains investigation findings (code path traces, user research, Datadog data), treat that as sufficient context for the clarification questions below — don't re-ask for information that's already been established.
+
 1. **Gather context** — assess what's known from conversation, code, or input
-2. **Clarify (conditional)** — if the input doesn't clearly answer ALL THREE of these questions, you MUST ask before drafting: (a) Who is affected? (b) What can't they do today? (c) Why does it matter? Ask up to 3 rounds (one question per message). NEVER invent answers to these questions — if you don't know, ask. Skip only when context is genuinely sufficient (HLD, detailed conversation, thorough description that covers all three).
+2. **Clarify (conditional)** — if the input doesn't clearly answer ALL THREE of these questions, you MUST ask before drafting: (a) Who is affected? (b) What can't they do today? (c) Why does it matter? Ask up to 3 rounds (one question per message). NEVER invent answers to these questions — if you don't know, ask. Skip only when context is genuinely sufficient (HLD, detailed conversation, thorough description that covers all three, or prior investigation findings).
 3. **Assess scope** — can this be done in one PR? If not, plan parent + sub-issues with blocking relationships
 4. **Draft** — title + description, structure scaled to complexity
 5. **Suggest metadata (conditional)** — priority (Urgent/High/Medium/Low/No Priority), labels, project when context supports it. Present metadata suggestions BELOW the ticket body, separate from the description.

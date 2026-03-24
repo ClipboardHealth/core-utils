@@ -11,6 +11,10 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — what it c
 
 ## Process
 
+> **Investigation first?** If the debt isn't well-understood yet (vague complaint, unclear cost, uncertain scope), use the `investigate-ticket` skill first. It will hand off back here with structured findings.
+>
+> **Already investigated?** If the conversation already contains investigation findings (code path traces, git history analysis, Datadog links), treat that as sufficient context — don't re-ask for information that's already been established.
+
 1. **Gather context** — from code, PR comment, conversation, or audit
 2. **Analyze the code** — read the actual code. Understand what it does and why it qualifies as debt.
 3. **Classify** — pick a primary debt type (and optional secondary) from the classification table
