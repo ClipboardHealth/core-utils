@@ -111,11 +111,15 @@ runs:
         restore-keys: |
           ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-
 
-    - name: Install dependencies
+    - name: Start services and install dependencies
       shell: bash
       env:
         NPM_TOKEN: ${{ inputs.npm_token }}
-      run: npm ci --audit false --fund false
+      run: |
+        docker compose up -d --wait --wait-timeout 120 &
+        DOCKER_PID=$!
+        npm ci --audit false --fund false
+        wait $DOCKER_PID
 
     - name: Save ~/.npm cache
       if: steps.npm-cache.outputs.cache-hit != 'true'
