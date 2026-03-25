@@ -116,6 +116,7 @@ runs:
       env:
         NPM_TOKEN: ${{ inputs.npm_token }}
       run: |
+        set -euo pipefail
         docker compose up -d --wait --wait-timeout 120 &
         DOCKER_PID=$!
         npm ci --audit false --fund false
