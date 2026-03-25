@@ -17,7 +17,7 @@ inputs:
   start_services:
     description: Start repo services with Docker Compose before running `npm ci`.
     required: false
-    default: 'false'
+    default: "false"
 
 runs:
   using: composite
