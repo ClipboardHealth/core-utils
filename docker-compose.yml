@@ -7,7 +7,7 @@ services:
     volumes:
       - cbh-mongo:/data/db
     healthcheck:
-      test: mongosh --quiet --eval "rs.status().ok" || mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok"
+      test: mongosh --quiet --eval "db.isWritablePrimary()" || mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok"
       interval: 10s
       start_period: 30s
       timeout: 5s

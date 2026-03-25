@@ -14,6 +14,10 @@ inputs:
   npm_token:
     description: The `NPM_TOKEN` to download CBH private NPM packages.
     required: true
+  start_services:
+    description: Start repo services with Docker Compose before running `npm ci`.
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -115,12 +119,17 @@ runs:
       shell: bash
       env:
         NPM_TOKEN: ${{ inputs.npm_token }}
+        START_SERVICES: ${{ inputs.start_services }}
       run: |
         set -euo pipefail
-        docker compose up -d --wait --wait-timeout 120 &
-        DOCKER_PID=$!
+        if [ "$START_SERVICES" = 'true' ]; then
+          docker compose up -d --wait --wait-timeout 120 &
+          DOCKER_PID=$!
+        fi
         npm ci --audit false --fund false
-        wait $DOCKER_PID
+        if [ "$START_SERVICES" = 'true' ]; then
+          wait "$DOCKER_PID"
+        fi
 
     - name: Save ~/.npm cache
       if: steps.npm-cache.outputs.cache-hit != 'true'
