@@ -31,12 +31,9 @@ jobs:
           fetch-depth: 0
       - run: git fetch origin main:main
       - uses: ./.github/actions/setup-node
-
-      - name: Install dependencies and start services
-        run: |
-          docker compose up -d --wait --wait-timeout 120 &
-          npm run ci:install
-          wait
+        with:
+          npm_token: ${{ secrets.NPM_TOKEN }}
+      - run: docker compose up -d --wait --wait-timeout 120
       - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: npx nx affected --configuration ci --targets build,lint,test
@@ -63,12 +60,9 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.token.outputs.token }}
       - uses: ./.github/actions/setup-node
-
-      - name: Install dependencies and start services
-        run: |
-          docker compose up -d --wait --wait-timeout 120 &
-          npm run ci:install
-          wait
+        with:
+          npm_token: ${{ secrets.NPM_TOKEN }}
+      - run: docker compose up -d --wait --wait-timeout 120
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
       - run: npx nx affected --configuration ci --skip-nx-cache --target build
         env:
@@ -91,7 +85,7 @@ jobs:
         # Run a build so package.json files in dist directories pick up new versions
       - run: npx nx run-many --target=build
       - env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
         # Re-publishing an existing version is a no-op, so re-running this workflow recovers from transient NPM registry failures
         run: npx nx release publish
       - env:

@@ -1,19 +1,125 @@
-name: Setup Node
-description: "Setup Node.js environment"
+name: Setup Node environment
+description: |
+  Set up Node.js and install dependencies.
+  Mirrors ClipboardHealth/action-build-nodejs@v4 for use in public repos
+  that cannot reference internal GitHub Actions.
+
+  - Validates repo configuration;
+  - Sets up Node.js from .nvmrc;
+  - Pins npm version from engines.npm;
+  - Caches ~/.npm (download cache);
+  - Runs `npm ci` for deterministic installs.
+
+inputs:
+  npm_token:
+    description: The `NPM_TOKEN` to download CBH private NPM packages.
+    required: true
 
 runs:
-  using: "composite"
+  using: composite
   steps:
     - uses: nrwl/nx-set-shas@v4
-    - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-
-    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+
+    - name: Validate repo configuration files
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ ! -f .nvmrc ]; then
+          echo "Expected a repo-root .nvmrc, but none was found." >&2
+          exit 1
+        fi
+
+        if [ ! -f package.json ]; then
+          echo "Expected a repo-root package.json, but none was found." >&2
+          exit 1
+        fi
+
+        if [ ! -f .npmrc ]; then
+          echo "Expected a repo-root .npmrc, but none was found." >&2
+          exit 1
+        fi
+
+        if ! grep -q '^engine-strict=true$' .npmrc; then
+          echo "Expected .npmrc to contain 'engine-strict=true', but it was not found." >&2
+          exit 1
+        fi
+
+        if [ ! -f package-lock.json ]; then
+          echo "Expected a repo-root package-lock.json for 'npm ci', but none was found." >&2
+          exit 1
+        fi
+
+    - name: Setup Node
+      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       with:
         node-version-file: .nvmrc
-        registry-url: https://registry.npmjs.org
-    - run: corepack enable npm
+        check-latest: true
+        package-manager-cache: false
+      env:
+        NPM_TOKEN: ${{ inputs.npm_token }}
+
+    - name: Validate engines field
       shell: bash
+      run: |
+        set -euo pipefail
+
+        engines_node="$(node -p "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); typeof pkg.engines?.node === 'string' ? pkg.engines.node : ''")"
+        engines_npm="$(node -p "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); typeof pkg.engines?.npm === 'string' ? pkg.engines.npm : ''")"
+
+        if [ -z "$engines_node" ]; then
+          echo "Expected package.json to contain engines.node, but none was found." >&2
+          exit 1
+        fi
+
+        if ! [[ "$engines_node" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "engines.node must be an exact version (e.g., '24.12.0'), not a range: $engines_node" >&2
+          exit 1
+        fi
+
+        if [ -z "$engines_npm" ]; then
+          echo "Expected package.json to contain engines.npm, but none was found." >&2
+          exit 1
+        fi
+
+        if ! [[ "$engines_npm" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "engines.npm must be an exact version (e.g., '11.6.2'), not a range: $engines_npm" >&2
+          exit 1
+        fi
+
+    - name: Pin npm version from engines.npm
+      shell: bash
+      env:
+        NPM_TOKEN: ${{ inputs.npm_token }}
+      run: |
+        set -euo pipefail
+
+        engines_npm="$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).engines.npm")"
+        current_npm="$(npm --version)"
+
+        if [ "$current_npm" != "$engines_npm" ]; then
+          echo "npm $current_npm does not match engines.npm $engines_npm, installing..."
+          npm install -g "npm@$engines_npm"
+        fi
+
+    - name: Restore ~/.npm cache
+      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      id: npm-cache
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        NPM_TOKEN: ${{ inputs.npm_token }}
+      run: npm ci --audit false --fund false
+
+    - name: Save ~/.npm cache
+      if: steps.npm-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        path: ~/.npm
+        key: ${{ steps.npm-cache.outputs.cache-primary-key }}
