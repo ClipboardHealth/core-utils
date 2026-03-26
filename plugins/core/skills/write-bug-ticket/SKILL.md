@@ -48,7 +48,7 @@ Draft Linear bug report tickets that clearly document symptoms and provide Datad
 - `## Technical Context` (optional) — only concrete observables: "started after deploy at 14:00 UTC", "only affects service X". NOT diagnosis.
 - `## Impact` — who/how many affected, severity
 
-**Metadata:** Present priority (Urgent/High/Medium/Low/No Priority), labels, and any other suggestions BELOW the ticket body, separate from the description.
+**Metadata:** Present priority (Urgent/High/Medium/Low/No Priority), labels, and any other suggestions BELOW the ticket body, separate from the description. Always apply the `bug` label if available on the team.
 
 ## Red Flags — Self-Review Before Presenting
 

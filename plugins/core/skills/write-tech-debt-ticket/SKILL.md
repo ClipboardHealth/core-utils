@@ -92,7 +92,7 @@ Each: High/Medium/Low with a one-line justification backed by evidence.
 - `## Suggested Approach` (optional) — only when the fix is well-understood AND the user has context the implementer wouldn't. Omit when ambiguous. Keep brief — 2-3 sentences max, not a numbered plan.
 - `## Impact If Left Unaddressed` — what happens in 3-6 months if this isn't fixed. The business case for prioritization. Be concrete: "latency will reach Xs at projected growth", "each new notification type will require changes in N places."
 
-**Metadata:** Priority, labels, and suggestions presented BELOW the ticket body. Separate from the description.
+**Metadata:** Priority, labels, and suggestions presented BELOW the ticket body. Separate from the description. Always apply the `technical-debt` label if available on the team.
 
 ## Red Flags — Self-Review Before Presenting
 
