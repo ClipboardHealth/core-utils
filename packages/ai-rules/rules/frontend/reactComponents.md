@@ -94,7 +94,7 @@ Before creating a new component, search the codebase for existing components tha
 ### Search order
 
 1. **Shared UI libraries**: `@clipboard-health/ui-components`, `@clipboard-health/ui-react`, MUI (`@mui/material`)
-2. **App-level shared components**: `src/appV2/lib/` for shared app-level components
+2. **App-level shared components**: app-level shared directories (e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`)
 3. **Sibling features**: similarly-named components in other features (e.g., before creating `ShiftCard`, search for existing `*Card` components)
 
 ### Evaluate reuse feasibility

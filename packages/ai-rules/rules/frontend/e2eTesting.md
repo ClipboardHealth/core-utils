@@ -51,7 +51,7 @@ Before writing an E2E test, evaluate whether a component test would suffice. E2E
 When reviewing a new E2E test, ask:
 
 1. Does this test cross page boundaries? If no → component test
-2. Does this test require real backend responses? If no → component test with MSW
+2. Does this test require real backend responses? If no → component test with mocked API responses (e.g., MSW)
 3. Is this testing a critical user flow (auth, payments, onboarding)? If no → likely a component test
 4. Could this same assertion be made with `render()` + `screen.getByRole()`? If yes → component test
 
