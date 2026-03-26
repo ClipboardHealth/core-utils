@@ -41,13 +41,56 @@ Based on topics identified in the HLD, search Notion for applicable best practic
 | Feature flags            | "BP: Feature Flags"                     |
 | Architecture             | "BP: Architecture"                      |
 | Database changes         | "BP: Database" or "BP: Data Modeling"   |
-| API design               | "BP: API Design" or "BP: REST APIs"     |
+| API design               | "BP: REST API" and "BP: Contracts"      |
 | Security                 | "BP: Security"                          |
 | Caching                  | "BP: Caching"                           |
 | Testing                  | "BP: Testing"                           |
 | Monitoring/observability | "BP: Monitoring" or "BP: Observability" |
 | Error handling           | "BP: Error Handling"                    |
 | Performance              | "BP: Performance"                       |
+
+### Step 3b: API Endpoint Design Review
+
+If the HLD proposes new or modified REST API endpoints, evaluate the design against these key principles from BP: REST API and BP: Contracts. This is a **design-level** review — focus on the API shape and contract decisions, not implementation details.
+
+**URL & Resource Design:**
+
+- URLs are lower kebab-case plural nouns, no verbs
+- Resources are properly nested (e.g., `/workers/:workerId/shifts` not `/shifts/:workerId`)
+- Singular `type` values in JSON:API responses
+- Different access patterns for different actors get separate endpoints
+
+**Contract Design:**
+
+- Date fields planned to use `dateTimeSchema()` (not `z.coerce.date()` or bare strings)
+- Enum fields planned to use `requiredEnumWithFallback` with `"unspecified"` fallback for forwards compatibility
+- No `.default()` in contracts — defaults belong in service layer
+- Shared schemas for `type` values that already exist in other contracts
+- Contract placed in `contract-<backend-repo-name>` package
+
+**HTTP & JSON:API Compliance:**
+
+- Only GET/POST/PATCH/DELETE (no PUT)
+- POST returns DTO in body, not raw DB shape
+- Links only for pagination (no `self` link, no relationship links)
+- Relationships use data linkage only; related data via `include` query params
+- Avoid `meta` unless for computed/derived fields
+- Standard error codes (200, 201, 400, 401, 403, 404, 409, 422, 429, 500)
+
+**Data Design:**
+
+- Numeric field names include units (e.g., `lateTimeInHours` not `lateTime`)
+- Money uses `{ amountInMinorUnits, currencyCode }` pattern
+- Cursor-based pagination only (no offset, no count totals)
+- `lowerCamelCase` JSON keys
+
+**Architecture:**
+
+- Favor generic APIs over feature-specific ones
+- Return only what clients require (adding fields is non-breaking; removing is breaking)
+- Multi-write operations planned with transaction support
+
+Flag any violations as issues in your review, citing the specific BP.
 
 ### Step 4: Validate Against the Codebase
 
@@ -164,11 +207,12 @@ Structure your review as follows:
 
 1. Have you retrieved and applied the official grading guide?
 2. Have you searched for ALL relevant best practices based on HLD topics?
-3. Have you validated technical claims against the actual codebase?
-4. Have you checked for AGENTS.md alignment?
-5. Is every piece of feedback specific and actionable?
-6. Have you provided a clear final grade with breakdown?
-7. Are next steps prioritized and clear?
+3. If the HLD involves API endpoints, have you reviewed against BP: REST API and BP: Contracts?
+4. Have you validated technical claims against the actual codebase?
+5. Have you checked for AGENTS.md alignment?
+6. Is every piece of feedback specific and actionable?
+7. Have you provided a clear final grade with breakdown?
+8. Are next steps prioritized and clear?
 
 ## Handling Edge Cases
 
