@@ -7,12 +7,13 @@
 extract_nitpick_comments() {
   local reviews_json="$1"
 
-  perl -e '
+  printf '%s' "$reviews_json" | perl -e '
 use strict;
 use warnings;
 use JSON::PP;
 
-my $reviews_json = $ARGV[0];
+local $/;
+my $reviews_json = <STDIN>;
 my $reviews = decode_json($reviews_json);
 
 # Find latest coderabbitai review with nitpick section

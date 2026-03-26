@@ -16,7 +16,7 @@ exec 3>&1
 # --- Helpers (inlined from ghClient.ts / prClient.ts) ---
 
 output_error() {
-  printf '{"error":"%s"}\n' "$1" >&3
+  printf '%s' "$1" | jq -Rsc '{ error: . }' >&3
   exit 1
 }
 
