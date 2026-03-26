@@ -13,7 +13,7 @@ Fetch and analyze unresolved review comments from a GitHub pull request.
 Run the script to fetch PR comment data:
 
 ```bash
-bash scripts/unresolvedPrComments.sh [pr-number]
+node scripts/unresolvedPrComments.ts [pr-number]
 ```
 
 If no PR number is provided, it uses the PR associated with the current branch.

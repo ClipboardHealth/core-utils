@@ -28,7 +28,7 @@ Get the PR for the current branch:
 
 **If PR exists:** Get unresolved comments data:
 
-!`bash "${CLAUDE_PLUGIN_ROOT:-.agents}/skills/unresolved-pr-comments/scripts/unresolvedPrComments.sh" 2>/dev/null`
+!`node "${CLAUDE_PLUGIN_ROOT:-.agents}/skills/unresolved-pr-comments/scripts/unresolvedPrComments.ts" 2>/dev/null`
 
 Parse the JSON output and evaluate exit conditions.
 
@@ -75,7 +75,7 @@ Spawn a Task subagent with `subagent_type: "general-purpose"` using this prompt:
 > 4. **Wait for CI**: !`rc=0; if command -v gtimeout >/dev/null 2>&1; then gtimeout 600 gh pr checks --watch || rc=$?; elif command -v timeout >/dev/null 2>&1; then timeout 600 gh pr checks --watch || rc=$?; else gh pr checks --watch || rc=$?; fi; case $rc in 0|1|8|124) ;; *) exit $rc;; esac` (10 minute timeout; exit codes: 0=pass, 1=fail, 8=pending, 124=timeout are expected and handled in next step; other codes like 4=auth error are re-raised; uses gtimeout on macOS, timeout on Linux, no timeout as fallback)
 > 5. **Check CI Status**: Run `gh pr checks --json name,state,bucket` and parse the output
 >    - If any check has `bucket: "fail"`, invoke `core:fix-ci` via the Skill tool. Since you are running autonomously, do NOT wait for user approval — apply the fixes directly. Report what was fixed and exit.
-> 6. **Check Comments**: Run `bash "${CLAUDE_PLUGIN_ROOT:-.agents}/skills/unresolved-pr-comments/scripts/unresolvedPrComments.sh"` and parse the JSON output
+> 6. **Check Comments**: Run `node "${CLAUDE_PLUGIN_ROOT:-.agents}/skills/unresolved-pr-comments/scripts/unresolvedPrComments.ts"` and parse the JSON output
 >    - If unresolved comments or nitpicks exist:
 >      1. Group comments by file path and read each file once (not per-comment)
 >      2. If a file no longer exists, note the comment may be outdated and skip it
@@ -92,7 +92,7 @@ After the subagent completes:
 
 1. Increment iteration counter
 2. If no commits were made this iteration:
-   - Get unresolved comments by running: `bash "${CLAUDE_PLUGIN_ROOT:-.agents}/skills/unresolved-pr-comments/scripts/unresolvedPrComments.sh"`
+   - Get unresolved comments by running: `node "${CLAUDE_PLUGIN_ROOT:-.agents}/skills/unresolved-pr-comments/scripts/unresolvedPrComments.ts"`
    - If unresolved comments remain, exit with: "Comments addressed, awaiting reviewer resolution. Run `/iterate-pr` after reviewer responds."
 3. Report: "Iteration [N]/[max] complete. Checking state..."
 4. Return to Step 2
