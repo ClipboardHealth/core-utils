@@ -114,7 +114,7 @@ sub trim {
   $s =~ s/\s+$//;
   return $s;
 }
-' "$reviews_json"
+'
 }
 
 # Extract code scanning alert number from comment body.

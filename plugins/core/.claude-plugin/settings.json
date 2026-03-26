@@ -8,7 +8,8 @@
       "Bash(gh run download *)",
       "Bash(gh run view *)",
       "Bash(gh run watch *)",
-      "Bash(gh workflow run *)"
+      "Bash(gh workflow run *)",
+      "Bash(node *)"
     ]
   }
 }
