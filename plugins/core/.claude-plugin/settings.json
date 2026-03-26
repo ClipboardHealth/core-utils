@@ -1,19 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(gh api graphql:*)",
-      "Bash(gh pr checks:*)",
-      "Bash(gh pr view:*)",
-      "Bash(gh repo view:*)",
-      "Bash(gh run download:*)",
-      "Bash(gh run view:*)",
-      "Bash(gh run watch:*)",
-      "Bash(gh workflow run:*)",
-      "Bash(node:*)",
-      "Bash(npm list)",
-      "Bash(npm run embed:*)",
-      "Bash(npm view:*)"
+      "Bash(gh api graphql *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr view *)",
+      "Bash(gh repo view *)",
+      "Bash(gh run download *)",
+      "Bash(gh run view *)",
+      "Bash(gh run watch *)",
+      "Bash(gh workflow run *)"
     ]
   }
 }
