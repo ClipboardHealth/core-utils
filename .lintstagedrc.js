@@ -1,28 +1,12 @@
-const { ESLint } = require("eslint");
-
-// See https://github.com/lint-staged/lint-staged/tree/05fb3829faa5437276d98450c34699fecfc8c1c8?tab=readme-ov-file#eslint--7-1
-const esLintIgnored = async (files) => {
-  const eslint = new ESLint();
-  const isIgnored = await Promise.all(files.map((f) => eslint.isPathIgnored(f)));
-  return files.filter((_, i) => !isIgnored[i]).join(" ");
-};
-
 module.exports = {
-  "**/*": async (files) => [
-    `npm run cspell -- ${files.join(" ")}`,
-    `npm run knip`,
-    `npm run oxlint`,
-    `npm run lint:md`,
+  "**/package.json": () => ["syncpack lint", "tsx ./populateLibraries.ts"],
+  "**/*": (files) => [
+    `cspell --no-must-find-files ${files.join(" ")}`,
+    "markdownlint-cli2 '**/*.md'",
   ],
-  "**/*.{ts,tsx,js,jsx}": async (files) => [
-    `eslint --fix --max-warnings=0 ${await esLintIgnored(files)}`,
-  ],
-  "**/*.{ts,tsx,md,mdx}": async () => [`npm run embed:check`],
-  "**/*.{css,scss,graphql,js,json,jsonc,jsx,ts,tsx,md,mdx,toml,yml,yaml}": async (files) => [
+  "**/*.{ts,tsx,js,jsx}": (files) => [`oxlint --deny-warnings ${files.join(" ")}`],
+  "**/*.{ts,tsx,md,mdx}": () => ["npm run embed:check"],
+  "**/*.{css,scss,graphql,js,json,jsonc,jsx,ts,tsx,md,mdx,toml,yml,yaml}": (files) => [
     `oxfmt --no-error-on-unmatched-pattern ${files.join(" ")}`,
-  ],
-  "**/package.json": async () => [
-    process.env.NX_RELEASE === "true" ? `syncpack fix` : `syncpack lint`,
-    "tsx ./populateLibraries.ts",
   ],
 };

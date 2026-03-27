@@ -1,4 +1,6 @@
 {
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "experimentalSortPackageJson": true,
   "ignorePatterns": [
     ".nx/cache",
     ".nx/workspace-data",
@@ -7,7 +9,6 @@
     "dist/",
     "docs/",
     ".github/CODEOWNERS",
-    "*.toml",
-    "**/package.json"
+    "*.toml"
   ]
 }

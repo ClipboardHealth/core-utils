@@ -1,0 +1,8 @@
+# Skip if there's nothing to push
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse "@{u}" 2>/dev/null || true)
+if [ "$LOCAL" = "$REMOTE" ]; then
+  exit 0
+fi
+
+node --run hook:pre-push

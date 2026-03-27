@@ -11,5 +11,6 @@
     "**/node_modules": true,
     "**/tmp": true
   },
+  "typescript.experimental.useTsgo": true,
   "typescript.tsdk": "./node_modules/typescript/lib"
 }
