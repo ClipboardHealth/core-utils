@@ -7,13 +7,16 @@ Clipboard's core development tools.
 - [Installation](#installation)
 - [Prerequisites](#prerequisites)
 - [Skills](#skills)
+  - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
+  - [datadog-investigate](#datadog-investigate)
   - [fix-ci](#fix-ci)
+  - [flaky-test-debugger](#flaky-test-debugger)
   - [iterate-pr](#iterate-pr)
-  - [local-package](#local-package)
-  - [revise-claude-md](#revise-claude-md)
   - [learn-from-session](#learn-from-session)
+  - [local-package](#local-package)
   - [seed-data](#seed-data)
+  - [simplify](#simplify)
   - [unresolved-pr-comments](#unresolved-pr-comments)
   - [investigate-ticket](#investigate-ticket)
   - [write-bug-ticket](#write-bug-ticket)
@@ -82,13 +85,25 @@ Switch back to main after testing:
 
 ## Skills
 
+### cognito-user-analysis
+
+Analyze and fix duplicate Cognito users by comparing against backend data. Useful for diagnosing 403 Forbidden errors, duplicate accounts sharing phone/email, and orphaned UNCONFIRMED signups. Invoke with `/cognito-user-analysis`.
+
 ### commit-push-pr
 
 Commit changes, push to origin, and create a PR in one step. Invoke with `/commit-push-pr`.
 
+### datadog-investigate
+
+Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase. Invoke with `/datadog-investigate` or by mentioning production errors, latency spikes, error rates, or trace IDs.
+
 ### fix-ci
 
 Analyze and fix CI failures for a GitHub pull request. Invoke with `/fix-ci` or `/fix-ci <pr-url>`.
+
+### flaky-test-debugger
+
+Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
 
 ### iterate-pr
 
@@ -104,13 +119,13 @@ Use Clipboard's internal CLI (`@clipboard-health/cli`) to link and unlink packag
 
 See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage details.
 
-### revise-claude-md
-
-Review the current session for learnings and update CLAUDE.md with context that would help future sessions. Invoke with `/revise-claude-md`.
-
 ### seed-data
 
 Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HCPs, facilities, shifts) in development, staging, or prod-shadow environments. Invoke with `/seed-data` or by asking to seed/create test data.
+
+### simplify
+
+Review all changed files for reuse, quality, and efficiency, then fix any issues found. Launches parallel review agents for dead code, library reuse, and code quality. Invoke with `/simplify`.
 
 ### unresolved-pr-comments
 

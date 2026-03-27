@@ -85,6 +85,7 @@
     "oxfmtrc",
     "oxlint",
     "parallelizable",
+    "pipefail",
     "promptfoo",
     "promptfooconfig",
     "retryable",
