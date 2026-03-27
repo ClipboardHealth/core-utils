@@ -4,14 +4,14 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-agent-sdk": "0.2.77",
+    "@anthropic-ai/claude-agent-sdk": "0.2.81",
     "@nx/eslint": "22.5.4",
     "@nx/eslint-plugin": "22.5.4",
     "@nx/jest": "22.5.4",
     "@nx/js": "22.5.4",
     "@nx/webpack": "22.5.4",
     "@swc-node/register": "1.11.1",
-    "@swc/core": "1.15.18",
+    "@swc/core": "1.15.21",
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
     "@types/jest": "30.0.0",
@@ -23,7 +23,7 @@
     "jest": "30.3.0",
     "jest-util": "30.3.0",
     "jsonc-eslint-parser": "3.1.0",
-    "knip": "5.87.0",
+    "knip": "5.88.1",
     "lint-staged": "16.4.0",
     "markdownlint-cli2": "0.21.0",
     "nx": "22.5.4",
@@ -38,8 +38,8 @@
     "typescript": "5.9.3"
   },
   "engines": {
-    "node": "24.14.0",
-    "npm": "11.11.1"
+    "node": "24.12.0",
+    "npm": "11.6.2"
   },
   "license": "MIT",
   "overrides": {
@@ -50,7 +50,6 @@
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0"
   },
-  "packageManager": "npm@11.11.1+sha512.6ac6b30a876415dcf545e433ba4cb34bf0c3efbb86088a9415e446de0b5a4fc6fd511d277b59bd40e06e3204fbda28f5aeded346b3a8c780355b39ed31622e12",
   "private": true,
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
