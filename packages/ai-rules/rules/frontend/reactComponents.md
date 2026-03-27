@@ -89,33 +89,10 @@ return <MemoizedChild onSave={handleSave} />;
 
 ## Component Reuse
 
-Before creating a new component, search the codebase for existing components that serve the same or similar purpose. Prefer reusing or extending an existing component over creating a new one.
+Before creating a new component, search for existing ones in this order:
 
-### Search order
+1. **Shared UI libraries**: `@clipboard-health/ui-components`, `@clipboard-health/ui-react`, MUI
+2. **App-level shared directories**: e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`
+3. **Sibling features**: search for `*Card`, `*Modal`, `*Form`, `*EmptyState`, `*Page` patterns in other features
 
-1. **Shared UI libraries**: `@clipboard-health/ui-components`, `@clipboard-health/ui-react`, MUI (`@mui/material`)
-2. **App-level shared components**: app-level shared directories (e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`)
-3. **Sibling features**: similarly-named components in other features (e.g., before creating `ShiftCard`, search for existing `*Card` components)
-
-### Evaluate reuse feasibility
-
-- Can the existing component be used as-is? → use it directly
-- Can the existing component be extended with minor prop additions? → modify the existing component
-- Is the overlap >70% with only layout/styling differences? → extract a shared base component
-- Is the component fundamentally different in behavior? → create a new component (document why reuse was not feasible in the PR description)
-
-### When extending existing components
-
-- Prefer composition (`children`, render props) over adding feature-specific boolean flags
-- Do not add more than 2-3 optional props for a single use case — if the component becomes too configurable, it may need to be split
-- Ensure the modified component's existing tests still pass and add tests for new behavior
-
-### What to search for
-
-| When creating...  | Search for...                                             |
-| ----------------- | --------------------------------------------------------- |
-| Card/list item    | `*Card`, `*ListItem`, `*Row` components in other features |
-| Modal/dialog      | `*Modal`, `*Dialog`, shared modal patterns in `lib/`      |
-| Form/input group  | `*Form`, `*Input`, `*Field` components, form patterns     |
-| Empty/error state | `*EmptyState`, `*ErrorState`, `*Placeholder` components   |
-| Page layout       | `*Page`, `*Layout`, `*Container` wrapper components       |
+If an existing component covers >70% of the need, extend it (prefer composition over boolean flags). Only create a new component when behavior is fundamentally different — document why in the PR.

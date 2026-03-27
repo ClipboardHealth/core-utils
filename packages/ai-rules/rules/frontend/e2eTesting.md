@@ -27,33 +27,11 @@ await expect(page.getByText("Submit")).toBeAttached();
 
 ## E2E vs Component Test Decision
 
-Before writing an E2E test, evaluate whether a component test would suffice. E2E tests are expensive, slow, and flaky — only use them for what component tests cannot cover.
+Before adding an E2E test:
 
-### Use E2E (Playwright) ONLY when the test requires
-
-- Real browser navigation across multiple routes/pages
-- Cross-service integration (backend API + frontend together)
-- Authentication flows (login, token refresh, session management)
-- Third-party service integration that cannot be mocked at the component level
-- Complex multi-step user journeys spanning multiple pages (e.g., onboarding funnels)
-
-### Convert to component test when
-
-- Testing a single page or component's behavior (form validation, conditional rendering, error states)
-- Testing data display/formatting from mocked API responses
-- Testing user interactions within a single view (clicks, inputs, toggles)
-- Testing loading/error/empty states
-- Testing feature flag variations on UI rendering
-- Testing modal or dialog behavior
-
-### Conversion checklist
-
-When reviewing a new E2E test, ask:
-
-1. Does this test cross page boundaries? If no → component test
-2. Does this test require real backend responses? If no → component test with mocked API responses (e.g., MSW)
-3. Is this testing a critical user flow (auth, payments, onboarding)? If no → likely a component test
-4. Could this same assertion be made with `render()` + `screen.getByRole()`? If yes → component test
+1. Check if existing E2E tests already cover the API calls and flows being tested — avoid duplicating coverage
+2. Confirm the flow is a core user journey (auth, payments, onboarding, multi-page navigation) — non-core flows belong in component tests even if they call backend APIs or touch API contracts
+3. Verify the test requires real cross-service integration or multi-page navigation — if it can be asserted with `render()` + `screen.getByRole()` or mocked API responses, write a component test instead
 
 ## Avoid
 
