@@ -1,8 +1,21 @@
 {
   "name": "@clipboard-health/notifications",
-  "description": "Send notifications through third-party providers.",
   "version": "3.2.59",
+  "description": "Send notifications through third-party providers.",
+  "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/notifications"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@clipboard-health/background-jobs-adapter": "2.1.58",
     "@clipboard-health/phone-number": "2.2.59",
@@ -13,18 +26,5 @@
   "devDependencies": {
     "@clipboard-health/testing-core": "2.2.59",
     "type-fest": "5.5.0"
-  },
-  "keywords": [],
-  "license": "MIT",
-  "main": "./src/index.js",
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
-    "directory": "packages/notifications"
-  },
-  "type": "commonjs",
-  "typings": "./src/index.d.ts"
+  }
 }
