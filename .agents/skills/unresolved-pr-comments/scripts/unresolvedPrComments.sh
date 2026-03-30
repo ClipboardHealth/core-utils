@@ -16,16 +16,17 @@ exec 3>&1
 # --- Helpers (inlined from ghClient.ts / prClient.ts) ---
 
 output_error() {
-  printf '{"error":"%s"}\n' "$1" >&3
+  printf '%s' "$1" | jq -Rsc '{ error: . }' >&3
   exit 1
 }
 
 validate_prerequisites() {
+  if ! command -v jq >/dev/null 2>&1; then
+    printf '{"error":"jq not found. Install from https://stedolan.github.io/jq"}\n' >&3
+    exit 1
+  fi
   if ! command -v gh >/dev/null 2>&1; then
     output_error "gh CLI not found. Install from https://cli.github.com"
-  fi
-  if ! command -v jq >/dev/null 2>&1; then
-    output_error "jq not found. Install from https://stedolan.github.io/jq"
   fi
   if ! command -v perl >/dev/null 2>&1; then
     output_error "perl not found."
