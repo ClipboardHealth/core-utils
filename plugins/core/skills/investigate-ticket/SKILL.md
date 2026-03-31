@@ -1,6 +1,6 @@
 ---
 name: investigate-ticket
-description: Use when investigating a bug, incident, or issue before implementation. Researches codebase, queries Datadog, and updates the Linear ticket with findings. Also use when asked to "look into" or "investigate" something.
+description: Use when investigating a bug, incident, or issue before implementation. Researches codebase, queries Datadog, and presents structured findings with handoff options. Also use when asked to "look into" or "investigate" something.
 ---
 
 # Investigate Ticket
@@ -56,14 +56,12 @@ What would you like to do with these findings?
 
 1. Update an existing Linear ticket with this investigation
 2. Create a new ticket (I'll use the appropriate ticket skill)
-3. Start implementing a fix (I'll use work-linear-ticket)
-4. Just keep the findings — no ticket action needed
+3. Just keep the findings — no ticket action needed
 ```
 
 - **Option 1:** Update the ticket description with findings. Preserve existing content, add investigation section.
 - **Option 2:** Redirect to `write-bug-ticket`, `write-tech-debt-ticket`, or `write-feature-ticket` as appropriate, carrying the investigation context forward.
-- **Option 3:** Redirect to `work-linear-ticket`, carrying the investigation context forward.
-- **Option 4:** Done. No further action.
+- **Option 3:** Done. No further action.
 
 ## Hard Rules
 
@@ -89,4 +87,3 @@ What would you like to do with these findings?
 - `write-bug-ticket` — for creating bug tickets from investigation findings
 - `write-tech-debt-ticket` — for creating tech debt tickets from investigation findings
 - `write-feature-ticket` — for creating feature tickets from investigation findings
-- `work-linear-ticket` — for implementing after investigation is complete
