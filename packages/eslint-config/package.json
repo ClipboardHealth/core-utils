@@ -1,14 +1,24 @@
 {
   "name": "@clipboard-health/eslint-config",
+  "version": "7.3.11",
   "description": "Our ESLint configuration.",
-  "version": "7.2.31",
-  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "config",
     "eslint"
   ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/eslint-config"
+  },
+  "type": "commonjs",
   "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@clipboard-health/eslint-plugin": "^1.2.0 || ^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
@@ -32,15 +42,5 @@
     "eslint-plugin-security": "^1",
     "eslint-plugin-simple-import-sort": "^12",
     "eslint-plugin-unicorn": "^56"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
-    "directory": "packages/eslint-config"
-  },
-  "type": "commonjs",
-  "typings": "./src/index.d.ts"
+  }
 }

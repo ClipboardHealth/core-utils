@@ -13,7 +13,7 @@ Fetch and analyze unresolved review comments from a GitHub pull request.
 Run the script to fetch PR comment data:
 
 ```bash
-node scripts/unresolvedPrComments.ts [pr-number]
+bash scripts/unresolvedPrComments.sh [pr-number]
 ```
 
 If no PR number is provided, it uses the PR associated with the current branch.
@@ -32,20 +32,16 @@ Then, for EVERY comment (both `unresolvedComments` AND `nitpickComments`):
 
 1. Group comments by file path and read each file once (not per-comment)
 2. If a file no longer exists, note that the comment may be outdated
-3. Assess the comment against the current code and provide your opinion:
-   - **Agree**: Explain why and offer to fix it
-   - **Disagree**: Explain why the current code is acceptable
-   - **Already fixed**: Note that the code already addresses this concern
-4. When multiple comments appear at the same file and line, they are part of the same review thread — read them together as a conversation and assess the original feedback
-5. Present your assessment in list format (renders reliably in terminals):
+3. Assess each comment against the current code. When multiple comments appear at the same file and line, they are part of the same review thread — read them together as a conversation
+4. Group your assessment as follows:
 
-   **1. `src/api.ts:118`** - Wrap JSON.parse in try-catch
-   **Verdict: Already fixed** - Try-catch added in recent commit
+   **Should address**
+   - Description of the comment with file path(s)
+     - Why it's a real issue (bug, a11y, UX, etc.)
 
-   **2. `src/config.ts:23`** - Use `const` instead of `let`
-   **Verdict: Disagree** - Value is reassigned on L31
+   **Can ignore**
+   - Description of the comment with file path(s)
+     - Why: already fixed, not actionable, not worth addressing in this PR, etc.
 
-   **3. `src/utils.ts:42`** - Add null check for user input
-   **Verdict: Agree** - Input isn't validated, could cause runtime error
-
-Then, offer to fix any issues where you agreed.
+   **Net**
+   Summary of how many are worth fixing and what kind of issues they are. Offer to fix, but **do NOT start until the user confirms**.

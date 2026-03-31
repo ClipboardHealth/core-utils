@@ -25,6 +25,14 @@ await expect(page.getByText("Submit")).toBeVisible();
 await expect(page.getByText("Submit")).toBeAttached();
 ```
 
+## E2E vs Component Test Decision
+
+Before adding an E2E test:
+
+1. Check if existing E2E tests already cover the API calls and flows being tested — avoid duplicating coverage
+2. Confirm the flow is a core user journey (auth, payments, onboarding, multi-page navigation) — non-core flows belong in component tests even if they call backend APIs or touch API contracts
+3. Verify the test requires real cross-service integration or multi-page navigation — if it can be asserted with `render()` + `screen.getByRole()` or mocked API responses, write a component test instead
+
 ## Avoid
 
 - Hard-coded timeouts (`page.waitForTimeout`)

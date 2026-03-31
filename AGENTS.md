@@ -33,6 +33,18 @@ npm run format
 
 # Check formatting, spelling, etc.
 npm run ci:check
+
+# Type check (all packages)
+npm run typecheck
+
+# Lint (oxlint)
+npm run lint
+
+# Check dependency architecture
+npm run architecture:check
+
+# Check formatting
+npm run format:check
 ```
 
 ## Package-specific Commands

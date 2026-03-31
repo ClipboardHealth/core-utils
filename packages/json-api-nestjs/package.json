@@ -1,17 +1,7 @@
 {
   "name": "@clipboard-health/json-api-nestjs",
+  "version": "2.2.67",
   "description": "TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.",
-  "version": "2.2.54",
-  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
-  "dependencies": {
-    "@clipboard-health/contract-core": "*",
-    "tslib": "2.8.1"
-  },
-  "devDependencies": {
-    "@clipboard-health/testing-core": "2.2.52",
-    "type-fest": "5.4.4",
-    "zod": "3.25.76"
-  },
   "keywords": [
     "api",
     "json-api",
@@ -21,20 +11,30 @@
     "rest",
     "typescript"
   ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
-  "main": "./src/index.js",
-  "peerDependencies": {
-    "type-fest": "^4 || ^5.0.0",
-    "zod": "^3"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
     "directory": "packages/json-api-nestjs"
   },
   "type": "commonjs",
-  "typings": "./src/index.d.ts"
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@clipboard-health/contract-core": "*",
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "@clipboard-health/testing-core": "2.2.65",
+    "type-fest": "5.5.0",
+    "zod": "3.25.76"
+  },
+  "peerDependencies": {
+    "type-fest": "^4 || ^5.0.0",
+    "zod": "^3"
+  }
 }

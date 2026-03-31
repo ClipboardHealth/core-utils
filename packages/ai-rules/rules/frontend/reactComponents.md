@@ -86,3 +86,13 @@ return <Input onChange={(e) => setValue(e.target.value)} />;
 const handleSave = useCallback(async () => { ... }, [deps]);
 return <MemoizedChild onSave={handleSave} />;
 ```
+
+## Component Reuse
+
+Before creating a new component, search for existing ones in this order:
+
+1. **Shared UI libraries**: `@clipboard-health/ui-components`, `@clipboard-health/ui-react`, MUI
+2. **App-level shared directories**: e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`
+3. **Sibling features**: search for `*Card`, `*Modal`, `*Form`, `*EmptyState`, `*Page` patterns in other features
+
+If an existing component covers >70% of the need, extend it (prefer composition over boolean flags). Only create a new component when behavior is fundamentally different — document why in the PR.

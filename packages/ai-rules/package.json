@@ -1,8 +1,7 @@
 {
   "name": "@clipboard-health/ai-rules",
+  "version": "2.10.1",
   "description": "Pre-built AI agent rules for consistent coding standards.",
-  "version": "2.7.4",
-  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "keywords": [
     "ai",
     "best-practices",
@@ -15,14 +14,15 @@
     "react",
     "typescript"
   ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
     "directory": "packages/ai-rules"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "format": "oxfmt 'rules/**/*.md'"

@@ -106,6 +106,36 @@ module.exports = {
       },
     },
     {
+      // Enforce contract schema best practices. See BP: Contracts.
+      files: ["**/contract-*/**/*.ts"],
+      rules: {
+        "no-restricted-syntax": [
+          ...baseNoRestrictedSyntax,
+          {
+            selector:
+              "CallExpression[callee.property.name='date'][callee.object.property.name='coerce'][callee.object.object.name='z']",
+            message:
+              "Use dateTimeSchema() from @clipboard-health/contract-core instead of z.coerce.date(). See BP: Contracts.",
+          },
+          {
+            selector: "CallExpression[callee.property.name='enum'][callee.object.name='z']",
+            message:
+              "Do not use z.enum() in contracts. Use requiredEnumWithFallback/optionalEnumWithFallback from contract-core for forwards compatibility. See BP: Contracts.",
+          },
+          {
+            selector: "CallExpression > MemberExpression[property.name='default']",
+            message:
+              "Do not use .default() in contracts — defaults should be server-authoritative. See BP: Contracts.",
+          },
+          {
+            selector: "CallExpression > MemberExpression[property.name='catch']",
+            message:
+              "Do not use .catch() on schemas in contracts. Use requiredEnumWithFallback/optionalEnumWithFallback from contract-core. See BP: Contracts.",
+          },
+        ],
+      },
+    },
+    {
       // Enforce that job files are located under the logic folder to follow the three-tier architecture
       files: ["src/modules/**/*.job.ts"],
       rules: {

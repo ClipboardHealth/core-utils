@@ -64,7 +64,7 @@ describe("Context Store", () => {
       addToMetadataList("list", { key: "value" });
 
       const context = getExecutionContext();
-      expect(context?.metadata?.list).toEqual([{ key: "value" }]);
+      expect(context?.metadata?.["list"]).toEqual([{ key: "value" }]);
     });
   });
 
@@ -77,7 +77,7 @@ describe("Context Store", () => {
       addToMetadataRecord("record", { key: "value" });
 
       const context = getExecutionContext();
-      expect(context?.metadata?.record).toEqual({ key: "value" });
+      expect(context?.metadata?.["record"]).toEqual({ key: "value" });
     });
   });
 });

@@ -1,33 +1,33 @@
 {
   "name": "@clipboard-health/rules-engine",
+  "version": "3.1.64",
   "description": "A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.",
-  "version": "3.1.51",
-  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
-  "dependencies": {
-    "tslib": "2.8.1"
-  },
-  "devDependencies": {
-    "type-fest": "5.4.4"
-  },
   "keywords": [
     "engine",
     "functional",
     "rules",
     "typescript"
   ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
-  "main": "./src/index.js",
-  "peerDependencies": {
-    "type-fest": "^4 || ^5.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
     "directory": "packages/rules-engine"
   },
   "type": "commonjs",
-  "typings": "./src/index.d.ts"
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "type-fest": "5.5.0"
+  },
+  "peerDependencies": {
+    "type-fest": "^4 || ^5.0.0"
+  }
 }
