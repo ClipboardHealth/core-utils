@@ -26,6 +26,10 @@ Research-only workflow for understanding bugs, incidents, or issues before any i
 8. **Summarize findings** — present a structured summary to the user (see format below).
 9. **Hand off** — ask the user what to do next (see Handoff Options below).
 
+## Tool Availability
+
+This skill uses MCP tools when available: Datadog MCP for logs/traces/metrics, Snowflake MCP for data queries, LaunchDarkly MCP for flag state. If the Datadog MCP is not configured, use the `datadog-investigate` skill as an API reference — it provides curl commands and `dog` CLI patterns for querying logs, traces, metrics, and monitors directly.
+
 ## Datadog Search Strategy
 
 - **Always use structured attributes** (`@field:value`) over free-text when the code tells you what attributes are logged. Free-text searches like `sms reply 3107221978` miss logs where those words don't appear together in the message field.
@@ -149,3 +153,4 @@ What would you like to do with these findings?
 - `write-bug-ticket` — for creating bug tickets from investigation findings
 - `write-tech-debt-ticket` — for creating tech debt tickets from investigation findings
 - `write-feature-ticket` — for creating feature tickets from investigation findings
+- `datadog-investigate` — API reference for Datadog queries when no Datadog MCP is available
