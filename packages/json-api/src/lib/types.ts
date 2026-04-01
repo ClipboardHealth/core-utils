@@ -6,8 +6,9 @@
  * - gte: Greater than or equal to.
  * - lt: Less than.
  * - lte: Less than or equal to.
+ * - search: Fuzzy text matching on a specific field.
  */
-export type FilterOperator = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
+export type FilterOperator = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "search";
 
 export type PageKey = "cursor" | "limit" | "number" | "offset" | "size";
 

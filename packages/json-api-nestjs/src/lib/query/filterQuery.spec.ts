@@ -156,6 +156,40 @@ describe("filterQuery", () => {
         },
       },
       {
+        name: "preserves commas in search filter values",
+        input: {
+          filter: {
+            displayName: {
+              search: "Smith, Jr.",
+            },
+          },
+        },
+        expected: {
+          filter: {
+            displayName: {
+              search: ["Smith, Jr."],
+            },
+          },
+        },
+      },
+      {
+        name: "accepts array input for search filter",
+        input: {
+          filter: {
+            displayName: {
+              search: ["some term"],
+            },
+          },
+        },
+        expected: {
+          filter: {
+            displayName: {
+              search: ["some term"],
+            },
+          },
+        },
+      },
+      {
         name: "allows empty object",
         input: {},
         expected: {},
