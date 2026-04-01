@@ -4,7 +4,7 @@ import { queryFilterPreprocessor } from "../internal/queryFilterPreprocessor";
 import { splitString } from "../internal/splitString";
 import { type Field } from "../types";
 
-export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
+export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "search";
 
 export type FilterTuple = readonly [Filter, ...Filter[]];
 
