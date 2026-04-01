@@ -7,9 +7,23 @@ module.exports = {
   output: {
     path: join(__dirname, "..", "..", "dist", "apps", "nx-nest"),
   },
+  module: {
+    rules: [
+      {
+        test: /\.([jt])sx?$/,
+        loader: require.resolve("ts-loader"),
+        exclude: /node_modules/,
+        options: {
+          configFile: join(__dirname, "tsconfig.build.json"),
+          transpileOnly: false,
+          experimentalWatchApi: true,
+        },
+      },
+    ],
+  },
   plugins: [
     new NxAppWebpackPlugin({
-      compiler: "tsc",
+      compiler: false,
       generatePackageJson: true,
       main: "./src/main.ts",
       optimization: false,

@@ -2,6 +2,7 @@
   "extends": ["@tsconfig/node24", "@tsconfig/strictest"],
   "compileOnSave": false,
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "declaration": false,
     "emitDecoratorMetadata": true,
