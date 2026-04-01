@@ -33,13 +33,15 @@ Use this exact structure:
 [Honest yes/no/maybe with reasoning. If no, state what should happen instead.
 If yes, state the strongest argument against it anyway.]
 
-## Risks if you proceed
+## If we proceed
+
+### Risks
 
 [Concrete, specific risks. Not vague hand-waving.
 Examples: maintenance burden, wrong abstraction level, coupling to implementation details,
 scope creep, performance implications, testing complexity, migration path.]
 
-## Simplifications
+### Simplifications
 
 [Parts that should be simplified or skipped entirely, and why.
 Be specific: name lines, files, functions, abstractions that are over-engineered.
