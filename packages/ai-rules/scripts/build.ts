@@ -66,6 +66,11 @@ async function build(): Promise<void> {
         "node",
         "--esModuleInterop",
         "--skipLibCheck",
+        "--ignoreConfig",
+        "--ignoreDeprecations",
+        "6.0",
+        "--types",
+        "node",
       ],
     }),
   ]);
