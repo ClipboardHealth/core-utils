@@ -18,6 +18,10 @@ describe("filterQuery", () => {
         filters: ["gte"],
         schema: z.coerce.date().min(new Date("1900-01-01")),
       },
+      displayName: {
+        filters: ["search"],
+        schema: z.string().min(1),
+      },
       isActive: {
         filters: ["eq"],
         schema: booleanString,
@@ -130,6 +134,23 @@ describe("filterQuery", () => {
             age: {
               eq: [30],
               gt: [25],
+            },
+          },
+        },
+      },
+      {
+        name: "accepts search filter",
+        input: {
+          filter: {
+            displayName: {
+              search: "some term",
+            },
+          },
+        },
+        expected: {
+          filter: {
+            displayName: {
+              search: ["some term"],
             },
           },
         },
