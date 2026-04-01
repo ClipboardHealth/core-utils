@@ -12,12 +12,23 @@ Research-only workflow for understanding bugs, incidents, or issues before any i
 ## Process
 
 1. **Gather context** — accept a ticket ID/URL, Slack thread, Datadog alert, or verbal description. If a Linear ticket exists, fetch it for current details.
-2. **Quick Datadog scan** — search for obvious signals using whatever clues are available: error messages, user IDs, timeframes, service names, endpoint paths. The goal is orientation, not deep analysis — note what you find and move on.
-3. **Trace the code** — find the entry point and walk the full execution path. For every branch, conditional, and early return: note what causes the code to take that path, what log message or side effect it produces, and what structured attributes are logged. Include file paths and line numbers. Don't stop at the first plausible explanation — trace through to the expected outcome.
-4. **Validate each branch in Datadog** — using the execution path from step 3, search Datadog for the specific log messages and structured attributes you found in the code. Use `@field:value` queries (e.g., `@logContext:ServiceName @userId:abc123`), not free-text keyword searches. This tells you exactly which code path was taken for the entity/event in question.
+2. **Initial Datadog scan** — do a quick, broad search for obvious signals: error messages, user IDs, timeframes, service names, endpoint paths. The goal is orientation, not root cause. Note what you find (or don't), but **do not form a hypothesis yet**.
+3. **Trace the full execution path** — find the relevant code paths in the current repo. Starting from the entry point (controller, webhook handler, cron job), trace through **every branch, early return, and conditional** to the expected outcome. For each branch, note:
+   - What condition triggers it
+   - What log message it produces (exact message string and structured attributes)
+   - What would cause the code to take that path vs. continue
+     This is the most important step. Do NOT skip branches that seem unlikely — those are exactly where non-obvious bugs hide.
+4. **Validate each branch in Datadog** — now that you know the exact log messages and attribute names from the code, search Datadog using **structured attribute queries** to determine which code path was actually taken. This confirms or eliminates each branch as the failure point. See the Datadog Search Strategy section below.
 5. **Cross-reference** — check git history for recent changes to affected files. Look for related tickets in Linear. Check if the issue correlates with a deploy.
 6. **Summarize findings** — present a structured summary to the user (see format below).
 7. **Hand off** — ask the user what to do next (see Handoff Options below).
+
+## Datadog Search Strategy
+
+- **Always use structured attributes** (`@field:value`) over free-text when the code tells you what attributes are logged. Free-text searches like `sms reply 3107221978` miss logs where those words don't appear together in the message field.
+- **When a specific user/entity is involved, search for their identifier in application logs first.** This shows you exactly which code path was taken. Example: `@logContext:SmsReplyForwarderService @from:"+13107221978"` instead of `knock-sms-replies 3107221978`.
+- **Don't rely solely on the absence of logs as evidence.** Verify your query matches the actual attribute names logged in the code. A zero-result search might mean "the event didn't happen" or it might mean "your query was wrong."
+- **Read the code's logger calls to discover searchable attributes.** If the code logs `this.logger.info("SMS not sent to Knock number", { to, expectedNumber })`, search for `@logContext:ServiceName "SMS not sent to Knock number"` — not a free-text guess.
 
 ## Findings Format
 
@@ -64,13 +75,6 @@ What would you like to do with these findings?
 - **Option 2:** Redirect to `write-bug-ticket`, `write-tech-debt-ticket`, or `write-feature-ticket` as appropriate, carrying the investigation context forward.
 - **Option 3:** Done. No further action.
 
-## Datadog Search Strategy
-
-- **Always use structured attributes (`@field:value`) over free-text** when the code tells you what attributes are logged. Free-text searches miss structured data and return noisy results.
-- **When a specific user/entity is involved**, search for their identifier in application logs first — this shows you exactly which code path was taken.
-- **Don't rely solely on the absence of logs as evidence** — verify the log query matches the actual attribute names in the code. A query that returns nothing might just be querying the wrong field.
-- **Let the code guide your queries.** After tracing the execution path, you know every log message and attribute. Search for those exact strings and fields — not paraphrases or guesses.
-
 ## Hard Rules
 
 1. **Always search Datadog** before concluding the investigation. Not optional, even if the user didn't mention monitoring.
@@ -79,17 +83,20 @@ What would you like to do with these findings?
 4. **Present findings before any ticket action.** The user decides what to do with the findings, not you.
 5. **Don't invent root causes.** If you can't determine root cause from evidence, say so. Speculation presented as fact wastes the investigator's time.
 6. **Carry context forward.** When handing off to a ticket skill, pass all investigation findings so the ticket skill doesn't re-ask for information you already gathered.
+7. **Trace the full execution path before forming a hypothesis.** Skimming code and jumping to the most "obvious" filter or check leads to wrong conclusions. Walk every branch from entry point to outcome.
+8. **Validate with structured Datadog queries, not free-text guesses.** Read the code's logger calls to know exactly what attributes and messages to search for.
 
 ## Red Flags — STOP If You Notice These
 
-| You're about to...                                    | STOP and...                                                                                                                 |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Write a fix for the bug you found                     | This is investigation only — present findings first                                                                         |
-| Skip Datadog because "I already understand the issue" | Search Datadog anyway — you might find something unexpected                                                                 |
-| Present vague findings without file paths             | Go back and trace the actual code paths                                                                                     |
-| Create a ticket without presenting findings first     | Show the user what you found and let them decide                                                                            |
-| Guess the root cause without evidence                 | Say "root cause not yet determined" and list what you checked                                                               |
-| Form a root cause theory before tracing the full path | Trace entry point → every branch → expected output first. Hypotheses formed from partial code reads miss early-return bugs. |
+| You're about to...                                         | STOP and...                                                                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Write a fix for the bug you found                          | This is investigation only — present findings first                                                                        |
+| Skip Datadog because "I already understand the issue"      | Search Datadog anyway — you might find something unexpected                                                                |
+| Present vague findings without file paths                  | Go back and trace the actual code paths                                                                                    |
+| Create a ticket without presenting findings first          | Show the user what you found and let them decide                                                                           |
+| Guess the root cause without evidence                      | Say "root cause not yet determined" and list what you checked                                                              |
+| Form a root cause theory before tracing the full code path | Trace entry point → every branch → expected output first. Hypotheses formed from partial code reads miss early-return bugs |
+| Search Datadog with free-text keywords only                | Read the code's logger calls first, then search using structured attributes (`@field:value`)                               |
 
 ## Cross-Referenced Skills
 
