@@ -9,7 +9,7 @@ Draft Linear bug report tickets that clearly document symptoms and provide Datad
 
 ## Process
 
-> **Investigation first?** If the bug needs research before a ticket can be written (unclear root cause, insufficient evidence, vague symptom), use the `investigate-ticket` skill first. It will hand off back here with structured findings.
+> **Investigation first?** If you don't have at least: (1) a clear symptom description, (2) who's affected, and (3) evidence (Datadog links, error messages, or reproduction steps) — use `investigate-ticket` first. Don't try to draft a bug ticket from a vague report. It will hand off back here with structured findings.
 >
 > **Already investigated?** If the conversation already contains investigation findings (Datadog links, code path traces, root cause analysis), treat that as sufficient context — don't re-ask for information that's already been established.
 
