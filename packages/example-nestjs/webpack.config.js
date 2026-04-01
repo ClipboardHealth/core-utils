@@ -11,7 +11,7 @@ module.exports = {
     rules: [
       {
         test: /\.([jt])sx?$/,
-        loader: require.resolve("ts-loader"),
+        loader: "ts-loader",
         exclude: /node_modules/,
         options: {
           configFile: join(__dirname, "tsconfig.build.json"),
