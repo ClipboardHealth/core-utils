@@ -22,6 +22,10 @@
 - Use explicit access modifiers (`public`, `private`, `protected`) on all class methods and properties
 - Use a `for` loop with `// eslint-disable-next-line no-await-in-loop` for intentional sequential execution (e.g., rate limiting, ordered processing, or resource constraints); prefer `Promise.all` when operations are independent
 
+## Dead Code Cleanup
+
+When removing a usage of a function, constant, type, or other symbol, check whether it has any remaining usages (e.g., search the codebase). If it has no other usages, delete the now-unused code. Apply this recursively: if deleting that code removes the last usage of another symbol, delete that symbol too. This includes removing any imports that become unused as a result.
+
 ## Null/Undefined Checks
 
 Use `isDefined` helper from `@clipboard-health/util-ts` for `null` and `undefined` checks:
