@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 import { queryFilterPreprocessor } from "../internal/queryFilterPreprocessor";
-import { splitString } from "../internal/splitString";
+import { splitString, wrapString } from "../internal/splitString";
 import { type Field } from "../types";
 
-export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte";
+export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "search";
 
 export type FilterTuple = readonly [Filter, ...Filter[]];
 
@@ -117,17 +117,21 @@ export function filterQuery<const MapT extends InternalFilterMap>(parameters: Re
   };
 }
 
+function filterValueSchema(filter: Filter, schema: z.ZodTypeAny) {
+  return z
+    .preprocess(
+      filter === "search" ? wrapString : splitString,
+      schema.array().min(1).max(10_000).optional(),
+    )
+    .optional();
+}
+
 function filterSchema(parameters: FilterValue) {
   const { filters, schema } = parameters;
 
   return z
     .object(
-      Object.fromEntries(
-        filters.map((filter) => [
-          filter,
-          z.preprocess(splitString, schema.array().min(1).max(10_000).optional()).optional(),
-        ]),
-      ),
+      Object.fromEntries(filters.map((filter) => [filter, filterValueSchema(filter, schema)])),
     )
     .strict()
     .optional();
