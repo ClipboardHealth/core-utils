@@ -1,4 +1,4 @@
-import { splitString } from "./splitString";
+import { splitString, wrapString } from "./splitString";
 
 describe("splitString", () => {
   it.each<{ expected: unknown; input: unknown; name: string }>([
@@ -29,5 +29,27 @@ describe("splitString", () => {
     },
   ])("$name", ({ input, expected }) => {
     expect(splitString(input)).toEqual(expected);
+  });
+});
+
+describe("wrapString", () => {
+  it.each<{ expected: unknown; input: unknown; name: string }>([
+    {
+      name: "wraps string in array",
+      input: "a",
+      expected: ["a"],
+    },
+    {
+      name: "preserves commas in string",
+      input: "a,b",
+      expected: ["a,b"],
+    },
+    {
+      name: "returns original value for array input",
+      input: ["a", "b"],
+      expected: ["a", "b"],
+    },
+  ])("$name", ({ input, expected }) => {
+    expect(wrapString(input)).toEqual(expected);
   });
 });
