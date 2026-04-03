@@ -6,16 +6,16 @@ description: |
 
   - Validates repo configuration;
   - Sets up Node.js from .nvmrc;
-  - Pins npm version from engines.npm;
-  - Caches ~/.npm (download cache);
-  - Runs `npm ci` for deterministic installs.
+  - Activates pnpm via corepack;
+  - Caches pnpm store;
+  - Runs `pnpm install --frozen-lockfile` for deterministic installs.
 
 inputs:
   npm_token:
     description: The `NPM_TOKEN` to download CBH private NPM packages.
     required: true
   start_services:
-    description: Start repo services with Docker Compose before running `npm ci`.
+    description: Start repo services with Docker Compose before running `pnpm install`.
     required: false
     default: "false"
 
@@ -44,13 +44,13 @@ runs:
           exit 1
         fi
 
-        if ! grep -q '^engine-strict=true$' .npmrc; then
-          echo "Expected .npmrc to contain 'engine-strict=true', but it was not found." >&2
+        if [ ! -f pnpm-workspace.yaml ]; then
+          echo "Expected a repo-root pnpm-workspace.yaml, but none was found." >&2
           exit 1
         fi
 
-        if [ ! -f package-lock.json ]; then
-          echo "Expected a repo-root package-lock.json for 'npm ci', but none was found." >&2
+        if [ ! -f pnpm-lock.yaml ]; then
+          echo "Expected a repo-root pnpm-lock.yaml for 'pnpm install --frozen-lockfile', but none was found." >&2
           exit 1
         fi
 
@@ -69,7 +69,6 @@ runs:
         set -euo pipefail
 
         engines_node="$(node -p "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); typeof pkg.engines?.node === 'string' ? pkg.engines.node : ''")"
-        engines_npm="$(node -p "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); typeof pkg.engines?.npm === 'string' ? pkg.engines.npm : ''")"
 
         if [ -z "$engines_node" ]; then
           echo "Expected package.json to contain engines.node, but none was found." >&2
@@ -81,39 +80,26 @@ runs:
           exit 1
         fi
 
-        if [ -z "$engines_npm" ]; then
-          echo "Expected package.json to contain engines.npm, but none was found." >&2
-          exit 1
-        fi
-
-        if ! [[ "$engines_npm" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "engines.npm must be an exact version (e.g., '11.6.2'), not a range: $engines_npm" >&2
-          exit 1
-        fi
-
-    - name: Pin npm version from engines.npm
+    - name: Install pnpm
       shell: bash
-      env:
-        NPM_TOKEN: ${{ inputs.npm_token }}
       run: |
         set -euo pipefail
+        corepack enable
+        corepack prepare --activate
 
-        engines_npm="$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).engines.npm")"
-        current_npm="$(npm --version)"
+    - name: Get pnpm store directory
+      id: pnpm-store
+      shell: bash
+      run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
 
-        if [ "$current_npm" != "$engines_npm" ]; then
-          echo "npm $current_npm does not match engines.npm $engines_npm, installing..."
-          npm install -g "npm@$engines_npm"
-        fi
-
-    - name: Restore ~/.npm cache
+    - name: Restore pnpm store cache
       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
-      id: npm-cache
+      id: pnpm-cache
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/package-lock.json') }}
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-
+          ${{ runner.os }}-pnpm-${{ hashFiles('.nvmrc') }}-
 
     - name: Start services and install dependencies
       shell: bash
@@ -126,14 +112,14 @@ runs:
           docker compose up -d --wait --wait-timeout 120 &
           DOCKER_PID=$!
         fi
-        npm ci --audit false --fund false
+        pnpm install --frozen-lockfile
         if [ "$START_SERVICES" = 'true' ]; then
           wait "$DOCKER_PID"
         fi
 
-    - name: Save ~/.npm cache
-      if: steps.npm-cache.outputs.cache-hit != 'true'
+    - name: Save pnpm store cache
+      if: steps.pnpm-cache.outputs.cache-hit != 'true'
       uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
-        path: ~/.npm
-        key: ${{ steps.npm-cache.outputs.cache-primary-key }}
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: ${{ steps.pnpm-cache.outputs.cache-primary-key }}

@@ -26,3 +26,4 @@ tmp/
 *.bak
 CLAUDE.local.md
 npm-debug.log
+pnpm-debug.log

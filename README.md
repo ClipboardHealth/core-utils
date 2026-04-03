@@ -44,29 +44,29 @@
 
 See [`package.json`](./package.json) `scripts` for a complete list of commands.
 
-See [Nx CLI Commands](https://nx.dev/reference/commands#nx-cli-commands) for options or `npx nx --help`.
+See [Nx CLI Commands](https://nx.dev/reference/commands#nx-cli-commands) for options or `pnpm exec nx --help`.
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Build, lint, and test only changed files from `main`, helpful prior to opening PRs
-npm run affected
+pnpm run affected
 
 # For the paranoid: build, lint, and test everything
-npm run all
+pnpm run all
 
 # Install a dependency in a specific package
-npm install --workspace packages/[PROJECT_NAME] [DEPENDENCY]
+pnpm add --filter packages/[PROJECT_NAME] [DEPENDENCY]
 
 # Run specific commands against a specific packages
-npx nx run [PROJECT_NAME]:[COMMAND]
+pnpm exec nx run [PROJECT_NAME]:[COMMAND]
 
 # Upgrade Nx
-npx nx migrate latest && \
-  npx syncpack fix && \
-  npm install && \
-  npx nx migrate --runMigrations --ifExists
+pnpm exec nx migrate latest && \
+  pnpm exec syncpack fix && \
+  pnpm install && \
+  pnpm exec nx migrate --runMigrations --ifExists
 ```
 
 ## Adding or porting libraries

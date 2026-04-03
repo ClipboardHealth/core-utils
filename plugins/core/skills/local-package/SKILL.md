@@ -70,4 +70,4 @@ To test changes to `ui-theme` in `cbh-mobile-app`:
 
 - **Package not found**: Ensure the package exists in a sibling repo's `packages/` directory
 - **Build fails**: The package must have a valid nx build target
-- **Changes not reflected**: Run `npm install` after linking to pull in the yalc version
+- **Changes not reflected**: Run `pnpm install` after linking to pull in the yalc version

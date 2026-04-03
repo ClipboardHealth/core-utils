@@ -2,19 +2,16 @@
   "name": "@clipboard-health/core-utils",
   "private": true,
   "license": "MIT",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
-    "all": "npm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
+    "all": "pnpm run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
     "architecture:check": "depcruise packages/*/src",
-    "ci:check": "node --run format:check && npm run cspell -- . && syncpack lint && npm run embed:check && node --run knip && node --run lint && npm run lint:md && node --run architecture:check && npm run test:claude",
-    "ci:install": "npm clean-install",
+    "ci:check": "node --run format:check && pnpm run cspell -- . && syncpack lint && pnpm run embed:check && node --run knip && node --run lint && pnpm run lint:md && node --run architecture:check && pnpm run test:claude",
+    "ci:install": "pnpm install --frozen-lockfile",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
-    "embed:check": "npm run embed -- --check",
+    "embed:check": "pnpm run embed -- --check",
     "eval": "promptfoo eval --config evals/promptfooconfig.ts",
     "eval:view": "promptfoo view --yes",
     "format": "oxfmt",
@@ -25,7 +22,7 @@
     "lint:md": "markdownlint-cli2 \"**/*.md\"",
     "lint": "oxlint --deny-warnings",
     "oxlint": "oxlint --deny-warnings",
-    "postinstall": "npm run sync-ai-rules",
+    "postinstall": "pnpm run sync-ai-rules",
     "prepare": "husky",
     "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "test:claude": "tsx --test .claude/**/*.spec.ts",
@@ -72,16 +69,27 @@
     "typedoc": "0.28.18",
     "typescript": "5.9.3"
   },
-  "overrides": {
-    "@anthropic-ai/claude-agent-sdk": {
-      "zod": "3.25.76"
-    },
-    "@swc/core": "$@swc/core",
-    "ts-node": "11.0.0-beta.1",
-    "tsconfig-paths": "4.2.0"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@playwright/browser-chromium",
+      "@swc/core",
+      "better-sqlite3",
+      "esbuild",
+      "nx",
+      "protobufjs",
+      "sharp",
+      "unrs-resolver"
+    ],
+    "overrides": {
+      "@anthropic-ai/claude-agent-sdk>zod": "3.25.76",
+      "@swc/core": "$@swc/core",
+      "ts-node": "11.0.0-beta.1",
+      "tsconfig-paths": "4.2.0"
+    }
   },
   "engines": {
-    "node": "24.14.1",
-    "npm": "11.11.0"
-  }
+    "node": "24.14.1"
+  },
+  "packageManager": "pnpm@10.33.0"
 }

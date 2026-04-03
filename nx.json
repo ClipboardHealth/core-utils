@@ -12,7 +12,7 @@
       "sharedGlobals",
       "!{projectRoot}/**/*.md",
       "!{projectRoot}/doc/**/*",
-      "!{workspaceRoot}/package-lock.json"
+      "!{workspaceRoot}/pnpm-lock.yaml"
     ],
     "production": [
       "default",
