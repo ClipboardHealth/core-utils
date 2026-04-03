@@ -138,6 +138,21 @@ Do not propose a fix without concrete artifacts. At minimum, include:
 - A **specific code path** that consumed that state — use `tests[].location` to jump to the source
 - When available: **screenshot** from `failureArtifacts.screenshotBase64` showing page state at failure
 - When available: **Datadog trace** via `network[].traceId` showing backend behavior for the failing request
+- A **confidence score** from 1 to 5 rating how certain you are in the root cause diagnosis
+
+### Confidence Score
+
+Rate your confidence in the root cause on a 1-5 scale. Report this score alongside your evidence.
+
+| Score | Meaning             | Criteria                                                                                                                                                                                       |
+| ----- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **5** | Certain             | Root cause is directly visible in artifacts (e.g., assertion diff shows stale data, network response confirms 5xx, screenshot shows error banner)                                              |
+| **4** | High confidence     | Evidence strongly supports the diagnosis but one link in the chain is inferred rather than observed (e.g., timeline shows the right sequence but no Datadog trace to confirm backend behavior) |
+| **3** | Moderate confidence | Evidence is consistent with the diagnosis but alternative explanations remain plausible. Flag the alternatives explicitly                                                                      |
+| **2** | Low confidence      | Limited evidence, mostly reasoning from code patterns rather than observed artifacts. Recommend gathering more data before committing to a fix                                                 |
+| **1** | Speculative         | No direct evidence for the root cause. The fix is a best guess. Recommend reproducing the failure locally or adding instrumentation before proceeding                                          |
+
+If confidence is 2 or below, do not propose a code fix. Instead, recommend specific instrumentation or reproduction steps to raise confidence.
 
 ## Phase 5: Fix Decision Tree
 
@@ -166,6 +181,7 @@ Lint and type-check touched files
 
 When documenting the fix in a PR or issue, use this structure:
 
+- **Confidence:** score (1-5) with brief justification
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
 - **Evidence:** trace and network artifacts (include screenshot and Datadog trace when available)
