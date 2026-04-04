@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/testing-core",
-  "version": "2.2.70",
+  "version": "2.2.71",
   "description": "TypeScript-friendly testing utilities.",
   "keywords": [
     "expect",
@@ -21,7 +21,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/util-ts": "5.3.6",
+    "@clipboard-health/util-ts": "5.3.7",
     "tslib": "2.8.1"
   },
   "devDependencies": {
