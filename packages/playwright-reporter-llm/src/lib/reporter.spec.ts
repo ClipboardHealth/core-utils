@@ -1629,7 +1629,7 @@ describe("LlmReporter", () => {
     }
   });
 
-  it("prioritizes fetch/xhr requests over static assets when network cap is reached", () => {
+  it("filters out successful static asset requests entirely", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -1676,25 +1676,18 @@ describe("LlmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+    expect(attempt.network).toHaveLength(50);
 
     const fetchUrls = attempt.network
       .filter((request) => request.resourceType === "fetch")
       .map((request) => request.url);
     expect(fetchUrls).toHaveLength(50);
 
-    const scriptUrls = attempt.network
-      .filter((request) => request.resourceType === "script")
-      .map((request) => request.url);
-    expect(scriptUrls).toHaveLength(150);
-    const expectedScriptUrls = Array.from(
-      { length: 150 },
-      (_, index) => `https://cdn.example.com/chunk-${index + 50}.js`,
-    );
-    expect(scriptUrls).toEqual(expectedScriptUrls);
+    const scriptUrls = attempt.network.filter((request) => request.resourceType === "script");
+    expect(scriptUrls).toHaveLength(0);
   });
 
-  it("prioritizes error responses regardless of resource type", () => {
+  it("keeps static asset requests with error status codes", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -1741,7 +1734,7 @@ describe("LlmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+    expect(attempt.network).toHaveLength(10);
 
     const errorRequests = attempt.network.filter((request) => request.status === 500);
     expect(errorRequests).toHaveLength(10);

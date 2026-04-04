@@ -66,6 +66,7 @@ const RESPONSE_HEADER_ALLOWLIST = new Set([
 ]);
 const HIGH_SIGNAL_CONSOLE_ENTRY_TYPES = new Set(["warning", "error", "pageerror"]);
 const HIGH_SIGNAL_RESOURCE_TYPES = new Set(["fetch", "xhr"]);
+const LOW_SIGNAL_RESOURCE_TYPES = new Set(["script", "stylesheet", "image", "font", "media"]);
 const SCREENSHOT_BASE64_CAP = 524_288;
 
 function stripAnsi(text: string): string {
@@ -421,6 +422,16 @@ function isHighSignalNetworkRequest(request: NetworkRequest): boolean {
   );
 }
 
+function isLowSignalStaticAsset(request: NetworkRequest): boolean {
+  return (
+    request.resourceType !== undefined &&
+    LOW_SIGNAL_RESOURCE_TYPES.has(request.resourceType) &&
+    request.status < 400 &&
+    request.failureText === undefined &&
+    request.wasAborted !== true
+  );
+}
+
 function canImproveNetworkSignal(networkRequests: NetworkRequest[]): boolean {
   if (networkRequests.length < NETWORK_REQUESTS_CAP) {
     return true;
@@ -432,6 +443,10 @@ function appendNetworkRequestWithPriority(
   networkRequests: NetworkRequest[],
   networkRequest: NetworkRequest,
 ): void {
+  if (isLowSignalStaticAsset(networkRequest)) {
+    return;
+  }
+
   if (networkRequests.length < NETWORK_REQUESTS_CAP) {
     networkRequests.push(networkRequest);
     return;
