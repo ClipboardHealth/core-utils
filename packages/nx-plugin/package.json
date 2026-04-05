@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/nx-plugin",
-  "version": "2.1.71",
+  "version": "2.1.72",
   "description": "An Nx plugin with generators to manage libraries and applications.",
   "keywords": [
     "generator",
