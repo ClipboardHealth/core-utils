@@ -67,7 +67,7 @@ Apply the appropriate fix based on the pattern:
 **Service test fixes:**
 
 - Ensure `afterAll` closes the app _and_ awaits all open connections (DB, Redis, queues) before returning
-- Use `{ forceCloseConnections: true }` on the NestJS app if available, or explicitly close the Mongoose/TypeORM connection
+- Pass `{ forceCloseConnections: true }` to `NestFactory.create()` (NestJS v10+) to auto-close keep-alive connections on shutdown, or explicitly close the Mongoose/TypeORM connection in `afterAll`
 - Use dynamic/random ports (`listen(0)`) to avoid EADDRINUSE
 - Isolate database state: use unique collection prefixes, transaction rollbacks, or per-test database cleanup
 - If the test uses `setTimeout` or event-driven patterns, ensure the test awaits completion rather than relying on timing
