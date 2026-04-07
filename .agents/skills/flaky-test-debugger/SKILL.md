@@ -336,7 +336,7 @@ Lint and type-check touched files.
 
 ## Output Format
 
-When opening a PR for a flaky test fix, apply the `flaky-test-fix` label so other agents can find it during Phase 1b deduplication.
+When opening a PR for a flaky test fix, include `--label flaky-test-fix` in the `gh pr create` command so other agents can find it during Phase 1b deduplication.
 
 When documenting the fix in a PR or issue, use this structure:
 
