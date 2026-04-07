@@ -5,7 +5,7 @@ export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Install NVM if not present
 if [ ! -d "$HOME/.nvm" ]; then
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 fi
 
 # Source NVM (works in non-interactive shells)
@@ -20,7 +20,7 @@ nvm use
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export NVM_DIR=\"$HOME/.nvm\"" >> "$CLAUDE_ENV_FILE"
   echo ". \"\$NVM_DIR/nvm.sh\"" >> "$CLAUDE_ENV_FILE"
-  echo "export PATH=\"$(nvm which current | xargs dirname):\$PATH\"" >> "$CLAUDE_ENV_FILE"
+  echo "export PATH=\"$(dirname "$(nvm which current)"):\$PATH\"" >> "$CLAUDE_ENV_FILE"
   echo "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true" >> "$CLAUDE_ENV_FILE"
 fi
 
