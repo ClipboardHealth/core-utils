@@ -1,53 +1,70 @@
 ---
 name: write-feature-ticket
-description: Use when creating a Linear feature request ticket from conversation context, a brief description, or code/PR analysis. Guides through problem clarification before drafting.
+description: Use when creating a Linear feature request ticket from conversation context, a brief description, or code/PR analysis. Interviews the user for clarity when context is insufficient.
 ---
 
 # Write Feature Ticket
 
-Draft Linear feature requests that describe what users need and why — never how to implement it. Acceptance criteria are observable outcomes, not implementation steps.
-
-> Stems from a production issue or unclear problem? Use `investigate-ticket` first. If the conversation already has investigation findings, use them — don't re-ask.
+Draft Linear feature request tickets that describe what users need and why — never how to implement it. Dispatches to the `interview-feature` skill when context is insufficient to write a clear ticket.
 
 ## Process
 
-1. **Gather context** — assess what's known from conversation, code, or input
-2. **Clarify (conditional)** — if missing ANY of: (a) who is affected, (b) what they can't do today, (c) why it matters — ask before drafting. NEVER invent answers. Up to 3 rounds.
-3. **Assess scope** — can this be done in one PR? If not, plan parent + sub-issues with blocking relationships.
-4. **Draft** — title + description, structure scaled to complexity (see format below)
-5. **Present for review** — show draft + metadata suggestions. Wait for explicit approval.
-6. **Create in Linear** — only after approval. For complex tickets, create parent first, then linked sub-issues.
+1. **Assess context** — check what's known from conversation, HLD, PR, or prior investigation
+2. **Clarity gate** — does the available context answer: (a) Who is affected? (b) What can't they do? (c) Why does it matter? Is the framing problem-shaped? Are there no invented details?
+   - **Yes** → step 3
+   - **1-2 factual gaps** (missing repo, unclear who) → ask the user directly. Don't dispatch the full interview for a single missing data point.
+   - **Structural problems** (solution-shaped framing, no problem articulated, mostly unknowns) → dispatch `interview-feature` skill. Receive a structured problem brief. Re-check gate against the brief.
+   - If `interview-feature` terminates without producing a problem brief (user refused to articulate a problem), abort the ticket process. Inform the user that the ticket cannot be created without a problem statement.
+3. **Final validation** — run the checklist below before drafting. This is the ticket skill's own quality check — it doesn't blindly trust upstream context.
+4. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
+5. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
+6. **Self-review** — check every item in [red-flags.md](red-flags.md) before presenting
+7. **Suggest metadata (conditional)** — priority (Urgent/High/Medium/Low/No Priority), labels, project when context supports it. Present metadata suggestions BELOW the ticket body, separate from the description.
+8. **Present for review** — show the draft to the user. Wait for explicit approval before proceeding.
+9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply any confirmed metadata. NEVER create without user approval.
+
+## Final Validation Checklist
+
+Before drafting, verify ALL of these. If any fail, bounce back to `interview-feature` or ask the user directly:
+
+| Check                  | Fail condition                                                                                                                                     |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Problem is user-facing | Describes an implementation, not a user need                                                                                                       |
+| Who is specific        | "Users" without qualification                                                                                                                      |
+| Pain point is concrete | "Improve X" without what's wrong today                                                                                                             |
+| Impact is articulated  | No reason given for why this matters                                                                                                               |
+| No invented details    | Any claim not from the user, research, or conversation                                                                                             |
+| Unknowns are explicit  | Gaps filled with plausible-sounding guesses                                                                                                        |
+| No solution language   | Context contains implementation details (field names, technology choices, component names) that could leak into the ticket — scrub before drafting |
+| Repository documented  | No repo specified                                                                                                                                  |
 
 ## Hard Rules
 
-- **Problem-first, solution-never.** Describe what the user needs. NEVER include "Proposed Solution", "Approach", "Implementation", or "Technical Details" sections. Reframe technical input as the underlying problem.
-- **AC = observable outcomes.** Each criterion: something a user or system can DO or OBSERVE. Not implementation steps, not internal behavior, not database changes. Test: "Could a non-engineer verify this?"
-- **One ticket, one PR.** Multi-PR work → parent + sub-issues with blocking relationships.
-- **Clean titles.** Imperative, describes the CAPABILITY not the implementation. Under 70 characters.
-- **Always document the repository.** Flag multi-repo features to the user for splitting.
-- **Redirect non-features.** Bugs → `write-bug-ticket`, tech debt → `write-tech-debt-ticket`.
+- **Problem-first, solution-never.** Describe what the user needs and why. Never prescribe how to build it. If input contains technical solutions, the interview skill should have already reframed these — if they survived, strip them now. NEVER include a "Proposed Solution", "Approach", "Implementation", or "Technical Details" section.
+- **Acceptance criteria = observable outcomes.** Each criterion describes something a user or system can DO or OBSERVE when the work is done. Not implementation steps, not internal system behavior, not database changes.
+- **One ticket, one deliverable outcome.** If the problem contains multiple independent user-facing outcomes, decompose into parent + sub-issues — each describing one outcome.
+- **Never invent.** If a detail isn't established from the user, research, or conversation, it doesn't go in the ticket. Period.
+- **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
+- **Always document the repository.** Every ticket must specify which repo the work belongs in. If the feature spans multiple repos, flag this — it likely needs separate tickets.
+- **Feature requests only.** Redirect bug reports to `write-bug-ticket`, tech debt to `write-tech-debt-ticket`.
 
 ## Ticket Format
 
-**Title:** Imperative, describes the CAPABILITY. Under 70 characters.
+**Title:** Short, imperative, describes the CAPABILITY — not the implementation. Under 70 characters.
 
-**Simple feature** (<4 AC): A paragraph stating the problem, then AC as a checklist. No section headers.
+**Simple feature** (single user story, <4 acceptance criteria):
+A paragraph stating the problem and who it affects, then acceptance criteria as a checklist. No section headers.
 
-**Complex feature** (4+ AC, cross-cutting): Use `## Problem`, `## Acceptance Criteria`, `## Context` (links to HLD/related tickets), `## Scope` (in/out).
+**Complex feature** (multiple user stories, 4+ AC, or cross-cutting):
+Sections as needed:
 
-**Sub-issues:** Same format. Note blocking relationships ("_Blocked by: [title]_").
+- `## Problem` — who is affected, what they can't do today, why it matters
+- `## Acceptance Criteria` — observable outcomes checklist
+- `## Context` — links to HLD, related tickets (linking to technical docs is fine; inlining implementation details is not)
+- `## Scope` — in/out, if ambiguity exists
 
-See reference.md for full examples.
+**Sub-issues** (when decomposed):
+Each sub-issue follows the same format. Note blocking relationships (e.g., "_Blocked by: [sub-issue title]_").
 
-## Red Flags — Self-Review Before Presenting
-
-| Anti-Pattern                       | Fix                                                                |
-| ---------------------------------- | ------------------------------------------------------------------ |
-| "Proposed Solution" section        | DELETE entirely. Describe only the problem and desired outcome.    |
-| Technical suggestions in body      | Remove — describe the need, not the solution                       |
-| Implementation steps as AC         | Rewrite as what the user can do or observe                         |
-| Internal system behavior as AC     | Rewrite from user perspective. "Could a non-engineer verify this?" |
-| Vague problem statement            | Add who is affected, what they can't do, why it matters            |
-| Solution-shaped title              | Rewrite as the capability: "Allow filtering shifts by..."          |
-| Code references in body            | Remove. Describe the behavior change from the user's perspective.  |
-| No decomposition for multi-PR work | Split into parent + sub-issues with blocking relationships         |
+**For self-review anti-patterns**, see [red-flags.md](red-flags.md).
+**For ticket examples** (good and bad), see [examples.md](examples.md).
