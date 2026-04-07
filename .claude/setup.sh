@@ -3,6 +3,18 @@ set -euo pipefail
 
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
+# Portable SHA-256: hash256 (Linux) -> shasum (macOS Perl) -> sha256 (macOS BSD)
+if command -v hash256 >/dev/null 2>&1; then
+  hash256() { hash256 "$@"; }
+elif command -v shasum >/dev/null 2>&1; then
+  hash256() { shasum -a 256 "$@"; }
+elif command -v sha256 >/dev/null 2>&1; then
+  hash256() { sha256 -r "$@"; }
+else
+  echo "No SHA-256 hash tool found" >&2
+  exit 1
+fi
+
 # Install NVM if not present
 if [ ! -d "$HOME/.nvm" ]; then
   curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
@@ -33,12 +45,14 @@ expected_npm="${engines##* }"
 actual_node="$(node -v | sed 's/^v//')"
 actual_npm="$(npm -v)"
 
-if [ -n "$expected_node" ] && [ "$actual_node" != "$expected_node" ]; then
+is_exact_version() { [[ "$1" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; }
+
+if [ -n "$expected_node" ] && is_exact_version "$expected_node" && [ "$actual_node" != "$expected_node" ]; then
   echo "Node version mismatch: Expected $expected_node, got $actual_node" >&2
   exit 1
 fi
 
-if [ -n "$expected_npm" ] && [ "$actual_npm" != "$expected_npm" ]; then
+if [ -n "$expected_npm" ] && is_exact_version "$expected_npm" && [ "$actual_npm" != "$expected_npm" ]; then
   echo "npm version mismatch: Expected $expected_npm, got $actual_npm" >&2
   exit 1
 fi
@@ -99,7 +113,7 @@ cache_dir="${HOME}/.cache/agent-deps"
 mkdir -p "$cache_dir"
 
 remote_url="$(git config --get remote.origin.url 2>/dev/null || true)"
-repo_id="$(printf '%s\n%s\n' "$repo_root" "$remote_url" | sha256sum | awk '{print $1}')"
+repo_id="$(printf '%s\n%s\n' "$repo_root" "$remote_url" | hash256 | awk '{print $1}')"
 stamp_file="${cache_dir}/$(basename "$repo_root")-${repo_id}.stamp"
 
 compute_dep_key() {
@@ -111,12 +125,12 @@ compute_dep_key() {
     while IFS= read -r rel; do
       [ -n "$rel" ] || continue
       if [ -f "$rel" ]; then
-        sha256sum "$rel"
+        hash256 "$rel"
       else
         printf 'MISSING %s\n' "$rel"
       fi
     done <<< "$fingerprint_files"
-  } | sha256sum | awk '{print $1}'
+  } | hash256 | awk '{print $1}'
 }
 
 dep_key="$(compute_dep_key)"
