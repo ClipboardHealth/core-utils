@@ -18,7 +18,27 @@ Determine the test type from the user's input before doing anything else. The ty
 
 If the type is ambiguous, check the test file extension and imports to confirm.
 
-**Routing:**
+**Routing:** After completing Phase 1, always proceed to Phase 1b before investigating further.
+
+---
+
+## Phase 1b: Check for Existing Fixes
+
+Before investigating, check whether someone (or another agent) has already fixed this flake.
+
+1. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
+   - Search PRs labeled `flaky-test-fix` for the test file name or test directory
+   - If a matching open PR exists, stop and report it to the user — do not open a duplicate fix
+2. **Check recent commits on `main`** that touch the failing test file:
+   - `git log --oneline -20 -- <test-file-path>` to see if a recent commit already addresses the flake
+   - Read the commit messages — if one clearly fixes the same flake pattern, stop and report it to the user
+
+If an existing fix is found, report:
+- The PR number/URL or commit hash
+- A brief summary of what it addresses
+- Whether it fully covers the current flake or only partially
+
+If no existing fix is found, proceed to investigation:
 
 - **E2E (Playwright):** Go to [Phase 2E: E2E Triage Snapshot](#phase-2e-e2e-triage-snapshot)
 - **Service, React component, or Unit:** Go to [Phase 2: Fast Path](#phase-2-fast-path-non-e2e)
