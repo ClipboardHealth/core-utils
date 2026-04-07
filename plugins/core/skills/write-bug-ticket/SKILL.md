@@ -1,29 +1,30 @@
 ---
 name: write-bug-ticket
-description: Use when creating a Linear bug report ticket from user reports, customer complaints, monitoring alerts, or production investigation. Guides through evidence gathering from Datadog before drafting.
+description: Use when creating a Linear bug report ticket from conversation context, investigation findings, or user-provided evidence. Focuses on structuring and writing — not investigating.
 ---
 
 # Write Bug Ticket
 
-Draft Linear bug reports that document symptoms and provide Datadog evidence. Never diagnose root cause or propose fixes.
+Structure and write Linear bug reports from evidence that already exists in the conversation. Never diagnose root cause or propose fixes. Never investigate — that's `investigate-ticket`'s job.
 
-> Missing a clear symptom, who's affected, or evidence? Use `investigate-ticket` first. If the conversation already has investigation findings, use them — don't re-ask.
+> **No evidence yet?** If the conversation lacks Datadog links, error details, or clear symptom descriptions, STOP and redirect to `investigate-ticket` first. It will hand off back here with structured findings.
+>
+> **Already investigated?** If the conversation contains investigation findings (Datadog links, code paths, Snowflake queries, flag state), use them directly — don't re-investigate.
 
 ## Process
 
-1. **Gather context** — assess what's known from conversation, user input, or ongoing investigation
-2. **Search Datadog** — ALWAYS search proactively before drafting. If nothing found, note it and proceed.
-3. **Check for duplicates** — search Linear for existing tickets with the same symptom.
-4. **Clarify (conditional)** — if missing: (a) expected behavior, (b) actual behavior, or (c) who's affected — ask before drafting. NEVER invent answers. Up to 3 rounds.
-5. **Draft** — title + description, structure scaled to complexity (see format below)
-6. **Self-review** — check every Red Flag below before presenting
-7. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
-8. **Create in Linear** — only after explicit approval
+1. **Gather context** — collect evidence from the conversation: investigation findings, user reports, Datadog links, error details
+2. **Check for duplicates** — search Linear for existing tickets describing the same symptom
+3. **Clarify (conditional)** — if missing: (a) expected behavior, (b) actual behavior, or (c) who's affected — ask before drafting. NEVER invent answers. Up to 3 rounds.
+4. **Draft** — title + description, structure scaled to complexity (see format below)
+5. **Self-review** — check every Red Flag below before presenting
+6. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
+7. **Create in Linear** — only after explicit approval
 
 ## Hard Rules
 
 - **Symptom-first, diagnosis-never.** NEVER propose a fix, root cause, or investigation steps. Technical context is fine — speculation is not.
-- **Datadog always, links always.** Include direct links, not raw log dumps. Only include evidence actually found.
+- **Evidence belongs in the ticket, but gathering it does not.** Include Datadog links, Snowflake findings, and flag state from the conversation. If none exist, redirect to `investigate-ticket` — don't search yourself.
 - **STR preferred, not required.** If not reproduced: "Not yet reproduced manually. Observed via monitoring." NEVER invent STR.
 - **Clean titles.** No bracket prefixes. Describe the symptom. Under 70 characters.
 - **Always document the repository.** Flag multi-repo bugs to the user for splitting.
@@ -43,16 +44,17 @@ See reference.md for full examples.
 
 ## Red Flags — Self-Review Before Presenting
 
-| Anti-Pattern                   | Fix                                                             |
-| ------------------------------ | --------------------------------------------------------------- |
-| Root cause diagnosis           | Remove — describe symptom and evidence only                     |
-| Proposed fix                   | Remove entirely                                                 |
-| Investigation runbook          | Remove — this is a bug report, not an investigation plan        |
-| Vague actual behavior          | Be specific: "Returns 500 error when..."                        |
-| Missing expected behavior      | Add what should happen                                          |
-| Raw logs pasted inline         | Replace with Datadog log query link                             |
-| No Datadog evidence            | You must search Datadog before drafting                         |
-| Diagnosis disguised as context | Rewrite as observable: "Cache misses increased 3x after deploy" |
-| STR invented from assumptions  | "Not yet reproduced. Observed via monitoring."                  |
-| Guessed team assignment        | Ask the user — never guess                                      |
-| Bracket title prefixes         | Describe the symptom without brackets                           |
+| Anti-Pattern                   | Fix                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| Root cause diagnosis           | Remove — describe symptom and evidence only                             |
+| Proposed fix                   | Remove entirely                                                         |
+| Investigation runbook          | Remove — this is a bug report, not an investigation plan                |
+| Vague actual behavior          | Be specific: "Returns 500 error when..."                                |
+| Missing expected behavior      | Add what should happen                                                  |
+| Raw logs pasted inline         | Replace with Datadog log query link                                     |
+| No evidence in conversation    | STOP drafting — redirect to `investigate-ticket` to gather evidence     |
+| Searching Datadog yourself     | This skill writes, not investigates — use existing evidence or redirect |
+| Diagnosis disguised as context | Rewrite as observable: "Cache misses increased 3x after deploy"         |
+| STR invented from assumptions  | "Not yet reproduced. Observed via monitoring."                          |
+| Guessed team assignment        | Ask the user — never guess                                              |
+| Bracket title prefixes         | Describe the symptom without brackets                                   |
