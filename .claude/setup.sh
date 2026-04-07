@@ -98,7 +98,7 @@ list_fingerprint_files() {
       /(^|\/)node_modules\// { next }
       /(^|\/)\.git\// { next }
       /(^|\/)(package\.json|package-lock\.json|npm-shrinkwrap\.json|\.npmrc|\.nvmrc)$/ { print }
-    ' | sort
+    ' | sort -u
   else
     find . \
       \( -name .git -o -name node_modules \) -prune -o \
