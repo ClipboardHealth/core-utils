@@ -3,9 +3,9 @@ set -euo pipefail
 
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
-# Portable SHA-256: hash256 (Linux) -> shasum (macOS Perl) -> sha256 (macOS BSD)
-if command -v hash256 >/dev/null 2>&1; then
-  hash256() { hash256 "$@"; }
+# Portable SHA-256: sha256sum (Linux) -> shasum (macOS Perl) -> sha256 (macOS BSD)
+if command -v sha256sum >/dev/null 2>&1; then
+  hash256() { sha256sum "$@"; }
 elif command -v shasum >/dev/null 2>&1; then
   hash256() { shasum -a 256 "$@"; }
 elif command -v sha256 >/dev/null 2>&1; then
