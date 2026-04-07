@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/playwright-reporter-llm",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.",
   "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
