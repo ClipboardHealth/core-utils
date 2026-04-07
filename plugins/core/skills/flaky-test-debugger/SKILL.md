@@ -18,7 +18,29 @@ Determine the test type from the user's input before doing anything else. The ty
 
 If the type is ambiguous, check the test file extension and imports to confirm.
 
-**Routing:**
+**Routing:** After completing Phase 1, always proceed to Phase 1b before investigating further.
+
+---
+
+## Phase 1b: Check for Existing Fixes
+
+Before investigating, check whether someone (or another agent) has already fixed this flake.
+
+1. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
+   - Search PRs labeled `flaky-test-fix` for the test file name or test directory
+   - Review the PR's changes to assess whether they address the same flake pattern with reasonable confidence — if so, stop and report it to the user rather than opening a duplicate fix
+   - If the PR only partially addresses the flake or targets a different root cause, note it and proceed with investigation
+2. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
+   - `git log --oneline -20 origin/main -- <test-file-path>` and also check the parent directory or related source files
+   - Read the commit messages — if one clearly fixes the same flake pattern, stop and report it to the user
+
+If an existing fix is found, report:
+
+- The PR number/URL or commit hash
+- A brief summary of what it addresses
+- Whether it fully covers the current flake or only partially
+
+If no existing fix is found, proceed to investigation:
 
 - **E2E (Playwright):** Go to [Phase 2E: E2E Triage Snapshot](#phase-2e-e2e-triage-snapshot)
 - **Service, React component, or Unit:** Go to [Phase 2: Fast Path](#phase-2-fast-path-non-e2e)
@@ -313,6 +335,8 @@ Skip this step when the fix is **specific to one test's logic** -- for example, 
 Lint and type-check touched files.
 
 ## Output Format
+
+When opening a PR for a flaky test fix, include `--label flaky-test-fix` in the `gh pr create` command so other agents can find it during Phase 1b deduplication.
 
 When documenting the fix in a PR or issue, use this structure:
 
