@@ -14,7 +14,7 @@ Structure and write Linear bug reports from evidence that already exists in the 
 ## Process
 
 1. **Gather context** — collect evidence from the conversation: investigation findings, user reports, Datadog links, error details
-2. **Check for duplicates** — search Linear for existing tickets describing the same symptom
+2. **Check for duplicates** — dispatch the `linear-duplicate-finder` skill with the symptom description. If duplicates are found, present them to the user before proceeding.
 3. **Clarify (conditional)** — if missing: (a) expected behavior, (b) actual behavior, or (c) who's affected — ask before drafting. NEVER invent answers. Up to 3 rounds.
 4. **Draft** — title + description, structure scaled to complexity (see format below)
 5. **Self-review** — check every Red Flag below before presenting

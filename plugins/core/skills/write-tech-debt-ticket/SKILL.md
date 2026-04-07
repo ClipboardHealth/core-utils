@@ -21,7 +21,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
    - Maintainability/DX → `git log` for change frequency and bug-fix commits, grep for workarounds
    - Security → check dependency versions, scan for vulnerability patterns
 5. **Assess interest & risk** — produce structured ratings with evidence (see reference.md for rating framework)
-6. **Check for duplicates** — search Linear for existing tickets describing the same debt
+6. **Check for duplicates** — dispatch the `linear-duplicate-finder` skill with the debt description and draft title. If duplicates are found, present them to the user before proceeding.
 7. **Draft** — title + description, structure scaled to complexity (see format below)
 8. **Self-review** — check every Red Flag below before presenting
 9. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
