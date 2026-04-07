@@ -89,6 +89,7 @@
     "oxlint",
     "parallelizable",
     "pipefail",
+    "pushback",
     "promptfoo",
     "promptfooconfig",
     "retryable",
