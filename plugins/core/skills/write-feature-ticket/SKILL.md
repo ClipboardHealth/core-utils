@@ -15,7 +15,7 @@ Draft Linear feature request tickets that describe what users need and why — n
    - **1-2 factual gaps** (missing repo, unclear who) → ask the user directly. Don't dispatch the full interview for a single missing data point.
    - **Structural problems** (solution-shaped framing, no problem articulated, mostly unknowns) → dispatch `interview-feature` skill. Receive a structured problem brief. Re-check gate against the brief.
    - If `interview-feature` terminates without producing a problem brief (user refused to articulate a problem), abort the ticket process. Inform the user that the ticket cannot be created without a problem statement.
-3. **Check for duplicates** — dispatch the `linear-duplicate-finder` skill with the problem summary and draft title. If duplicates or closely related tickets are found, present them to the user and ask whether to proceed, merge with an existing ticket, or stop.
+3. **Check for duplicates** — follow the `linear-duplicate-finder` process (read its [SKILL.md](../linear-duplicate-finder/SKILL.md)). Generate search queries from the problem's key terms, affected users, and domain area. If duplicates or closely related tickets are found, present them to the user and ask whether to proceed, merge with an existing ticket, or stop.
 4. **Final validation** — run the checklist below before drafting. This is the ticket skill's own quality check — it doesn't blindly trust upstream context.
 5. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
 6. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
