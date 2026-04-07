@@ -18,10 +18,15 @@ nvm use
 
 # Persist the updated PATH (with correct node/npm) into subsequent Claude tool calls
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
-  echo "export NVM_DIR=\"$HOME/.nvm\"" >> "$CLAUDE_ENV_FILE"
-  echo ". \"\$NVM_DIR/nvm.sh\"" >> "$CLAUDE_ENV_FILE"
-  echo "export PATH=\"$(dirname "$(nvm which current)"):\$PATH\"" >> "$CLAUDE_ENV_FILE"
-  echo "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true" >> "$CLAUDE_ENV_FILE"
+  append_once() {
+    local line="$1"
+    grep -Fqx -- "$line" "$CLAUDE_ENV_FILE" 2>/dev/null || echo "$line" >> "$CLAUDE_ENV_FILE"
+  }
+
+  append_once "export NVM_DIR=\"$HOME/.nvm\""
+  append_once ". \"\$NVM_DIR/nvm.sh\""
+  append_once "export PATH=\"$(dirname "$(nvm which current)"):\$PATH\""
+  append_once "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true"
 fi
 
 # Install deps
