@@ -12,7 +12,9 @@ Draft Linear feature request tickets that describe what users need and why — n
 1. **Assess context** — check what's known from conversation, HLD, PR, or prior investigation
 2. **Clarity gate** — does the available context answer: (a) Who is affected? (b) What can't they do? (c) Why does it matter? Is the framing problem-shaped? Are there no invented details?
    - **Yes** → step 3
-   - **No** → dispatch `interview-feature` skill. Receive a structured problem brief. Re-check gate against the brief.
+   - **1-2 factual gaps** (missing repo, unclear who) → ask the user directly. Don't dispatch the full interview for a single missing data point.
+   - **Structural problems** (solution-shaped framing, no problem articulated, mostly unknowns) → dispatch `interview-feature` skill. Receive a structured problem brief. Re-check gate against the brief.
+   - If `interview-feature` terminates without producing a problem brief (user refused to articulate a problem), abort the ticket process. Inform the user that the ticket cannot be created without a problem statement.
 3. **Final validation** — run the checklist below before drafting. This is the ticket skill's own quality check — it doesn't blindly trust upstream context.
 4. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
 5. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
@@ -25,15 +27,16 @@ Draft Linear feature request tickets that describe what users need and why — n
 
 Before drafting, verify ALL of these. If any fail, bounce back to `interview-feature` or ask the user directly:
 
-| Check                  | Fail condition                                         |
-| ---------------------- | ------------------------------------------------------ |
-| Problem is user-facing | Describes an implementation, not a user need           |
-| Who is specific        | "Users" without qualification                          |
-| Pain point is concrete | "Improve X" without what's wrong today                 |
-| Impact is articulated  | No reason given for why this matters                   |
-| No invented details    | Any claim not from the user, research, or conversation |
-| Unknowns are explicit  | Gaps filled with plausible-sounding guesses            |
-| Repository documented  | No repo specified                                      |
+| Check                  | Fail condition                                                                                                                                     |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Problem is user-facing | Describes an implementation, not a user need                                                                                                       |
+| Who is specific        | "Users" without qualification                                                                                                                      |
+| Pain point is concrete | "Improve X" without what's wrong today                                                                                                             |
+| Impact is articulated  | No reason given for why this matters                                                                                                               |
+| No invented details    | Any claim not from the user, research, or conversation                                                                                             |
+| Unknowns are explicit  | Gaps filled with plausible-sounding guesses                                                                                                        |
+| No solution language   | Context contains implementation details (field names, technology choices, component names) that could leak into the ticket — scrub before drafting |
+| Repository documented  | No repo specified                                                                                                                                  |
 
 ## Hard Rules
 
