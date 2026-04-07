@@ -16,5 +16,18 @@
   "enabledPlugins": {
     "core@clipboard": true,
     "nx@nx-claude-plugins": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/setup.sh"
+          }
+        ]
+      }
+    ]
   }
 }
