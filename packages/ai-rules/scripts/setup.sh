@@ -21,6 +21,7 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export NVM_DIR=\"$HOME/.nvm\"" >> "$CLAUDE_ENV_FILE"
   echo ". \"\$NVM_DIR/nvm.sh\"" >> "$CLAUDE_ENV_FILE"
   echo "export PATH=\"$(nvm which current | xargs dirname):\$PATH\"" >> "$CLAUDE_ENV_FILE"
+  echo "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true" >> "$CLAUDE_ENV_FILE"
 fi
 
 # Install deps
