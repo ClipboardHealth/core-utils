@@ -3,6 +3,11 @@ set -euo pipefail
 
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
+deps_only=false
+if [ "${1:-}" = "--deps-only" ]; then
+  deps_only=true
+fi
+
 # Portable SHA-256: sha256sum (Linux) -> shasum (macOS Perl) -> sha256 (macOS BSD)
 if command -v sha256sum >/dev/null 2>&1; then
   hash256() { sha256sum "$@"; }
@@ -15,15 +20,6 @@ else
   exit 1
 fi
 
-# Install NVM if not present
-if [ ! -d "$HOME/.nvm" ]; then
-  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
-fi
-
-# Source NVM
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-
 # Always operate from repo root
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$repo_root"
@@ -33,32 +29,54 @@ if [ ! -f package.json ]; then
   exit 0
 fi
 
-# Install and use the Node version pinned by .nvmrc
-nvm install
-nvm use >/dev/null
+# Source NVM if available. --no-use avoids auto-activating .nvmrc (which fails
+# if the version isn't installed yet). Full bootstrap calls nvm install/use below.
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
 
-# Enforce exact Node and npm versions from package.json engines
-engines="$(node -p "try { const e = require('./package.json').engines || {}; (e.node || '') + ' ' + (e.npm || '') } catch { '' }" 2>/dev/null || true)"
-expected_node="${engines%% *}"
-expected_npm="${engines##* }"
-
-actual_node="$(node -v | sed 's/^v//')"
-actual_npm="$(npm -v)"
-
-is_exact_version() { [[ "$1" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; }
-
-if [ -n "$expected_node" ] && is_exact_version "$expected_node" && [ "$actual_node" != "$expected_node" ]; then
-  echo "Node version mismatch: Expected $expected_node, got $actual_node" >&2
-  exit 1
+if [ "$deps_only" = true ]; then
+  # Activate whatever node NVM has (try .nvmrc, then default alias).
+  # Suppressed: version may not be installed yet, or NVM may not be present.
+  nvm use 2>/dev/null || nvm use default 2>/dev/null || true
 fi
 
-if [ -n "$expected_npm" ] && is_exact_version "$expected_npm" && [ "$actual_npm" != "$expected_npm" ]; then
-  echo "npm version mismatch: Expected $expected_npm, got $actual_npm" >&2
+if [ "$deps_only" = false ]; then
+  # Install NVM if not present
+  if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
+  fi
+
+  # Install and use the Node version pinned by .nvmrc
+  nvm install
+  nvm use >/dev/null
+
+  # Enforce exact Node and npm versions from package.json engines
+  engines="$(node -p "try { const e = require('./package.json').engines || {}; (e.node || '') + ' ' + (e.npm || '') } catch { '' }" 2>/dev/null || true)"
+  expected_node="${engines%% *}"
+  expected_npm="${engines##* }"
+
+  is_exact_version() { [[ "$1" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]]; }
+
+  if [ -n "$expected_node" ] && is_exact_version "$expected_node" && [ "$(node -v | sed 's/^v//')" != "$expected_node" ]; then
+    echo "Node version mismatch: Expected $expected_node, got $(node -v)" >&2
+    exit 1
+  fi
+
+  if [ -n "$expected_npm" ] && is_exact_version "$expected_npm" && [ "$(npm -v)" != "$expected_npm" ]; then
+    echo "npm version mismatch: Expected $expected_npm, got $(npm -v)" >&2
+    exit 1
+  fi
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "node not found. Install Node.js or run without --deps-only for full bootstrap." >&2
   exit 1
 fi
 
 # Persist environment for subsequent Claude Bash commands.
 # Replace our own block each time so PATH does not accumulate stale Node bins.
+# Runs after both paths so CLAUDE_ENV_FILE stays consistent regardless of --deps-only.
 persist_claude_env() {
   [ -n "${CLAUDE_ENV_FILE:-}" ] || return 0
 
@@ -67,6 +85,7 @@ persist_claude_env() {
   local tmp
   tmp="$(mktemp)"
 
+  # Always strip the old block to avoid stale paths
   if [ -f "$CLAUDE_ENV_FILE" ]; then
     awk -v begin="$begin" -v end="$end" '
       $0 == begin { skip=1; next }
@@ -77,11 +96,17 @@ persist_claude_env() {
     : > "$tmp"
   fi
 
+  # Always persist general env vars; conditionally include NVM-specific lines
+  local node_dir
   {
     echo "$begin"
-    echo "export NVM_DIR=\"$HOME/.nvm\""
-    echo ". \"\$NVM_DIR/nvm.sh\""
-    echo "export PATH=\"$(dirname "$(nvm which current)"):\$PATH\""
+    if command -v nvm >/dev/null 2>&1 \
+      && node_dir="$(dirname "$(nvm which current)" 2>/dev/null)" \
+      && [[ "$node_dir" == "$NVM_DIR"/* ]]; then
+      echo "export NVM_DIR=\"$NVM_DIR\""
+      echo ". \"\$NVM_DIR/nvm.sh\" --no-use"
+      echo "export PATH=\"$node_dir:\$PATH\""
+    fi
     echo "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true"
     echo "$end"
   } >> "$tmp"
@@ -89,6 +114,9 @@ persist_claude_env() {
   mv "$tmp" "$CLAUDE_ENV_FILE"
 }
 persist_claude_env
+
+actual_node="$(node -v | sed 's/^v//')"
+actual_npm="$(npm -v)"
 
 # Use tracked plus current modified and untracked files so new workspace manifests also count.
 # Filter to npm-relevant inputs only, and avoid node_modules.
