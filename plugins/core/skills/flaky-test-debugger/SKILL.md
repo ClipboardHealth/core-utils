@@ -28,12 +28,14 @@ Before investigating, check whether someone (or another agent) has already fixed
 
 1. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
    - Search PRs labeled `flaky-test-fix` for the test file name or test directory
-   - If a matching open PR exists, stop and report it to the user — do not open a duplicate fix
-2. **Check recent commits on `main`** that touch the failing test file:
-   - `git log --oneline -20 -- <test-file-path>` to see if a recent commit already addresses the flake
+   - Review the PR's changes to assess whether they address the same flake pattern with reasonable confidence — if so, stop and report it to the user rather than opening a duplicate fix
+   - If the PR only partially addresses the flake or targets a different root cause, note it and proceed with investigation
+2. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
+   - `git log --oneline -20 -- <test-file-path>` and also check the parent directory or related source files
    - Read the commit messages — if one clearly fixes the same flake pattern, stop and report it to the user
 
 If an existing fix is found, report:
+
 - The PR number/URL or commit hash
 - A brief summary of what it addresses
 - Whether it fully covers the current flake or only partially
