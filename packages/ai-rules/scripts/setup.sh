@@ -42,7 +42,7 @@ fi
 
 if [ "$deps_only" = false ]; then
   # Install NVM if not present
-  if [ ! -d "$HOME/.nvm" ]; then
+  if [ ! -s "$NVM_DIR/nvm.sh" ]; then
     curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
   fi
@@ -104,7 +104,7 @@ persist_claude_env() {
       && node_dir="$(dirname "$(nvm which current)" 2>/dev/null)" \
       && [[ "$node_dir" == "$NVM_DIR"/* ]]; then
       echo "export NVM_DIR=\"$NVM_DIR\""
-      echo ". \"\$NVM_DIR/nvm.sh\""
+      echo ". \"\$NVM_DIR/nvm.sh\" --no-use"
       echo "export PATH=\"$node_dir:\$PATH\""
     fi
     echo "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true"
