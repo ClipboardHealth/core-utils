@@ -336,6 +336,8 @@ Lint and type-check touched files.
 
 ## Output Format
 
+When opening a PR for a flaky test fix, apply the `flaky-test-fix` label so other agents can find it during Phase 1b deduplication.
+
 When documenting the fix in a PR or issue, use this structure:
 
 - **Confidence:** score (1-5) with brief justification
