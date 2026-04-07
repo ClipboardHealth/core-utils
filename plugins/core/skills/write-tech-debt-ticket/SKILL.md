@@ -1,6 +1,6 @@
 ---
 name: write-tech-debt-ticket
-description: Use when creating a Linear tech debt ticket from code review, PR comments, codebase audits, conversations, or post-incident findings. Guides through classification, evidence gathering, and impact justification before drafting.
+description: Use when creating a Linear tech debt ticket while working in the codebase — from code review, PR comments, codebase audits, or post-incident findings. Expects deep technical context; classifies debt, assesses interest/risk with evidence, and justifies impact.
 ---
 
 # Write Tech Debt Ticket
@@ -36,6 +36,8 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 - **Datadog is mandatory for Performance/Reliability/Scalability.** Conditional for other types.
 - **Code references always.** File paths and line numbers in every ticket.
 - **Clean titles.** No bracket prefixes. Describe the debt. Under 70 characters.
+- **Never invent.** Every claim must be backed by code you read, data you found, or context from the conversation. If you can't find evidence for an assertion, don't include it — even if it seems plausible.
+- **One ticket, one concern.** If the debt spans multiple independent problems (e.g., a performance issue AND a maintainability issue in the same service), split into separate tickets — each with its own classification, evidence, and impact. Related debt can reference each other.
 - **Always document the repository.** Flag multi-repo debt to the user for splitting.
 - **Redirect non-debt.** Bugs → `write-bug-ticket`, features → `write-feature-ticket`.
 
