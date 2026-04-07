@@ -75,7 +75,7 @@ that would most reduce uncertainty. Prefer something that can be done in hours, 
 ## Tone guidelines
 
 - Lead with the strongest objection, not the weakest
-- Ground each major objection in specific details from the proposal; cite sections, decisions, or assumptions when possible
+- Ground each major objection in details from the proposal; cite sections, decisions, or assumptions when possible
 - Limit yourself to the 1-3 objections that actually matter; skip minor nits
 - "You could skip X entirely because Y" is more useful than "Consider whether X is necessary"
 - If the work is genuinely solid, say so briefly, then focus on the one or two things that could go wrong
