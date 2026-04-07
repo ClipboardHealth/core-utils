@@ -31,7 +31,7 @@ Before investigating, check whether someone (or another agent) has already fixed
    - Review the PR's changes to assess whether they address the same flake pattern with reasonable confidence — if so, stop and report it to the user rather than opening a duplicate fix
    - If the PR only partially addresses the flake or targets a different root cause, note it and proceed with investigation
 2. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
-   - `git log --oneline -20 -- <test-file-path>` and also check the parent directory or related source files
+   - `git log --oneline -20 origin/main -- <test-file-path>` and also check the parent directory or related source files
    - Read the commit messages — if one clearly fixes the same flake pattern, stop and report it to the user
 
 If an existing fix is found, report:
