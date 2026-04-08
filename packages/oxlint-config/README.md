@@ -63,6 +63,6 @@ Override shared rules as needed:
 
 The `base.json` config includes:
 
-- **Plugins**: eslint, typescript, unicorn, oxc, import, jsdoc, node, promise, vitest
+- **Plugins**: eslint, typescript, unicorn, oxc, import, jsdoc, node, promise
 - **Rules**: Opinionated defaults with select rules disabled
 - **Overrides**: Root-level files, vitest config, test files, and script files

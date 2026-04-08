@@ -10,8 +10,7 @@
     "jsdoc",
     "node",
     "promise",
-    "jest",
-    "vitest"
+    "jest"
   ],
   "categories": {
     "correctness": "error",
