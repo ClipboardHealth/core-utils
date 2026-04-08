@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type ApiType, type Data, type Field, type JsonApiDocument } from "../types";
+import type { ApiType, Data, Field, JsonApiDocument } from "../types";
 
 export type FieldsMap = Record<ApiType, readonly [Field, ...Field[]]>;
 

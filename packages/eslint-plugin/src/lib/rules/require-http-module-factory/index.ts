@@ -1,7 +1,8 @@
 /**
  * @fileoverview Rule to require HttpModule to use registerAsync factory to avoid shared axios client issues
  */
-import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
 
 import { createRule } from "../../createRule";
 

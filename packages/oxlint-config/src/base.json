@@ -4,7 +4,7 @@
     "curly": ["error", "all"],
     "func-style": ["error", "declaration"],
     "id-length": "off",
-    "import/consistent-type-specifier-style": "off",
+    "import/consistent-type-specifier-style": "error",
     "import/exports-last": "off",
     "import/group-exports": "off",
     "import/no-cycle": ["error", { "ignoreExternal": true, "maxDepth": 16 }],
@@ -17,6 +17,7 @@
     "no-named-export": "off",
     "no-ternary": "off",
     "no-undef": "off",
+    "no-useless-assignment": "off",
     "no-unused-vars": [
       "warn",
       {
@@ -34,11 +35,24 @@
     "promise/avoid-new": "off",
     "promise/prefer-await-to-callbacks": "off",
     "require-await": "off",
+    "typescript/consistent-return": "off",
+    "typescript/no-deprecated": "off",
+    "typescript/no-misused-promises": "off",
+    "typescript/no-unnecessary-condition": "off",
+    "typescript/no-unnecessary-type-arguments": "off",
+    "typescript/no-unnecessary-type-conversion": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unsafe-member-access": "off",
     "typescript/prefer-readonly-parameter-types": "off",
-    "typescript/promise-function-async": "off",
+    "typescript/prefer-promise-reject-errors": "off",
+    "typescript/promise-function-async": "error",
+    "typescript/strict-void-return": "off",
+    "typescript/unbound-method": "off",
+    "typescript/use-unknown-in-catch-callback-variable": "off",
+    "unicorn/custom-error-definition": "off",
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
-    "unicorn/no-null": "off",
-    "unicorn/prevent-abbreviations": ["error", { "ignore": ["config", "params", "props", "ref"] }]
+    "unicorn/no-useless-promise-resolve-reject": "off",
+    "unicorn/no-null": "off"
   },
   "overrides": [
     {
@@ -68,7 +82,12 @@
       "files": ["**/*.test.ts", "**/*.spec.ts"],
       "rules": {
         "max-lines": "off",
-        "max-lines-per-function": "off"
+        "max-lines-per-function": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/strict-void-return": "off",
+        "typescript/unbound-method": "off"
       }
     },
     {

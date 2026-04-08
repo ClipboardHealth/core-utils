@@ -1,5 +1,6 @@
 // embedex: packages/example-nestjs/README.md
-import { initClient, type ServerInferRequest } from "@ts-rest/core";
+import { initClient } from "@ts-rest/core";
+import type { ServerInferRequest } from "@ts-rest/core";
 
 import { contract } from "../src/contract";
 

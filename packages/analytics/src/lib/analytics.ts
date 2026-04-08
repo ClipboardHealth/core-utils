@@ -1,11 +1,6 @@
 import { formatPhoneNumber } from "@clipboard-health/phone-number";
-import {
-  isFailure,
-  isString,
-  type LogFunction,
-  type Logger,
-  toError,
-} from "@clipboard-health/util-ts";
+import { isFailure, isString, toError } from "@clipboard-health/util-ts";
+import type { LogFunction, Logger } from "@clipboard-health/util-ts";
 import { Analytics as SegmentAnalytics } from "@segment/analytics-node";
 
 export interface UserId {

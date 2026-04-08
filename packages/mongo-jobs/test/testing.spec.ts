@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-import { type BackgroundJobs } from "../src";
+import type { BackgroundJobs } from "../src";
 import { drainHandlers, drainQueues } from "../src/lib/testing";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
 import { EnqueueAnotherJob } from "./support/enqueueAnotherJob";
@@ -10,7 +10,8 @@ import { JobRun } from "./support/jobRun";
 import { LongJob } from "./support/longJob";
 import { NoRetryJob } from "./support/noRetryJob";
 import { OtherQueueJob } from "./support/otherQueueJob";
-import { createTestContext, type TestContext } from "./support/testContext";
+import { createTestContext } from "./support/testContext";
+import type { TestContext } from "./support/testContext";
 
 const HOURS = 1000 * 60 * 60;
 

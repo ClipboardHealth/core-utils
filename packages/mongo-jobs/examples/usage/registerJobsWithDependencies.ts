@@ -7,8 +7,10 @@ const backgroundJobs = new BackgroundJobs();
 
 // For jobs with constructor dependencies, register an instance
 const emailService = {
-  async send(to: string, subject: string, body: string) {
+  async send(to: string, subject: string, body: string): Promise<void> {
     console.log(`Sending email to ${to}: ${subject} : ${body}`);
+
+    return Promise.resolve();
   },
 };
 

@@ -1,4 +1,4 @@
-import { type Knock } from "@knocklabs/node";
+import type { Knock } from "@knocklabs/node";
 
 import type { Attachment, RecipientRequest, TriggerBody } from "../types";
 import { toInlineIdentifyUserRequest } from "./toInlineIdentifyUserRequest";

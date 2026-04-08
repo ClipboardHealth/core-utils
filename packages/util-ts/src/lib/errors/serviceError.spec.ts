@@ -2,7 +2,8 @@ import { ok } from "node:assert/strict";
 
 import { ZodError } from "zod";
 
-import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
+import { ERROR_CODES, ServiceError } from "./serviceError";
+import type { ServiceErrorParams } from "./serviceError";
 
 describe("ServiceError", () => {
   describe("fromZodLike", () => {

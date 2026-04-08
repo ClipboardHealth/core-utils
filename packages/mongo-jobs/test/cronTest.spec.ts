@@ -1,7 +1,8 @@
 import type { BackgroundJobs } from "../src";
 import { Semaphore } from "./support/semaphore";
 import { SemaphoreJob } from "./support/semaphoreJob";
-import { createTestContext, type TestContext } from "./support/testContext";
+import { createTestContext } from "./support/testContext";
+import type { TestContext } from "./support/testContext";
 
 const allFakeableTimers: FakeableAPI[] = [
   "Date",

@@ -21,8 +21,10 @@ export class NestedDataJob implements HandlerInterface<NestedJobData> {
 
   public name = "NestedDataJob";
 
-  public async perform(data: NestedJobData, job: BackgroundJobType<NestedJobData>) {
+  public async perform(data: NestedJobData, job: BackgroundJobType<NestedJobData>): Promise<void> {
     NestedDataJob.receivedData = data;
     NestedDataJob.receivedJob = job;
+
+    return Promise.resolve();
   }
 }

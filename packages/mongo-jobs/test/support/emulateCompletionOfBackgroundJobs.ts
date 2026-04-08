@@ -96,6 +96,6 @@ async function main() {
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
-void main().catch((error) => {
-  log(`Error: ${error}`);
+void main().catch((error: unknown) => {
+  log(`Error: ${String(error)}`);
 });

@@ -1,6 +1,7 @@
 import type { Logger } from "@clipboard-health/util-ts";
 
-import { Analytics, type Enabled, type IdentifyRequest, type TrackRequest } from "./analytics";
+import { Analytics } from "./analytics";
+import type { Enabled, IdentifyRequest, TrackRequest } from "./analytics";
 
 const mockSegment = {
   identify: jest.fn(),

@@ -1,6 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 
-import { BackgroundJobs, type BackgroundJobType } from "../src";
+import { BackgroundJobs } from "../src";
+import type { BackgroundJobType } from "../src";
 import { createMongoConnection, createMongoSession } from "./support/connectToMongo";
 import { dropDatabase } from "./support/dropDatabase";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
@@ -14,7 +15,8 @@ import { NoRetryJob } from "./support/noRetryJob";
 import { OtherQueueJob } from "./support/otherQueueJob";
 import { Semaphore } from "./support/semaphore";
 import { SemaphoreJob } from "./support/semaphoreJob";
-import { createTestContext, type TestContext } from "./support/testContext";
+import { createTestContext } from "./support/testContext";
+import type { TestContext } from "./support/testContext";
 import { TestLogger } from "./support/testLogger";
 import { waitForJobCount } from "./support/waitForJobCount";
 import { waitForJobRunCount } from "./support/waitForJobRunCount";

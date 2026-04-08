@@ -21,7 +21,7 @@
   "options": {
     "denyWarnings": true,
     "reportUnusedDisableDirectives": "off",
-    "typeAware": false,
+    "typeAware": true,
     "typeCheck": false
   },
   "settings": {

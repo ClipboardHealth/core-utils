@@ -1,7 +1,7 @@
-import { type Logger } from "@clipboard-health/util-ts";
+import type { Logger } from "@clipboard-health/util-ts";
 
-import { type IdempotentKnock } from "./internal/idempotentKnock";
-import { type TriggerIdempotencyKey } from "./triggerIdempotencyKey";
+import type { IdempotentKnock } from "./internal/idempotentKnock";
+import type { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
 
 export type Tags = Record<string, unknown>;
 

@@ -1,4 +1,4 @@
-import { type NullOrUndefined } from "../types";
+import type { NullOrUndefined } from "../types";
 
 /**
  * Type guard that checks if a value is null or undefined.

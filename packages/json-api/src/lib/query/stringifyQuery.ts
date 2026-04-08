@@ -1,6 +1,6 @@
 import { stringify } from "qs";
 
-import { type ClientJsonApiQuery } from "../types";
+import type { ClientJsonApiQuery } from "../types";
 
 /**
  * Converts from an ergonomic query format to URLSearchParams, providing a more user-friendly API

@@ -1,6 +1,6 @@
 // embedex: packages/notifications/examples/usage.md
-import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
-import { type SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
+import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+import type { SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
 
 import { BackgroundJobsService } from "./setup";
 import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";

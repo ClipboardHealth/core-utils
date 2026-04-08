@@ -68,7 +68,7 @@ export class JobsRepository {
     const uniqueOptions = normalizeUniqueOptions(unique);
     const uniqueKey = uniqueOptions?.enqueuedKey;
 
-    return await withProducerTrace(handler, data, async (dataWithTrace) => {
+    return withProducerTrace(handler, data, async (dataWithTrace) => {
       try {
         if (session && uniqueKey) {
           // Checking for existence here to prevent DuplicateKeyError from aborting the existing transaction
@@ -113,7 +113,7 @@ export class JobsRepository {
   public async fetchAndLockNextJob(
     queues: string[],
   ): Promise<BackgroundJobType<unknown> | undefined> {
-    return await withInternalsTrace("fetchAndLockNextJob", async () => {
+    return withInternalsTrace("fetchAndLockNextJob", async () => {
       const acquiredJob = await this.jobModel
         .findOneAndUpdate(
           {
@@ -136,7 +136,7 @@ export class JobsRepository {
   }
 
   public async fetchNextJob(queue: string): Promise<BackgroundJobType<unknown> | undefined> {
-    return await withInternalsTrace("fetchNextJob", async () => {
+    return withInternalsTrace("fetchNextJob", async () => {
       const job = await this.jobModel
         .findOne(
           {
@@ -189,7 +189,7 @@ export class JobsRepository {
   }
 
   public async getJob(id: mongoose.Types.ObjectId) {
-    return await this.jobModel.findById(id);
+    return this.jobModel.findById(id);
   }
 
   public async deleteUpcomingScheduleJobs(scheduleName: string) {
@@ -262,6 +262,6 @@ export class JobsRepository {
     }
 
     const queuesFilter = { queue: { $in: pertinentQueues } };
-    return await this.jobModel.distinct("queue", queuesFilter);
+    return this.jobModel.distinct("queue", queuesFilter);
   }
 }

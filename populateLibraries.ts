@@ -82,7 +82,7 @@ async function updateFile(file: FileUpdate, entries: readonly LibraryEntry[]): P
 
 async function updateLibraries(): Promise<void> {
   const entries = await getLibraryEntries();
-  await Promise.all(FILES.map((file) => updateFile(file, entries)));
+  await Promise.all(FILES.map(async (file) => updateFile(file, entries)));
 }
 
 void updateLibraries();

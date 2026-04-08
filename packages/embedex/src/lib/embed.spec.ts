@@ -36,7 +36,7 @@ describe("embed", () => {
   });
 
   async function read(filePath: string) {
-    return await readFile(path.join(cwd, filePath), "utf8");
+    return readFile(path.join(cwd, filePath), "utf8");
   }
 
   async function write(filePath: string, content: string[]) {
@@ -119,7 +119,7 @@ describe("embed", () => {
       ...sourceACode,
     ]);
 
-    await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
+    await expect(async () => embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
       `ENOENT: no such file or directory, open '${path.join(cwd, paths.destinations.l)}'`,
     );
   });

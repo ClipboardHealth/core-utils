@@ -1,4 +1,4 @@
-import { type ServerJsonApiQuery } from "../types";
+import type { ServerJsonApiQuery } from "../types";
 import { parseQuery } from "./parseQuery";
 
 const BASE_URL = "https://google.com";

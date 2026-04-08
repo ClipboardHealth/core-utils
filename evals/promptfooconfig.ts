@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = join(import.meta.dirname, "..");
 
 // claude-agent-sdk doesn't resolve @mentions in CLAUDE.md like Claude Code CLI does, so load
 // AGENTS.md to give the agent the index; we're still testing that it Read the actual rule files.

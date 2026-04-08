@@ -26,6 +26,8 @@ export async function processRequest() {
       addMetadataToLocalContext({ error });
       console.error("event=MessageProcessed", { ...context?.metadata });
     }
+
+    return Promise.resolve();
   });
 }
 
