@@ -45,6 +45,7 @@
     "@nx/webpack": "22.5.4",
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.15.21",
+    "@swc/helpers": "0.5.21",
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
     "@types/jest": "30.0.0",

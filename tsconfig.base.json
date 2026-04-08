@@ -30,7 +30,8 @@
       "@clipboard-health/rules-engine": ["packages/rules-engine/src/index.ts"],
       "@clipboard-health/testing-core": ["packages/testing-core/src/index.ts"],
       "@clipboard-health/util-ts": ["packages/util-ts/src/index.ts"],
-      "embedex": ["packages/embedex/src/index.ts"]
+      "embedex": ["packages/embedex/src/index.ts"],
+      "@clipboard-health/oxlint-config": ["packages/oxlint-config/src/index.ts"]
     },
     "rootDir": ".",
     "skipDefaultLibCheck": true,
