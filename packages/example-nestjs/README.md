@@ -27,7 +27,8 @@ The following makes requests to the example application using the `ts-rest` clie
 <embedex source="packages/example-nestjs/examples/client.ts">
 
 ```ts
-import { initClient, type ServerInferRequest } from "@ts-rest/core";
+import { initClient } from "@ts-rest/core";
+import type { ServerInferRequest } from "@ts-rest/core";
 
 import { contract } from "../src/contract";
 

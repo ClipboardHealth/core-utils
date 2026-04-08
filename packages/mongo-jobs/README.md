@@ -131,7 +131,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
   public maxAttempts = 5;
 
   // Required: the actual job logic
-  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
+  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>): Promise<void> {
     // Job implementation
     console.log(`Processing ${data.action} for user ${data.userId}`);
 
@@ -140,6 +140,8 @@ export class MyJob implements HandlerInterface<MyJobData> {
       console.log(`Job ID: ${job._id.toString()}`);
       console.log(`Attempt: ${job.attemptsCount}`);
     }
+
+    return Promise.resolve();
   }
 }
 ```
@@ -203,8 +205,10 @@ const backgroundJobs = new BackgroundJobs();
 
 // For jobs with constructor dependencies, register an instance
 const emailService = {
-  async send(to: string, subject: string, body: string) {
+  async send(to: string, subject: string, body: string): Promise<void> {
     console.log(`Sending email to ${to}: ${subject} : ${body}`);
+
+    return Promise.resolve();
   },
 };
 

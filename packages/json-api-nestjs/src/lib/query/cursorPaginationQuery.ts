@@ -19,17 +19,17 @@ export const PAGINATION = {
  * import {
  *   cursorPaginationQuery,
  *   fieldsQuery,
- *   type FilterMap,
  *   filterQuery,
  *   includeQuery,
  *   sortQuery,
  * } from "@clipboard-health/json-api-nestjs";
+ * import type { FilterMap } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import {
- *   type ArticleAttributeFields,
- *   type UserAttributeFields,
- *   type UserIncludeFields,
+ * import type {
+ *   ArticleAttributeFields,
+ *   UserAttributeFields,
+ *   UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];

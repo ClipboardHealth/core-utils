@@ -23,14 +23,8 @@ npm install @clipboard-health/rules-engine
 ```ts
 import { deepEqual } from "node:assert/strict";
 
-import {
-  all,
-  allIf,
-  appendOutput,
-  firstMatch,
-  type Rule,
-  type RuleContext,
-} from "@clipboard-health/rules-engine";
+import { all, allIf, appendOutput, firstMatch } from "@clipboard-health/rules-engine";
+import type { Rule, RuleContext } from "@clipboard-health/rules-engine";
 
 interface Input {
   a: number;

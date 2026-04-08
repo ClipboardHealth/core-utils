@@ -111,7 +111,8 @@ strictEqual(value.right, 5);
 import { strictEqual } from "node:assert/strict";
 
 import { expectToBeFailure } from "@clipboard-health/testing-core";
-import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
+import { failure, success } from "@clipboard-health/util-ts";
+import type { ServiceResult } from "@clipboard-health/util-ts";
 
 function validateAge(age: number): ServiceResult<number> {
   if (age < 0) {
@@ -136,7 +137,8 @@ strictEqual(result.left.issues[0]?.message, "Age cannot be negative");
 import { strictEqual } from "node:assert/strict";
 
 import { expectToBeSuccess } from "@clipboard-health/testing-core";
-import { failure, type ServiceResult, success } from "@clipboard-health/util-ts";
+import { failure, success } from "@clipboard-health/util-ts";
+import type { ServiceResult } from "@clipboard-health/util-ts";
 
 function validateAge(age: number): ServiceResult<number> {
   if (age < 0) {

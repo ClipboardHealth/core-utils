@@ -25,12 +25,11 @@ Send notifications through third-party providers.
 
    ```ts
    // triggerNotification.job.ts
-   import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
-   import {
-     ERROR_CODES,
-     type NotificationClient,
-     type SerializableTriggerChunkedRequest,
-     toTriggerChunkedRequest,
+   import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
+   import { ERROR_CODES, toTriggerChunkedRequest } from "@clipboard-health/notifications";
+   import type {
+     NotificationClient,
+     SerializableTriggerChunkedRequest,
    } from "@clipboard-health/notifications";
    import { isFailure } from "@clipboard-health/util-ts";
 
@@ -117,7 +116,8 @@ Send notifications through third-party providers.
    ```ts
    import { NotificationClient } from "@clipboard-health/notifications";
 
-   import { CBHLogger, type Provider, toLogger, tracer } from "./setup";
+   import { CBHLogger, toLogger, tracer } from "./setup";
+   import type { Provider } from "./setup";
 
    export const NOTIFICATION_CLIENT_TOKEN = "NOTIFICATION_CLIENT";
 
@@ -152,8 +152,8 @@ Send notifications through third-party providers.
 3. Build your `SerializableTriggerChunkedRequest` and enqueue your job. Think of queuing `TriggerNotificationJob` as a function call to send notifications in a best practices way. You should NOT call `triggerChunked` directly. If, for example, your notification is delayed, create a background job that runs in the future, does any necessary checks to ensure you should notify, and then queue `TriggerNotificationJob`.
 
    ```ts
-   import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
-   import { type SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
+   import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+   import type { SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
 
    import { BackgroundJobsService } from "./setup";
    import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";
