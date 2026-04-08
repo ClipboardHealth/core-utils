@@ -128,8 +128,10 @@ run_npm() {
 
   if command -v op >/dev/null 2>&1 && [ -f "$HOME/.1password.env" ]; then
     echo "NPM_TOKEN not set; running npm ${npm_args[*]} via 1Password env"
-    op run --env-file="$HOME/.1password.env" -- npm "${npm_args[@]}"
-    return
+    if op run --env-file="$HOME/.1password.env" -- npm "${npm_args[@]}"; then
+      return
+    fi
+    echo "1Password env execution failed; trying other npm fallbacks" >&2
   fi
 
   local user_shell="${SHELL:-}"
