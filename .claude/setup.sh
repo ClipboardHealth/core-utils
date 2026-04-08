@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# When invoked as a Claude Code SessionStart hook (`CLAUDE_ENV_FILE` set), only run in remote
+# environments (`CLAUDE_CODE_REMOTE` set). Direct invocations (e.g., Devin, local) always run.
+if [[ -n "${CLAUDE_ENV_FILE:-}" && -z "${CLAUDE_CODE_REMOTE:-}" ]]; then
+  exit 0
+fi
+
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 deps_only=false
@@ -29,15 +35,11 @@ if [ ! -f package.json ]; then
   exit 0
 fi
 
-# Source NVM if available. --no-use avoids auto-activating .nvmrc (which fails
-# if the version isn't installed yet). Full bootstrap calls nvm install/use below.
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
-
-if [ "$deps_only" = true ]; then
-  # Activate whatever node NVM has (try .nvmrc, then default alias).
-  # Suppressed: version may not be installed yet, or NVM may not be present.
-  nvm use 2>/dev/null || nvm use default 2>/dev/null || true
+# Source NVM only for full bootstrap (not --deps-only, where engineers may not use NVM).
+# --no-use avoids auto-activating .nvmrc (which fails if the version isn't installed yet).
+if [ "$deps_only" = false ]; then
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
 fi
 
 if [ "$deps_only" = false ]; then
