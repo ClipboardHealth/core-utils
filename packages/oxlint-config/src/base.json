@@ -65,7 +65,7 @@
       }
     },
     {
-      "files": ["**/*.test.ts"],
+      "files": ["**/*.test.ts", "**/*.spec.ts"],
       "rules": {
         "max-lines": ["error", { "max": 500 }],
         "max-lines-per-function": "off",
