@@ -123,11 +123,7 @@
     "unicorn/prefer-bigint-literals": "off",
     "unicorn/prefer-module": "off",
     "unicorn/prefer-string-raw": "off",
-    "unicorn/prefer-top-level-await": "off",
-    "vitest/consistent-test-filename": "off",
-    "vitest/prefer-called-once": "off",
-    "vitest/prefer-expect-type-of": "off",
-    "vitest/prefer-import-in-mock": "off"
+    "unicorn/prefer-top-level-await": "off"
   },
   "overrides": [
     {
