@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/eslint-config",
-  "version": "7.3.24",
+  "version": "7.3.25",
   "description": "Our ESLint configuration.",
   "keywords": [
     "config",
