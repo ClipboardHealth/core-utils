@@ -67,7 +67,7 @@
     {
       "files": ["**/*.test.ts", "**/*.spec.ts"],
       "rules": {
-        "max-lines": ["error", { "max": 500 }],
+        "max-lines": "off",
         "max-lines-per-function": "off",
         "vitest/prefer-describe-function-title": "off",
         "vitest/prefer-to-be-falsy": "off",
