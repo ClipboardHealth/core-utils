@@ -1,4 +1,4 @@
-import type { HandlerInterface } from "../../src/lib/handler";
+import { type HandlerInterface } from "../../src/lib/handler";
 
 interface JobData {
   myNumber: number;

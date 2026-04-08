@@ -1,4 +1,4 @@
-import type { Rule, RuleContext } from "../rule";
+import { type Rule, type RuleContext } from "../rule";
 
 /**
  * Run the first rule that returns true for `runIf`.

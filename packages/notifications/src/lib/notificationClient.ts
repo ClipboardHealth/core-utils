@@ -1,5 +1,12 @@
-import { failure, isFailure, ServiceError, success, toError } from "@clipboard-health/util-ts";
-import type { LogFunction, ServiceResult } from "@clipboard-health/util-ts";
+import {
+  failure,
+  isFailure,
+  type LogFunction,
+  ServiceError,
+  type ServiceResult,
+  success,
+  toError,
+} from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
@@ -12,24 +19,24 @@ import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
-import type { TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
-import type {
-  AppendPushTokenRequest,
-  AppendPushTokenResponse,
-  LogParams,
-  NotificationClientParams,
-  SignUserTokenRequest,
-  SignUserTokenResponse,
-  Span,
-  TriggerBody,
-  TriggerChunkedRequest,
-  TriggerChunkedResponse,
-  TriggerRequest,
-  TriggerResponse,
-  UpsertUserPreferencesRequest,
-  UpsertUserPreferencesResponse,
-  UpsertWorkplaceRequest,
-  UpsertWorkplaceResponse,
+import { type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
+import {
+  type AppendPushTokenRequest,
+  type AppendPushTokenResponse,
+  type LogParams,
+  type NotificationClientParams,
+  type SignUserTokenRequest,
+  type SignUserTokenResponse,
+  type Span,
+  type TriggerBody,
+  type TriggerChunkedRequest,
+  type TriggerChunkedResponse,
+  type TriggerRequest,
+  type TriggerResponse,
+  type UpsertUserPreferencesRequest,
+  type UpsertUserPreferencesResponse,
+  type UpsertWorkplaceRequest,
+  type UpsertWorkplaceResponse,
 } from "./types";
 
 const LOG_PARAMS = {
@@ -115,7 +122,7 @@ export class NotificationClient {
    */
   public async trigger(params: TriggerRequest): Promise<ServiceResult<TriggerResponse>> {
     const logParams = createTriggerLogParams({ ...params, ...LOG_PARAMS.trigger });
-    return this.tracer.trace(
+    return await this.tracer.trace(
       logParams.traceName,
       createTriggerTraceOptions(logParams),
       async (span) => {
@@ -183,11 +190,12 @@ export class NotificationClient {
    *
    * ```ts
    * // triggerNotification.job.ts
-   * import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
-   * import { ERROR_CODES, toTriggerChunkedRequest } from "@clipboard-health/notifications";
-   * import type {
-   *   NotificationClient,
-   *   SerializableTriggerChunkedRequest,
+   * import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
+   * import {
+   *   ERROR_CODES,
+   *   type NotificationClient,
+   *   type SerializableTriggerChunkedRequest,
+   *   toTriggerChunkedRequest,
    * } from "@clipboard-health/notifications";
    * import { isFailure } from "@clipboard-health/util-ts";
    *
@@ -279,7 +287,7 @@ export class NotificationClient {
     params: TriggerChunkedRequest,
   ): Promise<ServiceResult<TriggerChunkedResponse>> {
     const logParams = createTriggerLogParams({ ...params, ...LOG_PARAMS.triggerChunked });
-    return this.tracer.trace(
+    return await this.tracer.trace(
       logParams.traceName,
       createTriggerTraceOptions(logParams),
       async (span) => {

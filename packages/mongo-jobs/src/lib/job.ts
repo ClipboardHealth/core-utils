@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import type { TraceHeaders } from "./tracing";
+import { type TraceHeaders } from "./tracing";
 
 export interface JobUniqueOptions {
   enqueuedKey: string | undefined;

@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { embed } from "./embed";
 import { SOURCE_MARKER_PREFIX } from "./internal/createSourceMap";
-import type { CircularDependency, Embed, Updated } from "./types";
+import { type CircularDependency, type Embed, type Updated } from "./types";
 
 describe("embed", () => {
   // eslint-disable-next-line no-template-curly-in-string
@@ -36,7 +36,7 @@ describe("embed", () => {
   });
 
   async function read(filePath: string) {
-    return readFile(path.join(cwd, filePath), "utf8");
+    return await readFile(path.join(cwd, filePath), "utf8");
   }
 
   async function write(filePath: string, content: string[]) {
@@ -119,7 +119,7 @@ describe("embed", () => {
       ...sourceACode,
     ]);
 
-    await expect(async () => embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
+    await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
       `ENOENT: no such file or directory, open '${path.join(cwd, paths.destinations.l)}'`,
     );
   });

@@ -1,5 +1,8 @@
-import { DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS } from "../triggerIdempotencyKey";
-import type { TriggerIdempotencyKey, TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
+import {
+  DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
+  type TriggerIdempotencyKey,
+  type TriggerIdempotencyKeyParams,
+} from "../triggerIdempotencyKey";
 import { parseTriggerIdempotencyKey } from "./parseTriggerIdempotencyKey";
 
 describe("parseTriggerIdempotencyKey", () => {

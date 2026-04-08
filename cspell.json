@@ -113,6 +113,7 @@
     "trunc",
     "tsgo",
     "TSESTree",
+    "tsgolint",
     "TTFB",
     "typedoc",
     "typeof",

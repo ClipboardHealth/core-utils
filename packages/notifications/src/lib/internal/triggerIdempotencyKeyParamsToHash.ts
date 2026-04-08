@@ -1,6 +1,6 @@
 import { createDeterministicHash } from "@clipboard-health/util-ts";
 
-import type { TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
+import { type TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
 
 type HashParams = TriggerIdempotencyKeyParams & {
   workplaceId?: string | undefined;

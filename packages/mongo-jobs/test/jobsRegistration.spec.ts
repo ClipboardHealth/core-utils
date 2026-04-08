@@ -1,6 +1,6 @@
 /* eslint-disable  @typescript-eslint/dot-notation */
 import { BackgroundJobs } from "../src/lib/backgroundJobs";
-import type { Registry } from "../src/lib/internal/registry";
+import { type Registry } from "../src/lib/internal/registry";
 import { ExampleJob } from "./support/exampleJob";
 import { JobWithDependencies } from "./support/jobWithDependencies";
 

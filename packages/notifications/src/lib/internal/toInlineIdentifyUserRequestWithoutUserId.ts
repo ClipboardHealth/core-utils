@@ -1,6 +1,6 @@
-import type { Knock } from "@knocklabs/node";
+import { type Knock } from "@knocklabs/node";
 
-import type { InlineIdentifyUserRequest } from "../types";
+import { type InlineIdentifyUserRequest } from "../types";
 import { formatPhoneNumber } from "./formatPhoneNumber";
 
 type RecipientWithoutUserId = Omit<InlineIdentifyUserRequest, "userId">;

@@ -1,11 +1,11 @@
 import { CronExpressionParser } from "cron-parser";
 import type mongoose from "mongoose";
 
-import type { BackgroundJobType } from "../job";
-import type { ScheduleType } from "../schedule";
+import { type BackgroundJobType } from "../job";
+import { type ScheduleType } from "../schedule";
 import { HandlerAlreadyRegisteredError } from "./handlerAlreadyRegisteredError";
-import type { JobsRepository } from "./jobsRepository";
-import type { InstantiableHandlerClassOrInstance, Registry } from "./registry";
+import { type JobsRepository } from "./jobsRepository";
+import { type InstantiableHandlerClassOrInstance, type Registry } from "./registry";
 
 interface ConstructorOptions {
   scheduleModel: mongoose.Model<ScheduleType<unknown>>;

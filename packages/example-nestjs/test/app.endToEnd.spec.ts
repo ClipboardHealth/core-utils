@@ -1,6 +1,5 @@
-import type { NestExpressApplication } from "@nestjs/platform-express";
-import { Test } from "@nestjs/testing";
-import type { TestingModule } from "@nestjs/testing";
+import { type NestExpressApplication } from "@nestjs/platform-express";
+import { Test, type TestingModule } from "@nestjs/testing";
 import qs from "qs";
 import request from "supertest";
 

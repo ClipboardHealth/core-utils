@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
-import type { BackgroundJobs } from "./backgroundJobs";
-import type { AnyHandlerClass } from "./internal/registry";
-import type { Worker } from "./internal/worker";
+import { type BackgroundJobs } from "./backgroundJobs";
+import { type AnyHandlerClass } from "./internal/registry";
+import { type Worker } from "./internal/worker";
 
 interface DrainOptions {
   jobsScheduledUntil?: Date;

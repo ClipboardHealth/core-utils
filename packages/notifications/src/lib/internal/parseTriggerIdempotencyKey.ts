@@ -1,5 +1,8 @@
-import { isTriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
-import type { TriggerIdempotencyKey, TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
+import {
+  isTriggerIdempotencyKeyParams,
+  type TriggerIdempotencyKey,
+  type TriggerIdempotencyKeyParams,
+} from "../triggerIdempotencyKey";
 
 export function parseTriggerIdempotencyKey(params: {
   idempotencyKey: TriggerIdempotencyKey;

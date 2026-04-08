@@ -1,5 +1,5 @@
-import type { HandlerInterface } from "../../src/lib/handler";
-import type { Semaphore } from "./semaphore";
+import { type HandlerInterface } from "../../src/lib/handler";
+import { type Semaphore } from "./semaphore";
 
 interface JobData {
   resolvePromise: number | string;

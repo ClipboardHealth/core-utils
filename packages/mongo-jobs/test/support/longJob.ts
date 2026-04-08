@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import type { HandlerInterface } from "../../src";
+import { type HandlerInterface } from "../../src";
 import { JobRun } from "./jobRun";
 
 interface JobData {

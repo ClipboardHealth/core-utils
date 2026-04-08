@@ -19,11 +19,12 @@
 
    ```ts
    // triggerNotification.job.ts
-   import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
-   import { ERROR_CODES, toTriggerChunkedRequest } from "@clipboard-health/notifications";
-   import type {
-     NotificationClient,
-     SerializableTriggerChunkedRequest,
+   import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
+   import {
+     ERROR_CODES,
+     type NotificationClient,
+     type SerializableTriggerChunkedRequest,
+     toTriggerChunkedRequest,
    } from "@clipboard-health/notifications";
    import { isFailure } from "@clipboard-health/util-ts";
 
@@ -114,8 +115,7 @@
    ```ts
    import { NotificationClient } from "@clipboard-health/notifications";
 
-   import { CBHLogger, toLogger, tracer } from "./setup";
-   import type { Provider } from "./setup";
+   import { CBHLogger, type Provider, toLogger, tracer } from "./setup";
 
    export const NOTIFICATION_CLIENT_TOKEN = "NOTIFICATION_CLIENT";
 
@@ -158,8 +158,8 @@
    <embedex source="packages/notifications/examples/enqueueTriggerNotificationJob.ts">
 
    ```ts
-   import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
-   import type { SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
+   import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+   import { type SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
 
    import { BackgroundJobsService } from "./setup";
    import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";

@@ -122,8 +122,14 @@ try {
 ```ts
 import { ok } from "node:assert/strict";
 
-import { ERROR_CODES, failure, isFailure, isSuccess, success } from "@clipboard-health/util-ts";
-import type { ServiceResult } from "@clipboard-health/util-ts";
+import {
+  ERROR_CODES,
+  failure,
+  isFailure,
+  isSuccess,
+  type ServiceResult,
+  success,
+} from "@clipboard-health/util-ts";
 
 function validateUser(params: { email: string; phone: string }): ServiceResult<{ id: string }> {
   const { email, phone } = params;
@@ -168,7 +174,7 @@ async function example() {
   strictEqual(successResult.value.id, 1);
 
   const failureResult = await tryCatchAsync(
-    async () => Promise.reject(new Error("Network error")),
+    async () => await Promise.reject(new Error("Network error")),
     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
   );
 

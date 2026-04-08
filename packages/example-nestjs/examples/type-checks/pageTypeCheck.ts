@@ -1,6 +1,6 @@
-import type { z } from "zod";
+import { type z } from "zod";
 
-import type { query } from "../query";
+import { type query } from "../query";
 
 type Page = z.infer<typeof query.shape.page>;
 // @ts-expect-error: unused

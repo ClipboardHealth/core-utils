@@ -1,6 +1,6 @@
-import type { UserSetPreferencesParams } from "@knocklabs/node/resources/index";
+import { type UserSetPreferencesParams } from "@knocklabs/node/resources/index";
 
-import type { UpsertUserPreferencesRequest } from "../types";
+import { type UpsertUserPreferencesRequest } from "../types";
 import { toKnockUserPreferences } from "./toKnockUserPreferences";
 
 describe("toKnockPreferences", () => {

@@ -1,5 +1,5 @@
 // embedex: packages/mongo-jobs/README.md
-import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
+import { type HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 interface EmailService {
   send(to: string, subject: string, body: string): Promise<void>;

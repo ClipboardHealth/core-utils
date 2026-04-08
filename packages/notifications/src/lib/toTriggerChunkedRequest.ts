@@ -1,8 +1,8 @@
-import type {
-  RecipientRequest,
-  SerializableRecipientRequest,
-  SerializableTriggerChunkedRequest,
-  TriggerChunkedRequest,
+import {
+  type RecipientRequest,
+  type SerializableRecipientRequest,
+  type SerializableTriggerChunkedRequest,
+  type TriggerChunkedRequest,
 } from "./types";
 
 /**

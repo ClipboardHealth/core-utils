@@ -1,4 +1,4 @@
-import type { TriggerBody } from "../types";
+import { type TriggerBody } from "../types";
 import { toTriggerBody } from "./toTriggerBody";
 
 describe("toTriggerBody", () => {

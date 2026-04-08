@@ -1,4 +1,4 @@
-import type { ClientJsonApiQuery } from "../types";
+import { type ClientJsonApiQuery } from "../types";
 import { stringifyQuery } from "./stringifyQuery";
 
 function stringify(query: ClientJsonApiQuery): string {

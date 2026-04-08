@@ -1,4 +1,4 @@
-import type { Rule, RuleContext } from "../..";
+import { type Rule, type RuleContext } from "../..";
 import { appendOutput } from "../appendOutput";
 import { all } from "./all";
 

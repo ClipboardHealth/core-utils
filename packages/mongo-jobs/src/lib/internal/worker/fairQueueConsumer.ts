@@ -1,10 +1,10 @@
-import type { ChangeStream } from "mongodb";
+import { type ChangeStream } from "mongodb";
 
-import type { BackgroundJobType } from "../../job";
-import type { JobsRepository, UpsertChangeStreamEvent } from "../jobsRepository";
+import { type BackgroundJobType } from "../../job";
+import { type JobsRepository, type UpsertChangeStreamEvent } from "../jobsRepository";
 import { ActionableQueues } from "./actionableQueues";
 import { FutureQueues } from "./futureQueues";
-import type { QueueConsumer, QueueConsumerStartOptions } from "./queueConsumer";
+import { type QueueConsumer, type QueueConsumerStartOptions } from "./queueConsumer";
 
 export class FairQueueConsumer extends EventTarget implements QueueConsumer {
   private readonly jobsRepository: JobsRepository;
@@ -107,7 +107,8 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
       job = await this.jobsRepository.fetchAndLockNextJob([queue]);
 
       if (!job) {
-        this.removeQueueFromActionable(queue);
+        // eslint-disable-next-line no-await-in-loop
+        await this.removeQueueFromActionable(queue);
       }
     }
 
@@ -125,7 +126,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     }
   }
 
-  private removeQueueFromActionable(queue: string): void {
+  private async removeQueueFromActionable(queue: string) {
     this.actionableQueues.remove(queue);
     void this.refreshQueueFutureActionableAt(queue);
   }

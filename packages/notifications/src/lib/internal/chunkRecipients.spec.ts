@@ -1,4 +1,4 @@
-import type { InlineIdentifyUserRequest } from "../types";
+import { type InlineIdentifyUserRequest } from "../types";
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./chunkRecipients";
 
 describe("chunkRecipients", () => {

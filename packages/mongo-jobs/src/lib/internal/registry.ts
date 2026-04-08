@@ -1,4 +1,4 @@
-import type { HandlerInterface } from "../handler";
+import { type HandlerInterface } from "../handler";
 import { HandlerAlreadyRegisteredError } from "./handlerAlreadyRegisteredError";
 
 type InstantiableHandlerClass<T> = new () => HandlerInterface<T>;

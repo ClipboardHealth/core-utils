@@ -1,8 +1,7 @@
 /**
  * @fileoverview Rule to require runValidators: true when upsert: true is used in Mongoose operations
  */
-import { AST_NODE_TYPES } from "@typescript-eslint/utils";
-import type { TSESTree } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
 import { createRule } from "../../createRule";
 

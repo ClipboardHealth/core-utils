@@ -1,16 +1,16 @@
 import type mongoose from "mongoose";
 
-import type { BackgroundJobType } from "../job";
+import { type BackgroundJobType } from "../job";
 import { withConsumerTrace, withInternalsTrace } from "../tracing";
-import type { Cron } from "./cron";
+import { type Cron } from "./cron";
 import { DuplicateRunningError } from "./duplicateRunningError";
-import type { JobsRepository } from "./jobsRepository";
-import type { Logger } from "./logger";
-import type { Metrics } from "./metrics";
+import { type JobsRepository } from "./jobsRepository";
+import { type Logger } from "./logger";
+import { type Metrics } from "./metrics";
 import { isMongoDuplicateError } from "./mongoDuplicate";
-import type { Registry } from "./registry";
+import { type Registry } from "./registry";
 import { FairQueueConsumer } from "./worker/fairQueueConsumer";
-import type { QueueConsumer } from "./worker/queueConsumer";
+import { type QueueConsumer } from "./worker/queueConsumer";
 
 export interface WorkerOptions {
   maxConcurrency?: number;

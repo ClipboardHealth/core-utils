@@ -1,11 +1,10 @@
 import { setTimeout } from "node:timers/promises";
 
-import type { BackgroundJobs } from "../src";
+import { type BackgroundJobs } from "../src";
 import { ensureExistence } from "./support/ensureExistence";
 import { ExampleJob } from "./support/exampleJob";
 import { JobRun } from "./support/jobRun";
-import { createTestContext } from "./support/testContext";
-import type { TestContext } from "./support/testContext";
+import { createTestContext, type TestContext } from "./support/testContext";
 import { TestLogger } from "./support/testLogger";
 import { TestMetricsReporter } from "./support/testMetricsReporter";
 

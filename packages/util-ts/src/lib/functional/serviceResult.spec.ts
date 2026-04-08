@@ -1,19 +1,19 @@
 import { z } from "zod";
 
 import { ERROR_CODES, ServiceError } from "../errors/serviceError";
-import { isLeft, isRight } from "./either";
-import type { Left, Right } from "./either";
+import { isLeft, isRight, type Left, type Right } from "./either";
 import {
+  type Failure,
   failure,
   fromSafeParseReturnType,
   isFailure,
   isSuccess,
   mapFailure,
+  type Success,
   success,
   tryCatch,
   tryCatchAsync,
 } from "./serviceResult";
-import type { Failure, Success } from "./serviceResult";
 
 function getServiceErrorMessage(error: ServiceError): string {
   return error.issues[0]?.message ?? "no message";
@@ -69,7 +69,7 @@ describe("ServiceResult", () => {
   describe("tryCatchAsync", () => {
     it("returns success result when promise resolves", async () => {
       const actual = await tryCatchAsync(
-        async () => Promise.resolve("test data"),
+        async () => await Promise.resolve("test data"),
         (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
       );
 
@@ -82,7 +82,7 @@ describe("ServiceResult", () => {
       const onError = (error: unknown) => new ServiceError(`Promise error: ${String(error)}`);
 
       const actual = await tryCatchAsync(
-        async () => Promise.reject(new Error("Promise failed")),
+        async () => await Promise.reject(new Error("Promise failed")),
         onError,
       );
 
@@ -100,7 +100,7 @@ describe("ServiceResult", () => {
         });
 
       const actual = await tryCatchAsync(
-        async () => Promise.reject(new Error("custom error")),
+        async () => await Promise.reject(new Error("custom error")),
         onError,
       );
 

@@ -1,6 +1,6 @@
 import { ok } from "node:assert/strict";
 
-import type { SafeParseReturnType, SafeParseSuccess } from "zod";
+import { type SafeParseReturnType, type SafeParseSuccess } from "zod";
 
 import { expectToBeDefined } from "./expectToBeDefined";
 

@@ -1,5 +1,5 @@
-import type { TraceOptions } from "../types";
-import type { TriggerLogContext } from "./createTriggerLogParams";
+import { type TraceOptions } from "../types";
+import { type TriggerLogContext } from "./createTriggerLogParams";
 
 export function createTriggerTraceOptions(params: TriggerLogContext): TraceOptions {
   const { workflowKey, attempt, destination, dryRun } = params;

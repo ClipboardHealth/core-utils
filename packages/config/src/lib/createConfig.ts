@@ -2,7 +2,7 @@ import { deepFreeze, ServiceError } from "@clipboard-health/util-ts";
 import dotenv from "dotenv";
 
 import { resolve } from "./internal/resolver";
-import type { ConfigParams } from "./types";
+import { type ConfigParams } from "./types";
 
 dotenv.config();
 

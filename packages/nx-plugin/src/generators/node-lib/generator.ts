@@ -7,12 +7,12 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  type Tree,
   updateJson,
 } from "@nx/devkit";
-import type { Tree } from "@nx/devkit";
 import { getImportPath } from "@nx/js/src/utils/get-import-path";
 
-import type { NxPluginGeneratorSchema } from "./schema";
+import { type NxPluginGeneratorSchema } from "./schema";
 
 const ROOT_TS_CONFIG = "tsconfig.base.json";
 

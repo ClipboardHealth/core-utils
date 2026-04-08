@@ -1,5 +1,5 @@
 // embedex: packages/mongo-jobs/README.md
-import type { BackgroundJobType, HandlerInterface } from "@clipboard-health/mongo-jobs";
+import { type BackgroundJobType, type HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 export interface MyJobData {
   userId: string;
@@ -14,7 +14,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
   public maxAttempts = 5;
 
   // Required: the actual job logic
-  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>): Promise<void> {
+  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
     // Job implementation
     console.log(`Processing ${data.action} for user ${data.userId}`);
 
@@ -23,7 +23,5 @@ export class MyJob implements HandlerInterface<MyJobData> {
       console.log(`Job ID: ${job._id.toString()}`);
       console.log(`Attempt: ${job.attemptsCount}`);
     }
-
-    return Promise.resolve();
   }
 }

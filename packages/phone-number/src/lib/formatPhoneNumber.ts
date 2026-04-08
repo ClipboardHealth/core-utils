@@ -1,8 +1,13 @@
-import { failure, isFailure, success, toError } from "@clipboard-health/util-ts";
-import type { ServiceResult } from "@clipboard-health/util-ts";
+import {
+  failure,
+  isFailure,
+  type ServiceResult,
+  success,
+  toError,
+} from "@clipboard-health/util-ts";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 
-import type { WithPhoneNumber } from "./types";
+import { type WithPhoneNumber } from "./types";
 
 export interface FormatPhoneNumberParams extends WithPhoneNumber {
   format: "E.164" | "humanReadable";

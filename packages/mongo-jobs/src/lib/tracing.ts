@@ -1,15 +1,16 @@
 import {
+  type Context,
   context,
   propagation,
   ROOT_CONTEXT,
+  type Span,
   SpanKind,
   SpanStatusCode,
   trace,
 } from "@opentelemetry/api";
-import type { Context, Span } from "@opentelemetry/api";
 
-import type { HandlerInterface } from "./handler";
-import type { BackgroundJobType } from "./job";
+import { type HandlerInterface } from "./handler";
+import { type BackgroundJobType } from "./job";
 
 export interface TraceHeaders {
   _traceHeaders?: Record<string, string>;
@@ -126,7 +127,7 @@ export async function withProducerTrace<T>(
   const tracer = trace.getTracer(TRACER_NAME);
   const handlerName = handler.name;
 
-  return tracer.startActiveSpan(
+  return await tracer.startActiveSpan(
     PRODUCER_SPAN,
     {
       kind: SpanKind.PRODUCER,
@@ -220,7 +221,7 @@ export async function withInternalsTrace<T>(
 ): Promise<T> {
   const tracer = trace.getTracer(TRACER_NAME);
 
-  return tracer.startActiveSpan(
+  return await tracer.startActiveSpan(
     INTERNALS_SPAN,
     {
       kind: SpanKind.INTERNAL,

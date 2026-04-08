@@ -1,4 +1,4 @@
-import type { LogParams, TriggerChunkedRequest, TriggerRequest } from "../types";
+import { type LogParams, type TriggerChunkedRequest, type TriggerRequest } from "../types";
 
 export type TriggerLogContext = LogParams &
   Pick<TriggerRequest, "attempt" | "dryRun" | "workflowKey"> & {

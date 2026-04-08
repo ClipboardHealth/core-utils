@@ -1,5 +1,5 @@
-import type { HandlerInterface } from "../../src/lib/handler";
-import type { BackgroundJobType } from "../../src/lib/job";
+import { type HandlerInterface } from "../../src/lib/handler";
+import { type BackgroundJobType } from "../../src/lib/job";
 
 interface NestedJobData {
   someField: string;
@@ -21,10 +21,8 @@ export class NestedDataJob implements HandlerInterface<NestedJobData> {
 
   public name = "NestedDataJob";
 
-  public async perform(data: NestedJobData, job: BackgroundJobType<NestedJobData>): Promise<void> {
+  public async perform(data: NestedJobData, job: BackgroundJobType<NestedJobData>) {
     NestedDataJob.receivedData = data;
     NestedDataJob.receivedJob = job;
-
-    return Promise.resolve();
   }
 }

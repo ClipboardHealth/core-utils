@@ -1,8 +1,7 @@
 import { Controller, Logger } from "@nestjs/common";
 import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 
-import { contract } from "./contract";
-import type { UserDto } from "./contract";
+import { contract, type UserDto } from "./contract";
 
 @Controller()
 export class AppController {
@@ -11,21 +10,21 @@ export class AppController {
   private nextId = 0;
 
   @TsRestHandler(contract)
-  handler() {
+  async handler() {
     return tsRestHandler(contract, {
       create: async ({ body }) => {
         this.nextId += 1;
         const item = { id: String(this.nextId), ...body.data };
         this.items.set(item.id, item);
 
-        return Promise.resolve({
+        return {
           body: { data: item },
           status: 201,
-        });
+        };
       },
       list: async ({ query }) => {
         this.logger.log({ query });
-        return Promise.resolve({ body: query, status: 200 });
+        return { body: query, status: 200 };
       },
     });
   }

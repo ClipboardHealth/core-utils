@@ -1,10 +1,9 @@
-import StatsD from "hot-shots";
-import type { ClientOptions } from "hot-shots";
+import StatsD, { type ClientOptions } from "hot-shots";
 import type mongoose from "mongoose";
 
-import type { BackgroundJobType } from "../job";
+import { type BackgroundJobType } from "../job";
 import { withInternalsTrace } from "../tracing";
-import type { Registry } from "./registry";
+import { type Registry } from "./registry";
 
 const REPORTING_PERIOD_MILLIS = 60_000;
 
@@ -32,9 +31,9 @@ export class Metrics {
     private readonly registry: Registry,
   ) {}
 
-  public async startReporting(): Promise<void> {
+  public async startReporting() {
     if (this.started) {
-      return Promise.resolve();
+      return;
     }
 
     this.started = true;
@@ -44,8 +43,6 @@ export class Metrics {
     this.reportingInterval = setInterval(async () => {
       await this.reportMetrics();
     }, REPORTING_PERIOD_MILLIS);
-
-    return Promise.resolve();
   }
 
   public stopReporting() {

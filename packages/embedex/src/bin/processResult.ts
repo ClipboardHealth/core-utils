@@ -2,7 +2,7 @@ import path from "node:path";
 
 import colors from "yoctocolors-cjs";
 
-import type { Embed, EmbedResult } from "../lib/types";
+import { type Embed, type EmbedResult } from "../lib/types";
 
 interface Output {
   code: Embed["code"];

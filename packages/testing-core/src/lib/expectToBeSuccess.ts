@@ -1,7 +1,11 @@
 import { ok } from "node:assert/strict";
 
-import { isSuccess } from "@clipboard-health/util-ts";
-import type { either as E, ServiceResult, Success } from "@clipboard-health/util-ts";
+import {
+  type either as E,
+  isSuccess,
+  type ServiceResult,
+  type Success,
+} from "@clipboard-health/util-ts";
 
 import { expectToBeRight } from "./expectToBeRight";
 

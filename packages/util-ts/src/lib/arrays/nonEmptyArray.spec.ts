@@ -1,5 +1,4 @@
-import { toNonEmptyArray } from "./nonEmptyArray";
-import type { NonEmptyArray, OneOrNonEmptyArray } from "./nonEmptyArray";
+import { type NonEmptyArray, type OneOrNonEmptyArray, toNonEmptyArray } from "./nonEmptyArray";
 
 describe("NonEmptyArray", () => {
   it("should allow creation of a non-empty array", () => {

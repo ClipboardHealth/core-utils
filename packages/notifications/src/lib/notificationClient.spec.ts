@@ -1,20 +1,21 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
-import { ServiceError } from "@clipboard-health/util-ts";
-import type { Logger } from "@clipboard-health/util-ts";
-import type { Knock } from "@knocklabs/node";
+import { type Logger, ServiceError } from "@clipboard-health/util-ts";
+import { type Knock } from "@knocklabs/node";
 
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { NotificationClient } from "./notificationClient";
-import { DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS } from "./triggerIdempotencyKey";
-import type { TriggerIdempotencyKey } from "./triggerIdempotencyKey";
-import type {
-  SignUserTokenRequest,
-  Tracer,
-  TriggerChunkedRequest,
-  TriggerRequest,
-  UpsertUserPreferencesRequest,
-  UpsertWorkplaceRequest,
+import {
+  DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
+  type TriggerIdempotencyKey,
+} from "./triggerIdempotencyKey";
+import {
+  type SignUserTokenRequest,
+  type Tracer,
+  type TriggerChunkedRequest,
+  type TriggerRequest,
+  type UpsertUserPreferencesRequest,
+  type UpsertWorkplaceRequest,
 } from "./types";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;

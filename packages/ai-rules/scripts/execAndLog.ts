@@ -1,5 +1,4 @@
-import { execFile } from "node:child_process";
-import type { ExecFileOptions } from "node:child_process";
+import { execFile, type ExecFileOptions } from "node:child_process";
 import { promisify } from "node:util";
 
 const execAsync = promisify(execFile);

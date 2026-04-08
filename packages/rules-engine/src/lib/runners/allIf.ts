@@ -1,4 +1,4 @@
-import type { Rule, RuleContext } from "../rule";
+import { type Rule, type RuleContext } from "../rule";
 
 /**
  * Run all rules that return true for their runIf condition, but only when the predicate function returns true.

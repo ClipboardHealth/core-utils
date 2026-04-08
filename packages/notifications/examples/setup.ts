@@ -1,12 +1,11 @@
-import type {
-  BackgroundJobsAdapter,
-  BackgroundJobsImplementation,
-  EnqueueOptions,
-  HandlerClassOrInstance,
+import {
+  type BackgroundJobsAdapter,
+  type BackgroundJobsImplementation,
+  type EnqueueOptions,
+  type HandlerClassOrInstance,
 } from "@clipboard-health/background-jobs-adapter";
-import type { Span, TraceOptions, Tracer } from "@clipboard-health/notifications";
-import { toError } from "@clipboard-health/util-ts";
-import type { Logger } from "@clipboard-health/util-ts";
+import { type Span, type TraceOptions, type Tracer } from "@clipboard-health/notifications";
+import { type Logger, toError } from "@clipboard-health/util-ts";
 
 /**
  * Assume this is `@clipboard-health/mongo-jobs` or `@clipboard-health/background-jobs-postgres`.
@@ -19,7 +18,7 @@ export class BackgroundJobsService implements BackgroundJobsAdapter {
     _data: T,
     _options?: EnqueueOptions,
   ): Promise<unknown> {
-    return Promise.reject(new Error("Method not implemented."));
+    throw new Error("Method not implemented.");
   }
 }
 

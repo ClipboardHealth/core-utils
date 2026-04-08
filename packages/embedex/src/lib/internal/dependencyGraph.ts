@@ -1,5 +1,5 @@
-import type { DestinationPath } from "../types";
-import type { DestinationMap } from "./types";
+import { type DestinationPath } from "../types";
+import { type DestinationMap } from "./types";
 
 export interface DependencyGraph {
   // Map of destination path to set of destinations it depends on (must be processed before it)

@@ -3,36 +3,36 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node
 import path from "node:path";
 import { inflateRawSync } from "node:zlib";
 
-import type {
-  FullConfig,
-  FullResult,
-  Reporter,
-  Suite,
-  TestCase,
-  TestError as PlaywrightTestError,
-  TestResult,
-  TestStep,
+import {
+  type FullConfig,
+  type FullResult,
+  type Reporter,
+  type Suite,
+  type TestCase,
+  type TestError as PlaywrightTestError,
+  type TestResult,
+  type TestStep,
 } from "@playwright/test/reporter";
 
-import type {
-  AttemptResult,
-  ConsoleEntry,
-  FailureArtifacts,
-  FlatStep,
-  GlobalError,
-  LlmReporterOptions,
-  LlmTestEntry,
-  LlmTestReport,
-  NetworkRequest,
-  NetworkTimingBreakdown,
-  TestAttachment,
-  TestError,
-  TestStatus,
-  TestSummary,
-  TimelineConsoleEntry,
-  TimelineEntry,
-  TimelineNetworkEntry,
-  TimelineStepEntry,
+import {
+  type AttemptResult,
+  type ConsoleEntry,
+  type FailureArtifacts,
+  type FlatStep,
+  type GlobalError,
+  type LlmReporterOptions,
+  type LlmTestEntry,
+  type LlmTestReport,
+  type NetworkRequest,
+  type NetworkTimingBreakdown,
+  type TestAttachment,
+  type TestError,
+  type TestStatus,
+  type TestSummary,
+  type TimelineConsoleEntry,
+  type TimelineEntry,
+  type TimelineNetworkEntry,
+  type TimelineStepEntry,
 } from "./types";
 
 const STDOUT_CAP = 4096;

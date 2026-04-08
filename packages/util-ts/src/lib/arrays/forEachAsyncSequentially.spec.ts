@@ -48,8 +48,6 @@ describe("forEachAsyncSequentially", () => {
       .fn<Promise<void>, [number, number]>()
       .mockImplementationOnce(async (item) => {
         actual.push(item);
-
-        return Promise.resolve();
       })
       .mockRejectedValueOnce(new Error("Test error"));
 

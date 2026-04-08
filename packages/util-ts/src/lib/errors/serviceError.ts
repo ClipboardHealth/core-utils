@@ -1,4 +1,4 @@
-import type { ZodError, ZodIssue } from "zod";
+import { type ZodError, type ZodIssue } from "zod";
 
 import { deepFreeze } from "../deepFreeze";
 import { toError } from "./toError";

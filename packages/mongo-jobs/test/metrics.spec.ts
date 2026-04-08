@@ -1,9 +1,7 @@
-import { BackgroundJobs } from "../src";
-import type { BackgroundJobType } from "../src";
+import { BackgroundJobs, type BackgroundJobType } from "../src";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";
-import { createTestContext } from "./support/testContext";
-import type { TestContext } from "./support/testContext";
+import { createTestContext, type TestContext } from "./support/testContext";
 import { TestMetricsReporter } from "./support/testMetricsReporter";
 import { waitForJobCount } from "./support/waitForJobCount";
 import { waitForMetric } from "./support/waitForMetric";

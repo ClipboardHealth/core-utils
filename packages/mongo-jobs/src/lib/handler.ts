@@ -1,4 +1,4 @@
-import type { BackgroundJobType } from "./job";
+import { type BackgroundJobType } from "./job";
 
 export interface HandlerInterface<T> {
   name: string;

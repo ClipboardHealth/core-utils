@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 
-import type { LlmTestReport } from "../../src/lib/types";
+import { type LlmTestReport } from "../../src/lib/types";
 
 const testResultsDirectory = path.resolve(__dirname, "test-results");
 const reportPath = path.resolve(testResultsDirectory, "llm-report.json");

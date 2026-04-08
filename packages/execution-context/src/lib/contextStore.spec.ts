@@ -30,8 +30,6 @@ describe("Context Store", () => {
         list: [{ listKey: "listValue" }, { listKey: "listValue" }],
         record: { recordKey1: "recordValue1", recordKey2: "recordValue2" },
       });
-
-      return Promise.resolve();
     });
   });
 
@@ -43,9 +41,9 @@ describe("Context Store", () => {
 
   it("should throw exception if the underlying function throws one", async () => {
     await expect(
-      runWithExecutionContext(newExecutionContext("test"), async () =>
-        Promise.reject(new Error("testing asynchronous error")),
-      ),
+      runWithExecutionContext(newExecutionContext("test"), async () => {
+        throw new Error("testing asynchronous error");
+      }),
     ).rejects.toThrow("testing asynchronous error");
   });
 
@@ -67,8 +65,6 @@ describe("Context Store", () => {
 
       const context = getExecutionContext();
       expect(context?.metadata?.["list"]).toEqual([{ key: "value" }]);
-
-      return Promise.resolve();
     });
   });
 
@@ -82,8 +78,6 @@ describe("Context Store", () => {
 
       const context = getExecutionContext();
       expect(context?.metadata?.["record"]).toEqual({ key: "value" });
-
-      return Promise.resolve();
     });
   });
 });

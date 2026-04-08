@@ -1,23 +1,21 @@
 import mongoose from "mongoose";
 
-import { Cron } from "./internal/cron";
-import type { RegisterCronOptions } from "./internal/cron";
-import { JobsRepository } from "./internal/jobsRepository";
-import type { EnqueueOptions, SessionOptions } from "./internal/jobsRepository";
-import type { Logger } from "./internal/logger";
-import { defaultMetricsReporter, Metrics } from "./internal/metrics";
-import type { MetricsReporter } from "./internal/metrics";
-import { Registry } from "./internal/registry";
-import type {
-  AnyHandlerClassOrInstance,
-  InstantiableHandlerClassOrInstance,
+import { Cron, type RegisterCronOptions } from "./internal/cron";
+import {
+  type EnqueueOptions,
+  JobsRepository,
+  type SessionOptions,
+} from "./internal/jobsRepository";
+import { type Logger } from "./internal/logger";
+import { defaultMetricsReporter, Metrics, type MetricsReporter } from "./internal/metrics";
+import {
+  type AnyHandlerClassOrInstance,
+  type InstantiableHandlerClassOrInstance,
+  Registry,
 } from "./internal/registry";
-import { Worker } from "./internal/worker";
-import type { WorkerOptions } from "./internal/worker";
-import { BackgroundJobSchema, BackgroundJobSchemaName } from "./job";
-import type { BackgroundJobType } from "./job";
-import { ScheduleSchema, ScheduleSchemaName } from "./schedule";
-import type { ScheduleType } from "./schedule";
+import { Worker, type WorkerOptions } from "./internal/worker";
+import { BackgroundJobSchema, BackgroundJobSchemaName, type BackgroundJobType } from "./job";
+import { ScheduleSchema, ScheduleSchemaName, type ScheduleType } from "./schedule";
 
 /**
  * Helper type that forces explicit generic when using string handlers.
@@ -101,7 +99,7 @@ export class BackgroundJobs {
     data: T,
     options: EnqueueOptions = {},
   ): Promise<BackgroundJobType<T> | undefined> {
-    return this.jobsRepo.createJob({
+    return await this.jobsRepo.createJob({
       handler: handlerClassOrInstance,
       data,
       ...options,
@@ -141,7 +139,7 @@ export class BackgroundJobs {
 
   public async getJobById(jobId: string) {
     const jobObjectId = new mongoose.Types.ObjectId(jobId);
-    return this.jobsRepo.getJob(jobObjectId);
+    return await this.jobsRepo.getJob(jobObjectId);
   }
 
   /**

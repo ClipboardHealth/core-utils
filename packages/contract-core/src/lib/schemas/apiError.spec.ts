@@ -3,8 +3,7 @@ import {
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
 
-import { apiErrors } from "./apiError";
-import type { ApiError } from "./apiError";
+import { type ApiError, apiErrors } from "./apiError";
 
 describe("apiErrors", () => {
   it.each<{ input: { errors: ApiError[] }; name: string }>([

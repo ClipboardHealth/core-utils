@@ -3,17 +3,17 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { deflateRawSync } from "node:zlib";
 
-import type {
-  FullConfig,
-  FullResult,
-  Suite,
-  TestCase,
-  TestResult,
-  TestStep,
+import {
+  type FullConfig,
+  type FullResult,
+  type Suite,
+  type TestCase,
+  type TestResult,
+  type TestStep,
 } from "@playwright/test/reporter";
 
 import LlmReporter from "./reporter";
-import type { AttemptResult, LlmTestEntry, LlmTestReport } from "./types";
+import { type AttemptResult, type LlmTestEntry, type LlmTestReport } from "./types";
 
 const NETWORK_REQUESTS_CAP = 200 as const;
 

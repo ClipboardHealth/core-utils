@@ -1,5 +1,5 @@
-import type { HandlerInterface } from "../../src/lib/handler";
-import type { BackgroundJobType } from "../../src/lib/job";
+import { type HandlerInterface } from "../../src/lib/handler";
+import { type BackgroundJobType } from "../../src/lib/job";
 import { JobRun } from "./jobRun";
 
 interface JobData {

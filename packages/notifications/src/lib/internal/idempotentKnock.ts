@@ -1,4 +1,4 @@
-import type { Logger } from "@clipboard-health/util-ts";
+import { type Logger } from "@clipboard-health/util-ts";
 import { Knock } from "@knocklabs/node";
 
 /**

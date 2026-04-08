@@ -1,8 +1,7 @@
 // embedex: packages/notifications/examples/usage.md
 import { NotificationClient } from "@clipboard-health/notifications";
 
-import { CBHLogger, toLogger, tracer } from "./setup";
-import type { Provider } from "./setup";
+import { CBHLogger, type Provider, toLogger, tracer } from "./setup";
 
 export const NOTIFICATION_CLIENT_TOKEN = "NOTIFICATION_CLIENT";
 

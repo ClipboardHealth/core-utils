@@ -8,7 +8,7 @@ import {
   topologicalSort,
 } from "./internal/dependencyGraph";
 import { processDestinations } from "./internal/processDestinations";
-import type { Embed, EmbedParams, EmbedResult } from "./types";
+import { type Embed, type EmbedParams, type EmbedResult } from "./types";
 
 /**
  * Embed sources into destinations.

@@ -47,7 +47,7 @@ embed({
       console.log(output.map((o) => o.message).join("\n"));
     }
   })
-  .catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : String(error));
+  .catch((error) => {
+    console.error(error.message);
     process.exit(1);
   });

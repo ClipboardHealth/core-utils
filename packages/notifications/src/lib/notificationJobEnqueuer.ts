@@ -1,15 +1,24 @@
-import { ENQUEUE_FIELD_NAMES } from "@clipboard-health/background-jobs-adapter";
-import type {
-  BackgroundJobsAdapter,
-  EnqueueOptions,
-  MongoEnqueueOptions,
-  PostgresEnqueueOptions,
+import {
+  type BackgroundJobsAdapter,
+  ENQUEUE_FIELD_NAMES,
+  type EnqueueOptions,
+  type MongoEnqueueOptions,
+  type PostgresEnqueueOptions,
 } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients } from "./internal/chunkRecipients";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
-import { DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS } from "./triggerIdempotencyKey";
-import type { TriggerIdempotencyKey, TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
+import {
+  DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
+  type TriggerIdempotencyKey,
+  type TriggerIdempotencyKeyParams,
+} from "./triggerIdempotencyKey";
+import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  type TriggerBody,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  type TriggerRequest,
+} from "./types";
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;
 

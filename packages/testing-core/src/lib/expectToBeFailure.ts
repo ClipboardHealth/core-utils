@@ -1,7 +1,12 @@
 import { ok } from "node:assert/strict";
 
-import { isFailure } from "@clipboard-health/util-ts";
-import type { either as E, Failure, ServiceError, ServiceResult } from "@clipboard-health/util-ts";
+import {
+  type either as E,
+  type Failure,
+  isFailure,
+  type ServiceError,
+  type ServiceResult,
+} from "@clipboard-health/util-ts";
 
 import { expectToBeLeft } from "./expectToBeLeft";
 

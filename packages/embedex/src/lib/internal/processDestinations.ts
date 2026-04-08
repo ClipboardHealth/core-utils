@@ -1,8 +1,8 @@
 import path from "node:path";
 
-import type { Embed } from "../types";
+import { type Embed } from "../types";
 import { stripSourceMarker } from "./createSourceMap";
-import type { Destination, DestinationMap, SourceMap } from "./types";
+import { type Destination, type DestinationMap, type SourceMap } from "./types";
 
 const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
   cjs: "js",

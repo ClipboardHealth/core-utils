@@ -2,8 +2,15 @@
 import { access, chmod, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { CATEGORIES, FILES, PROFILES, RULE_FILES, toRulePath } from "./constants";
-import type { ProfileName, RuleId } from "./constants";
+import {
+  CATEGORIES,
+  FILES,
+  type ProfileName,
+  PROFILES,
+  RULE_FILES,
+  type RuleId,
+  toRulePath,
+} from "./constants";
 import { execAndLog } from "./execAndLog";
 import { toErrorMessage } from "./toErrorMessage";
 
@@ -346,7 +353,9 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   }
 
   const prettierChecks = await Promise.all(
-    PRETTIER_CONFIG_FILES.map(async (configFile) => fileExists(path.join(projectRoot, configFile))),
+    PRETTIER_CONFIG_FILES.map(
+      async (configFile) => await fileExists(path.join(projectRoot, configFile)),
+    ),
   );
   if (prettierChecks.some(Boolean)) {
     return "prettier";

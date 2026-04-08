@@ -1,6 +1,6 @@
-import type { DependencyGraph } from "./dependencyGraph";
+import { type DependencyGraph } from "./dependencyGraph";
 import { buildDependencyGraph, detectCircularDependency, topologicalSort } from "./dependencyGraph";
-import type { DestinationMap } from "./types";
+import { type DestinationMap } from "./types";
 
 describe("dependencyGraph", () => {
   describe("buildDependencyGraph", () => {

@@ -30,7 +30,7 @@ Job handlers implement the `HandlerInterface` and define how your jobs are proce
 <embedex source="packages/mongo-jobs/examples/quickstart/welcomeEmailJob.ts">
 
 ```ts
-import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
+import { type HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 export interface WelcomeEmailData {
   userId: string;
@@ -116,7 +116,7 @@ Jobs are defined as classes that implement the `HandlerInterface`:
 <embedex source="packages/mongo-jobs/examples/usage/myJob.ts">
 
 ```ts
-import type { BackgroundJobType, HandlerInterface } from "@clipboard-health/mongo-jobs";
+import { type BackgroundJobType, type HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 export interface MyJobData {
   userId: string;
@@ -131,7 +131,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
   public maxAttempts = 5;
 
   // Required: the actual job logic
-  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>): Promise<void> {
+  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
     // Job implementation
     console.log(`Processing ${data.action} for user ${data.userId}`);
 
@@ -140,8 +140,6 @@ export class MyJob implements HandlerInterface<MyJobData> {
       console.log(`Job ID: ${job._id.toString()}`);
       console.log(`Attempt: ${job.attemptsCount}`);
     }
-
-    return Promise.resolve();
   }
 }
 ```
@@ -205,10 +203,8 @@ const backgroundJobs = new BackgroundJobs();
 
 // For jobs with constructor dependencies, register an instance
 const emailService = {
-  async send(to: string, subject: string, body: string): Promise<void> {
+  async send(to: string, subject: string, body: string) {
     console.log(`Sending email to ${to}: ${subject} : ${body}`);
-
-    return Promise.resolve();
   },
 };
 
@@ -222,7 +218,7 @@ Example job with dependencies:
 <embedex source="packages/mongo-jobs/examples/usage/jobs/emailServiceJob.ts">
 
 ```ts
-import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
+import { type HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 interface EmailService {
   send(to: string, subject: string, body: string): Promise<void>;
@@ -287,7 +283,7 @@ await backgroundJobs.enqueue(MyJob, {
 <embedex source="packages/mongo-jobs/examples/usage/enqueueWithOptions.ts">
 
 ```ts
-import type { ClientSession } from "mongodb";
+import { type ClientSession } from "mongodb";
 
 import { backgroundJobs } from "./jobsRegistry";
 import { MyJob } from "./myJob";
@@ -317,7 +313,7 @@ await backgroundJobs.enqueue(
 
 ```ts
 import { backgroundJobs } from "./jobsRegistry";
-import type { MyJobData } from "./myJob";
+import { type MyJobData } from "./myJob";
 
 // Enqueue by job name requires explicit generic for type safety
 await backgroundJobs.enqueue<MyJobData>("MyJob", { userId: "123", action: "process" });

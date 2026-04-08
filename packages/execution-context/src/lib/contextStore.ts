@@ -2,7 +2,7 @@ import "../types/global";
 
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import type { ExecutionContext } from "../types/types";
+import { type ExecutionContext } from "../types/types";
 import { isRecord } from "./util";
 
 globalThis.threadLocalStorage ||= new AsyncLocalStorage();
@@ -19,7 +19,7 @@ export async function runWithExecutionContext<T = void>(
   context: ExecutionContext,
   callback: () => Promise<T>,
 ): Promise<T> {
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     getAsyncLocalStorage().run(context, () => {
       try {
         // eslint-disable-next-line promise/prefer-await-to-then

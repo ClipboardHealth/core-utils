@@ -1,17 +1,15 @@
 import { booleanString, nonEmptyString } from "@clipboard-health/contract-core";
 import {
+  type AttributeFields,
   cursorPaginationQuery,
   fieldsQuery,
+  type FilterMap,
   filterQuery,
   includeQuery,
+  type JsonApiDocument,
   PAGINATION,
+  type RelationshipPaths,
   sortQuery,
-} from "@clipboard-health/json-api-nestjs";
-import type {
-  AttributeFields,
-  FilterMap,
-  JsonApiDocument,
-  RelationshipPaths,
 } from "@clipboard-health/json-api-nestjs";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";

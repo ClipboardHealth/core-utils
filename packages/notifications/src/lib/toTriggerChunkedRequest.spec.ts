@@ -1,5 +1,5 @@
 import { toTriggerChunkedRequest } from "./toTriggerChunkedRequest";
-import type { SerializableTriggerChunkedRequest } from "./types";
+import { type SerializableTriggerChunkedRequest } from "./types";
 
 describe("toTriggerChunkedRequest", () => {
   const mockParams = { attempt: 1, idempotencyKey: "job-123" };

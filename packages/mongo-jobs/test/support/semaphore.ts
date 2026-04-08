@@ -26,7 +26,7 @@ export class Semaphore {
   }
 
   async getPromise(index: string | number) {
-    return this.promises.get(index)?.promise;
+    return await this.promises.get(index)?.promise;
   }
 
   cleanup(): void {

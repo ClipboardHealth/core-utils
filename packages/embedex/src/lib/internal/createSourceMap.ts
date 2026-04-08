@@ -3,8 +3,8 @@ import path from "node:path";
 
 import { glob } from "glob";
 
-import type { SourcePath } from "../types";
-import type { Source, SourceMap } from "./types";
+import { type SourcePath } from "../types";
+import { type Source, type SourceMap } from "./types";
 
 export const SOURCE_MARKER_PREFIX = "// embedex: ";
 

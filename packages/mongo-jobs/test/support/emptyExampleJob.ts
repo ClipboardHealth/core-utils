@@ -1,4 +1,4 @@
-import type { HandlerInterface } from "../../src";
+import { type HandlerInterface } from "../../src";
 import { JobRun } from "./jobRun";
 
 type JobData = object;

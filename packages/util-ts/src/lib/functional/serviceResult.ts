@@ -1,9 +1,7 @@
-import type { SafeParseReturnType } from "zod";
+import { type SafeParseReturnType } from "zod";
 
-import { ServiceError } from "../errors/serviceError";
-import type { ServiceErrorParams } from "../errors/serviceError";
-import { mapLeft } from "./either";
-import type { Either, Left, Right } from "./either";
+import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
+import { type Either, type Left, mapLeft, type Right } from "./either";
 
 export interface Success<A> {
   readonly isSuccess: true;
@@ -109,7 +107,7 @@ export function mapFailure<G>(
  *   strictEqual(successResult.value.id, 1);
  *
  *   const failureResult = await tryCatchAsync(
- *     async () => Promise.reject(new Error("Network error")),
+ *     async () => await Promise.reject(new Error("Network error")),
  *     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
  *   );
  *

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import type { ApiType, Data, Field, JsonApiDocument } from "../types";
+import { type ApiType, type Data, type Field, type JsonApiDocument } from "../types";
 
 export type FieldsMap = Record<ApiType, readonly [Field, ...Field[]]>;
 
@@ -36,17 +36,17 @@ export type AttributeFields<DocumentT extends JsonApiDocument> =
  * import {
  *   cursorPaginationQuery,
  *   fieldsQuery,
+ *   type FilterMap,
  *   filterQuery,
  *   includeQuery,
  *   sortQuery,
  * } from "@clipboard-health/json-api-nestjs";
- * import type { FilterMap } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import type {
- *   ArticleAttributeFields,
- *   UserAttributeFields,
- *   UserIncludeFields,
+ * import {
+ *   type ArticleAttributeFields,
+ *   type UserAttributeFields,
+ *   type UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];

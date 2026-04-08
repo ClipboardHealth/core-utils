@@ -1,10 +1,14 @@
-import type { ChangeStream, ClientSession } from "mongodb";
+import { type ChangeStream, type ClientSession } from "mongodb";
 import type mongoose from "mongoose";
 
-import type { BackgroundJobType, JobUniqueOptions } from "../job";
+import { type BackgroundJobType, type JobUniqueOptions } from "../job";
 import { withInternalsTrace, withProducerTrace } from "../tracing";
 import { isMongoDuplicateError } from "./mongoDuplicate";
-import type { AnyHandlerClassOrInstance, RegisteredHandlerType, Registry } from "./registry";
+import {
+  type AnyHandlerClassOrInstance,
+  type RegisteredHandlerType,
+  type Registry,
+} from "./registry";
 
 type EnqueueUniqueOptions = string | JobUniqueOptions;
 
@@ -68,7 +72,7 @@ export class JobsRepository {
     const uniqueOptions = normalizeUniqueOptions(unique);
     const uniqueKey = uniqueOptions?.enqueuedKey;
 
-    return withProducerTrace(handler, data, async (dataWithTrace) => {
+    return await withProducerTrace(handler, data, async (dataWithTrace) => {
       try {
         if (session && uniqueKey) {
           // Checking for existence here to prevent DuplicateKeyError from aborting the existing transaction
@@ -113,7 +117,7 @@ export class JobsRepository {
   public async fetchAndLockNextJob(
     queues: string[],
   ): Promise<BackgroundJobType<unknown> | undefined> {
-    return withInternalsTrace("fetchAndLockNextJob", async () => {
+    return await withInternalsTrace("fetchAndLockNextJob", async () => {
       const acquiredJob = await this.jobModel
         .findOneAndUpdate(
           {
@@ -136,7 +140,7 @@ export class JobsRepository {
   }
 
   public async fetchNextJob(queue: string): Promise<BackgroundJobType<unknown> | undefined> {
-    return withInternalsTrace("fetchNextJob", async () => {
+    return await withInternalsTrace("fetchNextJob", async () => {
       const job = await this.jobModel
         .findOne(
           {
@@ -189,7 +193,7 @@ export class JobsRepository {
   }
 
   public async getJob(id: mongoose.Types.ObjectId) {
-    return this.jobModel.findById(id);
+    return await this.jobModel.findById(id);
   }
 
   public async deleteUpcomingScheduleJobs(scheduleName: string) {
@@ -262,6 +266,6 @@ export class JobsRepository {
     }
 
     const queuesFilter = { queue: { $in: pertinentQueues } };
-    return this.jobModel.distinct("queue", queuesFilter);
+    return await this.jobModel.distinct("queue", queuesFilter);
   }
 }

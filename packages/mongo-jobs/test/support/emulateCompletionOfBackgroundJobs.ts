@@ -13,7 +13,7 @@
 import mongoose from "mongoose";
 
 import { BackgroundJobs } from "../../src";
-import type { HandlerInterface } from "../../src/lib/handler";
+import { type HandlerInterface } from "../../src/lib/handler";
 
 const arguments_ = process.argv.slice(2);
 const shutdownTimeoutMs = Number(arguments_[0]) || 120_000;
@@ -96,6 +96,6 @@ async function main() {
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
-void main().catch((error: unknown) => {
-  log(`Error: ${String(error)}`);
+void main().catch((error) => {
+  log(`Error: ${error}`);
 });
