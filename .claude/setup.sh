@@ -117,6 +117,40 @@ persist_claude_env() {
 }
 persist_claude_env
 
+# npm auth for private installs is often injected by a shell wrapper. This
+# Bash script does not inherit interactive aliases/functions, so bridge
+# install-like commands explicitly when NPM_TOKEN is absent.
+run_npm() {
+  local npm_args=("$@")
+
+  if [ -n "${NPM_TOKEN:-}" ]; then
+    npm "${npm_args[@]}"
+    return
+  fi
+
+  if command -v op >/dev/null 2>&1 && [ -f "$HOME/.1password.env" ]; then
+    echo "NPM_TOKEN not set; running npm ${npm_args[*]} via 1Password env"
+    if op run --env-file="$HOME/.1password.env" -- npm "${npm_args[@]}"; then
+      return
+    fi
+    echo "1Password env execution failed; trying other npm fallbacks" >&2
+  fi
+
+  local user_shell="${SHELL:-}"
+  local shell_name="${user_shell##*/}"
+  case "$shell_name" in
+    bash|zsh)
+      if "$user_shell" -ic 'alias npm >/dev/null 2>&1 || typeset -f npm >/dev/null 2>&1'; then
+        echo "NPM_TOKEN not set; running npm ${npm_args[*]} via interactive $shell_name shell"
+        "$user_shell" -ic 'npm "$@"' shell "${npm_args[@]}"
+        return
+      fi
+      ;;
+  esac
+
+  npm "${npm_args[@]}"
+}
+
 actual_node="$(node -v | sed 's/^v//')"
 actual_npm="$(npm -v)"
 
@@ -176,6 +210,6 @@ fi
 if [ "$need_install" -eq 0 ]; then
   echo "Dependencies unchanged for $(basename "$repo_root"), skipping npm ci"
 else
-  npm ci
+  run_npm ci
   printf '%s\n' "$dep_key" > "$stamp_file"
 fi
