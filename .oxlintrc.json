@@ -1,17 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/base.json"],
-  "plugins": [
-    "eslint",
-    "typescript",
-    "unicorn",
-    "oxc",
-    "import",
-    "jsdoc",
-    "node",
-    "promise",
-    "jest"
-  ],
+  "plugins": ["jest"],
   "categories": {
     "correctness": "error",
     "nursery": "error",
