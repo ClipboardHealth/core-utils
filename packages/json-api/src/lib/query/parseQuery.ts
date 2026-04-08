@@ -1,6 +1,6 @@
 import { parse } from "qs";
 
-import { type ServerJsonApiQuery } from "../types";
+import type { ServerJsonApiQuery } from "../types";
 
 /**
  * Call this function from servers to convert from {@link URLSearchParams} to {@link ServerJsonApiQuery}.

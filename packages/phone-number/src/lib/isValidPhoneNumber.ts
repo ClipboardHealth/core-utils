@@ -1,6 +1,6 @@
 import { isValidPhoneNumber as isValidPhoneNumberF } from "libphonenumber-js";
 
-import { type WithPhoneNumber } from "./types";
+import type { WithPhoneNumber } from "./types";
 
 export type IsValidPhoneNumberParams = WithPhoneNumber;
 

@@ -16,7 +16,7 @@ async function example() {
   strictEqual(successResult.value.id, 1);
 
   const failureResult = await tryCatchAsync(
-    async () => await Promise.reject(new Error("Network error")),
+    async () => Promise.reject(new Error("Network error")),
     (error) => new ServiceError(`Failed to fetch: ${String(error)}`),
   );
 

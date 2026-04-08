@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type Field } from "../types";
+import type { Field } from "../types";
 
 /**
  * Creates a Zod schema for JSON:API sort parameters.

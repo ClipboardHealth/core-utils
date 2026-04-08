@@ -1,11 +1,7 @@
-import {
-  type ErrorCode,
-  type FailureResult,
-  isSuccess,
-  type ServiceResult,
-} from "@clipboard-health/util-ts";
+import { isSuccess } from "@clipboard-health/util-ts";
+import type { ErrorCode, FailureResult, ServiceResult } from "@clipboard-health/util-ts";
 
-import { type TriggerResponse } from "./types";
+import type { TriggerResponse } from "./types";
 
 /**
  * Checks if a result contains specific error codes and is a failure result.

@@ -1,4 +1,5 @@
-import { readProjectConfiguration, type Tree } from "@nx/devkit";
+import { readProjectConfiguration } from "@nx/devkit";
+import type { Tree } from "@nx/devkit";
 import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
 
 import generator from "./generator";

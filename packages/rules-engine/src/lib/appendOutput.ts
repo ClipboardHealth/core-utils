@@ -1,6 +1,6 @@
-import { type ReadonlyDeep } from "type-fest";
+import type { ReadonlyDeep } from "type-fest";
 
-import { type RuleContext } from "./rule";
+import type { RuleContext } from "./rule";
 
 /**
  * Rule output is immutable, do not modify existing items, only append using this function.

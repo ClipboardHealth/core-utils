@@ -1,8 +1,8 @@
-import { type GreaterThan, type Subtract } from "type-fest";
+import type { GreaterThan, Subtract } from "type-fest";
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type JsonApiDocument, type Relationship, type Relationships } from "../types";
+import type { JsonApiDocument, Relationship, Relationships } from "../types";
 
 /**
  * Recursively traverse the JSON:API document to build a list of all possible relationship paths up

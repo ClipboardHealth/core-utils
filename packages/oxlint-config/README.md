@@ -11,7 +11,13 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 ## Install
 
 ```bash
-npm install @clipboard-health/oxlint-config
+npm install -D oxlint @clipboard-health/oxlint-config
+```
+
+If you enable Oxlint's type-aware mode, install `oxlint-tsgolint` too:
+
+```bash
+npm install -D oxlint-tsgolint
 ```
 
 ## Usage
@@ -38,7 +44,7 @@ Create an `.oxlintrc.json` in your repo root:
     "denyWarnings": true,
     "reportUnusedDisableDirectives": "error",
     "typeAware": true,
-    "typeCheck": true
+    "typeCheck": false
   },
   "settings": {
     "node": {
@@ -47,6 +53,10 @@ Create an `.oxlintrc.json` in your repo root:
   }
 }
 ```
+
+`typeCheck` adds TypeScript compiler diagnostics on top of type-aware lint rules. Start with `typeAware: true` and only enable `typeCheck` once your repo is ready for that stricter mode.
+
+Type-aware linting uses TS7-era config parsing through `tsgolint`. In practice that means avoiding `baseUrl`, using `./`-prefixed `paths`, and not relying on `moduleResolution: "Node10"`.
 
 Override shared rules as needed:
 

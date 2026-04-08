@@ -3,7 +3,8 @@ import {
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
 
-import { type BooleanString, booleanString, toBoolean } from "./booleanString";
+import { booleanString, toBoolean } from "./booleanString";
+import type { BooleanString } from "./booleanString";
 
 describe("booleanString", () => {
   describe("success cases", () => {

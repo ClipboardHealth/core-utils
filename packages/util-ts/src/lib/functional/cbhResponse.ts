@@ -1,6 +1,7 @@
-import { type Arrayable } from "type-fest";
+import type { Arrayable } from "type-fest";
 
-import { CbhError, type CbhIssue } from "../errors/cbhError";
+import { CbhError } from "../errors/cbhError";
+import type { CbhIssue } from "../errors/cbhError";
 
 export type CbhResponse<T> = { success: true; data: T } | { success: false; error: CbhError };
 

@@ -2,7 +2,7 @@ import {
   expectToBeSafeParseError,
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
-import { type Arrayable } from "type-fest";
+import type { Arrayable } from "type-fest";
 import { z } from "zod";
 
 import { fieldsQuery } from "./fieldsQuery";

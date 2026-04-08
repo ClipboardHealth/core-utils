@@ -1,7 +1,9 @@
-import { type SafeParseReturnType } from "zod";
+import type { SafeParseReturnType } from "zod";
 
-import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
-import { type Either, type Left, mapLeft, type Right } from "./either";
+import { ServiceError } from "../errors/serviceError";
+import type { ServiceErrorParams } from "../errors/serviceError";
+import { mapLeft } from "./either";
+import type { Either, Left, Right } from "./either";
 
 export interface Success<A> {
   readonly isSuccess: true;

@@ -3,7 +3,7 @@ import { deepEqual } from "node:assert/strict";
 
 import { stringifyQuery } from "@clipboard-health/json-api";
 
-import { type ClientJsonApiQuery } from "../src/lib/types";
+import type { ClientJsonApiQuery } from "../src/lib/types";
 
 const [date1, date2] = ["2024-01-01", "2024-01-02"];
 const query: ClientJsonApiQuery = {

@@ -1,11 +1,10 @@
 // embedex: packages/notifications/examples/usage.md,packages/notifications/src/lib/notificationClient.ts
 // triggerNotification.job.ts
-import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
-import {
-  ERROR_CODES,
-  type NotificationClient,
-  type SerializableTriggerChunkedRequest,
-  toTriggerChunkedRequest,
+import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
+import { ERROR_CODES, toTriggerChunkedRequest } from "@clipboard-health/notifications";
+import type {
+  NotificationClient,
+  SerializableTriggerChunkedRequest,
 } from "@clipboard-health/notifications";
 import { isFailure } from "@clipboard-health/util-ts";
 

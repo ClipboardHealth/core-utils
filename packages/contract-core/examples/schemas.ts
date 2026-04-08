@@ -10,7 +10,7 @@ import {
   requiredEnumWithFallback,
   uuid,
 } from "@clipboard-health/contract-core";
-import { type z, type ZodError } from "zod";
+import type { z, ZodError } from "zod";
 
 function logError(error: unknown) {
   console.error((error as ZodError).issues[0]!.message);

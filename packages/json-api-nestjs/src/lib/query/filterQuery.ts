@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { queryFilterPreprocessor } from "../internal/queryFilterPreprocessor";
 import { splitString, wrapString } from "../internal/splitString";
-import { type Field } from "../types";
+import type { Field } from "../types";
 
 export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "search";
 

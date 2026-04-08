@@ -1,4 +1,5 @@
-import StatsD, { type ClientOptions } from "hot-shots";
+import StatsD from "hot-shots";
+import type { ClientOptions } from "hot-shots";
 import type mongoose from "mongoose";
 
 import type { BackgroundJobType } from "../job";
@@ -31,9 +32,9 @@ export class Metrics {
     private readonly registry: Registry,
   ) {}
 
-  public async startReporting() {
+  public async startReporting(): Promise<void> {
     if (this.started) {
-      return;
+      return Promise.resolve();
     }
 
     this.started = true;
@@ -43,6 +44,8 @@ export class Metrics {
     this.reportingInterval = setInterval(async () => {
       await this.reportMetrics();
     }, REPORTING_PERIOD_MILLIS);
+
+    return Promise.resolve();
   }
 
   public stopReporting() {

@@ -1,7 +1,5 @@
-import {
-  isTriggerIdempotencyKeyParams,
-  type TriggerIdempotencyKeyParams,
-} from "./triggerIdempotencyKey";
+import { isTriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
+import type { TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
 
 describe("isTriggerIdempotencyKeyParams", () => {
   it("returns false for string", () => {
