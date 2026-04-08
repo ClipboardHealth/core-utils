@@ -1,0 +1,22 @@
+{
+  "name": "@clipboard-health/oxlint-config",
+  "version": "0.0.0",
+  "description": "Shared Oxlint configuration for Clipboard Health repositories.",
+  "keywords": [
+    "config",
+    "oxlint"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/oxlint-config"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
+}

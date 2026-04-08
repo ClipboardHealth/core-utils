@@ -18,6 +18,7 @@
   "ignoreDependencies": [
     "@anthropic-ai/claude-agent-sdk",
     "@nx/webpack",
+    "@swc/helpers",
     "@typescript-eslint/parser",
     "eslint-plugin-promise",
     "ts-node",
