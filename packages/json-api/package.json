@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/json-api",
-  "version": "2.1.76",
+  "version": "2.1.77",
   "description": "TypeScript-friendly utilities for adhering to the JSON:API specification.",
   "keywords": [
     "api",
