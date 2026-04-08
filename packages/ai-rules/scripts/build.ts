@@ -9,7 +9,6 @@ const { packageRoot, outputDirectory } = PATHS;
 
 const PLUGIN_ROOT = path.join(packageRoot, "..", "..", "plugins", "core");
 const SKILLS_SOURCE = path.join(PLUGIN_ROOT, "skills");
-const LIB_SOURCE = path.join(PLUGIN_ROOT, "lib");
 
 const params = {
   timeout: 60_000,
@@ -30,13 +29,12 @@ async function build(): Promise<void> {
       recursive: true,
       filter: (source) => !isTestFile(source),
     }),
-    cp(LIB_SOURCE, path.join(outputDirectory, "lib"), { recursive: true }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
     copyFile(path.join(packageRoot, "package.json"), path.join(outputDirectory, "package.json")),
   ]);
 
-  console.log(`📦 Copied rules/, skills/, and lib/ to dist`);
+  console.log(`📦 Copied rules/ and skills/ to dist`);
 
   await Promise.all([
     execAndLog({

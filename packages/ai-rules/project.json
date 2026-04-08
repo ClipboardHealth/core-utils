@@ -10,7 +10,6 @@
       "cache": true,
       "inputs": [
         "{projectRoot}/**/*",
-        "{workspaceRoot}/plugins/core/lib/**/*",
         "{workspaceRoot}/plugins/core/skills/**/*",
         "sharedGlobals",
         "!{workspaceRoot}/package-lock.json"
