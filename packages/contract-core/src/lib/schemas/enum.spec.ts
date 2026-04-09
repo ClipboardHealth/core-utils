@@ -4,6 +4,7 @@ import {
 } from "@clipboard-health/testing-core";
 
 import {
+  ENUM_FALLBACK,
   enumWithFallback,
   optionalEnum,
   optionalEnumWithFallback,
@@ -12,10 +13,9 @@ import {
 } from "./enum";
 
 const VALUES = ["a", "b", "c"] as const;
-const FALLBACK = "a";
 
 describe("requiredEnumWithFallback", () => {
-  const schema = requiredEnumWithFallback([...VALUES], FALLBACK);
+  const schema = requiredEnumWithFallback([...VALUES]);
 
   describe("success cases", () => {
     it.each<{ expected: string; input: unknown; name: string }>([
@@ -25,15 +25,15 @@ describe("requiredEnumWithFallback", () => {
       {
         name: "falls back for invalid string",
         input: "invalid",
-        expected: FALLBACK,
+        expected: ENUM_FALLBACK,
       },
       {
         name: "falls back for non-string input",
         input: 123,
-        expected: FALLBACK,
+        expected: ENUM_FALLBACK,
       },
-      { name: "falls back for null", input: null, expected: FALLBACK },
-      { name: "falls back for object", input: {}, expected: FALLBACK },
+      { name: "falls back for null", input: null, expected: ENUM_FALLBACK },
+      { name: "falls back for object", input: {}, expected: ENUM_FALLBACK },
     ])("$name", ({ input, expected }) => {
       const actual = schema.safeParse(input);
 
@@ -54,7 +54,7 @@ describe("requiredEnumWithFallback", () => {
 });
 
 describe("optionalEnumWithFallback", () => {
-  const schema = optionalEnumWithFallback([...VALUES], FALLBACK);
+  const schema = optionalEnumWithFallback([...VALUES]);
 
   describe("success cases", () => {
     it.each<{ expected: string | undefined; input: unknown; name: string }>([
@@ -65,15 +65,15 @@ describe("optionalEnumWithFallback", () => {
       {
         name: "falls back for invalid string",
         input: "invalid",
-        expected: FALLBACK,
+        expected: ENUM_FALLBACK,
       },
       {
         name: "falls back for non-string input",
         input: 123,
-        expected: FALLBACK,
+        expected: ENUM_FALLBACK,
       },
-      { name: "falls back for null", input: null, expected: FALLBACK },
-      { name: "falls back for object", input: {}, expected: FALLBACK },
+      { name: "falls back for null", input: null, expected: ENUM_FALLBACK },
+      { name: "falls back for object", input: {}, expected: ENUM_FALLBACK },
     ])("$name", ({ input, expected }) => {
       const actual = schema.safeParse(input);
 
@@ -84,8 +84,14 @@ describe("optionalEnumWithFallback", () => {
 });
 
 describe("enumWithFallback", () => {
+  it("throws if values include ENUM_FALLBACK", () => {
+    expect(() => enumWithFallback(["a", ENUM_FALLBACK])).toThrow(
+      `Enum values must not include "${ENUM_FALLBACK}"`,
+    );
+  });
+
   describe("with { optional: true }", () => {
-    const schema = enumWithFallback([...VALUES], FALLBACK, { optional: true });
+    const schema = enumWithFallback([...VALUES], { optional: true });
 
     it("accepts undefined", () => {
       // eslint-disable-next-line unicorn/no-useless-undefined
@@ -99,12 +105,12 @@ describe("enumWithFallback", () => {
       const actual = schema.safeParse("invalid");
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toBe(FALLBACK);
+      expect(actual.data).toBe(ENUM_FALLBACK);
     });
   });
 
   describe("with { optional: false }", () => {
-    const schema = enumWithFallback([...VALUES], FALLBACK, { optional: false });
+    const schema = enumWithFallback([...VALUES], { optional: false });
 
     it("rejects undefined", () => {
       // eslint-disable-next-line unicorn/no-useless-undefined
@@ -118,12 +124,12 @@ describe("enumWithFallback", () => {
       const actual = schema.safeParse("invalid");
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toBe(FALLBACK);
+      expect(actual.data).toBe(ENUM_FALLBACK);
     });
   });
 
   describe("with no options (defaults to required)", () => {
-    const schema = enumWithFallback([...VALUES], FALLBACK);
+    const schema = enumWithFallback([...VALUES]);
 
     it("rejects undefined", () => {
       // eslint-disable-next-line unicorn/no-useless-undefined
@@ -205,13 +211,13 @@ describe("optionalEnum", () => {
 });
 
 describe("accepts readonly values directly without spreading", () => {
-  const STATUSES = ["unspecified", "active", "inactive"] as const;
+  const STATUSES = ["active", "inactive"] as const;
   // Simulates a new enum value the producer added but this consumer
-  // doesn't recognize yet; fallback helpers coerce it to "unspecified".
+  // doesn't recognize yet; fallback helpers coerce it to ENUM_FALLBACK.
   const UNRECOGNIZED_VALUE = "deleted";
 
-  it("requiredEnumWithFallback coerces unknown values to fallback", () => {
-    const schema = requiredEnumWithFallback(STATUSES, "unspecified");
+  it("requiredEnumWithFallback coerces unknown values to ENUM_FALLBACK", () => {
+    const schema = requiredEnumWithFallback(STATUSES);
 
     const valid = schema.safeParse("active");
     expectToBeSafeParseSuccess(valid);
@@ -219,14 +225,14 @@ describe("accepts readonly values directly without spreading", () => {
 
     const unknown = schema.safeParse(UNRECOGNIZED_VALUE);
     expectToBeSafeParseSuccess(unknown);
-    expect(unknown.data).toBe("unspecified");
+    expect(unknown.data).toBe(ENUM_FALLBACK);
 
     // eslint-disable-next-line unicorn/no-useless-undefined
     expectToBeSafeParseError(schema.safeParse(undefined));
   });
 
-  it("optionalEnumWithFallback coerces unknown values to fallback and allows undefined", () => {
-    const schema = optionalEnumWithFallback(STATUSES, "unspecified");
+  it("optionalEnumWithFallback coerces unknown values to ENUM_FALLBACK and allows undefined", () => {
+    const schema = optionalEnumWithFallback(STATUSES);
 
     const valid = schema.safeParse("active");
     expectToBeSafeParseSuccess(valid);
@@ -234,7 +240,7 @@ describe("accepts readonly values directly without spreading", () => {
 
     const unknown = schema.safeParse(UNRECOGNIZED_VALUE);
     expectToBeSafeParseSuccess(unknown);
-    expect(unknown.data).toBe("unspecified");
+    expect(unknown.data).toBe(ENUM_FALLBACK);
 
     // eslint-disable-next-line unicorn/no-useless-undefined
     const undef = schema.safeParse(undefined);

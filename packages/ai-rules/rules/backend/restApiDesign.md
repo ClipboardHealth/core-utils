@@ -96,7 +96,7 @@ GET /shifts?filter[verified]=true&sort=startDate,-urgency&page[cursor]=abc&page[
 Use helpers from `@clipboard-health/contract-core` instead of raw Zod methods in contract packages:
 
 - Use `dateTimeSchema()` for date fields — not `z.coerce.date()` (too permissive), `z.string().datetime()` (gives string, not Date), or `z.date()` (won't parse JSON strings)
-- Use `requiredEnumWithFallback`/`optionalEnumWithFallback` for enums — not bare `z.enum()` (breaks old mobile clients when new values are added) or `z.enum().catch()` (doesn't compose with `.optional()`)
+- Use `requiredEnumWithFallback`/`optionalEnumWithFallback` for enums — not bare `z.enum()` (breaks old mobile clients when new values are added) or `z.enum().catch()` (doesn't compose with `.optional()`). These helpers automatically append `ENUM_FALLBACK` (`"UNRECOGNIZED_"`) to the output type — do not pass a fallback value
 - Do not use `.default()` in contracts — client and server can drift on defaults. Set defaults in the service layer.
 - Name schemas with a `Schema` suffix: `ShiftAttributeSchema`, not `shiftAttribute`
 - Export at the DTO boundary (request/response schemas), not every intermediate schema
