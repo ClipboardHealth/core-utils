@@ -388,5 +388,8 @@ module.exports = {
       { ignore: [/config/i, /params/i, /props/i, /ref/i] },
     ],
   },
-  settings: { node: { version: ">=24.12.0" } },
+  settings: {
+    jest: { version: 30 },
+    node: { version: ">=24.12.0" },
+  },
 };

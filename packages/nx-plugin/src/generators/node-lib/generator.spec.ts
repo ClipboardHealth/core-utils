@@ -3,6 +3,16 @@ import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
 
 import generator from "./generator";
 
+function readWorkspaceFile(tree: Tree, path: string): string {
+  const fileContents = tree.read(path, "utf8");
+
+  if (fileContents === null) {
+    throw new Error(`Expected ${path} to exist`);
+  }
+
+  return fileContents;
+}
+
 describe("generator", () => {
   let appTree: Tree;
 
@@ -24,7 +34,7 @@ describe("generator", () => {
 
     await generator(appTree, { name, publishPublicly: true });
 
-    const packageJson = JSON.parse(appTree.read(`libs/${name}/package.json`, "utf8") ?? "{}");
+    const packageJson = JSON.parse(readWorkspaceFile(appTree, `libs/${name}/package.json`));
 
     expect(packageJson.publishConfig.access).toBe("public");
     expect(packageJson.repository).toEqual({

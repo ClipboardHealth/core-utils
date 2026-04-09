@@ -341,8 +341,8 @@ describe("oxlint-config", () => {
 
   describe("invalid preset data", () => {
     afterEach(() => {
-      jest.resetModules();
-      jest.unmock("node:fs");
+      vi.resetModules();
+      vi.unmock("node:fs");
     });
 
     it("throws when base.json contains an unsupported oxlint plugin", async () => {
@@ -446,9 +446,9 @@ function getFirstOverrideFiles(config: {
 }
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
-  jest.resetModules();
-  jest.doMock("node:fs", () => ({
-    readFileSync: jest.fn(() => JSON.stringify(baseJson)),
+  vi.resetModules();
+  vi.doMock("node:fs", () => ({
+    readFileSync: vi.fn(() => JSON.stringify(baseJson)),
   }));
 
   return await import("./internal/presets");

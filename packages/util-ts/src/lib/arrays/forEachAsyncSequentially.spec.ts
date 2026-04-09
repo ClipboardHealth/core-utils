@@ -35,7 +35,9 @@ describe("forEachAsyncSequentially", () => {
     const input = [1, 2, 3];
     const callback = vi
       .fn<(item: number, index: number) => Promise<void>>()
-      .mockResolvedValueOnce(void 0)
+      .mockImplementationOnce(async (item, index) => {
+        await Promise.all([Promise.resolve(item), Promise.resolve(index)]);
+      })
       .mockRejectedValueOnce(new Error("Test error"));
 
     await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow("Test error");
