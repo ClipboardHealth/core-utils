@@ -81,10 +81,10 @@ function mergeArrayValues<Item>(
   next: readonly Item[] | undefined,
 ): Item[] | undefined {
   if (current === undefined) {
-    return next === undefined ? undefined : [...next];
+    return next === undefined ? undefined : cloneValue([...next]);
   }
 
-  return next === undefined ? [...current] : [...current, ...next];
+  return next === undefined ? cloneValue([...current]) : cloneValue([...current, ...next]);
 }
 
 function mergeObjectValues<Value extends object>(
@@ -92,10 +92,14 @@ function mergeObjectValues<Value extends object>(
   next: Value | undefined,
 ): Value | undefined {
   if (current === undefined) {
-    return next;
+    return next === undefined ? undefined : cloneValue(next);
   }
 
-  return next === undefined ? current : { ...current, ...next };
+  return next === undefined ? cloneValue(current) : cloneValue({ ...current, ...next });
+}
+
+function cloneValue<Value>(value: Value): Value {
+  return structuredClone(value);
 }
 
 function assignMergedValue<Field extends keyof OxlintConfig>(request: {

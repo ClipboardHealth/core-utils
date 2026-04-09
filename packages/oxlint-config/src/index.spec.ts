@@ -210,5 +210,179 @@ describe("oxlint-config", () => {
         },
       });
     });
+
+    it("does not share preset references with returned configs", () => {
+      const firstConfig = getConfigWithRulesAndOverrides(
+        createOxlintConfig({
+          presets: [base],
+        }),
+      );
+      const secondConfig = getConfigWithRulesAndOverrides(
+        createOxlintConfig({
+          presets: [base],
+        }),
+      );
+      const baseConfig = getConfigWithRulesAndOverrides(base);
+
+      firstConfig.overrides[0].files.push("**/*.cts");
+      firstConfig.rules["curly"] = "off";
+
+      const firstImportNoCycleRuleOptions = getRuleOptions(firstConfig.rules["import/no-cycle"]);
+      firstImportNoCycleRuleOptions["maxDepth"] = 1;
+
+      expect(firstConfig.rules).not.toBe(baseConfig.rules);
+      expect(firstConfig.overrides).not.toBe(baseConfig.overrides);
+      expect(firstConfig.rules["curly"]).toBe("off");
+      expect(secondConfig.rules["curly"]).toEqual(["error", "all"]);
+      expect(baseConfig.rules["curly"]).toEqual(["error", "all"]);
+      expect(firstConfig.overrides[0].files).toContain("**/*.cts");
+      expect(secondConfig.overrides[0].files).not.toContain("**/*.cts");
+      expect(baseConfig.overrides[0].files).not.toContain("**/*.cts");
+      expect(getRuleOptions(secondConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
+      expect(getRuleOptions(baseConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
+    });
+
+    it("clones preserved arrays and objects when later presets omit those fields", () => {
+      const input = {
+        overrides: [
+          {
+            files: ["**/*.ts"],
+          },
+        ],
+        rules: {
+          "import/no-cycle": ["error", { maxDepth: 4 }],
+        },
+      };
+
+      const actual = getConfigWithRulesAndOverrides(
+        createOxlintConfig({
+          presets: [input, {}],
+        }),
+      );
+
+      actual.overrides[0].files.push("**/*.tsx");
+      getRuleOptions(actual.rules["import/no-cycle"])["maxDepth"] = 1;
+
+      expect(input.overrides[0].files).toEqual(["**/*.ts"]);
+      expect(getRuleOptions(input.rules["import/no-cycle"])["maxDepth"]).toBe(4);
+    });
+  });
+
+  describe("invalid preset data", () => {
+    afterEach(() => {
+      jest.resetModules();
+      jest.unmock("node:fs");
+    });
+
+    it("throws when base.json contains an unsupported oxlint plugin", async () => {
+      await expect(
+        loadPresetsModule({
+          presets: [base],
+          overrides: [],
+          plugins: ["unsupported-plugin"],
+          rules: {},
+        }),
+      ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin" in base.json.');
+    });
+
+    it("throws when base.json is not an object", async () => {
+      await expect(loadPresetsModule([])).rejects.toThrow(
+        "The bundled base.json file is not a valid oxlint config preset.",
+      );
+    });
+
+    it("throws when base.json overrides are invalid", async () => {
+      await expect(
+        loadPresetsModule({
+          overrides: [false],
+          plugins: ["import"],
+          rules: {},
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+    });
+
+    it("throws when base.json rules are invalid", async () => {
+      await expect(
+        loadPresetsModule({
+          overrides: [],
+          plugins: ["import"],
+          rules: [],
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+    });
+
+    it("supports valid overrides without rules", async () => {
+      const loadedPresetsModule = getLoadedPresetsModule(
+        await loadPresetsModule({
+          overrides: [
+            {
+              files: ["**/*.ts"],
+            },
+          ],
+          plugins: ["import"],
+          rules: {},
+        }),
+      );
+
+      expect(loadedPresetsModule.base.overrides).toEqual([
+        {
+          files: ["**/*.ts"],
+        },
+      ]);
+    });
   });
 });
+
+function getRuleOptions(rule: unknown): Record<string, unknown> {
+  if (!Array.isArray(rule)) {
+    throw new TypeError("Expected oxlint rule to be a tuple.");
+  }
+
+  const [, options] = rule;
+
+  if (!isRecord(options)) {
+    throw new TypeError("Expected oxlint rule options to be an object.");
+  }
+
+  return options;
+}
+
+function getConfigWithRulesAndOverrides(config: typeof base): {
+  overrides: NonNullable<typeof base.overrides>;
+  rules: NonNullable<typeof base.rules>;
+} {
+  const { overrides, rules } = config;
+
+  if (overrides === undefined || rules === undefined) {
+    throw new TypeError("Expected config to define overrides and rules.");
+  }
+
+  return { overrides, rules };
+}
+
+async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
+  jest.resetModules();
+  jest.doMock("node:fs", () => ({
+    readFileSync: jest.fn(() => JSON.stringify(baseJson)),
+  }));
+
+  return await import("./internal/presets");
+}
+
+function getLoadedPresetsModule(value: unknown): {
+  base: { overrides?: Array<{ files: string[]; rules?: Record<string, unknown> }> };
+} {
+  if (!isRecord(value) || !("base" in value) || !isRecord(value["base"])) {
+    throw new TypeError("Expected presets module to expose a base preset.");
+  }
+
+  return {
+    base: value["base"] as {
+      overrides?: Array<{ files: string[]; rules?: Record<string, unknown> }>;
+    },
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
