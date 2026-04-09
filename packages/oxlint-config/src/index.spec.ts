@@ -1,4 +1,11 @@
-import { base, createOxlintConfig, jest as jestPreset, react, vitest } from "./index";
+import {
+  base,
+  createOxlintConfig,
+  jest as jestPreset,
+  react,
+  type OxlintPreset,
+  vitest,
+} from "./index";
 
 describe("oxlint-config", () => {
   describe("presets", () => {
@@ -223,8 +230,11 @@ describe("oxlint-config", () => {
         }),
       );
       const baseConfig = getConfigWithRulesAndOverrides(base);
+      const firstOverrideFiles = getFirstOverrideFiles(firstConfig);
+      const secondOverrideFiles = getFirstOverrideFiles(secondConfig);
+      const baseOverrideFiles = getFirstOverrideFiles(baseConfig);
 
-      firstConfig.overrides[0].files.push("**/*.cts");
+      firstOverrideFiles.push("**/*.cts");
       firstConfig.rules["curly"] = "off";
 
       const firstImportNoCycleRuleOptions = getRuleOptions(firstConfig.rules["import/no-cycle"]);
@@ -235,15 +245,15 @@ describe("oxlint-config", () => {
       expect(firstConfig.rules["curly"]).toBe("off");
       expect(secondConfig.rules["curly"]).toEqual(["error", "all"]);
       expect(baseConfig.rules["curly"]).toEqual(["error", "all"]);
-      expect(firstConfig.overrides[0].files).toContain("**/*.cts");
-      expect(secondConfig.overrides[0].files).not.toContain("**/*.cts");
-      expect(baseConfig.overrides[0].files).not.toContain("**/*.cts");
+      expect(firstOverrideFiles).toContain("**/*.cts");
+      expect(secondOverrideFiles).not.toContain("**/*.cts");
+      expect(baseOverrideFiles).not.toContain("**/*.cts");
       expect(getRuleOptions(secondConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
       expect(getRuleOptions(baseConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
     });
 
     it("clones preserved arrays and objects when later presets omit those fields", () => {
-      const input = {
+      const input: OxlintPreset = {
         overrides: [
           {
             files: ["**/*.ts"],
@@ -253,6 +263,7 @@ describe("oxlint-config", () => {
           "import/no-cycle": ["error", { maxDepth: 4 }],
         },
       };
+      const inputConfig = getConfigWithRulesAndOverrides(input);
 
       const actual = getConfigWithRulesAndOverrides(
         createOxlintConfig({
@@ -260,11 +271,11 @@ describe("oxlint-config", () => {
         }),
       );
 
-      actual.overrides[0].files.push("**/*.tsx");
+      getFirstOverrideFiles(actual).push("**/*.tsx");
       getRuleOptions(actual.rules["import/no-cycle"])["maxDepth"] = 1;
 
-      expect(input.overrides[0].files).toEqual(["**/*.ts"]);
-      expect(getRuleOptions(input.rules["import/no-cycle"])["maxDepth"]).toBe(4);
+      expect(getFirstOverrideFiles(inputConfig)).toEqual(["**/*.ts"]);
+      expect(getRuleOptions(inputConfig.rules["import/no-cycle"])["maxDepth"]).toBe(4);
     });
   });
 
@@ -358,6 +369,20 @@ function getConfigWithRulesAndOverrides(config: typeof base): {
   }
 
   return { overrides, rules };
+}
+
+function getFirstOverrideFiles(config: {
+  overrides: Array<{
+    files: string[];
+  }>;
+}): string[] {
+  const [firstOverride] = config.overrides;
+
+  if (firstOverride === undefined) {
+    throw new TypeError("Expected config to define at least one override.");
+  }
+
+  return firstOverride.files;
 }
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
