@@ -16,7 +16,63 @@ npm install @clipboard-health/oxlint-config
 
 ## Usage
 
-Oxlint's `extends` only inherits `rules`, `plugins`, and `overrides`. Properties like `categories`, `options`, `settings`, and `ignorePatterns` must be set in each repo's local config.
+Use the package's TypeScript helper when a repo needs additive composition. Oxlint's built-in `extends` is useful for simple inheritance, but it does not let a repo safely append shared `plugins`, `overrides`, and similar array fields without re-specifying the shared values.
+
+### TypeScript config
+
+Create an `oxlint.config.ts` in your repo root:
+
+```ts
+import { base, createOxlintConfig, vitest } from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+export default defineConfig(
+  createOxlintConfig({
+    localConfig: {
+      categories: {
+        correctness: "error",
+        nursery: "error",
+        pedantic: "error",
+        perf: "error",
+        restriction: "error",
+        style: "error",
+        suspicious: "error",
+      },
+      ignorePatterns: [".agents", "coverage/", "node_modules/"],
+      options: {
+        denyWarnings: true,
+        reportUnusedDisableDirectives: "error",
+        typeAware: true,
+        typeCheck: true,
+      },
+      rules: {
+        "vitest/require-test-timeout": "off",
+      },
+      settings: {
+        node: {
+          version: ">=24.14.0",
+        },
+      },
+    },
+    presets: [base, vitest],
+  }),
+);
+```
+
+Available presets:
+
+- `base`
+- `react`
+- `jest`
+- `vitest`
+
+Merge behavior:
+
+- `plugins`, `jsPlugins`, `overrides`, and `ignorePatterns` append in order
+- `rules`, `settings`, `options`, `categories`, `env`, and `globals` merge left-to-right
+- `localConfig` always wins over preset values when keys conflict
+
+### JSON config
 
 Create an `.oxlintrc.json` in your repo root:
 
@@ -48,6 +104,8 @@ Create an `.oxlintrc.json` in your repo root:
 }
 ```
 
+Use JSON only when simple inheritance is enough. JSON `extends` still works for shared `base.json`, but repo-local array fields like `plugins` and `overrides` will not get the additive merge behavior provided by `createOxlintConfig`.
+
 Override shared rules as needed:
 
 ```json
@@ -61,8 +119,9 @@ Override shared rules as needed:
 
 ## What is shared
 
-The `base.json` config includes:
+The package includes:
 
-- **Plugins**: eslint, typescript, unicorn, oxc, import, jsdoc, node, promise
-- **Rules**: Opinionated defaults with select rules disabled
-- **Overrides**: Root-level files, vitest config, test files, and script files
+- **`base.json`**: the backwards-compatible JSON preset for simple `extends` usage
+- **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
+- **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
+- **`createOxlintConfig`**: helper for composing presets with repo-local config
