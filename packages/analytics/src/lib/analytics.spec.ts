@@ -9,14 +9,16 @@ const { mockSegment } = vi.hoisted(() => ({
   },
 }));
 
-class AnalyticsMock {
-  public readonly identify = mockSegment.identify;
-  public readonly track = mockSegment.track;
-}
+vi.mock("@segment/analytics-node", () => {
+  class AnalyticsMock {
+    public readonly identify = mockSegment.identify;
+    public readonly track = mockSegment.track;
+  }
 
-vi.mock("@segment/analytics-node", () => ({
-  Analytics: AnalyticsMock,
-}));
+  return {
+    Analytics: AnalyticsMock,
+  };
+});
 
 describe("Analytics", () => {
   let logger: Logger;

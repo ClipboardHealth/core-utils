@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
   configDefaults,
   coverageConfigDefaults,
@@ -36,10 +38,12 @@ const DEFAULT_COVERAGE_THRESHOLDS = {
   lines: 100,
   statements: 100,
 } as const;
+const WORKSPACE_ROOT = import.meta.dirname;
 
 export function definePackageVitestConfig(
   options: DefinePackageVitestConfigOptions,
 ): ViteUserConfig {
+  const packageRoot = path.join(WORKSPACE_ROOT, "packages", options.name);
   const testConfig: NonNullable<ViteUserConfig["test"]> = {
     coverage: {
       exclude: [
@@ -76,6 +80,7 @@ export function definePackageVitestConfig(
   }
 
   return defineConfig({
+    root: packageRoot,
     test: testConfig,
   });
 }
