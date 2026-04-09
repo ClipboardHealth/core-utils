@@ -73,6 +73,8 @@ describe("oxlint-config", () => {
         plugins: ["vitest"],
         rules: {
           "vitest/prefer-importing-vitest-globals": "off",
+          "vitest/prefer-to-be-falsy": "off",
+          "vitest/prefer-to-be-truthy": "off",
           "vitest/require-test-timeout": "off",
         },
       });
@@ -534,9 +536,12 @@ function getFirstOverrideFiles(config: {
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
   vi.resetModules();
-  vi.doMock<typeof NodeFs>("node:fs", () => ({
-    readFileSync: vi.fn(() => JSON.stringify(baseJson)),
-  }));
+  vi.doMock(
+    "node:fs",
+    (): Partial<typeof NodeFs> => ({
+      readFileSync: vi.fn(() => JSON.stringify(baseJson)),
+    }),
+  );
 
   return await import("./internal/presets");
 }
