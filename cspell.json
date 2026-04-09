@@ -112,6 +112,7 @@
     "triaging",
     "trunc",
     "tsgo",
+    "tsgolint",
     "TSESTree",
     "TTFB",
     "typedoc",
