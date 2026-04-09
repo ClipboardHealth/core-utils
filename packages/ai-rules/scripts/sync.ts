@@ -96,26 +96,16 @@ function parseArguments(): ParsedArguments {
   for (const argument of processArguments.slice(1)) {
     if (argument === "--include") {
       mode = "include";
-      continue;
-    }
-
-    if (argument === "--exclude") {
+    } else if (argument === "--exclude") {
       mode = "exclude";
-      continue;
-    }
-
-    if (!mode) {
+    } else if (!mode) {
       console.error(`❌ Error: Unexpected argument "${argument}"`);
       printUsageAndExit();
-    }
-
-    if (!isRuleId(argument)) {
+    } else if (!isRuleId(argument)) {
       console.error(`❌ Error: Unknown rule "${argument}"`);
       console.error(`Available rules: ${Object.keys(RULE_FILES).join(", ")}`);
       process.exit(1);
-    }
-
-    if (mode === "include") {
+    } else if (mode === "include") {
       extraIncludes.push(argument);
     } else {
       excludes.push(argument);

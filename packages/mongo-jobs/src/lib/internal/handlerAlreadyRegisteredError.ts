@@ -1,1 +1,3 @@
-export class HandlerAlreadyRegisteredError extends Error {}
+export class HandlerAlreadyRegisteredError extends Error {
+  override name = "HandlerAlreadyRegisteredError";
+}

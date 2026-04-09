@@ -26,3 +26,5 @@ tmp/
 *.bak
 CLAUDE.local.md
 npm-debug.log
+
+.claude/worktrees

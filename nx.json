@@ -104,5 +104,6 @@
         "packageRoot": "dist/packages/{projectName}"
       }
     }
-  }
+  },
+  "analytics": false
 }

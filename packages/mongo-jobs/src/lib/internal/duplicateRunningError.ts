@@ -1,1 +1,3 @@
-export class DuplicateRunningError extends Error {}
+export class DuplicateRunningError extends Error {
+  override name = "DuplicateRunningError";
+}

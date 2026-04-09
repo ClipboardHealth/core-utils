@@ -37,8 +37,7 @@
     "typescript/prefer-readonly-parameter-types": "off",
     "typescript/promise-function-async": "off",
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
-    "unicorn/no-null": "off",
-    "unicorn/prevent-abbreviations": ["error", { "ignore": ["config", "params", "props", "ref"] }]
+    "unicorn/no-null": "off"
   },
   "overrides": [
     {
