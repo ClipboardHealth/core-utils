@@ -3,7 +3,7 @@ import { ok } from "node:assert/strict";
 import * as E from "../functional/either";
 import { CbhError, toLeft } from "./cbhError";
 
-describe("cbhError", () => {
+describe("CbhError", () => {
   it("returns proper defaults", () => {
     const message = "boom";
     const statusCode = 500;

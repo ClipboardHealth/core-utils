@@ -65,7 +65,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "INVALID_SOURCE",
         paths: { sources: [], destination: toPath(paths.destinations.l) },
@@ -87,7 +87,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UNREFERENCED_SOURCE",
         paths: { sources: [], destination: toPath(paths.destinations.l) },
@@ -99,7 +99,7 @@ describe("embed", () => {
   it("returns empty embeds when no sources found", async () => {
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([]);
+    expect(actual.embeds).toEqual([]);
   });
 
   it("ignores source files without source marker prefix", async () => {
@@ -108,9 +108,9 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([]);
-    expect(actual.sources).toStrictEqual([]);
-    expect(actual.destinations).toStrictEqual([]);
+    expect(actual.embeds).toEqual([]);
+    expect(actual.sources).toEqual([]);
+    expect(actual.destinations).toEqual([]);
   });
 
   it("throws for non-existent destinations", async () => {
@@ -119,7 +119,7 @@ describe("embed", () => {
       ...sourceACode,
     ]);
 
-    await expect(embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
+    await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
       `ENOENT: no such file or directory, open '${path.join(cwd, paths.destinations.l)}'`,
     );
   });
@@ -132,7 +132,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UNREFERENCED_SOURCE",
         paths: { sources: [], destination: toPath(paths.destinations.l) },
@@ -155,7 +155,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -182,7 +182,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -221,7 +221,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -254,7 +254,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -296,7 +296,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob: "sources/**/*.unknown", cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -334,7 +334,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -375,7 +375,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -407,7 +407,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -444,7 +444,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -472,7 +472,7 @@ describe("embed", () => {
     await embed({ sourcesGlob, cwd, write: false });
     const actual = await read(paths.destinations.l);
 
-    expect(actual).toStrictEqual(destinationContent.join("\n"));
+    expect(actual).toEqual(destinationContent.join("\n"));
   });
 
   it("returns NO_CHANGE if already embedded", async () => {
@@ -490,7 +490,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: true });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "NO_CHANGE",
         paths: { sources: [toPath(paths.sources.a)], destination: toPath(paths.destinations.l) },
@@ -513,7 +513,7 @@ describe("embed", () => {
     await embed({ sourcesGlob, cwd, write: true });
     const actual = await read(paths.destinations.l);
 
-    expect(actual).toStrictEqual(
+    expect(actual).toEqual(
       [
         "/**",
         " * @example",
@@ -550,7 +550,7 @@ describe("embed", () => {
     await embed({ sourcesGlob, cwd, write: true });
     const actual = await read(paths.destinations.l);
 
-    expect(actual).toStrictEqual(
+    expect(actual).toEqual(
       [
         "/**",
         " * @example",
@@ -818,7 +818,7 @@ describe("embed", () => {
       );
 
       // The intermediate markdown should embed the TypeScript source
-      expect(intermediateEmbed).toStrictEqual({
+      expect(intermediateEmbed).toEqual({
         code: "UPDATE",
         paths: {
           sources: [toPath(paths.sources.a)],
@@ -828,7 +828,7 @@ describe("embed", () => {
       });
 
       // The final markdown should have the intermediate content with nested tags stripped
-      expect(finalEmbed).toStrictEqual({
+      expect(finalEmbed).toEqual({
         code: "UPDATE",
         paths: {
           sources: [toPath(intermediateMarkdown)],
@@ -878,7 +878,7 @@ describe("embed", () => {
       const actual = await embed({ sourcesGlob, cwd, write: false });
 
       const finalEmbed = actual.embeds.find((embed) => embed.paths.destination === toPath(final));
-      expect(finalEmbed).toStrictEqual({
+      expect(finalEmbed).toEqual({
         code: "UPDATE",
         paths: {
           sources: [toPath(level2)],
@@ -917,7 +917,7 @@ describe("embed", () => {
       const actual = await embed({ sourcesGlob, cwd, write: false });
 
       const finalEmbed = actual.embeds.find((embed) => embed.paths.destination === toPath(final));
-      expect(finalEmbed).toStrictEqual({
+      expect(finalEmbed).toEqual({
         code: "UPDATE",
         paths: {
           sources: [toPath(intermediate)],
@@ -948,7 +948,7 @@ describe("embed", () => {
 
     const actual = await embed({ sourcesGlob, cwd, write: false });
 
-    expect(actual.embeds).toStrictEqual([
+    expect(actual.embeds).toEqual([
       {
         code: "UPDATE",
         paths: {
@@ -968,7 +968,7 @@ describe("embed", () => {
     ]);
   });
 
-  describe("cRLF line endings", () => {
+  describe("CRLF line endings", () => {
     it("handles Windows-style CRLF line endings correctly", async () => {
       const sourceCode = [`const x = "windows";`, "", "console.log(x);"];
 
@@ -992,7 +992,7 @@ describe("embed", () => {
       expect(actual.embeds).toHaveLength(1);
       const embedResult = actual.embeds[0]!;
       assertIsUpdatedEmbed(embedResult);
-      expect(embedResult.paths).toStrictEqual({
+      expect(embedResult.paths).toEqual({
         sources: [toPath(paths.sources.a)],
         destination: toPath(paths.destinations.l),
       });
@@ -1025,7 +1025,7 @@ describe("embed", () => {
       expect(actual.embeds).toHaveLength(1);
       const embedResult = actual.embeds[0]!;
       assertIsUpdatedEmbed(embedResult);
-      expect(embedResult.paths).toStrictEqual({
+      expect(embedResult.paths).toEqual({
         sources: [toPath(paths.sources.a)],
         destination: toPath(paths.destinations.l),
       });

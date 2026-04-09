@@ -2,13 +2,13 @@ import { nullToUndefined } from "./nullToUndefined";
 
 describe("nullToUndefined", () => {
   it("returns undefined", async () => {
-    await expect(nullToUndefined(Promise.resolve(null))).resolves.toBeUndefined();
+    expect(await nullToUndefined(Promise.resolve(null))).toBeUndefined();
   });
 
   it("returns value", async () => {
     const expected = "hi";
 
-    await expect(nullToUndefined(Promise.resolve(expected))).resolves.toBe(expected);
+    expect(await nullToUndefined(Promise.resolve(expected))).toBe(expected);
   });
 
   it("supports PromiseLike objects", async () => {
@@ -28,6 +28,6 @@ describe("nullToUndefined", () => {
       },
     };
 
-    await expect(nullToUndefined(promiseLike)).resolves.toBe(expected);
+    expect(await nullToUndefined(promiseLike)).toBe(expected);
   });
 });

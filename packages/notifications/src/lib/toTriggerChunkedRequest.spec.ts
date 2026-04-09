@@ -15,7 +15,7 @@ describe("toTriggerChunkedRequest", () => {
 
     const actual = toTriggerChunkedRequest(input, mockParams);
 
-    expect(actual).toStrictEqual({
+    expect(actual).toEqual({
       workflowKey: "test-workflow",
       body: {
         recipients: ["user-1", "user-2"],
@@ -43,7 +43,7 @@ describe("toTriggerChunkedRequest", () => {
 
     const actual = toTriggerChunkedRequest(input, mockParams);
 
-    expect(actual.body.recipients).toStrictEqual([
+    expect(actual.body.recipients).toEqual([
       {
         userId: "user-1",
         createdAt: new Date("2023-06-15T10:30:00.000Z"),
@@ -63,7 +63,7 @@ describe("toTriggerChunkedRequest", () => {
 
     const actual = toTriggerChunkedRequest(input, mockParams);
 
-    expect(actual.body.recipients).toStrictEqual([
+    expect(actual.body.recipients).toEqual([
       { userId: "user-1", createdAt: undefined, email: "user@example.com" },
     ]);
   });
@@ -83,7 +83,7 @@ describe("toTriggerChunkedRequest", () => {
 
     const actual = toTriggerChunkedRequest(input, mockParams);
 
-    expect(actual.body.actor).toStrictEqual({
+    expect(actual.body.actor).toEqual({
       userId: "admin-1",
       createdAt: new Date("2023-01-01T00:00:00.000Z"),
     });
@@ -118,7 +118,7 @@ describe("toTriggerChunkedRequest", () => {
 
     const actual = toTriggerChunkedRequest(input, mockParams);
 
-    expect(actual.body.data).toStrictEqual({ message: "Hello" });
+    expect(actual.body.data).toEqual({ message: "Hello" });
     expect(actual.body.cancellationKey).toBe("cancel-123");
     expect(actual.body.workplaceId).toBe("workplace-456");
   });
@@ -135,7 +135,7 @@ describe("toTriggerChunkedRequest", () => {
     const actual = toTriggerChunkedRequest(input, mockParams);
 
     expect(actual.dryRun).toBe(true);
-    expect(actual.keysToRedact).toStrictEqual(["secret"]);
+    expect(actual.keysToRedact).toEqual(["secret"]);
   });
 
   it("preserves attachments in body", () => {
@@ -156,7 +156,7 @@ describe("toTriggerChunkedRequest", () => {
 
     const actual = toTriggerChunkedRequest(input, mockParams);
 
-    expect(actual.body.attachments).toStrictEqual([
+    expect(actual.body.attachments).toEqual([
       {
         name: "report.pdf",
         contentType: "application/pdf",

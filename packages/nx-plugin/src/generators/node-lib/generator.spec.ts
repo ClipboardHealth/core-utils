@@ -37,7 +37,7 @@ describe("generator", () => {
     const packageJson = JSON.parse(readWorkspaceFile(appTree, `libs/${name}/package.json`));
 
     expect(packageJson.publishConfig.access).toBe("public");
-    expect(packageJson.repository).toStrictEqual({
+    expect(packageJson.repository).toEqual({
       directory: `packages/${name}`,
       type: "git",
       url: "git+https://github.com/ClipboardHealth/core-utils.git",

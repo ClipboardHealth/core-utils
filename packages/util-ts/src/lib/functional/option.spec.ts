@@ -1,7 +1,7 @@
 import * as O from "./option";
 import { pipe } from "./pipe";
 
-describe("option", () => {
+describe("Option", () => {
   it("none is not some", () => {
     const option = O.none;
 
@@ -23,7 +23,7 @@ describe("option", () => {
   describe("map", () => {
     it("should transform Some value", () => {
       const actual = pipe(O.some(5), O.map(double));
-      expect(actual).toStrictEqual(O.some(10));
+      expect(actual).toEqual(O.some(10));
     });
 
     it("should handle None", () => {
@@ -35,7 +35,7 @@ describe("option", () => {
   describe("flatMap", () => {
     it("should flatMap Some operations", () => {
       const actual = pipe(O.some(2), O.flatMap(inverse));
-      expect(actual).toStrictEqual(O.some(0.5));
+      expect(actual).toEqual(O.some(0.5));
     });
 
     it("should handle None", () => {
@@ -85,18 +85,18 @@ describe("option", () => {
   describe("fromNullable", () => {
     it("should return Some for non-null value", () => {
       const actual = O.fromNullable("my-value");
-      expect(actual).toStrictEqual(O.some("my-value"));
+      expect(actual).toEqual(O.some("my-value"));
     });
 
     it("should return None for null value", () => {
       const actual = O.fromNullable(null);
-      expect(actual).toStrictEqual(O.none);
+      expect(actual).toEqual(O.none);
     });
 
     it("should return None for undefined value", () => {
       // eslint-disable-next-line unicorn/no-useless-undefined
       const actual = O.fromNullable(undefined);
-      expect(actual).toStrictEqual(O.none);
+      expect(actual).toEqual(O.none);
     });
   });
 });

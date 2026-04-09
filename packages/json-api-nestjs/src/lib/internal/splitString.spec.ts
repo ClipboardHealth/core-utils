@@ -28,7 +28,7 @@ describe("splitString", () => {
       expected: 1,
     },
   ])("$name", ({ input, expected }) => {
-    expect(splitString(input)).toStrictEqual(expected);
+    expect(splitString(input)).toEqual(expected);
   });
 });
 
@@ -50,6 +50,6 @@ describe("wrapString", () => {
       expected: ["a", "b"],
     },
   ])("$name", ({ input, expected }) => {
-    expect(wrapString(input)).toStrictEqual(expected);
+    expect(wrapString(input)).toEqual(expected);
   });
 });

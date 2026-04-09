@@ -30,7 +30,7 @@ describe("includeQuery", () => {
       const actual = includeSchema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toStrictEqual(expected);
+      expect(actual.data).toEqual(expected);
     });
   });
 

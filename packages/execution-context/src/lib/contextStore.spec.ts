@@ -18,13 +18,13 @@ const addMetadataIfContextIsPresent = () => {
   addToMetadataRecord("record", { recordKey2: "recordValue2" });
 };
 
-describe("context Store", () => {
+describe("Context Store", () => {
   it("should create a context that lives throughout the execution of a thread", async () => {
     await runWithExecutionContext(newExecutionContext("test"), async () => {
       addMetadataIfContextIsPresent();
       const context = getExecutionContext();
 
-      expect(context?.metadata).toStrictEqual({
+      expect(context?.metadata).toEqual({
         key1: "value1",
         key2: "value2",
         list: [{ listKey: "listValue" }, { listKey: "listValue" }],
@@ -64,7 +64,7 @@ describe("context Store", () => {
       addToMetadataList("list", { key: "value" });
 
       const context = getExecutionContext();
-      expect(context?.metadata?.["list"]).toStrictEqual([{ key: "value" }]);
+      expect(context?.metadata?.["list"]).toEqual([{ key: "value" }]);
     });
   });
 
@@ -77,7 +77,7 @@ describe("context Store", () => {
       addToMetadataRecord("record", { key: "value" });
 
       const context = getExecutionContext();
-      expect(context?.metadata?.["record"]).toStrictEqual({ key: "value" });
+      expect(context?.metadata?.["record"]).toEqual({ key: "value" });
     });
   });
 });

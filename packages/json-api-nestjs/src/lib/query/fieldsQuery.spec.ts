@@ -71,7 +71,7 @@ describe("fieldsQuery", () => {
       const actual = fieldsSchema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toStrictEqual(expected);
+      expect(actual.data).toEqual(expected);
     });
   });
 

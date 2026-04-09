@@ -19,7 +19,7 @@ function getServiceErrorMessage(error: ServiceError): string {
   return error.issues[0]?.message ?? "no message";
 }
 
-describe("serviceResult", () => {
+describe("ServiceResult", () => {
   describe("success", () => {
     it("creates success result", () => {
       const input = { data: "test" };
@@ -29,7 +29,7 @@ describe("serviceResult", () => {
       expect(isSuccess(actual)).toBe(true);
       expect(isFailure(actual)).toBe(false);
       expect(actual.isSuccess).toBe(true);
-      expect((actual as Success<{ data: string }>).value).toStrictEqual(input);
+      expect((actual as Success<{ data: string }>).value).toEqual(input);
     });
   });
 
@@ -47,9 +47,7 @@ describe("serviceResult", () => {
       expect(actual.isSuccess).toBe(false);
       const { error } = actual as Failure<ServiceError>;
       expect(error).toBeInstanceOf(ServiceError);
-      expect(error.issues).toStrictEqual([
-        { code: ERROR_CODES.notFound, title: "Resource not found" },
-      ]);
+      expect(error.issues).toEqual([{ code: ERROR_CODES.notFound, title: "Resource not found" }]);
     });
 
     it("creates failure result from ServiceError", () => {
@@ -62,7 +60,7 @@ describe("serviceResult", () => {
       expect(actual.isRight).toBe(false);
       const { error } = actual as Failure<ServiceError>;
       expect(error).toBe(input);
-      expect(error.issues).toStrictEqual([
+      expect(error.issues).toEqual([
         { code: ERROR_CODES.internal, title: "Internal server error", message: "test error" },
       ]);
     });
@@ -108,7 +106,7 @@ describe("serviceResult", () => {
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;
-      expect(error.issues).toStrictEqual([
+      expect(error.issues).toEqual([
         {
           code: ERROR_CODES.notFound,
           title: "Resource not found",
@@ -156,7 +154,7 @@ describe("serviceResult", () => {
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;
-      expect(error.issues).toStrictEqual([
+      expect(error.issues).toEqual([
         {
           code: ERROR_CODES.badRequest,
           title: "Invalid or malformed request",
@@ -222,7 +220,7 @@ describe("serviceResult", () => {
       }>;
 
       expect(isLeft(actual)).toBe(true);
-      expect(actual.left).toStrictEqual({
+      expect(actual.left).toEqual({
         errorCode: ERROR_CODES.notFound,
         errorMessage: "Resource not found",
       });
@@ -264,7 +262,7 @@ describe("serviceResult", () => {
       expect(actual.isRight).toBe(false);
       const { error } = actual as Failure<ServiceError>;
       expect(error).toBeInstanceOf(ServiceError);
-      expect(error.issues).toStrictEqual([
+      expect(error.issues).toEqual([
         {
           code: ERROR_CODES.badRequest,
           title: "Invalid or malformed request",

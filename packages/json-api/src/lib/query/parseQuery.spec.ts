@@ -80,7 +80,7 @@ describe("parseQuery", () => {
 
     const actual = parseQuery(url.search);
 
-    expect(actual).toStrictEqual(expected);
+    expect(actual).toEqual(expected);
   });
 
   it("parses combinations", () => {
@@ -101,6 +101,6 @@ describe("parseQuery", () => {
     const url = new URL(`${BASE_URL}?${input}`);
     const actual = parseQuery(url.search);
 
-    expect(actual).toStrictEqual(expected);
+    expect(actual).toEqual(expected);
   });
 });

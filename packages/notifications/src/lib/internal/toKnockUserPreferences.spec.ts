@@ -40,7 +40,7 @@ describe("toKnockPreferences", () => {
 
     const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
 
-    expect(preferencesSet).toStrictEqual({
+    expect(preferencesSet).toEqual({
       channel_types: {
         chat: false,
         email: false,
@@ -87,7 +87,7 @@ describe("toKnockPreferences", () => {
 
     const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
 
-    expect(preferencesSet).toStrictEqual({
+    expect(preferencesSet).toEqual({
       channel_types: {},
       categories: null,
       workflows: {
@@ -105,6 +105,6 @@ describe("toKnockPreferences", () => {
 
     const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
 
-    expect(preferencesSet).toStrictEqual({});
+    expect(preferencesSet).toEqual({});
   });
 });

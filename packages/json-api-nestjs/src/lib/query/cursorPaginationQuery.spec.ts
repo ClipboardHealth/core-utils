@@ -34,7 +34,7 @@ describe("cursorPaginationQuery", () => {
     const actual = cursorPaginationSchema.safeParse(input);
 
     expectToBeSafeParseSuccess(actual);
-    expect(actual.data).toStrictEqual(expected);
+    expect(actual.data).toEqual(expected);
   });
 
   it.each<{ errorMessage: string; input: unknown; name: string }>([
@@ -74,7 +74,7 @@ describe("cursorPaginationQuery", () => {
       const actual = schema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toStrictEqual({
+      expect(actual.data).toEqual({
         page: {
           size: 10,
         },

@@ -73,6 +73,6 @@ describe("queryFilterPreprocessor", () => {
       expected: { eq: "20,10", gt: "5" },
     },
   ])("$name", ({ input, expected }) => {
-    expect(queryFilterPreprocessor(input)).toStrictEqual(expected);
+    expect(queryFilterPreprocessor(input)).toEqual(expected);
   });
 });

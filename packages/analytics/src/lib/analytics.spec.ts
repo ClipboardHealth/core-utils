@@ -20,7 +20,7 @@ vi.mock("@segment/analytics-node", () => {
   };
 });
 
-describe("analytics", () => {
+describe("Analytics", () => {
   let logger: Logger;
   let analytics: Analytics;
 

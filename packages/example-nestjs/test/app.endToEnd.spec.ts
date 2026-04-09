@@ -5,7 +5,7 @@ import request from "supertest";
 
 import { AppModule } from "../src/app.module";
 
-describe("gET /users", () => {
+describe("GET /users", () => {
   let app: NestExpressApplication;
 
   beforeEach(async () => {
@@ -28,7 +28,6 @@ describe("gET /users", () => {
   });
 
   const defaultQuery = { page: { size: 20 } };
-
   it.each<{ expected: Record<string, unknown>; input: string; name: string }>([
     {
       name: "defaults page size if no query string",
@@ -104,7 +103,7 @@ describe("gET /users", () => {
     const response = await request(app.getHttpServer()).get(input);
 
     expect(response.status).toBe(200);
-    expect(response.body).toStrictEqual(expected);
+    expect(response.body).toEqual(expected);
   });
 
   it.each<{

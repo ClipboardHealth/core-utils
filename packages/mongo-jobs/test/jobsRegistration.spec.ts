@@ -4,7 +4,7 @@ import type { Registry } from "../src/lib/internal/registry";
 import { ExampleJob } from "./support/exampleJob";
 import { JobWithDependencies } from "./support/jobWithDependencies";
 
-describe("registering background jobs", () => {
+describe("Registering background jobs", () => {
   let backgroundJobs: BackgroundJobs;
   let registry: Registry;
 

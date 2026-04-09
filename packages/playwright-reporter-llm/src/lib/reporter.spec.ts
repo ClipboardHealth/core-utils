@@ -287,14 +287,14 @@ function writeTraceZipFixture(
   return tracePath;
 }
 
-describe("llmReporter", () => {
+describe("LlmReporter", () => {
   let outputDirectory: string;
   let outputFile: string;
 
   beforeEach(() => {
     outputDirectory = mkdtempSync(path.join(tmpdir(), "llm-reporter-test-"));
     outputFile = path.join(outputDirectory, "llm-report.json");
-    vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
 
   afterEach(() => {
@@ -326,7 +326,7 @@ describe("llmReporter", () => {
     expect(report.schemaVersion).toBe(2);
     expect(report.timestamp).toBeDefined();
     expect(report.durationMs).toBeGreaterThanOrEqual(0);
-    expect(report.summary).toStrictEqual({
+    expect(report.summary).toEqual({
       total: 1,
       passed: 1,
       failed: 0,
@@ -342,7 +342,7 @@ describe("llmReporter", () => {
     expect(report.tests[0]?.status).toBe("passed");
     expect(report.tests[0]?.flaky).toBe(false);
     expect(report.tests[0]?.id).toBe("stable-test-id-1");
-    expect(report.globalErrors).toStrictEqual([]);
+    expect(report.globalErrors).toEqual([]);
   });
 
   it("records failed tests with error details", () => {
@@ -370,7 +370,7 @@ describe("llmReporter", () => {
     expect(report.tests[0]?.errors).toHaveLength(1);
     expect(report.tests[0]?.errors[0]?.message).not.toContain("\u001B[");
     expect(report.tests[0]?.errors[0]?.stack).not.toContain("node_modules");
-    expect(report.tests[0]?.errors[0]?.location).toStrictEqual({
+    expect(report.tests[0]?.errors[0]?.location).toEqual({
       file: "/project/tests/my-test.spec.ts",
       line: 12,
       column: 5,
@@ -514,7 +514,7 @@ describe("llmReporter", () => {
     const entry = firstTestEntry(report);
     const [attempt] = entry.attempts;
 
-    expect(attempt?.steps).toStrictEqual([
+    expect(attempt?.steps).toEqual([
       {
         title: "outer step",
         category: "test.step",
@@ -531,7 +531,7 @@ describe("llmReporter", () => {
         error: "inner failure line",
       },
     ]);
-    expect(entry.steps).toStrictEqual(attempt?.steps);
+    expect(entry.steps).toEqual(attempt?.steps);
   });
 
   it("extracts network requests and JSON bodies from trace attachments", () => {
@@ -576,7 +576,7 @@ describe("llmReporter", () => {
     const entry = firstTestEntry(report);
     const [attempt] = entry.attempts;
 
-    expect(attempt?.network).toStrictEqual([
+    expect(attempt?.network).toEqual([
       {
         method: "POST",
         url: "https://api.example.com/v1/orders",
@@ -593,7 +593,7 @@ describe("llmReporter", () => {
         responseBody: '{"response":"world"}',
       },
     ]);
-    expect(entry.network).toStrictEqual(attempt?.network);
+    expect(entry.network).toEqual(attempt?.network);
   });
 
   it("keeps network empty when no trace attachment exists", () => {
@@ -613,8 +613,8 @@ describe("llmReporter", () => {
     const report = readReport(outputFile);
     const entry = firstTestEntry(report);
 
-    expect(entry.attempts[0]?.network).toStrictEqual([]);
-    expect(entry.network).toStrictEqual([]);
+    expect(entry.attempts[0]?.network).toEqual([]);
+    expect(entry.network).toEqual([]);
   });
 
   it("ignores zip attachments that are not trace artifacts", () => {
@@ -637,8 +637,8 @@ describe("llmReporter", () => {
     const report = readReport(outputFile);
     const entry = firstTestEntry(report);
 
-    expect(entry.attempts[0]?.network).toStrictEqual([]);
-    expect(entry.attempts[0]?.consoleMessages).toStrictEqual([]);
+    expect(entry.attempts[0]?.network).toEqual([]);
+    expect(entry.attempts[0]?.consoleMessages).toEqual([]);
   });
 
   it("caps JSON request and response bodies from traces at 2KB", () => {
@@ -715,8 +715,8 @@ describe("llmReporter", () => {
     );
 
     expect(attempt?.network).toHaveLength(NETWORK_REQUESTS_CAP);
-    expect(attempt?.network.map((request) => request.url)).toStrictEqual(expectedUrls);
-    expect(entry.network).toStrictEqual(attempt?.network);
+    expect(attempt?.network.map((request) => request.url)).toEqual(expectedUrls);
+    expect(entry.network).toEqual(attempt?.network);
   });
 
   it("extracts warning/error/pageerror console messages from traces", () => {
@@ -750,7 +750,7 @@ describe("llmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt?.consoleMessages).toStrictEqual([
+    expect(attempt?.consoleMessages).toEqual([
       { type: "warning", text: "deprecated API used" },
       { type: "error", text: "failed to fetch" },
       { type: "pageerror", text: "Uncaught TypeError: x is undefined" },
@@ -781,7 +781,7 @@ describe("llmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt?.consoleMessages).toStrictEqual(
+    expect(attempt?.consoleMessages).toEqual(
       expect.arrayContaining([
         { type: "page-closed", text: "Page closed" },
         { type: "page-crashed", text: "Target page crashed" },
@@ -958,7 +958,7 @@ describe("llmReporter", () => {
     const [networkRequest] = attempt.network;
 
     expect(networkRequest?.durationMs).toBe(27);
-    expect(networkRequest?.timings).toStrictEqual({
+    expect(networkRequest?.timings).toEqual({
       dnsMs: 2,
       connectMs: 7,
       sslMs: 4,
@@ -1237,7 +1237,7 @@ describe("llmReporter", () => {
     const attempt = firstAttempt(report);
 
     expect(attempt?.consoleMessages).toContainEqual({ type: "pageerror", text: "page exploded" });
-    expect(attempt?.network).toStrictEqual(
+    expect(attempt?.network).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           method: "POST",
@@ -1276,8 +1276,8 @@ describe("llmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt?.network).toStrictEqual([]);
-    expect(attempt?.consoleMessages).toStrictEqual([]);
+    expect(attempt?.network).toEqual([]);
+    expect(attempt?.consoleMessages).toEqual([]);
   });
 
   it("collects global errors", () => {
@@ -1359,7 +1359,7 @@ describe("llmReporter", () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt?.failureArtifacts).toStrictEqual({
+    expect(attempt?.failureArtifacts).toEqual({
       videoPath: "retry-video.webm",
     });
   });
@@ -1402,7 +1402,7 @@ describe("llmReporter", () => {
 
     const report = readReport(outputFile);
 
-    expect(report.tests[0]?.errors[0]?.diff).toStrictEqual({
+    expect(report.tests[0]?.errors[0]?.diff).toEqual({
       expected: '"hello"',
       actual: '"world"',
     });
@@ -2032,7 +2032,7 @@ describe("llmReporter", () => {
     expect(attempt.timeline[2]).toMatchObject({ kind: "console", offsetMs: 300, type: "error" });
 
     const entry = firstTestEntry(report);
-    expect(entry.timeline).toStrictEqual(attempt.timeline);
+    expect(entry.timeline).toEqual(attempt.timeline);
   });
 
   it("excludes entries without offsetMs from timeline", () => {

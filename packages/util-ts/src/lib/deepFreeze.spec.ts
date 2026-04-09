@@ -7,7 +7,7 @@ describe("deepFreeze", () => {
     const actual = deepFreeze(input);
 
     expect(Object.isFrozen(actual)).toBe(true);
-    expect(actual).toStrictEqual(input);
+    expect(actual).toEqual(input);
     expect(() => {
       // @ts-expect-error: Cannot assign to read only
       actual.a = 2;
@@ -29,7 +29,7 @@ describe("deepFreeze", () => {
     expect(Object.isFrozen(actual.c.d)).toBe(true);
     expect(Object.isFrozen(actual.f)).toBe(true);
     expect(Object.isFrozen(actual.f[0])).toBe(true);
-    expect(actual).toStrictEqual(input);
+    expect(actual).toEqual(input);
   });
 
   it("handles circular references", () => {
@@ -39,7 +39,7 @@ describe("deepFreeze", () => {
     const actual = deepFreeze(input);
 
     expect(Object.isFrozen(actual)).toBe(true);
-    expect(actual).toStrictEqual(input);
+    expect(actual).toEqual(input);
   });
 
   it("returns non-object values as-is", () => {

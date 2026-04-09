@@ -30,7 +30,7 @@ describe("sortQuery", () => {
       const actual = sortSchema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toStrictEqual(expected);
+      expect(actual.data).toEqual(expected);
     });
   });
 

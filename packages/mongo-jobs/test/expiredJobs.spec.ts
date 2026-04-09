@@ -8,7 +8,7 @@ import { createTestContext, type TestContext } from "./support/testContext";
 import { TestLogger } from "./support/testLogger";
 import { TestMetricsReporter } from "./support/testMetricsReporter";
 
-describe("expired Jobs", () => {
+describe("Expired Jobs", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
   let logger: TestLogger;
@@ -59,7 +59,7 @@ describe("expired Jobs", () => {
     await setTimeout(300);
     await backgroundJobs.stop();
 
-    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
+    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
 
     const jobRuns = await JobRun.find({});
     const jobRunNumbers = jobRuns.map((jobRun) => jobRun.myNumber);

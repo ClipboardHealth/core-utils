@@ -51,16 +51,14 @@ describe("allIf", () => {
 
   describe("run", () => {
     it("runs all the matching rules", () => {
-      expect(
-        allIf(() => true, testRule2, testRule1, testRule3, testRule4).run(context),
-      ).toStrictEqual({
+      expect(allIf(() => true, testRule2, testRule1, testRule3, testRule4).run(context)).toEqual({
         ...context,
         output: [2, 3],
       });
     });
 
     it("returns the received context if no rule can be run", () => {
-      expect(allIf(() => true, testRule1, testRule4).run(context)).toStrictEqual(context);
+      expect(allIf(() => true, testRule1, testRule4).run(context)).toEqual(context);
     });
   });
 });

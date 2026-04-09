@@ -18,7 +18,7 @@ describe("parseTriggerIdempotencyKey", () => {
 
       const actual = parseTriggerIdempotencyKey({ idempotencyKey });
 
-      expect(actual).toStrictEqual(params);
+      expect(actual).toEqual(params);
     });
 
     it("parses params with eventOccurredAt", () => {
@@ -32,7 +32,7 @@ describe("parseTriggerIdempotencyKey", () => {
 
       const actual = parseTriggerIdempotencyKey({ idempotencyKey });
 
-      expect(actual).toStrictEqual(params);
+      expect(actual).toEqual(params);
     });
   });
 

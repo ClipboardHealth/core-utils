@@ -1,6 +1,6 @@
 import { ActionableQueues } from "../../../src/lib/internal/worker/actionableQueues";
 
-describe("actionableQueues", () => {
+describe("ActionableQueues", () => {
   let actionableQueues: ActionableQueues;
 
   beforeEach(() => {

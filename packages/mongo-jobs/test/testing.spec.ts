@@ -14,7 +14,7 @@ import { createTestContext, type TestContext } from "./support/testContext";
 
 const HOURS = 1000 * 60 * 60;
 
-describe("testing helpers", () => {
+describe("Testing helpers", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
 

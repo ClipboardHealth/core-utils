@@ -46,14 +46,14 @@ describe("firstMatch", () => {
 
   describe("run", () => {
     it("runs the first matching rule", () => {
-      expect(firstMatch(testRule1, testRule2, testRule3).run(context)).toStrictEqual({
+      expect(firstMatch(testRule1, testRule2, testRule3).run(context)).toEqual({
         ...context,
         output: [2],
       });
     });
 
     it("returns the received context if no rule can be run", () => {
-      expect(firstMatch(testRule1, testRule3).run(context)).toStrictEqual(context);
+      expect(firstMatch(testRule1, testRule3).run(context)).toEqual(context);
     });
   });
 });

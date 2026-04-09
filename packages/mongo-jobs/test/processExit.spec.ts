@@ -6,7 +6,7 @@ const execFileAsync = promisify(execFile);
 const emulateScript = path.join(__dirname, "support", "emulateCompletionOfBackgroundJobs.ts");
 const EXIT_TIMEOUT_MS = 5000;
 
-describe("process exit after stop", () => {
+describe("Process exit after stop", () => {
   it(
     "should allow the Node process to exit after stop() is called on background jobs",
     async () => {

@@ -7,7 +7,7 @@ import { waitForJobCount } from "./support/waitForJobCount";
 import { waitForMetric } from "./support/waitForMetric";
 import { waitForTimings } from "./support/waitForTimings";
 
-describe("backgroundJobMetrics", () => {
+describe("BackgroundJobMetrics", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
   let metricsReporter: TestMetricsReporter;
