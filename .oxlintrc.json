@@ -2,7 +2,14 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/base.json"],
   "plugins": ["vitest"],
-  "ignorePatterns": ["packages/eslint-config/src/index.js"],
+  "ignorePatterns": [
+    ".agents/",
+    ".rules/",
+    "coverage/",
+    "dist/",
+    "node_modules/",
+    "packages/eslint-config/src/index.js"
+  ],
   "options": {
     "reportUnusedDisableDirectives": "off",
     "typeAware": false,
