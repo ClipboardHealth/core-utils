@@ -1,16 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
-    "**/cbhResponse.ts",
-    "**/generators/**/schema.d.ts",
-    "**/jest.config.ts",
     "**/webpack.*.js",
-    ".agents/**/*.ts",
-    ".claude/**/*.ts",
     "evals/**/*.ts",
     "packages/ai-rules/scripts/*.ts",
     "packages/eslint-config/src/react.js",
-    "packages/eslint-plugin/src/lib/createRule.ts",
     "plugins/**/*.ts",
     "scripts/**/*.ts",
     "packages/mongo-jobs/test/support/emulateCompletionOfBackgroundJobs.ts",
@@ -18,8 +12,6 @@
   "ignoreDependencies": [
     "@anthropic-ai/claude-agent-sdk",
     "@nx/webpack",
-    "@swc/helpers",
-    "@typescript-eslint/parser",
     "eslint-plugin-promise",
     "ts-node",
     "tslib",
