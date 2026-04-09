@@ -79,9 +79,7 @@
       "cache": true,
       "configurations": {
         "ci": {
-          "coverage": {
-            "enabled": true
-          }
+          "coverage": true
         }
       }
     },
