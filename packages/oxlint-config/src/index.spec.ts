@@ -241,7 +241,7 @@ describe("oxlint-config", () => {
       });
     });
 
-    it("deep-merges settings namespaces instead of clobbering them", () => {
+    it("merges settings at the plugin namespace level without recursing deeper", () => {
       const actual = createOxlintConfig({
         presets: [
           {
@@ -259,7 +259,7 @@ describe("oxlint-config", () => {
               react: {
                 version: "19",
                 nested: {
-                  add: true,
+                  replaced: true,
                 },
               },
             },
@@ -272,8 +272,7 @@ describe("oxlint-config", () => {
           pragma: "React",
           version: "19",
           nested: {
-            keep: true,
-            add: true,
+            replaced: true,
           },
         },
       });
