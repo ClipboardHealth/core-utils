@@ -54,7 +54,7 @@ Each package in `packages/` has:
 - `project.json`: Nx project configuration with build/lint/test targets
 - `src/index.ts`: Main export file
 - `README.md`: Package-specific documentation with usage examples
-- Individual `tsconfig.lib.json`, `jest.config.ts`, etc.
+- Individual `tsconfig.lib.json`, `vitest.config.ts`, etc.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

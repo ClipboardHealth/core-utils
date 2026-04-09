@@ -3,7 +3,10 @@ import { Semaphore } from "./support/semaphore";
 import { SemaphoreJob } from "./support/semaphoreJob";
 import { createTestContext, type TestContext } from "./support/testContext";
 
-const allFakeableTimers: FakeableAPI[] = [
+type FakeTimerOptions = NonNullable<Parameters<typeof vi.useFakeTimers>[0]>;
+type FakeableTimer = NonNullable<FakeTimerOptions["toFake"]>[number];
+
+const allFakeableTimers: FakeableTimer[] = [
   "Date",
   "hrtime",
   "nextTick",
@@ -21,14 +24,10 @@ const allFakeableTimers: FakeableAPI[] = [
   "clearTimeout",
 ];
 
-function jestFakeOnlyTimers(toFake: FakeableAPI[]) {
-  const notToFake = new Set(allFakeableTimers);
-
-  toFake.forEach((timer) => notToFake.delete(timer));
-
-  jest.useFakeTimers({
-    doNotFake: [...notToFake],
+function useFakeOnlyTimers(toFake: FakeableTimer[]) {
+  vi.useFakeTimers({
     now: new Date("2023-07-04T14:59:00.000Z").getTime(),
+    toFake: allFakeableTimers.filter((timer) => toFake.includes(timer)),
   });
 }
 
@@ -42,13 +41,13 @@ describe("Cron jobs", () => {
     backgroundJobs = testContext.backgroundJobs;
     semaphore = new Semaphore();
 
-    jestFakeOnlyTimers(["Date"]);
+    useFakeOnlyTimers(["Date"]);
   });
 
   afterEach(async () => {
     semaphore.cleanup();
     await backgroundJobs.stop();
-    jest.useRealTimers();
+    vi.useRealTimers();
     await testContext.tearDown();
   });
 
@@ -71,7 +70,7 @@ describe("Cron jobs", () => {
     /* Setting the system time to when the job should run, checking that the
      * job runs and new one is scheduled
      */
-    jest.setSystemTime(new Date("2023-07-04T15:10:00.000Z"));
+    vi.setSystemTime(new Date("2023-07-04T15:10:00.000Z"));
 
     void backgroundJobs.start(["default"]);
     await semaphore.getPromise(1);
@@ -134,7 +133,7 @@ describe("Cron jobs", () => {
     /* Setting the system time to when the job should run, checking that the
      * job runs and new one is scheduled
      */
-    jest.setSystemTime(new Date("2023-07-04T15:10:00.000Z"));
+    vi.setSystemTime(new Date("2023-07-04T15:10:00.000Z"));
 
     void backgroundJobs.start(["default"]);
     await semaphore.getPromise(1);
@@ -142,7 +141,7 @@ describe("Cron jobs", () => {
     await backgroundJobs.stop(500);
 
     // Move time by 15 minutes
-    jest.setSystemTime(new Date("2023-07-04T15:25:00.000Z"));
+    vi.setSystemTime(new Date("2023-07-04T15:25:00.000Z"));
 
     // Set new promise in semaphore to wait for when new execution of job1 starts
     semaphore.setNewPromise(1);

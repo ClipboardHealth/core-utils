@@ -33,7 +33,7 @@
     "rootDir": ".",
     "skipDefaultLibCheck": true,
     "sourceMap": true,
-    "types": ["jest", "node"]
+    "types": ["vitest/globals", "node"]
   },
   "include": ["./packages"],
   "exclude": ["node_modules", "dist", "coverage", "tmp"]

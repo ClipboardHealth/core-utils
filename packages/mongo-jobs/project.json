@@ -24,12 +24,10 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/mongo-jobs/jest.config.ts",
-        "passWithNoTests": false
-      },
-      "outputs": ["{projectRoot}/coverage"]
+        "configFile": "packages/mongo-jobs/vitest.config.ts"
+      }
     }
   }
 }

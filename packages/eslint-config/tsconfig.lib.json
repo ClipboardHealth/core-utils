@@ -5,5 +5,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.js", "src/**/*.ts"],
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.spec.ts"]
 }

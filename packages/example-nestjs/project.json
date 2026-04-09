@@ -31,9 +31,9 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/example-nestjs/jest.config.ts"
+        "configFile": "packages/example-nestjs/vitest.config.ts"
       }
     }
   }

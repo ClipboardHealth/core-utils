@@ -24,10 +24,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/background-jobs-adapter/jest.config.ts",
-        "passWithNoTests": true
+        "configFile": "packages/background-jobs-adapter/vitest.config.ts"
       }
     }
   }

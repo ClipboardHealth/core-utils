@@ -24,9 +24,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/eslint-plugin/jest.config.ts"
+        "configFile": "packages/eslint-plugin/vitest.config.ts"
       }
     }
   }

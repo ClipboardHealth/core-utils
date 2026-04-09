@@ -30,10 +30,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/ai-rules/jest.config.ts",
-        "passWithNoTests": true
+        "configFile": "packages/ai-rules/vitest.config.ts"
       }
     }
   }

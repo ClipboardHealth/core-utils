@@ -1,6 +1,7 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
 import { type Knock } from "@knocklabs/node";
+import type { Mocked } from "vitest";
 
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { IdempotentKnock } from "./internal/idempotentKnock";
@@ -23,20 +24,20 @@ type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"
 
 describe("NotificationClient", () => {
   let client: NotificationClient;
-  let mockLogger: jest.Mocked<Logger>;
-  let mockTracer: jest.Mocked<Tracer>;
+  let mockLogger: Mocked<Logger>;
+  let mockTracer: Mocked<Tracer>;
   let provider: IdempotentKnock;
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
     };
     mockTracer = {
-      trace: jest
+      trace: vi
         .fn()
-        .mockImplementation((_name, _options, fun) => fun({ addTags: jest.fn() }) as unknown),
+        .mockImplementation((_name, _options, fun) => fun({ addTags: vi.fn() }) as unknown),
     };
     provider = new IdempotentKnock({ apiKey: "test-api-key", logger: mockLogger });
 
@@ -48,7 +49,7 @@ describe("NotificationClient", () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("constructor", () => {
@@ -90,7 +91,7 @@ describe("NotificationClient", () => {
         data: { message: "Hello world" },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -128,7 +129,7 @@ describe("NotificationClient", () => {
 
     it("rejects expired request", async () => {
       const mockExpiredDate = new Date(Date.now() - 1000);
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -155,7 +156,7 @@ describe("NotificationClient", () => {
 
     it("handles Knock API error", async () => {
       const mockError = new Error("Knock API error");
-      jest.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -169,9 +170,8 @@ describe("NotificationClient", () => {
       const actual = await client.trigger(input);
 
       expectToBeFailure(actual);
-      expect(actual.error).toEqual(
-        new ServiceError({ issues: [{ code: "unknown", message: mockError.message }] }),
-      );
+      expect(actual.error).toBeInstanceOf(ServiceError);
+      expect(actual.error.issues).toEqual([{ code: "unknown", message: mockError.message }]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.trigger [unknown] Knock API error",
@@ -192,7 +192,7 @@ describe("NotificationClient", () => {
         },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -227,7 +227,7 @@ describe("NotificationClient", () => {
     it("handles undefined data in body", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -255,8 +255,8 @@ describe("NotificationClient", () => {
     it("traces workflow execution with correct tags", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
-      const mockSpan = { addTags: jest.fn() };
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const mockSpan = { addTags: vi.fn() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -300,7 +300,7 @@ describe("NotificationClient", () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -331,7 +331,7 @@ describe("NotificationClient", () => {
     it("handles string recipients in trigger body", async () => {
       const mockBody = { recipients: ["user-1", "user-2"] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -351,7 +351,7 @@ describe("NotificationClient", () => {
     it("handles body with no actor or cancellation key", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -371,7 +371,7 @@ describe("NotificationClient", () => {
     it("handles recipient with minimal fields", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -405,7 +405,7 @@ describe("NotificationClient", () => {
         cancellationKey: "cancel-key",
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -424,7 +424,7 @@ describe("NotificationClient", () => {
 
     it("adds error tags to span when request expires", async () => {
       const mockExpiredDate = new Date(Date.now() - 1000);
-      const mockSpan = { addTags: jest.fn() };
+      const mockSpan = { addTags: vi.fn() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -448,8 +448,8 @@ describe("NotificationClient", () => {
 
     it("adds error tags to span when Knock API fails", async () => {
       const mockError = new Error("Knock API error");
-      jest.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
-      const mockSpan = { addTags: jest.fn() };
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+      const mockSpan = { addTags: vi.fn() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -512,7 +512,7 @@ describe("NotificationClient", () => {
     it("handles trigger request without keysToRedact", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: Omit<TriggerRequest, "keysToRedact"> = {
         workflowKey: mockWorkflowKey,
@@ -530,7 +530,7 @@ describe("NotificationClient", () => {
 
     it("rejects invalid idempotencyKey", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
 
       const invalidIdempotencyKey = "custom-idempotency-key-123" as TriggerIdempotencyKey;
 
@@ -552,7 +552,7 @@ describe("NotificationClient", () => {
     });
 
     it("skips provider call when dryRun is true", async () => {
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -593,7 +593,7 @@ describe("NotificationClient", () => {
     });
 
     it("includes dryRun in trace tags when true", async () => {
-      const mockSpan = { addTags: jest.fn() };
+      const mockSpan = { addTags: vi.fn() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -620,7 +620,7 @@ describe("NotificationClient", () => {
 
     it("defaults dryRun to false and calls provider", async () => {
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -651,7 +651,7 @@ describe("NotificationClient", () => {
         data: { message: "Hello world" },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -687,7 +687,7 @@ describe("NotificationClient", () => {
       const mockBody = { recipients };
       const mockResponse1 = { workflow_run_id: "run-1" };
       const mockResponse2 = { workflow_run_id: "run-2" };
-      const triggerSpy = jest
+      const triggerSpy = vi
         .spyOn(provider.workflows, "trigger")
         .mockResolvedValueOnce(mockResponse1)
         .mockResolvedValueOnce(mockResponse2);
@@ -728,7 +728,7 @@ describe("NotificationClient", () => {
 
     it("rejects expired request", async () => {
       const mockExpiredDate = new Date(Date.now() - 1000);
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -746,7 +746,7 @@ describe("NotificationClient", () => {
     });
 
     it("rejects request with no recipients", async () => {
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -764,7 +764,7 @@ describe("NotificationClient", () => {
     });
 
     it("rejects request with invalid expiresAt", async () => {
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
       const invalidDate = new Date("not-a-date");
 
       const input: TriggerChunkedRequest = {
@@ -784,7 +784,7 @@ describe("NotificationClient", () => {
     });
 
     it("skips provider call when dryRun is true", async () => {
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger");
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger");
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -805,7 +805,7 @@ describe("NotificationClient", () => {
 
     it("handles Knock API error", async () => {
       const mockError = new Error("Knock API error");
-      jest.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -824,7 +824,7 @@ describe("NotificationClient", () => {
     it("handles string recipients", async () => {
       const mockBody = { recipients: ["user-1", "user-2"] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -848,7 +848,7 @@ describe("NotificationClient", () => {
     it("logs request and chunk responses", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -882,7 +882,7 @@ describe("NotificationClient", () => {
         workplaceId: "workplace-123",
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -919,7 +919,7 @@ describe("NotificationClient", () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -956,7 +956,7 @@ describe("NotificationClient", () => {
         },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -996,7 +996,7 @@ describe("NotificationClient", () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1040,7 +1040,7 @@ describe("NotificationClient", () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      jest.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1075,10 +1075,10 @@ describe("NotificationClient", () => {
     const mockChannelId = "channel-id-abc";
 
     it("appends push token successfully when no existing tokens", async () => {
-      const getChannelDataSpy = jest
+      const getChannelDataSpy = vi
         .spyOn(provider.users, "getChannelData")
         .mockRejectedValue(createNotFoundError());
-      const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: { tokens: [mockToken] },
       } as SetChannelDataResponse);
 
@@ -1114,10 +1114,10 @@ describe("NotificationClient", () => {
 
     it("appends push token to existing tokens", async () => {
       const existingTokens = ["existing-token-1", "existing-token-2"];
-      jest.spyOn(provider.users, "getChannelData").mockResolvedValue({
+      vi.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: { tokens: existingTokens },
       } as GetChannelDataResponse);
-      const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: { tokens: [...existingTokens, mockToken] },
       } as SetChannelDataResponse);
 
@@ -1143,10 +1143,10 @@ describe("NotificationClient", () => {
 
     it("deduplicates tokens when adding existing token", async () => {
       const existingTokens = ["existing-token-1", mockToken];
-      jest.spyOn(provider.users, "getChannelData").mockResolvedValue({
+      vi.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: { tokens: existingTokens },
       } as GetChannelDataResponse);
-      const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: { tokens: ["existing-token-1", mockToken] },
       } as SetChannelDataResponse);
 
@@ -1171,10 +1171,10 @@ describe("NotificationClient", () => {
     });
 
     it("handles channel data with no tokens field", async () => {
-      jest.spyOn(provider.users, "getChannelData").mockResolvedValue({
+      vi.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: {},
       } as GetChannelDataResponse);
-      const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: { tokens: [mockToken] },
       } as SetChannelDataResponse);
 
@@ -1191,8 +1191,8 @@ describe("NotificationClient", () => {
     });
 
     it("logs info when no existing channel data found", async () => {
-      jest.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
+      vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: { tokens: [mockToken] },
       } as SetChannelDataResponse);
 
@@ -1214,8 +1214,8 @@ describe("NotificationClient", () => {
 
     it("handles getChannelData error that is not 404", async () => {
       const mockError = new Error("API error");
-      jest.spyOn(provider.users, "getChannelData").mockRejectedValue(mockError);
-      const setChannelDataSpy = jest.spyOn(provider.users, "setChannelData");
+      vi.spyOn(provider.users, "getChannelData").mockRejectedValue(mockError);
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData");
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1224,9 +1224,8 @@ describe("NotificationClient", () => {
       });
 
       expectToBeFailure(result);
-      expect(result.error).toEqual(
-        new ServiceError({ issues: [{ code: "unknown", message: "API error" }] }),
-      );
+      expect(result.error).toBeInstanceOf(ServiceError);
+      expect(result.error.issues).toEqual([{ code: "unknown", message: "API error" }]);
 
       expect(setChannelDataSpy).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -1237,8 +1236,8 @@ describe("NotificationClient", () => {
 
     it("handles setChannelData error", async () => {
       const mockError = new Error("Set channel data failed");
-      jest.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      jest.spyOn(provider.users, "setChannelData").mockRejectedValue(mockError);
+      vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
+      vi.spyOn(provider.users, "setChannelData").mockRejectedValue(mockError);
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1247,9 +1246,10 @@ describe("NotificationClient", () => {
       });
 
       expectToBeFailure(result);
-      expect(result.error).toEqual(
-        new ServiceError({ issues: [{ code: "unknown", message: "Set channel data failed" }] }),
-      );
+      expect(result.error).toBeInstanceOf(ServiceError);
+      expect(result.error.issues).toEqual([
+        { code: "unknown", message: "Set channel data failed" },
+      ]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.appendPushToken [unknown] Set channel data failed",
@@ -1258,8 +1258,8 @@ describe("NotificationClient", () => {
     });
 
     it("does not log sensitive push token in request or response", async () => {
-      jest.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
+      vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: { tokens: [mockToken] },
       } as SetChannelDataResponse);
 
@@ -1282,8 +1282,8 @@ describe("NotificationClient", () => {
     });
 
     it("handles response with no tokens field", async () => {
-      jest.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      jest.spyOn(provider.users, "setChannelData").mockResolvedValue({
+      vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
+      vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
         data: {},
       } as SetChannelDataResponse);
 
@@ -1304,7 +1304,7 @@ describe("NotificationClient", () => {
 
     it("handles Knock API error", async () => {
       const mockError = new Error("Tenant API error");
-      jest.spyOn(provider.tenants, "set").mockRejectedValue(mockError);
+      vi.spyOn(provider.tenants, "set").mockRejectedValue(mockError);
 
       const input: UpsertWorkplaceRequest = {
         workplaceId: mockWorkplaceId,
@@ -1314,9 +1314,8 @@ describe("NotificationClient", () => {
       const result = await client.upsertWorkplace(input);
 
       expectToBeFailure(result);
-      expect(result.error).toEqual(
-        new ServiceError({ issues: [{ code: "unknown", message: mockError.message }] }),
-      );
+      expect(result.error).toBeInstanceOf(ServiceError);
+      expect(result.error.issues).toEqual([{ code: "unknown", message: mockError.message }]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.upsertWorkplace [unknown] Tenant API error",
@@ -1339,7 +1338,7 @@ describe("NotificationClient", () => {
         name: mockWorkplaceName,
         __typename: "Tenant",
       };
-      const tenantSetSpy = jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
+      const tenantSetSpy = vi.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
 
       const input: UpsertWorkplaceRequest = {
         workplaceId: mockWorkplaceId,
@@ -1370,7 +1369,7 @@ describe("NotificationClient", () => {
         name: mockWorkplaceName,
         __typename: "Tenant",
       };
-      const tenantSetSpy = jest.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
+      const tenantSetSpy = vi.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
 
       const input: UpsertWorkplaceRequest = {
         workplaceId: mockWorkplaceId,
@@ -1497,11 +1496,10 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
       const result = await clientWithoutSigningKey.signUserToken(input);
 
       expectToBeFailure(result);
-      expect(result.error).toEqual(
-        new ServiceError({
-          issues: [{ code: "missingSigningKey", message: "Missing signing key." }],
-        }),
-      );
+      expect(result.error).toBeInstanceOf(ServiceError);
+      expect(result.error.issues).toEqual([
+        { code: "missingSigningKey", message: "Missing signing key." },
+      ]);
     });
 
     it("handles signUserToken API error", async () => {
@@ -1604,7 +1602,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
         channel_types: {},
       };
 
-      const setPreferencesSpy = jest
+      const setPreferencesSpy = vi
         .spyOn(provider.users, "setPreferences")
         .mockResolvedValue(mockPreferenceSet);
 
@@ -1630,7 +1628,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
     it("handles Knock API error", async () => {
       const mockUserId = "user-id";
       const mockError = new Error("Preferences API error");
-      jest.spyOn(provider.users, "setPreferences").mockRejectedValue(mockError);
+      vi.spyOn(provider.users, "setPreferences").mockRejectedValue(mockError);
 
       const input: UpsertUserPreferencesRequest = {
         userId: mockUserId,
@@ -1642,9 +1640,8 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
       const result = await client.upsertUserPreferences(input);
 
       expectToBeFailure(result);
-      expect(result.error).toEqual(
-        new ServiceError({ issues: [{ code: "unknown", message: mockError.message }] }),
-      );
+      expect(result.error).toBeInstanceOf(ServiceError);
+      expect(result.error.issues).toEqual([{ code: "unknown", message: mockError.message }]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.upsertUserPreferences [unknown] Preferences API error",

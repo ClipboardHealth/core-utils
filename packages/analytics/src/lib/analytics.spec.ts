@@ -2,13 +2,17 @@ import type { Logger } from "@clipboard-health/util-ts";
 
 import { Analytics, type Enabled, type IdentifyRequest, type TrackRequest } from "./analytics";
 
-const mockSegment = {
-  identify: jest.fn(),
-  track: jest.fn(),
-};
+const { mockSegment } = vi.hoisted(() => ({
+  mockSegment: {
+    identify: vi.fn(),
+    track: vi.fn(),
+  },
+}));
 
-jest.mock("@segment/analytics-node", () => ({
-  Analytics: jest.fn(() => mockSegment),
+vi.mock("@segment/analytics-node", () => ({
+  Analytics: function MockAnalytics(): typeof mockSegment {
+    return mockSegment;
+  },
 }));
 
 describe("Analytics", () => {
@@ -17,12 +21,12 @@ describe("Analytics", () => {
 
   beforeEach(() => {
     logger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
     };
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("constructor", () => {
