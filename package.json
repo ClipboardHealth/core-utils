@@ -59,7 +59,7 @@
     "jest": "30.3.0",
     "jest-util": "30.3.0",
     "jsonc-eslint-parser": "3.1.0",
-    "knip": "5.88.1",
+    "knip": "6.3.1",
     "lint-staged": "16.4.0",
     "markdownlint-cli2": "0.22.0",
     "nx": "22.6.4",
