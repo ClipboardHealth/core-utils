@@ -17,11 +17,17 @@
  * "mongodb://root:mongo@localhost/tests-1?authSource=admin"
  * ```
  *
- * @param {string} template - The URI string with zero or more {{test_worker_id}} variables
+ * @param {string} template - The URI string with one or more {{test_worker_id}} variables
  */
 export function getTestWorkerUri(template: string): string {
-  if (!template) {
+  const trimmedTemplate = template.trim();
+
+  if (trimmedTemplate.length === 0) {
     throw new Error("Argument 'template' representing a string for the URI can't be blank");
+  }
+
+  if (!trimmedTemplate.includes("{{test_worker_id}}")) {
+    throw new Error("Argument 'template' must include the '{{test_worker_id}}' placeholder");
   }
 
   const workerId = process.env["VITEST_POOL_ID"];
@@ -30,5 +36,5 @@ export function getTestWorkerUri(template: string): string {
     throw new Error("Environment variable 'VITEST_POOL_ID' was not set in the current context");
   }
 
-  return template.replaceAll("{{test_worker_id}}", workerId);
+  return trimmedTemplate.replaceAll("{{test_worker_id}}", workerId);
 }
