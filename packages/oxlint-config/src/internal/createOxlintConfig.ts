@@ -70,7 +70,7 @@ function mergeOxlintPreset(request: { current: OxlintConfig; next: OxlintPreset 
   assignMergedValue({
     config,
     field: "settings",
-    value: mergeObjectValues(current.settings, next.settings),
+    value: mergeSettingsValues(current.settings, next.settings),
   });
 
   return config;
@@ -96,6 +96,34 @@ function mergeObjectValues<Value extends object>(
   }
 
   return next === undefined ? cloneValue(current) : cloneValue({ ...current, ...next });
+}
+
+function mergeSettingsValues(
+  current: OxlintConfig["settings"],
+  next: OxlintConfig["settings"],
+): OxlintConfig["settings"] {
+  if (current === undefined) {
+    return next === undefined ? undefined : cloneValue(next);
+  }
+
+  if (next === undefined) {
+    return cloneValue(current);
+  }
+
+  const merged = { ...current };
+  for (const [namespace, nextValue] of Object.entries(next)) {
+    const currentValue = merged[namespace];
+    merged[namespace] =
+      isPlainObject(currentValue) && isPlainObject(nextValue)
+        ? { ...currentValue, ...nextValue }
+        : nextValue;
+  }
+
+  return cloneValue(merged);
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function cloneValue<Value>(value: Value): Value {

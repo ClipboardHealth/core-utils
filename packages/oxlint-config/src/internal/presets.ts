@@ -145,7 +145,9 @@ function isRuleTuple(value: unknown): value is [AllowWarnDeny, ...unknown[]] {
 
 function isAllowWarnDeny(value: unknown): value is AllowWarnDeny {
   return (
-    typeof value === "number" ||
+    value === 0 ||
+    value === 1 ||
+    value === 2 ||
     value === "allow" ||
     value === "off" ||
     value === "warn" ||

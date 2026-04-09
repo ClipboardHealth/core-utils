@@ -218,6 +218,57 @@ describe("oxlint-config", () => {
       });
     });
 
+    it("preserves settings when a later preset omits them", () => {
+      const actual = createOxlintConfig({
+        presets: [
+          {
+            settings: {
+              node: {
+                version: ">=24.14.0",
+              },
+            },
+          },
+          {
+            plugins: ["vitest"],
+          },
+        ],
+      });
+
+      expect(actual.settings).toEqual({
+        node: {
+          version: ">=24.14.0",
+        },
+      });
+    });
+
+    it("deep-merges settings namespaces instead of clobbering them", () => {
+      const actual = createOxlintConfig({
+        presets: [
+          {
+            settings: {
+              react: {
+                pragma: "React",
+              },
+            },
+          },
+          {
+            settings: {
+              react: {
+                version: "19",
+              },
+            },
+          },
+        ],
+      });
+
+      expect(actual.settings).toEqual({
+        react: {
+          pragma: "React",
+          version: "19",
+        },
+      });
+    });
+
     it("does not share preset references with returned configs", () => {
       const firstConfig = getConfigWithRulesAndOverrides(
         createOxlintConfig({
