@@ -92,8 +92,17 @@
       }
     },
     {
+      "files": ["**/*.test.ts", "**/*.spec.ts"],
+      "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off"
+      }
+    },
+    {
       "files": ["**/scripts/**/*.ts"],
       "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off",
         "no-console": "off",
         "no-plusplus": "off",
         "node/no-process-env": "off",
