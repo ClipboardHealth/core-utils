@@ -15,6 +15,11 @@
     "typeAware": false,
     "typeCheck": false
   },
+  "settings": {
+    "node": {
+      "version": ">=24.14.1"
+    }
+  },
   "rules": {
     "class-methods-use-this": "off",
     "complexity": "off",
