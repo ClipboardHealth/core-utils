@@ -1,5 +1,3 @@
-import type NodeFs from "node:fs";
-
 import {
   base,
   createOxlintConfig,
@@ -536,12 +534,10 @@ function getFirstOverrideFiles(config: {
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
   vi.resetModules();
-  vi.doMock(
-    "node:fs",
-    (): Partial<typeof NodeFs> => ({
-      readFileSync: vi.fn(() => JSON.stringify(baseJson)),
-    }),
-  );
+  // oxlint-disable-next-line jest/no-untyped-mock-factory -- conflicts with consistent-type-imports
+  vi.doMock("node:fs", () => ({
+    readFileSync: vi.fn(() => JSON.stringify(baseJson)),
+  }));
 
   return await import("./internal/presets");
 }
