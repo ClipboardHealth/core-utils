@@ -55,11 +55,7 @@ describe("oxlint-config", () => {
       expect(vitest).toEqual({
         plugins: ["vitest"],
         rules: {
-          "vitest/no-importing-vitest-globals": "off",
-          "vitest/prefer-describe-function-title": "off",
           "vitest/prefer-importing-vitest-globals": "off",
-          "vitest/prefer-to-be-falsy": "off",
-          "vitest/prefer-to-be-truthy": "off",
           "vitest/require-test-timeout": "off",
         },
       });
