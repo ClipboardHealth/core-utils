@@ -50,7 +50,7 @@
     "@tsconfig/strictest": "2.0.8",
     "@types/jest": "30.0.0",
     "@types/node": "24.12.2",
-    "@typescript/native-preview": "7.0.0-dev.20260401.1",
+    "@typescript/native-preview": "7.0.0-dev.20260405.1",
     "cspell": "9.7.0",
     "dependency-cruiser": "17.3.10",
     "eslint": "8.57.1",
