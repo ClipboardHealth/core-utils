@@ -248,6 +248,9 @@ describe("oxlint-config", () => {
             settings: {
               react: {
                 pragma: "React",
+                nested: {
+                  keep: true,
+                },
               },
             },
           },
@@ -255,6 +258,9 @@ describe("oxlint-config", () => {
             settings: {
               react: {
                 version: "19",
+                nested: {
+                  add: true,
+                },
               },
             },
           },
@@ -265,6 +271,10 @@ describe("oxlint-config", () => {
         react: {
           pragma: "React",
           version: "19",
+          nested: {
+            keep: true,
+            add: true,
+          },
         },
       });
     });

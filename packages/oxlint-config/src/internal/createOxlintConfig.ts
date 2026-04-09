@@ -110,16 +110,24 @@ function mergeSettingsValues(
     return cloneValue(current);
   }
 
+  return cloneValue(deepMerge(current, next));
+}
+
+function deepMerge(
+  current: Record<string, unknown>,
+  next: Record<string, unknown>,
+): Record<string, unknown> {
   const merged = { ...current };
-  for (const [namespace, nextValue] of Object.entries(next)) {
-    const currentValue = merged[namespace];
-    merged[namespace] =
+
+  for (const [key, nextValue] of Object.entries(next)) {
+    const currentValue = merged[key];
+    merged[key] =
       isPlainObject(currentValue) && isPlainObject(nextValue)
-        ? { ...currentValue, ...nextValue }
+        ? deepMerge(currentValue, nextValue)
         : nextValue;
   }
 
-  return cloneValue(merged);
+  return merged;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
