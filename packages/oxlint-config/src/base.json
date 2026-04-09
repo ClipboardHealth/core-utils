@@ -12,7 +12,7 @@
     "denyWarnings": true
   },
   "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "jsdoc", "node", "promise"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise"],
   "settings": {
     "node": {
       "version": ">=24.14.1"
@@ -32,6 +32,8 @@
     "import/no-relative-parent-imports": "off",
     "import/prefer-default-export": "off",
     "init-declarations": "off",
+    "max-lines": "off",
+    "max-lines-per-function": "off",
     "max-statements": "off",
     "no-continue": "off",
     "no-inline-comments": "off",
@@ -62,6 +64,7 @@
     "typescript/promise-function-async": "off",
     "typescript/return-await": ["error", "always"],
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
+    "unicorn/no-array-reduce": "off",
     "unicorn/no-null": "off"
   },
   "overrides": [
@@ -89,17 +92,8 @@
       }
     },
     {
-      "files": ["**/*.test.ts", "**/*.spec.ts"],
-      "rules": {
-        "max-lines": "off",
-        "max-lines-per-function": "off"
-      }
-    },
-    {
       "files": ["**/scripts/**/*.ts"],
       "rules": {
-        "max-lines": "off",
-        "max-lines-per-function": "off",
         "no-console": "off",
         "no-plusplus": "off",
         "node/no-process-env": "off",

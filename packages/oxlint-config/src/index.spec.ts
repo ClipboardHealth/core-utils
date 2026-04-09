@@ -1,3 +1,5 @@
+import type NodeFs from "node:fs";
+
 import {
   base,
   createOxlintConfig,
@@ -9,19 +11,18 @@ import {
 
 describe("oxlint-config", () => {
   describe("presets", () => {
-    it("exports the shared base preset", () => {
-      expect(base.plugins).toEqual([
+    it("exports the shared base preset plugins, categories, and ignore patterns", () => {
+      expect(base.plugins).toStrictEqual([
         "eslint",
         "typescript",
         "unicorn",
         "oxc",
         "import",
-        "jsdoc",
         "node",
         "promise",
       ]);
 
-      expect(base.categories).toEqual({
+      expect(base.categories).toStrictEqual({
         correctness: "error",
         nursery: "error",
         pedantic: "error",
@@ -31,25 +32,27 @@ describe("oxlint-config", () => {
         suspicious: "error",
       });
 
-      expect(base.ignorePatterns).toEqual([
+      expect(base.ignorePatterns).toStrictEqual([
         ".agents/",
         ".rules/",
         "coverage/",
         "dist/",
         "node_modules/",
       ]);
+    });
 
-      expect(base.options).toEqual({
+    it("exports the shared base preset options, settings, overrides, and rules", () => {
+      expect(base.options).toStrictEqual({
         denyWarnings: true,
       });
 
-      expect(base.settings).toEqual({
+      expect(base.settings).toStrictEqual({
         node: {
           version: ">=24.14.1",
         },
       });
 
-      expect(base.overrides).toHaveLength(4);
+      expect(base.overrides).toHaveLength(3);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
@@ -58,15 +61,15 @@ describe("oxlint-config", () => {
     });
 
     it("exports additive plugin presets", () => {
-      expect(react).toEqual({
+      expect(react).toStrictEqual({
         plugins: ["react"],
       });
 
-      expect(jestPreset).toEqual({
+      expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
       });
 
-      expect(vitest).toEqual({
+      expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
           "vitest/prefer-importing-vitest-globals": "off",
@@ -80,7 +83,7 @@ describe("oxlint-config", () => {
     it("returns an empty config when no presets or local config are provided", () => {
       const actual = createOxlintConfig({});
 
-      expect(actual).toEqual({});
+      expect(actual).toStrictEqual({});
     });
 
     it("merges presets left-to-right and applies local config last", () => {
@@ -190,7 +193,7 @@ describe("oxlint-config", () => {
         ],
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         categories: {
           correctness: "error",
           style: "error",
@@ -266,7 +269,7 @@ describe("oxlint-config", () => {
         ],
       });
 
-      expect(actual.settings).toEqual({
+      expect(actual.settings).toStrictEqual({
         node: {
           version: ">=24.14.0",
         },
@@ -299,7 +302,7 @@ describe("oxlint-config", () => {
         ],
       });
 
-      expect(actual.settings).toEqual({
+      expect(actual.settings).toStrictEqual({
         react: {
           pragma: "React",
           version: "19",
@@ -310,7 +313,32 @@ describe("oxlint-config", () => {
       });
     });
 
-    it("does not share preset references with returned configs", () => {
+    it("does not share rule references between configs", () => {
+      const firstConfig = getConfigWithRulesAndOverrides(
+        createOxlintConfig({
+          presets: [base],
+        }),
+      );
+      const secondConfig = getConfigWithRulesAndOverrides(
+        createOxlintConfig({
+          presets: [base],
+        }),
+      );
+      const baseConfig = getConfigWithRulesAndOverrides(base);
+
+      firstConfig.rules["curly"] = "off";
+
+      const firstImportNoCycleRuleOptions = getRuleOptions(firstConfig.rules["import/no-cycle"]);
+      firstImportNoCycleRuleOptions["maxDepth"] = 1;
+
+      expect(firstConfig.rules).not.toBe(baseConfig.rules);
+      expect(firstConfig.rules["curly"]).toBe("off");
+      expect(secondConfig.rules["curly"]).toStrictEqual(["error", "all"]);
+      expect(baseConfig.rules["curly"]).toStrictEqual(["error", "all"]);
+      expect(getRuleOptions(secondConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
+    });
+
+    it("does not share override references between configs", () => {
       const firstConfig = getConfigWithRulesAndOverrides(
         createOxlintConfig({
           presets: [base],
@@ -327,20 +355,11 @@ describe("oxlint-config", () => {
       const baseOverrideFiles = getFirstOverrideFiles(baseConfig);
 
       firstOverrideFiles.push("**/*.cts");
-      firstConfig.rules["curly"] = "off";
 
-      const firstImportNoCycleRuleOptions = getRuleOptions(firstConfig.rules["import/no-cycle"]);
-      firstImportNoCycleRuleOptions["maxDepth"] = 1;
-
-      expect(firstConfig.rules).not.toBe(baseConfig.rules);
       expect(firstConfig.overrides).not.toBe(baseConfig.overrides);
-      expect(firstConfig.rules["curly"]).toBe("off");
-      expect(secondConfig.rules["curly"]).toEqual(["error", "all"]);
-      expect(baseConfig.rules["curly"]).toEqual(["error", "all"]);
       expect(firstOverrideFiles).toContain("**/*.cts");
       expect(secondOverrideFiles).not.toContain("**/*.cts");
       expect(baseOverrideFiles).not.toContain("**/*.cts");
-      expect(getRuleOptions(secondConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
       expect(getRuleOptions(baseConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
     });
 
@@ -366,83 +385,108 @@ describe("oxlint-config", () => {
       getFirstOverrideFiles(actual).push("**/*.tsx");
       getRuleOptions(actual.rules["import/no-cycle"])["maxDepth"] = 1;
 
-      expect(getFirstOverrideFiles(inputConfig)).toEqual(["**/*.ts"]);
+      expect(getFirstOverrideFiles(inputConfig)).toStrictEqual(["**/*.ts"]);
       expect(getRuleOptions(inputConfig.rules["import/no-cycle"])["maxDepth"]).toBe(4);
     });
   });
 
   describe("invalid preset data", () => {
-    afterEach(() => {
-      vi.resetModules();
-      vi.unmock("node:fs");
-    });
-
     it("throws when base.json contains an unsupported oxlint plugin", async () => {
-      await expect(
-        loadPresetsModule({
-          presets: [base],
-          overrides: [],
-          plugins: ["unsupported-plugin"],
-          rules: {},
-        }),
-      ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin" in base.json.');
+      try {
+        await expect(
+          loadPresetsModule({
+            presets: [base],
+            overrides: [],
+            plugins: ["unsupported-plugin"],
+            rules: {},
+          }),
+        ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin" in base.json.');
+      } finally {
+        vi.resetModules();
+        vi.unmock("node:fs");
+      }
     });
 
     it("throws when base.json is not an object", async () => {
-      await expect(loadPresetsModule([])).rejects.toThrow(
-        "The bundled base.json file is not a valid oxlint config preset.",
-      );
+      try {
+        await expect(loadPresetsModule([])).rejects.toThrow(
+          "The bundled base.json file is not a valid oxlint config preset.",
+        );
+      } finally {
+        vi.resetModules();
+        vi.unmock("node:fs");
+      }
     });
 
     it("throws when base.json overrides are invalid", async () => {
-      await expect(
-        loadPresetsModule({
-          overrides: [false],
-          plugins: ["import"],
-          rules: {},
-        }),
-      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+      try {
+        await expect(
+          loadPresetsModule({
+            overrides: [false],
+            plugins: ["import"],
+            rules: {},
+          }),
+        ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+      } finally {
+        vi.resetModules();
+        vi.unmock("node:fs");
+      }
     });
 
     it("throws when base.json rules are invalid", async () => {
-      await expect(
-        loadPresetsModule({
-          overrides: [],
-          plugins: ["import"],
-          rules: [],
-        }),
-      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+      try {
+        await expect(
+          loadPresetsModule({
+            overrides: [],
+            plugins: ["import"],
+            rules: [],
+          }),
+        ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+      } finally {
+        vi.resetModules();
+        vi.unmock("node:fs");
+      }
     });
 
     it("throws when base.json categories are invalid", async () => {
-      await expect(
-        loadPresetsModule({
-          categories: "not-an-object",
-          overrides: [],
-          plugins: ["import"],
-          rules: {},
-        }),
-      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+      try {
+        await expect(
+          loadPresetsModule({
+            categories: "not-an-object",
+            overrides: [],
+            plugins: ["import"],
+            rules: {},
+          }),
+        ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+      } finally {
+        vi.resetModules();
+        vi.unmock("node:fs");
+      }
     });
 
     it("supports valid overrides without rules", async () => {
-      const loadedPresetsModule = getLoadedPresetsModule(
-        await loadPresetsModule({
-          overrides: [
-            {
-              files: ["**/*.ts"],
-            },
-          ],
-          plugins: ["import"],
-          rules: {},
-        }),
-      );
+      try {
+        const loadedPresetsModule = getLoadedPresetsModule(
+          await loadPresetsModule({
+            overrides: [
+              {
+                files: ["**/*.ts"],
+              },
+            ],
+            plugins: ["import"],
+            rules: {},
+          }),
+        );
 
-      expect(loadedPresetsModule.base.overrides).toEqual([
-        {
-          files: ["**/*.ts"],
-        },
-      ]);
+        expect(loadedPresetsModule.base.overrides).toStrictEqual([
+          {
+            files: ["**/*.ts"],
+          },
+        ]);
+      } finally {
+        vi.resetModules();
+        vi.unmock("node:fs");
+      }
     });
   });
 });
@@ -490,7 +534,7 @@ function getFirstOverrideFiles(config: {
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
   vi.resetModules();
-  vi.doMock("node:fs", () => ({
+  vi.doMock<typeof NodeFs>("node:fs", () => ({
     readFileSync: vi.fn(() => JSON.stringify(baseJson)),
   }));
 
