@@ -1,4 +1,4 @@
-import { base, createOxlintConfig, jest } from "./dist/packages/oxlint-config/src/index.js";
+import { base, createOxlintConfig, vitest } from "./dist/packages/oxlint-config/src/index.js";
 import { defineConfig, type OxlintConfig, type OxlintOverride } from "oxlint";
 
 const SCRIPTS_OVERRIDE: OxlintOverride = {
@@ -58,22 +58,6 @@ function createCoreUtilsOxlintConfig(): OxlintConfig {
         "import/no-namespace": "off",
         "import/no-unassigned-import": "off",
         "import/unambiguous": "off",
-        "jest/max-expects": "off",
-        "jest/max-nested-describe": "off",
-        "jest/no-confusing-set-timeout": "off",
-        "jest/no-conditional-in-test": "off",
-        "jest/no-hooks": "off",
-        "jest/no-unneeded-async-expect-function": "off",
-        "jest/no-untyped-mock-factory": "off",
-        "jest/padding-around-test-blocks": "off",
-        "jest/prefer-called-with": "off",
-        "jest/prefer-expect-resolves": "off",
-        "jest/prefer-jest-mocked": "off",
-        "jest/prefer-lowercase-title": "off",
-        "jest/prefer-mock-return-shorthand": "off",
-        "jest/prefer-strict-equal": "off",
-        "jest/require-hook": "off",
-        "jest/require-to-throw-message": "off",
         "jsdoc/check-tag-names": "off",
         "jsdoc/empty-tags": "off",
         "jsdoc/require-param": "off",
@@ -129,6 +113,17 @@ function createCoreUtilsOxlintConfig(): OxlintConfig {
         "unicorn/prefer-module": "off",
         "unicorn/prefer-string-raw": "off",
         "unicorn/prefer-top-level-await": "off",
+        "vitest/consistent-test-filename": "off",
+        "vitest/hoisted-apis-on-top": "off",
+        "vitest/prefer-called-once": "off",
+        "vitest/prefer-describe-function-title": "off",
+        "vitest/prefer-expect-type-of": "off",
+        "vitest/prefer-import-in-mock": "off",
+        "vitest/prefer-strict-boolean-matchers": "off",
+        "vitest/prefer-to-be-falsy": "off",
+        "vitest/prefer-to-be-truthy": "off",
+        "vitest/require-hook": "off",
+        "vitest/require-mock-type-parameters": "off",
       },
       settings: {
         node: {
@@ -136,6 +131,6 @@ function createCoreUtilsOxlintConfig(): OxlintConfig {
         },
       },
     },
-    presets: [base, jest],
+    presets: [base, vitest],
   });
 }
