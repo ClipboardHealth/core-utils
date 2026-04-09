@@ -51,6 +51,8 @@ export const vitest: OxlintPreset = {
   plugins: ["vitest"],
   rules: {
     "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-to-be-falsy": "off",
+    "vitest/prefer-to-be-truthy": "off",
     "vitest/require-test-timeout": "off",
   },
 };
