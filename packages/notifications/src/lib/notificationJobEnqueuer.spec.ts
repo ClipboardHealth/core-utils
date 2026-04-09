@@ -12,17 +12,19 @@ import {
   type TriggerIdempotencyKeyParams,
 } from "./triggerIdempotencyKey";
 
-jest.mock("./internal/chunkRecipients");
+vi.mock("./internal/chunkRecipients");
+
+const mockChunkRecipients = vi.mocked(chunkRecipients);
 
 describe("NotificationJobEnqueuer", () => {
-  const mockEnqueue = jest.fn();
+  const mockEnqueue = vi.fn();
   const mockAdapter: BackgroundJobsAdapter = {
     implementation: "postgres",
     enqueue: mockEnqueue,
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("constructor", () => {
@@ -62,7 +64,7 @@ describe("NotificationJobEnqueuer", () => {
         },
       ];
 
-      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+      mockChunkRecipients.mockReturnValue(mockChunks);
 
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
@@ -115,7 +117,7 @@ describe("NotificationJobEnqueuer", () => {
         workflowKey: mockWorkflowKey,
       };
 
-      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+      mockChunkRecipients.mockReturnValue(mockChunks);
 
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
@@ -159,7 +161,7 @@ describe("NotificationJobEnqueuer", () => {
     it("includes additional data properties in enqueued jobs", async () => {
       const mockChunks = [{ number: 1, recipients: mockRecipients }];
 
-      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+      mockChunkRecipients.mockReturnValue(mockChunks);
 
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
@@ -191,7 +193,7 @@ describe("NotificationJobEnqueuer", () => {
       const mockOptions: EnqueueOneOrMoreOptions = { startAt: new Date("2025-12-31") };
       const mockChunks = [{ number: 1, recipients: mockRecipients }];
 
-      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+      mockChunkRecipients.mockReturnValue(mockChunks);
 
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 
@@ -228,7 +230,7 @@ describe("NotificationJobEnqueuer", () => {
         },
       ];
 
-      (chunkRecipients as jest.Mock).mockReturnValue(mockChunks);
+      mockChunkRecipients.mockReturnValue(mockChunks);
 
       const instance = new NotificationJobEnqueuer({ adapter: mockAdapter });
 

@@ -24,9 +24,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/execution-context/jest.config.ts"
+        "configFile": "packages/execution-context/vitest.config.ts"
       }
     }
   }

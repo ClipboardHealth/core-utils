@@ -93,7 +93,7 @@ describe("Testing helpers", () => {
     });
 
     it("should allow enqueueing new job with same enqueuedKey after first job starts running (advanced unique options)", async () => {
-      jest.spyOn(testContext.backgroundJobs.jobModel, "updateOne");
+      vi.spyOn(testContext.backgroundJobs.jobModel, "updateOne");
       const uniqueOptions = {
         enqueuedKey: "workplace-cache-update",
         runningKey: "workplace-cache-update-running",

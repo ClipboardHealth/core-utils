@@ -294,11 +294,11 @@ describe("LlmReporter", () => {
   beforeEach(() => {
     outputDirectory = mkdtempSync(path.join(tmpdir(), "llm-reporter-test-"));
     outputFile = path.join(outputDirectory, "llm-report.json");
-    jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     rmSync(outputDirectory, { recursive: true, force: true });
   });
 
@@ -1365,7 +1365,7 @@ describe("LlmReporter", () => {
   });
 
   it("prints dot progress and summary to stdout", () => {
-    const mockWrite = jest.mocked(process.stdout.write);
+    const mockWrite = vi.mocked(process.stdout.write);
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -1475,7 +1475,7 @@ describe("LlmReporter", () => {
   });
 
   it("includes flaky and timedOut in console output", () => {
-    const mockWrite = jest.mocked(process.stdout.write);
+    const mockWrite = vi.mocked(process.stdout.write);
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -1499,7 +1499,7 @@ describe("LlmReporter", () => {
   });
 
   it("warns if onEnd called without onBegin", () => {
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
     const reporter = new LlmReporter({ outputFile });
 
     reporter.onEnd({ status: "passed" } as FullResult);
@@ -1591,7 +1591,7 @@ describe("LlmReporter", () => {
 
   it("handles skipped tests in progress output and summary", () => {
     const reporter = new LlmReporter({ outputFile });
-    const mockWrite = jest.mocked(process.stdout.write);
+    const mockWrite = vi.mocked(process.stdout.write);
     reporter.onBegin(createMockConfig(), createMockSuite());
 
     reporter.onTestEnd(
@@ -1609,8 +1609,8 @@ describe("LlmReporter", () => {
 
   it("logs an error when report writing throws", () => {
     const reporter = new LlmReporter({ outputFile });
-    const mockError = jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const stringifySpy = jest.spyOn(JSON, "stringify").mockImplementation(() => {
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const stringifySpy = vi.spyOn(JSON, "stringify").mockImplementation(() => {
       throw new Error("stringify failed");
     });
 

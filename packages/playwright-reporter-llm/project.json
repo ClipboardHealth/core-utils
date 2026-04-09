@@ -24,9 +24,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/playwright-reporter-llm/jest.config.ts"
+        "configFile": "packages/playwright-reporter-llm/vitest.config.ts"
       }
     }
   }

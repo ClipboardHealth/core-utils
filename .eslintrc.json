@@ -28,6 +28,12 @@
       }
     },
     {
+      "files": ["**/vitest.config.ts"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off"
+      }
+    },
+    {
       "files": "package.json",
       "parser": "jsonc-eslint-parser",
       "rules": {
@@ -42,7 +48,7 @@
     "@nx/enforce-module-boundaries": [
       "error",
       {
-        "allow": [],
+        "allow": ["type-fest"],
         "allowCircularSelfDependency": true,
         "banTransitiveDependencies": true,
         "depConstraints": [

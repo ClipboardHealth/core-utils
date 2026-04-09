@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "2.2.86",
-    "type-fest": "5.5.0"
+    "type-fest": "5.5.0",
+    "vitest": "4.1.3"
   }
 }

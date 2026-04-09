@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { BackgroundJobs, type ConstructorOptions } from "../../src";
 import { defaultConnectToMongo } from "./connectToMongo";
 import { dropDatabase } from "./dropDatabase";
-import { getJestWorkerUri } from "./getJestWorkerUri";
+import { getTestWorkerUri } from "./getTestWorkerUri";
 
 export interface TestContext {
   tearDown: () => Promise<void>;
@@ -15,8 +15,8 @@ export interface TestContext {
 export async function createTestContext(
   backgroundJobsOptions: ConstructorOptions = {},
 ): Promise<TestContext> {
-  const databaseUrlTemplate = "mongodb://localhost:27017/mongo-jobs-test-{{jest_worker_id}}";
-  const databaseUrl = getJestWorkerUri(databaseUrlTemplate);
+  const databaseUrlTemplate = "mongodb://localhost:27017/mongo-jobs-test-{{test_worker_id}}";
+  const databaseUrl = getTestWorkerUri(databaseUrlTemplate);
 
   await dropDatabase(databaseUrl);
   await defaultConnectToMongo(databaseUrl);

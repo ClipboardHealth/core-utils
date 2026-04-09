@@ -39,9 +39,9 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/nx-plugin/jest.config.ts"
+        "configFile": "packages/nx-plugin/vitest.config.ts"
       },
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
     }

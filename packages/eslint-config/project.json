@@ -24,10 +24,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "options": {
-        "jestConfig": "packages/eslint-config/jest.config.ts",
-        "passWithNoTests": true
+        "configFile": "packages/eslint-config/vitest.config.ts"
       }
     }
   }
