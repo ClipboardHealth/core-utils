@@ -2,29 +2,17 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/base.json"],
   "plugins": ["vitest"],
-  "ignorePatterns": [
-    ".agents",
-    "coverage/",
-    "dist/",
-    "node_modules/",
-    "packages/eslint-config/src/index.js"
-  ],
+  "ignorePatterns": ["packages/eslint-config/src/index.js"],
   "options": {
     "reportUnusedDisableDirectives": "off",
     "typeAware": false,
     "typeCheck": false
-  },
-  "settings": {
-    "node": {
-      "version": ">=24.14.1"
-    }
   },
   "rules": {
     "class-methods-use-this": "off",
     "complexity": "off",
     "func-names": "off",
     "func-style": "off",
-    "import/max-dependencies": "off",
     "import/no-anonymous-default-export": "off",
     "import/no-commonjs": "off",
     "import/no-default-export": "off",
@@ -43,9 +31,7 @@
     "max-lines-per-function": "off",
     "max-params": "off",
     "new-cap": "off",
-    "no-continue": "off",
     "no-duplicate-imports": "off",
-    "no-inline-comments": "off",
     "no-plusplus": "off",
     "no-shadow": "off",
     "node/no-process-env": "off",
