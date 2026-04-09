@@ -1,9 +1,9 @@
 import {
+  type OxlintPreset,
   base,
   createOxlintConfig,
   jest as jestPreset,
   react,
-  type OxlintPreset,
   vitest,
 } from "./index";
 
