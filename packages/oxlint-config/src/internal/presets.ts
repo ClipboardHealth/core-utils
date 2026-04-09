@@ -32,10 +32,12 @@ interface BaseJsonOverride {
 
 interface BaseJsonConfig {
   categories?: NonNullable<OxlintPreset["categories"]>;
+  ignorePatterns?: NonNullable<OxlintPreset["ignorePatterns"]>;
   options?: NonNullable<OxlintPreset["options"]>;
   overrides: BaseJsonOverride[];
   plugins: string[];
   rules: NonNullable<OxlintPreset["rules"]>;
+  settings?: NonNullable<OxlintPreset["settings"]>;
 }
 
 export const base = createBasePreset();
@@ -65,8 +67,16 @@ function createBasePreset(): OxlintPreset {
     preset.categories = parsedBaseJson.categories;
   }
 
+  if (parsedBaseJson.ignorePatterns !== undefined) {
+    preset.ignorePatterns = parsedBaseJson.ignorePatterns;
+  }
+
   if (parsedBaseJson.options !== undefined) {
     preset.options = parsedBaseJson.options;
+  }
+
+  if (parsedBaseJson.settings !== undefined) {
+    preset.settings = parsedBaseJson.settings;
   }
 
   return preset;
@@ -118,14 +128,16 @@ function isBaseJsonConfig(value: unknown): value is BaseJsonConfig {
     return false;
   }
 
-  const { categories, options } = value;
+  const { categories, ignorePatterns, options, settings } = value;
 
   return (
     isStringArray(value["plugins"]) &&
     isRuleMap(value["rules"]) &&
     isOverrideArray(value["overrides"]) &&
     (categories === undefined || isCategoryMap(categories)) &&
-    (options === undefined || isPlainObject(options))
+    (ignorePatterns === undefined || isStringArray(ignorePatterns)) &&
+    (options === undefined || isPlainObject(options)) &&
+    (settings === undefined || isPlainObject(settings))
   );
 }
 

@@ -11,7 +11,13 @@
   "options": {
     "denyWarnings": true
   },
+  "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "jsdoc", "node", "promise"],
+  "settings": {
+    "node": {
+      "version": ">=24.14.1"
+    }
+  },
   "rules": {
     "capitalized-comments": "off",
     "curly": ["error", "all"],
@@ -20,12 +26,15 @@
     "import/consistent-type-specifier-style": "off",
     "import/exports-last": "off",
     "import/group-exports": "off",
+    "import/max-dependencies": "off",
     "import/no-cycle": ["error", { "ignoreExternal": true, "maxDepth": 16 }],
     "import/no-nodejs-modules": "off",
     "import/no-relative-parent-imports": "off",
     "import/prefer-default-export": "off",
     "init-declarations": "off",
     "max-statements": "off",
+    "no-continue": "off",
+    "no-inline-comments": "off",
     "no-magic-numbers": "off",
     "no-named-export": "off",
     "no-ternary": "off",
@@ -39,6 +48,7 @@
       }
     ],
     "no-undefined": "off",
+    "return-await": "off",
     "no-use-before-define": "off",
     "no-void": "off",
     "object-shorthand": ["error", "properties"],
@@ -50,6 +60,7 @@
     "require-await": "off",
     "typescript/prefer-readonly-parameter-types": "off",
     "typescript/promise-function-async": "off",
+    "typescript/return-await": ["error", "always"],
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
     "unicorn/no-null": "off"
   },

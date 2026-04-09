@@ -31,8 +31,22 @@ describe("oxlint-config", () => {
         suspicious: "error",
       });
 
+      expect(base.ignorePatterns).toEqual([
+        ".agents/",
+        ".rules/",
+        "coverage/",
+        "dist/",
+        "node_modules/",
+      ]);
+
       expect(base.options).toEqual({
         denyWarnings: true,
+      });
+
+      expect(base.settings).toEqual({
+        node: {
+          version: ">=24.14.1",
+        },
       });
 
       expect(base.overrides).toHaveLength(4);
