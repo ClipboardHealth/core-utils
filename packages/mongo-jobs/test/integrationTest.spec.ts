@@ -47,7 +47,7 @@ async function waitForFailedJobs(options: WaitForFailedJobsOptions): Promise<voi
   });
 }
 
-describe("Background Jobs Worker", () => {
+describe("background Jobs Worker", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
   let testLogger: TestLogger;
@@ -80,8 +80,8 @@ describe("Background Jobs Worker", () => {
     await waitForJobRunCount({ expectedCount: 1 });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(0);
-    expect(await JobRun.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(0);
+    await expect(JobRun.countDocuments()).resolves.toBe(1);
 
     const jobRun = await JobRun.findOne();
     expect(jobRun?.myNumber).toBe(myNumber);
@@ -116,8 +116,8 @@ describe("Background Jobs Worker", () => {
     await waitForJobRunCount({ expectedCount: 1 });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(0);
-    expect(await JobRun.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(0);
+    await expect(JobRun.countDocuments()).resolves.toBe(1);
 
     const jobRun = await JobRun.findOne();
     expect(jobRun?.myNumber).toBe(myNumber);
@@ -131,8 +131,8 @@ describe("Background Jobs Worker", () => {
     await setTimeout(100);
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
-    expect(await JobRun.countDocuments()).toBe(0);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
+    await expect(JobRun.countDocuments()).resolves.toBe(0);
 
     const job = await backgroundJobs.jobModel.findOne();
     expect(job?.attemptsCount).toBe(0);
@@ -149,8 +149,8 @@ describe("Background Jobs Worker", () => {
     await setTimeout(100);
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
-    expect(await JobRun.countDocuments()).toBe(0);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
+    await expect(JobRun.countDocuments()).resolves.toBe(0);
 
     const job = await backgroundJobs.jobModel.findOne();
     expect(job?.attemptsCount).toBe(0);
@@ -167,8 +167,8 @@ describe("Background Jobs Worker", () => {
     await waitForJobRunCount({ expectedCount: 1 });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(0);
-    expect(await JobRun.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(0);
+    await expect(JobRun.countDocuments()).resolves.toBe(1);
 
     const jobRun = await JobRun.findOne();
     expect(jobRun?.myNumber).toBe(0);
@@ -217,7 +217,7 @@ describe("Background Jobs Worker", () => {
     });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job = await backgroundJobs.jobModel.findOne();
     expect(job?.attemptsCount).toBe(1);
@@ -231,7 +231,7 @@ describe("Background Jobs Worker", () => {
     await waitForFailedJobs({ backgroundJobs, expectedCount: 1 });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job = await backgroundJobs.jobModel.findOne();
     expect(job?.attemptsCount).toBe(1);
@@ -261,7 +261,7 @@ describe("Background Jobs Worker", () => {
     });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(2);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(2);
 
     const job1_failed = await backgroundJobs.jobModel.findOne({ _id: job1._id });
     expect(job1_failed?.attemptsCount).toBe(1);
@@ -289,7 +289,7 @@ describe("Background Jobs Worker", () => {
     await waitForFailedJobs({ backgroundJobs, expectedCount: 1, jobIds: [job._id] });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job_failed = await backgroundJobs.jobModel.findOne({ _id: job._id });
     expect(job_failed?.attemptsCount).toBe(1);
@@ -305,7 +305,7 @@ describe("Background Jobs Worker", () => {
     expect(nextJob?.uniqueKey).toBe("my-key");
     expect(nextJob?._id).toBeDefined();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(2);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(2);
   });
 
   it("on worker stop it will wait for jobs to finish for specified amount of time", async () => {
@@ -319,18 +319,18 @@ describe("Background Jobs Worker", () => {
     await setTimeout(100);
     await backgroundJobs.stop(250);
 
-    expect(
-      await backgroundJobs.jobModel.countDocuments({
+    await expect(
+      backgroundJobs.jobModel.countDocuments({
         _id: (job200 as BackgroundJobType<unknown>)._id,
       }),
-    ).toBe(0);
-    expect(
-      await backgroundJobs.jobModel.countDocuments({
+    ).resolves.toBe(0);
+    await expect(
+      backgroundJobs.jobModel.countDocuments({
         _id: (job500 as BackgroundJobType<unknown>)._id,
       }),
-    ).toBe(1);
+    ).resolves.toBe(1);
 
-    expect(await JobRun.countDocuments()).toBe(1);
+    await expect(JobRun.countDocuments()).resolves.toBe(1);
     const jobRun = await JobRun.findOne();
     expect(jobRun?.myNumber).toBe(100);
   });
@@ -343,7 +343,7 @@ describe("Background Jobs Worker", () => {
     await backgroundJobs.enqueue(ExampleJob, { myNumber });
 
     await setTimeout(100);
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
   });
 
   it("with change stream the job will be consumed right after being enqueued even if it's during the wait for new job period", async () => {
@@ -358,7 +358,7 @@ describe("Background Jobs Worker", () => {
       expectedCount: 0,
       description: "remaining background jobs after first change stream job",
     });
-    expect(await JobRun.countDocuments()).toBe(1);
+    await expect(JobRun.countDocuments()).resolves.toBe(1);
 
     await setTimeout(100);
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 555 });
@@ -369,7 +369,7 @@ describe("Background Jobs Worker", () => {
       expectedCount: 0,
       description: "remaining background jobs after second change stream job",
     });
-    expect(await JobRun.countDocuments()).toBe(2);
+    await expect(JobRun.countDocuments()).resolves.toBe(2);
   });
 
   it("when run with exclude option, worker will not be consuming jobs from that queue", async () => {
@@ -383,8 +383,8 @@ describe("Background Jobs Worker", () => {
 
     const jobRun = await JobRun.findOne();
     expect(jobRun?.myNumber).toBe(0);
-    expect(await JobRun.countDocuments()).toBe(1);
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(2);
+    await expect(JobRun.countDocuments()).resolves.toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(2);
   });
 
   it("we properly keep track of when the queue should become actionable again", async () => {
@@ -439,7 +439,7 @@ describe("Background Jobs Worker", () => {
   });
 });
 
-describe("Unique jobs", () => {
+describe("unique jobs", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
   let semaphore: Semaphore;
@@ -497,7 +497,7 @@ describe("Unique jobs", () => {
     await session.commitTransaction();
     await session.endSession();
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
   });
 
   it("with a simple uniqueness the job holds uniqueness even if it starts running", async () => {
@@ -607,7 +607,7 @@ describe("Unique jobs", () => {
   });
 });
 
-describe("Helper APIs", () => {
+describe("helper APIs", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
 
@@ -628,7 +628,7 @@ describe("Helper APIs", () => {
       await backgroundJobs.enqueue(ExampleJob, { myNumber: 123 }),
     );
 
-    expect(await backgroundJobs.getJobById(enqueuedJob._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(enqueuedJob._id.toString())).resolves.toMatchObject({
       _id: enqueuedJob._id,
       data: { myNumber: 123 },
       attemptsCount: 0,
@@ -642,11 +642,11 @@ describe("Helper APIs", () => {
 
     await backgroundJobs.cancel([job1._id.toString(), job3._id.toString()]);
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toBeNull();
-    expect(await backgroundJobs.getJobById(job2._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toBeNull();
+    await expect(backgroundJobs.getJobById(job2._id.toString())).resolves.toMatchObject({
       data: { myNumber: 555 },
     });
-    expect(await backgroundJobs.getJobById(job3._id.toString())).toBeNull();
+    await expect(backgroundJobs.getJobById(job3._id.toString())).resolves.toBeNull();
   });
 
   it("is possible to cancel a job by id within a transaction", async () => {
@@ -658,8 +658,8 @@ describe("Helper APIs", () => {
     await backgroundJobs.cancel([job1._id.toString()], { session });
     await session.commitTransaction();
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toBeNull();
-    expect(await backgroundJobs.getJobById(job2._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toBeNull();
+    await expect(backgroundJobs.getJobById(job2._id.toString())).resolves.toMatchObject({
       data: { myNumber: 555 },
     });
   });
@@ -680,23 +680,23 @@ describe("Helper APIs", () => {
     });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
       data: { myNumber: 123 },
       attemptsCount: 1,
     });
-    expect(await backgroundJobs.getJobById(job2._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job2._id.toString())).resolves.toMatchObject({
       data: { myNumber: 555 },
       attemptsCount: 1,
     });
-    expect(await JobRun.countDocuments()).toBe(2);
+    await expect(JobRun.countDocuments()).resolves.toBe(2);
 
     await backgroundJobs.retryJobById(job1._id.toString());
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
       data: { myNumber: 123 },
       attemptsCount: 0,
     });
-    expect(await backgroundJobs.getJobById(job2._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job2._id.toString())).resolves.toMatchObject({
       data: { myNumber: 555 },
       attemptsCount: 1,
     });
@@ -705,11 +705,11 @@ describe("Helper APIs", () => {
     await waitForFailedJobs({ backgroundJobs, expectedCount: 1, jobIds: [job1._id] });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
       data: { myNumber: 123 },
       attemptsCount: 1,
     });
-    expect(await JobRun.countDocuments()).toBe(3);
+    await expect(JobRun.countDocuments()).resolves.toBe(3);
   });
 
   it("when resetting a job with unique key we will honor uniqueness", async () => {
@@ -725,7 +725,7 @@ describe("Helper APIs", () => {
     await waitForFailedJobs({ backgroundJobs, expectedCount: 1, jobIds: [job1._id] });
     await backgroundJobs.stop();
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
       data: { myNumber: 123 },
       attemptsCount: 1,
       uniqueKey: undefined,
@@ -741,13 +741,13 @@ describe("Helper APIs", () => {
 
     await expect(backgroundJobs.retryJobById(job1._id.toString())).rejects.toThrow();
 
-    expect(await backgroundJobs.getJobById(job1._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
       data: { myNumber: 123 },
       attemptsCount: 1,
       uniqueKey: undefined,
       failedAt: expect.anything(),
     });
-    expect(await backgroundJobs.getJobById(job2._id.toString())).toMatchObject({
+    await expect(backgroundJobs.getJobById(job2._id.toString())).resolves.toMatchObject({
       data: { myNumber: 444 },
       attemptsCount: 0,
       uniqueKey: "my-job",
@@ -755,7 +755,7 @@ describe("Helper APIs", () => {
   });
 });
 
-describe("Using custom connection", () => {
+describe("using custom connection", () => {
   it("is possible to use background jobs with custom connection", async () => {
     const otherDatabaseUrl = "mongodb://localhost:27017/mongo-jobs-test-other-db";
     await dropDatabase(otherDatabaseUrl);
@@ -766,8 +766,8 @@ describe("Using custom connection", () => {
     backgroundJobs.register(ExampleJob, "default");
 
     await backgroundJobs.enqueue(ExampleJob, { myNumber: 100 });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
-    expect(await connection.collection("backgroundjobs").countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
+    await expect(connection.collection("backgroundjobs").countDocuments()).resolves.toBe(1);
 
     await connection.close();
   });

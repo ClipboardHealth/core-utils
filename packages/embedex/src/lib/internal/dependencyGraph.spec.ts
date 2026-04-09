@@ -9,7 +9,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph).toEqual({
+      expect(graph).toStrictEqual({
         dependencies: new Map(),
         destinations: new Set(),
       });
@@ -20,7 +20,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph).toEqual({
+      expect(graph).toStrictEqual({
         dependencies: new Map([["B", new Set()]]),
         destinations: new Set(["B"]),
       });
@@ -35,7 +35,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph).toEqual({
+      expect(graph).toStrictEqual({
         dependencies: new Map([
           ["B", new Set()], // B has no dependencies (A is not a destination)
           ["C", new Set(["B"])], // C depends on B
@@ -56,7 +56,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph.dependencies).toEqual(
+      expect(graph.dependencies).toStrictEqual(
         new Map([
           ["A", new Set()], // A has no dependencies in the destination set
           ["B", new Set(["A"])], // B depends on A
@@ -76,7 +76,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph.dependencies).toEqual(
+      expect(graph.dependencies).toStrictEqual(
         new Map([
           ["A", new Set()],
           ["B", new Set(["A"])],
@@ -99,7 +99,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph.dependencies).toEqual(
+      expect(graph.dependencies).toStrictEqual(
         new Map([
           ["A", new Set()],
           ["B", new Set(["A"])],
@@ -121,7 +121,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph.dependencies).toEqual(
+      expect(graph.dependencies).toStrictEqual(
         new Map([
           ["A", new Set()],
           ["B", new Set(["A"])],
@@ -142,7 +142,7 @@ describe("dependencyGraph", () => {
 
       const graph = buildDependencyGraph({ destinationMap });
 
-      expect(graph.dependencies).toEqual(
+      expect(graph.dependencies).toStrictEqual(
         new Map([
           ["A", new Set()],
           ["B", new Set()],
@@ -202,7 +202,7 @@ describe("dependencyGraph", () => {
 
       const result = detectCircularDependency(graph);
 
-      expect(result).toEqual({ cycle: ["A", "A"] });
+      expect(result).toStrictEqual({ cycle: ["A", "A"] });
     });
 
     it("detects 2-node cycle: A -> B -> A", () => {
@@ -292,7 +292,7 @@ describe("dependencyGraph", () => {
 
       const result = topologicalSort(graph);
 
-      expect(result).toEqual([]);
+      expect(result).toStrictEqual([]);
     });
 
     it("returns single node for graph with one destination", () => {
@@ -303,7 +303,7 @@ describe("dependencyGraph", () => {
 
       const result = topologicalSort(graph);
 
-      expect(result).toEqual(["A"]);
+      expect(result).toStrictEqual(["A"]);
     });
 
     it("sorts simple chain A -> B -> C", () => {
@@ -318,7 +318,7 @@ describe("dependencyGraph", () => {
 
       const result = topologicalSort(graph);
 
-      expect(result).toEqual(["A", "B", "C"]);
+      expect(result).toStrictEqual(["A", "B", "C"]);
     });
 
     it("sorts 5-level chain correctly", () => {
@@ -335,7 +335,7 @@ describe("dependencyGraph", () => {
 
       const result = topologicalSort(graph);
 
-      expect(result).toEqual(["A", "B", "C", "D", "E"]);
+      expect(result).toStrictEqual(["A", "B", "C", "D", "E"]);
     });
 
     it("sorts diamond dependency correctly", () => {

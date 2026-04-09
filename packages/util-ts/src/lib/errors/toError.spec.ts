@@ -61,7 +61,7 @@ describe("toError", () => {
     expect(actual.message).toBe("custom error");
     expect(actual.status).toBe(500);
     expect(actual.code).toBe("INTERNAL_ERROR");
-    expect(actual.details).toEqual({ userId: "123" });
+    expect(actual.details).toStrictEqual({ userId: "123" });
   });
 
   it("preserves name property for error-like objects with string name", () => {

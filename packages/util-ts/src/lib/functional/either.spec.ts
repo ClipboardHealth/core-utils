@@ -1,7 +1,7 @@
 import * as E from "./either";
 import { pipe } from "./pipe";
 
-describe("Either", () => {
+describe("either", () => {
   it("left works", () => {
     const error = new Error("boom");
     const either = E.left(error) as E.Left<Error>;
@@ -25,38 +25,38 @@ describe("Either", () => {
   describe("map", () => {
     it("maps Right value", () => {
       const actual = pipe(E.right(5), E.map(double));
-      expect(actual).toEqual(E.right(10));
+      expect(actual).toStrictEqual(E.right(10));
     });
 
     it("does not map Left", () => {
       const error = new Error("boom");
       const actual = pipe(E.left(error), E.map(double));
-      expect(actual).toEqual(E.left(error));
+      expect(actual).toStrictEqual(E.left(error));
     });
   });
 
   describe("mapLeft", () => {
     it("maps Left value", () => {
       const actual = pipe(E.left("boom"), E.mapLeft(addPrefix));
-      expect(actual).toEqual(E.left("Error: boom"));
+      expect(actual).toStrictEqual(E.left("Error: boom"));
     });
 
     it("does not map Right", () => {
       const actual = pipe(E.right(5), E.mapLeft(addPrefix));
-      expect(actual).toEqual(E.right(5));
+      expect(actual).toStrictEqual(E.right(5));
     });
   });
 
   describe("flatMap", () => {
     it("flatMaps Right operations", () => {
       const actual = pipe(E.right(2), E.flatMap(inverse));
-      expect(actual).toEqual(E.right(0.5));
+      expect(actual).toStrictEqual(E.right(0.5));
     });
 
     it("does not flatMap Left", () => {
       const error = "Initial error";
       const actual = pipe(E.left(error), E.flatMap(inverse));
-      expect(actual).toEqual(E.left(error));
+      expect(actual).toStrictEqual(E.left(error));
     });
   });
 

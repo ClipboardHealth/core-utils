@@ -18,7 +18,7 @@ describe("redact", () => {
       keysToRedact: [],
     });
 
-    expect(actual).toEqual(input);
+    expect(actual).toStrictEqual(input);
   });
 
   it("redacts specified keys", () => {
@@ -33,7 +33,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       public: "visible",
       secret: "[REDACTED]",
       another: "also visible",
@@ -51,7 +51,7 @@ describe("redact", () => {
       keysToRedact: ["secrets"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       secrets: "[REDACTED]",
       public: ["public1"],
     });
@@ -68,7 +68,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       secret: "[REDACTED]",
       public: "visible",
     });
@@ -85,7 +85,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       secret: "[REDACTED]",
       public: "visible",
     });
@@ -106,7 +106,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       level1: {
         level2: {
           secret: "[REDACTED]",
@@ -127,7 +127,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       secret: "[REDACTED]",
       public: "visible",
     });
@@ -146,7 +146,7 @@ describe("redact", () => {
       keysToRedact: ["secret1", "secret2"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       secret1: "[REDACTED]",
       public: "visible",
       secret2: "[REDACTED]",
@@ -167,7 +167,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       items: [
         { secret: "[REDACTED]", public: "visible1" },
         { secret: "[REDACTED]", public: "visible2" },
@@ -185,7 +185,7 @@ describe("redact", () => {
       keysToRedact: ["secret"],
     });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       mixed: ["string", { secret: "[REDACTED]", public: "visible" }, 123, null, undefined],
     });
   });

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { createConfig } from "./createConfig";
 
-describe("Config", () => {
+describe("config", () => {
   const environment = {
     allowed: ["development", "production"] as const,
     current: "development",
@@ -214,7 +214,7 @@ describe("Config", () => {
         config.hosts.push("host");
       }).toThrow("Cannot add property 2, object is not extensible");
 
-      expect(config.hosts).toEqual(["host1", "host2"]);
+      expect(config.hosts).toStrictEqual(["host1", "host2"]);
     });
   });
 });

@@ -11,7 +11,7 @@ describe("chunk", () => {
 
     const actual = chunk(input, 2);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("handles array that doesn't divide evenly", () => {
@@ -20,7 +20,7 @@ describe("chunk", () => {
 
     const actual = chunk(input, 2);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("handles empty array", () => {
@@ -29,7 +29,7 @@ describe("chunk", () => {
 
     const actual = chunk(input, 2);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("handles chunk size larger than array length", () => {
@@ -38,7 +38,7 @@ describe("chunk", () => {
 
     const actual = chunk(input, 5);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("handles chunk size equal to array length", () => {
@@ -47,7 +47,7 @@ describe("chunk", () => {
 
     const actual = chunk(input, 3);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("works with different data types", () => {
@@ -59,7 +59,7 @@ describe("chunk", () => {
 
     const actual = chunk(input, 2);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("throws error for invalid size", () => {

@@ -7,7 +7,7 @@ describe("parse", () => {
 
       const result = parseJson<{ name: string; age: number }>(jsonString);
 
-      expect(result).toEqual({ name: "John", age: 30 });
+      expect(result).toStrictEqual({ name: "John", age: 30 });
       expect(result.name).toBe("John");
       expect(result.age).toBe(30);
     });
@@ -17,7 +17,7 @@ describe("parse", () => {
 
       const result = parseJson<Array<string | number>>(jsonString);
 
-      expect(result).toEqual([1, 2, 3, "test"]);
+      expect(result).toStrictEqual([1, 2, 3, "test"]);
       expect(result).toHaveLength(4);
     });
 
@@ -46,7 +46,7 @@ describe("parse", () => {
       const result = parseJson(jsonString);
 
       // TypeScript should infer this as unknown, but runtime behavior is still correct
-      expect(result).toEqual({ key: "value" });
+      expect(result).toStrictEqual({ key: "value" });
     });
 
     it("throws SyntaxError for malformed JSON", () => {
@@ -74,8 +74,8 @@ describe("parse", () => {
     });
 
     it("handles empty object and array", () => {
-      expect(parseJson<Record<string, unknown>>("{}")).toEqual({});
-      expect(parseJson<unknown[]>("[]")).toEqual([]);
+      expect(parseJson<Record<string, unknown>>("{}")).toStrictEqual({});
+      expect(parseJson<unknown[]>("[]")).toStrictEqual([]);
     });
 
     it("handles JSON with whitespace", () => {
@@ -88,7 +88,7 @@ describe("parse", () => {
 
       const result = parseJson<{ name: string; age: number }>(jsonWithWhitespace);
 
-      expect(result).toEqual({ name: "Alice", age: 25 });
+      expect(result).toStrictEqual({ name: "Alice", age: 25 });
     });
 
     it("preserves type safety with generic parameter", () => {

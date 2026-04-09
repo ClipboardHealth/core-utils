@@ -48,7 +48,7 @@ describe("apiErrors", () => {
     const actual = apiErrors.safeParse(input);
 
     expectToBeSafeParseSuccess(actual);
-    expect(actual.data).toEqual(input);
+    expect(actual.data).toStrictEqual(input);
   });
 
   it.each<{ errorMessage: string; input: unknown; name: string }>([

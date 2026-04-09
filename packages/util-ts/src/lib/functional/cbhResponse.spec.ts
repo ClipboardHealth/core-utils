@@ -7,7 +7,7 @@ describe("toErrorCbhResponse", () => {
 
     const response = toErrorCbhResponse({ message });
 
-    expect(response).toEqual({
+    expect(response).toStrictEqual({
       success: false,
       error: new CbhError({ message }),
     });
@@ -20,6 +20,6 @@ describe("toSuccessCbhResponse", () => {
 
     const response = toSuccessCbhResponse({ message });
 
-    expect(response).toEqual({ success: true, data: { message } });
+    expect(response).toStrictEqual({ success: true, data: { message } });
   });
 });

@@ -16,6 +16,6 @@ describe("head", () => {
 
   it("returns value if not an array", () => {
     const value = { hi: "there" };
-    expect(head(value)).toEqual(value);
+    expect(head(value)).toStrictEqual(value);
   });
 });

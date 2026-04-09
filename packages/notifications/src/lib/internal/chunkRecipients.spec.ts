@@ -13,7 +13,7 @@ describe("chunkRecipients", () => {
     const actual = chunkRecipients(input);
 
     expect(actual).toHaveLength(1);
-    expect(actual[0]).toEqual({
+    expect(actual[0]).toStrictEqual({
       number: 1,
       recipients: input.recipients,
     });
@@ -27,7 +27,7 @@ describe("chunkRecipients", () => {
     const actual = chunkRecipients(input);
 
     expect(actual).toHaveLength(1);
-    expect(actual[0]).toEqual({
+    expect(actual[0]).toStrictEqual({
       number: 1,
       recipients: [],
     });
@@ -44,11 +44,11 @@ describe("chunkRecipients", () => {
     const actual = chunkRecipients(input);
 
     expect(actual).toHaveLength(2);
-    expect(actual[0]).toEqual({
+    expect(actual[0]).toStrictEqual({
       number: 1,
       recipients: input.recipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
     });
-    expect(actual[1]).toEqual({
+    expect(actual[1]).toStrictEqual({
       number: 2,
       recipients: input.recipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
     });
@@ -68,11 +68,11 @@ describe("chunkRecipients", () => {
     const actual = chunkRecipients(input);
 
     expect(actual).toHaveLength(2);
-    expect(actual[0]).toEqual({
+    expect(actual[0]).toStrictEqual({
       number: 1,
       recipients: input.recipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
     });
-    expect(actual[1]).toEqual({
+    expect(actual[1]).toStrictEqual({
       number: 2,
       recipients: input.recipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
     });

@@ -14,7 +14,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("excludes tenant when workplaceId is not provided", () => {
@@ -27,7 +27,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("handles string recipients", () => {
@@ -40,7 +40,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("handles mixed recipient types", () => {
@@ -56,7 +56,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("maps recipient triggerData to trigger_data", () => {
@@ -69,7 +69,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("maps attachments into data payload with snake_case keys", () => {
@@ -98,7 +98,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("merges attachments with existing data", () => {
@@ -129,7 +129,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("excludes attachments from data when not provided", () => {
@@ -144,7 +144,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("excludes data key entirely when neither data nor attachments provided", () => {
@@ -157,7 +157,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
     expect(actual).not.toHaveProperty("data");
   });
 
@@ -207,7 +207,7 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("typed attachments parameter takes precedence over data.attachments", () => {
@@ -243,6 +243,6 @@ describe("toTriggerBody", () => {
 
     const actual = toTriggerBody(input);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 });
