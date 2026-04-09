@@ -228,7 +228,7 @@ export class ServiceError extends Error {
     this.cause = cause;
     this.id = id ?? crypto.randomUUID();
     this.issues = deepFreeze(issues);
-    this.name = this.constructor.name;
+    this.name = "ServiceError";
     this.source = source ?? "pointer";
     this.status = Math.max(...issues.map((issue) => getStatusFromIssue(issue))) as Status;
 
