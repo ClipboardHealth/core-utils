@@ -31,6 +31,8 @@ interface BaseJsonOverride {
 }
 
 interface BaseJsonConfig {
+  categories?: NonNullable<OxlintPreset["categories"]>;
+  options?: NonNullable<OxlintPreset["options"]>;
   overrides: BaseJsonOverride[];
   plugins: string[];
   rules: NonNullable<OxlintPreset["rules"]>;
@@ -45,16 +47,33 @@ export const jest: OxlintPreset = {
 };
 export const vitest: OxlintPreset = {
   plugins: ["vitest"],
+  rules: {
+    "vitest/no-importing-vitest-globals": "off",
+    "vitest/prefer-describe-function-title": "off",
+    "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-to-be-falsy": "off",
+    "vitest/prefer-to-be-truthy": "off",
+    "vitest/require-test-timeout": "off",
+  },
 };
 
 function createBasePreset(): OxlintPreset {
   const parsedBaseJson = loadBaseJson();
-
-  return {
+  const preset: OxlintPreset = {
     overrides: parsedBaseJson.overrides.map(createOverride),
     plugins: normalizePlugins(parsedBaseJson.plugins),
     rules: parsedBaseJson.rules,
   };
+
+  if (parsedBaseJson.categories !== undefined) {
+    preset.categories = parsedBaseJson.categories;
+  }
+
+  if (parsedBaseJson.options !== undefined) {
+    preset.options = parsedBaseJson.options;
+  }
+
+  return preset;
 }
 
 function createOverride(override: BaseJsonOverride): OxlintOverride {
@@ -103,10 +122,14 @@ function isBaseJsonConfig(value: unknown): value is BaseJsonConfig {
     return false;
   }
 
+  const { categories, options } = value;
+
   return (
     isStringArray(value["plugins"]) &&
     isRuleMap(value["rules"]) &&
-    isOverrideArray(value["overrides"])
+    isOverrideArray(value["overrides"]) &&
+    (categories === undefined || isCategoryMap(categories)) &&
+    (options === undefined || isPlainObject(options))
   );
 }
 
@@ -125,6 +148,14 @@ function isBaseJsonOverride(value: unknown): value is BaseJsonOverride {
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isCategoryMap(value: unknown): value is NonNullable<OxlintPreset["categories"]> {
+  if (!isPlainObject(value)) {
+    return false;
+  }
+
+  return Object.values(value).every(isAllowWarnDeny);
 }
 
 function isRuleMap(value: unknown): value is NonNullable<OxlintPreset["rules"]> {

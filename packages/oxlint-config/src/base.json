@@ -1,4 +1,16 @@
 {
+  "categories": {
+    "correctness": "error",
+    "nursery": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "restriction": "error",
+    "style": "error",
+    "suspicious": "error"
+  },
+  "options": {
+    "denyWarnings": true
+  },
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "jsdoc", "node", "promise"],
   "rules": {
     "curly": ["error", "all"],
