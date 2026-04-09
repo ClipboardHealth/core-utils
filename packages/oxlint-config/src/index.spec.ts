@@ -400,6 +400,17 @@ describe("oxlint-config", () => {
       ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
     });
 
+    it("throws when base.json categories are invalid", async () => {
+      await expect(
+        loadPresetsModule({
+          categories: "not-an-object",
+          overrides: [],
+          plugins: ["import"],
+          rules: {},
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+    });
+
     it("supports valid overrides without rules", async () => {
       const loadedPresetsModule = getLoadedPresetsModule(
         await loadPresetsModule({
