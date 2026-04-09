@@ -1,16 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/base.json"],
-  "plugins": ["jest"],
-  "categories": {
-    "correctness": "error",
-    "nursery": "error",
-    "pedantic": "error",
-    "perf": "error",
-    "restriction": "error",
-    "style": "error",
-    "suspicious": "error"
-  },
+  "plugins": ["vitest"],
   "ignorePatterns": [
     ".agents",
     "coverage/",
@@ -19,7 +10,6 @@
     "packages/eslint-config/src/index.js"
   ],
   "options": {
-    "denyWarnings": true,
     "reportUnusedDisableDirectives": "off",
     "typeAware": false,
     "typeCheck": false
@@ -30,7 +20,6 @@
     }
   },
   "rules": {
-    "capitalized-comments": "off",
     "class-methods-use-this": "off",
     "complexity": "off",
     "func-names": "off",
@@ -42,22 +31,6 @@
     "import/no-namespace": "off",
     "import/no-unassigned-import": "off",
     "import/unambiguous": "off",
-    "jest/max-expects": "off",
-    "jest/max-nested-describe": "off",
-    "jest/no-confusing-set-timeout": "off",
-    "jest/no-conditional-in-test": "off",
-    "jest/no-hooks": "off",
-    "jest/no-unneeded-async-expect-function": "off",
-    "jest/no-untyped-mock-factory": "off",
-    "jest/padding-around-test-blocks": "off",
-    "jest/prefer-called-with": "off",
-    "jest/prefer-expect-resolves": "off",
-    "jest/prefer-jest-mocked": "off",
-    "jest/prefer-lowercase-title": "off",
-    "jest/prefer-mock-return-shorthand": "off",
-    "jest/prefer-strict-equal": "off",
-    "jest/require-hook": "off",
-    "jest/require-to-throw-message": "off",
     "jsdoc/check-tag-names": "off",
     "jsdoc/empty-tags": "off",
     "jsdoc/require-param": "off",
@@ -75,7 +48,6 @@
     "no-inline-comments": "off",
     "no-plusplus": "off",
     "no-shadow": "off",
-    "no-void": "off",
     "node/no-process-env": "off",
     "oxc/no-accumulating-spread": "off",
     "oxc/no-barrel-file": "off",
@@ -113,7 +85,20 @@
     "unicorn/prefer-bigint-literals": "off",
     "unicorn/prefer-module": "off",
     "unicorn/prefer-string-raw": "off",
-    "unicorn/prefer-top-level-await": "off"
+    "unicorn/prefer-top-level-await": "off",
+    "vitest/consistent-test-filename": "off",
+    "vitest/hoisted-apis-on-top": "off",
+    "vitest/prefer-called-once": "off",
+    "vitest/prefer-describe-function-title": "off",
+    "vitest/prefer-expect-type-of": "off",
+    "vitest/prefer-import-in-mock": "off",
+    "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-strict-boolean-matchers": "off",
+    "vitest/prefer-to-be-falsy": "off",
+    "vitest/prefer-to-be-truthy": "off",
+    "vitest/require-hook": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/require-test-timeout": "off"
   },
   "overrides": [
     {

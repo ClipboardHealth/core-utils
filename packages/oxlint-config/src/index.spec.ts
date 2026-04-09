@@ -21,6 +21,20 @@ describe("oxlint-config", () => {
         "promise",
       ]);
 
+      expect(base.categories).toEqual({
+        correctness: "error",
+        nursery: "error",
+        pedantic: "error",
+        perf: "error",
+        restriction: "error",
+        style: "error",
+        suspicious: "error",
+      });
+
+      expect(base.options).toEqual({
+        denyWarnings: true,
+      });
+
       expect(base.overrides).toHaveLength(4);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
@@ -40,6 +54,10 @@ describe("oxlint-config", () => {
 
       expect(vitest).toEqual({
         plugins: ["vitest"],
+        rules: {
+          "vitest/prefer-importing-vitest-globals": "off",
+          "vitest/require-test-timeout": "off",
+        },
       });
     });
   });
@@ -378,6 +396,17 @@ describe("oxlint-config", () => {
           overrides: [],
           plugins: ["import"],
           rules: [],
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+    });
+
+    it("throws when base.json categories are invalid", async () => {
+      await expect(
+        loadPresetsModule({
+          categories: "not-an-object",
+          overrides: [],
+          plugins: ["import"],
+          rules: {},
         }),
       ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
     });

@@ -1,6 +1,19 @@
 {
+  "categories": {
+    "correctness": "error",
+    "nursery": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "restriction": "error",
+    "style": "error",
+    "suspicious": "error"
+  },
+  "options": {
+    "denyWarnings": true
+  },
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "jsdoc", "node", "promise"],
   "rules": {
+    "capitalized-comments": "off",
     "curly": ["error", "all"],
     "func-style": ["error", "declaration"],
     "id-length": "off",
@@ -27,6 +40,7 @@
     ],
     "no-undefined": "off",
     "no-use-before-define": "off",
+    "no-void": "off",
     "object-shorthand": ["error", "properties"],
     "oxc/no-async-await": "off",
     "oxc/no-optional-chaining": "off",
