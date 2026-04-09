@@ -1,4 +1,4 @@
-import StatsD, { type ClientOptions } from "hot-shots";
+import { type ClientOptions, StatsD } from "hot-shots";
 import type mongoose from "mongoose";
 
 import type { BackgroundJobType } from "../job";
