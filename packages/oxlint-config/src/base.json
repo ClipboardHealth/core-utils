@@ -39,7 +39,6 @@
     "import/prefer-default-export": "off",
     "import/unambiguous": "off",
     "init-declarations": "off",
-    "jest/no-hooks": "off",
     "max-classes-per-file": "off",
     "max-depth": "off",
     "max-lines": "off",

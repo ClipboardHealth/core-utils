@@ -66,6 +66,7 @@ describe("oxlint-config", () => {
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
         rules: {
+          "jest/no-hooks": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
         },
       });
@@ -73,6 +74,7 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "jest/no-hooks": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
           "vitest/prefer-importing-vitest-globals": "off",
           "vitest/prefer-to-be-falsy": "off",

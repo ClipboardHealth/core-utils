@@ -27,6 +27,7 @@
     "jest/max-expects": "off",
     "jest/max-nested-describe": "off",
     "jest/no-conditional-in-test": "off",
+    "jest/no-hooks": "off",
     "jest/no-unneeded-async-expect-function": "off",
     "jest/no-untyped-mock-factory": "off",
     "jest/padding-around-test-blocks": "off",
