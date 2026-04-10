@@ -41,7 +41,7 @@ async function getLibraryEntries(): Promise<LibraryEntry[]> {
   const results = await Promise.allSettled(
     directories.map(async (dirent) => {
       const path = join(__dirname, "packages", dirent.name, "package.json");
-      const parsed: { description?: string } = JSON.parse(await readFile(path, UTF8));
+      const parsed = JSON.parse(await readFile(path, UTF8)) as { description?: string };
       return { name: dirent.name, description: parsed.description ?? "" };
     }),
   );

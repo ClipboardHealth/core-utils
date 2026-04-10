@@ -72,7 +72,7 @@ function parseEnvironmentVariable(value: unknown, schema: z.ZodType<unknown>): u
 function getSchema(path: readonly string[], schema: z.ZodType<unknown>): z.ZodType<unknown> {
   return path.reduce(
     (result, key) =>
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       result instanceof z.ZodObject ? result.shape[key] : /* istanbul ignore next */ result,
     schema,
   );
