@@ -12,7 +12,7 @@
   ],
   "options": {
     "reportUnusedDisableDirectives": "off",
-    "typeAware": false,
+    "typeAware": true,
     "typeCheck": false
   },
   "settings": {
