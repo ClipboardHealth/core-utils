@@ -37,6 +37,21 @@ This package provides four enum validation helpers to cover different use cases:
 - `requiredEnum(values)` - Wraps `z.enum()` for required strict validation. Invalid values fail validation.
 - `optionalEnum(values)` - Wraps `z.enum()` for optional strict validation. Invalid values fail validation, but `undefined` is allowed.
 
+**Type narrowing:** All helpers reject widened `string[]` arrays at compile time. When passing a pre-declared variable, use `as const` to preserve literal types:
+
+```ts
+// Inline arrays work as-is
+requiredEnum(["a", "b"]);
+
+// Pre-declared variables require `as const`
+const VALUES = ["a", "b"] as const;
+requiredEnum(VALUES);
+
+// Without `as const`, the type widens to string[] and is rejected
+const widened = ["a", "b"];
+requiredEnum(widened); // TS error
+```
+
 <embedex source="packages/contract-core/examples/schemas.ts">
 
 ```ts
