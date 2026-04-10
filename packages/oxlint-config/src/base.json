@@ -66,7 +66,6 @@
     "return-await": "off",
     "no-use-before-define": "off",
     "no-void": "off",
-    "node/no-process-env": "off",
     "object-shorthand": ["error", "properties"],
     "oxc/no-async-await": "off",
     "oxc/no-optional-chaining": "off",
@@ -97,6 +96,7 @@
       "files": ["**/scripts/**/*.ts"],
       "rules": {
         "no-console": "off",
+        "node/no-process-env": "off",
         "unicorn/no-process-exit": "off"
       }
     },
