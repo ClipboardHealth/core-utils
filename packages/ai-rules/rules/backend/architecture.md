@@ -12,6 +12,7 @@ All NestJS microservices follow a three-tier layered architecture:
 │  Logic (NestJS services, message publishers, background jobs)   │
 │  - ALL business logic; works with DOs only                      │
 │  - Knows nothing about HTTP or database specifics               │
+│  - Can depend on other modules' logic (cross-module composition)│
 ├─────────────────────────────────────────────────────────────────┤
 │  Data (Data repositories, gateways)                             │
 │  - Database via ORM (Prisma/Mongoose), DAO ↔ DO translation     │
