@@ -46,10 +46,14 @@ export const react: OxlintPreset = {
 };
 export const jest: OxlintPreset = {
   plugins: ["jest"],
+  rules: {
+    "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+  },
 };
 export const vitest: OxlintPreset = {
   plugins: ["vitest"],
   rules: {
+    "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
     "vitest/prefer-importing-vitest-globals": "off",
     "vitest/prefer-to-be-falsy": "off",
     "vitest/prefer-to-be-truthy": "off",
