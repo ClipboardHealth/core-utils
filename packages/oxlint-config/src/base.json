@@ -12,7 +12,7 @@
     "denyWarnings": true
   },
   "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "jsdoc", "node", "promise"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise"],
   "settings": {
     "node": {
       "version": ">=24.14.1"
@@ -40,12 +40,6 @@
     "import/unambiguous": "off",
     "init-declarations": "off",
     "jest/no-hooks": "off",
-    "jsdoc/check-tag-names": "off",
-    "jsdoc/empty-tags": "off",
-    "jsdoc/require-param": "off",
-    "jsdoc/require-param-type": "off",
-    "jsdoc/require-returns": "off",
-    "jsdoc/require-returns-type": "off",
     "max-classes-per-file": "off",
     "max-depth": "off",
     "max-lines": "off",
