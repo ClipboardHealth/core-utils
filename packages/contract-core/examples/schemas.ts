@@ -3,6 +3,7 @@ import {
   apiErrors,
   booleanString,
   dateTimeSchema,
+  ENUM_FALLBACK,
   nonEmptyString,
   optionalEnum,
   optionalEnumWithFallback,
@@ -93,12 +94,13 @@ const someDate = schema.parse("2026-03-15T10:30:00.000Z");
 console.log(someDate);
 
 // Enum with fallback examples
+// ENUM_FALLBACK is a neutral sentinel ("UNRECOGNIZED_") automatically appended
+// to the enum type. Consumers cannot choose their own fallback value, preventing
+// misuse where a business-meaningful value is treated as a default.
+
 /* -- required -- */
-const requiredStatusEnumSchema = requiredEnumWithFallback(
-  ["unspecified", "pending", "completed", "failed"],
-  "unspecified",
-);
-// type RequiredStatusEnum = "unspecified" | "pending" | "completed" | "failed"
+const requiredStatusEnumSchema = requiredEnumWithFallback(["pending", "completed", "failed"]);
+// type RequiredStatusEnum = "pending" | "completed" | "failed" | "UNRECOGNIZED_"
 type RequiredStatusEnum = z.infer<typeof requiredStatusEnumSchema>;
 
 const completedStatus: RequiredStatusEnum = requiredStatusEnumSchema.parse("completed");
@@ -106,8 +108,9 @@ const completedStatus: RequiredStatusEnum = requiredStatusEnumSchema.parse("comp
 console.log(completedStatus);
 
 const additionalStatus = requiredStatusEnumSchema.parse("additional");
-// => "unspecified"
+// => "UNRECOGNIZED_" (ENUM_FALLBACK)
 console.log(additionalStatus);
+console.log(additionalStatus === ENUM_FALLBACK); // true
 
 try {
   // eslint-disable-next-line unicorn/no-useless-undefined
@@ -118,11 +121,8 @@ try {
 }
 
 /* -- optional -- */
-const optionalStatusEnumSchema = optionalEnumWithFallback(
-  ["unspecified", "pending", "completed", "failed"],
-  "unspecified",
-);
-// type OptionalStatusEnum = "unspecified" | "pending" | "completed" | "failed" | undefined
+const optionalStatusEnumSchema = optionalEnumWithFallback(["pending", "completed", "failed"]);
+// type OptionalStatusEnum = "pending" | "completed" | "failed" | "UNRECOGNIZED_" | undefined
 type OptionalStatusEnum = z.infer<typeof optionalStatusEnumSchema>;
 
 const failedStatus: OptionalStatusEnum = optionalStatusEnumSchema.parse("failed");
@@ -130,7 +130,7 @@ const failedStatus: OptionalStatusEnum = optionalStatusEnumSchema.parse("failed"
 console.log(failedStatus);
 
 const extraStatus = optionalStatusEnumSchema.parse("extra");
-// => "unspecified"
+// => "UNRECOGNIZED_" (ENUM_FALLBACK)
 console.log(extraStatus);
 
 // eslint-disable-next-line unicorn/no-useless-undefined
