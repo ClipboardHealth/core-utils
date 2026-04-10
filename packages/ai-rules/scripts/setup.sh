@@ -98,15 +98,15 @@ persist_claude_env() {
     : > "$tmp"
   fi
 
-  # Always persist general env vars; conditionally include NVM-specific lines
+  # Persist only the resolved PATH to the node binary — never source nvm.sh here.
+  # Sourcing nvm.sh on every Bash call is fragile (fails if nvm.sh is missing or
+  # errors out) and unnecessary since the PATH entry is sufficient for node/npm.
   local node_dir
   {
     echo "$begin"
     if command -v nvm >/dev/null 2>&1 \
       && node_dir="$(dirname "$(nvm which current)" 2>/dev/null)" \
       && [[ "$node_dir" == "$NVM_DIR"/* ]]; then
-      echo "export NVM_DIR=\"$NVM_DIR\""
-      echo ". \"\$NVM_DIR/nvm.sh\" --no-use"
       echo "export PATH=\"$node_dir:\$PATH\""
     fi
     echo "export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true"
