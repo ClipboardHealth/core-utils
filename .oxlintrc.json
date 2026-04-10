@@ -39,6 +39,7 @@
     "jest/require-to-throw-message": "off",
     "no-duplicate-imports": "off",
     "no-plusplus": "off",
+    "node/no-process-env": "off",
     "oxc/no-accumulating-spread": "off",
     "oxc/no-barrel-file": "off",
     "oxc/no-map-spread": "off",
