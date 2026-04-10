@@ -30,6 +30,7 @@ const DEFAULT_COVERAGE_EXCLUDE = [
   "src/**/index.ts",
   "src/**/*.d.ts",
   "src/**/*.json",
+  "src/**/*.md",
   "src/generators/**/files/**",
 ] as const;
 const DEFAULT_COVERAGE_THRESHOLDS = {
