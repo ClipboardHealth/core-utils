@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/contract-core",
-  "version": "2.3.47",
+  "version": "3.0.0",
   "description": "Shared Zod schemas for Clipboard's contracts.",
   "keywords": [
     "contract",

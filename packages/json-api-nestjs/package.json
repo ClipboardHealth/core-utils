@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/json-api-nestjs",
-  "version": "2.3.22",
+  "version": "2.3.23",
   "description": "TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.",
   "keywords": [
     "api",
