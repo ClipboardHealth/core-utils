@@ -50,7 +50,7 @@ describe("oxlint-config", () => {
         },
       });
 
-      expect(base.overrides).toHaveLength(4);
+      expect(base.overrides).toHaveLength(1);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
