@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/background-jobs-adapter",
-  "version": "2.1.87",
+  "version": "2.1.88",
   "description": "Minimal adapter interface for background jobs operations supporting Mongo and Postgres implementations.",
   "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
