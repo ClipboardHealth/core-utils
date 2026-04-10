@@ -45,7 +45,7 @@ export function buildDependencyGraph(
     for (const sourcePath of sources) {
       // If this source is also a destination, then destinationPath depends on it
       if (destinations.has(sourcePath)) {
-        dependencies.get(destinationPath)!.add(sourcePath);
+        dependencies.get(destinationPath)?.add(sourcePath);
       }
     }
   }
@@ -144,6 +144,7 @@ export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPa
   // Calculate in-degree (number of dependencies) for each node
   const inDegree = new Map<DestinationPath, number>();
   for (const destination of destinations) {
+    // oxlint-disable-next-line typescript/no-non-null-assertion -- initialized on line 40 for all destinations
     inDegree.set(destination, dependencies.get(destination)!.size);
   }
 
@@ -156,7 +157,7 @@ export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPa
 
   for (const [destination, deps] of dependencies.entries()) {
     for (const dependency of deps) {
-      dependents.get(dependency)!.add(destination);
+      dependents.get(dependency)?.add(destination);
     }
   }
 
@@ -172,7 +173,12 @@ export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPa
 
   // Process nodes with no dependencies
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const current = queue.shift();
+    /* istanbul ignore next */
+    if (!current) {
+      break;
+    }
+
     result.push(current);
 
     // For each node that depends on current, decrease its in-degree
@@ -180,7 +186,7 @@ export function topologicalSort(graph: Readonly<DependencyGraph>): DestinationPa
     /* istanbul ignore next */
     if (nodeDependents) {
       for (const dependent of nodeDependents) {
-        const newDegree = inDegree.get(dependent)! - 1;
+        const newDegree = (inDegree.get(dependent) ?? 0) - 1;
         inDegree.set(dependent, newDegree);
 
         if (newDegree === 0) {

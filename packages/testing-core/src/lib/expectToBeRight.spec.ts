@@ -11,6 +11,7 @@ import { expectToBeSuccess } from "./expectToBeSuccess";
 
 describe("expectToBeRight", () => {
   interface TestCase {
+    expected?: string | RegExp;
     input: E.Either<string, number> | undefined;
     name: string;
   }
@@ -30,15 +31,17 @@ describe("expectToBeRight", () => {
     {
       name: "throws for Left",
       input: E.left("error"),
+      expected: /falsy value/,
     },
     {
       name: "throws for undefined",
       input: undefined,
+      expected: "Expected value to be defined",
     },
-  ])("$name", ({ input }) => {
+  ])("$name", ({ input, expected }) => {
     expect(() => {
       expectToBeRight(input);
-    }).toThrow();
+    }).toThrow(expected);
   });
 
   it("narrows type", () => {
@@ -53,6 +56,7 @@ describe("expectToBeRight", () => {
 
 describe("expectToBeSuccess", () => {
   interface TestCase {
+    expected?: string | RegExp;
     input: ServiceResult<number> | undefined;
     name: string;
   }
@@ -72,15 +76,17 @@ describe("expectToBeSuccess", () => {
     {
       name: "throws for Failure",
       input: failure(new ServiceError("test error")),
+      expected: /falsy value/,
     },
     {
       name: "throws for undefined",
       input: undefined,
+      expected: "Expected value to be defined",
     },
-  ])("$name", ({ input }) => {
+  ])("$name", ({ input, expected }) => {
     expect(() => {
       expectToBeSuccess(input);
-    }).toThrow();
+    }).toThrow(expected);
   });
 
   it("narrows type", () => {

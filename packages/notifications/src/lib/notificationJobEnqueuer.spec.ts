@@ -1,4 +1,4 @@
-import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
@@ -12,11 +12,11 @@ import {
   type TriggerIdempotencyKeyParams,
 } from "./triggerIdempotencyKey";
 
-vi.mock("./internal/chunkRecipients");
+vi.mock(import("./internal/chunkRecipients"));
 
 const mockChunkRecipients = vi.mocked(chunkRecipients);
 
-describe("NotificationJobEnqueuer", () => {
+describe("notificationJobEnqueuer", () => {
   const mockEnqueue = vi.fn();
   const mockAdapter: BackgroundJobsAdapter = {
     implementation: "postgres",
@@ -78,8 +78,7 @@ describe("NotificationJobEnqueuer", () => {
       expect(chunkRecipients).toHaveBeenCalledWith({
         recipients: mockRecipients,
       });
-      expect(mockEnqueue).toHaveBeenCalledTimes(1);
-      expect(mockEnqueue).toHaveBeenCalledWith(
+      expect(mockEnqueue).toHaveBeenCalledExactlyOnceWith(
         mockHandler,
         expect.objectContaining({
           idempotencyKey: DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS(mockTriggerIdempotencyKey),
@@ -93,27 +92,26 @@ describe("NotificationJobEnqueuer", () => {
     });
 
     it("enqueues multiple jobs when recipients require chunking", async () => {
-      const mockChunks = [
-        {
-          number: 1,
-          recipients: mockRecipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
-        },
-        {
-          number: 2,
-          recipients: mockRecipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
-        },
-      ];
+      const mockChunk1 = {
+        number: 1,
+        recipients: mockRecipients.slice(0, MAXIMUM_RECIPIENTS_COUNT),
+      };
+      const mockChunk2 = {
+        number: 2,
+        recipients: mockRecipients.slice(MAXIMUM_RECIPIENTS_COUNT, MAXIMUM_RECIPIENTS_COUNT + 1),
+      };
+      const mockChunks = [mockChunk1, mockChunk2];
 
       const mockKey1: TriggerIdempotencyKeyParams = {
         ...mockIdempotencyKeyParts,
         chunk: 1,
-        recipients: mockChunks[0]!.recipients,
+        recipients: mockChunk1.recipients,
         workflowKey: mockWorkflowKey,
       };
       const mockKey2: TriggerIdempotencyKeyParams = {
         ...mockIdempotencyKeyParts,
         chunk: 2,
-        recipients: mockChunks[1]!.recipients,
+        recipients: mockChunk2.recipients,
         workflowKey: mockWorkflowKey,
       };
 

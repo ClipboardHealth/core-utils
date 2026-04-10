@@ -26,10 +26,10 @@ export const PAGINATION = {
  * } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import {
- *   type ArticleAttributeFields,
- *   type UserAttributeFields,
- *   type UserIncludeFields,
+ * import type {
+ *   ArticleAttributeFields,
+ *   UserAttributeFields,
+ *   UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];

@@ -3,7 +3,7 @@ import { ok } from "node:assert/strict";
 import * as E from "../functional/either";
 import { CbhError, toLeft } from "./cbhError";
 
-describe("CbhError", () => {
+describe("cbhError", () => {
   it("returns proper defaults", () => {
     const message = "boom";
     const statusCode = 500;
@@ -49,6 +49,6 @@ describe("CbhError", () => {
     const error = toLeft("boom");
 
     ok(E.isLeft(error));
-    expect(error.left.issues[0]!.message).toBe("boom");
+    expect(error.left.issues[0]?.message).toBe("boom");
   });
 });

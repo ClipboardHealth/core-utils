@@ -1,5 +1,5 @@
 import { appendOutput } from "../appendOutput";
-import { type Rule, type RuleContext } from "../rule";
+import type { Rule, RuleContext } from "../rule";
 import { allIf } from "./allIf";
 
 interface Input {

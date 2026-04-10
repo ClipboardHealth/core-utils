@@ -2,7 +2,7 @@ import { isDefined } from "@clipboard-health/util-ts";
 
 interface PromiseEntry {
   promise?: Promise<void>;
-  resolve?: (value: void) => void;
+  resolve?: () => void;
 }
 
 export class Semaphore {

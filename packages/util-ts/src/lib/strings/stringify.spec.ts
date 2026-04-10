@@ -7,7 +7,7 @@ describe("stringify", () => {
     { input: true, expected: "true" },
     { input: { foo: "bar" }, expected: '{"foo":"bar"}' },
     { input: [1, 2, 3], expected: "[1,2,3]" },
-    { input: BigInt(9_007_199_254_740_991), expected: '"9007199254740991"' },
+    { input: 9_007_199_254_740_991n, expected: '"9007199254740991"' },
     { input: null, expected: "null" },
     { input: undefined, expected: undefined },
     { input: { nested: { array: [1, { x: 2 }] } }, expected: '{"nested":{"array":[1,{"x":2}]}}' },
@@ -23,6 +23,6 @@ describe("stringify", () => {
   it("throws on circular references", () => {
     const circular = { self: {} };
     circular.self = circular;
-    expect(() => stringify(circular)).toThrow();
+    expect(() => stringify(circular)).toThrow(/circular/i);
   });
 });

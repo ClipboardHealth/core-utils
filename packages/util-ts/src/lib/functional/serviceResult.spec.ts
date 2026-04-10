@@ -19,7 +19,7 @@ function getServiceErrorMessage(error: ServiceError): string {
   return error.issues[0]?.message ?? "no message";
 }
 
-describe("ServiceResult", () => {
+describe("serviceResult", () => {
   describe("success", () => {
     it("creates success result", () => {
       const input = { data: "test" };
@@ -305,13 +305,15 @@ describe("ServiceResult", () => {
 
     it("falls back to ServiceError.merge when onError throws", () => {
       const originalError = new Error("original error");
-      const faultyOnError = () => {
-        throw new Error("onError function failed");
-      };
 
-      const actual = tryCatch(() => {
-        throw originalError;
-      }, faultyOnError);
+      const actual = tryCatch(
+        () => {
+          throw originalError;
+        },
+        () => {
+          throw new Error("onError function failed");
+        },
+      );
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;

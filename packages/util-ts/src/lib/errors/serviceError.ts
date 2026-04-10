@@ -1,4 +1,4 @@
-import { type ZodError, type ZodIssue } from "zod";
+import type { ZodError, ZodIssue } from "zod";
 
 import { deepFreeze } from "../deepFreeze";
 import { toError } from "./toError";
@@ -17,8 +17,10 @@ export const ERROR_CODES = {
   internal: "internal",
 } as const;
 
-// (string & {}) keeps the literal-union intact—so we get autocomplete for the built-ins *and* accept any other string.
-export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | (string & {});
+// (string & Record<never, never>) keeps the literal-union intact, so we get autocomplete for the built-ins and accept any other string.
+export type ErrorCode =
+  | (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
+  | (string & Record<never, never>);
 
 const ERROR_METADATA = {
   badRequest: {

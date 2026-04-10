@@ -119,7 +119,7 @@ describe("embed", () => {
       ...sourceACode,
     ]);
 
-    await expect(async () => await embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
+    await expect(embed({ sourcesGlob, cwd, write: false })).rejects.toThrow(
       `ENOENT: no such file or directory, open '${path.join(cwd, paths.destinations.l)}'`,
     );
   });
@@ -602,8 +602,7 @@ describe("embed", () => {
       const embedC = actual.embeds.find(
         (embed) => embed.paths.destination === toPath(chainPaths.c),
       );
-      expect(embedC).toBeDefined();
-      assertIsUpdatedEmbed(embedC!);
+      assertIsUpdatedEmbed(embedC);
       // Verify that C.md contains the code from A.ts
       expect(embedC.updatedContent).toContain(sourceACode[0]);
     });
@@ -638,8 +637,7 @@ describe("embed", () => {
 
       // Final destination should contain original source code
       const embedD = actual.embeds.find((embed) => embed.paths.destination === toPath(paths4.d));
-      expect(embedD).toBeDefined();
-      assertIsUpdatedEmbed(embedD!);
+      assertIsUpdatedEmbed(embedD);
       expect(embedD.updatedContent).toContain("const x = 1;");
     });
 
@@ -685,8 +683,7 @@ describe("embed", () => {
       const embedD = actual.embeds.find(
         (embed) => embed.paths.destination === toPath(pathsDiamond.d),
       );
-      expect(embedD).toBeDefined();
-      assertIsUpdatedEmbed(embedD!);
+      assertIsUpdatedEmbed(embedD);
       expect(embedD.updatedContent).toContain("const x = 1;");
     });
 
@@ -713,8 +710,7 @@ describe("embed", () => {
 
       expect(actual.embeds).toHaveLength(1);
       const [firstEmbed] = actual.embeds;
-      expect(firstEmbed).toBeDefined();
-      assertIsCircularDependencyEmbed(firstEmbed!);
+      assertIsCircularDependencyEmbed(firstEmbed);
       expect(firstEmbed.cycle.length).toBeGreaterThanOrEqual(3);
       // Cycle should contain both files
       const cycleSet = new Set(firstEmbed.cycle);
@@ -751,8 +747,7 @@ describe("embed", () => {
 
       expect(actual.embeds).toHaveLength(1);
       const [cycleEmbed] = actual.embeds;
-      expect(cycleEmbed).toBeDefined();
-      assertIsCircularDependencyEmbed(cycleEmbed!);
+      assertIsCircularDependencyEmbed(cycleEmbed);
       expect(cycleEmbed.cycle.length).toBeGreaterThanOrEqual(3);
     });
 
@@ -968,7 +963,7 @@ describe("embed", () => {
     ]);
   });
 
-  describe("CRLF line endings", () => {
+  describe("cRLF line endings", () => {
     it("handles Windows-style CRLF line endings correctly", async () => {
       const sourceCode = [`const x = "windows";`, "", "console.log(x);"];
 
@@ -990,7 +985,7 @@ describe("embed", () => {
       const actual = await embed({ sourcesGlob, cwd, write: false });
 
       expect(actual.embeds).toHaveLength(1);
-      const embedResult = actual.embeds[0]!;
+      const [embedResult] = actual.embeds;
       assertIsUpdatedEmbed(embedResult);
       expect(embedResult.paths).toEqual({
         sources: [toPath(paths.sources.a)],
@@ -1023,7 +1018,7 @@ describe("embed", () => {
       const actual = await embed({ sourcesGlob, cwd, write: false });
 
       expect(actual.embeds).toHaveLength(1);
-      const embedResult = actual.embeds[0]!;
+      const [embedResult] = actual.embeds;
       assertIsUpdatedEmbed(embedResult);
       expect(embedResult.paths).toEqual({
         sources: [toPath(paths.sources.a)],
@@ -1037,10 +1032,14 @@ describe("embed", () => {
   });
 });
 
-function assertIsUpdatedEmbed(embed: Embed): asserts embed is Updated {
-  expect(embed.code).toBe("UPDATE");
+function assertIsUpdatedEmbed(embed: Embed | undefined): asserts embed is Updated {
+  expect(embed).toBeDefined();
+  expect(embed?.code).toBe("UPDATE");
 }
 
-function assertIsCircularDependencyEmbed(embed: Embed): asserts embed is CircularDependency {
-  expect(embed.code).toBe("CIRCULAR_DEPENDENCY");
+function assertIsCircularDependencyEmbed(
+  embed: Embed | undefined,
+): asserts embed is CircularDependency {
+  expect(embed).toBeDefined();
+  expect(embed?.code).toBe("CIRCULAR_DEPENDENCY");
 }

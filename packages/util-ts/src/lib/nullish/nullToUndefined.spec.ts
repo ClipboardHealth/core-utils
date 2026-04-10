@@ -2,20 +2,21 @@ import { nullToUndefined } from "./nullToUndefined";
 
 describe("nullToUndefined", () => {
   it("returns undefined", async () => {
-    expect(await nullToUndefined(Promise.resolve(null))).toBeUndefined();
+    await expect(nullToUndefined(Promise.resolve(null))).resolves.toBeUndefined();
   });
 
   it("returns value", async () => {
     const expected = "hi";
 
-    expect(await nullToUndefined(Promise.resolve(expected))).toBe(expected);
+    await expect(nullToUndefined(Promise.resolve(expected))).resolves.toBe(expected);
   });
 
   it("supports PromiseLike objects", async () => {
     const expected = "hello";
 
+    // oxlint-disable func-names
     const promiseLike: PromiseLike<string> = {
-      // eslint-disable-next-line unicorn/no-thenable
+      // eslint-disable-next-line unicorn/no-thenable -- PromiseLike requires `then`
       then: function <TResult1, TResult2>(
         onfulfilled?: (value: string) => TResult1 | PromiseLike<TResult1>,
       ): PromiseLike<TResult1 | TResult2> {
@@ -27,7 +28,8 @@ describe("nullToUndefined", () => {
         return Promise.reject();
       },
     };
+    // oxlint-enable func-names
 
-    expect(await nullToUndefined(promiseLike)).toBe(expected);
+    await expect(nullToUndefined(promiseLike)).resolves.toBe(expected);
   });
 });

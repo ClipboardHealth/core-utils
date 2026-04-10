@@ -1,4 +1,4 @@
-import { type Knock } from "@knocklabs/node";
+import type { Knock } from "@knocklabs/node";
 
 import type { UpsertWorkplaceRequest } from "../types";
 import { toInlineIdentifyUserRequestWithoutUserId } from "./toInlineIdentifyUserRequestWithoutUserId";

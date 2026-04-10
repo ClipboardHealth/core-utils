@@ -50,6 +50,10 @@ export const jest: OxlintPreset = {
 export const vitest: OxlintPreset = {
   plugins: ["vitest"],
   rules: {
+    "jest/max-expects": "off",
+    "jest/max-nested-describe": "off",
+    "jest/no-hooks": "off",
+    "vitest/prefer-called-once": "off",
     "vitest/prefer-importing-vitest-globals": "off",
     "vitest/prefer-to-be-falsy": "off",
     "vitest/prefer-to-be-truthy": "off",

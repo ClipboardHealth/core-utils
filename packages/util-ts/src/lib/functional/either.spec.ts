@@ -1,7 +1,7 @@
 import * as E from "./either";
 import { pipe } from "./pipe";
 
-describe("Either", () => {
+describe("either", () => {
   it("left works", () => {
     const error = new Error("boom");
     const either = E.left(error) as E.Left<Error>;

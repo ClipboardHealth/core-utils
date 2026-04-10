@@ -4,6 +4,7 @@ import { expectToBeSafeParseSuccess } from "./expectToBeSafeParseSuccess";
 
 describe("expectToBeSafeParseSuccess", () => {
   interface TestCase {
+    expected?: string;
     input: z.SafeParseReturnType<unknown, unknown>;
     name: string;
   }
@@ -25,15 +26,17 @@ describe("expectToBeSafeParseSuccess", () => {
     {
       name: "throws for SafeParseError",
       input: schema.safeParse(123),
+      expected: "Expected SafeParseSuccess, got SafeParseError",
     },
     {
       name: "throws for undefined",
       input: undefined as unknown as z.SafeParseReturnType<unknown, unknown>,
+      expected: "Expected value to be defined",
     },
-  ])("$name", ({ input }) => {
+  ])("$name", ({ input, expected }) => {
     expect(() => {
       expectToBeSafeParseSuccess(input);
-    }).toThrow();
+    }).toThrow(expected);
   });
 
   it("narrows type", () => {
@@ -46,6 +49,6 @@ describe("expectToBeSafeParseSuccess", () => {
     // Narrowed to SafeParseSuccess
     expect(actual.success).toBe(true);
     expect(actual.data).toBe(input);
-    expect(typeof actual.data).toBe("string");
+    expectTypeOf(actual.data).toBeString();
   });
 });

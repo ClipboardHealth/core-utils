@@ -51,7 +51,7 @@ function checkNamingViolations(codeLines: string[], issues: string[]): void {
   }
 }
 
-export default function (output: string): GradingResult {
+export default function gradeTypescriptRules(output: string): GradingResult {
   const issues: string[] = [];
   const codeLines = getCodeLines(output);
 

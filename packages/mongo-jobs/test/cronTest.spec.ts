@@ -31,14 +31,14 @@ function useFakeOnlyTimers(toFake: FakeableTimer[]) {
   });
 }
 
-describe("Cron jobs", () => {
+describe("cron jobs", () => {
   let testContext: TestContext;
   let backgroundJobs: BackgroundJobs;
   let semaphore: Semaphore;
 
   beforeEach(async () => {
     testContext = await createTestContext();
-    backgroundJobs = testContext.backgroundJobs;
+    ({ backgroundJobs } = testContext);
     semaphore = new Semaphore();
 
     useFakeOnlyTimers(["Date"]);
@@ -62,7 +62,7 @@ describe("Cron jobs", () => {
       scheduleName: "cron-semaphores",
       data: { resolvePromise: 1, waitPromise: 2 },
     });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job1 = await backgroundJobs.jobModel.findOne({ scheduleName: "cron-semaphores" });
     expect(job1?.nextRunAt).toStrictEqual(new Date("2023-07-04T15:10:00.000Z"));
@@ -75,7 +75,7 @@ describe("Cron jobs", () => {
     void backgroundJobs.start(["default"]);
     await semaphore.getPromise(1);
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(2);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(2);
     const job2 = await backgroundJobs.jobModel.findOne(
       { scheduleName: "cron-semaphores" },
       undefined,
@@ -93,7 +93,7 @@ describe("Cron jobs", () => {
       scheduleName: "cron-semaphores",
       data: { resolvePromise: 1, waitPromise: 2 },
     });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job1 = await backgroundJobs.jobModel.findOne({ scheduleName: "cron-semaphores" });
     expect(job1?.nextRunAt).toStrictEqual(new Date("2023-07-04T15:10:00.000Z"));
@@ -105,7 +105,7 @@ describe("Cron jobs", () => {
       data: { resolvePromise: 1, waitPromise: 2 },
     });
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job2 = await backgroundJobs.jobModel.findOne({ scheduleName: "cron-semaphores" });
     expect(job2?.nextRunAt).toStrictEqual(new Date("2023-07-04T15:20:00.000Z"));
@@ -123,7 +123,7 @@ describe("Cron jobs", () => {
       scheduleName: "cron-semaphores",
       data: { resolvePromise: 1, waitPromise: 2 },
     });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
 
     const job1 = await backgroundJobs.jobModel.findOne({
       scheduleName: "cron-semaphores",
@@ -152,7 +152,7 @@ describe("Cron jobs", () => {
     void backgroundJobs.start(["default"]);
     await semaphore.getPromise(1);
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(2);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(2);
 
     const job1Again = await backgroundJobs.jobModel.findOne(
       { scheduleName: "cron-semaphores" },
@@ -193,13 +193,13 @@ describe("Cron jobs", () => {
       scheduleName: "cron-semaphores",
       data: { resolvePromise: 1, waitPromise: 2 },
     });
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(1);
-    expect(await backgroundJobs.scheduleModel.countDocuments()).toBe(1);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(1);
+    await expect(backgroundJobs.scheduleModel.countDocuments()).resolves.toBe(1);
 
     await backgroundJobs.removeCron("cron-semaphores");
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(0);
-    expect(await backgroundJobs.scheduleModel.countDocuments()).toBe(0);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(0);
+    await expect(backgroundJobs.scheduleModel.countDocuments()).resolves.toBe(0);
   });
 
   it("is possible to have 2 schedules for same handler and different data", async () => {
@@ -217,8 +217,8 @@ describe("Cron jobs", () => {
       data: { resolvePromise: 4, waitPromise: 5 },
     });
 
-    expect(await backgroundJobs.jobModel.countDocuments()).toBe(2);
-    expect(await backgroundJobs.scheduleModel.countDocuments()).toBe(2);
+    await expect(backgroundJobs.jobModel.countDocuments()).resolves.toBe(2);
+    await expect(backgroundJobs.scheduleModel.countDocuments()).resolves.toBe(2);
 
     const job1 = await backgroundJobs.jobModel.findOne({}, undefined, { sort: { nextRunAt: 1 } });
     const job2 = await backgroundJobs.jobModel.findOne({}, undefined, { sort: { nextRunAt: -1 } });

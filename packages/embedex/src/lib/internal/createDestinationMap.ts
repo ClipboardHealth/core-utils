@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import type { DestinationPath } from "../types";
-import { type DestinationMap, type SourceMap } from "./types";
+import type { DestinationMap, SourceMap } from "./types";
 
 export async function createDestinationMap(
   params: Readonly<{ sourceMap: Readonly<SourceMap> }>,
@@ -22,7 +22,8 @@ export async function createDestinationMap(
     [...uniqueDestinationPaths].map((destinationPath) => [
       destinationPath,
       {
-        content: destinationContents.get(destinationPath)!,
+        // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- guaranteed set above; oxlint no-non-null-assertion forbids !
+        content: destinationContents.get(destinationPath) as string,
         sources: new Set(
           [...sourceMap.entries()]
             .filter(([_, { destinations }]) => destinations.includes(destinationPath))

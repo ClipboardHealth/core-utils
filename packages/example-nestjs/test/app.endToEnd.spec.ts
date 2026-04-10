@@ -1,11 +1,11 @@
-import { type NestExpressApplication } from "@nestjs/platform-express";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test, type TestingModule } from "@nestjs/testing";
 import qs from "qs";
 import request from "supertest";
 
 import { AppModule } from "../src/app.module";
 
-describe("GET /users", () => {
+describe("gET /users", () => {
   let app: NestExpressApplication;
 
   beforeEach(async () => {
@@ -28,6 +28,7 @@ describe("GET /users", () => {
   });
 
   const defaultQuery = { page: { size: 20 } };
+
   it.each<{ expected: Record<string, unknown>; input: string; name: string }>([
     {
       name: "defaults page size if no query string",

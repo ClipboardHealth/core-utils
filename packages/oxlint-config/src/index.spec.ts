@@ -16,6 +16,7 @@ describe("oxlint-config", () => {
         "unicorn",
         "oxc",
         "import",
+        "jsdoc",
         "node",
         "promise",
       ]);
@@ -70,6 +71,10 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "jest/max-expects": "off",
+          "jest/max-nested-describe": "off",
+          "jest/no-hooks": "off",
+          "vitest/prefer-called-once": "off",
           "vitest/prefer-importing-vitest-globals": "off",
           "vitest/prefer-to-be-falsy": "off",
           "vitest/prefer-to-be-truthy": "off",
@@ -535,7 +540,7 @@ function getFirstOverrideFiles(config: {
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
   vi.resetModules();
   // oxlint-disable-next-line jest/no-untyped-mock-factory -- conflicts with consistent-type-imports
-  vi.doMock("node:fs", () => ({
+  vi.doMock(import("node:fs"), () => ({
     readFileSync: vi.fn(() => JSON.stringify(baseJson)),
   }));
 

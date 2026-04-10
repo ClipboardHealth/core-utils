@@ -1,6 +1,6 @@
 import { createDeterministicHash } from "@clipboard-health/util-ts";
 
-import { type TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
+import type { TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
 
 type HashParams = TriggerIdempotencyKeyParams & {
   workplaceId?: string | undefined;
@@ -17,6 +17,7 @@ function toSorted(params: HashParams) {
   return {
     chunk: params.chunk,
     eventOccurredAt: params.eventOccurredAt,
+    // oxlint-disable-next-line unicorn/no-array-sort -- ESLint no-use-extend-native doesn't recognize toSorted() as standard
     recipients: [...params.recipients].sort(),
     resource: {
       id: params.resource?.id,

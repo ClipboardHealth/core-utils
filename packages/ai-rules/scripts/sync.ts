@@ -128,7 +128,7 @@ function printUsageAndExit(): never {
 function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
   const { profile, extraIncludes, excludes } = parsedArguments;
 
-  const profileRules = PROFILES[profile].include.flatMap((category) => [...CATEGORIES[category]]);
+  const profileRules = PROFILES[profile].include.flatMap((category) => CATEGORIES[category]);
   const ruleSet = new Set<RuleId>([...profileRules, ...extraIncludes]);
 
   for (const ruleId of excludes) {
@@ -259,7 +259,7 @@ async function mergeSessionStartHook(): Promise<void> {
   const updatedHooks = { ...hooks, SessionStart: updatedSessionStart };
   const updatedSettings = { ...settings, hooks: updatedHooks };
 
-  await writeFile(settingsPath, JSON.stringify(updatedSettings, undefined, 2) + "\n", "utf8");
+  await writeFile(settingsPath, `${JSON.stringify(updatedSettings, undefined, 2)}\n`, "utf8");
 
   const action = hasStale || currentCount > 1 ? "Updated" : "Added";
   console.log(`📋 ${action} SessionStart hook in .claude/settings.json`);

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { createConfig } from "./createConfig";
 
-describe("Config", () => {
+describe("config", () => {
   const environment = {
     allowed: ["development", "production"] as const,
     current: "development",

@@ -4,6 +4,7 @@ import { expectToBeSome } from "./expectToBeSome";
 
 describe("expectToBeSome", () => {
   interface TestCase {
+    expected?: string | RegExp;
     input: O.Option<number> | undefined;
     name: string;
   }
@@ -23,15 +24,17 @@ describe("expectToBeSome", () => {
     {
       name: "throws for None",
       input: O.none,
+      expected: /falsy value/,
     },
     {
       name: "throws for undefined",
       input: undefined,
+      expected: "Expected value to be defined",
     },
-  ])("$name", ({ input }) => {
+  ])("$name", ({ input, expected }) => {
     expect(() => {
       expectToBeSome(input);
-    }).toThrow();
+    }).toThrow(expected);
   });
 
   it("narrows type", () => {

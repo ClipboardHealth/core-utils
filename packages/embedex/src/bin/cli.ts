@@ -33,12 +33,14 @@ if (verbose) {
   console.log(dim("cwd:\n  ", cwd));
 }
 
-embed({
-  cwd,
-  sourcesGlob,
-  write: !check,
-})
-  .then((result) => {
+void (async () => {
+  try {
+    const result = await embed({
+      cwd,
+      sourcesGlob,
+      write: !check,
+    });
+
     const output = processResult({ check, result, cwd, verbose });
     if (output.some((o) => o.isError)) {
       console.error(output.map((o) => o.message).join("\n"));
@@ -46,8 +48,8 @@ embed({
     } else {
       console.log(output.map((o) => o.message).join("\n"));
     }
-  })
-  .catch((error) => {
-    console.error(error.message);
+  } catch (error: unknown) {
+    console.error((error as Error).message);
     process.exit(1);
-  });
+  }
+})();

@@ -122,11 +122,17 @@ function readReport(filePath: string): LlmTestReport {
 }
 
 function firstTestEntry(report: LlmTestReport): LlmTestEntry {
-  return report.tests[0]!;
+  const [entry] = report.tests;
+  expect(entry).toBeDefined();
+  // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- oxlint no-non-null-assertion forbids !
+  return entry as LlmTestEntry;
 }
 
 function firstAttempt(report: LlmTestReport): AttemptResult {
-  return firstTestEntry(report).attempts[0]!;
+  const [attempt] = firstTestEntry(report).attempts;
+  expect(attempt).toBeDefined();
+  // eslint-disable-next-line @typescript-eslint/non-nullable-type-assertion-style -- oxlint no-non-null-assertion forbids !
+  return attempt as AttemptResult;
 }
 
 interface ZipFixtureEntry {
@@ -287,14 +293,14 @@ function writeTraceZipFixture(
   return tracePath;
 }
 
-describe("LlmReporter", () => {
+describe("llmReporter", () => {
   let outputDirectory: string;
   let outputFile: string;
 
   beforeEach(() => {
     outputDirectory = mkdtempSync(path.join(tmpdir(), "llm-reporter-test-"));
     outputFile = path.join(outputDirectory, "llm-report.json");
-    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    vi.spyOn(process.stdout, "write").mockReturnValue(true);
   });
 
   afterEach(() => {

@@ -102,9 +102,9 @@ describe("parse", () => {
       const result = parseJson<User>(jsonString);
 
       // These should have proper TypeScript types
-      expect(typeof result.id).toBe("number");
-      expect(typeof result.name).toBe("string");
-      expect(typeof result.active).toBe("boolean");
+      expectTypeOf(result.id).toBeNumber();
+      expectTypeOf(result.name).toBeString();
+      expectTypeOf(result.active).toBeBoolean();
 
       expect(result.id).toBe(123);
       expect(result.name).toBe("Bob");

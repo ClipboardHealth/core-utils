@@ -1,5 +1,5 @@
 import { NestFactory } from "@nestjs/core";
-import { type NestExpressApplication } from "@nestjs/platform-express";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import qs from "qs";
 
 import { AppModule } from "./app.module";

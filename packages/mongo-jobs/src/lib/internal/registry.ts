@@ -66,9 +66,7 @@ export class Registry {
     if (queueGroup) {
       queueGroup.add(queue);
     } else {
-      const newQueueGroup = new Set<string>();
-      newQueueGroup.add(queue);
-      this.queueGroups.set(group, newQueueGroup);
+      this.queueGroups.set(group, new Set<string>([queue]));
     }
   }
 
@@ -90,12 +88,12 @@ export class Registry {
   }
 
   public getQueuesForGroups(groups: string[]): string[] {
-    let result = new Array<string>();
+    const result = new Array<string>();
 
     for (const group of groups) {
       const queuesInGroup = this.queueGroups.get(group);
       if (queuesInGroup) {
-        result = [...result, ...queuesInGroup];
+        result.push(...queuesInGroup);
       }
     }
 

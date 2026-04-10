@@ -1,13 +1,13 @@
 import { type NonEmptyArray, type OneOrNonEmptyArray, toNonEmptyArray } from "./nonEmptyArray";
 
-describe("NonEmptyArray", () => {
+describe("nonEmptyArray", () => {
   it("should allow creation of a non-empty array", () => {
     const array: NonEmptyArray<number> = [1, 2, 3];
     expect(array).toEqual([1, 2, 3]);
   });
 });
 
-describe("OneOrNonEmptyArray", () => {
+describe("oneOrNonEmptyArray", () => {
   it("should allow a single value", () => {
     const value: OneOrNonEmptyArray<string> = "test";
     expect(value).toBe("test");

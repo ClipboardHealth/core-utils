@@ -18,7 +18,7 @@ const addMetadataIfContextIsPresent = () => {
   addToMetadataRecord("record", { recordKey2: "recordValue2" });
 };
 
-describe("Context Store", () => {
+describe("context Store", () => {
   it("should create a context that lives throughout the execution of a thread", async () => {
     await runWithExecutionContext(newExecutionContext("test"), async () => {
       addMetadataIfContextIsPresent();

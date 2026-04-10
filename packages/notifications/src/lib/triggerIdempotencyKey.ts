@@ -1,10 +1,10 @@
 import { isNil, stringify } from "@clipboard-health/util-ts";
-import { type Tagged } from "type-fest";
+import type { Tagged } from "type-fest";
 
-import {
-  type IdempotencyKeyParts,
+import type {
+  IdempotencyKeyParts,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type NotificationJobEnqueuer,
+  NotificationJobEnqueuer,
 } from "./notificationJobEnqueuer";
 
 /**

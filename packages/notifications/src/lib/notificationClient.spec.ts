@@ -1,6 +1,6 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type Logger, ServiceError } from "@clipboard-health/util-ts";
-import { type Knock } from "@knocklabs/node";
+import type { Knock } from "@knocklabs/node";
 import type { Mocked } from "vitest";
 
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
@@ -22,7 +22,7 @@ import type {
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
 
-describe("NotificationClient", () => {
+describe("notificationClient", () => {
   let client: NotificationClient;
   let mockLogger: Mocked<Logger>;
   let mockTracer: Mocked<Tracer>;
@@ -634,6 +634,7 @@ describe("NotificationClient", () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
+      // oxlint-disable-next-line jest/prefer-called-with -- intentionally checking only that trigger was called, not with what args
       expect(triggerSpy).toHaveBeenCalled();
     });
   });
@@ -1431,7 +1432,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeSuccess(result);
       expect(result.value.token).toBeDefined();
-      expect(typeof result.value.token).toBe("string");
+      expectTypeOf(result.value.token).toBeString();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.signUserToken request",
@@ -1471,7 +1472,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeSuccess(result);
       expect(result.value.token).toBeDefined();
-      expect(typeof result.value.token).toBe("string");
+      expectTypeOf(result.value.token).toBeString();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.signUserToken request",
@@ -1519,7 +1520,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeFailure(result);
       expect(result.error).toBeInstanceOf(ServiceError);
-      expect(result.error.issues[0]!.code).toBe("unknown");
+      expect(result.error.issues[0]?.code).toBe("unknown");
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/^notifications\.signUserToken \[unknown]/),

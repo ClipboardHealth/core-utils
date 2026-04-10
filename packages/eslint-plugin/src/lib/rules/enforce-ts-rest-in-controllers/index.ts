@@ -62,6 +62,7 @@ const rule = createRule({
        * `TsRestHandler` decorator and return the result of `tsRestHandler` as the
        * only expression in it.
        */
+      // oxlint-disable-next-line complexity
       MethodDefinition(node) {
         const symbolName =
           (node.key.type === AST_NODE_TYPES.Identifier && node.key.name) || "<unknown>";

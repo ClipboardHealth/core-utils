@@ -774,6 +774,7 @@ function extractTraceId(
   return responseHeaders?.["x-datadog-trace-id"] ?? requestHeaders?.["x-datadog-trace-id"];
 }
 
+// oxlint-disable-next-line complexity
 function buildNetworkRequestFromEvent(
   eventRecord: Record<string, unknown>,
   archiveEntries: Record<string, Uint8Array>,
@@ -879,7 +880,7 @@ function extractPageErrorText(eventRecord: Record<string, unknown>): string | un
     return undefined;
   }
 
-  const error = paramsRecord["error"];
+  const { error } = paramsRecord;
   const errorAsText = asString(error);
   if (errorAsText) {
     return errorAsText;
@@ -1173,18 +1174,31 @@ function buildTimeline(
     .filter(
       (request): request is NetworkRequest & { offsetMs: number } => request.offsetMs !== undefined,
     )
-    .map((request) => ({
-      kind: "network" as const,
-      offsetMs: request.offsetMs,
-      method: request.method,
-      url: request.url,
-      status: request.status,
-      ...(request.durationMs !== undefined && { durationMs: request.durationMs }),
-      ...(request.resourceType && { resourceType: request.resourceType }),
-      ...(request.traceId && { traceId: request.traceId }),
-      ...(request.failureText && { failureText: request.failureText }),
-      ...(request.wasAborted !== undefined && { wasAborted: request.wasAborted }),
-    }));
+    .map((request) => {
+      const entry: TimelineNetworkEntry = {
+        kind: "network",
+        offsetMs: request.offsetMs,
+        method: request.method,
+        url: request.url,
+        status: request.status,
+      };
+      if (request.durationMs !== undefined) {
+        entry.durationMs = request.durationMs;
+      }
+      if (request.resourceType) {
+        entry.resourceType = request.resourceType;
+      }
+      if (request.traceId) {
+        entry.traceId = request.traceId;
+      }
+      if (request.failureText) {
+        entry.failureText = request.failureText;
+      }
+      if (request.wasAborted !== undefined) {
+        entry.wasAborted = request.wasAborted;
+      }
+      return entry;
+    });
 
   const consoleEntries: TimelineConsoleEntry[] = consoleMessages
     .filter((entry): entry is ConsoleEntry & { offsetMs: number } => entry.offsetMs !== undefined)
@@ -1265,7 +1279,7 @@ export default class LlmReporter implements Reporter {
   }
 
   public onTestEnd(test: TestCase, result: TestResult): void {
-    const config = this.config;
+    const { config } = this;
     if (!config) {
       return;
     }
@@ -1273,7 +1287,7 @@ export default class LlmReporter implements Reporter {
     const file = path.relative(config.rootDir, test.location.file);
     const fullTitle = buildFullTitle(test);
     const project = test.parent.project()?.name ?? "";
-    const status: TestStatus = result.status;
+    const { status } = result;
     const retries = test.results.length - 1;
     const isFlaky = status === "passed" && retries > 0;
 
@@ -1356,7 +1370,7 @@ export default class LlmReporter implements Reporter {
 
   public onEnd(_result: FullResult): void {
     const durationMs = Date.now() - this.startTimeMs;
-    const config = this.config;
+    const { config } = this;
     if (!config) {
       // eslint-disable-next-line no-console
       console.error("LlmReporter: onEnd called without onBegin — skipping report.");
@@ -1376,9 +1390,9 @@ export default class LlmReporter implements Reporter {
 
     for (const entry of entries) {
       if (entry.flaky) {
-        summary.flaky++;
+        summary.flaky += 1;
       } else {
-        summary[entry.status]++;
+        summary[entry.status] += 1;
       }
     }
 

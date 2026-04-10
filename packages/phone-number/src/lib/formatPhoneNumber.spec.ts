@@ -60,8 +60,8 @@ describe("formatPhoneNumber", () => {
 
         expectToBeFailure(result);
         expect(result.error.issues).toHaveLength(1);
-        expect(result.error.issues[0]!.message).toBe(expectedError);
-        expect(result.error.issues[0]!.code).toBe("INVALID_PHONE_NUMBER");
+        expect(result.error.issues[0]?.message).toBe(expectedError);
+        expect(result.error.issues[0]?.code).toBe("INVALID_PHONE_NUMBER");
       },
     );
   });

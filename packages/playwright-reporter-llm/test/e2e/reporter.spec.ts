@@ -8,7 +8,7 @@ const testResultsDirectory = path.resolve(__dirname, "test-results");
 const reportPath = path.resolve(testResultsDirectory, "llm-report.json");
 const markerPath = path.resolve(testResultsDirectory, ".flaky-marker");
 
-describe("LLM Reporter E2E", () => {
+describe("lLM Reporter E2E", () => {
   let report: LlmTestReport;
 
   beforeAll(() => {
@@ -75,7 +75,7 @@ describe("LLM Reporter E2E", () => {
       expect(test.id).toBeDefined();
       expect(test.title).toBeDefined();
       expect(validStatuses).toContain(test.status);
-      expect(typeof test.flaky).toBe("boolean");
+      expectTypeOf(test.flaky).toBeBoolean();
       expect(test.durationMs).toBeGreaterThanOrEqual(0);
       expect(test.location.file).toBeDefined();
       expect(test.location.line).toBeGreaterThan(0);

@@ -19,7 +19,7 @@
 
    ```ts
    // triggerNotification.job.ts
-   import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
+   import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import {
      ERROR_CODES,
      type NotificationClient,
@@ -123,7 +123,7 @@
      provide: NOTIFICATION_CLIENT_TOKEN,
      useFactory: (): NotificationClient =>
        new NotificationClient({
-         apiKey: process.env["KNOCK_API_KEY"]!,
+         apiKey: process.env["KNOCK_API_KEY"] ?? "",
          logger: toLogger(
            new CBHLogger({
              defaultMeta: { context: "NotificationClient" },
@@ -158,8 +158,8 @@
    <embedex source="packages/notifications/examples/enqueueTriggerNotificationJob.ts">
 
    ```ts
-   import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
-   import { type SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
+   import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+   import type { SerializableTriggerChunkedRequest } from "@clipboard-health/notifications";
 
    import { BackgroundJobsService } from "./setup";
    import { TRIGGER_NOTIFICATION_JOB_NAME } from "./triggerNotification.constants";

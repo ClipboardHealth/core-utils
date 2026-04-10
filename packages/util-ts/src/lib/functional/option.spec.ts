@@ -1,7 +1,7 @@
 import * as O from "./option";
 import { pipe } from "./pipe";
 
-describe("Option", () => {
+describe("option", () => {
   it("none is not some", () => {
     const option = O.none;
 

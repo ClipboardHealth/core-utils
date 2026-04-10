@@ -4,13 +4,13 @@ import type { Registry } from "../src/lib/internal/registry";
 import { ExampleJob } from "./support/exampleJob";
 import { JobWithDependencies } from "./support/jobWithDependencies";
 
-describe("Registering background jobs", () => {
+describe("registering background jobs", () => {
   let backgroundJobs: BackgroundJobs;
   let registry: Registry;
 
   beforeEach(() => {
     backgroundJobs = new BackgroundJobs();
-    registry = backgroundJobs["registry"];
+    ({ registry } = backgroundJobs);
   });
 
   it("is possible to register a handler as an instance and then get the registered handler by name", () => {

@@ -9,7 +9,7 @@ const { mockSegment } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@segment/analytics-node", () => {
+vi.mock(import("@segment/analytics-node"), () => {
   class AnalyticsMock {
     public readonly identify = mockSegment.identify;
     public readonly track = mockSegment.track;
@@ -20,7 +20,7 @@ vi.mock("@segment/analytics-node", () => {
   };
 });
 
-describe("Analytics", () => {
+describe("analytics", () => {
   let logger: Logger;
   let analytics: Analytics;
 
@@ -108,6 +108,7 @@ describe("Analytics", () => {
 
       analytics.identify(request);
 
+      // oxlint-disable-next-line jest/prefer-called-with -- checking error was called, not specific args
       expect(logger.error).toHaveBeenCalled();
       expect(mockSegment.identify).toHaveBeenCalledWith({
         userId: "user123",

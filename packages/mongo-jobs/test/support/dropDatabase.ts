@@ -5,6 +5,12 @@ import mongoose from "mongoose";
  */
 export async function dropDatabase(uri: string): Promise<void> {
   await mongoose.connect(uri);
-  await mongoose.connection.db!.dropDatabase();
+
+  const { db } = mongoose.connection;
+  if (!db) {
+    throw new Error("Database connection not established");
+  }
+
+  await db.dropDatabase();
   await mongoose.disconnect();
 }

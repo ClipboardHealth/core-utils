@@ -34,7 +34,7 @@ function checkVariableNaming(codeLines: string[], issues: string[]): void {
   }
 }
 
-export default function (output: string): GradingResult {
+export default function gradeTestingRules(output: string): GradingResult {
   const issues: string[] = [];
   const codeLines = getCodeLines(output);
 

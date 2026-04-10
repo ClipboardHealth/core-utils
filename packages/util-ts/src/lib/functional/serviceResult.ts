@@ -1,4 +1,4 @@
-import { type SafeParseReturnType } from "zod";
+import type { SafeParseReturnType } from "zod";
 
 import { ServiceError, type ServiceErrorParams } from "../errors/serviceError";
 import { type Either, type Left, mapLeft, type Right } from "./either";

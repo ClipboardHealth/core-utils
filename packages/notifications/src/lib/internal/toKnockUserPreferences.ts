@@ -1,10 +1,10 @@
-import { type UserSetPreferencesParams } from "@knocklabs/node/resources/index";
-import { type PreferenceSetChannelTypes } from "@knocklabs/node/resources/recipients/preferences";
+import type { UserSetPreferencesParams } from "@knocklabs/node/resources/index";
+import type { PreferenceSetChannelTypes } from "@knocklabs/node/resources/recipients/preferences";
 
-import {
-  type ChannelTypePreferences,
-  type PreferenceOverrides,
-  type UpsertUserPreferencesRequest,
+import type {
+  ChannelTypePreferences,
+  PreferenceOverrides,
+  UpsertUserPreferencesRequest,
 } from "../types";
 
 function ifDefined<T>(value: unknown, partial: T) {

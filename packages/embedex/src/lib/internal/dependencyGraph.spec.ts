@@ -1,5 +1,9 @@
-import type { DependencyGraph } from "./dependencyGraph";
-import { buildDependencyGraph, detectCircularDependency, topologicalSort } from "./dependencyGraph";
+import {
+  buildDependencyGraph,
+  type DependencyGraph,
+  detectCircularDependency,
+  topologicalSort,
+} from "./dependencyGraph";
 import type { DestinationMap } from "./types";
 
 describe("dependencyGraph", () => {
@@ -216,13 +220,13 @@ describe("dependencyGraph", () => {
 
       const result = detectCircularDependency(graph);
 
-      expect(result).toBeDefined();
-      expect(result!.cycle).toHaveLength(3);
+      assertIsDefined(result);
+      expect(result.cycle).toHaveLength(3);
       // Cycle could be [A, B, A] or [B, A, B] depending on traversal order
       expect([
         ["A", "B", "A"],
         ["B", "A", "B"],
-      ]).toContainEqual(result!.cycle);
+      ]).toContainEqual(result.cycle);
     });
 
     it("detects 3-node cycle: A -> B -> C -> A", () => {
@@ -237,11 +241,11 @@ describe("dependencyGraph", () => {
 
       const result = detectCircularDependency(graph);
 
-      expect(result).toBeDefined();
-      expect(result!.cycle).toHaveLength(4);
+      assertIsDefined(result);
+      expect(result.cycle).toHaveLength(4);
       // Could start from any node in the cycle
-      const [first] = result!.cycle;
-      expect(result!.cycle.at(-1)).toBe(first);
+      const [first] = result.cycle;
+      expect(result.cycle.at(-1)).toBe(first);
     });
 
     it("detects cycle in larger graph with non-cyclic parts", () => {
@@ -261,8 +265,8 @@ describe("dependencyGraph", () => {
 
       const result = detectCircularDependency(graph);
 
-      expect(result).toBeDefined();
-      expect(result!.cycle.length).toBeGreaterThan(2);
+      assertIsDefined(result);
+      expect(result.cycle.length).toBeGreaterThan(2);
     });
 
     it("returns undefined for diamond dependency (not a cycle)", () => {
@@ -462,6 +466,10 @@ describe("dependencyGraph", () => {
     });
   });
 });
+
+function assertIsDefined<T>(value: T | undefined): asserts value is T {
+  expect(value).toBeDefined();
+}
 
 function createDestinationMap(
   entries: Array<[destination: string, sources: string[]]>,

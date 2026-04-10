@@ -1,4 +1,4 @@
-import { type ReadonlyDeep } from "type-fest";
+import type { ReadonlyDeep } from "type-fest";
 
 export interface RuleContext<TInput, TOutput> {
   /**

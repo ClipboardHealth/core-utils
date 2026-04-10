@@ -1,7 +1,7 @@
 export type BackgroundJobsImplementation = "mongo" | "postgres";
 
 export interface Handler<TData> {
-  perform(data: TData, job?: unknown): Promise<string | void>;
+  perform(data: TData, job?: unknown): Promise<string | undefined>;
 }
 
 /**

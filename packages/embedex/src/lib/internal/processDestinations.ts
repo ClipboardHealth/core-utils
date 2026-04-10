@@ -2,7 +2,7 @@ import path from "node:path";
 
 import type { Embed } from "../types";
 import { stripSourceMarker } from "./createSourceMap";
-import { type Destination, type DestinationMap, type SourceMap } from "./types";
+import type { Destination, DestinationMap, SourceMap } from "./types";
 
 const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
   cjs: "js",
@@ -70,7 +70,7 @@ function processDestination(params: {
   // Strip source marker from updated content to ensure clean processing
   /* istanbul ignore next - defensive: destination typically not in updatedContentMap during processing */
   let content = updatedContentMap?.has(destination)
-    ? stripSourceMarker(updatedContentMap.get(destination)!)
+    ? stripSourceMarker(updatedContentMap.get(destination) ?? "")
     : originalContent;
 
   // Normalize CRLF to LF to ensure consistent processing across platforms
@@ -134,7 +134,11 @@ function processDestination(params: {
   let updatedContent = content;
   for (const { fullMatch, prefix, sourcePath } of uniqueMatches) {
     const absoluteSourcePath = absolutePath(sourcePath);
-    const sourceFromMap = sourceMap.get(absoluteSourcePath)!;
+    const sourceFromMap = sourceMap.get(absoluteSourcePath);
+    /* istanbul ignore next */
+    if (!sourceFromMap) {
+      continue;
+    }
 
     // If the source is also a destination that was updated earlier, use its updated content
     // and strip the source marker line if present

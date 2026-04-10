@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 
 import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
 
-describe("ServiceError", () => {
+describe("serviceError", () => {
   describe("fromZodLike", () => {
     it("converts ZodLike to ServiceError", () => {
       const input = new ZodError([
