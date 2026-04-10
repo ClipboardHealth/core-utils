@@ -106,6 +106,7 @@ persist_claude_env() {
     echo "$begin"
     if command -v nvm >/dev/null 2>&1 \
       && node_dir="$(dirname "$(nvm which current)" 2>/dev/null)" \
+      && [[ -n "${NVM_DIR:-}" ]] \
       && [[ "$node_dir" == "$NVM_DIR"/* ]]; then
       echo "export PATH=\"$node_dir:\$PATH\""
     fi
