@@ -50,7 +50,7 @@ describe("oxlint-config", () => {
         },
       });
 
-      expect(base.overrides).toHaveLength(1);
+      expect(base.overrides).toHaveLength(2);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
@@ -65,11 +65,15 @@ describe("oxlint-config", () => {
 
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
+        rules: {
+          "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+        },
       });
 
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
           "vitest/prefer-importing-vitest-globals": "off",
           "vitest/prefer-to-be-falsy": "off",
           "vitest/prefer-to-be-truthy": "off",

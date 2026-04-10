@@ -42,6 +42,7 @@
     "no-continue": "off",
     "no-inline-comments": "off",
     "no-magic-numbers": "off",
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-named-export": "off",
     "no-ternary": "off",
     "no-undef": "off",
@@ -82,6 +83,13 @@
         "no-console": "off",
         "node/no-process-env": "off",
         "unicorn/no-process-exit": "off"
+      }
+    },
+    {
+      "files": ["**/*.js", "**/*.cjs"],
+      "rules": {
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off"
       }
     }
   ]
