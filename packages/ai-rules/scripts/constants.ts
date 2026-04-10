@@ -1,6 +1,5 @@
 import path from "node:path";
 
-// Root directory of the ai-rules package
 const PACKAGE_ROOT = path.join(__dirname, "..");
 export const PATHS = {
   packageRoot: PACKAGE_ROOT,
