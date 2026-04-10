@@ -210,6 +210,34 @@ describe("optionalEnum", () => {
   });
 });
 
+describe("rejects widened string[] at compile time", () => {
+  const widened = ["a", "b"];
+
+  it("requiredEnum", () => {
+    // @ts-expect-error: widened string[] should not be accepted
+    const schema = requiredEnum(widened);
+    expect(schema).toBeDefined();
+  });
+
+  it("optionalEnum", () => {
+    // @ts-expect-error: widened string[] should not be accepted
+    const schema = optionalEnum(widened);
+    expect(schema).toBeDefined();
+  });
+
+  it("requiredEnumWithFallback", () => {
+    // @ts-expect-error: widened string[] should not be accepted
+    const schema = requiredEnumWithFallback(widened);
+    expect(schema).toBeDefined();
+  });
+
+  it("optionalEnumWithFallback", () => {
+    // @ts-expect-error: widened string[] should not be accepted
+    const schema = optionalEnumWithFallback(widened);
+    expect(schema).toBeDefined();
+  });
+});
+
 describe("accepts readonly values directly without spreading", () => {
   const STATUSES = ["active", "inactive"] as const;
   // Simulates a new enum value the producer added but this consumer

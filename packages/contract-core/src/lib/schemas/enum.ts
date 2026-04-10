@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 type EnumValues = readonly [string, ...string[]];
+type NarrowEnum<V extends EnumValues> = string extends V[number] ? never : V;
 
 /**
  * A business-context-neutral sentinel returned when an enum field
@@ -18,12 +19,12 @@ type EnumFallback = typeof ENUM_FALLBACK;
  * - Invalid values are coerced to ENUM_FALLBACK ("UNRECOGNIZED_")
  */
 export function enumWithFallback<const V extends EnumValues>(
-  values: V,
+  values: NarrowEnum<V>,
   options?: { optional?: false },
 ): z.ZodEffects<z.ZodEnum<[...V, EnumFallback]>, V[number] | EnumFallback, unknown>;
 
 export function enumWithFallback<const V extends EnumValues>(
-  values: V,
+  values: NarrowEnum<V>,
   options: { optional: true },
 ): z.ZodEffects<
   z.ZodOptional<z.ZodEnum<[...V, EnumFallback]>>,
@@ -56,20 +57,20 @@ export function enumWithFallback<const V extends EnumValues>(
   }, schema);
 }
 
-export function requiredEnumWithFallback<const V extends EnumValues>(values: V) {
+export function requiredEnumWithFallback<const V extends EnumValues>(values: NarrowEnum<V>) {
   return enumWithFallback(values, { optional: false });
 }
 
-export function optionalEnumWithFallback<const V extends EnumValues>(values: V) {
+export function optionalEnumWithFallback<const V extends EnumValues>(values: NarrowEnum<V>) {
   return enumWithFallback(values, { optional: true });
 }
 
-export function requiredEnum<const V extends EnumValues>(values: V): z.ZodEnum<[...V]> {
+export function requiredEnum<const V extends EnumValues>(values: NarrowEnum<V>): z.ZodEnum<[...V]> {
   return z.enum([...values]);
 }
 
 export function optionalEnum<const V extends EnumValues>(
-  values: V,
+  values: NarrowEnum<V>,
 ): z.ZodOptional<z.ZodEnum<[...V]>> {
   return z.enum([...values]).optional();
 }
