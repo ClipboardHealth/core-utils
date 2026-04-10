@@ -1,6 +1,7 @@
 // embedex: packages/notifications/examples/usage.md,packages/notifications/src/lib/notificationClient.ts
 // triggerNotification.job.ts
-import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
+// oxlint-disable-next-line typescript/no-import-type-side-effects
+import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
 import {
   ERROR_CODES,
   type NotificationClient,
@@ -49,7 +50,7 @@ export class TriggerNotificationJob implements BaseHandler<SerializableTriggerCh
      *    `id`, `retryAttempts`, and `idempotencyKey`.
      */
     job: { _id: string; attemptsCount: number; uniqueKey?: string },
-  ) {
+  ): Promise<string | undefined> {
     const metadata = {
       // For background-jobs-postgres, this is called `retryAttempts`.
       attempt: job.attemptsCount + 1,
@@ -81,6 +82,7 @@ export class TriggerNotificationJob implements BaseHandler<SerializableTriggerCh
       const success = "TriggerNotificationJob success";
       this.logger.info(success, { ...metadata, response: result.value });
       // For background-jobs-postgres, return the `success` string result.
+      return undefined;
     } catch (error) {
       this.logger.error("TriggerNotificationJob failure", { ...metadata, error });
       throw error;

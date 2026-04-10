@@ -9,7 +9,8 @@ const { mockSegment } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock(import("@segment/analytics-node"), () => {
+// oxlint-disable-next-line typescript/consistent-type-imports, jest/no-untyped-mock-factory, vitest/prefer-import-in-mock -- import() form causes TS overload mismatch
+vi.mock("@segment/analytics-node", () => {
   class AnalyticsMock {
     public readonly identify = mockSegment.identify;
     public readonly track = mockSegment.track;

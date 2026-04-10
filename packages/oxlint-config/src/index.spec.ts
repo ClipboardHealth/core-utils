@@ -539,8 +539,8 @@ function getFirstOverrideFiles(config: {
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
   vi.resetModules();
-  // oxlint-disable-next-line jest/no-untyped-mock-factory -- conflicts with consistent-type-imports
-  vi.doMock(import("node:fs"), () => ({
+  // oxlint-disable-next-line jest/no-untyped-mock-factory, typescript/consistent-type-imports, vitest/prefer-import-in-mock -- import() form causes TS overload mismatch
+  vi.doMock("node:fs", () => ({
     readFileSync: vi.fn(() => JSON.stringify(baseJson)),
   }));
 
