@@ -38,10 +38,10 @@ export class Metrics {
 
     this.started = true;
 
-    void this.reportMetrics();
+    this.reportMetricsSafely();
 
     this.reportingInterval = setInterval(() => {
-      void this.reportMetrics();
+      this.reportMetricsSafely();
     }, REPORTING_PERIOD_MILLIS);
   }
 
@@ -114,6 +114,16 @@ export class Metrics {
 
   private sendGaugeMetric(queue: string, state: string, value: number) {
     this.reporter.gauge(`queue.${state}`, value, { queue });
+  }
+
+  private reportMetricsSafely(): void {
+    void (async () => {
+      try {
+        await this.reportMetrics();
+      } catch {
+        // Ignore rejections from detached metrics reporting.
+      }
+    })();
   }
 
   private scheduledJobsQuery(queue: string): mongoose.FilterQuery<BackgroundJobType<unknown>> {

@@ -37,7 +37,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
   async startQueuesRefresh(interval: number) {
     await this.refreshActionableQueuesFromDB();
     this.refreshQueuesInterval = setInterval(() => {
-      void this.refreshActionableQueuesFromDB();
+      this.refreshActionableQueuesFromDBSafely();
     }, interval);
   }
 
@@ -117,6 +117,16 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
 
   getConsumedQueues(): string[] {
     return [...this.consumedQueues];
+  }
+
+  private refreshActionableQueuesFromDBSafely(): void {
+    void (async () => {
+      try {
+        await this.refreshActionableQueuesFromDB();
+      } catch {
+        // Ignore rejections from detached queue refreshes.
+      }
+    })();
   }
 
   private promoteQueues() {
