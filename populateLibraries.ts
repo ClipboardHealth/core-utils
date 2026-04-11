@@ -18,6 +18,10 @@ interface FileUpdate {
   formatLine: (entry: LibraryEntry) => string;
 }
 
+interface PackageMetadata {
+  description?: string;
+}
+
 const FILES: FileUpdate[] = [
   {
     path: join(__dirname, "README.md"),
@@ -41,7 +45,7 @@ async function getLibraryEntries(): Promise<LibraryEntry[]> {
   const results = await Promise.allSettled(
     directories.map(async (dirent) => {
       const path = join(__dirname, "packages", dirent.name, "package.json");
-      const parsed: { description?: string } = JSON.parse(await readFile(path, UTF8));
+      const parsed = parsePackageMetadata(await readFile(path, UTF8));
       return { name: dirent.name, description: parsed.description ?? "" };
     }),
   );
@@ -61,6 +65,19 @@ async function getLibraryEntries(): Promise<LibraryEntry[]> {
       (result): result is PromiseFulfilledResult<LibraryEntry> => result.status === "fulfilled",
     )
     .map((result) => result.value);
+}
+
+function parsePackageMetadata(value: string): PackageMetadata {
+  const parsed: unknown = JSON.parse(value);
+  if (typeof parsed !== "object" || parsed === null) {
+    return {};
+  }
+
+  if (!("description" in parsed)) {
+    return {};
+  }
+
+  return typeof parsed.description === "string" ? { description: parsed.description } : {};
 }
 
 async function updateFile(file: FileUpdate, entries: readonly LibraryEntry[]): Promise<void> {

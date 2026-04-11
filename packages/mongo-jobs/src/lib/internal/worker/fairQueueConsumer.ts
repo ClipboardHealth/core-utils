@@ -36,8 +36,8 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
 
   async startQueuesRefresh(interval: number) {
     await this.refreshActionableQueuesFromDB();
-    this.refreshQueuesInterval = setInterval(async () => {
-      await this.refreshActionableQueuesFromDB();
+    this.refreshQueuesInterval = setInterval(() => {
+      void this.refreshActionableQueuesFromDB();
     }, interval);
   }
 

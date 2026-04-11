@@ -69,11 +69,20 @@ function parseEnvironmentVariable(value: unknown, schema: z.ZodType<unknown>): u
   return value;
 }
 
+function isZodObject(
+  schema: z.ZodType<unknown>,
+): schema is z.ZodObject<Record<string, z.ZodType<unknown>>> {
+  return schema instanceof z.ZodObject;
+}
+
 function getSchema(path: readonly string[], schema: z.ZodType<unknown>): z.ZodType<unknown> {
-  return path.reduce(
-    (result, key) =>
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      result instanceof z.ZodObject ? result.shape[key] : /* istanbul ignore next */ result,
-    schema,
-  );
+  return path.reduce((result, key) => {
+    /* c8 ignore next 3 */
+    if (!isZodObject(result)) {
+      return result;
+    }
+
+    /* c8 ignore next */
+    return result.shape[key] ?? result;
+  }, schema);
 }

@@ -7,10 +7,10 @@
   "include": [],
   "references": [
     {
-      "path": "./tsconfig.build.json"
+      "path": "./tsconfig.lint.json"
     },
     {
-      "path": "./tsconfig.lint.json"
+      "path": "./tsconfig.build.json"
     },
     {
       "path": "./tsconfig.spec.json"

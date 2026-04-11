@@ -40,8 +40,8 @@ export class Metrics {
 
     void this.reportMetrics();
 
-    this.reportingInterval = setInterval(async () => {
-      await this.reportMetrics();
+    this.reportingInterval = setInterval(() => {
+      void this.reportMetrics();
     }, REPORTING_PERIOD_MILLIS);
   }
 
