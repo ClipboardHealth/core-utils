@@ -35,7 +35,11 @@ describe("NotificationClient", () => {
       error: vi.fn<LogFunction>(),
     };
     mockTracer = {
-      trace: vi.fn().mockImplementation((_name, _options, fun: (span?: Span) => unknown) => fun({ addTags: vi.fn() })),
+      trace: vi
+        .fn()
+        .mockImplementation((_name, _options, fun: (span?: Span) => unknown) =>
+          fun({ addTags: vi.fn() }),
+        ),
     } as unknown as Mocked<Tracer>;
     provider = new IdempotentKnock({ apiKey: "test-api-key", logger: mockLogger });
 
