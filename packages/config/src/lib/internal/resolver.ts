@@ -81,7 +81,7 @@ function getSchema(
 ): z.ZodType<unknown> | undefined {
   return path.reduce<z.ZodType<unknown> | undefined>((result, key) => {
     if (!isZodObject(result)) {
-      return result;
+      return;
     }
 
     return result.shape[key];

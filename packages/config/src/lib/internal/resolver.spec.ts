@@ -115,9 +115,9 @@ describe("resolver", () => {
       holidays: ["2024-01-01"],
     });
 
-    process.env["HOLIDAYS"] = undefined;
-    process.env["DATABASE_HOST"] = undefined;
-    process.env["DATABASE_PORT"] = undefined;
+    delete process.env["HOLIDAYS"];
+    delete process.env["DATABASE_HOST"];
+    delete process.env["DATABASE_PORT"];
   });
 
   it("handles non-object schemas", () => {
@@ -136,7 +136,7 @@ describe("resolver", () => {
       items: ["override1", "override2"],
     });
 
-    process.env["ITEMS"] = undefined;
+    delete process.env["ITEMS"];
   });
 
   describe("array parsing", () => {
@@ -160,7 +160,7 @@ describe("resolver", () => {
         items: ["a", "b", "c"],
       });
 
-      process.env["ITEMS"] = undefined;
+      delete process.env["ITEMS"];
     });
 
     it("returns original string when JSON parsing fails", () => {
@@ -183,7 +183,7 @@ describe("resolver", () => {
         items: "not-json",
       });
 
-      process.env["ITEMS"] = undefined;
+      delete process.env["ITEMS"];
     });
 
     it("returns original value for non-array schemas", () => {
@@ -202,7 +202,7 @@ describe("resolver", () => {
         value: "123",
       });
 
-      process.env["VALUE"] = undefined;
+      delete process.env["VALUE"];
     });
 
     it("does not fall back to a parent schema when a nested key is missing", () => {
@@ -253,7 +253,42 @@ describe("resolver", () => {
         },
       });
 
-      process.env["DATABASE_MISSING_VALUE"] = undefined;
+      delete process.env["DATABASE_MISSING_VALUE"];
+    });
+
+    it("does not keep using a non-object schema when the path has extra segments", () => {
+      process.env["DATABASE_EXTRA"] = '["a", "b"]';
+
+      const schemaWithExtraSegment = z.object({
+        database: z.array(z.string()),
+      }) as unknown as z.ZodType<{
+        database: {
+          extra: string;
+        };
+      }>;
+
+      const config = {
+        database: {
+          extra: {
+            defaultValue: "",
+            description: "Extra nested value",
+          },
+        },
+      };
+
+      const actual = resolve({
+        ...params,
+        config,
+        schema: schemaWithExtraSegment,
+      });
+
+      expect(actual).toEqual({
+        database: {
+          extra: '["a", "b"]',
+        },
+      });
+
+      delete process.env["DATABASE_EXTRA"];
     });
   });
 
@@ -307,10 +342,10 @@ describe("resolver", () => {
         maxRetryCount: "5",
       });
 
-      process.env["DATE_ARRAY"] = undefined;
-      process.env["MAX_RETRY_COUNT"] = undefined;
-      process.env["DATABASE_HOST_NAME"] = undefined;
-      process.env["DATABASE_MAX_CONNECTIONS"] = undefined;
+      delete process.env["DATE_ARRAY"];
+      delete process.env["MAX_RETRY_COUNT"];
+      delete process.env["DATABASE_HOST_NAME"];
+      delete process.env["DATABASE_MAX_CONNECTIONS"];
     });
 
     it("handles environment variables without prefix", () => {
@@ -332,7 +367,7 @@ describe("resolver", () => {
         dateArray: ["2024-01-01"],
       });
 
-      process.env["DATE_ARRAY"] = undefined;
+      delete process.env["DATE_ARRAY"];
     });
   });
 });
