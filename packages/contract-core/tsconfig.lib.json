@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "declaration": true,
     "types": ["node"],
     "stripInternal": true

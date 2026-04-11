@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "declaration": true,
     "resolveJsonModule": true,
     "types": ["node"]

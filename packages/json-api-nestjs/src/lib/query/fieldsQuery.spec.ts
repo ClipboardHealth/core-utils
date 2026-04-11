@@ -2,7 +2,8 @@ import {
   expectToBeSafeParseError,
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
-import { type Arrayable } from "type-fest";
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
+import type { Arrayable } from "type-fest";
 import { z } from "zod";
 
 import { fieldsQuery } from "./fieldsQuery";

@@ -117,7 +117,13 @@
       }
     },
     {
-      "files": ["**/*.spec.ts", "**/*.test.ts", "**/test/**/*.ts", "**/examples/**/*.ts"],
+      "files": [
+        "**/*.spec.ts",
+        "**/*.test.ts",
+        "**/test/**/*.ts",
+        "**/examples/**/*.ts",
+        "packages/config/src/lib/internal/resolver.ts"
+      ],
       "rules": {
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-call": "off",

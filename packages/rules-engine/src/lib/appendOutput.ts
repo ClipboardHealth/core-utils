@@ -1,4 +1,5 @@
-import { type ReadonlyDeep } from "type-fest";
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
+import type { ReadonlyDeep } from "type-fest";
 
 import { type RuleContext } from "./rule";
 

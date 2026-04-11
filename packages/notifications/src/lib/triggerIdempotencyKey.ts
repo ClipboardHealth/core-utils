@@ -1,5 +1,6 @@
 import { isNil, stringify } from "@clipboard-health/util-ts";
-import { type Tagged } from "type-fest";
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
+import type { Tagged } from "type-fest";
 
 import {
   type IdempotencyKeyParts,

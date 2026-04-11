@@ -1,4 +1,5 @@
-import { type Arrayable } from "type-fest";
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
+import type { Arrayable } from "type-fest";
 
 export type ApiType = string;
 

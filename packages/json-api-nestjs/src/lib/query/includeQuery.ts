@@ -1,4 +1,5 @@
-import { type GreaterThan, type Subtract } from "type-fest";
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
+import type { GreaterThan, Subtract } from "type-fest";
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
