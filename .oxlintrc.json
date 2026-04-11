@@ -129,6 +129,25 @@
         "typescript/no-unsafe-call": "off",
         "typescript/no-unsafe-member-access": "off"
       }
+    },
+    {
+      "files": [
+        "packages/json-api-nestjs/src/lib/query/fieldsQuery.spec.ts",
+        "packages/json-api-nestjs/src/lib/query/includeQuery.ts",
+        "packages/json-api-nestjs/src/lib/types.ts",
+        "packages/notifications/src/lib/triggerIdempotencyKey.ts",
+        "packages/oxlint-config/src/internal/createOxlintConfig.ts",
+        "packages/oxlint-config/src/internal/presets.ts",
+        "packages/oxlint-config/src/internal/types.ts",
+        "packages/rules-engine/src/lib/appendOutput.ts",
+        "packages/rules-engine/src/lib/rule.ts",
+        "packages/util-ts/src/lib/errors/cbhError.ts",
+        "packages/util-ts/src/lib/functional/cbhResponse.ts"
+      ],
+      "rules": {
+        "typescript/ban-ts-comment": "off",
+        "typescript/prefer-ts-expect-error": "off"
+      }
     }
   ]
 }

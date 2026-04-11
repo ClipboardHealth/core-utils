@@ -1,5 +1,5 @@
 import { isNil, stringify } from "@clipboard-health/util-ts";
-// @ts-expect-error TS1541 type-only import from ESM package in CJS context
+// @ts-ignore TS1541 type-only import from ESM package in CJS context
 import type { Tagged } from "type-fest";
 
 import {
