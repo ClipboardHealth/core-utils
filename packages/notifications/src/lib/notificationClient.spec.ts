@@ -1,5 +1,5 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
-import { type Logger, ServiceError } from "@clipboard-health/util-ts";
+import { type LogFunction, type Logger, ServiceError } from "@clipboard-health/util-ts";
 import { type Knock } from "@knocklabs/node";
 import type { Mocked } from "vitest";
 
@@ -30,15 +30,13 @@ describe("NotificationClient", () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
+      info: vi.fn<LogFunction>(),
+      warn: vi.fn<LogFunction>(),
+      error: vi.fn<LogFunction>(),
     };
     mockTracer = {
-      trace: vi
-        .fn()
-        .mockImplementation((_name, _options, fun) => fun({ addTags: vi.fn() }) as unknown),
-    };
+      trace: vi.fn().mockImplementation((_name, _options, fun) => fun({ addTags: vi.fn() })),
+    } as unknown as Mocked<Tracer>;
     provider = new IdempotentKnock({ apiKey: "test-api-key", logger: mockLogger });
 
     client = new NotificationClient({
