@@ -204,6 +204,57 @@ describe("resolver", () => {
 
       process.env["VALUE"] = undefined;
     });
+
+    it("does not fall back to a parent schema when a nested key is missing", () => {
+      process.env["DATABASE_MISSING_VALUE"] = '["a", "b"]';
+
+      // The runtime schema intentionally omits `missing` to verify lookup behavior when a config
+      // path contains keys that are absent from the schema tree.
+      const schemaWithMissingPath = z.object({
+        database: z.object({
+          value: z.array(z.string()),
+        }),
+      }) as unknown as z.ZodType<{
+        database: {
+          missing: {
+            value: string;
+          };
+          value: string[];
+        };
+      }>;
+
+      const config = {
+        database: {
+          value: {
+            defaultValue: [],
+            description: "Known value",
+          },
+          missing: {
+            value: {
+              defaultValue: "",
+              description: "Missing nested value",
+            },
+          },
+        },
+      };
+
+      const actual = resolve({
+        ...params,
+        config,
+        schema: schemaWithMissingPath,
+      });
+
+      expect(actual).toEqual({
+        database: {
+          value: [],
+          missing: {
+            value: '["a", "b"]',
+          },
+        },
+      });
+
+      process.env["DATABASE_MISSING_VALUE"] = undefined;
+    });
   });
 
   describe("environment variable names", () => {
