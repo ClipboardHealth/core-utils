@@ -1,4 +1,4 @@
-// @ts-ignore TS1541 type-only import from ESM package in CJS context
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
 import type { GreaterThan, Subtract } from "type-fest";
 import { z } from "zod";
 

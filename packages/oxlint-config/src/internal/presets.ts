@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-// @ts-ignore TS1541 type-only import from ESM package in CJS context
+// @ts-expect-error TS1541 type-only import from ESM package in CJS context
 import type { AllowWarnDeny, DummyRule, OxlintConfig, OxlintOverride } from "oxlint";
 
 import type { OxlintPreset } from "./types";
