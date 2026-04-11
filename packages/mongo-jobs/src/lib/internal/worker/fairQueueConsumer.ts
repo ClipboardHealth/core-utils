@@ -138,7 +138,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
 
   private async removeQueueFromActionable(queue: string) {
     this.actionableQueues.remove(queue);
-    void this.refreshQueueFutureActionableAt(queue);
+    this.refreshQueueFutureActionableAtSafely(queue);
   }
 
   private async refreshQueueFutureActionableAt(queue: string) {
@@ -158,6 +158,16 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     if (nextRunAt < new Date()) {
       this.dispatchNewJobEvent();
     }
+  }
+
+  private refreshQueueFutureActionableAtSafely(queue: string): void {
+    void (async () => {
+      try {
+        await this.refreshQueueFutureActionableAt(queue);
+      } catch {
+        // Ignore rejections from detached queue future refreshes.
+      }
+    })();
   }
 
   private dispatchNewJobEvent() {
