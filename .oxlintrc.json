@@ -12,7 +12,7 @@
   ],
   "options": {
     "reportUnusedDisableDirectives": "off",
-    "typeAware": false,
+    "typeAware": true,
     "typeCheck": false
   },
   "settings": {
@@ -48,14 +48,25 @@
     "promise/always-return": "off",
     "typescript/array-type": "off",
     "typescript/ban-types": "off",
+    "typescript/consistent-return": "off",
     "typescript/dot-notation": "off",
+    "typescript/no-deprecated": "off",
     "typescript/no-extraneous-class": "off",
     "typescript/no-import-type-side-effects": "off",
     "typescript/no-invalid-void-type": "off",
     "typescript/no-non-null-assertion": "off",
+    "typescript/no-unnecessary-condition": "off",
+    "typescript/no-unnecessary-type-arguments": "off",
+    "typescript/no-unnecessary-type-conversion": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/prefer-includes": "off",
+    "typescript/prefer-promise-reject-errors": "off",
     "typescript/prefer-regexp-exec": "off",
+    "typescript/require-await": "off",
+    "typescript/strict-void-return": "off",
+    "typescript/unbound-method": "off",
+    "typescript/use-unknown-in-catch-callback-variable": "off",
     "unicorn/consistent-function-scoping": "off",
     "unicorn/no-anonymous-default-export": "off",
     "unicorn/no-array-sort": "off",
@@ -80,6 +91,15 @@
   },
   "overrides": [
     {
+      "files": ["**/*.spec.ts", "**/*.test.ts"],
+      "rules": {
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
+      }
+    },
+    {
       "files": [
         "**/.claude/**/*.ts",
         "**/examples/**/*.js",
@@ -90,7 +110,12 @@
         "populateLibraries.ts"
       ],
       "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
       }
     },
     {

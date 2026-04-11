@@ -36,8 +36,8 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
 
   async startQueuesRefresh(interval: number) {
     await this.refreshActionableQueuesFromDB();
-    this.refreshQueuesInterval = setInterval(async () => {
-      await this.refreshActionableQueuesFromDB();
+    this.refreshQueuesInterval = setInterval(() => {
+      this.refreshActionableQueuesFromDBSafely();
     }, interval);
   }
 
@@ -119,6 +119,16 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     return [...this.consumedQueues];
   }
 
+  private refreshActionableQueuesFromDBSafely(): void {
+    void (async () => {
+      try {
+        await this.refreshActionableQueuesFromDB();
+      } catch {
+        // Ignore rejections from detached queue refreshes.
+      }
+    })();
+  }
+
   private promoteQueues() {
     const queuesToPromote = this.futureQueues.acquireCurrentlyActionable();
     for (const queue of queuesToPromote) {
@@ -128,7 +138,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
 
   private async removeQueueFromActionable(queue: string) {
     this.actionableQueues.remove(queue);
-    void this.refreshQueueFutureActionableAt(queue);
+    this.refreshQueueFutureActionableAtSafely(queue);
   }
 
   private async refreshQueueFutureActionableAt(queue: string) {
@@ -148,6 +158,16 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     if (nextRunAt < new Date()) {
       this.dispatchNewJobEvent();
     }
+  }
+
+  private refreshQueueFutureActionableAtSafely(queue: string): void {
+    void (async () => {
+      try {
+        await this.refreshQueueFutureActionableAt(queue);
+      } catch {
+        // Ignore rejections from detached queue future refreshes.
+      }
+    })();
   }
 
   private dispatchNewJobEvent() {

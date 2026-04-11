@@ -57,7 +57,7 @@ function resolveConfigValue(params: ResolveConfigValueParams): unknown {
   return value.defaultValue;
 }
 
-function parseEnvironmentVariable(value: unknown, schema: z.ZodType<unknown>): unknown {
+function parseEnvironmentVariable(value: unknown, schema: z.ZodType<unknown> | undefined): unknown {
   if (schema instanceof z.ZodArray && typeof value === "string") {
     try {
       return JSON.parse(value);
@@ -69,11 +69,21 @@ function parseEnvironmentVariable(value: unknown, schema: z.ZodType<unknown>): u
   return value;
 }
 
-function getSchema(path: readonly string[], schema: z.ZodType<unknown>): z.ZodType<unknown> {
-  return path.reduce(
-    (result, key) =>
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      result instanceof z.ZodObject ? result.shape[key] : /* istanbul ignore next */ result,
-    schema,
-  );
+function isZodObject(
+  schema: z.ZodType<unknown> | undefined,
+): schema is z.ZodObject<Record<string, z.ZodType<unknown>>> {
+  return schema instanceof z.ZodObject;
+}
+
+function getSchema(
+  path: readonly string[],
+  schema: z.ZodType<unknown>,
+): z.ZodType<unknown> | undefined {
+  return path.reduce<z.ZodType<unknown> | undefined>((result, key) => {
+    if (!isZodObject(result)) {
+      return;
+    }
+
+    return result.shape[key];
+  }, schema);
 }
