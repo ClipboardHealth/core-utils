@@ -33,7 +33,7 @@ describe(expectToBeSafeParseError, () => {
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeSafeParseError(input);
-    }).toThrow();
+    }).toThrow(/Expected/);
   });
 
   it("narrows type", () => {

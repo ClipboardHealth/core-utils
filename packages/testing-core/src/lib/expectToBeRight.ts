@@ -13,5 +13,5 @@ export function expectToBeRight<A, E>(
   value: E.Either<E, A> | undefined,
 ): asserts value is E.Right<A> {
   expectToBeDefined(value);
-  ok(E.isRight(value));
+  ok(E.isRight(value), "Expected Right, got Left");
 }

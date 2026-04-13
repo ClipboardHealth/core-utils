@@ -31,7 +31,7 @@ describe(expectToBeNone, () => {
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeNone(input);
-    }).toThrow();
+    }).toThrow(/Expected/);
   });
 
   it("narrows type", () => {

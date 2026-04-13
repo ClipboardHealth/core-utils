@@ -53,7 +53,7 @@ describe(forEachAsyncSequentially, () => {
       })
       .mockRejectedValueOnce(new Error("Test error"));
 
-    await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow();
+    await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow("Test error");
 
     expect(actual).toStrictEqual([1]);
   });

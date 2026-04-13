@@ -17,7 +17,6 @@
     "oxc/no-barrel-file": "off",
 
     // TODO: To fix
-    "jest/require-to-throw-message": "off",
     "vitest/consistent-test-filename": "off",
     "vitest/require-mock-type-parameters": "off",
     "typescript/strict-boolean-expressions": "off",
