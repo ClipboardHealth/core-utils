@@ -22,7 +22,7 @@ describe("oxlint-config", () => {
 
       expect(base.categories).toStrictEqual({
         correctness: "error",
-        nursery: "error",
+        nursery: "off",
         pedantic: "error",
         perf: "error",
         restriction: "error",
