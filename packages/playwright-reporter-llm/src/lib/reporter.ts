@@ -774,15 +774,24 @@ function extractTraceId(
   return responseHeaders?.["x-datadog-trace-id"] ?? requestHeaders?.["x-datadog-trace-id"];
 }
 
-function enrichNetworkRequest(
-  networkRequest: NetworkRequest,
-  snapshotRecord: Record<string, unknown>,
-  requestRecord: Record<string, unknown>,
-  responseRecord: Record<string, unknown>,
-  archiveEntries: Record<string, Uint8Array>,
-  anchor: MonotonicAnchor | undefined,
-  attemptStartTimeMs: number,
-): void {
+function enrichNetworkRequest(params: {
+  networkRequest: NetworkRequest;
+  snapshotRecord: Record<string, unknown>;
+  requestRecord: Record<string, unknown>;
+  responseRecord: Record<string, unknown>;
+  archiveEntries: Record<string, Uint8Array>;
+  anchor: MonotonicAnchor | undefined;
+  attemptStartTimeMs: number;
+}): void {
+  const {
+    networkRequest,
+    snapshotRecord,
+    requestRecord,
+    responseRecord,
+    archiveEntries,
+    anchor,
+    attemptStartTimeMs,
+  } = params;
   const resourceType = asString(snapshotRecord["_resourceType"]);
   if (resourceType) {
     networkRequest.resourceType = resourceType;
@@ -880,7 +889,7 @@ function buildNetworkRequestFromEvent(
     status,
   };
 
-  enrichNetworkRequest(
+  enrichNetworkRequest({
     networkRequest,
     snapshotRecord,
     requestRecord,
@@ -888,7 +897,7 @@ function buildNetworkRequestFromEvent(
     archiveEntries,
     anchor,
     attemptStartTimeMs,
-  );
+  });
 
   return networkRequest;
 }
