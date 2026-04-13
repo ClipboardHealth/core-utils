@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { expectToBeSafeParseError } from "./expectToBeSafeParseError";
 
-describe("expectToBeSafeParseError", () => {
+describe(expectToBeSafeParseError, () => {
   interface TestCase {
     input: z.SafeParseReturnType<unknown, unknown>;
     name: string;

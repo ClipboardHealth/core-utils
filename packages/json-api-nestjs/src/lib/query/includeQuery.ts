@@ -1,8 +1,8 @@
-import { type GreaterThan, type Subtract } from "type-fest";
+import type { GreaterThan, Subtract } from "type-fest";
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type JsonApiDocument, type Relationship, type Relationships } from "../types";
+import type { JsonApiDocument, Relationship, Relationships } from "../types";
 
 /**
  * Recursively traverse the JSON:API document to build a list of all possible relationship paths up
@@ -21,7 +21,7 @@ export type RelationshipPaths<
   Prefix extends string = "",
 > =
   GreaterThan<Depth, 0> extends true
-    ? DocumentT["data"] extends Array<infer Data> | (infer Data)
+    ? DocumentT["data"] extends (infer Data)[] | (infer Data)
       ? Data extends { relationships?: infer Relation }
         ? Relation extends Relationships
           ? {
@@ -29,7 +29,7 @@ export type RelationshipPaths<
                 ? NonNullable<Relation[K]> extends Relationship
                   ? NonNullable<Relation[K]>["data"] extends
                       | { type?: infer RelationT }
-                      | Array<{ type?: infer RelationT }>
+                      | { type?: infer RelationT }[]
                     ? RelationT extends keyof MapT
                       ?
                           | `${Prefix}${K}`
@@ -67,10 +67,10 @@ export type RelationshipPaths<
  * } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import {
- *   type ArticleAttributeFields,
- *   type UserAttributeFields,
- *   type UserIncludeFields,
+ * import type {
+ *   ArticleAttributeFields,
+ *   UserAttributeFields,
+ *   UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
@@ -138,6 +138,6 @@ export function includeQuery<const FieldT extends readonly string[]>(fields: Fie
           }
         }
       })
-      .transform((value) => value as Array<FieldT[number]> | undefined),
+      .transform((value) => value as FieldT[number][] | undefined),
   };
 }

@@ -157,7 +157,7 @@ export interface LlmTestEntry {
   location: TestLocation;
   project: string;
   tags: string[];
-  annotations: Array<{ type: string; description?: string }>;
+  annotations: { type: string; description?: string }[];
   retries: number;
   errors: TestError[];
   attachments: TestAttachment[];

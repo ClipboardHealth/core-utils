@@ -1,6 +1,6 @@
 import { createDeterministicHash } from "@clipboard-health/util-ts";
 
-import { type TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
+import type { TriggerIdempotencyKeyParams } from "../triggerIdempotencyKey";
 
 type HashParams = TriggerIdempotencyKeyParams & {
   workplaceId?: string | undefined;
@@ -17,7 +17,7 @@ function toSorted(params: HashParams) {
   return {
     chunk: params.chunk,
     eventOccurredAt: params.eventOccurredAt,
-    recipients: [...params.recipients].sort(),
+    recipients: params.recipients.toSorted(),
     resource: {
       id: params.resource?.id,
       type: params.resource?.type,

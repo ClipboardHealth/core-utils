@@ -445,7 +445,7 @@ export class Worker {
 
     await this.jobsRepo.updateOne(job._id, {
       $set: {
-        lastError: error.toString(),
+        lastError: error,
         nextRunAt,
         attemptsCount,
       },

@@ -9,6 +9,7 @@ const { mockSegment } = vi.hoisted(() => ({
   },
 }));
 
+// oxlint-disable-next-line jest/no-untyped-mock-factory
 vi.mock("@segment/analytics-node", () => {
   class AnalyticsMock {
     public readonly identify = mockSegment.identify;
@@ -20,7 +21,7 @@ vi.mock("@segment/analytics-node", () => {
   };
 });
 
-describe("Analytics", () => {
+describe(Analytics, () => {
   let logger: Logger;
   let analytics: Analytics;
 

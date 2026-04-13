@@ -1,6 +1,7 @@
 export type BackgroundJobsImplementation = "mongo" | "postgres";
 
 export interface Handler<TData> {
+  // oxlint-disable-next-line typescript/no-invalid-void-type
   perform(data: TData, job?: unknown): Promise<string | void>;
 }
 

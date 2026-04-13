@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-import { type TestMetricsReporter } from "./testMetricsReporter";
+import type { TestMetricsReporter } from "./testMetricsReporter";
 
 export async function waitForMetric(
   metricsReporter: TestMetricsReporter,

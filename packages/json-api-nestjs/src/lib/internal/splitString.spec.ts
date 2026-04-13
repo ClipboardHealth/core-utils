@@ -1,6 +1,6 @@
 import { splitString, wrapString } from "./splitString";
 
-describe("splitString", () => {
+describe(splitString, () => {
   it.each<{ expected: unknown; input: unknown; name: string }>([
     {
       name: "handles empty string",
@@ -28,11 +28,11 @@ describe("splitString", () => {
       expected: 1,
     },
   ])("$name", ({ input, expected }) => {
-    expect(splitString(input)).toEqual(expected);
+    expect(splitString(input)).toStrictEqual(expected);
   });
 });
 
-describe("wrapString", () => {
+describe(wrapString, () => {
   it.each<{ expected: unknown; input: unknown; name: string }>([
     {
       name: "wraps string in array",
@@ -50,6 +50,6 @@ describe("wrapString", () => {
       expected: ["a", "b"],
     },
   ])("$name", ({ input, expected }) => {
-    expect(wrapString(input)).toEqual(expected);
+    expect(wrapString(input)).toStrictEqual(expected);
   });
 });

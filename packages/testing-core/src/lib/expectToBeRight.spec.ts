@@ -9,7 +9,7 @@ import {
 import { expectToBeRight } from "./expectToBeRight";
 import { expectToBeSuccess } from "./expectToBeSuccess";
 
-describe("expectToBeRight", () => {
+describe(expectToBeRight, () => {
   interface TestCase {
     input: E.Either<string, number> | undefined;
     name: string;
@@ -51,7 +51,7 @@ describe("expectToBeRight", () => {
   });
 });
 
-describe("expectToBeSuccess", () => {
+describe(expectToBeSuccess, () => {
   interface TestCase {
     input: ServiceResult<number> | undefined;
     name: string;

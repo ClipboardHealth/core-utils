@@ -1,4 +1,4 @@
-import { type NullOrUndefined } from "../types";
+import type { NullOrUndefined } from "../types";
 import { isNil } from "./isNil";
 
 /**

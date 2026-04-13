@@ -51,21 +51,21 @@ export type Either<E, A> = Left<E> | Right<A>;
 /**
  * Constructs an `Either` holding a `Left<E>` value, usually representing a failure.
  *
- * @param l - The value to wrap in a `Left`
+ * @param value - The value to wrap in a `Left`
  * @returns A `Left` containing the value
  */
-export function left<E, A = never>(l: E): Either<E, A> {
-  return { isRight: false, left: l };
+export function left<E, A = never>(value: E): Either<E, A> {
+  return { isRight: false, left: value };
 }
 
 /**
  * Constructs an `Either` holding a `Right<A>`, representing a success.
  *
- * @param r - The value to wrap in a `Right`
+ * @param value - The value to wrap in a `Right`
  * @returns A `Right` containing the value
  */
-export function right<A, E = never>(r: A): Either<E, A> {
-  return { isRight: true, right: r };
+export function right<A, E = never>(value: A): Either<E, A> {
+  return { isRight: true, right: value };
 }
 
 /**

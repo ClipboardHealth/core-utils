@@ -58,7 +58,7 @@ function verbose(message: string): void {
 }
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
+  await new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
@@ -68,7 +68,7 @@ function resolveGitHubRepo(): { owner: string; repo: string } {
     encoding: "utf8",
   }).trim();
 
-  const match = remoteUrl.match(/github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/);
+  const match = /github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/.exec(remoteUrl);
   if (!match) {
     throw new Error(`Could not parse GitHub owner/repo from remote URL: ${remoteUrl}`);
   }

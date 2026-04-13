@@ -14,7 +14,11 @@ module.exports = {
       comment: "Modules should be reachable from an entry point",
       from: {
         orphan: true,
-        pathNot: ["\\.(spec|test)\\.ts$", "\\.d\\.ts$", "jest\\.config\\.ts$"],
+        pathNot: [
+          String.raw`\.(spec|test)\.ts$`,
+          String.raw`\.d\.ts$`,
+          String.raw`jest\.config\.ts$`,
+        ],
       },
       to: {},
     },
@@ -30,7 +34,7 @@ module.exports = {
           // Allow imports within the same package
           "^packages/$1/",
           // Allow imports to a package's public API (index.ts)
-          "^packages/[^/]+/src/index\\.ts$",
+          String.raw`^packages/[^/]+/src/index\.ts$`,
         ],
       },
     },

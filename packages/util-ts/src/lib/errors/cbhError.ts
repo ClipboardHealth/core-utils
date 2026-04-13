@@ -1,4 +1,4 @@
-import { type Arrayable } from "type-fest";
+import type { Arrayable } from "type-fest";
 
 import * as E from "../functional/either";
 

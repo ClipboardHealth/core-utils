@@ -5,7 +5,7 @@ import {
 
 import { objectId } from "./objectId";
 
-describe("objectId", () => {
+describe("objectId.safeParse", () => {
   it.each<{ input: string; name: string }>([
     {
       name: "accepts valid ObjectId with lowercase hex",

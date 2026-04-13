@@ -5,7 +5,7 @@ import { errorsInResult } from "./errorsInResult";
 
 const errors: ErrorCode[] = [ERROR_CODES.unknown];
 
-describe("errorsInResult", () => {
+describe(errorsInResult, () => {
   const mockTriggerResponse: TriggerResponse = {
     id: "test-response-id",
   };

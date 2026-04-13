@@ -44,7 +44,7 @@ const EXPECTED_RESULTS = {
   },
 } as const;
 
-describe("formatPhoneNumber", () => {
+describe(formatPhoneNumber, () => {
   describe.each(["E.164", "humanReadable"] as const)("with format %s", (format) => {
     it.each(TEST_CASES.valid)("should format valid $name", ({ phoneNumber }) => {
       const result = formatPhoneNumber({ phoneNumber, format });
@@ -67,7 +67,7 @@ describe("formatPhoneNumber", () => {
   });
 });
 
-describe("formatPhoneNumberOrThrow", () => {
+describe(formatPhoneNumberOrThrow, () => {
   describe.each(["E.164", "humanReadable"] as const)("with format %s", (format) => {
     it.each(TEST_CASES.valid)("should format valid $name", ({ phoneNumber }) => {
       const actual = formatPhoneNumberOrThrow({ phoneNumber, format });

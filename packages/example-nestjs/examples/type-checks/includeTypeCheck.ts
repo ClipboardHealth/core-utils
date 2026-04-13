@@ -1,11 +1,11 @@
-import { type z } from "zod";
+import type { z } from "zod";
 
-import {
-  type ArticleIncludeFields,
-  type CommentIncludeFields,
-  type UserIncludeFields,
+import type {
+  ArticleIncludeFields,
+  CommentIncludeFields,
+  UserIncludeFields,
 } from "../../src/contract";
-import { type query } from "../query";
+import type { query } from "../query";
 
 type Include = z.infer<typeof query.shape.include>;
 // @ts-expect-error: unused

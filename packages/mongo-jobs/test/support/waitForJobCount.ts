@@ -2,7 +2,7 @@ import { setTimeout } from "node:timers/promises";
 
 import type mongoose from "mongoose";
 
-import { type BackgroundJobs, type BackgroundJobType } from "../../src";
+import type { BackgroundJobs, BackgroundJobType } from "../../src";
 
 interface WaitForJobCountOptions {
   backgroundJobs: BackgroundJobs;

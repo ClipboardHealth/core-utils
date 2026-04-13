@@ -1,6 +1,6 @@
-import { type UserSetPreferencesParams } from "@knocklabs/node/resources/index";
+import type { UserSetPreferencesParams } from "@knocklabs/node/resources/index";
 
-import { type UpsertUserPreferencesRequest } from "../types";
+import type { UpsertUserPreferencesRequest } from "../types";
 import { toKnockUserPreferences } from "./toKnockUserPreferences";
 
 describe("toKnockPreferences", () => {
@@ -40,7 +40,7 @@ describe("toKnockPreferences", () => {
 
     const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
 
-    expect(preferencesSet).toEqual({
+    expect(preferencesSet).toStrictEqual({
       channel_types: {
         chat: false,
         email: false,
@@ -87,7 +87,7 @@ describe("toKnockPreferences", () => {
 
     const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
 
-    expect(preferencesSet).toEqual({
+    expect(preferencesSet).toStrictEqual({
       channel_types: {},
       categories: null,
       workflows: {
@@ -105,6 +105,6 @@ describe("toKnockPreferences", () => {
 
     const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
 
-    expect(preferencesSet).toEqual({});
+    expect(preferencesSet).toStrictEqual({});
   });
 });

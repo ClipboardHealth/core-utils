@@ -1,4 +1,4 @@
-import { type NestExpressApplication } from "@nestjs/platform-express";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test, type TestingModule } from "@nestjs/testing";
 import qs from "qs";
 import request from "supertest";
@@ -28,6 +28,7 @@ describe("GET /users", () => {
   });
 
   const defaultQuery = { page: { size: 20 } };
+
   it.each<{ expected: Record<string, unknown>; input: string; name: string }>([
     {
       name: "defaults page size if no query string",
@@ -103,11 +104,11 @@ describe("GET /users", () => {
     const response = await request(app.getHttpServer()).get(input);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(expected);
+    expect(response.body).toStrictEqual(expected);
   });
 
   it.each<{
-    error: { message: string; path: Array<string | number> };
+    error: { message: string; path: (string | number)[] };
     input: string;
     name: string;
   }>([

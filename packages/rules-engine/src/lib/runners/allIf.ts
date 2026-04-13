@@ -1,4 +1,4 @@
-import { type Rule, type RuleContext } from "../rule";
+import type { Rule, RuleContext } from "../rule";
 
 /**
  * Run all rules that return true for their runIf condition, but only when the predicate function returns true.
@@ -16,7 +16,7 @@ import { type Rule, type RuleContext } from "../rule";
  */
 export function allIf<TInput, TOutput, TContext extends RuleContext<TInput, TOutput>>(
   allIfPredicate: (input: RuleContext<TInput, TOutput>["input"]) => boolean,
-  ...rules: Array<Rule<TInput, TOutput, TContext>>
+  ...rules: Rule<TInput, TOutput, TContext>[]
 ): Rule<TInput, TOutput, TContext> {
   return {
     runIf: (input) => allIfPredicate(input),

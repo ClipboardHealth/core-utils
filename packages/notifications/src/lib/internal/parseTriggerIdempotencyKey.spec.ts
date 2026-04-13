@@ -5,7 +5,7 @@ import {
 } from "../triggerIdempotencyKey";
 import { parseTriggerIdempotencyKey } from "./parseTriggerIdempotencyKey";
 
-describe("parseTriggerIdempotencyKey", () => {
+describe(parseTriggerIdempotencyKey, () => {
   describe("with valid branded TriggerIdempotencyKey", () => {
     it("parses and returns params for valid key", () => {
       const params: TriggerIdempotencyKeyParams = {
@@ -18,7 +18,7 @@ describe("parseTriggerIdempotencyKey", () => {
 
       const actual = parseTriggerIdempotencyKey({ idempotencyKey });
 
-      expect(actual).toEqual(params);
+      expect(actual).toStrictEqual(params);
     });
 
     it("parses params with eventOccurredAt", () => {
@@ -32,7 +32,7 @@ describe("parseTriggerIdempotencyKey", () => {
 
       const actual = parseTriggerIdempotencyKey({ idempotencyKey });
 
-      expect(actual).toEqual(params);
+      expect(actual).toStrictEqual(params);
     });
   });
 

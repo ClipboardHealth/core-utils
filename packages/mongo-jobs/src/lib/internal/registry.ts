@@ -66,8 +66,7 @@ export class Registry {
     if (queueGroup) {
       queueGroup.add(queue);
     } else {
-      const newQueueGroup = new Set<string>();
-      newQueueGroup.add(queue);
+      const newQueueGroup = new Set<string>([queue]);
       this.queueGroups.set(group, newQueueGroup);
     }
   }

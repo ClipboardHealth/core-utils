@@ -19,7 +19,7 @@ export const MAXIMUM_RECIPIENTS_COUNT = 1000;
  */
 export function chunkRecipients<T>(params: {
   recipients: T[];
-}): Array<{ number: number; recipients: T[] }> {
+}): { number: number; recipients: T[] }[] {
   const { recipients } = params;
 
   if (recipients.length === 0) {

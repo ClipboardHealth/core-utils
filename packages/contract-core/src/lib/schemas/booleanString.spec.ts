@@ -5,7 +5,7 @@ import {
 
 import { type BooleanString, booleanString, toBoolean } from "./booleanString";
 
-describe("booleanString", () => {
+describe("booleanString.safeParse", () => {
   describe("success cases", () => {
     it.each<{ expected: string; input: string; name: string }>([
       { name: "transforms 'true' to boolean true", input: "true", expected: "true" },
@@ -44,7 +44,7 @@ describe("booleanString", () => {
   });
 });
 
-describe("toBoolean", () => {
+describe(toBoolean, () => {
   it.each<{ expected: boolean; input: BooleanString }>([
     { input: "true", expected: true },
     { input: "false", expected: false },

@@ -879,7 +879,7 @@ function extractPageErrorText(eventRecord: Record<string, unknown>): string | un
     return undefined;
   }
 
-  const error = paramsRecord["error"];
+  const { error } = paramsRecord;
   const errorAsText = asString(error);
   if (errorAsText) {
     return errorAsText;
@@ -1265,7 +1265,7 @@ export default class LlmReporter implements Reporter {
   }
 
   public onTestEnd(test: TestCase, result: TestResult): void {
-    const config = this.config;
+    const { config } = this;
     if (!config) {
       return;
     }
@@ -1273,7 +1273,7 @@ export default class LlmReporter implements Reporter {
     const file = path.relative(config.rootDir, test.location.file);
     const fullTitle = buildFullTitle(test);
     const project = test.parent.project()?.name ?? "";
-    const status: TestStatus = result.status;
+    const { status } = result;
     const retries = test.results.length - 1;
     const isFlaky = status === "passed" && retries > 0;
 
@@ -1356,7 +1356,7 @@ export default class LlmReporter implements Reporter {
 
   public onEnd(_result: FullResult): void {
     const durationMs = Date.now() - this.startTimeMs;
-    const config = this.config;
+    const { config } = this;
     if (!config) {
       // eslint-disable-next-line no-console
       console.error("LlmReporter: onEnd called without onBegin — skipping report.");
@@ -1376,9 +1376,9 @@ export default class LlmReporter implements Reporter {
 
     for (const entry of entries) {
       if (entry.flaky) {
-        summary.flaky++;
+        summary.flaky += 1;
       } else {
-        summary[entry.status]++;
+        summary[entry.status] += 1;
       }
     }
 

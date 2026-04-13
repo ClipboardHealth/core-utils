@@ -5,7 +5,7 @@ import {
 
 import { uuid } from "./uuid";
 
-describe("uuid", () => {
+describe("uuid.safeParse", () => {
   it.each<{ input: string; name: string }>([
     {
       name: "accepts valid UUID v4",

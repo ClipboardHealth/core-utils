@@ -1,5 +1,5 @@
 import { appendOutput } from "../appendOutput";
-import { type Rule, type RuleContext } from "../rule";
+import type { Rule, RuleContext } from "../rule";
 import { allIf } from "./allIf";
 
 interface Input {
@@ -38,7 +38,7 @@ const testRule4: TestRule = {
   run: (context) => appendOutput(context, 4),
 };
 
-describe("allIf", () => {
+describe(allIf, () => {
   describe("if", () => {
     it("returns true if predicate returns true", () => {
       expect(allIf(() => true, testRule2, testRule1).runIf(context.input)).toBe(true);
@@ -51,14 +51,16 @@ describe("allIf", () => {
 
   describe("run", () => {
     it("runs all the matching rules", () => {
-      expect(allIf(() => true, testRule2, testRule1, testRule3, testRule4).run(context)).toEqual({
+      expect(
+        allIf(() => true, testRule2, testRule1, testRule3, testRule4).run(context),
+      ).toStrictEqual({
         ...context,
         output: [2, 3],
       });
     });
 
     it("returns the received context if no rule can be run", () => {
-      expect(allIf(() => true, testRule1, testRule4).run(context)).toEqual(context);
+      expect(allIf(() => true, testRule1, testRule4).run(context)).toStrictEqual(context);
     });
   });
 });

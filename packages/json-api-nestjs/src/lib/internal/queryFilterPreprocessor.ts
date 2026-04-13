@@ -36,7 +36,7 @@ function appendFilterValue(filter: Record<string, string>, key: string, value: s
 }
 
 function mergeFilters(currentFilter: Record<string, string>, newFilter: Record<string, string>) {
-  return Object.entries(newFilter).reduce<Record<string, string>>(
+  return Object.entries(newFilter).reduce(
     (mergedFilter, [key, value]) => appendFilterValue(mergedFilter, key, value),
     currentFilter,
   );

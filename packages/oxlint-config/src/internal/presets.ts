@@ -6,7 +6,10 @@ import type { AllowWarnDeny, DummyRule, DummyRuleMap, OxlintConfig, OxlintOverri
 import type { OxlintPreset } from "./types";
 
 const JEST_RULES: DummyRuleMap = {
+  "jest/max-expects": "off",
+  "jest/max-nested-describe": "off",
   "jest/no-hooks": "off",
+  "jest/prefer-lowercase-title": "off",
   "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
 } as const;
 
@@ -59,8 +62,11 @@ export const vitest: OxlintPreset = {
   rules: {
     ...JEST_RULES,
     "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-called-once": "off",
+    "vitest/prefer-import-in-mock": "off",
     "vitest/prefer-to-be-falsy": "off",
     "vitest/prefer-to-be-truthy": "off",
+    "vitest/require-hook": "off",
     "vitest/require-test-timeout": "off",
   },
 };

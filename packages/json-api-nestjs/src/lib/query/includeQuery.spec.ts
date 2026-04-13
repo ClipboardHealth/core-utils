@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { includeQuery } from "./includeQuery";
 
-describe("includeQuery", () => {
+describe(includeQuery, () => {
   const includeSchema = z.object(includeQuery(["articles", "articles.comments"]));
 
   describe("success cases", () => {
@@ -30,7 +30,7 @@ describe("includeQuery", () => {
       const actual = includeSchema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toEqual(expected);
+      expect(actual.data).toStrictEqual(expected);
     });
   });
 

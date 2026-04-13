@@ -2,7 +2,7 @@ import colors from "yoctocolors-cjs";
 
 import { processResult } from "./processResult";
 
-describe("processResult", () => {
+describe(processResult, () => {
   const destination = "destinations/path";
   const sources = ["sources/path"];
   const base = {

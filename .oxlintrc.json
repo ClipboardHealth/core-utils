@@ -14,74 +14,46 @@
     }
   },
   "rules": {
+    // TODO: To fix
     "complexity": "off",
-    "func-names": "off",
-    "func-style": "off",
-    "jest/max-expects": "off",
-    "jest/max-nested-describe": "off",
-    "jest/no-conditional-in-test": "off",
-    "jest/no-unneeded-async-expect-function": "off",
-    "jest/no-untyped-mock-factory": "off",
-    "jest/padding-around-test-blocks": "off",
     "jest/prefer-called-with": "off",
-    "jest/prefer-expect-resolves": "off",
-    "jest/prefer-lowercase-title": "off",
-    "jest/prefer-mock-return-shorthand": "off",
-    "jest/prefer-strict-equal": "off",
     "jest/require-to-throw-message": "off",
-    "no-duplicate-imports": "off",
-    "no-plusplus": "off",
-    "node/no-process-env": "off",
-    "oxc/no-accumulating-spread": "off",
-    "oxc/no-barrel-file": "off",
-    "oxc/no-map-spread": "off",
-    "prefer-destructuring": "off",
-    "prefer-template": "off",
-    "promise/always-return": "off",
-    "typescript/array-type": "off",
-    "typescript/ban-types": "off",
-    "typescript/consistent-return": "off",
-    "typescript/dot-notation": "off",
-    "typescript/no-deprecated": "off",
-    "typescript/no-extraneous-class": "off",
-    "typescript/no-import-type-side-effects": "off",
-    "typescript/no-invalid-void-type": "off",
-    "typescript/no-non-null-assertion": "off",
-    "typescript/no-unnecessary-type-arguments": "off",
-    "typescript/no-unnecessary-type-conversion": "off",
-    "typescript/no-unsafe-type-assertion": "off",
-    "typescript/prefer-includes": "off",
-    "typescript/prefer-promise-reject-errors": "off",
-    "typescript/prefer-regexp-exec": "off",
-    "typescript/require-await": "off",
-    "typescript/strict-boolean-expressions": "off",
-    "typescript/unbound-method": "off",
-    "typescript/use-unknown-in-catch-callback-variable": "off",
-    "unicorn/consistent-function-scoping": "off",
-    "unicorn/no-anonymous-default-export": "off",
-    "unicorn/no-array-sort": "off",
-    "unicorn/no-immediate-mutation": "off",
-    "unicorn/no-instanceof-builtins": "off",
-    "unicorn/prefer-bigint-literals": "off",
-    "unicorn/prefer-string-raw": "off",
-    "unicorn/prefer-top-level-await": "off",
     "vitest/consistent-test-filename": "off",
-    "vitest/hoisted-apis-on-top": "off",
-    "vitest/prefer-called-once": "off",
-    "vitest/prefer-describe-function-title": "off",
-    "vitest/prefer-expect-type-of": "off",
-    "vitest/prefer-import-in-mock": "off",
-    "vitest/prefer-strict-boolean-matchers": "off",
-    "vitest/require-hook": "off",
     "vitest/require-mock-type-parameters": "off",
+    "typescript/strict-boolean-expressions": "off",
+    "vitest/hoisted-apis-on-top": "off",
+    "oxc/no-accumulating-spread": "off",
+    "oxc/no-map-spread": "off",
+    "typescript/consistent-return": "off",
+    "typescript/prefer-promise-reject-errors": "off",
+
+    // Project-specific
+    "oxc/no-barrel-file": "off",
 
     // From [vitest preset](./packages/oxlint-config/src/internal/presets.ts)
+    "jest/max-expects": "off",
+    "jest/max-nested-describe": "off",
     "jest/no-hooks": "off",
+    "jest/prefer-lowercase-title": "off",
     "jest/valid-title": ["error", { "ignoreTypeOfDescribeName": true }],
     "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-called-once": "off",
+    "vitest/prefer-import-in-mock": "off",
     "vitest/prefer-to-be-falsy": "off",
     "vitest/prefer-to-be-truthy": "off",
-    "vitest/require-test-timeout": "off"
+    "vitest/require-hook": "off",
+    "vitest/require-test-timeout": "off",
+
+    // Temporarily disabled globally until issue gets fixed, should then move to test-only disable
+    // in ./packages/oxlint-config/src/base.json
+    // See https://github.com/oxc-project/oxc/issues/21284
+    "no-shadow": "off",
+    "typescript/no-deprecated": "off",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/no-unsafe-assignment": "off",
+    "typescript/no-unsafe-member-access": "off",
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/unbound-method": "off"
   },
   "overrides": [
     {
@@ -93,6 +65,12 @@
       ],
       "rules": {
         "no-console": "off"
+      }
+    },
+    {
+      "files": ["**/config/**/*.ts", "**/mongo-jobs/**/*.ts", "**/plugins/**/*.ts"],
+      "rules": {
+        "node/no-process-env": "off"
       }
     },
     {

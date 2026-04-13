@@ -1,4 +1,4 @@
-import { type Arrayable } from "type-fest";
+import type { Arrayable } from "type-fest";
 
 import { CbhError, type CbhIssue } from "../errors/cbhError";
 

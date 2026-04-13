@@ -5,7 +5,7 @@ import {
 
 import { nonEmptyString } from "./nonEmptyString";
 
-describe("nonEmptyString", () => {
+describe("nonEmptyString.safeParse", () => {
   describe("success cases", () => {
     it.each<{ input: string; name: string }>([
       { name: "accepts non-empty string", input: "hi" },

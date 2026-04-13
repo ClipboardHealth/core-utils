@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import type { DestinationPath } from "../types";
-import { type DestinationMap, type SourceMap } from "./types";
+import type { DestinationMap, SourceMap } from "./types";
 
 export async function createDestinationMap(
   params: Readonly<{ sourceMap: Readonly<SourceMap> }>,

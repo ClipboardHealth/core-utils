@@ -1,6 +1,6 @@
 import { isNonEmptyArray } from "./isNonEmptyArray";
 
-describe("isNonEmptyArray", () => {
+describe(isNonEmptyArray, () => {
   it("returns true for array with one element", () => {
     expect(isNonEmptyArray([1])).toBe(true);
   });

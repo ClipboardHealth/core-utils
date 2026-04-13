@@ -2,7 +2,7 @@ import "../types/global";
 
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { type ExecutionContext } from "../types/types";
+import type { ExecutionContext } from "../types/types";
 import { isRecord } from "./util";
 
 globalThis.threadLocalStorage ||= new AsyncLocalStorage();

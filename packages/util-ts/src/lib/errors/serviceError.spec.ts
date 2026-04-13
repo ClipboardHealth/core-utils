@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 
 import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
 
-describe("ServiceError", () => {
+describe(ServiceError, () => {
   describe("fromZodLike", () => {
     it("converts ZodLike to ServiceError", () => {
       const input = new ZodError([
@@ -27,7 +27,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromZodError(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid email format",
@@ -53,7 +53,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromUnknown(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.internal,
           message: "Something went wrong",
@@ -70,7 +70,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromUnknown(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.internal,
           message: "Something went wrong",
@@ -143,7 +143,7 @@ describe("ServiceError", () => {
       '[badRequest]: Invalid email at "data.attributes.email"; [badRequest]: Invalid phone at "data.attributes.phoneNumber"',
     );
     expect(actual.issues).toHaveLength(2);
-    expect(actual.issues).toEqual([
+    expect(actual.issues).toStrictEqual([
       {
         code: ERROR_CODES.badRequest,
         message: "Invalid email",
@@ -186,7 +186,7 @@ describe("ServiceError", () => {
     const actual = new ServiceError(input);
     const jsonApi = actual.toJsonApi();
 
-    expect(jsonApi.errors[0]).toEqual({
+    expect(jsonApi.errors[0]).toStrictEqual({
       id: actual.id,
       status: "400",
       code: ERROR_CODES.badRequest,
@@ -210,7 +210,7 @@ describe("ServiceError", () => {
     const actual = new ServiceError(input);
     const jsonApi = actual.toJsonApi();
 
-    expect(jsonApi.errors[0]).toEqual({
+    expect(jsonApi.errors[0]).toStrictEqual({
       id: actual.id,
       status: "404",
       code: ERROR_CODES.notFound,
@@ -238,7 +238,7 @@ describe("ServiceError", () => {
 
     const jsonApi = actual.toJsonApi();
     expect(jsonApi.errors).toHaveLength(2);
-    expect(jsonApi.errors).toEqual(
+    expect(jsonApi.errors).toStrictEqual(
       expect.arrayContaining([
         expect.objectContaining({
           status: "422",
@@ -287,7 +287,7 @@ describe("ServiceError", () => {
     const actual = new ServiceError(input);
     const jsonApi = actual.toJsonApi();
 
-    expect(jsonApi.errors[0]).toEqual({
+    expect(jsonApi.errors[0]).toStrictEqual({
       id: actual.id,
       status: "500",
       code: "licenseNotFound",
@@ -308,7 +308,7 @@ describe("ServiceError", () => {
     const actual = new ServiceError(input);
     const jsonApi = actual.toJsonApi();
 
-    expect(jsonApi.errors[0]).toEqual({
+    expect(jsonApi.errors[0]).toStrictEqual({
       id: actual.id,
       status: "422",
       code: "licenseNotFound",
@@ -332,7 +332,7 @@ describe("ServiceError", () => {
       const jsonApi = actual.toJsonApi();
 
       ok(jsonApi.errors[0]);
-      expect(jsonApi.errors[0].source).toEqual({
+      expect(jsonApi.errors[0].source).toStrictEqual({
         pointer: "/data/attributes/email",
       });
     });
@@ -353,7 +353,7 @@ describe("ServiceError", () => {
       const jsonApi = actual.toJsonApi();
 
       ok(jsonApi.errors[0]);
-      expect(jsonApi.errors[0].source).toEqual({
+      expect(jsonApi.errors[0].source).toStrictEqual({
         header: "/authorization",
       });
     });
@@ -373,7 +373,7 @@ describe("ServiceError", () => {
       const jsonApi = actual.toJsonApi();
 
       ok(jsonApi.errors[0]);
-      expect(jsonApi.errors[0].source).toEqual({
+      expect(jsonApi.errors[0].source).toStrictEqual({
         header: "/page",
       });
     });
@@ -416,7 +416,7 @@ describe("ServiceError", () => {
 
       expect(actual).toBeInstanceOf(ServiceError);
       expect(actual.id).toBe("123");
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid email format",
@@ -440,7 +440,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.notFound,
           title: "Resource not found",
@@ -472,7 +472,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid email",
@@ -505,7 +505,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid header",
@@ -529,7 +529,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid request",
@@ -551,7 +551,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid request",
@@ -576,7 +576,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid request",
@@ -597,7 +597,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: ERROR_CODES.internal,
           message: "Something went wrong",
@@ -619,7 +619,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: "licenseNotFound",
         },
@@ -642,7 +642,7 @@ describe("ServiceError", () => {
       const actual = ServiceError.fromJsonApi(input);
 
       expect(actual).toBeInstanceOf(ServiceError);
-      expect(actual.issues).toEqual([
+      expect(actual.issues).toStrictEqual([
         {
           code: "licenseNotFound",
           status: 422,
@@ -676,7 +676,7 @@ describe("ServiceError", () => {
       const result = ServiceError.merge(error1, error2);
 
       expect(result.issues).toHaveLength(2);
-      expect(result.issues).toEqual([
+      expect(result.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           message: "Invalid input",

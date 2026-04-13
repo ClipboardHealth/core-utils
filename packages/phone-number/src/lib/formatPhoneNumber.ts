@@ -7,7 +7,7 @@ import {
 } from "@clipboard-health/util-ts";
 import { parsePhoneNumberWithError } from "libphonenumber-js";
 
-import { type WithPhoneNumber } from "./types";
+import type { WithPhoneNumber } from "./types";
 
 export interface FormatPhoneNumberParams extends WithPhoneNumber {
   format: "E.164" | "humanReadable";

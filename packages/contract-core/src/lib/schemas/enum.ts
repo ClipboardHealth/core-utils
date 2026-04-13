@@ -21,16 +21,12 @@ type EnumFallback = typeof ENUM_FALLBACK;
 export function enumWithFallback<const V extends EnumValues>(
   values: NarrowEnum<V>,
   options?: { optional?: false },
-): z.ZodEffects<z.ZodEnum<[...V, EnumFallback]>, V[number] | EnumFallback, unknown>;
+): z.ZodEffects<z.ZodEnum<[...V, EnumFallback]>>;
 
 export function enumWithFallback<const V extends EnumValues>(
   values: NarrowEnum<V>,
   options: { optional: true },
-): z.ZodEffects<
-  z.ZodOptional<z.ZodEnum<[...V, EnumFallback]>>,
-  V[number] | EnumFallback | undefined,
-  unknown
->;
+): z.ZodEffects<z.ZodOptional<z.ZodEnum<[...V, EnumFallback]>>>;
 
 export function enumWithFallback<const V extends EnumValues>(
   values: V,

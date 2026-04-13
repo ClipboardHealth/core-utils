@@ -19,7 +19,7 @@ const TEST_CASES = {
   ],
 } as const;
 
-describe("isValidPhoneNumber", () => {
+describe(isValidPhoneNumber, () => {
   it.each(TEST_CASES.valid)("should return true for $name", ({ phoneNumber }) => {
     const actual = isValidPhoneNumber({ phoneNumber });
 

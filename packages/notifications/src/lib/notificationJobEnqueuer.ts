@@ -13,11 +13,11 @@ import {
   type TriggerIdempotencyKey,
   type TriggerIdempotencyKeyParams,
 } from "./triggerIdempotencyKey";
-import {
+import type {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type TriggerBody,
+  TriggerBody,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type TriggerRequest,
+  TriggerRequest,
 } from "./types";
 
 type EnqueueParameters = Parameters<BackgroundJobsAdapter["enqueue"]>;

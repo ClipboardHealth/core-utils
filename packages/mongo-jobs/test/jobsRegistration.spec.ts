@@ -10,7 +10,7 @@ describe("Registering background jobs", () => {
 
   beforeEach(() => {
     backgroundJobs = new BackgroundJobs();
-    registry = backgroundJobs["registry"];
+    ({ registry } = backgroundJobs);
   });
 
   it("is possible to register a handler as an instance and then get the registered handler by name", () => {
@@ -76,6 +76,12 @@ describe("Registering background jobs", () => {
     expect(group).toBe("default");
     expect(queue).toBe("ExampleJob");
     expect(handler.name).toBe("ExampleJob");
+  });
+
+  it("tracks queues for each group", () => {
+    backgroundJobs.register(ExampleJob, "default");
+
+    expect(registry.getQueuesForGroups(["default"])).toStrictEqual(["ExampleJob"]);
   });
 
   it("is not possible to register a job with the same name twice", () => {

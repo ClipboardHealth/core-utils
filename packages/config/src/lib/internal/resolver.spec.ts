@@ -36,7 +36,7 @@ describe("resolver", () => {
 
     const actual = resolve({ ...params, config });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       database: {
         host: "localhost",
         port: 5432,
@@ -74,7 +74,7 @@ describe("resolver", () => {
 
     const actual = resolve({ ...params, config });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       database: {
         host: "dev-host",
         port: 5433,
@@ -107,7 +107,7 @@ describe("resolver", () => {
 
     const actual = resolve({ ...params, config });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       database: {
         host: "env-host",
         port: "5434",
@@ -132,7 +132,7 @@ describe("resolver", () => {
 
     const actual = resolve({ ...params, config, schema: z.object({ items: z.array(z.string()) }) });
 
-    expect(actual).toEqual({
+    expect(actual).toStrictEqual({
       items: ["override1", "override2"],
     });
 
@@ -156,7 +156,7 @@ describe("resolver", () => {
         schema: z.object({ items: z.array(z.string()) }),
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         items: ["a", "b", "c"],
       });
 
@@ -179,7 +179,7 @@ describe("resolver", () => {
         schema: z.object({ items: z.array(z.string()) }),
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         items: "not-json",
       });
 
@@ -198,7 +198,7 @@ describe("resolver", () => {
 
       const actual = resolve({ ...params, config, schema: z.object({ value: z.string() }) });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         value: "123",
       });
 
@@ -244,7 +244,7 @@ describe("resolver", () => {
         schema: schemaWithMissingPath,
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         database: {
           value: [],
           missing: {
@@ -282,7 +282,7 @@ describe("resolver", () => {
         schema: schemaWithExtraSegment,
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         database: {
           extra: '["a", "b"]',
         },
@@ -333,7 +333,7 @@ describe("resolver", () => {
         }),
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         database: {
           hostName: "localhost",
           maxConnections: "10",
@@ -363,7 +363,7 @@ describe("resolver", () => {
         schema: z.object({ dateArray: z.array(z.string()) }),
       });
 
-      expect(actual).toEqual({
+      expect(actual).toStrictEqual({
         dateArray: ["2024-01-01"],
       });
 

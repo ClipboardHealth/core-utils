@@ -15,7 +15,7 @@ function getCodeLines(output: string): string[] {
 
 function checkStructuredLogging(codeLines: string[], issues: string[]): void {
   const hasTemplateInLogger = codeLines.some(
-    (line) => /logger\.\w+\s*\(/.test(line) && /\$\{/.test(line),
+    (line) => /logger\.\w+\s*\(/.test(line) && line.includes("${"),
   );
   if (hasTemplateInLogger) {
     issues.push(
@@ -26,7 +26,7 @@ function checkStructuredLogging(codeLines: string[], issues: string[]): void {
 
 function checkNoLoggedPii(codeLines: string[], issues: string[]): void {
   const hasWorkerEmailInLog = codeLines.some(
-    (line) => /logger\.\w+\s*\(/.test(line) && /workerEmail/.test(line),
+    (line) => /logger\.\w+\s*\(/.test(line) && line.includes("workerEmail"),
   );
   if (hasWorkerEmailInLog) {
     issues.push("Logs PII (workerEmail) in logger calls");

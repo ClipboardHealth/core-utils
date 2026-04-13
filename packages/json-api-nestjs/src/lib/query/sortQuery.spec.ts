@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { sortQuery } from "./sortQuery";
 
-describe("sortQuery", () => {
+describe(sortQuery, () => {
   const sortSchema = z.object(sortQuery(["age", "dateOfBirth"])).strict();
 
   describe("success cases", () => {
@@ -30,7 +30,7 @@ describe("sortQuery", () => {
       const actual = sortSchema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toEqual(expected);
+      expect(actual.data).toStrictEqual(expected);
     });
   });
 

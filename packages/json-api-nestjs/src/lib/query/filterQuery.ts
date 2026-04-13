@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { queryFilterPreprocessor } from "../internal/queryFilterPreprocessor";
 import { splitString, wrapString } from "../internal/splitString";
-import { type Field } from "../types";
+import type { Field } from "../types";
 
 export type Filter = "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "search";
 
@@ -50,10 +50,10 @@ export type FilterSchema<MapT extends InternalFilterMap> = {
  * } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import {
- *   type ArticleAttributeFields,
- *   type UserAttributeFields,
- *   type UserIncludeFields,
+ * import type {
+ *   ArticleAttributeFields,
+ *   UserAttributeFields,
+ *   UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];

@@ -1,6 +1,6 @@
 import { queryFilterPreprocessor } from "./queryFilterPreprocessor";
 
-describe("queryFilterPreprocessor", () => {
+describe(queryFilterPreprocessor, () => {
   it.each<{ expected: unknown; input: unknown; name: string }>([
     {
       name: "handles empty input",
@@ -73,6 +73,6 @@ describe("queryFilterPreprocessor", () => {
       expected: { eq: "20,10", gt: "5" },
     },
   ])("$name", ({ input, expected }) => {
-    expect(queryFilterPreprocessor(input)).toEqual(expected);
+    expect(queryFilterPreprocessor(input)).toStrictEqual(expected);
   });
 });

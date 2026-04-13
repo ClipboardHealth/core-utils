@@ -1,9 +1,9 @@
-import { type ServerJsonApiQuery } from "../types";
+import type { ServerJsonApiQuery } from "../types";
 import { parseQuery } from "./parseQuery";
 
 const BASE_URL = "https://google.com";
 
-describe("parseQuery", () => {
+describe(parseQuery, () => {
   it.each<{ expected: ServerJsonApiQuery; input: string; name: string }>([
     {
       name: "parses fields",
@@ -80,7 +80,7 @@ describe("parseQuery", () => {
 
     const actual = parseQuery(url.search);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 
   it("parses combinations", () => {
@@ -101,6 +101,6 @@ describe("parseQuery", () => {
     const url = new URL(`${BASE_URL}?${input}`);
     const actual = parseQuery(url.search);
 
-    expect(actual).toEqual(expected);
+    expect(actual).toStrictEqual(expected);
   });
 });

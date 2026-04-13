@@ -51,7 +51,7 @@ export async function drainQueues(
 // Drain jobs for given handlers
 export async function drainHandlers(
   backgroundJobs: BackgroundJobs,
-  handlers: Array<AnyHandlerClass<unknown> | string>,
+  handlers: (AnyHandlerClass<unknown> | string)[],
   options: DrainOptions = {},
 ) {
   const queues = handlers.map(

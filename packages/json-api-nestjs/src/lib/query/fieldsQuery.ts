@@ -1,16 +1,12 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type ApiType, type Data, type Field, type JsonApiDocument } from "../types";
+import type { ApiType, Data, Field, JsonApiDocument } from "../types";
 
 export type FieldsMap = Record<ApiType, readonly [Field, ...Field[]]>;
 
 export type FieldsSchema<MapT extends FieldsMap> = {
-  [K in keyof MapT]: z.ZodEffects<
-    z.ZodOptional<z.ZodArray<z.ZodEnum<z.Writeable<MapT[K]>>>>,
-    Array<MapT[K][number]> | undefined,
-    unknown
-  >;
+  [K in keyof MapT]: z.ZodEffects<z.ZodOptional<z.ZodArray<z.ZodEnum<z.Writeable<MapT[K]>>>>>;
 };
 
 /**
@@ -19,7 +15,7 @@ export type FieldsSchema<MapT extends FieldsMap> = {
  * @template DocumentT - The JSON:API document.
  */
 export type AttributeFields<DocumentT extends JsonApiDocument> =
-  DocumentT["data"] extends Array<infer R extends Data>
+  DocumentT["data"] extends (infer R extends Data)[]
     ? keyof R["attributes"]
     : DocumentT["data"] extends Data
       ? keyof DocumentT["data"]["attributes"]
@@ -43,10 +39,10 @@ export type AttributeFields<DocumentT extends JsonApiDocument> =
  * } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import {
- *   type ArticleAttributeFields,
- *   type UserAttributeFields,
- *   type UserIncludeFields,
+ * import type {
+ *   ArticleAttributeFields,
+ *   UserAttributeFields,
+ *   UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];

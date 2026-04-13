@@ -19,24 +19,24 @@ import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
-import { type TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
-import {
-  type AppendPushTokenRequest,
-  type AppendPushTokenResponse,
-  type LogParams,
-  type NotificationClientParams,
-  type SignUserTokenRequest,
-  type SignUserTokenResponse,
-  type Span,
-  type TriggerBody,
-  type TriggerChunkedRequest,
-  type TriggerChunkedResponse,
-  type TriggerRequest,
-  type TriggerResponse,
-  type UpsertUserPreferencesRequest,
-  type UpsertUserPreferencesResponse,
-  type UpsertWorkplaceRequest,
-  type UpsertWorkplaceResponse,
+import type { TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
+import type {
+  AppendPushTokenRequest,
+  AppendPushTokenResponse,
+  LogParams,
+  NotificationClientParams,
+  SignUserTokenRequest,
+  SignUserTokenResponse,
+  Span,
+  TriggerBody,
+  TriggerChunkedRequest,
+  TriggerChunkedResponse,
+  TriggerRequest,
+  TriggerResponse,
+  UpsertUserPreferencesRequest,
+  UpsertUserPreferencesResponse,
+  UpsertWorkplaceRequest,
+  UpsertWorkplaceResponse,
 } from "./types";
 
 const LOG_PARAMS = {
@@ -190,7 +190,7 @@ export class NotificationClient {
    *
    * ```ts
    * // triggerNotification.job.ts
-   * import { type BaseHandler } from "@clipboard-health/background-jobs-adapter";
+   * import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
    * import {
    *   ERROR_CODES,
    *   type NotificationClient,
@@ -312,7 +312,7 @@ export class NotificationClient {
         }
 
         const chunks = chunkRecipients({ recipients: body.recipients });
-        const responses: Array<{ chunkNumber: number; id: string }> = [];
+        const responses: { chunkNumber: number; id: string }[] = [];
 
         // Sequential execution is intentional - we want to fail fast on error and track progress
         for (const recipientChunk of chunks) {

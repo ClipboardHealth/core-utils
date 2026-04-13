@@ -1,4 +1,4 @@
-import { type DestinationPath, type SourcePath } from "../types";
+import type { DestinationPath, SourcePath } from "../types";
 
 export interface Source {
   content: string;

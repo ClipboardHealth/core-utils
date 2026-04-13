@@ -1,11 +1,10 @@
 import { isString } from "./isString";
 
-describe("isString", () => {
+describe(isString, () => {
   it.each([
     { input: "hello", expected: true },
-    { input: String("hello"), expected: true },
     // eslint-disable-next-line no-new-wrappers, unicorn/new-for-builtins
-    { input: new String("hello"), expected: true },
+    { input: new String("hello"), expected: false },
     { input: "", expected: true },
     { input: "   ", expected: true },
     { input: `template`, expected: true },

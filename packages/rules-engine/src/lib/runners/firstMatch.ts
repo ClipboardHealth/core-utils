@@ -1,4 +1,4 @@
-import { type Rule, type RuleContext } from "../rule";
+import type { Rule, RuleContext } from "../rule";
 
 /**
  * Run the first rule that returns true for `runIf`.
@@ -6,7 +6,7 @@ import { type Rule, type RuleContext } from "../rule";
  * @param rules The rules to run.
  */
 export function firstMatch<TInput, TOutput, TContext extends RuleContext<TInput, TOutput>>(
-  ...rules: Array<Rule<TInput, TOutput, TContext>>
+  ...rules: Rule<TInput, TOutput, TContext>[]
 ): Rule<TInput, TOutput, TContext> {
   return {
     runIf: (input) => rules.some((rule) => rule.runIf(input)),

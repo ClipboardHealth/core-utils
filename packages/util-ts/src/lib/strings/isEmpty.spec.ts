@@ -1,6 +1,6 @@
 import { isEmpty } from "./isEmpty";
 
-describe("isEmpty", () => {
+describe(isEmpty, () => {
   it.each([
     [[], true],
     [[1], false],
@@ -27,6 +27,6 @@ describe("isEmpty", () => {
 
     const actual = isEmpty(input);
 
-    expect(actual).toBeTruthy();
+    expect(actual).toBe(true);
   });
 });
