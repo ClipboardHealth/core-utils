@@ -38,10 +38,10 @@ describe(NotificationClient, () => {
     };
     mockTracer = {
       trace: vi
-        .fn()
+        .fn<Tracer["trace"]>()
         .mockImplementation(
           <T>(_name: string, _options: TraceOptions, fun: (span?: Span) => T): T =>
-            fun({ addTags: vi.fn() }),
+            fun({ addTags: vi.fn<Span["addTags"]>() }),
         ),
     } as unknown as Mocked<Tracer>;
     provider = new IdempotentKnock({ apiKey: "test-api-key", logger: mockLogger });
@@ -261,7 +261,7 @@ describe(NotificationClient, () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
       vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
-      const mockSpan = { addTags: vi.fn() };
+      const mockSpan = { addTags: vi.fn<Span["addTags"]>() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -429,7 +429,7 @@ describe(NotificationClient, () => {
 
     it("adds error tags to span when request expires", async () => {
       const mockExpiredDate = new Date(Date.now() - 1000);
-      const mockSpan = { addTags: vi.fn() };
+      const mockSpan = { addTags: vi.fn<Span["addTags"]>() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -454,7 +454,7 @@ describe(NotificationClient, () => {
     it("adds error tags to span when Knock API fails", async () => {
       const mockError = new Error("Knock API error");
       vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
-      const mockSpan = { addTags: vi.fn() };
+      const mockSpan = { addTags: vi.fn<Span["addTags"]>() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -598,7 +598,7 @@ describe(NotificationClient, () => {
     });
 
     it("includes dryRun in trace tags when true", async () => {
-      const mockSpan = { addTags: vi.fn() };
+      const mockSpan = { addTags: vi.fn<Span["addTags"]>() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
       const input: TriggerRequest = {
@@ -639,7 +639,15 @@ describe(NotificationClient, () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
-      expect(triggerSpy).toHaveBeenCalled();
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [{ id: "user-1" }],
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
     });
   });
 

@@ -16,5 +16,5 @@ export function expectToBeSuccess<A>(
   value: ServiceResult<A> | undefined,
 ): asserts value is E.Right<A> & Success<A> {
   expectToBeRight(value);
-  ok(isSuccess(value));
+  ok(isSuccess(value), "Expected Success, got Failure");
 }

@@ -1,11 +1,11 @@
-import type { Logger } from "@clipboard-health/util-ts";
+import type { LogFunction, Logger } from "@clipboard-health/util-ts";
 
 import { Analytics, type Enabled, type IdentifyRequest, type TrackRequest } from "./analytics";
 
 const { mockSegment } = vi.hoisted(() => ({
   mockSegment: {
-    identify: vi.fn(),
-    track: vi.fn(),
+    identify: vi.fn<(...parameters: unknown[]) => void>(),
+    track: vi.fn<(...parameters: unknown[]) => void>(),
   },
 }));
 
@@ -27,9 +27,9 @@ describe(Analytics, () => {
 
   beforeEach(() => {
     logger = {
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
+      info: vi.fn<LogFunction>(),
+      error: vi.fn<LogFunction>(),
+      warn: vi.fn<LogFunction>(),
     };
 
     vi.clearAllMocks();
@@ -109,7 +109,10 @@ describe(Analytics, () => {
 
       analytics.identify(request);
 
-      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("analytics.identify:"),
+        expect.objectContaining({ traits: { phone: "invalid-phone" } }),
+      );
       expect(mockSegment.identify).toHaveBeenCalledWith({
         userId: "user123",
         traits: { phone: "invalid-phone" },

@@ -31,7 +31,7 @@ describe(expectToBeSome, () => {
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeSome(input);
-    }).toThrow();
+    }).toThrow(/Expected/);
   });
 
   it("narrows type", () => {

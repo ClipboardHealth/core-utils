@@ -23,6 +23,6 @@ describe(stringify, () => {
   it("throws on circular references", () => {
     const circular = { self: {} };
     circular.self = circular;
-    expect(() => stringify(circular)).toThrow();
+    expect(() => stringify(circular)).toThrow("Converting circular structure to JSON");
   });
 });

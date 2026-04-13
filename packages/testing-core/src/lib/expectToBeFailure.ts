@@ -17,5 +17,5 @@ export function expectToBeFailure<A>(
   value: ServiceResult<A> | undefined,
 ): asserts value is E.Left<ServiceError> & Failure<ServiceError> {
   expectToBeLeft(value);
-  ok(isFailure(value));
+  ok(isFailure(value), "Expected Failure, got Success");
 }

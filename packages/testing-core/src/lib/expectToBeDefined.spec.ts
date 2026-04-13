@@ -53,7 +53,7 @@ describe(expectToBeDefined, () => {
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeDefined(input);
-    }).toThrow();
+    }).toThrow("Expected value to be defined, got null or undefined");
   });
 
   it("narrows type", () => {

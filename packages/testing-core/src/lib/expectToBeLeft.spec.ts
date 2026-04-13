@@ -38,7 +38,7 @@ describe(expectToBeLeft, () => {
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeLeft(input);
-    }).toThrow();
+    }).toThrow(/Expected/);
   });
 
   it("narrows type", () => {
@@ -80,7 +80,7 @@ describe(expectToBeFailure, () => {
   ])("$name", ({ input }) => {
     expect(() => {
       expectToBeFailure(input);
-    }).toThrow();
+    }).toThrow(/Expected/);
   });
 
   it("narrows type", () => {

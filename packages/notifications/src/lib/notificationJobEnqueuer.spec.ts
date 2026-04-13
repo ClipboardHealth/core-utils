@@ -17,7 +17,7 @@ vi.mock("./internal/chunkRecipients");
 const mockChunkRecipients = vi.mocked(chunkRecipients);
 
 describe(NotificationJobEnqueuer, () => {
-  const mockEnqueue = vi.fn();
+  const mockEnqueue = vi.fn<BackgroundJobsAdapter["enqueue"]>();
   const mockAdapter: BackgroundJobsAdapter = {
     implementation: "postgres",
     enqueue: mockEnqueue,

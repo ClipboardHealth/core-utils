@@ -11,5 +11,5 @@ import { expectToBeDefined } from "./expectToBeDefined";
  */
 export function expectToBeSome<A>(value: O.Option<A> | undefined): asserts value is O.Some<A> {
   expectToBeDefined(value);
-  ok(O.isSome(value));
+  ok(O.isSome(value), "Expected Some, got None");
 }

@@ -774,36 +774,24 @@ function extractTraceId(
   return responseHeaders?.["x-datadog-trace-id"] ?? requestHeaders?.["x-datadog-trace-id"];
 }
 
-function buildNetworkRequestFromEvent(
-  eventRecord: Record<string, unknown>,
-  archiveEntries: Record<string, Uint8Array>,
-  anchor: MonotonicAnchor | undefined,
-  attemptStartTimeMs: number,
-): NetworkRequest | undefined {
-  if (eventRecord["type"] !== "resource-snapshot") {
-    return undefined;
-  }
-
-  const snapshotRecord = asRecord(eventRecord["snapshot"]);
-  const requestRecord = asRecord(snapshotRecord?.["request"]);
-  const responseRecord = asRecord(snapshotRecord?.["response"]);
-  if (!snapshotRecord || !requestRecord || !responseRecord) {
-    return undefined;
-  }
-
-  const method = asString(requestRecord["method"]);
-  const url = asString(requestRecord["url"]);
-  const status = asNumber(responseRecord["status"]);
-  if (!method || !url || status === undefined) {
-    return undefined;
-  }
-
-  const networkRequest: NetworkRequest = {
-    method,
-    url,
-    status,
-  };
-
+function enrichNetworkRequest(params: {
+  networkRequest: NetworkRequest;
+  snapshotRecord: Record<string, unknown>;
+  requestRecord: Record<string, unknown>;
+  responseRecord: Record<string, unknown>;
+  archiveEntries: Record<string, Uint8Array>;
+  anchor: MonotonicAnchor | undefined;
+  attemptStartTimeMs: number;
+}): void {
+  const {
+    networkRequest,
+    snapshotRecord,
+    requestRecord,
+    responseRecord,
+    archiveEntries,
+    anchor,
+    attemptStartTimeMs,
+  } = params;
   const resourceType = asString(snapshotRecord["_resourceType"]);
   if (resourceType) {
     networkRequest.resourceType = resourceType;
@@ -869,6 +857,47 @@ function buildNetworkRequestFromEvent(
   if (responseBody !== undefined) {
     networkRequest.responseBody = responseBody;
   }
+}
+
+function buildNetworkRequestFromEvent(
+  eventRecord: Record<string, unknown>,
+  archiveEntries: Record<string, Uint8Array>,
+  anchor: MonotonicAnchor | undefined,
+  attemptStartTimeMs: number,
+): NetworkRequest | undefined {
+  if (eventRecord["type"] !== "resource-snapshot") {
+    return undefined;
+  }
+
+  const snapshotRecord = asRecord(eventRecord["snapshot"]);
+  const requestRecord = asRecord(snapshotRecord?.["request"]);
+  const responseRecord = asRecord(snapshotRecord?.["response"]);
+  if (!snapshotRecord || !requestRecord || !responseRecord) {
+    return undefined;
+  }
+
+  const method = asString(requestRecord["method"]);
+  const url = asString(requestRecord["url"]);
+  const status = asNumber(responseRecord["status"]);
+  if (!method || !url || status === undefined) {
+    return undefined;
+  }
+
+  const networkRequest: NetworkRequest = {
+    method,
+    url,
+    status,
+  };
+
+  enrichNetworkRequest({
+    networkRequest,
+    snapshotRecord,
+    requestRecord,
+    responseRecord,
+    archiveEntries,
+    anchor,
+    attemptStartTimeMs,
+  });
 
   return networkRequest;
 }
