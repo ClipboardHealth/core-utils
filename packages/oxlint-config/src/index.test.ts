@@ -531,7 +531,7 @@ function getFirstOverrideFiles(config: {
 }
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
-  return loadPresetsModuleWithVitestJson(baseJson);
+  return await loadPresetsModuleWithVitestJson(baseJson);
 }
 
 async function loadPresetsModuleWithVitestJson(
