@@ -5,9 +5,9 @@
   },
   "include": [
     "vitest.config.ts",
-    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
     "src/**/*.d.ts",
-    "test/**/*.spec.ts",
+    "test/**/*.test.ts",
     "test/**/*.d.ts"
   ]
 }

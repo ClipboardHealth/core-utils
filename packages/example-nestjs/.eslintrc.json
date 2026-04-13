@@ -6,7 +6,7 @@
   },
   "overrides": [
     {
-      "files": "*.endToEnd.spec.ts",
+      "files": "*.endToEnd.test.ts",
       "rules": {
         "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/no-unsafe-return": "off",
