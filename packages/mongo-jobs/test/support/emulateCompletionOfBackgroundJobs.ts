@@ -1,7 +1,7 @@
 /**
  * Standalone script that exercises the full BackgroundJobs lifecycle in a separate Node process.
  *
- * It is executed by processExit.spec.ts via `npx tsx` to verify that the Node process
+ * It is executed by processExit.test.ts via `npx tsx` to verify that the Node process
  * actually exits after `stop()` is called (no leaked timers or open handles keeping it alive).
  *
  * Usage: npx tsx emulateCompletionOfBackgroundJobs.ts [shutdownTimeoutMs] [jobDurationMs]

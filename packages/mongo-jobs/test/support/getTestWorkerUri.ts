@@ -3,7 +3,7 @@
  *
  * Vitest runs tests in parallel by spawning worker processes. Each process is assigned
  * an ID (e.g. 1, 2, etc.) which is accessible via the VITEST_POOL_ID environment variable.
- * The parallelization is done on a file level, so "foo.spec.ts" and "bar.spec.ts"
+ * The parallelization is done on a file level, so "foo.test.ts" and "bar.test.ts"
  * are run in parallel.
  *
  * This mechanism can be leveraged to generate a unique resource URI based on a URI template.

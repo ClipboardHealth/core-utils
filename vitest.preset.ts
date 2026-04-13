@@ -24,7 +24,7 @@ interface DefinePackageVitestConfigOptions {
   testExclude?: string[];
 }
 
-const DEFAULT_TEST_INCLUDE = ["src/**/*.spec.ts", "src/**/*.test.ts", "test/**/*.spec.ts"] as const;
+const DEFAULT_TEST_INCLUDE = ["src/**/*.test.ts", "test/**/*.test.ts"] as const;
 const DEFAULT_COVERAGE_INCLUDE = ["src/**"] as const;
 const DEFAULT_COVERAGE_EXCLUDE = [
   "src/**/index.ts",

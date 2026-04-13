@@ -7,8 +7,8 @@
   "include": [
     "src/**/*.ts",
     "src/generators/node-lib/files/src/lib/delete-me.ts__template__",
-    "src/generators/node-lib/files/src/lib/delete-me.spec.ts__template__",
+    "src/generators/node-lib/files/src/lib/delete-me.test.ts__template__",
     "src/generators/node-lib/files/src/index.ts__template__"
   ],
-  "exclude": ["vitest.config.ts", "src/**/*.spec.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
 }
