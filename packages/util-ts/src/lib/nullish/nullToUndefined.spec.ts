@@ -24,7 +24,7 @@ describe(nullToUndefined, () => {
           return Promise.resolve(onfulfilled(expected));
         }
 
-        return Promise.reject();
+        return Promise.reject(new Error("No onfulfilled handler"));
       },
     };
 

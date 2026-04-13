@@ -19,11 +19,6 @@
     // TODO: To fix
     "vitest/consistent-test-filename": "off",
     "typescript/strict-boolean-expressions": "off",
-    "vitest/hoisted-apis-on-top": "off",
-    "oxc/no-accumulating-spread": "off",
-    "oxc/no-map-spread": "off",
-    "typescript/consistent-return": "off",
-    "typescript/prefer-promise-reject-errors": "off",
 
     // From [vitest preset](./packages/oxlint-config/src/internal/presets.ts)
     "jest/max-expects": "off",

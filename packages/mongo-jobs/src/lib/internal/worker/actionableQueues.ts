@@ -25,7 +25,7 @@ export class ActionableQueues {
   getRandom(): string | undefined {
     const arrayLength = this.array.length;
     if (arrayLength === 0) {
-      return;
+      return undefined;
     }
 
     return this.array[Math.floor(Math.random() * arrayLength)];

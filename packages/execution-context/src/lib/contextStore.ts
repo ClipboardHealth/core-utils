@@ -25,6 +25,7 @@ export async function runWithExecutionContext<T = void>(
         // eslint-disable-next-line promise/prefer-await-to-then
         Promise.resolve(callback()).then(resolve).catch(reject);
       } catch (error) {
+        // oxlint-disable-next-line typescript/prefer-promise-reject-errors -- re-throwing caught error
         reject(error);
       }
     });

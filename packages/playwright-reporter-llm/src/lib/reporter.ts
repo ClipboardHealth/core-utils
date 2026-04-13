@@ -1202,18 +1202,37 @@ function buildTimeline(
     .filter(
       (request): request is NetworkRequest & { offsetMs: number } => request.offsetMs !== undefined,
     )
-    .map((request) => ({
-      kind: "network" as const,
-      offsetMs: request.offsetMs,
-      method: request.method,
-      url: request.url,
-      status: request.status,
-      ...(request.durationMs !== undefined && { durationMs: request.durationMs }),
-      ...(request.resourceType && { resourceType: request.resourceType }),
-      ...(request.traceId && { traceId: request.traceId }),
-      ...(request.failureText && { failureText: request.failureText }),
-      ...(request.wasAborted !== undefined && { wasAborted: request.wasAborted }),
-    }));
+    .map((request) => {
+      const entry: TimelineNetworkEntry = {
+        kind: "network",
+        offsetMs: request.offsetMs,
+        method: request.method,
+        url: request.url,
+        status: request.status,
+      };
+
+      if (request.durationMs !== undefined) {
+        entry.durationMs = request.durationMs;
+      }
+
+      if (request.resourceType) {
+        entry.resourceType = request.resourceType;
+      }
+
+      if (request.traceId) {
+        entry.traceId = request.traceId;
+      }
+
+      if (request.failureText) {
+        entry.failureText = request.failureText;
+      }
+
+      if (request.wasAborted !== undefined) {
+        entry.wasAborted = request.wasAborted;
+      }
+
+      return entry;
+    });
 
   const consoleEntries: TimelineConsoleEntry[] = consoleMessages
     .filter((entry): entry is ConsoleEntry & { offsetMs: number } => entry.offsetMs !== undefined)

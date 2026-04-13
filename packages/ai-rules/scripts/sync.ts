@@ -128,7 +128,7 @@ function printUsageAndExit(): never {
 function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
   const { profile, extraIncludes, excludes } = parsedArguments;
 
-  const profileRules = PROFILES[profile].include.flatMap((category) => [...CATEGORIES[category]]);
+  const profileRules = PROFILES[profile].include.flatMap((category) => CATEGORIES[category]);
   const ruleSet = new Set<RuleId>([...profileRules, ...extraIncludes]);
 
   for (const ruleId of excludes) {
