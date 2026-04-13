@@ -521,7 +521,7 @@ async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
   vi.resetModules();
   // oxlint-disable-next-line jest/no-untyped-mock-factory -- conflicts with consistent-type-imports
   vi.doMock("node:fs", () => ({
-    readFileSync: vi.fn(() => JSON.stringify(baseJson)),
+    readFileSync: vi.fn<() => string>(() => JSON.stringify(baseJson)),
   }));
 
   return await import("./internal/presets");

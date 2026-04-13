@@ -33,12 +33,11 @@ describe(forEachAsyncSequentially, () => {
 
   it("should propagates errors from the async task", async () => {
     const input = [1, 2, 3];
-    const callback = vi
-      .fn<(item: number, index: number) => Promise<void>>()
-      .mockImplementationOnce(async (item, index) => {
-        await Promise.all([Promise.resolve(item), Promise.resolve(index)]);
-      })
-      .mockRejectedValueOnce(new Error("Test error"));
+    const callback = vi.fn<(item: number, index: number) => Promise<void>>();
+    callback.mockImplementationOnce(async (item, index) => {
+      await Promise.all([Promise.resolve(item), Promise.resolve(index)]);
+    });
+    callback.mockRejectedValueOnce(new Error("Test error"));
 
     await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow("Test error");
   });
@@ -46,12 +45,11 @@ describe(forEachAsyncSequentially, () => {
   it("should stop processing after an error", async () => {
     const input = [1, 2, 3];
     const actual: number[] = [];
-    const callback = vi
-      .fn<(item: number, index: number) => Promise<void>>()
-      .mockImplementationOnce(async (item) => {
-        actual.push(item);
-      })
-      .mockRejectedValueOnce(new Error("Test error"));
+    const callback = vi.fn<(item: number, index: number) => Promise<void>>();
+    callback.mockImplementationOnce(async (item) => {
+      actual.push(item);
+    });
+    callback.mockRejectedValueOnce(new Error("Test error"));
 
     await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow("Test error");
 

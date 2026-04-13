@@ -18,7 +18,6 @@
 
     // TODO: To fix
     "vitest/consistent-test-filename": "off",
-    "vitest/require-mock-type-parameters": "off",
     "typescript/strict-boolean-expressions": "off",
     "vitest/hoisted-apis-on-top": "off",
     "oxc/no-accumulating-spread": "off",
