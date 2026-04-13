@@ -1,4 +1,4 @@
-import { type Rule, type RuleContext } from "../..";
+import type { Rule, RuleContext } from "../..";
 import { appendOutput } from "../appendOutput";
 import { all } from "./all";
 
@@ -38,7 +38,7 @@ const testRule4: TestRule = {
   run: (context) => appendOutput(context, 4),
 };
 
-describe("all", () => {
+describe(all, () => {
   describe("if", () => {
     it("returns true if any rules are true", () => {
       expect(all(testRule1, testRule2, testRule3).runIf(context.input)).toBe(true);
@@ -51,14 +51,14 @@ describe("all", () => {
 
   describe("run", () => {
     it("runs all the matching rules", () => {
-      expect(all(testRule1, testRule2, testRule3, testRule4).run(context)).toEqual({
+      expect(all(testRule1, testRule2, testRule3, testRule4).run(context)).toStrictEqual({
         ...context,
         output: [2, 3],
       });
     });
 
     it("returns the received context if no rule can be run", () => {
-      expect(all(testRule1, testRule4).run(context)).toEqual(context);
+      expect(all(testRule1, testRule4).run(context)).toStrictEqual(context);
     });
   });
 });

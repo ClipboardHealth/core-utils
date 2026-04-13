@@ -87,6 +87,6 @@ export function pipe<A, B, C, D, E, F, G, H, I, J>(
  *
  * </embedex>
  */
-export function pipe(a: unknown, ...fs: Array<(a: unknown) => unknown>): unknown {
+export function pipe(a: unknown, ...fs: ((a: unknown) => unknown)[]): unknown {
   return fs.reduce((accumulator, f) => f(accumulator), a);
 }

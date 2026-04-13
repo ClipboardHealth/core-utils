@@ -1,6 +1,6 @@
 import { pipe } from "./pipe";
 
-describe("pipe", () => {
+describe(pipe, () => {
   it("pipes values through functions", () => {
     const result = pipe(
       5,

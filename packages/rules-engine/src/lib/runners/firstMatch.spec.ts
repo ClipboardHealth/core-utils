@@ -1,4 +1,4 @@
-import { type Rule, type RuleContext } from "../..";
+import type { Rule, RuleContext } from "../..";
 import { appendOutput } from "../appendOutput";
 import { firstMatch } from "./firstMatch";
 
@@ -33,7 +33,7 @@ const testRule3: TestRule = {
   run: (context) => appendOutput(context, 3),
 };
 
-describe("firstMatch", () => {
+describe(firstMatch, () => {
   describe("if", () => {
     it("returns true if any rules are true", () => {
       expect(firstMatch(testRule1, testRule2, testRule3).runIf(context.input)).toBe(true);
@@ -46,14 +46,14 @@ describe("firstMatch", () => {
 
   describe("run", () => {
     it("runs the first matching rule", () => {
-      expect(firstMatch(testRule1, testRule2, testRule3).run(context)).toEqual({
+      expect(firstMatch(testRule1, testRule2, testRule3).run(context)).toStrictEqual({
         ...context,
         output: [2],
       });
     });
 
     it("returns the received context if no rule can be run", () => {
-      expect(firstMatch(testRule1, testRule3).run(context)).toEqual(context);
+      expect(firstMatch(testRule1, testRule3).run(context)).toStrictEqual(context);
     });
   });
 });

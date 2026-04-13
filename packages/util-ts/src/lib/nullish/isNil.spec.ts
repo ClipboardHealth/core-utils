@@ -1,6 +1,6 @@
 import { isNil, isNullOrUndefined } from "./isNil";
 
-describe("isNil", () => {
+describe(isNil, () => {
   it.each([
     { input: null, expected: true },
     { input: undefined, expected: true },

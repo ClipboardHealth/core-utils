@@ -33,6 +33,7 @@ import { contract } from "../src/contract";
 
 type ListUsersRequest = ServerInferRequest<typeof contract.list>;
 
+// oxlint-disable-next-line node/no-process-env
 const port = process.env["PORT"] ?? 3000;
 export const client = initClient(contract, {
   baseUrl: `http://localhost:${port}`,

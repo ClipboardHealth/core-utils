@@ -1,6 +1,6 @@
 import { getTestWorkerUri } from "./getTestWorkerUri";
 
-describe("getTestWorkerUri", () => {
+describe(getTestWorkerUri, () => {
   let originalWorkerId: string | undefined;
 
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { splitString } from "../internal/splitString";
-import { type Field } from "../types";
+import type { Field } from "../types";
 
 /**
  * Creates a Zod schema for JSON:API sort parameters.
@@ -20,10 +20,10 @@ import { type Field } from "../types";
  * } from "@clipboard-health/json-api-nestjs";
  * import { z } from "zod";
  *
- * import {
- *   type ArticleAttributeFields,
- *   type UserAttributeFields,
- *   type UserIncludeFields,
+ * import type {
+ *   ArticleAttributeFields,
+ *   UserAttributeFields,
+ *   UserIncludeFields,
  * } from "../src/contract";
  *
  * const articleFields = ["title"] as const satisfies readonly ArticleAttributeFields[];
@@ -90,6 +90,6 @@ export function sortQuery<const FieldT extends readonly [Field, ...Field[]]>(fie
           }
         }
       })
-      .transform((value) => value as Array<`-${FieldT[number]}` | FieldT[number]> | undefined),
+      .transform((value) => value as (`-${FieldT[number]}` | FieldT[number])[] | undefined),
   };
 }

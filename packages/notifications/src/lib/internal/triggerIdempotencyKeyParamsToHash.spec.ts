@@ -1,6 +1,6 @@
 import { triggerIdempotencyKeyParamsToHash } from "./triggerIdempotencyKeyParamsToHash";
 
-describe("triggerIdempotencyKeyParamsToHash", () => {
+describe(triggerIdempotencyKeyParamsToHash, () => {
   const baseParams = {
     chunk: 1,
     recipients: ["user1", "user2"],

@@ -1,4 +1,4 @@
-import { type ZodError, type ZodIssue } from "zod";
+import type { ZodError, ZodIssue } from "zod";
 
 import { deepFreeze } from "../deepFreeze";
 import { toError } from "./toError";
@@ -17,7 +17,7 @@ export const ERROR_CODES = {
   internal: "internal",
 } as const;
 
-// (string & {}) keeps the literal-union intact—so we get autocomplete for the built-ins *and* accept any other string.
+// oxlint-disable-next-line typescript/ban-types -- (string & {}) keeps the literal-union intact—so we get autocomplete for the built-ins *and* accept any other string.
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES] | (string & {});
 
 const ERROR_METADATA = {
@@ -67,7 +67,7 @@ export interface ServiceIssue {
   message?: string | undefined;
 
   /** Path to issue location */
-  path?: Array<string | number>;
+  path?: (string | number)[];
 
   /**
    * Short, reusable summary of the problem (`errors.title`).
@@ -174,14 +174,14 @@ export class ServiceError extends Error {
    * @returns New ServiceError instance
    */
   static fromJsonApi(jsonApiError: {
-    errors: Array<{
+    errors: {
       id?: string;
       status?: `${Status}`;
       code?: ErrorCode;
       title?: string;
       detail?: string;
       source?: Record<string, string>;
-    }>;
+    }[];
   }): ServiceError {
     const issues = jsonApiError.errors.map((error) => {
       const path = Object.values(error.source ?? {})?.[0]
@@ -257,7 +257,7 @@ export class ServiceError extends Error {
         id: this.id,
         status: String(getStatusFromIssue(issue)),
         code: issue.code,
-        title: issue.title,
+        ...(issue.title === undefined ? undefined : { title: issue.title }),
         ...(issue.message && { detail: issue.message }),
         ...(issue.path && {
           source: {
@@ -300,7 +300,13 @@ function toIssue(issue: ServiceIssue): Issue {
   const code = issue.code ?? ERROR_CODES.internal;
   const title =
     issue.title ?? (isKeyOf(code, ERROR_METADATA) ? ERROR_METADATA[code].title : undefined);
-  return { ...issue, code, ...(title ? { title } : undefined) };
+  return {
+    code,
+    ...(issue.message === undefined ? undefined : { message: issue.message }),
+    ...(issue.path === undefined ? undefined : { path: issue.path }),
+    ...(issue.status === undefined ? undefined : { status: issue.status }),
+    ...(title === undefined ? undefined : { title }),
+  };
 }
 
 function isKeyOf<T extends Record<string, unknown>>(

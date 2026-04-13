@@ -2,14 +2,14 @@ import {
   expectToBeSafeParseError,
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
-import { type Arrayable } from "type-fest";
+import type { Arrayable } from "type-fest";
 import { z } from "zod";
 
 import { fieldsQuery } from "./fieldsQuery";
 
 type Fields = Record<string, Arrayable<string>>;
 
-describe("fieldsQuery", () => {
+describe(fieldsQuery, () => {
   const fieldsSchema = z.object(
     fieldsQuery({
       user: ["age", "dateOfBirth"],
@@ -71,7 +71,7 @@ describe("fieldsQuery", () => {
       const actual = fieldsSchema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toEqual(expected);
+      expect(actual.data).toStrictEqual(expected);
     });
   });
 

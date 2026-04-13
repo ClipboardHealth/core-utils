@@ -1,11 +1,11 @@
-import { type ClientJsonApiQuery } from "../types";
+import type { ClientJsonApiQuery } from "../types";
 import { stringifyQuery } from "./stringifyQuery";
 
 function stringify(query: ClientJsonApiQuery): string {
   return stringifyQuery(query, { encode: false });
 }
 
-describe("stringifyQuery", () => {
+describe(stringifyQuery, () => {
   it("encodes", () => {
     const actual = stringifyQuery({ fields: { user: "age" } });
 

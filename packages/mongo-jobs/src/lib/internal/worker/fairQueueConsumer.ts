@@ -1,7 +1,7 @@
 import type { ChangeStream } from "mongodb";
 
 import type { BackgroundJobType } from "../../job";
-import { type JobsRepository, type UpsertChangeStreamEvent } from "../jobsRepository";
+import type { JobsRepository, UpsertChangeStreamEvent } from "../jobsRepository";
 import { ActionableQueues } from "./actionableQueues";
 import { FutureQueues } from "./futureQueues";
 import type { QueueConsumer, QueueConsumerStartOptions } from "./queueConsumer";

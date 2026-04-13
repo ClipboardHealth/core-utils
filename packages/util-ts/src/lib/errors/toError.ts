@@ -32,7 +32,7 @@ export function toError(value: unknown): Error {
     }
 
     if ("name" in value && typeof value.name === "string") {
-      error.name = String(value.name);
+      error.name = value.name;
     }
 
     // Preserve original properties without clobbering.

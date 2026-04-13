@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { expectToBeSafeParseSuccess } from "./expectToBeSafeParseSuccess";
 
-describe("expectToBeSafeParseSuccess", () => {
+describe(expectToBeSafeParseSuccess, () => {
   interface TestCase {
     input: z.SafeParseReturnType<unknown, unknown>;
     name: string;
@@ -46,6 +46,6 @@ describe("expectToBeSafeParseSuccess", () => {
     // Narrowed to SafeParseSuccess
     expect(actual.success).toBe(true);
     expect(actual.data).toBe(input);
-    expect(typeof actual.data).toBe("string");
+    expectTypeOf(actual.data).toBeString();
   });
 });

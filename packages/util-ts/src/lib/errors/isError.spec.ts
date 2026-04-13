@@ -1,6 +1,6 @@
 import { isError } from "./isError";
 
-describe("isError", () => {
+describe(isError, () => {
   it.each([
     { input: new Error("test"), expected: true },
     { input: new TypeError("test"), expected: true },

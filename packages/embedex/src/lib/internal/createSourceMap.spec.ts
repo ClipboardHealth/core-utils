@@ -1,6 +1,6 @@
 import { stripSourceMarker } from "./createSourceMap";
 
-describe("stripSourceMarker", () => {
+describe(stripSourceMarker, () => {
   it("strips source marker line when present", () => {
     const content = "// embedex: dest.md\nconst x = 1;\nconsole.log(x);";
 

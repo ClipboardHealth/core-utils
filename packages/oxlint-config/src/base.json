@@ -20,10 +20,11 @@
   },
   "rules": {
     "capitalized-comments": "off",
-    "curly": ["error", "all"],
-    "func-style": ["error", "declaration"],
-    "id-length": "off",
     "class-methods-use-this": "off",
+    "curly": ["error", "all"],
+    "func-names": "off",
+    "func-style": "off",
+    "id-length": "off",
     "import/consistent-type-specifier-style": "off",
     "import/exports-last": "off",
     "import/group-exports": "off",
@@ -48,19 +49,18 @@
     "no-continue": "off",
     "no-inline-comments": "off",
     "no-magic-numbers": "off",
-    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-named-export": "off",
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-ternary": "off",
+    "no-undefined": "off",
     "no-unused-vars": [
       "error",
       {
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
+        "caughtErrorsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
       }
     ],
-    "no-undefined": "off",
-    "return-await": "off",
     "no-use-before-define": "off",
     "no-void": "off",
     "object-shorthand": ["error", "properties"],
@@ -69,21 +69,25 @@
     "oxc/no-rest-spread-properties": "off",
     "prefer-promise-reject-errors": "off",
     "promise/avoid-new": "off",
-    "promise/prefer-await-to-then": "off",
     "promise/prefer-await-to-callbacks": "off",
+    "promise/prefer-await-to-then": "off",
     "require-await": "off",
+    "return-await": "off",
     "sort-imports": "off",
     "sort-keys": "off",
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-module-boundary-types": "off",
+    "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
     "typescript/parameter-properties": "off",
+    "typescript/require-await": "off",
     "typescript/return-await": ["error", "always"],
+    "unicorn/filename-case": ["error", { "case": "camelCase" }],
     "unicorn/no-array-callback-reference": "off",
     "unicorn/no-array-for-each": "off",
-    "unicorn/filename-case": ["error", { "case": "camelCase" }],
     "unicorn/no-array-reduce": "off",
     "unicorn/no-null": "off",
-    "unicorn/prefer-module": "off"
+    "unicorn/prefer-module": "off",
+    "unicorn/prefer-top-level-await": "off"
   },
   "overrides": [
     {
@@ -99,14 +103,6 @@
         "no-console": "off",
         "node/no-process-env": "off",
         "unicorn/no-process-exit": "off"
-      }
-    },
-    {
-      "files": ["**/*.spec.ts", "**/*.test.ts"],
-      "rules": {
-        "no-shadow": "off",
-        "typescript/no-unsafe-assignment": "off",
-        "typescript/no-unsafe-member-access": "off"
       }
     }
   ]

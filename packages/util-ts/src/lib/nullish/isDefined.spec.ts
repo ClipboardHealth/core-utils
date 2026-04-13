@@ -1,6 +1,6 @@
 import { isDefined } from "./isDefined";
 
-describe("isDefined", () => {
+describe(isDefined, () => {
   it.each([
     { input: null, expected: false },
     { input: undefined, expected: false },

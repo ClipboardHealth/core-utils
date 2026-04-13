@@ -1,4 +1,4 @@
-import { type BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
 
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
@@ -16,7 +16,7 @@ vi.mock("./internal/chunkRecipients");
 
 const mockChunkRecipients = vi.mocked(chunkRecipients);
 
-describe("NotificationJobEnqueuer", () => {
+describe(NotificationJobEnqueuer, () => {
   const mockEnqueue = vi.fn();
   const mockAdapter: BackgroundJobsAdapter = {
     implementation: "postgres",

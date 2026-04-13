@@ -1,6 +1,6 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type LogFunction, type Logger, ServiceError } from "@clipboard-health/util-ts";
-import { type Knock } from "@knocklabs/node";
+import type { Knock } from "@knocklabs/node";
 import type { Mocked } from "vitest";
 
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
@@ -24,7 +24,7 @@ import type {
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
 
-describe("NotificationClient", () => {
+describe(NotificationClient, () => {
   let client: NotificationClient;
   let mockLogger: Mocked<Logger>;
   let mockTracer: Mocked<Tracer>;
@@ -176,7 +176,7 @@ describe("NotificationClient", () => {
 
       expectToBeFailure(actual);
       expect(actual.error).toBeInstanceOf(ServiceError);
-      expect(actual.error.issues).toEqual([{ code: "unknown", message: mockError.message }]);
+      expect(actual.error.issues).toStrictEqual([{ code: "unknown", message: mockError.message }]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.trigger [unknown] Knock API error",
@@ -670,7 +670,7 @@ describe("NotificationClient", () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.responses).toHaveLength(1);
-      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: mockWorkflowRunId });
+      expect(actual.value.responses[0]).toStrictEqual({ chunkNumber: 1, id: mockWorkflowRunId });
 
       expect(triggerSpy).toHaveBeenCalledWith(
         mockWorkflowKey,
@@ -709,8 +709,8 @@ describe("NotificationClient", () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.responses).toHaveLength(2);
-      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: "run-1" });
-      expect(actual.value.responses[1]).toEqual({ chunkNumber: 2, id: "run-2" });
+      expect(actual.value.responses[0]).toStrictEqual({ chunkNumber: 1, id: "run-1" });
+      expect(actual.value.responses[1]).toStrictEqual({ chunkNumber: 2, id: "run-2" });
 
       expect(triggerSpy).toHaveBeenCalledTimes(2);
       expect(triggerSpy).toHaveBeenNthCalledWith(
@@ -804,7 +804,7 @@ describe("NotificationClient", () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.responses).toHaveLength(1);
-      expect(actual.value.responses[0]).toEqual({ chunkNumber: 1, id: "dry-run" });
+      expect(actual.value.responses[0]).toStrictEqual({ chunkNumber: 1, id: "dry-run" });
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
@@ -1230,7 +1230,7 @@ describe("NotificationClient", () => {
 
       expectToBeFailure(result);
       expect(result.error).toBeInstanceOf(ServiceError);
-      expect(result.error.issues).toEqual([{ code: "unknown", message: "API error" }]);
+      expect(result.error.issues).toStrictEqual([{ code: "unknown", message: "API error" }]);
 
       expect(setChannelDataSpy).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -1252,7 +1252,7 @@ describe("NotificationClient", () => {
 
       expectToBeFailure(result);
       expect(result.error).toBeInstanceOf(ServiceError);
-      expect(result.error.issues).toEqual([
+      expect(result.error.issues).toStrictEqual([
         { code: "unknown", message: "Set channel data failed" },
       ]);
 
@@ -1320,7 +1320,7 @@ describe("NotificationClient", () => {
 
       expectToBeFailure(result);
       expect(result.error).toBeInstanceOf(ServiceError);
-      expect(result.error.issues).toEqual([{ code: "unknown", message: mockError.message }]);
+      expect(result.error.issues).toStrictEqual([{ code: "unknown", message: mockError.message }]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.upsertWorkplace [unknown] Tenant API error",
@@ -1436,7 +1436,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeSuccess(result);
       expect(result.value.token).toBeDefined();
-      expect(typeof result.value.token).toBe("string");
+      expectTypeOf(result.value.token).toBeString();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.signUserToken request",
@@ -1476,7 +1476,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeSuccess(result);
       expect(result.value.token).toBeDefined();
-      expect(typeof result.value.token).toBe("string");
+      expectTypeOf(result.value.token).toBeString();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         "notifications.signUserToken request",
@@ -1502,7 +1502,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeFailure(result);
       expect(result.error).toBeInstanceOf(ServiceError);
-      expect(result.error.issues).toEqual([
+      expect(result.error.issues).toStrictEqual([
         { code: "missingSigningKey", message: "Missing signing key." },
       ]);
     });
@@ -1646,7 +1646,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       expectToBeFailure(result);
       expect(result.error).toBeInstanceOf(ServiceError);
-      expect(result.error.issues).toEqual([{ code: "unknown", message: mockError.message }]);
+      expect(result.error.issues).toStrictEqual([{ code: "unknown", message: mockError.message }]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.upsertUserPreferences [unknown] Preferences API error",

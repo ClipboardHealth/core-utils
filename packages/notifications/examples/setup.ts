@@ -1,10 +1,10 @@
-import {
-  type BackgroundJobsAdapter,
-  type BackgroundJobsImplementation,
-  type EnqueueOptions,
-  type HandlerClassOrInstance,
+import type {
+  BackgroundJobsAdapter,
+  BackgroundJobsImplementation,
+  EnqueueOptions,
+  HandlerClassOrInstance,
 } from "@clipboard-health/background-jobs-adapter";
-import { type Span, type TraceOptions, type Tracer } from "@clipboard-health/notifications";
+import type { Span, TraceOptions, Tracer } from "@clipboard-health/notifications";
 import { type Logger, toError } from "@clipboard-health/util-ts";
 
 /**

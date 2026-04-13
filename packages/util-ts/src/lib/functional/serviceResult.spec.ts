@@ -20,7 +20,7 @@ function getServiceErrorMessage(error: ServiceError): string {
 }
 
 describe("ServiceResult", () => {
-  describe("success", () => {
+  describe(success, () => {
     it("creates success result", () => {
       const input = { data: "test" };
 
@@ -29,11 +29,11 @@ describe("ServiceResult", () => {
       expect(isSuccess(actual)).toBe(true);
       expect(isFailure(actual)).toBe(false);
       expect(actual.isSuccess).toBe(true);
-      expect((actual as Success<{ data: string }>).value).toEqual(input);
+      expect((actual as Success<{ data: string }>).value).toStrictEqual(input);
     });
   });
 
-  describe("failure", () => {
+  describe(failure, () => {
     it("creates failure result from ServiceErrorParams", () => {
       const input = {
         issues: [{ code: ERROR_CODES.notFound }],
@@ -47,7 +47,9 @@ describe("ServiceResult", () => {
       expect(actual.isSuccess).toBe(false);
       const { error } = actual as Failure<ServiceError>;
       expect(error).toBeInstanceOf(ServiceError);
-      expect(error.issues).toEqual([{ code: ERROR_CODES.notFound, title: "Resource not found" }]);
+      expect(error.issues).toStrictEqual([
+        { code: ERROR_CODES.notFound, title: "Resource not found" },
+      ]);
     });
 
     it("creates failure result from ServiceError", () => {
@@ -60,13 +62,13 @@ describe("ServiceResult", () => {
       expect(actual.isRight).toBe(false);
       const { error } = actual as Failure<ServiceError>;
       expect(error).toBe(input);
-      expect(error.issues).toEqual([
+      expect(error.issues).toStrictEqual([
         { code: ERROR_CODES.internal, title: "Internal server error", message: "test error" },
       ]);
     });
   });
 
-  describe("tryCatchAsync", () => {
+  describe(tryCatchAsync, () => {
     it("returns success result when promise resolves", async () => {
       const actual = await tryCatchAsync(
         async () => await Promise.resolve("test data"),
@@ -106,7 +108,7 @@ describe("ServiceResult", () => {
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;
-      expect(error.issues).toEqual([
+      expect(error.issues).toStrictEqual([
         {
           code: ERROR_CODES.notFound,
           title: "Resource not found",
@@ -116,7 +118,7 @@ describe("ServiceResult", () => {
     });
   });
 
-  describe("tryCatch", () => {
+  describe(tryCatch, () => {
     it("returns success result when function executes successfully", () => {
       const actual = tryCatch(
         () => "success value",
@@ -154,7 +156,7 @@ describe("ServiceResult", () => {
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;
-      expect(error.issues).toEqual([
+      expect(error.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           title: "Invalid or malformed request",
@@ -182,7 +184,7 @@ describe("ServiceResult", () => {
     });
   });
 
-  describe("mapFailure", () => {
+  describe(mapFailure, () => {
     it("transforms error when ServiceResult is failure", () => {
       const serviceError = new ServiceError("original error");
       const failureResult = failure(serviceError);
@@ -220,7 +222,7 @@ describe("ServiceResult", () => {
       }>;
 
       expect(isLeft(actual)).toBe(true);
-      expect(actual.left).toEqual({
+      expect(actual.left).toStrictEqual({
         errorCode: ERROR_CODES.notFound,
         errorMessage: "Resource not found",
       });
@@ -240,7 +242,7 @@ describe("ServiceResult", () => {
     });
   });
 
-  describe("fromSafeParseReturnType", () => {
+  describe(fromSafeParseReturnType, () => {
     it("returns success result when parse succeeds", () => {
       const schema = z.string();
       const input = "test";
@@ -262,7 +264,7 @@ describe("ServiceResult", () => {
       expect(actual.isRight).toBe(false);
       const { error } = actual as Failure<ServiceError>;
       expect(error).toBeInstanceOf(ServiceError);
-      expect(error.issues).toEqual([
+      expect(error.issues).toStrictEqual([
         {
           code: ERROR_CODES.badRequest,
           title: "Invalid or malformed request",
@@ -305,9 +307,6 @@ describe("ServiceResult", () => {
 
     it("falls back to ServiceError.merge when onError throws", () => {
       const originalError = new Error("original error");
-      const faultyOnError = () => {
-        throw new Error("onError function failed");
-      };
 
       const actual = tryCatch(() => {
         throw originalError;
@@ -322,3 +321,7 @@ describe("ServiceResult", () => {
     });
   });
 });
+
+function faultyOnError(): never {
+  throw new Error("onError function failed");
+}

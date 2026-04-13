@@ -50,7 +50,7 @@ describe("oxlint-config", () => {
         },
       });
 
-      expect(base.overrides).toHaveLength(3);
+      expect(base.overrides).toHaveLength(2);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
@@ -66,7 +66,10 @@ describe("oxlint-config", () => {
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
         rules: {
+          "jest/max-expects": "off",
+          "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
+          "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
         },
       });
@@ -74,18 +77,24 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "jest/max-expects": "off",
+          "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
+          "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+          "vitest/prefer-called-once": "off",
+          "vitest/prefer-import-in-mock": "off",
           "vitest/prefer-importing-vitest-globals": "off",
           "vitest/prefer-to-be-falsy": "off",
           "vitest/prefer-to-be-truthy": "off",
+          "vitest/require-hook": "off",
           "vitest/require-test-timeout": "off",
         },
       });
     });
   });
 
-  describe("createOxlintConfig", () => {
+  describe(createOxlintConfig, () => {
     it("returns an empty config when no presets or local config are provided", () => {
       const actual = createOxlintConfig({});
 
@@ -398,101 +407,71 @@ describe("oxlint-config", () => {
 
   describe("invalid preset data", () => {
     it("throws when base.json contains an unsupported oxlint plugin", async () => {
-      try {
-        await expect(
-          loadPresetsModule({
-            presets: [base],
-            overrides: [],
-            plugins: ["unsupported-plugin"],
-            rules: {},
-          }),
-        ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin" in base.json.');
-      } finally {
-        vi.resetModules();
-        vi.unmock("node:fs");
-      }
+      await expect(
+        loadPresetsModule({
+          presets: [base],
+          overrides: [],
+          plugins: ["unsupported-plugin"],
+          rules: {},
+        }),
+      ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin" in base.json.');
     });
 
     it("throws when base.json is not an object", async () => {
-      try {
-        await expect(loadPresetsModule([])).rejects.toThrow(
-          "The bundled base.json file is not a valid oxlint config preset.",
-        );
-      } finally {
-        vi.resetModules();
-        vi.unmock("node:fs");
-      }
+      await expect(loadPresetsModule([])).rejects.toThrow(
+        "The bundled base.json file is not a valid oxlint config preset.",
+      );
     });
 
     it("throws when base.json overrides are invalid", async () => {
-      try {
-        await expect(
-          loadPresetsModule({
-            overrides: [false],
-            plugins: ["import"],
-            rules: {},
-          }),
-        ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
-      } finally {
-        vi.resetModules();
-        vi.unmock("node:fs");
-      }
+      await expect(
+        loadPresetsModule({
+          overrides: [false],
+          plugins: ["import"],
+          rules: {},
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
     });
 
     it("throws when base.json rules are invalid", async () => {
-      try {
-        await expect(
-          loadPresetsModule({
-            overrides: [],
-            plugins: ["import"],
-            rules: [],
-          }),
-        ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
-      } finally {
-        vi.resetModules();
-        vi.unmock("node:fs");
-      }
+      await expect(
+        loadPresetsModule({
+          overrides: [],
+          plugins: ["import"],
+          rules: [],
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
     });
 
     it("throws when base.json categories are invalid", async () => {
-      try {
-        await expect(
-          loadPresetsModule({
-            categories: "not-an-object",
-            overrides: [],
-            plugins: ["import"],
-            rules: {},
-          }),
-        ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
-      } finally {
-        vi.resetModules();
-        vi.unmock("node:fs");
-      }
+      await expect(
+        loadPresetsModule({
+          categories: "not-an-object",
+          overrides: [],
+          plugins: ["import"],
+          rules: {},
+        }),
+      ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
     });
 
     it("supports valid overrides without rules", async () => {
-      try {
-        const loadedPresetsModule = getLoadedPresetsModule(
-          await loadPresetsModule({
-            overrides: [
-              {
-                files: ["**/*.ts"],
-              },
-            ],
-            plugins: ["import"],
-            rules: {},
-          }),
-        );
+      const loadedPresetsModule = getLoadedPresetsModule(
+        await loadPresetsModule({
+          overrides: [
+            {
+              files: ["**/*.ts"],
+            },
+          ],
+          plugins: ["import"],
+          rules: {},
+        }),
+      );
 
-        expect(loadedPresetsModule.base.overrides).toStrictEqual([
-          {
-            files: ["**/*.ts"],
-          },
-        ]);
-      } finally {
-        vi.resetModules();
-        vi.unmock("node:fs");
-      }
+      expect(loadedPresetsModule.base.overrides).toStrictEqual([
+        {
+          files: ["**/*.ts"],
+        },
+      ]);
     });
   });
 });
@@ -525,9 +504,9 @@ function getConfigWithRulesAndOverrides(config: typeof base): {
 }
 
 function getFirstOverrideFiles(config: {
-  overrides: Array<{
+  overrides: {
     files: string[];
-  }>;
+  }[];
 }): string[] {
   const [firstOverride] = config.overrides;
 
@@ -549,7 +528,7 @@ async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
 }
 
 function getLoadedPresetsModule(value: unknown): {
-  base: { overrides?: Array<{ files: string[]; rules?: Record<string, unknown> }> };
+  base: { overrides?: { files: string[]; rules?: Record<string, unknown> }[] };
 } {
   if (!isRecord(value) || !("base" in value) || !isRecord(value["base"])) {
     throw new TypeError("Expected presets module to expose a base preset.");
@@ -557,7 +536,7 @@ function getLoadedPresetsModule(value: unknown): {
 
   return {
     base: value["base"] as {
-      overrides?: Array<{ files: string[]; rules?: Record<string, unknown> }>;
+      overrides?: { files: string[]; rules?: Record<string, unknown> }[];
     },
   };
 }

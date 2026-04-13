@@ -1,16 +1,16 @@
 import { forEachAsyncSequentially } from "./forEachAsyncSequentially";
 
-describe("forEachAsyncSequentially", () => {
+describe(forEachAsyncSequentially, () => {
   it("should pass the current executing index in the list to the async task", async () => {
     const input = ["a", "b", "c"];
-    const results: Array<{ item: string; index: number }> = [];
+    const results: { item: string; index: number }[] = [];
 
     await forEachAsyncSequentially(input, async (item, index) => {
       await Promise.resolve();
       results.push({ item, index });
     });
 
-    expect(results).toEqual([
+    expect(results).toStrictEqual([
       { item: "a", index: 0 },
       { item: "b", index: 1 },
       { item: "c", index: 2 },
@@ -28,7 +28,7 @@ describe("forEachAsyncSequentially", () => {
       actual.push(item);
     });
 
-    expect(actual).toEqual([10, 5, 1]);
+    expect(actual).toStrictEqual([10, 5, 1]);
   });
 
   it("should propagates errors from the async task", async () => {
@@ -55,7 +55,7 @@ describe("forEachAsyncSequentially", () => {
 
     await expect(forEachAsyncSequentially(input, callback)).rejects.toThrow();
 
-    expect(actual).toEqual([1]);
+    expect(actual).toStrictEqual([1]);
   });
 
   it("should be a noop when run on empty arrays", async () => {

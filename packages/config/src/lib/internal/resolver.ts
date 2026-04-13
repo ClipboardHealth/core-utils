@@ -2,7 +2,7 @@ import { isDefined } from "@clipboard-health/util-ts";
 import decamelize from "decamelize";
 import { z } from "zod";
 
-import { type ConfigValue, type ConfigValueMap } from "../types";
+import type { ConfigValue, ConfigValueMap } from "../types";
 
 interface ResolveParams<SchemaT extends Record<string, unknown>> {
   config: Readonly<ConfigValueMap<SchemaT, readonly string[]>>;

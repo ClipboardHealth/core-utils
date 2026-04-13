@@ -4,8 +4,8 @@ module.exports = {
     `cspell --no-must-find-files ${files.join(" ")}`,
     "markdownlint-cli2 '**/*.md'",
   ],
-  "**/*.{ts,tsx,js,jsx}": () => ["oxlint --deny-warnings"],
-  "**/*.{ts,tsx,md,mdx}": () => ["npm run embed:check"],
+  "**/*.{ts,tsx,js,jsx}": () => ["node --run lint"],
+  "**/*.{ts,tsx,md,mdx}": () => ["node --run embed:check"],
   "**/*.{css,scss,graphql,js,json,jsonc,jsx,ts,tsx,md,mdx,toml,yml,yaml}": (files) => [
     `oxfmt --no-error-on-unmatched-pattern ${files.join(" ")}`,
   ],

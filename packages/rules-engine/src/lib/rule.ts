@@ -1,4 +1,4 @@
-import { type ReadonlyDeep } from "type-fest";
+import type { ReadonlyDeep } from "type-fest";
 
 export interface RuleContext<TInput, TOutput> {
   /**
@@ -9,7 +9,7 @@ export interface RuleContext<TInput, TOutput> {
   /**
    * Output is immutable, do not modify existing items, only append using {@link appendOutput}.
    */
-  output: ReadonlyArray<ReadonlyDeep<TOutput>>;
+  output: readonly ReadonlyDeep<TOutput>[];
 }
 
 export interface Rule<

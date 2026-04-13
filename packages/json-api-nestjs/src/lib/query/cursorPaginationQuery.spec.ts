@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { cursorPaginationQuery } from "./cursorPaginationQuery";
 
-describe("cursorPaginationQuery", () => {
+describe(cursorPaginationQuery, () => {
   interface Page {
     cursor?: string;
     size?: number;
@@ -34,7 +34,7 @@ describe("cursorPaginationQuery", () => {
     const actual = cursorPaginationSchema.safeParse(input);
 
     expectToBeSafeParseSuccess(actual);
-    expect(actual.data).toEqual(expected);
+    expect(actual.data).toStrictEqual(expected);
   });
 
   it.each<{ errorMessage: string; input: unknown; name: string }>([
@@ -74,7 +74,7 @@ describe("cursorPaginationQuery", () => {
       const actual = schema.safeParse(input);
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toEqual({
+      expect(actual.data).toStrictEqual({
         page: {
           size: 10,
         },

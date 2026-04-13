@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-import { type BackgroundJobs } from "../src";
+import type { BackgroundJobs } from "../src";
 import { drainHandlers, drainQueues } from "../src/lib/testing";
 import { EmptyExampleJob } from "./support/emptyExampleJob";
 import { EnqueueAnotherJob } from "./support/enqueueAnotherJob";
@@ -20,7 +20,7 @@ describe("Testing helpers", () => {
 
   beforeEach(async () => {
     testContext = await createTestContext();
-    backgroundJobs = testContext.backgroundJobs;
+    ({ backgroundJobs } = testContext);
 
     backgroundJobs.register(ExampleJob, "default");
     backgroundJobs.register(EmptyExampleJob, "default");
@@ -35,7 +35,7 @@ describe("Testing helpers", () => {
     await testContext.tearDown();
   });
 
-  describe("drainQueues", () => {
+  describe(drainQueues, () => {
     it("consumes jobs from given group", async () => {
       await backgroundJobs.enqueue(ExampleJob, { myNumber: 123 });
       await backgroundJobs.enqueue(OtherQueueJob, { myNumber: 999 });
@@ -55,7 +55,7 @@ describe("Testing helpers", () => {
     });
   });
 
-  describe("drainHandlers", () => {
+  describe(drainHandlers, () => {
     it("consumes jobs for given handler", async () => {
       await backgroundJobs.enqueue(ExampleJob, { myNumber: 123 });
       await backgroundJobs.enqueue(EmptyExampleJob, {});

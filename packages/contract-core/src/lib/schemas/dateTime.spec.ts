@@ -5,7 +5,7 @@ import {
 
 import { dateTimeSchema } from "./dateTime";
 
-describe("dateTimeSchema", () => {
+describe(dateTimeSchema, () => {
   const schema = dateTimeSchema();
 
   describe("success cases", () => {

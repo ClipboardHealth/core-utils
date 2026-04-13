@@ -2,7 +2,7 @@ import { option as O } from "@clipboard-health/util-ts";
 
 import { expectToBeSome } from "./expectToBeSome";
 
-describe("expectToBeSome", () => {
+describe(expectToBeSome, () => {
   interface TestCase {
     input: O.Option<number> | undefined;
     name: string;

@@ -14,7 +14,7 @@ import {
 
 const VALUES = ["a", "b", "c"] as const;
 
-describe("requiredEnumWithFallback", () => {
+describe(requiredEnumWithFallback, () => {
   const schema = requiredEnumWithFallback([...VALUES]);
 
   describe("success cases", () => {
@@ -53,7 +53,7 @@ describe("requiredEnumWithFallback", () => {
   });
 });
 
-describe("optionalEnumWithFallback", () => {
+describe(optionalEnumWithFallback, () => {
   const schema = optionalEnumWithFallback([...VALUES]);
 
   describe("success cases", () => {
@@ -83,7 +83,7 @@ describe("optionalEnumWithFallback", () => {
   });
 });
 
-describe("enumWithFallback", () => {
+describe(enumWithFallback, () => {
   it("throws if values include ENUM_FALLBACK", () => {
     expect(() => enumWithFallback(["a", ENUM_FALLBACK])).toThrow(
       `Enum values must not include "${ENUM_FALLBACK}"`,
@@ -148,7 +148,7 @@ describe("enumWithFallback", () => {
   });
 });
 
-describe("requiredEnum", () => {
+describe(requiredEnum, () => {
   const schema = requiredEnum([...VALUES]);
 
   describe("success cases", () => {
@@ -179,7 +179,7 @@ describe("requiredEnum", () => {
   });
 });
 
-describe("optionalEnum", () => {
+describe(optionalEnum, () => {
   const schema = optionalEnum([...VALUES]);
 
   describe("success cases", () => {

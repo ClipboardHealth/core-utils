@@ -5,6 +5,7 @@
       "extends": ["./packages/eslint-config/src/index.js"],
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
+        "@typescript-eslint/array-type": "off",
         "no-barrel-files/no-barrel-files": "off",
         "unicorn/filename-case": ["error", { "case": "camelCase" }]
       }
@@ -14,7 +15,9 @@
       "env": {
         "jest": true
       },
-      "rules": {}
+      "rules": {
+        "jest/valid-title": "off"
+      }
     },
     {
       "files": [

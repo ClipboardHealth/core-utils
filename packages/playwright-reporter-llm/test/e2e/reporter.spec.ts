@@ -17,6 +17,7 @@ describe("LLM Reporter E2E", () => {
 
     // Strip Jest environment variables so Playwright doesn't detect a Jest context and skip test discovery.
     const environment = Object.fromEntries(
+      // oxlint-disable-next-line node/no-process-env
       Object.entries(process.env).filter(([key]) => !key.startsWith("JEST")),
     );
 
@@ -75,7 +76,7 @@ describe("LLM Reporter E2E", () => {
       expect(test.id).toBeDefined();
       expect(test.title).toBeDefined();
       expect(validStatuses).toContain(test.status);
-      expect(typeof test.flaky).toBe("boolean");
+      expectTypeOf(test.flaky).toBeBoolean();
       expect(test.durationMs).toBeGreaterThanOrEqual(0);
       expect(test.location.file).toBeDefined();
       expect(test.location.line).toBeGreaterThan(0);
@@ -85,8 +86,8 @@ describe("LLM Reporter E2E", () => {
 
       const finalAttempt = test.attempts.at(-1);
       expect(finalAttempt?.status).toBe(test.status);
-      expect(test.steps).toEqual(finalAttempt?.steps);
-      expect(test.network).toEqual(finalAttempt?.network);
+      expect(test.steps).toStrictEqual(finalAttempt?.steps);
+      expect(test.network).toStrictEqual(finalAttempt?.network);
       expect(finalAttempt?.consoleMessages).toBeInstanceOf(Array);
       const expectedTopLevelErrorByStatus = {
         failed: test.errors[0],
@@ -95,7 +96,7 @@ describe("LLM Reporter E2E", () => {
         skipped: undefined,
         timedOut: test.errors[0],
       };
-      expect(test.error).toEqual(expectedTopLevelErrorByStatus[test.status]);
+      expect(test.error).toStrictEqual(expectedTopLevelErrorByStatus[test.status]);
     }
   });
 
@@ -119,10 +120,13 @@ describe("LLM Reporter E2E", () => {
     expect(flakyTest?.retries).toBeGreaterThan(0);
     expect(flakyTest?.title).toContain("passes on retry");
     expect(flakyTest?.attempts).toHaveLength(2);
-    expect(flakyTest?.attempts.map((attempt) => attempt.attempt)).toEqual([1, 2]);
-    expect(flakyTest?.attempts.map((attempt) => attempt.status)).toEqual(["failed", "passed"]);
-    expect(flakyTest?.steps).toEqual(flakyTest?.attempts.at(1)?.steps);
-    expect(flakyTest?.network).toEqual(flakyTest?.attempts.at(1)?.network);
+    expect(flakyTest?.attempts.map((attempt) => attempt.attempt)).toStrictEqual([1, 2]);
+    expect(flakyTest?.attempts.map((attempt) => attempt.status)).toStrictEqual([
+      "failed",
+      "passed",
+    ]);
+    expect(flakyTest?.steps).toStrictEqual(flakyTest?.attempts.at(1)?.steps);
+    expect(flakyTest?.network).toStrictEqual(flakyTest?.attempts.at(1)?.network);
   });
 
   it("has attachment entries with paths", () => {
@@ -144,9 +148,9 @@ describe("LLM Reporter E2E", () => {
 
   it("defaults network to empty arrays when no trace attachment is present", () => {
     for (const test of report.tests) {
-      expect(test.network).toEqual([]);
+      expect(test.network).toStrictEqual([]);
       for (const attempt of test.attempts) {
-        expect(attempt.network).toEqual([]);
+        expect(attempt.network).toStrictEqual([]);
       }
     }
   });
@@ -154,7 +158,7 @@ describe("LLM Reporter E2E", () => {
   it("defaults consoleMessages to empty arrays when no warnings/errors/page errors exist", () => {
     for (const test of report.tests) {
       for (const attempt of test.attempts) {
-        expect(attempt.consoleMessages).toEqual([]);
+        expect(attempt.consoleMessages).toStrictEqual([]);
       }
     }
   });

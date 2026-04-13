@@ -214,7 +214,7 @@ describe("Config", () => {
         config.hosts.push("host");
       }).toThrow("Cannot add property 2, object is not extensible");
 
-      expect(config.hosts).toEqual(["host1", "host2"]);
+      expect(config.hosts).toStrictEqual(["host1", "host2"]);
     });
   });
 });

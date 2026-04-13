@@ -8,7 +8,7 @@ function createExpectedResult(value: unknown): string {
   return createHash("sha256").update(normalized).digest("hex");
 }
 
-describe("createDeterministicHash", () => {
+describe(createDeterministicHash, () => {
   it("returns hash for array", () => {
     const input = ["user1", "user2", "user3"];
     const expected = createExpectedResult(input);

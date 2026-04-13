@@ -1,6 +1,6 @@
 import { expectToBeDefined } from "./expectToBeDefined";
 
-describe("expectToBeDefined", () => {
+describe(expectToBeDefined, () => {
   interface TestCase {
     input: unknown;
     name: string;

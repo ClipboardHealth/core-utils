@@ -3,7 +3,7 @@ import {
   type TriggerIdempotencyKeyParams,
 } from "./triggerIdempotencyKey";
 
-describe("isTriggerIdempotencyKeyParams", () => {
+describe(isTriggerIdempotencyKeyParams, () => {
   it("returns false for string", () => {
     const actual = isTriggerIdempotencyKeyParams("some string");
 

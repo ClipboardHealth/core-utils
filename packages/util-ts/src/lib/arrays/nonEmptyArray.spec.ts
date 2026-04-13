@@ -1,13 +1,13 @@
 import { type NonEmptyArray, type OneOrNonEmptyArray, toNonEmptyArray } from "./nonEmptyArray";
 
-describe("NonEmptyArray", () => {
+describe("[deprecated] NonEmptyArray", () => {
   it("should allow creation of a non-empty array", () => {
     const array: NonEmptyArray<number> = [1, 2, 3];
-    expect(array).toEqual([1, 2, 3]);
+    expect(array).toStrictEqual([1, 2, 3]);
   });
 });
 
-describe("OneOrNonEmptyArray", () => {
+describe("[deprecated] OneOrNonEmptyArray", () => {
   it("should allow a single value", () => {
     const value: OneOrNonEmptyArray<string> = "test";
     expect(value).toBe("test");
@@ -15,14 +15,14 @@ describe("OneOrNonEmptyArray", () => {
 
   it("should allow a non-empty array", () => {
     const array: OneOrNonEmptyArray<number> = [1, 2, 3];
-    expect(array).toEqual([1, 2, 3]);
+    expect(array).toStrictEqual([1, 2, 3]);
   });
 });
 
-describe("toNonEmptyArray", () => {
+describe("[deprecated] toNonEmptyArray", () => {
   it("should convert a single value to a non-empty array", () => {
     const result = toNonEmptyArray(5);
-    expect(result).toEqual([5]);
+    expect(result).toStrictEqual([5]);
   });
 
   it("should return the same array if given a non-empty array", () => {
@@ -31,6 +31,6 @@ describe("toNonEmptyArray", () => {
     const result = toNonEmptyArray(input);
 
     expect(result).toBe(input);
-    expect(result).toEqual(["a", "b", "c"]);
+    expect(result).toStrictEqual(["a", "b", "c"]);
   });
 });

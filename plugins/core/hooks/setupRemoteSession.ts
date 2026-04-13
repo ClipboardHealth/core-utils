@@ -35,7 +35,7 @@ interface SetupResult {
 }
 
 interface GithubRelease {
-  assets: ReadonlyArray<{ browser_download_url: string; name: string }>;
+  assets: readonly { browser_download_url: string; name: string }[];
   tag_name: string;
 }
 
@@ -120,7 +120,7 @@ function installGh(): string | undefined {
 }
 
 function getSetupStatus(): SetupResult {
-  if (process.env["CLAUDE_CODE_REMOTE"] !== "true") {
+  if (process.env.CLAUDE_CODE_REMOTE !== "true") {
     return { status: STATUS.notRemote };
   }
 
@@ -128,7 +128,7 @@ function getSetupStatus(): SetupResult {
     return { status: STATUS.ghAvailable };
   }
 
-  if (!process.env["GITHUB_TOKEN"]) {
+  if (!process.env.GITHUB_TOKEN) {
     return { status: STATUS.noToken };
   }
 

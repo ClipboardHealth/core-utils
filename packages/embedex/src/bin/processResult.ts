@@ -2,7 +2,7 @@ import path from "node:path";
 
 import colors from "yoctocolors-cjs";
 
-import { type Embed, type EmbedResult } from "../lib/types";
+import type { Embed, EmbedResult } from "../lib/types";
 
 interface Output {
   code: Embed["code"];
@@ -132,7 +132,7 @@ export function processResult(params: {
     }
   }
 
-  return output.sort((a, b) => a.code.localeCompare(b.code));
+  return output.toSorted((a, b) => a.code.localeCompare(b.code));
 }
 
 function createToOutput(params: { code: Embed["code"]; paths: Embed["paths"] }) {

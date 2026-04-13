@@ -8,7 +8,7 @@ import { dim, processResult } from "./processResult";
 const program = new Command()
   .name(name)
   .description(description)
-  .version(String(version))
+  .version(version)
   .addOption(
     new Option("-s, --sourcesGlob <pattern>", "sources glob pattern").default(
       "examples/**/*.{md,ts}",
@@ -38,6 +38,7 @@ embed({
   sourcesGlob,
   write: !check,
 })
+  // oxlint-disable-next-line promise/always-return
   .then((result) => {
     const output = processResult({ check, result, cwd, verbose });
     if (output.some((o) => o.isError)) {
@@ -47,7 +48,7 @@ embed({
       console.log(output.map((o) => o.message).join("\n"));
     }
   })
-  .catch((error) => {
+  .catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   });

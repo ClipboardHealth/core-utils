@@ -7,6 +7,7 @@ const markerDirectory = path.join(__dirname, "..", "test-results");
 const markerFile = path.join(markerDirectory, ".flaky-marker");
 
 test("passes on retry", async () => {
+  // oxlint-disable-next-line jest/no-conditional-in-test
   if (!existsSync(markerFile)) {
     mkdirSync(markerDirectory, { recursive: true });
     writeFileSync(markerFile, "1");

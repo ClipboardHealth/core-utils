@@ -9,7 +9,7 @@ import {
 import { expectToBeFailure } from "./expectToBeFailure";
 import { expectToBeLeft } from "./expectToBeLeft";
 
-describe("expectToBeLeft", () => {
+describe(expectToBeLeft, () => {
   interface TestCase {
     input: E.Either<string, number> | undefined;
     name: string;
@@ -51,7 +51,7 @@ describe("expectToBeLeft", () => {
   });
 });
 
-describe("expectToBeFailure", () => {
+describe(expectToBeFailure, () => {
   interface TestCase {
     input: ServiceResult<number> | undefined;
     name: string;

@@ -1,12 +1,12 @@
 import { toErrorMessage } from "./toErrorMessage";
 
-describe("toErrorMessage", () => {
+describe(toErrorMessage, () => {
   it.each([
     { input: new Error("test"), expected: "test" },
     { input: "test string", expected: "test string" },
     { input: { message: "test object" }, expected: "test object" },
     { input: 123, expected: "123" },
-    { input: BigInt(123), expected: '"123"' },
+    { input: 123n, expected: '"123"' },
     { input: Symbol("test"), expected: "Symbol(test)" },
     { input: null, expected: "null" },
     { input: undefined, expected: "" },
