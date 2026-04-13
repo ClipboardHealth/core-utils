@@ -12,7 +12,7 @@
     "denyWarnings": true
   },
   "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise"],
+  "plugins": ["eslint", "import", "node", "oxc", "promise", "typescript", "unicorn"],
   "settings": {
     "node": {
       "version": ">=24.14.1"

@@ -5,6 +5,7 @@ import type { AllowWarnDeny, DummyRule, OxlintConfig, OxlintOverride } from "oxl
 
 import type { OxlintPreset } from "./types";
 
+// See https://oxc.rs/docs/guide/usage/linter/plugins.html#supported-plugins
 const OXLINT_PLUGIN_NAMES = {
   eslint: "eslint",
   import: "import",

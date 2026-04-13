@@ -2,18 +2,11 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/base.json"],
   "plugins": ["vitest"],
-  "ignorePatterns": [
-    ".agents/",
-    ".rules/",
-    "coverage/",
-    "dist/",
-    "node_modules/",
-    "packages/eslint-config/src/index.js"
-  ],
+  "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
   "options": {
     "reportUnusedDisableDirectives": "off",
     "typeAware": true,
-    "typeCheck": false
+    "typeCheck": true
   },
   "settings": {
     "node": {
@@ -27,7 +20,6 @@
     "jest/max-expects": "off",
     "jest/max-nested-describe": "off",
     "jest/no-conditional-in-test": "off",
-    "jest/no-hooks": "off",
     "jest/no-unneeded-async-expect-function": "off",
     "jest/no-untyped-mock-factory": "off",
     "jest/padding-around-test-blocks": "off",
@@ -81,12 +73,16 @@
     "vitest/prefer-describe-function-title": "off",
     "vitest/prefer-expect-type-of": "off",
     "vitest/prefer-import-in-mock": "off",
-    "vitest/prefer-importing-vitest-globals": "off",
     "vitest/prefer-strict-boolean-matchers": "off",
-    "vitest/prefer-to-be-falsy": "off",
-    "vitest/prefer-to-be-truthy": "off",
     "vitest/require-hook": "off",
     "vitest/require-mock-type-parameters": "off",
+
+    // From [vitest preset](./packages/oxlint-config/src/internal/presets.ts)
+    "jest/no-hooks": "off",
+    "jest/valid-title": ["error", { "ignoreTypeOfDescribeName": true }],
+    "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-to-be-falsy": "off",
+    "vitest/prefer-to-be-truthy": "off",
     "vitest/require-test-timeout": "off"
   },
   "overrides": [
@@ -94,40 +90,24 @@
       "files": ["**/*.spec.ts", "**/*.test.ts"],
       "rules": {
         "typescript/no-unsafe-assignment": "off",
-        "typescript/no-unsafe-call": "off",
-        "typescript/no-unsafe-member-access": "off",
-        "typescript/no-unsafe-return": "off"
+        "typescript/no-unsafe-member-access": "off"
       }
     },
     {
       "files": [
-        "**/.claude/**/*.ts",
-        "**/examples/**/*.js",
+        "**/bin/**/*.ts",
         "**/examples/**/*.ts",
         "**/plugins/**/*.ts",
-        "**/scripts/**/*.js",
-        "**/scripts/**/*.ts",
         "populateLibraries.ts"
       ],
       "rules": {
-        "no-console": "off",
-        "typescript/no-unsafe-argument": "off",
-        "typescript/no-unsafe-assignment": "off",
-        "typescript/no-unsafe-call": "off",
-        "typescript/no-unsafe-member-access": "off",
-        "typescript/no-unsafe-return": "off"
+        "no-console": "off"
       }
     },
     {
       "files": ["packages/nx-plugin/src/index.ts"],
       "rules": {
         "unicorn/no-empty-file": "off"
-      }
-    },
-    {
-      "files": ["packages/embedex/src/bin/**/*.ts"],
-      "rules": {
-        "no-console": "off"
       }
     }
   ]
