@@ -639,7 +639,15 @@ describe(NotificationClient, () => {
 
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);
-      expect(triggerSpy).toHaveBeenCalled();
+      expect(triggerSpy).toHaveBeenCalledWith(
+        mockWorkflowKey,
+        {
+          recipients: [{ id: "user-1" }],
+        },
+        {
+          idempotencyKey: expect.any(String),
+        },
+      );
     });
   });
 

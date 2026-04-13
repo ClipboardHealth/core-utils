@@ -109,7 +109,10 @@ describe(Analytics, () => {
 
       analytics.identify(request);
 
-      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("analytics.identify:"),
+        expect.objectContaining({ traits: { phone: "invalid-phone" } }),
+      );
       expect(mockSegment.identify).toHaveBeenCalledWith({
         userId: "user123",
         traits: { phone: "invalid-phone" },
