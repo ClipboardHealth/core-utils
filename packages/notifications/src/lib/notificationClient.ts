@@ -137,7 +137,7 @@ export class NotificationClient {
           const triggerBody = toTriggerBody(body);
           this.logTriggerRequest({ logParams, body, keysToRedact });
 
-          if (params.dryRun) {
+          if (params.dryRun === true) {
             this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
             return success({ id: "dry-run" });
           }
@@ -306,7 +306,7 @@ export class NotificationClient {
 
         this.logTriggerRequest({ logParams, body, keysToRedact });
 
-        if (params.dryRun) {
+        if (params.dryRun === true) {
           this.logTriggerResponse({ span, response: { dryRun: true }, id: "dry-run", logParams });
           return success({ responses: [{ chunkNumber: 1, id: "dry-run" }] });
         }

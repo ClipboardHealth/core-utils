@@ -16,7 +16,7 @@ function validateDecorators(
   symbolName: string,
   decoratorImportedCorrectly: boolean,
 ): void {
-  const decorators = node.decorators || [];
+  const decorators = node.decorators ?? [];
   const hasMatchingDecorator = decorators.some(
     (decorator) =>
       decorator.expression.type === AST_NODE_TYPES.CallExpression &&

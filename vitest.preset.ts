@@ -72,7 +72,7 @@ export function definePackageVitestConfig(
     };
   }
 
-  if (options.serverDepsInline?.length) {
+  if (options.serverDepsInline !== undefined && options.serverDepsInline.length > 0) {
     testConfig.server = {
       deps: {
         inline: options.serverDepsInline,

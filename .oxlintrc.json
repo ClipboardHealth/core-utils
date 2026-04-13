@@ -18,7 +18,6 @@
 
     // TODO: To fix
     "vitest/consistent-test-filename": "off",
-    "typescript/strict-boolean-expressions": "off",
 
     // From [vitest preset](./packages/oxlint-config/src/internal/presets.ts)
     "jest/max-expects": "off",

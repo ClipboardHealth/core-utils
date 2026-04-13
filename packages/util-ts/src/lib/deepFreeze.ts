@@ -7,14 +7,14 @@
  * @returns A deeply frozen version of the input object.
  */
 export function deepFreeze<T extends object>(value: T, seen = new WeakSet()): Readonly<T> {
-  if (!value || typeof value !== "object" || seen.has(value)) {
+  if (value === null || typeof value !== "object" || seen.has(value)) {
     return value;
   }
 
   seen.add(value);
   (Reflect.ownKeys(value) as (keyof T)[]).forEach((key) => {
     const property = value[key];
-    if (property && typeof property === "object" && !Object.isFrozen(property)) {
+    if (typeof property === "object" && property !== null && !Object.isFrozen(property)) {
       deepFreeze(property, seen);
     }
   });

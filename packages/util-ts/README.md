@@ -211,7 +211,7 @@ const failureResult = tryCatch(
 );
 
 ok(isFailure(failureResult));
-ok(failureResult.error.issues[0]?.message?.includes("Parse error"));
+ok(failureResult.error.issues[0]?.message?.includes("Parse error") === true);
 ```
 
 </embedex>

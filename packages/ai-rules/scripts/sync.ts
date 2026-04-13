@@ -247,7 +247,7 @@ async function mergeSessionStartHook(): Promise<void> {
   // commands that may share the same entry. Drop entries left with no hooks.
   const cleaned = sessionStart.flatMap((entry) => {
     const entryHooks = entry["hooks"] as Record<string, unknown>[] | undefined;
-    if (!entryHooks?.some((h) => isKnownCommand(h))) {
+    if (entryHooks?.some((h) => isKnownCommand(h)) !== true) {
       return [entry];
     }
 

@@ -20,7 +20,7 @@ export function toTriggerChunkedRequest(
     attempt: params.attempt,
     body: {
       ...bodyRest,
-      ...(actor && { actor: toRecipientRequest(actor) }),
+      ...(actor === undefined ? {} : { actor: toRecipientRequest(actor) }),
       recipients: recipients.map(toRecipientRequest),
     },
     expiresAt: new Date(expiresAt),

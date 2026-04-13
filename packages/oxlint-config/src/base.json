@@ -81,6 +81,10 @@
     "typescript/parameter-properties": "off",
     "typescript/require-await": "off",
     "typescript/return-await": ["error", "always"],
+    "typescript/strict-boolean-expressions": [
+      "error",
+      { "allowNullableBoolean": true, "allowNullableString": true }
+    ],
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
     "unicorn/no-array-callback-reference": "off",
     "unicorn/no-array-for-each": "off",
