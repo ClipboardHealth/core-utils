@@ -414,7 +414,7 @@ describe("oxlint-config", () => {
           plugins: ["unsupported-plugin"],
           rules: {},
         }),
-      ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin" in base.json.');
+      ).rejects.toThrow('Unsupported oxlint plugin "unsupported-plugin".');
     });
 
     it("throws when base.json is not an object", async () => {
@@ -452,6 +452,19 @@ describe("oxlint-config", () => {
           rules: {},
         }),
       ).rejects.toThrow("The bundled base.json file is not a valid oxlint config preset.");
+    });
+
+    it("throws when vitest.json is not a valid preset", async () => {
+      await expect(
+        loadPresetsModuleWithVitestJson(
+          {
+            overrides: [],
+            plugins: ["import"],
+            rules: {},
+          },
+          "not-an-object",
+        ),
+      ).rejects.toThrow("The bundled vitest.json file is not a valid oxlint config preset.");
     });
 
     it("supports valid overrides without rules", async () => {
@@ -518,10 +531,23 @@ function getFirstOverrideFiles(config: {
 }
 
 async function loadPresetsModule(baseJson: unknown): Promise<unknown> {
+  return loadPresetsModuleWithVitestJson(baseJson);
+}
+
+async function loadPresetsModuleWithVitestJson(
+  baseJson: unknown,
+  vitestJson?: unknown,
+): Promise<unknown> {
   vi.resetModules();
   // oxlint-disable-next-line jest/no-untyped-mock-factory -- conflicts with consistent-type-imports
   vi.doMock("node:fs", () => ({
-    readFileSync: vi.fn<() => string>(() => JSON.stringify(baseJson)),
+    readFileSync: vi.fn<(filePath: string) => string>((filePath) => {
+      if (vitestJson !== undefined && filePath.includes("vitest.json")) {
+        return JSON.stringify(vitestJson);
+      }
+
+      return JSON.stringify(baseJson);
+    }),
   }));
 
   return await import("./internal/presets");

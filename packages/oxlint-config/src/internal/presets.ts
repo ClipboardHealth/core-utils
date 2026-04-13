@@ -108,7 +108,7 @@ function normalizePlugins(plugins: string[]): OxlintPluginName[] {
       return plugin;
     }
 
-    throw new Error(`Unsupported oxlint plugin "${plugin}" in base.json.`);
+    throw new Error(`Unsupported oxlint plugin "${plugin}".`);
   });
 }
 
