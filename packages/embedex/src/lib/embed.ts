@@ -74,9 +74,9 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
   });
 
   await Promise.all(
-    embeds.map(async (e) => {
-      if (write && e.code === "UPDATE") {
-        await writeFile(e.paths.destination, e.updatedContent);
+    embeds.map(async (embedResult) => {
+      if (write && embedResult.code === "UPDATE") {
+        await writeFile(embedResult.paths.destination, embedResult.updatedContent);
       }
     }),
   );

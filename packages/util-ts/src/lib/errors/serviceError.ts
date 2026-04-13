@@ -158,12 +158,12 @@ export class ServiceError extends Error {
       return firstError;
     }
 
-    const additionalErrors = errors.map((e) =>
-      e instanceof ServiceError ? e : ServiceError.fromUnknown(e),
+    const additionalErrors = errors.map((error_) =>
+      error_ instanceof ServiceError ? error_ : ServiceError.fromUnknown(error_),
     );
     return new ServiceError({
       cause: firstError.cause ?? firstError,
-      issues: [...firstError.issues, ...additionalErrors.flatMap((e) => e.issues)],
+      issues: [...firstError.issues, ...additionalErrors.flatMap((error_) => error_.issues)],
     });
   }
 

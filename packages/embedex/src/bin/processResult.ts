@@ -45,7 +45,7 @@ export function processResult(params: {
 
   function format(item: { path: string } & ({ destinations: string[] } | { sources: string[] })) {
     const items = "destinations" in item ? item.destinations : item.sources;
-    return `${relative(item.path)} -> ${items.map((i) => relative(i)).join(", ")}`;
+    return `${relative(item.path)} -> ${items.map((element) => relative(element)).join(", ")}`;
   }
 
   if (verbose) {
