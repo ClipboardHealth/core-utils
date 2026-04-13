@@ -11,7 +11,7 @@ export function firstMatch<TInput, TOutput, TContext extends RuleContext<TInput,
   return {
     runIf: (input) => rules.some((rule) => rule.runIf(input)),
     run: (context) => {
-      const rule = rules.find((rule) => rule.runIf(context.input));
+      const rule = rules.find((r) => r.runIf(context.input));
       return rule ? rule.run(context) : context;
     },
   };

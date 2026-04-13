@@ -2,18 +2,11 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/base.json"],
   "plugins": ["vitest"],
-  "ignorePatterns": [
-    ".agents/",
-    ".rules/",
-    "coverage/",
-    "dist/",
-    "node_modules/",
-    "packages/eslint-config/src/index.js"
-  ],
+  "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
   "options": {
     "reportUnusedDisableDirectives": "off",
     "typeAware": true,
-    "typeCheck": false
+    "typeCheck": true
   },
   "settings": {
     "node": {
@@ -27,7 +20,6 @@
     "jest/max-expects": "off",
     "jest/max-nested-describe": "off",
     "jest/no-conditional-in-test": "off",
-    "jest/no-hooks": "off",
     "jest/no-unneeded-async-expect-function": "off",
     "jest/no-untyped-mock-factory": "off",
     "jest/padding-around-test-blocks": "off",
@@ -55,16 +47,14 @@
     "typescript/no-import-type-side-effects": "off",
     "typescript/no-invalid-void-type": "off",
     "typescript/no-non-null-assertion": "off",
-    "typescript/no-unnecessary-condition": "off",
     "typescript/no-unnecessary-type-arguments": "off",
     "typescript/no-unnecessary-type-conversion": "off",
-    "typescript/no-unnecessary-type-parameters": "off",
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/prefer-includes": "off",
     "typescript/prefer-promise-reject-errors": "off",
     "typescript/prefer-regexp-exec": "off",
     "typescript/require-await": "off",
-    "typescript/strict-void-return": "off",
+    "typescript/strict-boolean-expressions": "off",
     "typescript/unbound-method": "off",
     "typescript/use-unknown-in-catch-callback-variable": "off",
     "unicorn/consistent-function-scoping": "off",
@@ -81,53 +71,34 @@
     "vitest/prefer-describe-function-title": "off",
     "vitest/prefer-expect-type-of": "off",
     "vitest/prefer-import-in-mock": "off",
-    "vitest/prefer-importing-vitest-globals": "off",
     "vitest/prefer-strict-boolean-matchers": "off",
-    "vitest/prefer-to-be-falsy": "off",
-    "vitest/prefer-to-be-truthy": "off",
     "vitest/require-hook": "off",
     "vitest/require-mock-type-parameters": "off",
+
+    // From [vitest preset](./packages/oxlint-config/src/internal/presets.ts)
+    "jest/no-hooks": "off",
+    "jest/valid-title": ["error", { "ignoreTypeOfDescribeName": true }],
+    "vitest/prefer-importing-vitest-globals": "off",
+    "vitest/prefer-to-be-falsy": "off",
+    "vitest/prefer-to-be-truthy": "off",
     "vitest/require-test-timeout": "off"
   },
   "overrides": [
     {
-      "files": ["**/*.spec.ts", "**/*.test.ts"],
-      "rules": {
-        "typescript/no-unsafe-assignment": "off",
-        "typescript/no-unsafe-call": "off",
-        "typescript/no-unsafe-member-access": "off",
-        "typescript/no-unsafe-return": "off"
-      }
-    },
-    {
       "files": [
-        "**/.claude/**/*.ts",
-        "**/examples/**/*.js",
+        "**/bin/**/*.ts",
         "**/examples/**/*.ts",
         "**/plugins/**/*.ts",
-        "**/scripts/**/*.js",
-        "**/scripts/**/*.ts",
         "populateLibraries.ts"
       ],
       "rules": {
-        "no-console": "off",
-        "typescript/no-unsafe-argument": "off",
-        "typescript/no-unsafe-assignment": "off",
-        "typescript/no-unsafe-call": "off",
-        "typescript/no-unsafe-member-access": "off",
-        "typescript/no-unsafe-return": "off"
+        "no-console": "off"
       }
     },
     {
       "files": ["packages/nx-plugin/src/index.ts"],
       "rules": {
         "unicorn/no-empty-file": "off"
-      }
-    },
-    {
-      "files": ["packages/embedex/src/bin/**/*.ts"],
-      "rules": {
-        "no-console": "off"
       }
     }
   ]

@@ -10,6 +10,7 @@ const agentsMd = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
 const textGenFormat =
   "In your final response, output ONLY the requested content directly. Do not include explanation or commentary.";
 
+// oxlint-disable import/no-anonymous-default-export
 export default {
   description: "CLAUDE.md rule adherence evals",
 

@@ -30,13 +30,13 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
     const { cycle } = circularDependency;
     /* istanbul ignore next - cycle[0] is always defined in practice */
     const destination = cycle[0] ?? "";
-    const embed: Embed = {
+    const circularEmbed: Embed = {
       code: "CIRCULAR_DEPENDENCY",
       paths: { destination, sources: [] },
       cycle,
     };
     return {
-      embeds: [embed],
+      embeds: [circularEmbed],
       sources: [...sourceMap.entries()].map(([path, { destinations }]) => ({ path, destinations })),
       destinations: [...destinationMap.entries()].map(([path, { sources }]) => ({
         path,
@@ -54,29 +54,29 @@ export async function embed(params: Readonly<EmbedParams>): Promise<EmbedResult>
       return [];
     }
 
-    const [embed] = processDestinations({
+    const [anEmbed] = processDestinations({
       cwd,
       sourceMap,
       destinationMap: new Map([[destinationPath, destinationEntry]]),
       updatedContentMap,
     });
     /* istanbul ignore next: sanity check */
-    if (!embed) {
+    if (!anEmbed) {
       return [];
     }
 
     // Track updated content for chained embeds
-    if (embed.code === "UPDATE") {
-      updatedContentMap.set(destinationPath, embed.updatedContent);
+    if (anEmbed.code === "UPDATE") {
+      updatedContentMap.set(destinationPath, anEmbed.updatedContent);
     }
 
-    return [embed];
+    return [anEmbed];
   });
 
   await Promise.all(
-    embeds.map(async (embed) => {
-      if (write && embed.code === "UPDATE") {
-        await writeFile(embed.paths.destination, embed.updatedContent);
+    embeds.map(async (embedResult) => {
+      if (write && embedResult.code === "UPDATE") {
+        await writeFile(embedResult.paths.destination, embedResult.updatedContent);
       }
     }),
   );

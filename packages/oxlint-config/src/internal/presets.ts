@@ -1,10 +1,16 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import type { AllowWarnDeny, DummyRule, OxlintConfig, OxlintOverride } from "oxlint";
+import type { AllowWarnDeny, DummyRule, DummyRuleMap, OxlintConfig, OxlintOverride } from "oxlint";
 
 import type { OxlintPreset } from "./types";
 
+const JEST_RULES: DummyRuleMap = {
+  "jest/no-hooks": "off",
+  "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+} as const;
+
+// See https://oxc.rs/docs/guide/usage/linter/plugins.html#supported-plugins
 const OXLINT_PLUGIN_NAMES = {
   eslint: "eslint",
   import: "import",
@@ -46,16 +52,12 @@ export const react: OxlintPreset = {
 };
 export const jest: OxlintPreset = {
   plugins: ["jest"],
-  rules: {
-    "jest/no-hooks": "off",
-    "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
-  },
+  rules: JEST_RULES,
 };
 export const vitest: OxlintPreset = {
   plugins: ["vitest"],
   rules: {
-    "jest/no-hooks": "off",
-    "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+    ...JEST_RULES,
     "vitest/prefer-importing-vitest-globals": "off",
     "vitest/prefer-to-be-falsy": "off",
     "vitest/prefer-to-be-truthy": "off",
