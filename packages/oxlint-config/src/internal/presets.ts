@@ -57,19 +57,7 @@ export const jest: OxlintPreset = {
   plugins: ["jest"],
   rules: JEST_RULES,
 };
-export const vitest: OxlintPreset = {
-  plugins: ["vitest"],
-  rules: {
-    ...JEST_RULES,
-    "vitest/prefer-importing-vitest-globals": "off",
-    "vitest/prefer-called-once": "off",
-    "vitest/prefer-import-in-mock": "off",
-    "vitest/prefer-to-be-falsy": "off",
-    "vitest/prefer-to-be-truthy": "off",
-    "vitest/require-hook": "off",
-    "vitest/require-test-timeout": "off",
-  },
-};
+export const vitest: OxlintPreset = createVitestPreset();
 
 function createBasePreset(): OxlintPreset {
   const parsedBaseJson = loadBaseJson();
@@ -122,6 +110,20 @@ function normalizePlugins(plugins: string[]): OxlintPluginName[] {
 
     throw new Error(`Unsupported oxlint plugin "${plugin}" in base.json.`);
   });
+}
+
+function createVitestPreset(): OxlintPreset {
+  const vitestJsonPath = path.resolve(__dirname, "../vitest.json");
+  const json = parseUnknownJson(readFileSync(vitestJsonPath, "utf8"));
+
+  if (!isPlainObject(json) || !isStringArray(json["plugins"]) || !isRuleMap(json["rules"])) {
+    throw new Error("The bundled vitest.json file is not a valid oxlint config preset.");
+  }
+
+  return {
+    plugins: normalizePlugins(json["plugins"].filter((p) => !base.plugins?.some((bp) => bp === p))),
+    rules: json["rules"],
+  };
 }
 
 function loadBaseJson(): BaseJsonConfig {

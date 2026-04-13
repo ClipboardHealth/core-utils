@@ -8,7 +8,11 @@
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "assets": ["packages/oxlint-config/*.md", "packages/oxlint-config/src/base.json"],
+        "assets": [
+          "packages/oxlint-config/*.md",
+          "packages/oxlint-config/src/base.json",
+          "packages/oxlint-config/src/vitest.json"
+        ],
         "main": "packages/oxlint-config/src/index.js",
         "outputPath": "dist/packages/oxlint-config",
         "tsConfig": "packages/oxlint-config/tsconfig.lib.json"

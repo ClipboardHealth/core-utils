@@ -104,7 +104,15 @@ Create an `.oxlintrc.json` in your repo root:
 }
 ```
 
-Use JSON only when simple inheritance is enough. JSON `extends` still works for shared `base.json`, but repo-local array fields like `plugins` and `overrides` will not get the additive merge behavior provided by `createOxlintConfig`.
+Use JSON only when simple inheritance is enough. JSON `extends` still works for shared presets, but repo-local array fields like `plugins` and `overrides` will not get the additive merge behavior provided by `createOxlintConfig`.
+
+For repos using Vitest, extend from `vitest.json` instead of `base.json` to include the vitest plugin and rules:
+
+```json
+{
+  "extends": ["./node_modules/@clipboard-health/oxlint-config/src/vitest.json"]
+}
+```
 
 Override shared rules as needed:
 
@@ -122,6 +130,7 @@ Override shared rules as needed:
 The package includes:
 
 - **`base.json`**: the backwards-compatible JSON preset for simple `extends` usage
+- **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
