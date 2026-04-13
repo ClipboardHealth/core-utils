@@ -1188,15 +1188,22 @@ function buildTimeline(
   network: NetworkRequest[],
   consoleMessages: ConsoleEntry[],
 ): TimelineEntry[] {
-  const stepEntries: TimelineStepEntry[] = steps.map((step) => ({
-    kind: "step" as const,
-    offsetMs: step.offsetMs,
-    title: step.title,
-    category: step.category,
-    durationMs: step.durationMs,
-    depth: step.depth,
-    ...(step.error && { error: step.error }),
-  }));
+  const stepEntries: TimelineStepEntry[] = steps.map((step) => {
+    const entry: TimelineStepEntry = {
+      kind: "step",
+      offsetMs: step.offsetMs,
+      title: step.title,
+      category: step.category,
+      durationMs: step.durationMs,
+      depth: step.depth,
+    };
+
+    if (step.error) {
+      entry.error = step.error;
+    }
+
+    return entry;
+  });
 
   const networkEntries: TimelineNetworkEntry[] = network
     .filter(
