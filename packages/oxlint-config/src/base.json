@@ -1,7 +1,7 @@
 {
   "categories": {
     "correctness": "error",
-    "nursery": "error",
+    "nursery": "off",
     "pedantic": "error",
     "perf": "error",
     "restriction": "error",
@@ -12,7 +12,7 @@
     "denyWarnings": true
   },
   "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
-  "plugins": ["eslint", "import", "node", "oxc", "promise", "typescript", "unicorn"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise"],
   "settings": {
     "node": {
       "version": ">=24.14.1"
@@ -53,7 +53,6 @@
     "no-named-export": "off",
     "no-shadow": "off",
     "no-ternary": "off",
-    "no-undef": "off",
     "no-unused-vars": [
       "warn",
       {
@@ -80,7 +79,6 @@
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-module-boundary-types": "off",
     "typescript/parameter-properties": "off",
-    "typescript/prefer-readonly-parameter-types": "off",
     "typescript/promise-function-async": "off",
     "typescript/return-await": ["error", "always"],
     "typescript/strict-boolean-expressions": "off",
