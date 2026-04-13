@@ -14,7 +14,7 @@ export const SOURCE_MARKER_PREFIX = "// embedex: ";
  */
 export function stripSourceMarker(content: string): string {
   const [first, ...rest] = content.split("\n");
-  if (first?.startsWith(SOURCE_MARKER_PREFIX)) {
+  if (first?.startsWith(SOURCE_MARKER_PREFIX) === true) {
     return rest.join("\n");
   }
 
@@ -32,7 +32,7 @@ export async function createSourceMap(
     paths.map(async (filePath) => {
       const content = await readFile(filePath, "utf8");
       const [first, ...rest] = content.split("\n");
-      if (first?.startsWith(SOURCE_MARKER_PREFIX)) {
+      if (first?.startsWith(SOURCE_MARKER_PREFIX) === true) {
         sourceMap.set(filePath, {
           content: rest.join("\n"),
           destinations: first

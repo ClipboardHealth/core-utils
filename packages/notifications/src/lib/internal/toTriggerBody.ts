@@ -8,7 +8,7 @@ export function toTriggerBody(body: TriggerBody): Knock.Workflows.WorkflowTrigge
 
   return {
     ...rest,
-    ...(actor ? { actor: toRecipient(actor) } : {}),
+    ...(actor === undefined ? {} : { actor: toRecipient(actor) }),
     ...(cancellationKey ? { cancellation_key: cancellationKey } : {}),
     ...(workplaceId ? { tenant: workplaceId } : {}),
     recipients: recipients.map(toRecipient),

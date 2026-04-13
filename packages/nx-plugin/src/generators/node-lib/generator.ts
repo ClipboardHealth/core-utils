@@ -33,9 +33,8 @@ function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): Normali
     projectDirectory,
     projectName: name.replaceAll("/", "-"),
     projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,
-    publishConfigAccess: /* istanbul ignore next */ options.publishPublicly
-      ? "public"
-      : "restricted",
+    publishConfigAccess:
+      /* istanbul ignore next */ options.publishPublicly === true ? "public" : "restricted",
   };
 }
 

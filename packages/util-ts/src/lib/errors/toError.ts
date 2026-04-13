@@ -25,7 +25,7 @@ export function toError(value: unknown): Error {
     return value;
   }
 
-  if (value && typeof value === "object" && "message" in value) {
+  if (typeof value === "object" && value !== null && "message" in value) {
     const error = new Error(String(value.message));
     if ("stack" in value) {
       error.stack = String(value.stack);

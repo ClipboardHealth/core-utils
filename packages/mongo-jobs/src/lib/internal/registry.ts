@@ -89,12 +89,12 @@ export class Registry {
   }
 
   public getQueuesForGroups(groups: string[]): string[] {
-    let result = new Array<string>();
+    const result: string[] = [];
 
     for (const group of groups) {
       const queuesInGroup = this.queueGroups.get(group);
       if (queuesInGroup) {
-        result = [...result, ...queuesInGroup];
+        result.push(...queuesInGroup);
       }
     }
 

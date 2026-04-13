@@ -319,7 +319,7 @@ function isKeyOf<T extends Record<string, unknown>>(
 function getStatusFromIssue(issue: ServiceIssue): Status {
   return (
     issue.status ??
-    (issue.code && isKeyOf(issue.code, ERROR_METADATA)
+    (issue.code !== undefined && isKeyOf(issue.code, ERROR_METADATA)
       ? ERROR_METADATA[issue.code].status
       : ERROR_METADATA.internal.status)
   );

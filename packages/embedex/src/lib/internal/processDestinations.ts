@@ -69,9 +69,10 @@ function processDestination(params: {
   // otherwise use the original content from disk
   // Strip source marker from updated content to ensure clean processing
   /* istanbul ignore next - defensive: destination typically not in updatedContentMap during processing */
-  let content = updatedContentMap?.has(destination)
-    ? stripSourceMarker(updatedContentMap.get(destination)!)
-    : originalContent;
+  let content =
+    updatedContentMap?.has(destination) === true
+      ? stripSourceMarker(updatedContentMap.get(destination)!)
+      : originalContent;
 
   // Normalize CRLF to LF to ensure consistent processing across platforms
   content = content.replaceAll("\r\n", "\n");
@@ -139,7 +140,7 @@ function processDestination(params: {
     // If the source is also a destination that was updated earlier, use its updated content
     // and strip the source marker line if present
     let sourceContent = updatedContentMap?.get(absoluteSourcePath) ?? sourceFromMap.content;
-    if (updatedContentMap?.has(absoluteSourcePath)) {
+    if (updatedContentMap?.has(absoluteSourcePath) === true) {
       sourceContent = stripSourceMarker(sourceContent);
     }
 

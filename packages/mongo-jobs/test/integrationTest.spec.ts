@@ -38,7 +38,7 @@ async function waitForFailedJobs(options: WaitForFailedJobsOptions): Promise<voi
     backgroundJobs,
     expectedCount,
     description: "failed background jobs",
-    ...(timeoutMilliseconds ? { timeoutMilliseconds } : {}),
+    ...(timeoutMilliseconds === undefined ? {} : { timeoutMilliseconds }),
     query: {
       attemptsCount: 1,
       failedAt: { $exists: true, $ne: null },

@@ -208,7 +208,7 @@ export async function withConsumerTrace(
      **/
     parentContext = ROOT_CONTEXT;
   } else {
-    const jobData = job.data || {};
+    const jobData = job.data ?? {};
     parentContext = extractTraceContext(jobData._traceHeaders);
   }
 

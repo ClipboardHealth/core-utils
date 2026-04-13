@@ -128,7 +128,7 @@ function printUsageAndExit(): never {
 function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
   const { profile, extraIncludes, excludes } = parsedArguments;
 
-  const profileRules = PROFILES[profile].include.flatMap((category) => [...CATEGORIES[category]]);
+  const profileRules = PROFILES[profile].include.flatMap((category) => CATEGORIES[category]);
   const ruleSet = new Set<RuleId>([...profileRules, ...extraIncludes]);
 
   for (const ruleId of excludes) {
@@ -247,7 +247,7 @@ async function mergeSessionStartHook(): Promise<void> {
   // commands that may share the same entry. Drop entries left with no hooks.
   const cleaned = sessionStart.flatMap((entry) => {
     const entryHooks = entry["hooks"] as Record<string, unknown>[] | undefined;
-    if (!entryHooks?.some((h) => isKnownCommand(h))) {
+    if (entryHooks?.some((h) => isKnownCommand(h)) !== true) {
       return [entry];
     }
 
