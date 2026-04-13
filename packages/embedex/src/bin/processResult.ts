@@ -45,7 +45,7 @@ export function processResult(params: {
 
   function format(item: { path: string } & ({ destinations: string[] } | { sources: string[] })) {
     const items = "destinations" in item ? item.destinations : item.sources;
-    return `${relative(item.path)} -> ${items.map((item) => relative(item)).join(", ")}`;
+    return `${relative(item.path)} -> ${items.map((i) => relative(i)).join(", ")}`;
   }
 
   if (verbose) {
@@ -56,12 +56,12 @@ export function processResult(params: {
   const output: Output[] = [];
   for (const embed of embeds) {
     const { code, paths } = embed;
-    const { destination, sources } = paths;
+    const { destination, sources: sourcePaths } = paths;
 
     switch (code) {
       case "INVALID_SOURCE": {
         const { invalidSources } = embed;
-        const joined = invalidSources.map((path) => relative(path)).join(", ");
+        const joined = invalidSources.map((p) => relative(p)).join(", ");
         output.push({
           code,
           isError: true,
@@ -78,7 +78,7 @@ export function processResult(params: {
 
       case "UNREFERENCED_SOURCE": {
         const { unreferencedSources } = embed;
-        const joined = unreferencedSources.map((path) => relative(path)).join(", ");
+        const joined = unreferencedSources.map((p) => relative(p)).join(", ");
         output.push({
           code,
           isError: true,
@@ -95,7 +95,7 @@ export function processResult(params: {
 
       case "CIRCULAR_DEPENDENCY": {
         const { cycle } = embed;
-        const cycleMessage = cycle.map((path) => relative(path)).join(" → ");
+        const cycleMessage = cycle.map((p) => relative(p)).join(" → ");
         output.push({
           code,
           isError: true,
@@ -116,7 +116,7 @@ export function processResult(params: {
           code,
           paths: {
             destination: relative(destination),
-            sources: sources.map((path) => relative(path)),
+            sources: sourcePaths.map((p) => relative(p)),
           },
         });
 

@@ -202,8 +202,8 @@ function createReplacement(
       .replaceAll(
         // eslint-disable-next-line security/detect-unsafe-regex
         /^(.*)<embedex source=".+?">(?:\r?\n)?([\S\s]*?)<\/embedex>/gm,
-        (_match, _prefix, content: string) => {
-          const lines = content.split(/\r?\n/);
+        (_match, _prefix, c: string) => {
+          const lines = c.split(/\r?\n/);
 
           // Remove leading blank lines
           while (lines.length > 0 && lines[0]?.trim() === "") {

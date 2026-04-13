@@ -37,7 +37,7 @@ export type Right<A> = Readonly<{
  *   E.flatMap(inverse),
  *   E.match(
  *     (error) => `Error: ${error}`,
- *     (result) => `Result is ${result}`,
+ *     (r) => `Result is ${r}`,
  *   ),
  * );
  *
@@ -51,21 +51,21 @@ export type Either<E, A> = Left<E> | Right<A>;
 /**
  * Constructs an `Either` holding a `Left<E>` value, usually representing a failure.
  *
- * @param left - The value to wrap in a `Left`
+ * @param l - The value to wrap in a `Left`
  * @returns A `Left` containing the value
  */
-export function left<E, A = never>(left: E): Either<E, A> {
-  return { isRight: false, left };
+export function left<E, A = never>(l: E): Either<E, A> {
+  return { isRight: false, left: l };
 }
 
 /**
  * Constructs an `Either` holding a `Right<A>`, representing a success.
  *
- * @param right - The value to wrap in a `Right`
+ * @param r - The value to wrap in a `Right`
  * @returns A `Right` containing the value
  */
-export function right<A, E = never>(right: A): Either<E, A> {
-  return { isRight: true, right };
+export function right<A, E = never>(r: A): Either<E, A> {
+  return { isRight: true, right: r };
 }
 
 /**

@@ -17,7 +17,7 @@ const result = pipe(
   E.flatMap(inverse),
   E.match(
     (error) => `Error: ${error}`,
-    (result) => `Result is ${result}`,
+    (r) => `Result is ${r}`,
   ),
 );
 

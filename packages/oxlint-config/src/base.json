@@ -28,7 +28,6 @@
     "import/exports-last": "off",
     "import/group-exports": "off",
     "import/max-dependencies": "off",
-    "import/no-anonymous-default-export": "off",
     "import/no-commonjs": "off",
     "import/no-cycle": ["error", { "ignoreExternal": true, "maxDepth": 16 }],
     "import/no-default-export": "off",
@@ -51,10 +50,9 @@
     "no-magic-numbers": "off",
     "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-named-export": "off",
-    "no-shadow": "off",
     "no-ternary": "off",
     "no-unused-vars": [
-      "warn",
+      "error",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
@@ -79,9 +77,7 @@
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-module-boundary-types": "off",
     "typescript/parameter-properties": "off",
-    "typescript/promise-function-async": "off",
     "typescript/return-await": ["error", "always"],
-    "typescript/strict-boolean-expressions": "off",
     "unicorn/no-array-callback-reference": "off",
     "unicorn/no-array-for-each": "off",
     "unicorn/filename-case": ["error", { "case": "camelCase" }],
@@ -91,6 +87,13 @@
   },
   "overrides": [
     {
+      "files": ["**/*.js", "**/*.cjs"],
+      "rules": {
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off"
+      }
+    },
+    {
       "files": ["**/scripts/**/*.ts"],
       "rules": {
         "no-console": "off",
@@ -99,9 +102,10 @@
       }
     },
     {
-      "files": ["**/*.js", "**/*.cjs"],
+      "files": ["**/*.spec.ts", "**/*.test.ts"],
       "rules": {
-        "typescript/no-unsafe-call": "off",
+        "no-shadow": "off",
+        "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-member-access": "off"
       }
     }

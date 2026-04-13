@@ -34,6 +34,7 @@ function checkVariableNaming(codeLines: string[], issues: string[]): void {
   }
 }
 
+// oxlint-disable import/no-anonymous-default-export
 export default function (output: string): GradingResult {
   const issues: string[] = [];
   const codeLines = getCodeLines(output);

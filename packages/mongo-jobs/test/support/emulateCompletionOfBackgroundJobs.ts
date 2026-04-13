@@ -24,11 +24,11 @@ function log(message: string) {
 }
 
 const logger = {
-  info: (...arguments_: unknown[]) => {
-    log(`[info] ${arguments_.join(" ")}`);
+  info: (...infoArguments: unknown[]) => {
+    log(`[info] ${infoArguments.join(" ")}`);
   },
-  error: (...arguments_: unknown[]) => {
-    log(`[error] ${arguments_.join(" ")}`);
+  error: (...errorArguments: unknown[]) => {
+    log(`[error] ${errorArguments.join(" ")}`);
   },
 };
 
