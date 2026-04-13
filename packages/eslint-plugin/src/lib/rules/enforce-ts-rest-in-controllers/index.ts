@@ -1,9 +1,98 @@
 /**
  * @fileoverview Rule to require controller methods to use ts-rest as per our best practices on backend REST APIs
  */
-import { AST_NODE_TYPES } from "@typescript-eslint/utils";
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from "@typescript-eslint/utils";
 
 import { createRule } from "../../createRule";
+
+type RuleContext = TSESLint.RuleContext<
+  "missingDecorator" | "missingReturn" | "decoratorNotFromPackage" | "callNotFromPackage",
+  []
+>;
+
+function validateDecorators(
+  context: RuleContext,
+  node: TSESTree.MethodDefinition,
+  symbolName: string,
+  decoratorImportedCorrectly: boolean,
+): void {
+  const decorators = node.decorators || [];
+  const hasMatchingDecorator = decorators.some(
+    (decorator) =>
+      decorator.expression.type === AST_NODE_TYPES.CallExpression &&
+      decorator.expression.callee.type === AST_NODE_TYPES.Identifier &&
+      decorator.expression.callee.name === "TsRestHandler",
+  );
+
+  if (!hasMatchingDecorator) {
+    context.report({
+      node,
+      messageId: "missingDecorator",
+      data: { name: symbolName },
+    });
+  }
+
+  decorators.forEach((decorator) => {
+    if (
+      decorator.expression.type === AST_NODE_TYPES.CallExpression &&
+      decorator.expression.callee.type === AST_NODE_TYPES.Identifier &&
+      decorator.expression.callee.name === "TsRestHandler" &&
+      !decoratorImportedCorrectly
+    ) {
+      context.report({
+        node: decorator,
+        messageId: "decoratorNotFromPackage",
+      });
+    }
+  });
+}
+
+function validateReturnStatement(
+  context: RuleContext,
+  node: TSESTree.MethodDefinition,
+  symbolName: string,
+  methodImportedCorrectly: boolean,
+): void {
+  const body = node.value?.body;
+  if (
+    body?.type !== AST_NODE_TYPES.BlockStatement ||
+    body.body.length !== 1 ||
+    body.body[0]?.type !== AST_NODE_TYPES.ReturnStatement
+  ) {
+    context.report({
+      node,
+      messageId: "missingReturn",
+      data: { name: symbolName },
+    });
+    return;
+  }
+
+  const returnValueExpr = body.body[0].argument;
+  if (
+    returnValueExpr?.type !== AST_NODE_TYPES.CallExpression ||
+    returnValueExpr.callee.type !== AST_NODE_TYPES.Identifier ||
+    returnValueExpr.callee.name !== "tsRestHandler"
+  ) {
+    context.report({
+      node,
+      messageId: "missingReturn",
+      data: { name: symbolName },
+    });
+  }
+
+  if (
+    returnValueExpr &&
+    returnValueExpr?.type === AST_NODE_TYPES.CallExpression &&
+    returnValueExpr.callee.type === AST_NODE_TYPES.Identifier &&
+    returnValueExpr.callee.name === "tsRestHandler" &&
+    !methodImportedCorrectly
+  ) {
+    context.report({
+      node: returnValueExpr,
+      messageId: "callNotFromPackage",
+    });
+  }
+}
 
 const rule = createRule({
   name: "enforce-ts-rest-in-controllers",
@@ -65,7 +154,6 @@ const rule = createRule({
       MethodDefinition(node) {
         const symbolName =
           (node.key.type === AST_NODE_TYPES.Identifier && node.key.name) || "<unknown>";
-        // Ignore this rule for constructor and private methods
         if (
           node.kind === "constructor" ||
           node.accessibility === "private" ||
@@ -74,83 +162,8 @@ const rule = createRule({
           return;
         }
 
-        // Check for use of `@TsRestHandler()` decorator and ensure it comes from `@ts-rest/nest` package
-        const decorators = node.decorators || [];
-        const hasMatchingDecorator = decorators.some(
-          (decorator) =>
-            decorator.expression.type === AST_NODE_TYPES.CallExpression &&
-            decorator.expression.callee.type === AST_NODE_TYPES.Identifier &&
-            decorator.expression.callee.name === "TsRestHandler",
-        );
-
-        if (!hasMatchingDecorator) {
-          context.report({
-            node,
-            messageId: "missingDecorator",
-            data: {
-              name: symbolName,
-            },
-          });
-        }
-
-        decorators.forEach((decorator) => {
-          if (
-            decorator.expression.type === AST_NODE_TYPES.CallExpression &&
-            decorator.expression.callee.type === AST_NODE_TYPES.Identifier &&
-            decorator.expression.callee.name === "TsRestHandler" &&
-            !decoratorImportedCorrectly
-          ) {
-            context.report({
-              node: decorator,
-              messageId: "decoratorNotFromPackage",
-            });
-          }
-        });
-
-        // Check for returning the result of `tsRestHandler()` method (without any other statement present), and ensure it comes from `@ts-rest/nest` package
-        const body = node.value?.body;
-        if (
-          body?.type !== AST_NODE_TYPES.BlockStatement ||
-          body.body.length !== 1 ||
-          body.body[0]?.type !== AST_NODE_TYPES.ReturnStatement
-        ) {
-          context.report({
-            node,
-            messageId: "missingReturn",
-            data: {
-              name: symbolName,
-            },
-          });
-          return;
-        }
-
-        const returnValueExpr = body.body[0].argument;
-        if (
-          returnValueExpr?.type !== AST_NODE_TYPES.CallExpression ||
-          returnValueExpr.callee.type !== AST_NODE_TYPES.Identifier ||
-          returnValueExpr.callee.name !== "tsRestHandler"
-        ) {
-          context.report({
-            node,
-            messageId: "missingReturn",
-            data: {
-              name: symbolName,
-            },
-          });
-        }
-
-        if (
-          returnValueExpr &&
-          returnValueExpr?.type === AST_NODE_TYPES.CallExpression &&
-          returnValueExpr.callee.type === AST_NODE_TYPES.Identifier &&
-          returnValueExpr.callee.name === "tsRestHandler" &&
-          !methodImportedCorrectly
-        ) {
-          context.report({
-            node: returnValueExpr,
-            messageId: "callNotFromPackage",
-          });
-        }
+        validateDecorators(context, node, symbolName, decoratorImportedCorrectly);
+        validateReturnStatement(context, node, symbolName, methodImportedCorrectly);
       },
     };
   },

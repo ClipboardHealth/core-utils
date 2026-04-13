@@ -15,7 +15,6 @@
   },
   "rules": {
     // TODO: To fix
-    "complexity": "off",
     "jest/prefer-called-with": "off",
     "jest/require-to-throw-message": "off",
     "vitest/consistent-test-filename": "off",
