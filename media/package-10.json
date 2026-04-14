@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/json-api",
-  "version": "2.1.88",
+  "version": "2.1.89",
   "description": "TypeScript-friendly utilities for adhering to the JSON:API specification.",
   "keywords": [
     "api",
@@ -27,7 +27,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "qs": "6.15.0"
+    "qs": "6.15.1"
   },
   "peerDependencies": {
     "qs": "^6.14"
