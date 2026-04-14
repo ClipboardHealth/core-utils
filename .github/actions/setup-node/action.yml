@@ -6,7 +6,7 @@ description: |
 
   - Validates repo configuration;
   - Sets up Node.js from .nvmrc;
-  - Pins npm version from engines.npm;
+  - Aligns npm version with engines.npm;
   - Caches ~/.npm (download cache);
   - Runs `npm ci` for deterministic installs.
 
@@ -86,24 +86,62 @@ runs:
           exit 1
         fi
 
-        if ! [[ "$engines_npm" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "engines.npm must be an exact version (e.g., '11.6.2'), not a range: $engines_npm" >&2
+        if ! [[ "$engines_npm" =~ ^(~)?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "engines.npm must be an exact version or a patch range (e.g., '11.6.2' or '~11.11.0'): $engines_npm" >&2
           exit 1
         fi
 
-    - name: Pin npm version from engines.npm
+    - name: Align npm version with engines.npm
       shell: bash
       env:
         NPM_TOKEN: ${{ inputs.npm_token }}
       run: |
         set -euo pipefail
 
+        npm_satisfies_spec() {
+          local current="$1"
+          local spec="$2"
+
+          if [[ "$spec" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            [[ "$current" == "$spec" ]]
+            return
+          fi
+
+          if [[ "$spec" =~ ^~([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            local spec_major="${BASH_REMATCH[1]}"
+            local spec_minor="${BASH_REMATCH[2]}"
+            local spec_patch="${BASH_REMATCH[3]}"
+
+            if ! [[ "$current" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              return 1
+            fi
+
+            local current_major="${BASH_REMATCH[1]}"
+            local current_minor="${BASH_REMATCH[2]}"
+            local current_patch="${BASH_REMATCH[3]}"
+
+            [[ "$current_major" -eq "$spec_major" ]] &&
+              [[ "$current_minor" -eq "$spec_minor" ]] &&
+              [[ "$current_patch" -ge "$spec_patch" ]]
+            return
+          fi
+
+          return 1
+        }
+
         engines_npm="$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).engines.npm")"
         current_npm="$(npm --version)"
 
-        if [ "$current_npm" != "$engines_npm" ]; then
-          echo "npm $current_npm does not match engines.npm $engines_npm, installing..."
+        if ! npm_satisfies_spec "$current_npm" "$engines_npm"; then
+          echo "npm $current_npm does not satisfy engines.npm $engines_npm, installing..."
           npm install -g "npm@$engines_npm"
+        fi
+
+        current_npm="$(npm --version)"
+
+        if ! npm_satisfies_spec "$current_npm" "$engines_npm"; then
+          echo "npm $current_npm still does not satisfy engines.npm $engines_npm after installation." >&2
+          exit 1
         fi
 
     - name: Restore ~/.npm cache
