@@ -37,6 +37,8 @@ Each: High/Medium/Low with a one-line justification backed by evidence.
 
 **Title:** Shift matching query scans full collection on every request
 
+**Repository:** clipboard-health/clipboard-api. Discovered while working on [ENG-4521](https://linear.app/clipboard-health/issue/ENG-4521) (shift booking latency improvements) — investigation revealed the missing index as a separate concern from the ticket's scope.
+
 The shift matching query in `src/services/booking/shiftMatcher.ts:142` executes `find({ facility, status: 'open' })` without an index on the `facility` field. Every matching request scans ~200k documents instead of the ~50 that match.
 
 **Type:** Performance | **Interest:** High — 847 requests/day hit this path. p99 latency is 4.2s vs ~120ms baseline for indexed queries ([APM: shift matching latency](https://app.datadoghq.com/apm/...)). **Incident Risk:** Medium — a traffic spike during peak booking could exhaust the connection pool. **Velocity Risk:** Low — code is stable, rarely modified.
@@ -55,7 +57,13 @@ Suggested metadata: Priority: High
 
 #### What Is The Debt
 
+**Repository:** clipboard-health/clipboard-api
+
 Four cron jobs (`DailyDigestCron`, `ShiftReminderCron`, `CredentialExpiryCron`, `TimesheetReminderCron`) each implement their own notification dispatch: recipient resolution, template selection, channel routing, and retry handling. The implementations are nearly identical but have diverged — each has different retry behavior and error handling, making it impossible to reason about notification reliability as a whole.
+
+#### Discovery Context
+
+Discovered while implementing push notification support for [ENG-3891](https://linear.app/clipboard-health/issue/ENG-3891). Adding the new channel required duplicating dispatch logic into a fifth cron job, revealing the extent of the divergence.
 
 #### Classification
 

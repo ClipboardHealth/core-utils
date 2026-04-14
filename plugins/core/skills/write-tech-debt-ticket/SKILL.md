@@ -13,7 +13,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 ## Process
 
-1. **Gather context** — from code, PR comment, conversation, or audit
+1. **Gather context** — from code, PR comment, conversation, or audit. Note how the debt was discovered (see Discovery Context below).
 2. **Analyze the code** — read the actual code. Understand what it does and why it qualifies as debt.
 3. **Classify** — pick a primary debt type (and optional secondary) from classification table in reference.md
 4. **Gather evidence** (driven by classification):
@@ -45,9 +45,13 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 **Title:** Describes the debt, not the fix. Under 70 characters. No bracket prefixes.
 
-**Simple debt** (single location, clear impact): A paragraph with classification, code references, and "Impact If Left Unaddressed" inline.
+**Repository:** Always include the repository name (e.g., `clipboard-health/core-utils`) in the ticket body. Determine the repo from the current working directory's git remote (`git remote get-url origin`). For simple debt, include as a bold inline label. For complex debt, include in `## What Is The Debt`.
 
-**Complex debt** (multi-file, systemic, high-stakes): Use `## What Is The Debt`, `## Debt Classification` (type + rated interest/risk with justifications), `## Code References`, `## Evidence`, `## Ideal State` (destination, not route), `## Suggested Approach` (optional — only when fix is well-understood AND user has context implementer wouldn't, 2-3 sentences max), `## Impact If Left Unaddressed`.
+**Discovery Context:** If the debt was discovered while working on a specific ticket, PR, or incident, include that context so reviewers understand how it surfaced. For simple debt, add a sentence (e.g., "Discovered while working on [TICKET-123](link)."). For complex debt, include a `## Discovery Context` section with the originating ticket/PR link and a brief note on how the work revealed the debt. Omit this section only if the debt was found through a standalone audit with no originating ticket.
+
+**Simple debt** (single location, clear impact): A paragraph with classification, repository, code references, discovery context (if applicable), and "Impact If Left Unaddressed" inline.
+
+**Complex debt** (multi-file, systemic, high-stakes): Use `## What Is The Debt` (include repository), `## Discovery Context` (if applicable — originating ticket/PR and how the work revealed the debt), `## Debt Classification` (type + rated interest/risk with justifications), `## Code References`, `## Evidence`, `## Ideal State` (destination, not route), `## Suggested Approach` (optional — only when fix is well-understood AND user has context implementer wouldn't, 2-3 sentences max), `## Impact If Left Unaddressed`.
 
 **Metadata:** Priority, labels (`technical-debt`), presented BELOW the body. Always ask for team/assignee.
 
@@ -55,15 +59,17 @@ See reference.md for classification tables, rating framework, and full examples.
 
 ## Red Flags — Self-Review Before Presenting
 
-| Anti-Pattern                      | Fix                                                      |
-| --------------------------------- | -------------------------------------------------------- |
-| Reads like a refactoring task     | Rewrite to document the cost of the debt, not the fix    |
-| Has "Proposed Solution" section   | Delete. Describe ideal state instead.                    |
-| Has "Acceptance Criteria"         | Delete. This is a debt ticket, not a task.               |
-| No code references                | Add specific file paths and line numbers                 |
-| Unjustified ratings               | Cite git frequency, Datadog data, or workaround examples |
-| Aesthetic complaints as debt      | Explain the concrete cost or don't file the ticket       |
-| No "Impact If Left Unaddressed"   | Always include — this gets the ticket prioritized        |
-| No Datadog for perf/reliability   | You MUST search Datadog for these types                  |
-| Forced Datadog on maintainability | Only for performance/reliability/scalability             |
-| Guessed team assignment           | Ask the user                                             |
+| Anti-Pattern                      | Fix                                                       |
+| --------------------------------- | --------------------------------------------------------- |
+| Reads like a refactoring task     | Rewrite to document the cost of the debt, not the fix     |
+| Has "Proposed Solution" section   | Delete. Describe ideal state instead.                     |
+| Has "Acceptance Criteria"         | Delete. This is a debt ticket, not a task.                |
+| No code references                | Add specific file paths and line numbers                  |
+| Unjustified ratings               | Cite git frequency, Datadog data, or workaround examples  |
+| Aesthetic complaints as debt      | Explain the concrete cost or don't file the ticket        |
+| No "Impact If Left Unaddressed"   | Always include — this gets the ticket prioritized         |
+| No Datadog for perf/reliability   | You MUST search Datadog for these types                   |
+| Forced Datadog on maintainability | Only for performance/reliability/scalability              |
+| Guessed team assignment           | Ask the user                                              |
+| Missing repository                | Include repo name in ticket body — derive from git remote |
+| Missing discovery context         | If debt was found during ticket/PR work, link it          |
