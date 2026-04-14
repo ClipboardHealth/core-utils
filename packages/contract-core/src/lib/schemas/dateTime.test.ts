@@ -21,6 +21,21 @@ describe(dateTimeSchema, () => {
         expected: "2026-03-15T10:30:00.000Z",
       },
       {
+        name: "accepts ISO-8601 datetime with positive offset",
+        input: "2026-03-15T15:30:00.000+05:00",
+        expected: "2026-03-15T10:30:00.000Z",
+      },
+      {
+        name: "accepts ISO-8601 datetime with negative offset",
+        input: "2026-03-15T06:30:00.000-04:00",
+        expected: "2026-03-15T10:30:00.000Z",
+      },
+      {
+        name: "accepts ISO-8601 datetime with zero offset",
+        input: "2026-03-15T10:30:00.000+00:00",
+        expected: "2026-03-15T10:30:00.000Z",
+      },
+      {
         name: "accepts Date object",
         input: new Date("2026-03-15T10:30:00.000Z"),
         expected: "2026-03-15T10:30:00.000Z",
