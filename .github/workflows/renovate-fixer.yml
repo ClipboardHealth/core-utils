@@ -15,23 +15,42 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: write
-      id-token: write
       actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
+
+      - name: Check for existing investigation
+        id: check-existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh pr view ${{ github.event.pull_request.number }} \
+            --repo "${{ github.repository }}" \
+            --json comments \
+            --jq '[.comments[] | select(.body | contains("<!-- renovate-ci-fixer -->"))] | length')
+          if [ "$EXISTING" -gt "0" ]; then
+            echo "Claude has already investigated this PR"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node environment
+        if: steps.check-existing.outputs.skip != 'true'
         uses: ./.github/actions/setup-node
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
 
       - name: Run Claude Code
+        if: steps.check-existing.outputs.skip != 'true'
         id: claude
         uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1
         with:
@@ -60,7 +79,7 @@ jobs:
 
             Look at the actual changes:
             ```
-            git diff main..HEAD -- package.json package-lock.json packages/*/package.json
+            git diff ${{ github.event.pull_request.base.ref }}..HEAD -- package.json package-lock.json packages/*/package.json
             ```
 
             Identify which package(s) were updated, the version range (old → new), and whether this is a major, minor, or patch bump.
@@ -139,5 +158,5 @@ jobs:
             - Focus on providing actionable information for a human reviewer.
 
       - name: Tear down services
+        if: always() && steps.check-existing.outputs.skip != 'true'
         run: docker compose down --volumes
-        if: always()
