@@ -1,0 +1,30 @@
+{
+  "name": "core",
+  "version": "1.16.0",
+  "description": "Clipboard's core development tools.",
+  "author": {
+    "name": "Clipboard",
+    "url": "https://github.com/ClipboardHealth"
+  },
+  "homepage": "https://github.com/ClipboardHealth/core-utils/tree/main/plugins/core",
+  "repository": "https://github.com/ClipboardHealth/core-utils",
+  "license": "MIT",
+  "keywords": ["clipboard", "skills", "development", "engineering"],
+  "skills": "./skills",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Clipboard Core",
+    "shortDescription": "Clipboard's core development tools.",
+    "longDescription": "Shared Clipboard engineering skills and hooks for investigation, PR iteration, CI fixes, and local development workflows.",
+    "developerName": "Clipboard",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write", "Interactive"],
+    "websiteURL": "https://github.com/ClipboardHealth/core-utils",
+    "defaultPrompt": [
+      "Investigate a production issue in Datadog.",
+      "Iterate on a PR until CI passes.",
+      "Review unresolved PR comments."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "clipboard",
+  "interface": {
+    "displayName": "Clipboard"
+  },
+  "plugins": [
+    {
+      "name": "core",
+      "source": {
+        "source": "local",
+        "path": "./plugins/core"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
