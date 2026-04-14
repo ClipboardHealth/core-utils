@@ -1,37 +1,48 @@
 name: Renovate CI Fixer
 
 on:
-  pull_request:
-    types: [opened]
-
-concurrency:
-  group: renovate-fixer-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: ["renovate/**"]
 
 jobs:
   investigate:
-    if: github.event.pull_request.user.login == 'renovate[bot]'
+    if: github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       actions: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
+      - name: Find open PR for branch
+        id: find-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --head "${{ github.event.workflow_run.head_branch }}" \
+            --state open \
+            --json number,title \
+            --jq '.[0] // empty')
 
-      - name: Fetch base branch
-        run: git fetch origin ${{ github.event.pull_request.base.ref }}:${{ github.event.pull_request.base.ref }}
+          if [ -z "$PR" ]; then
+            echo "No open PR found for branch ${{ github.event.workflow_run.head_branch }}"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pr_number=$(echo "$PR" | jq -r '.number')" >> "$GITHUB_OUTPUT"
+            echo "pr_title=$(echo "$PR" | jq -r '.title')" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Check for existing investigation
+        if: steps.find-pr.outputs.skip != 'true'
         id: check-existing
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          EXISTING=$(gh pr view ${{ github.event.pull_request.number }} \
+          EXISTING=$(gh pr view "${{ steps.find-pr.outputs.pr_number }}" \
             --repo "${{ github.repository }}" \
             --json comments \
             --jq '[.comments[] | select(.body | contains("<!-- renovate-ci-fixer -->"))] | length')
@@ -42,15 +53,26 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Checkout repository
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        run: git fetch origin main:main
+
       - name: Setup Node environment
-        if: steps.check-existing.outputs.skip != 'true'
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
         uses: ./.github/actions/setup-node
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
 
       - name: Run Claude Code
-        if: steps.check-existing.outputs.skip != 'true'
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
         id: claude
         uses: anthropics/claude-code-action@1c8b699d43e9bfed42b48ef15da85d89bab70960 # v1
         with:
@@ -65,37 +87,37 @@ jobs:
 
             ## Context
             - Repository: ${{ github.repository }}
-            - PR: #${{ github.event.pull_request.number }}
-            - Branch: ${{ github.event.pull_request.head.ref }}
-            - PR title: ${{ github.event.pull_request.title }}
+            - PR: #${{ steps.find-pr.outputs.pr_number }}
+            - PR title: ${{ steps.find-pr.outputs.pr_title }}
+            - Branch: ${{ github.event.workflow_run.head_branch }}
+            - Failed CI run: ${{ github.event.workflow_run.html_url }}
+            - Failed run ID: ${{ github.event.workflow_run.id }}
 
             ## Instructions
 
             ### 1. Understand the dependency change
             Read the PR body for Renovate's changelog and release notes:
             ```
-            gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }}
+            gh pr view ${{ steps.find-pr.outputs.pr_number }} --repo ${{ github.repository }}
             ```
 
             Look at the actual changes:
             ```
-            git diff ${{ github.event.pull_request.base.ref }}..HEAD -- package.json package-lock.json packages/*/package.json
+            git diff main..HEAD -- package.json package-lock.json packages/*/package.json
             ```
 
             Identify which package(s) were updated, the version range (old → new), and whether this is a major, minor, or patch bump.
 
             ### 2. Check CI failure details
-            Find the most recent failed CI run for this branch:
+            Get the failure logs from the CI run that triggered this workflow:
             ```
-            gh run list --repo ${{ github.repository }} --branch "${{ github.event.pull_request.head.ref }}" --workflow CI --status failure --limit 1 --json databaseId --jq '.[0].databaseId'
-            ```
-
-            Then get the failure logs:
-            ```
-            gh run view <RUN_ID> --repo ${{ github.repository }} --log-failed
+            gh run view ${{ github.event.workflow_run.id }} --repo ${{ github.repository }} --log-failed
             ```
 
-            If no failed run is found yet (CI may still be running on the newly opened PR), check pending runs and note that in your report.
+            Also check which specific jobs and steps failed:
+            ```
+            gh run view ${{ github.event.workflow_run.id }} --repo ${{ github.repository }}
+            ```
 
             ### 3. Research breaking changes and migration guides
             For each updated package:
@@ -123,9 +145,11 @@ jobs:
             ### 5. Post your findings
             Post a comment on the PR summarizing your investigation:
             ```
-            gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "$(cat <<'COMMENT_EOF'
+            gh pr comment ${{ steps.find-pr.outputs.pr_number }} --repo ${{ github.repository }} --body "$(cat <<'COMMENT_EOF'
             <!-- renovate-ci-fixer -->
             ## Renovate CI Failure Investigation
+
+            **Failed run:** ${{ github.event.workflow_run.html_url }}
 
             ### Dependency Changes
             <table or list of packages updated with version ranges>
@@ -158,5 +182,5 @@ jobs:
             - Focus on providing actionable information for a human reviewer.
 
       - name: Tear down services
-        if: always() && steps.check-existing.outputs.skip != 'true'
+        if: always() && steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
         run: docker compose down --volumes
