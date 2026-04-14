@@ -47,8 +47,9 @@ jobs:
         id: check-existing
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find-pr.outputs.pr_number }}
         run: |
-          EXISTING=$(gh pr view "${{ steps.find-pr.outputs.pr_number }}" \
+          EXISTING=$(gh pr view "$PR_NUMBER" \
             --repo "${{ github.repository }}" \
             --json comments \
             --jq '[.comments[] | select(.body | contains("<!-- renovate-ci-fixer -->"))] | length')
