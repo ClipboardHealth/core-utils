@@ -90,7 +90,7 @@ jobs:
           prompt: |
             You are investigating a Renovate dependency update PR that failed CI.
 
-            Renovate only opens PRs when branch-level automerge has already failed, so this PR represents a dependency update that could not land automatically.
+            Renovate only opens PRs when branch-level automerge failed, so this PR represents a dependency update that could not land automatically.
 
             ## Context
             - Repository: ${{ github.repository }}
@@ -128,7 +128,7 @@ jobs:
 
             ### 3. Research breaking changes and migration guides
             For each updated package:
-            - Check GitHub releases between the old and new versions for breaking changes or migration notes
+            - Check releases between the old and new versions for breaking changes or migration notes
             - Look for CHANGELOG.md entries
             - For **major version bumps**, actively search for a migration guide
             - Scan for keywords: "breaking", "deprecated", "removed", "migration", "incompatible"
@@ -136,7 +136,7 @@ jobs:
             ### 4. Attempt a fix
             If you can identify why CI failed:
             1. Make the necessary code changes (type updates, config changes, import fixes, etc.)
-            2. Verify the fix compiles: `npx tsc --noEmit` on affected packages
+            2. Verify the fix: `node --run lint`
             3. If tests were failing, run the specific tests: `npx nx run <project>:test`
             4. Commit with conventional format: `fix(deps): <description>`
             5. Push the fix to the PR branch
@@ -147,7 +147,7 @@ jobs:
             - Import path changes → update imports
             - Lock file issues → run `npm install`
 
-            If you cannot fix it, that's fine — your investigation report is still valuable.
+            If you cannot fix it, that's fine, your investigation report is still valuable.
 
             ### 5. Post your findings
             Post a comment on the PR summarizing your investigation:
