@@ -27,7 +27,7 @@ Nurses on the mobile app are unable to complete shift bookings. After submitting
 
 **Actual Behavior:** Spinner runs indefinitely. App must be force-closed.
 
-**Repository:** clipboard-health/clipboard-mobile
+**Repository:** ClipboardHealth/core-utils
 
 **Evidence:**
 
@@ -60,7 +60,7 @@ Not yet reproduced manually. Observed via monitoring.
 
 ## Technical Context
 
-**Repository:** clipboard-health/clipboard-api
+**Repository:** ClipboardHealth/core-utils
 
 Errors began at 2026-03-12 14:00 UTC. Error logs reference `MongoServerError: connection pool exhausted`. Correlates with deploy at 13:45 UTC.
 

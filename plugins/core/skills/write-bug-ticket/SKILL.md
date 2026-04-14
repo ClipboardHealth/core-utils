@@ -34,7 +34,7 @@ Structure and write Linear bug reports from evidence that already exists in the 
 
 **Title:** Describes the SYMPTOM, not the cause. Under 70 characters. No bracket prefixes.
 
-**Repository:** Always include the repository name (e.g., `clipboard-health/core-utils`) in the ticket body. Determine the repo from the current working directory's git remote (`git remote get-url origin`). For simple bugs, include as a bold inline label. For complex bugs, include in `## Technical Context`.
+**Repository:** Always include the repository name in the ticket body. Run `git remote get-url origin | sed 's/.*[:/]\([^/]*\/[^/]*\)\.git$/\1/'` to get the `org/repo` name. For simple bugs, include as a bold inline label. For complex bugs, include in `## Technical Context`.
 
 **Simple bug** (<4 details): A paragraph with bold inline labels (**Expected:**, **Actual:**, **Repository:**, etc.). No `##` headers needed.
 

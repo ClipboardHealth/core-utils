@@ -22,7 +22,7 @@ Workplaces using phone interviews receive a daily interview digest email that is
 - [ ] Workplaces using phone interviews do not receive the digest by default
 - [ ] When a workplace switches to phone interviews, the digest is automatically disabled
 
-**Repository:** clipboard-health/clipboard-api
+**Repository:** ClipboardHealth/core-utils
 
 ## Complex Ticket (with sub-issues)
 
@@ -42,7 +42,7 @@ Workplaces using phone interviews receive a daily interview digest email that is
 
 ### Context
 
-**Repository:** clipboard-health/clipboard-api
+**Repository:** ClipboardHealth/core-utils
 
 ### Scope
 

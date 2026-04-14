@@ -45,7 +45,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 **Title:** Describes the debt, not the fix. Under 70 characters. No bracket prefixes.
 
-**Repository:** Always include the repository name (e.g., `clipboard-health/core-utils`) in the ticket body. Determine the repo from the current working directory's git remote (`git remote get-url origin`). For simple debt, include as a bold inline label. For complex debt, include in `## What Is The Debt`.
+**Repository:** Always include the repository name in the ticket body. Run `git remote get-url origin | sed 's/.*[:/]\([^/]*\/[^/]*\)\.git$/\1/'` to get the `org/repo` name. For simple debt, include as a bold inline label. For complex debt, include in `## What Is The Debt`.
 
 **Discovery Context:** If the debt was discovered while working on a specific ticket, PR, or incident, include that context so reviewers understand how it surfaced. For simple debt, add a sentence (e.g., "Discovered while working on [TICKET-123](link)."). For complex debt, include a `## Discovery Context` section with the originating ticket/PR link and a brief note on how the work revealed the debt. Omit this section only if the debt was found through a standalone audit with no originating ticket.
 
