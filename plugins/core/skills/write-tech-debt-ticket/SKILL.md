@@ -29,7 +29,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 ## Hard Rules
 
-- **Debt ticket, not refactoring task.** Document the cost. NEVER include "Proposed Solution", "Suggested Fix", "Acceptance Criteria", or implementation steps. You may describe _ideal state_ (destination) but NOT steps to get there.
+- **Debt ticket, not refactoring task.** Document the cost. NEVER include "Proposed Solution", "Suggested Approach", "Suggested Fix", "Acceptance Criteria", or implementation steps. You may describe _ideal state_ (destination) but NOT steps to get there.
 - **"Impact If Left Unaddressed" is MANDATORY.** What happens in 3-6 months if nobody fixes this? Without this, the ticket is just a complaint.
 - **Always read the code.** Every claim backed by a code reference or data. No vibes.
 - **Justify every rating.** Cite git history, Datadog data, or workaround examples.
@@ -51,7 +51,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 **Simple debt** (single location, clear impact): A paragraph with classification, repository, code references, discovery context (if applicable), and "Impact If Left Unaddressed" inline.
 
-**Complex debt** (multi-file, systemic, high-stakes): Use `## What Is The Debt` (include repository), `## Discovery Context` (if applicable — originating ticket/PR and how the work revealed the debt), `## Debt Classification` (type + rated interest/risk with justifications), `## Code References`, `## Evidence`, `## Ideal State` (destination, not route), `## Suggested Approach` (optional — only when fix is well-understood AND user has context implementer wouldn't, 2-3 sentences max), `## Impact If Left Unaddressed`.
+**Complex debt** (multi-file, systemic, high-stakes): Use `## What Is The Debt` (include repository), `## Discovery Context` (if applicable — originating ticket/PR and how the work revealed the debt), `## Debt Classification` (type + rated interest/risk with justifications), `## Code References`, `## Evidence`, `## Ideal State` (destination, not route), `## Impact If Left Unaddressed`.
 
 **Metadata:** Priority, labels (`technical-debt`), presented BELOW the body. Always ask for team/assignee.
 
@@ -63,6 +63,7 @@ See reference.md for classification tables, rating framework, and full examples.
 | --------------------------------- | --------------------------------------------------------- |
 | Reads like a refactoring task     | Rewrite to document the cost of the debt, not the fix     |
 | Has "Proposed Solution" section   | Delete. Describe ideal state instead.                     |
+| Has "Suggested Approach" section  | Delete. Describe ideal state instead.                     |
 | Has "Acceptance Criteria"         | Delete. This is a debt ticket, not a task.                |
 | No code references                | Add specific file paths and line numbers                  |
 | Unjustified ratings               | Cite git frequency, Datadog data, or workaround examples  |
