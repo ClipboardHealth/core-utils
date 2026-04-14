@@ -34,10 +34,7 @@ npm run format
 # Check formatting, spelling, etc.
 npm run ci:check
 
-# Type check (all packages)
-npm run typecheck
-
-# Lint (oxlint)
+# Lint (oxlint), also runs typecheck
 npm run lint
 
 # Check dependency architecture
