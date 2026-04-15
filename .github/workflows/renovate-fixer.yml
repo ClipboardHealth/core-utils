@@ -1,0 +1,193 @@
+name: Renovate CI Fixer
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: ["renovate/**"]
+
+jobs:
+  investigate:
+    concurrency:
+      group: renovate-fixer-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.actor.login == 'renovate[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Find open PR for branch
+        id: find-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          PR=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --head "$HEAD_BRANCH" \
+            --state open \
+            --json number,title \
+            --jq '.[0] // empty')
+
+          if [ -z "$PR" ]; then
+            echo "No open PR found for branch $HEAD_BRANCH"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pr_number=$(echo "$PR" | jq -r '.number')" >> "$GITHUB_OUTPUT"
+            echo "pr_title=$(echo "$PR" | jq -r '.title')" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for existing investigation
+        if: steps.find-pr.outputs.skip != 'true'
+        id: check-existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find-pr.outputs.pr_number }}
+        run: |
+          EXISTING=$(gh pr view "$PR_NUMBER" \
+            --repo "${{ github.repository }}" \
+            --json comments \
+            --jq '[.comments[] | select(.body | contains("<!-- renovate-ci-fixer -->"))] | length')
+          if [ "$EXISTING" -gt "0" ]; then
+            echo "Claude has already investigated this PR"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        run: git fetch origin main:main
+
+      - name: Setup Node environment
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        uses: ./.github/actions/setup-node
+        with:
+          npm_token: ${{ secrets.NPM_TOKEN }}
+          start_services: "true"
+
+      - name: Run Claude Code
+        if: steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        id: claude
+        uses: anthropics/claude-code-action@5fb899572b81d2bb648d4d187173a2f423a9677c # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: "renovate"
+          additional_permissions: |
+            actions: read
+          prompt: |
+            You are investigating a Renovate dependency update PR that failed CI.
+
+            Renovate only opens PRs when branch-level automerge failed, so this PR represents a dependency update that could not land automatically.
+
+            ## Context
+            - Repository: ${{ github.repository }}
+            - PR: #${{ steps.find-pr.outputs.pr_number }}
+            - PR title: ${{ steps.find-pr.outputs.pr_title }}
+            - Branch: ${{ github.event.workflow_run.head_branch }}
+            - Failed CI run: ${{ github.event.workflow_run.html_url }}
+            - Failed run ID: ${{ github.event.workflow_run.id }}
+
+            ## Instructions
+
+            ### 1. Understand the dependency change
+            Read the PR body for Renovate's changelog and release notes:
+            ```
+            gh pr view ${{ steps.find-pr.outputs.pr_number }} --repo ${{ github.repository }}
+            ```
+
+            Look at the actual changes:
+            ```
+            git diff main..HEAD -- package.json package-lock.json packages/*/package.json
+            ```
+
+            Identify which package(s) were updated, the version range (old → new), and whether this is a major, minor, or patch bump.
+
+            ### 2. Check CI failure details
+            Get the failure logs from the CI run that triggered this workflow:
+            ```
+            gh run view ${{ github.event.workflow_run.id }} --repo ${{ github.repository }} --log-failed
+            ```
+
+            Also check which specific jobs and steps failed:
+            ```
+            gh run view ${{ github.event.workflow_run.id }} --repo ${{ github.repository }}
+            ```
+
+            ### 3. Research breaking changes and migration guides
+            For each updated package:
+            - Check releases between the old and new versions for breaking changes or migration notes
+            - Look for CHANGELOG.md entries
+            - For **major version bumps**, actively search for a migration guide
+            - Scan for keywords: "breaking", "deprecated", "removed", "migration", "incompatible"
+
+            ### 4. Attempt a fix
+            If you can identify why CI failed:
+            1. Make the necessary code changes (type updates, config changes, import fixes, etc.)
+            2. Verify the fix: `node --run lint`
+            3. If tests were failing, run the specific tests: `npx nx run <project>:test`
+            4. Commit with conventional format: `fix(deps): <description>`
+            5. Push the fix to the PR branch
+
+            Common fixes:
+            - Type errors from updated packages → update type usage to match new API
+            - Configuration or schema changes → update config files
+            - Import path changes → update imports
+            - Lock file issues → run `npm install`
+
+            If you cannot fix it, that's fine, your investigation report is still valuable.
+
+            ### 5. Post your findings
+            Post a comment on the PR summarizing your investigation:
+            ```
+            gh pr comment ${{ steps.find-pr.outputs.pr_number }} --repo ${{ github.repository }} --body "$(cat <<'COMMENT_EOF'
+            <!-- renovate-ci-fixer -->
+            ## Renovate CI Failure Investigation
+
+            **Failed run:** ${{ github.event.workflow_run.html_url }}
+
+            ### Dependency Changes
+            <table or list of packages updated with version ranges>
+
+            ### CI Failure Analysis
+            <what failed and why, with relevant log excerpts>
+
+            ### Breaking Changes
+            <any breaking changes, migration notes, or changelog entries found — or "None found">
+
+            ### Migration Guide
+            <relevant migration steps if this is a major bump — or "N/A">
+
+            ### Fix Attempted
+            <what you tried; if you pushed a fix, say so; if you couldn't fix it, explain why>
+
+            ### Risk Assessment
+            <High/Medium/Low risk and why — consider: scope of changes, test coverage, breaking change surface>
+
+            ### Recommended Action
+            <one of: "Fix pushed — CI should re-run automatically" / "Manual intervention needed — <details>" / "Transient failure — consider re-running CI">
+            COMMENT_EOF
+            )"
+            ```
+
+            IMPORTANT rules:
+            - The comment MUST include `<!-- renovate-ci-fixer -->` on the first line inside the body. This marker prevents duplicate investigations.
+            - Do NOT merge the PR.
+            - Do NOT approve the PR.
+            - Focus on providing actionable information for a human reviewer.
+
+      - name: Tear down services
+        if: always() && steps.find-pr.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        run: docker compose down --volumes

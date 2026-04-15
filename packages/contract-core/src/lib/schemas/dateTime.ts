@@ -22,6 +22,6 @@ import { z } from "zod";
  */
 export function dateTimeSchema() {
   return z
-    .union([z.string().datetime(), z.date()])
+    .union([z.string().datetime({ offset: true }), z.date()])
     .transform((value) => (value instanceof Date ? value : new Date(value)));
 }
