@@ -15,6 +15,8 @@ import { writeTraceZipFixture } from "./internal/testHelpers";
 import LlmReporter from "./reporter";
 import type { AttemptResult, LlmTestEntry, LlmTestReport } from "./types";
 
+const NETWORK_REQUESTS_CAP = 200 as const;
+
 function createMockConfig(overrides: Partial<FullConfig> = {}): FullConfig {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {
@@ -728,5 +730,59 @@ describe(LlmReporter, () => {
 
     const entry = firstTestEntry(report);
     expect(entry.timeline).toStrictEqual(attempt.timeline);
+  });
+
+  it("keeps improving console signal after network cap is reached", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const traceEvents = [
+      ...Array.from({ length: 50 }, (_, index) => ({
+        type: "event",
+        method: "pageClosed",
+        params: { pageId: `page-${index}` },
+      })),
+      { type: "console", messageType: "error", text: "error retained after network cap" },
+    ];
+    const networkEvents = Array.from({ length: NETWORK_REQUESTS_CAP + 10 }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "fetch",
+        request: {
+          method: "GET",
+          url: `https://api.example.com/network-cap/${index}`,
+        },
+        response: {
+          status: 200,
+        },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(
+      outputDirectory,
+      "trace-console-priority-network-cap.zip",
+      {
+        requestBody: JSON.stringify({ request: "hello" }),
+        responseBody: JSON.stringify({ response: "world" }),
+        traceEvents,
+        networkEvents,
+      },
+    );
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+    expect(attempt.consoleMessages).toContainEqual({
+      type: "error",
+      text: "error retained after network cap",
+    });
   });
 });

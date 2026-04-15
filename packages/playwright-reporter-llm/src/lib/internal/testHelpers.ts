@@ -8,7 +8,7 @@ interface ZipFixtureEntry {
   compressionMethod?: 0 | 8;
 }
 
-function createStoredZipArchive(entries: ZipFixtureEntry[]): Buffer {
+export function createStoredZipArchive(entries: ZipFixtureEntry[]): Buffer {
   const localFileParts: Buffer[] = [];
   const centralDirectoryParts: Buffer[] = [];
   let localFileOffset = 0;

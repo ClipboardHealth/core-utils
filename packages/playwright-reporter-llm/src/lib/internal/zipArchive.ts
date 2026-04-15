@@ -17,7 +17,12 @@ function findEndOfCentralDirectoryOffset(zipBuffer: Buffer): number {
       continue;
     }
     const commentLength = zipBuffer.readUInt16LE(offset + 20);
-    if (offset + minimumEndRecordLength + commentLength === zipBuffer.length) {
+    const centralDirectorySize = zipBuffer.readUInt32LE(offset + 12);
+    const centralDirectoryOffset = zipBuffer.readUInt32LE(offset + 16);
+    if (
+      offset + minimumEndRecordLength + commentLength === zipBuffer.length &&
+      centralDirectoryOffset + centralDirectorySize === offset
+    ) {
       return offset;
     }
   }
