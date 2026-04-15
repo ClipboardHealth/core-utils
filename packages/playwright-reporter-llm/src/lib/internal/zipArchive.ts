@@ -13,7 +13,11 @@ function findEndOfCentralDirectoryOffset(zipBuffer: Buffer): number {
   const minimumOffset = Math.max(0, zipBuffer.length - minimumEndRecordLength - maxCommentLength);
 
   for (let offset = zipBuffer.length - minimumEndRecordLength; offset >= minimumOffset; offset--) {
-    if (zipBuffer.readUInt32LE(offset) === ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE) {
+    if (zipBuffer.readUInt32LE(offset) !== ZIP_END_OF_CENTRAL_DIRECTORY_SIGNATURE) {
+      continue;
+    }
+    const commentLength = zipBuffer.readUInt16LE(offset + 20);
+    if (offset + minimumEndRecordLength + commentLength === zipBuffer.length) {
       return offset;
     }
   }
