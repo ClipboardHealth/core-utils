@@ -19,6 +19,30 @@ npm install @clipboard-health/contract-core
 
 ### Zod schemas
 
+#### Comma-separated array schema
+
+`commaSeparatedArray(itemSchema)` validates comma-separated string or array inputs and normalizes them to typed arrays. Designed for shared contracts where the server receives comma-separated query strings and the client passes typed arrays.
+
+```ts
+// z.input  → string | string[]
+// z.output → string[]
+commaSeparatedArray(nonEmptyString).optional();
+
+// z.input  → string | ("CNA" | "RN" | "LVN")[]
+// z.output → ("CNA" | "RN" | "LVN")[]
+commaSeparatedArray(requiredEnum(["CNA", "RN", "LVN"]));
+
+// z.input  → string | string[]
+// z.output → string[]  (each validated as ObjectId)
+commaSeparatedArray(objectId);
+
+// z.input  → string | (string | Date)[]
+// z.output → Date[]
+commaSeparatedArray(dateTimeSchema());
+```
+
+Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess(splitString, z.array(...))` with proper `z.input` typing (the `splitString` pattern erases input types to `unknown`).
+
 #### DateTime schema
 
 `dateTimeSchema()` validates strict ISO-8601 datetime strings and transforms them to `Date` objects. Unlike `z.coerce.date()`, it rejects loose inputs like epoch numbers and date-only strings. Composable with `.optional()`, `.nullable()`, etc. at the call site.
@@ -58,9 +82,11 @@ requiredEnum(widened); // TS error
 import {
   apiErrors,
   booleanString,
+  commaSeparatedArray,
   dateTimeSchema,
   ENUM_FALLBACK,
   nonEmptyString,
+  objectId,
   optionalEnum,
   optionalEnumWithFallback,
   requiredEnum,
@@ -84,6 +110,35 @@ apiErrors.parse({
     },
   ],
 });
+
+// Comma-separated array examples
+// Designed for shared contracts: server receives "CNA,RN" (string), client passes ["CNA", "RN"] (array).
+// Both normalize to the same typed array output.
+const workerTypes = commaSeparatedArray(requiredEnum(["CNA", "RN", "LVN"]));
+
+// Server-side: comma-separated string from query params
+const fromString = workerTypes.parse("CNA,RN");
+// => ["CNA", "RN"]
+console.log(fromString);
+
+// Client-side: typed array
+const fromArray = workerTypes.parse(["CNA", "LVN"]);
+// => ["CNA", "LVN"]
+console.log(fromArray);
+
+// Composes with other schemas
+const workerIds = commaSeparatedArray(objectId).optional();
+const dates = commaSeparatedArray(dateTimeSchema());
+
+// Works with .optional()
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noIds = workerIds.parse(undefined);
+// => undefined
+console.log(noIds);
+
+const someDates = dates.parse("2026-01-01T00:00:00.000Z,2026-01-02T00:00:00.000Z");
+// => [Date, Date]
+console.log(someDates[0] instanceof Date); // true
 
 booleanString.parse("true");
 

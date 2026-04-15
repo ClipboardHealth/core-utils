@@ -1,5 +1,6 @@
 export * from "./apiError";
 export * from "./booleanString";
+export * from "./commaSeparatedArray";
 export * from "./dateTime";
 export * from "./enum";
 export * from "./money";
