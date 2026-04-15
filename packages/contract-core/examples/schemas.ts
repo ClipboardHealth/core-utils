@@ -2,9 +2,11 @@
 import {
   apiErrors,
   booleanString,
+  commaSeparatedArray,
   dateTimeSchema,
   ENUM_FALLBACK,
   nonEmptyString,
+  objectId,
   optionalEnum,
   optionalEnumWithFallback,
   requiredEnum,
@@ -28,6 +30,35 @@ apiErrors.parse({
     },
   ],
 });
+
+// Comma-separated array examples
+// Designed for shared contracts: server receives "CNA,RN" (string), client passes ["CNA", "RN"] (array).
+// Both normalize to the same typed array output.
+const workerTypes = commaSeparatedArray(requiredEnum(["CNA", "RN", "LVN"]));
+
+// Server-side: comma-separated string from query params
+const fromString = workerTypes.parse("CNA,RN");
+// => ["CNA", "RN"]
+console.log(fromString);
+
+// Client-side: typed array
+const fromArray = workerTypes.parse(["CNA", "LVN"]);
+// => ["CNA", "LVN"]
+console.log(fromArray);
+
+// Composes with other schemas
+const workerIds = commaSeparatedArray(objectId).optional();
+const dates = commaSeparatedArray(dateTimeSchema());
+
+// Works with .optional()
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noIds = workerIds.parse(undefined);
+// => undefined
+console.log(noIds);
+
+const someDates = dates.parse("2026-01-01T00:00:00.000Z,2026-01-02T00:00:00.000Z");
+// => [Date, Date]
+console.log(someDates[0] instanceof Date); // true
 
 booleanString.parse("true");
 
