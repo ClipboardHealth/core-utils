@@ -30,12 +30,20 @@ jobs:
       - name: Resolve PR context
         id: context
         env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          CURRENT_REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPO_FULL_NAME: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HTML_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER_EVENT: ${{ github.event.pull_request.number }}
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+          REVIEWER_LOGIN_EVENT: ${{ github.event.review.user.login }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PR_NUMBER="${{ inputs.pr_number }}"
+            PR_NUMBER="$PR_NUMBER_INPUT"
             PR_JSON=$(gh pr view "$PR_NUMBER" \
-              --repo "${{ github.repository }}" \
+              --repo "$CURRENT_REPOSITORY" \
               --json state,headRefName,baseRefName,isCrossRepository,url)
 
             PR_STATE=$(echo "$PR_JSON" | jq -r '.state')
@@ -56,13 +64,13 @@ jobs:
             PR_URL=$(echo "$PR_JSON" | jq -r '.url')
             REVIEWER_LOGIN="workflow-dispatch"
           else
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-            BRANCH="${{ github.event.pull_request.head.ref }}"
-            BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-            PR_URL="${{ github.event.pull_request.html_url }}"
-            REVIEWER_LOGIN="${{ github.event.review.user.login }}"
+            PR_NUMBER="$PR_NUMBER_EVENT"
+            BRANCH="$HEAD_REF"
+            BASE_BRANCH="$BASE_REF"
+            PR_URL="$PR_HTML_URL"
+            REVIEWER_LOGIN="$REVIEWER_LOGIN_EVENT"
 
-            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+            if [ "$HEAD_REPO_FULL_NAME" != "$CURRENT_REPOSITORY" ]; then
               echo "Skipping cross-repository PR #$PR_NUMBER for safety"
               echo "skip=true" >> "$GITHUB_OUTPUT"
               exit 0
