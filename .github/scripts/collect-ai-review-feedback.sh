@@ -22,7 +22,8 @@ output_error() {
 
 validate_prerequisites() {
   if ! command -v jq >/dev/null 2>&1; then
-    output_error "jq not found. Install from https://stedolan.github.io/jq"
+    printf '{"error":"jq not found. Install from https://stedolan.github.io/jq"}\n' >&3
+    exit 1
   fi
   if ! command -v gh >/dev/null 2>&1; then
     output_error "gh CLI not found. Install from https://cli.github.com"
