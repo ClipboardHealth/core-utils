@@ -32,6 +32,7 @@ jobs:
         id: context
         env:
           GH_TOKEN: ${{ github.token }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             PR_NUMBER="${{ inputs.pr_number }}"
@@ -65,7 +66,7 @@ jobs:
               echo "run_url=$(echo "$RUN_JSON" | jq -r '.url')" >> "$GITHUB_OUTPUT"
             fi
           else
-            BRANCH="${{ github.event.workflow_run.head_branch }}"
+            BRANCH="$HEAD_BRANCH"
             PR_JSON=$(gh pr list \
               --repo "${{ github.repository }}" \
               --head "$BRANCH" \
