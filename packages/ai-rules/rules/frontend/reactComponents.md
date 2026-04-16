@@ -91,7 +91,7 @@ return <MemoizedChild onSave={handleSave} />;
 
 Before creating a new component, search for existing ones in this order:
 
-2. **App-level shared directories**: e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`
-3. **Sibling features**: search for `*Card`, `*Modal`, `*Form`, `*EmptyState`, `*Page` patterns in other features
+1. **App-level shared directories**: e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`
+2. **Sibling features**: search for `*Card`, `*Modal`, `*Form`, `*EmptyState`, `*Page` patterns in other features
 
 If an existing component covers >70% of the need, extend it (prefer composition over boolean flags). Only create a new component when behavior is fundamentally different — document why in the PR.
