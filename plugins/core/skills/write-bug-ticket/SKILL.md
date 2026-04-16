@@ -34,9 +34,11 @@ Structure and write Linear bug reports from evidence that already exists in the 
 
 **Title:** Describes the SYMPTOM, not the cause. Under 70 characters. No bracket prefixes.
 
-**Simple bug** (<4 details): A paragraph with bold inline labels (**Expected:**, **Actual:**, etc.). No `##` headers needed.
+**Repository:** Always include the repository name in the ticket body. Run `git remote get-url origin | sed 's/\.git$//' | sed 's/.*[:/]\([^/]*\/[^/]*\)$/\1/'` to get the `org/repo` name. For simple bugs, include as a bold inline label. For complex bugs, include in `## Technical Context`.
 
-**Complex bug** (multi-service, intermittent, wide impact): Use `## Expected Behavior`, `## Actual Behavior`, `## Steps to Reproduce`, `## Evidence`, `## Technical Context` (optional — observables only, NOT diagnosis), `## Impact`.
+**Simple bug** (<4 details): A paragraph with bold inline labels (**Expected:**, **Actual:**, **Repository:**, etc.). No `##` headers needed.
+
+**Complex bug** (multi-service, intermittent, wide impact): Use `## Expected Behavior`, `## Actual Behavior`, `## Steps to Reproduce`, `## Evidence`, `## Technical Context` (include repository — observables only, NOT diagnosis), `## Impact`.
 
 **Metadata:** Priority, labels (`bug`), presented BELOW the body. Always ask for team/assignee.
 
@@ -58,3 +60,4 @@ See reference.md for full examples.
 | STR invented from assumptions  | "Not yet reproduced. Observed via monitoring."                          |
 | Guessed team assignment        | Ask the user — never guess                                              |
 | Bracket title prefixes         | Describe the symptom without brackets                                   |
+| Missing repository             | Include repo name in ticket body — derive from git remote               |
