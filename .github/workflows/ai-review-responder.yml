@@ -1,0 +1,202 @@
+name: AI Review Responder
+# cspell:ignore mendral
+
+on:
+  pull_request_review:
+    types: [submitted]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to investigate"
+        required: true
+        type: number
+
+jobs:
+  respond:
+    timeout-minutes: 20
+    concurrency:
+      group: ai-review-responder-${{ inputs.pr_number || github.event.pull_request.number }}
+      cancel-in-progress: true
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.review.user.login == 'coderabbitai' ||
+      github.event.review.user.login == 'devin-ai-integration' ||
+      github.event.review.user.login == 'mendral-app'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Resolve PR context
+        id: context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PR_NUMBER="${{ inputs.pr_number }}"
+            PR_JSON=$(gh pr view "$PR_NUMBER" \
+              --repo "${{ github.repository }}" \
+              --json state,headRefName,baseRefName,isCrossRepository,url)
+
+            PR_STATE=$(echo "$PR_JSON" | jq -r '.state')
+            if [ "$PR_STATE" != "OPEN" ]; then
+              echo "PR #$PR_NUMBER is not open (state: $PR_STATE)"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if [ "$(echo "$PR_JSON" | jq -r '.isCrossRepository')" = "true" ]; then
+              echo "Skipping cross-repository PR #$PR_NUMBER for safety"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
+            BASE_BRANCH=$(echo "$PR_JSON" | jq -r '.baseRefName')
+            PR_URL=$(echo "$PR_JSON" | jq -r '.url')
+            REVIEWER_LOGIN="workflow-dispatch"
+          else
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+            PR_URL="${{ github.event.pull_request.html_url }}"
+            REVIEWER_LOGIN="${{ github.event.review.user.login }}"
+
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+              echo "Skipping cross-repository PR #$PR_NUMBER for safety"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          echo "base_branch=$BASE_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "reviewer_login=$REVIEWER_LOGIN" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        if: steps.context.outputs.skip != 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ steps.context.outputs.branch }}
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        if: steps.context.outputs.skip != 'true'
+        run: git fetch origin "${{ steps.context.outputs.base_branch }}:${{ steps.context.outputs.base_branch }}"
+
+      - name: Gather pending AI review feedback
+        if: steps.context.outputs.skip != 'true'
+        id: feedback
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OUTPUT_PATH="$RUNNER_TEMP/ai-review-feedback.json"
+          bash .github/scripts/collect-ai-review-feedback.sh "${{ steps.context.outputs.pr_number }}" > "$OUTPUT_PATH"
+
+          echo "json_path=$OUTPUT_PATH" >> "$GITHUB_OUTPUT"
+          echo "pending_count=$(jq -r '.totalPendingComments' "$OUTPUT_PATH")" >> "$GITHUB_OUTPUT"
+          echo "pending_thread_count=$(jq -r '.totalPendingThreadComments' "$OUTPUT_PATH")" >> "$GITHUB_OUTPUT"
+          echo "pending_nitpick_count=$(jq -r '.totalPendingNitpickComments' "$OUTPUT_PATH")" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node environment
+        if: steps.context.outputs.skip != 'true' && steps.feedback.outputs.pending_count != '0'
+        uses: ./.github/actions/setup-node
+        with:
+          npm_token: ${{ secrets.NPM_TOKEN }}
+          start_services: "true"
+
+      - name: Run Claude Code
+        if: steps.context.outputs.skip != 'true' && steps.feedback.outputs.pending_count != '0'
+        uses: anthropics/claude-code-action@5fb899572b81d2bb648d4d187173a2f423a9677c # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: "coderabbitai,devin-ai-integration,mendral-app"
+          prompt: |
+            You are responding to automated AI review feedback on a pull request.
+
+            ## Context
+            - Repository: ${{ github.repository }}
+            - PR: #${{ steps.context.outputs.pr_number }}
+            - PR URL: ${{ steps.context.outputs.pr_url }}
+            - Branch: ${{ steps.context.outputs.branch }}
+            - Base branch: ${{ steps.context.outputs.base_branch }}
+            - Triggering reviewer: ${{ steps.context.outputs.reviewer_login }}
+            - Pending feedback JSON: `${{ steps.feedback.outputs.json_path }}`
+            - Pending thread comments: ${{ steps.feedback.outputs.pending_thread_count }}
+            - Pending CodeRabbit nitpicks: ${{ steps.feedback.outputs.pending_nitpick_count }}
+
+            ## Required setup
+            1. Read `AGENTS.md` and any relevant rule files before editing code.
+            2. Read `${{ steps.feedback.outputs.json_path }}`. It already excludes AI comments that have a prior ai-review-responder marker.
+
+            ## What the JSON contains
+            - `pendingThreadComments`: unresolved inline review threads started by `coderabbitai`, `devin-ai-integration`, or `mendral-app`
+            - `pendingNitpickComments`: CodeRabbit nitpicks parsed from review bodies
+            - `genericMarker`: the generic reply marker
+            - Each item also includes a unique `marker` that must be copied verbatim into the response
+
+            ## Classification
+            For every pending item, decide exactly one verdict:
+            - `Agree`: the feedback is correct and still needs a code change
+            - `Already fixed`: current `HEAD` already addresses it
+            - `Disagree`: the feedback is incorrect, stale, or not worth changing in this PR
+
+            ## Implementation rules
+            1. Read each affected file once and evaluate all comments for that file together.
+            2. Make the smallest set of code changes needed to address only the comments you agree with.
+            3. Prefer repo-native commands. When validating changes, use the narrowest relevant `npm exec nx run ...` command you can find.
+            4. If you change code, commit once with a conventional commit message like `fix(review): address agreed AI feedback` and push the branch.
+            5. Do not open a new PR. Do not approve the PR. Do not merge the PR.
+
+            ## Reply rules
+            After code changes are pushed, respond to every pending item:
+
+            ### For `pendingThreadComments`
+            - Reply in the same review thread using GitHub GraphQL `addPullRequestReviewThreadReply`
+            - Use this mutation shape:
+              ```bash
+              gh api graphql -f query='mutation($threadId: ID!, $body: String!) { addPullRequestReviewThreadReply(input: { pullRequestReviewThreadId: $threadId, body: $body }) { comment { url } } }' -f threadId='<item.threadId>' -f body="$BODY"
+              ```
+            - Reply body format:
+              ```
+              <!-- ai-review-responder -->
+              <item.marker>
+              **Verdict:** Agree | Already fixed | Disagree
+              **Reasoning:** <short explanation grounded in the current code>
+              <If Agree and changed code: **Fix:** Fixed in `<commit-sha>`.>
+              <If Already fixed: **Fix:** Already fixed on `HEAD`.>
+              ```
+            - If the verdict is `Agree` or `Already fixed`, resolve the thread with:
+              ```bash
+              gh api graphql -f query='mutation($threadId: ID!) { resolveReviewThread(input: { threadId: $threadId }) { thread { id isResolved } } }' -f threadId='<item.threadId>'
+              ```
+            - If the verdict is `Disagree`, leave the thread unresolved after replying
+
+            ### For `pendingNitpickComments`
+            - GitHub does not support replying directly to those review-body nitpicks, so post one PR comment per nitpick with `gh pr comment`
+            - Comment body format:
+              ```
+              <!-- ai-review-responder -->
+              <item.marker>
+              **CodeRabbit nitpick**
+              **Location:** `<item.file>:<item.line>`
+              **Verdict:** Agree | Already fixed | Disagree
+              **Reasoning:** <short explanation grounded in the current code>
+              <If Agree and changed code: **Fix:** Fixed in `<commit-sha>`.>
+              <If Already fixed: **Fix:** Already fixed on `HEAD`.>
+              **Review:** <item.reviewUrl>
+              ```
+
+            ## Ordering
+            1. Inspect the JSON and relevant files.
+            2. Make any agreed fixes.
+            3. Run targeted validation for the changed area.
+            4. Commit and push once if needed.
+            5. Post all replies and comments with the exact markers from the JSON.
+
+      - name: Tear down services
+        if: always() && steps.context.outputs.skip != 'true' && steps.feedback.outputs.pending_count != '0'
+        run: docker compose down --volumes
