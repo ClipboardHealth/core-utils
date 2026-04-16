@@ -118,6 +118,7 @@ jobs:
 
       - name: Setup Node environment
         if: steps.context.outputs.skip != 'true' && steps.check-existing.outputs.skip != 'true'
+        continue-on-error: true
         uses: ./.github/actions/setup-node
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
