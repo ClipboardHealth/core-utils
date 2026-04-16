@@ -79,9 +79,7 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **testing-outgoing-http**: Test helpers for outgoing HTTP requests.
 - **testing-prisma**: Test helpers for working with Prisma.
 - **testing-protobuf**: Test helpers for Protobuf.
-- **ui-components**: Clipboard's Material UI React components.
-- **ui-react**: Reusable React UI Components, hooks, and utilities.
-- **ui-theme**: Clipboard's Material UI theme.
+
 - **util-api**: API utilities.
 - **util-message**: Shared async messaging types and functions.
 - **util-protobuf**: Protobuf utilities.

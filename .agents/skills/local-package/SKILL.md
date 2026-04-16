@@ -24,7 +24,7 @@ cbh local-package link --packages <package-names...>
 Example:
 
 ```bash
-cbh local-package link --packages ui-theme ui-components
+cbh local-package link --packages util-ts
 ```
 
 This will:
@@ -45,25 +45,26 @@ cbh local-package unlink --packages <package-names...>
 Example:
 
 ```bash
-cbh local-package unlink --packages ui-theme ui-components
+cbh local-package unlink --packages util-ts
 ```
 
 ## Workflow Example
 
-To test changes to `ui-theme` in `cbh-mobile-app`:
+To test changes to `util-ts` in `cbh-mobile-app`:
 
-1. Make changes to `ui-theme` in `cbh-core`
+1. Make changes to `util-ts` in `core-utils`
+
 2. From `cbh-mobile-app` root, run:
 
    ```bash
-   cbh local-package link --packages ui-theme
+   cbh local-package link --packages util-ts
    ```
 
 3. Test your changes in `cbh-mobile-app`
 4. When done, unlink:
 
    ```bash
-   cbh local-package unlink --packages ui-theme
+   cbh local-package unlink --packages util-ts
    ```
 
 ## Troubleshooting
