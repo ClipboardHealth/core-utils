@@ -91,7 +91,6 @@ return <MemoizedChild onSave={handleSave} />;
 
 Before creating a new component, search for existing ones in this order:
 
-1. **Shared UI libraries**: `@clipboard-health/ui-components`, `@clipboard-health/ui-react`, MUI
 2. **App-level shared directories**: e.g., `src/appV2/lib/`, `src/lib/components/`, `src/shared/`
 3. **Sibling features**: search for `*Card`, `*Modal`, `*Form`, `*EmptyState`, `*Page` patterns in other features
 
