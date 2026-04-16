@@ -120,10 +120,10 @@ jobs:
         if: steps.context.outputs.skip != 'true' && steps.feedback.outputs.pending_count != '0'
         uses: anthropics/claude-code-action@5fb899572b81d2bb648d4d187173a2f423a9677c # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           allowed_bots: "coderabbitai,devin-ai-integration,mendral-app"
           prompt: |
-            You are responding to automated AI review feedback on a pull request.
+            You are responding to review feedback on a pull request.
 
             ## Context
             - Repository: ${{ github.repository }}
