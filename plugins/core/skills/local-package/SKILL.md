@@ -52,7 +52,8 @@ cbh local-package unlink --packages util-ts
 
 To test changes to `util-ts` in `cbh-mobile-app`:
 
-1. Make changes to `util-ts` in `cbh-core`
+1. Make changes to `util-ts` in `core-utils`
+
 2. From `cbh-mobile-app` root, run:
 
    ```bash
