@@ -47,7 +47,7 @@ jobs:
             fi
             BRANCH=$(echo "$PR_JSON" | jq -r '.headRefName')
             AUTHOR=$(echo "$PR_JSON" | jq -r '.author.login')
-            if [ "$AUTHOR" != "renovate[bot]" ] || [[ "$BRANCH" != renovate/* ]]; then
+            if [ "$AUTHOR" != "app/renovate" ] || [[ "$BRANCH" != renovate/* ]]; then
               echo "PR #$PR_NUMBER is not a Renovate PR (author: $AUTHOR, branch: $BRANCH)"
               echo "skip=true" >> "$GITHUB_OUTPUT"
               exit 0
