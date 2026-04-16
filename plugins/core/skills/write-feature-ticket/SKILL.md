@@ -53,15 +53,17 @@ Before drafting, verify ALL of these. If any fail, bounce back to `interview-fea
 
 **Title:** Short, imperative, describes the CAPABILITY — not the implementation. Under 70 characters.
 
+**Repository:** Always include the repository name in the ticket body. Run `git remote get-url origin | sed 's/\.git$//' | sed 's/.*[:/]\([^/]*\/[^/]*\)$/\1/'` to get the `org/repo` name. For simple features, include as a bold inline label at the end. For complex features, include in `## Context`.
+
 **Simple feature** (single user story, <4 acceptance criteria):
-A paragraph stating the problem and who it affects, then acceptance criteria as a checklist. No section headers.
+A paragraph stating the problem and who it affects, then acceptance criteria as a checklist, then repository. No section headers.
 
 **Complex feature** (multiple user stories, 4+ AC, or cross-cutting):
 Sections as needed:
 
 - `## Problem` — who is affected, what they can't do today, why it matters
 - `## Acceptance Criteria` — observable outcomes checklist
-- `## Context` — links to HLD, related tickets (linking to technical docs is fine; inlining implementation details is not)
+- `## Context` — repository, links to HLD, related tickets (linking to technical docs is fine; inlining implementation details is not)
 - `## Scope` — in/out, if ambiguity exists
 
 **Sub-issues** (when decomposed):
