@@ -22,6 +22,16 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Validate npm_token input
+      shell: bash
+      env:
+        NPM_TOKEN: ${{ inputs.npm_token }}
+      run: |
+        if [ -z "$NPM_TOKEN" ]; then
+          echo "::error::npm_token input is empty. The NPM_TOKEN secret may be missing or deleted. Add a valid token to the repository's Actions secrets: Settings → Secrets and variables → Actions → NPM_TOKEN"
+          exit 1
+        fi
+
     - uses: nrwl/nx-set-shas@3e9ad7370203c1e93d109be57f3b72eb0eb511b1 # v4.4.0
 
     - name: Validate repo configuration files
