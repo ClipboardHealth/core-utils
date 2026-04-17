@@ -559,7 +559,7 @@ describe(LlmReporter, () => {
   });
 
   it("warns if onEnd called without onBegin", () => {
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn<() => void>());
     const reporter = new LlmReporter({ outputFile });
 
     reporter.onEnd({ status: "passed" } as FullResult);
@@ -640,7 +640,7 @@ describe(LlmReporter, () => {
 
   it("logs an error when report writing throws", () => {
     const reporter = new LlmReporter({ outputFile });
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn<() => void>());
     const stringifySpy = vi.spyOn(JSON, "stringify").mockImplementation(() => {
       throw new Error("stringify failed");
     });

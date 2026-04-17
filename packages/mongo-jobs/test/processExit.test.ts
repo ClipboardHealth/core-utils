@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 
+// oxlint-disable-next-line typescript/strict-void-return -- execFile returns ChildProcess by design
 const execFileAsync = promisify(execFile);
 const emulateScript = path.join(__dirname, "support", "emulateCompletionOfBackgroundJobs.ts");
 const EXIT_TIMEOUT_MS = 5000;

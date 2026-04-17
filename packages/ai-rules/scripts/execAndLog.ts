@@ -1,6 +1,7 @@
 import { execFile, type ExecFileOptions } from "node:child_process";
 import { promisify } from "node:util";
 
+// oxlint-disable-next-line typescript/strict-void-return -- execFile returns ChildProcess by design
 const execAsync = promisify(execFile);
 
 interface ExecAndLogParams extends ExecFileOptions {
