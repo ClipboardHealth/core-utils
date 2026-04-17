@@ -141,24 +141,16 @@ This downloads and extracts to `/tmp/playwright-llm-report-{runId}/`. The report
 
 ## Phase 3E: Quick Classification
 
-LLM report structure:
+For the full report schema, field reference, caps, and example reports:
 
-- **`summary`** -- quick pass/fail counts
-- **`tests[].errors[].message`** -- ANSI-stripped, clean error text
-- **`tests[].errors[].diff`** -- extracted expected/actual from assertion errors
-- **`tests[].errors[].location`** -- exact file and line of failure
-- **`tests[].flaky`** -- true if test passed after retry
-- **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
-- **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt, high-signal entries prioritized over low-signal)
-- **`tests[].steps` / `tests[].network` / `tests[].timeline`** -- convenience aliases from the final attempt
-- **`tests[].attempts[].timeline[]`** -- unified, sorted-by-`offsetMs` array of all retained events (`kind: "step" | "network" | "console"`). Slimmed-down entries for quick temporal scanning; full details remain in the source arrays
-- **`offsetMs`** -- milliseconds since the attempt's `startTime`. Always present on steps (from `TestStep.startTime`). Optional on network entries (from trace `_monotonicTime` or `startedDateTime`, converted via the trace's `context-options` anchor) and console entries (from trace monotonic `time` field + anchor). Absent when the trace lacks a `context-options` event. Entries without `offsetMs` are excluded from the timeline
-- **`tests[].attempts[].network[].traceId`** -- promoted from `x-datadog-trace-id` header for direct access
-- **`tests[].attempts[].network[]`** -- max 200 per attempt, priority-based: fetch/xhr requests, error responses (status >= 400), failed, and aborted requests are retained over static assets (script, stylesheet, image, font). Includes failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), `durationMs` derived from available timing components, and allowlisted headers (`requestHeaders`, `responseHeaders`)
-- **`tests[].attempts[].network[].responseHeaders`** -- includes `x-datadog-trace-id` and `x-datadog-span-id` when present (values capped to 256 chars)
-- **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path). Omitted entirely when neither screenshot nor video is available
-- **`tests[].attachments[].path`** -- relative to Playwright outputDir
-- **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
+1. If the repo has `node_modules/@clipboard-health/playwright-reporter-llm/`, read `README.md` and `docs/example-report.json` from there — exact version match to the report.
+2. Otherwise, fetch the latest docs from GitHub:
+   - `https://raw.githubusercontent.com/ClipboardHealth/core-utils/refs/heads/main/packages/playwright-reporter-llm/README.md`
+   - `https://raw.githubusercontent.com/ClipboardHealth/core-utils/refs/heads/main/packages/playwright-reporter-llm/docs/example-report.json`
+
+Cross-check the report's `schemaVersion` against the docs — if they disagree, the `main` docs describe a different version and some field semantics may not apply.
+
+Read the docs if you need field semantics or limits; otherwise the field names used below are enough to drive the investigation.
 
 Classify the flake to narrow the search space:
 
@@ -218,33 +210,21 @@ Filter `tests[]` for entries where `status` is `"failed"` or `flaky` is `true`. 
 
 ### 4Ed: Examine attempts for retry patterns
 
-Each attempt includes:
+For each attempt, compare `status`, `durationMs`, and `error` across retries — timing or error-shape differences between attempts often point at the trigger.
 
-- `status` and `durationMs` — spot timing differences between passing and failing attempts
-- `error` — failure reason per attempt (may differ across retries)
-- `consoleMessages[]` — browser warnings/errors (only warning, error, pageerror, page-closed, page-crashed entries; capped at 2KB / 50 per attempt)
-- `failureArtifacts` — for failed/timed-out/interrupted attempts:
-  - `screenshotBase64` — base64-encoded failure screenshot (max 512KB). **Decode and inspect this** to see exactly what the page showed at failure time — often reveals modals, loading spinners, error banners, or unexpected navigation that the assertion text alone doesn't explain.
-  - `videoPath` — path to video recording
-- `network[]` — HTTP requests/responses for that attempt
-- `timeline[]` — unified sorted event stream
+**Always decode `failureArtifacts.screenshotBase64` when present.** The page state at failure often reveals modals, loading spinners, error banners, or unexpected navigation that the assertion text alone doesn't explain.
 
 ### 4Ee: Inspect network activity and extract trace IDs
 
-The `network[]` array (on tests or individual attempts) includes:
+Scan `network[]` for 4xx/5xx responses, `failureText`, and `wasAborted` near the failure's `offsetMs`. Use `timings` to isolate slow phases (DNS, connect, wait, receive).
 
-- `method`, `url`, `status` — identify 4xx/5xx responses
-- `timings` — detailed breakdown: `dnsMs`, `connectMs`, `sslMs`, `sendMs`, `waitMs`, `receiveMs`
-- `durationMs` — total request duration derived from timing components
-- `requestHeaders`, `responseHeaders` — allowlisted headers
-- `redirectChain` — full redirect sequence
-- **`traceId`** — Datadog trace ID extracted from `x-datadog-trace-id` response header. **When present near a failure, you must use references/datadog-apm-traces.md for backend correlation to bridge the gap between frontend test failure and potential backend root cause.**
+**`traceId`** — when present on a failing request, you must follow [`references/datadog-apm-traces.md`](./references/datadog-apm-traces.md) to correlate with backend behavior. This is the bridge between frontend test failure and potential backend root cause.
 
-Network is capped at 200 entries per attempt, prioritized: fetch/xhr and error responses are retained over static assets. Headers/values capped at 256 chars. If all 200 entries are static assets (script/stylesheet/font) with no API calls, the capture is saturated.
+If the `network[]` array is full (200 entries) but contains only static assets, the capture is saturated and the relevant API calls may have been dropped — note this as a confidence-reducing factor.
 
 ### 4Ef: Review test steps
 
-`tests[].steps[]` provides a step-by-step breakdown of test actions with timing (`offsetMs`, `durationMs`, `depth`). Prefer the timeline view (4Ea) which interleaves steps with network and console. Use steps directly when you need the full hierarchy (nested steps via `depth`).
+Prefer the timeline view (4Ea) which interleaves steps with network and console. Fall back to `tests[].attempts[].steps[]` directly when you need the full nesting hierarchy via `depth`.
 
 ## Phase 4E Evidence Standard
 

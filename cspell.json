@@ -109,6 +109,8 @@
     "Timestamptz",
     "TOCTOU",
     "toplevel",
+    "traceparent",
+    "tracestate",
     "triaging",
     "trunc",
     "tsgo",

@@ -75,6 +75,7 @@ export interface NetworkRequest {
   resourceType?: string;
   offsetMs?: number;
   traceId?: string;
+  spanId?: string;
   requestBody?: string;
   responseBody?: string;
   failureText?: string;
@@ -117,6 +118,7 @@ export interface TimelineNetworkEntry {
   durationMs?: number;
   resourceType?: string;
   traceId?: string;
+  spanId?: string;
   failureText?: string;
   wasAborted?: boolean;
 }

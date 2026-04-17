@@ -70,6 +70,10 @@ function buildTimeline(
         entry.traceId = request.traceId;
       }
 
+      if (request.spanId) {
+        entry.spanId = request.spanId;
+      }
+
       if (request.failureText) {
         entry.failureText = request.failureText;
       }

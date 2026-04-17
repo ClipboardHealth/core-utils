@@ -11,9 +11,8 @@ export const REQUEST_HEADER_ALLOWLIST = new Set([
   "content-type",
   "x-request-id",
   "x-correlation-id",
-  "x-datadog-trace-id",
-  "x-datadog-parent-id",
-  "x-datadog-span-id",
+  "traceparent",
+  "tracestate",
 ]);
 
 export const RESPONSE_HEADER_ALLOWLIST = new Set([
@@ -21,9 +20,8 @@ export const RESPONSE_HEADER_ALLOWLIST = new Set([
   "location",
   "x-request-id",
   "x-correlation-id",
-  "x-datadog-trace-id",
-  "x-datadog-parent-id",
-  "x-datadog-span-id",
+  "traceparent",
+  "tracestate",
 ]);
 
 export const HIGH_SIGNAL_CONSOLE_ENTRY_TYPES = new Set(["warning", "error", "pageerror"]);
