@@ -9,6 +9,8 @@ const JEST_RULES: DummyRuleMap = {
   "jest/max-expects": "off",
   "jest/max-nested-describe": "off",
   "jest/no-hooks": "off",
+  "jest/prefer-ending-with-an-expect": "off",
+  "jest/prefer-importing-jest-globals": "off",
   "jest/prefer-lowercase-title": "off",
   "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
 } as const;
