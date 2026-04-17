@@ -3,11 +3,11 @@
   "timestamp": "2026-02-25T19:00:00.000Z",
   "durationMs": 4200,
   "summary": {
-    "total": 26,
-    "passed": 23,
-    "failed": 2,
-    "flaky": 0,
-    "skipped": 1,
+    "total": 1,
+    "passed": 0,
+    "failed": 0,
+    "flaky": 1,
+    "skipped": 0,
     "timedOut": 0,
     "interrupted": 0
   },

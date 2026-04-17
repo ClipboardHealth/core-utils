@@ -227,7 +227,7 @@ Divergence: the passing attempt made an extra `/inventory` call that the failing
 
 ### Full example report
 
-See [`docs/example-report.json`](./docs/example-report.json) for a complete report with every optional field populated (network timings, redirect chains, headers, attachments, step nesting, multi-attempt retries).
+See [`docs/example-report.json`](./docs/example-report.json) for a complete report with representative optional fields populated (network timings, redirect chains, headers, attachments, step nesting, multi-attempt retries).
 
 ### Field reference
 

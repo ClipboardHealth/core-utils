@@ -112,6 +112,7 @@ describe(buildNetworkRequestFromEvent, () => {
         url: "https://api.example.com/data",
         headers: [
           { name: "traceparent", value: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01" },
+          { name: "tracestate", value: "test=00f067aa0ba902b7" },
           { name: "x-ignore-me", value: "ignore" },
         ],
       },
@@ -119,6 +120,7 @@ describe(buildNetworkRequestFromEvent, () => {
         status: 200,
         headers: [
           { name: "content-type", value: "application/json" },
+          { name: "tracestate", value: "acme=t61rcWkgMzE" },
           { name: "x-ignore-me", value: "ignore" },
         ],
       },
@@ -128,8 +130,12 @@ describe(buildNetworkRequestFromEvent, () => {
 
     expect(result?.requestHeaders).toStrictEqual({
       traceparent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+      tracestate: "test=00f067aa0ba902b7",
     });
-    expect(result?.responseHeaders).toStrictEqual({ "content-type": "application/json" });
+    expect(result?.responseHeaders).toStrictEqual({
+      "content-type": "application/json",
+      tracestate: "acme=t61rcWkgMzE",
+    });
   });
 
   it("extracts timings and derives duration excluding ssl", () => {
@@ -221,13 +227,31 @@ describe(buildNetworkRequestFromEvent, () => {
     expect(result?.spanId).toBeUndefined();
   });
 
-  it("ignores traceparent with invalid all-zero trace or span id", () => {
+  it("ignores traceparent with invalid all-zero trace id", () => {
     const event = makeResourceSnapshot({
       request: {
         method: "GET",
         url: "https://api.example.com/data",
         headers: [
           { name: "traceparent", value: "00-00000000000000000000000000000000-aaaaaaaaaaaaaaaa-01" },
+        ],
+      },
+      response: { status: 200 },
+    });
+
+    const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
+
+    expect(result?.traceId).toBeUndefined();
+    expect(result?.spanId).toBeUndefined();
+  });
+
+  it("ignores traceparent with invalid all-zero span id", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "00-11111111111111111111111111111111-0000000000000000-01" },
         ],
       },
       response: { status: 200 },
@@ -254,6 +278,7 @@ describe(buildNetworkRequestFromEvent, () => {
     const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
 
     expect(result?.traceId).toBeUndefined();
+    expect(result?.spanId).toBeUndefined();
   });
 
   it("extracts failureText and wasAborted", () => {
