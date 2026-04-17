@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { failure, ServiceError, success } from "@clipboard-health/util-ts";
+import { describe, expect, it } from "vitest";
 
 import { ERROR_CODES, type ErrorCode, type TriggerResponse } from "..";
 import { errorsInResult } from "./errorsInResult";

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { appendOutput } from "../appendOutput";
 import type { Rule, RuleContext } from "../rule";
 import { allIf } from "./allIf";

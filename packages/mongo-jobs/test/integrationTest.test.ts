@@ -1,5 +1,6 @@
-import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { setTimeout } from "node:timers/promises";
+
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { BackgroundJobs, type BackgroundJobType } from "../src";
 import { createMongoConnection, createMongoSession } from "./support/connectToMongo";
@@ -595,7 +596,6 @@ describe("Unique jobs", () => {
     expect(runningJob).toBeDefined();
     expect(waitingJob).toBeDefined();
 
-    // eslint-disable-next-line jest/no-conditional-in-test
     const timeDiff = waitingJob?.nextRunAt
       ? waitingJob.nextRunAt.getTime() - now.getTime()
       : undefined;

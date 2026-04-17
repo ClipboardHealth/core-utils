@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { ConsoleEntry, NetworkRequest } from "../types";
 import {
   appendConsoleEntryWithPriority,

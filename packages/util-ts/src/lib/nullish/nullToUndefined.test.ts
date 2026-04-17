@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { nullToUndefined } from "./nullToUndefined";
 
 describe(nullToUndefined, () => {
@@ -20,7 +21,7 @@ describe(nullToUndefined, () => {
       then: function <TResult1, TResult2>(
         onfulfilled?: (value: string) => TResult1 | PromiseLike<TResult1>,
       ): PromiseLike<TResult1 | TResult2> {
-        // eslint-disable-next-line jest/no-conditional-in-test
+        // oxlint-disable-next-line jest/no-conditional-in-test
         if (onfulfilled) {
           return Promise.resolve(onfulfilled(expected));
         }

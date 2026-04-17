@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { option as O } from "@clipboard-health/util-ts";
+import { describe, expect, it } from "vitest";
 
 import { expectToBeNone } from "./expectToBeNone";
 

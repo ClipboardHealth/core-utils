@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
+
+import { describe, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
 const emulateScript = path.join(__dirname, "support", "emulateCompletionOfBackgroundJobs.ts");

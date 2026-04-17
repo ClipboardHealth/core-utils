@@ -1,4 +1,5 @@
-import { beforeEach, afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
 import { BackgroundJobs, type BackgroundJobType } from "../src";
 import { ExampleJob } from "./support/exampleJob";
 import { FailingJob } from "./support/failingJob";

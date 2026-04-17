@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from "vitest";
 import { readProjectConfiguration, type Tree } from "@nx/devkit";
 import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import generator from "./generator";
 

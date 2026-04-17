@@ -1,5 +1,5 @@
-import { beforeEach, vi, afterEach, describe, expect, it } from "vitest";
 import { Types } from "mongoose";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { BackgroundJobs } from "../src";
 import { drainHandlers, drainQueues } from "../src/lib/testing";

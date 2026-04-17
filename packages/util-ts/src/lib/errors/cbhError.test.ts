@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { ok } from "node:assert/strict";
+
+import { describe, expect, it } from "vitest";
 
 import * as E from "../functional/either";
 import { CbhError, toLeft } from "./cbhError";

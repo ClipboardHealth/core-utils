@@ -1,4 +1,4 @@
-import { beforeEach, vi, afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import { createConfig } from "./createConfig";

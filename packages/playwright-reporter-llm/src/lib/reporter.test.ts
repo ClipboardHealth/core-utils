@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -11,6 +10,7 @@ import type {
   TestResult,
   TestStep,
 } from "@playwright/test/reporter";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { writeTraceZipFixture } from "./internal/testHelpers";
 import LlmReporter from "./reporter";

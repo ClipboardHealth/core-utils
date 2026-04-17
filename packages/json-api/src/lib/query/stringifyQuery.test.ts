@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { ClientJsonApiQuery } from "../types";
 import { stringifyQuery } from "./stringifyQuery";
 

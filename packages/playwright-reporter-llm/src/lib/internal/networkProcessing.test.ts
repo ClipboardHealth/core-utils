@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { NetworkRequest } from "../types";
 import { annotateRedirectChains, buildNetworkRequestFromEvent } from "./networkProcessing";
 import type { MonotonicAnchor } from "./traceTiming";

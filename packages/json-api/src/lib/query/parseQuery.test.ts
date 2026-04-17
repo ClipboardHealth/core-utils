@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { ServerJsonApiQuery } from "../types";
 import { parseQuery } from "./parseQuery";
 

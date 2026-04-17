@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { buildConsoleEntryFromEvent } from "./consoleProcessing";
 import type { MonotonicAnchor } from "./traceTiming";
 

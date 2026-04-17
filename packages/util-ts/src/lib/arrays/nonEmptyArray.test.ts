@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { type NonEmptyArray, type OneOrNonEmptyArray, toNonEmptyArray } from "./nonEmptyArray";
 
 describe("[deprecated] NonEmptyArray", () => {

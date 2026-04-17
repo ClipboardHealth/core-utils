@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import { booleanString } from "@clipboard-health/contract-core";
 import {
   expectToBeSafeParseError,
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { filterQuery } from "./filterQuery";

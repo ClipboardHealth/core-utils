@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { ok } from "node:assert/strict";
 
+import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
 import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";

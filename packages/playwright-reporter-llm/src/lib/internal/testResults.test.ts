@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { TestCase, TestResult, TestStep } from "@playwright/test/reporter";
+import { describe, expect, it } from "vitest";
 
 import {
   buildFullTitle,

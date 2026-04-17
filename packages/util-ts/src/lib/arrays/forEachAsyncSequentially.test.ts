@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { forEachAsyncSequentially } from "./forEachAsyncSequentially";
 
 describe(forEachAsyncSequentially, () => {

@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import {
   either as E,
   failure,
@@ -6,6 +5,7 @@ import {
   type ServiceResult,
   success,
 } from "@clipboard-health/util-ts";
+import { describe, expect, it } from "vitest";
 
 import { expectToBeFailure } from "./expectToBeFailure";
 import { expectToBeLeft } from "./expectToBeLeft";

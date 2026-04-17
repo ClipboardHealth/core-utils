@@ -16,7 +16,8 @@
         "jest": true
       },
       "rules": {
-        "jest/valid-title": "off"
+        "jest/valid-title": "off",
+        "n/no-extraneous-import": ["error", { "allowModules": ["vitest"] }]
       }
     },
     {

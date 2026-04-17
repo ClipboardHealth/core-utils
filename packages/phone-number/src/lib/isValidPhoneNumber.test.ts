@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { isValidPhoneNumber } from "./isValidPhoneNumber";
 
 const TEST_CASES = {

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { UserSetPreferencesParams } from "@knocklabs/node/resources/index";
+import { describe, expect, it } from "vitest";
 
 import type { UpsertUserPreferencesRequest } from "../types";
 import { toKnockUserPreferences } from "./toKnockUserPreferences";

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BackgroundJobsAdapter } from "@clipboard-health/background-jobs-adapter";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";

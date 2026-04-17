@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
 import {
   expectToBeSafeParseError,
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
+import { describe, expect, it } from "vitest";
 
 import { nonEmptyString } from "./nonEmptyString";
 

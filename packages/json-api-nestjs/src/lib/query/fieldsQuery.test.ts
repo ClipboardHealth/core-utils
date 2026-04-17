@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import {
   expectToBeSafeParseError,
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
 import type { Arrayable } from "type-fest";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { fieldsQuery } from "./fieldsQuery";
