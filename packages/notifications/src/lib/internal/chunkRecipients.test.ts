@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import type { InlineIdentifyUserRequest } from "../types";
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./chunkRecipients";
 

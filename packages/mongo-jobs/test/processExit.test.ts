@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";

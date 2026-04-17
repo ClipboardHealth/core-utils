@@ -1,3 +1,4 @@
+import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { getTestWorkerUri } from "./getTestWorkerUri";
 
 describe(getTestWorkerUri, () => {

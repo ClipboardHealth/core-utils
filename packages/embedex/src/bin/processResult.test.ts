@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import colors from "yoctocolors-cjs";
 
 import { processResult } from "./processResult";

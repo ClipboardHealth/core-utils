@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import type { TriggerBody } from "../types";
 import { toTriggerBody } from "./toTriggerBody";
 

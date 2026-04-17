@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { booleanString } from "@clipboard-health/contract-core";
 import {
   expectToBeSafeParseError,

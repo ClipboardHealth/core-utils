@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { toTriggerChunkedRequest } from "./toTriggerChunkedRequest";
 import type { SerializableTriggerChunkedRequest } from "./types";
 

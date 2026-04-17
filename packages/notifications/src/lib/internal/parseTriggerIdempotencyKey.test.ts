@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import {
   DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
   type TriggerIdempotencyKey,

@@ -20,10 +20,14 @@
     // See https://github.com/oxc-project/oxc/issues/21284
     "no-shadow": "off",
     "typescript/no-deprecated": "off",
+    "typescript/no-misused-promises": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
     "typescript/no-non-null-assertion": "off",
+    "typescript/prefer-readonly-parameter-types": "off",
     "typescript/no-unsafe-assignment": "off",
     "typescript/no-unsafe-member-access": "off",
     "typescript/no-unsafe-type-assertion": "off",
+    "typescript/strict-void-return": "off",
     "typescript/unbound-method": "off"
   },
   "overrides": [
@@ -48,6 +52,12 @@
       "files": ["packages/nx-plugin/src/index.ts"],
       "rules": {
         "unicorn/no-empty-file": "off"
+      }
+    },
+    {
+      "files": ["**/e2e/fixtures/**/*.test.ts"],
+      "rules": {
+        "vitest/prefer-importing-vitest-globals": "off"
       }
     }
   ]

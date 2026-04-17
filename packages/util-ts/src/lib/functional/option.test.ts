@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import * as O from "./option";
 import { pipe } from "./pipe";
 

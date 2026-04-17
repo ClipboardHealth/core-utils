@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { chunk } from "./chunk";
 
 describe(chunk, () => {

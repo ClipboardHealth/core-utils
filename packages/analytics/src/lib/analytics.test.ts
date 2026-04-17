@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { LogFunction, Logger } from "@clipboard-health/util-ts";
 
 import { Analytics, type Enabled, type IdentifyRequest, type TrackRequest } from "./analytics";

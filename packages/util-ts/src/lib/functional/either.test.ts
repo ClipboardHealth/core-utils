@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import * as E from "./either";
 import { pipe } from "./pipe";
 

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { stripSourceMarker } from "./createSourceMap";
 
 describe(stripSourceMarker, () => {

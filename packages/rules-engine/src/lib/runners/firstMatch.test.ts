@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import type { Rule, RuleContext } from "../..";
 import { appendOutput } from "../appendOutput";
 import { firstMatch } from "./firstMatch";

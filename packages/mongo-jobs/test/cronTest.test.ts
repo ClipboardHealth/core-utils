@@ -1,3 +1,4 @@
+import { it, vi, afterEach, describe, expect, beforeEach } from "vitest";
 import type { BackgroundJobs } from "../src";
 import { Semaphore } from "./support/semaphore";
 import { SemaphoreJob } from "./support/semaphoreJob";

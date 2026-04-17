@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "vitest";
 import {
   base,
   createOxlintConfig,
@@ -77,14 +78,17 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "jest/expect-expect": "off",
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
+          "jest/prefer-ending-with-an-expect": "off",
           "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+          "vitest/no-importing-vitest-globals": "off",
           "vitest/prefer-called-once": "off",
           "vitest/prefer-import-in-mock": "off",
-          "vitest/prefer-importing-vitest-globals": "off",
+          "vitest/prefer-importing-vitest-globals": "error",
           "vitest/prefer-to-be-falsy": "off",
           "vitest/prefer-to-be-truthy": "off",
           "vitest/require-hook": "off",

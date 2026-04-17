@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { computeNetworkOffsetMs, extractMonotonicAnchor, monotonicToOffsetMs } from "./traceTiming";
 
 describe(monotonicToOffsetMs, () => {

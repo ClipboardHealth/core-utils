@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ok } from "node:assert/strict";
 
 import { ZodError } from "zod";

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { splitString, wrapString } from "./splitString";
 
 describe(splitString, () => {

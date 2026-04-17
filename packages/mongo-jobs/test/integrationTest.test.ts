@@ -1,3 +1,4 @@
+import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { setTimeout } from "node:timers/promises";
 
 import { BackgroundJobs, type BackgroundJobType } from "../src";
