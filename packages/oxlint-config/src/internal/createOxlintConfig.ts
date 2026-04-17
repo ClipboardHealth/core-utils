@@ -126,7 +126,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-// Wrapper to allow swapping clone strategies if needed
+// Wrapper to allow swapping clone strategies if needed.
 function cloneValue<Value>(value: Value): Value {
   return structuredClone(value);
 }
