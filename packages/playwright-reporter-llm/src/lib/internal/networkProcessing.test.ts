@@ -111,7 +111,7 @@ describe(buildNetworkRequestFromEvent, () => {
         method: "GET",
         url: "https://api.example.com/data",
         headers: [
-          { name: "x-datadog-trace-id", value: "12345" },
+          { name: "traceparent", value: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01" },
           { name: "x-ignore-me", value: "ignore" },
         ],
       },
@@ -126,7 +126,9 @@ describe(buildNetworkRequestFromEvent, () => {
 
     const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
 
-    expect(result?.requestHeaders).toStrictEqual({ "x-datadog-trace-id": "12345" });
+    expect(result?.requestHeaders).toStrictEqual({
+      traceparent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+    });
     expect(result?.responseHeaders).toStrictEqual({ "content-type": "application/json" });
   });
 
@@ -162,22 +164,96 @@ describe(buildNetworkRequestFromEvent, () => {
     expect(result?.durationMs).toBeUndefined();
   });
 
-  it("extracts traceId from response header preferring over request", () => {
+  it("extracts traceId and spanId from traceparent, preferring response over request", () => {
     const event = makeResourceSnapshot({
       request: {
         method: "GET",
         url: "https://api.example.com/data",
-        headers: [{ name: "x-datadog-trace-id", value: "req-trace" }],
+        headers: [
+          { name: "traceparent", value: "00-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+        ],
       },
       response: {
         status: 200,
-        headers: [{ name: "x-datadog-trace-id", value: "resp-trace" }],
+        headers: [
+          { name: "traceparent", value: "00-22222222222222222222222222222222-bbbbbbbbbbbbbbbb-01" },
+        ],
       },
     });
 
     const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
 
-    expect(result?.traceId).toBe("resp-trace");
+    expect(result?.traceId).toBe("22222222222222222222222222222222");
+    expect(result?.spanId).toBe("bbbbbbbbbbbbbbbb");
+  });
+
+  it("falls back to request traceparent when response lacks one", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "00-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+        ],
+      },
+      response: { status: 200 },
+    });
+
+    const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
+
+    expect(result?.traceId).toBe("11111111111111111111111111111111");
+    expect(result?.spanId).toBe("aaaaaaaaaaaaaaaa");
+  });
+
+  it("ignores malformed traceparent", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [{ name: "traceparent", value: "not-a-valid-traceparent" }],
+      },
+      response: { status: 200 },
+    });
+
+    const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
+
+    expect(result?.traceId).toBeUndefined();
+    expect(result?.spanId).toBeUndefined();
+  });
+
+  it("ignores traceparent with invalid all-zero trace or span id", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "00-00000000000000000000000000000000-aaaaaaaaaaaaaaaa-01" },
+        ],
+      },
+      response: { status: 200 },
+    });
+
+    const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
+
+    expect(result?.traceId).toBeUndefined();
+    expect(result?.spanId).toBeUndefined();
+  });
+
+  it("ignores traceparent with invalid ff version", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "ff-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+        ],
+      },
+      response: { status: 200 },
+    });
+
+    const result = buildNetworkRequestFromEvent(event, {}, undefined, 0);
+
+    expect(result?.traceId).toBeUndefined();
   });
 
   it("extracts failureText and wasAborted", () => {
