@@ -20,7 +20,7 @@
     "@clipboard-health/background-jobs-adapter": "2.1.91",
     "@clipboard-health/phone-number": "2.2.92",
     "@clipboard-health/util-ts": "5.3.28",
-    "@knocklabs/node": "1.29.1",
+    "@knocklabs/node": "1.30.0",
     "tslib": "2.8.1"
   },
   "devDependencies": {
