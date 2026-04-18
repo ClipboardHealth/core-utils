@@ -3,7 +3,7 @@ import {
   expectToBeSafeParseSuccess,
 } from "@clipboard-health/testing-core";
 
-import { objectId } from "./objectId";
+import { type MongoObjectId, objectId } from "./objectId";
 
 describe("objectId.safeParse", () => {
   it.each<{ input: string; name: string }>([
@@ -24,6 +24,8 @@ describe("objectId.safeParse", () => {
 
     expectToBeSafeParseSuccess(actual);
     expect(actual.data).toBe(input);
+    const branded: MongoObjectId = actual.data;
+    expect(branded).toBe(input);
   });
 
   it.each<{ errorMessage: string; input: unknown; name: string }>([

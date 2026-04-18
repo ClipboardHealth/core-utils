@@ -7,6 +7,7 @@ Shared Zod schemas for Clipboard's contracts.
 - [Install](#install)
 - [Usage](#usage)
   - [Zod schemas](#zod-schemas)
+  - [ObjectId (MongoDB) schema](#objectid-mongodb-schema)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -18,6 +19,14 @@ npm install @clipboard-health/contract-core
 ## Usage
 
 ### Zod schemas
+
+#### ObjectId (MongoDB) schema
+
+`objectId` validates MongoDB ObjectId **hex strings**: exactly **24** characters matching `[0-9A-Fa-f]`. It is built with `z.coerce.string()`, so anything that coerces to a string is checked against that pattern (for example BSON `ObjectId` instances on some server code paths stringify to the expected form before JSON). Values that coerce to the wrong length or characters still fail with **`Must be a valid ObjectId`**.
+
+The parsed type is **`MongoObjectId`** (`z.infer<typeof objectId>`): a **branded** string, so arbitrary `string` is not assignable without going through this schema (or an equivalent parse). Branding is **TypeScript-only**; on the wire and in JSON the value is still a normal string.
+
+Compose like any other Zod schema at the call site: `objectId.optional()`, `objectId.nullable()`, `objectId.nullish()`, or add a domain brand (for example `objectId.brand("WorkerId")`). For query strings that list several ids, use [`commaSeparatedArray(objectId)`](#comma-separated-array-schema); each element is validated and the output type is `MongoObjectId[]`.
 
 #### Comma-separated array schema
 
@@ -32,8 +41,8 @@ commaSeparatedArray(nonEmptyString).optional();
 // z.output → ("CNA" | "RN" | "LVN")[]
 commaSeparatedArray(requiredEnum(["CNA", "RN", "LVN"]));
 
-// z.input  → string | string[]
-// z.output → string[]  (each validated as ObjectId)
+// z.input  → string | MongoObjectId[]  (see objectId schema)
+// z.output → MongoObjectId[]
 commaSeparatedArray(objectId);
 
 // z.input  → string | (string | Date)[]
@@ -85,6 +94,7 @@ import {
   commaSeparatedArray,
   dateTimeSchema,
   ENUM_FALLBACK,
+  type MongoObjectId,
   nonEmptyString,
   objectId,
   optionalEnum,
@@ -139,6 +149,27 @@ console.log(noIds);
 const someDates = dates.parse("2026-01-01T00:00:00.000Z,2026-01-02T00:00:00.000Z");
 // => [Date, Date]
 console.log(someDates[0] instanceof Date); // true
+
+// ObjectId: 24-char hex; TypeScript infers branded MongoObjectId (runtime value is still a string)
+const facilityId: MongoObjectId = objectId.parse("507f1f77bcf86cd799439011");
+console.log(facilityId);
+
+const idList = commaSeparatedArray(objectId).parse(
+  "507f1f77bcf86cd799439011,507f191e810c19729de860ea",
+);
+// => MongoObjectId[] (two ids)
+console.log(idList.length);
+
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noSingleId = objectId.optional().parse(undefined);
+console.log(noSingleId); // => undefined
+
+try {
+  objectId.parse("507f1f77bcf86cd79943901"); // too short
+} catch (error) {
+  logError(error);
+  // => Must be a valid ObjectId
+}
 
 booleanString.parse("true");
 
