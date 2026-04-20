@@ -13,6 +13,7 @@ Playwright reporter that outputs structured JSON for LLM agents. Minimal console
   - [Flaky test example (pass-vs-fail comparison)](#flaky-test-example-pass-vs-fail-comparison)
   - [Full example report](#full-example-report)
   - [Field reference](#field-reference)
+- [Why not Playwright's built-in JSON reporter?](#why-not-playwrights-built-in-json-reporter)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -247,6 +248,15 @@ See [`docs/example-report.json`](./docs/example-report.json) for a complete repo
 - **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path). Omitted entirely when neither screenshot nor video is available
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
+
+## Why not Playwright's built-in JSON reporter?
+
+This library is specialized for agents:
+
+- **JSON instead of markdown.** Other LLM-focused reporters emit a markdown summary, which is easy to read and hard to post-process. Agents can't cheaply filter to "just the failed tests" or "just 4xx/5xx requests on the failing attempt" without re-parsing prose. JSON with a flat, documented schema lets agents `jq` or index into exactly the fields they need.
+- **Better flaky test diagnosis.** Full per-attempt retry history with a unified, time-ordered `timeline[]` of steps, network, and console on every attempt. The divergence between the failing and passing attempts is usually the diagnosis (see the [flaky test example](#flaky-test-example-pass-vs-fail-comparison)).
+- **Better backend trace correlation.** `traceId` and `spanId` are parsed from W3C [`traceparent`](https://www.w3.org/TR/trace-context/) headers on every network request, so an agent can jump straight from a failing test to the backend trace in Datadog, Jaeger, Tempo, Honeycomb, or any OpenTelemetry-compatible backend.
+- **Better signal filtering.** Network priority retention, console filtered, and headers allowlisted. An agent reading an unfiltered trace burns tokens on noise; this reporter does the filtering up front.
 
 ## Local development commands
 
