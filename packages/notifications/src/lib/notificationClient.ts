@@ -1,5 +1,6 @@
 import {
   failure,
+  type FailureResult,
   isFailure,
   type LogFunction,
   ServiceError,
@@ -424,7 +425,7 @@ export class NotificationClient {
         this.logger.info(`${logParams.traceName} response`, logParams);
       } catch (maybeError) {
         const error = toError(maybeError);
-        this.createAndLogError({
+        const result = this.createAndLogError({
           notificationError: {
             code: ERROR_CODES.unknown,
             message: error.message,
@@ -434,7 +435,7 @@ export class NotificationClient {
           logParams,
           metadata: { error },
         });
-        throw error;
+        throw result.error;
       }
     });
   }
@@ -616,7 +617,7 @@ export class NotificationClient {
     logFunction?: LogFunction;
     logParams: LogParams;
     metadata?: Record<string, unknown>;
-  }): ServiceResult<never> {
+  }): FailureResult {
     const { logParams, notificationError, span, metadata, logFunction = this.logger.warn } = params;
     const { code, message } = notificationError;
 

@@ -719,7 +719,7 @@ describe(NotificationClient, () => {
         cancellationKey: mockCancellationKey,
       };
 
-      await expect(client.cancel(input)).rejects.toThrow(mockError);
+      await expect(client.cancel(input)).rejects.toThrow(ServiceError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.cancel [unknown] Knock cancel failed",
