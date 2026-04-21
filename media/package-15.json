@@ -25,7 +25,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "type-fest": "5.5.0"
+    "type-fest": "5.6.0"
   },
   "peerDependencies": {
     "type-fest": "^4 || ^5.0.0"
