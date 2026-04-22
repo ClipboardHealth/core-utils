@@ -43,7 +43,7 @@ on its own line at the end of the body. This is how the skill knows, on re-runs,
 
 - **`active`** — no sentinel yet, OR at least one human commented after the last sentinel. Always handle this thread.
 - **`uncertain`** — a sentinel exists AND one or more bot comments appeared after it. The thread carries a `postSentinelBotComments` array listing EVERY such comment. You MUST read every entry in that array (not just the most recent — a later ack must not hide an earlier actionable finding), then decide:
-  - **Every** post-sentinel bot comment is a non-actionable acknowledgement (`"Thanks, resolved"`, `"LGTM"`, `"Learnings added"`, etc.) → treat as addressed; do not reply again.
+  - **Every** post-sentinel bot comment is a non-actionable acknowledgement (`"Thanks, resolved"`, `"LGTM"`, `"Learnings added"`, etc.) → mark the thread **Skip-reply**; do not post a new reply. (See step 6 — Skip-reply is a distinct classification from the `addressed` activityState value.)
   - **Any** post-sentinel bot comment carries new actionable content (new nit, new finding, corrected diagnosis) → treat as **active**; reply again AND mention in the final summary that you reactivated an "uncertain" thread and why.
   - If you cannot confidently classify every entry → default to **active** and flag it. Silence is the failure mode we are trying to avoid.
 - **`addressed`** — the sentinel is the newest relevant activity on the thread. Skip it.
@@ -126,11 +126,21 @@ The output JSON has:
 
 ### 5. Handle CI failures (conservative)
 
-If any check in `statusCheckRollup` has `bucket: "fail"` or `conclusion: "failure"`:
+If any check in `statusCheckRollup` has `bucket: "fail"` or `conclusion: "failure"`, pull the failing job logs. Derive `RUN_ID` from the failing check's `detailsUrl`, then loop over every failed job in that run:
 
 ```bash
-gh run view "$RUN_ID" --json jobs --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'
-gh run view --job "$JOB_ID" --log-failed
+# Pick the first failed check's run id from statusCheckRollup (stored in $ROLLUP_JSON).
+RUN_ID="$(printf '%s' "$ROLLUP_JSON" \
+  | jq -r 'first(.[] | select(.bucket == "fail" or .conclusion == "FAILURE") | .detailsUrl // empty)' \
+  | sed -nE 's#.*/runs/([0-9]+).*#\1#p')"
+[ -n "$RUN_ID" ] || { echo "No failed run id found"; exit 1; }
+
+# Stream only failed steps' output for every failed job in the run.
+for JOB_ID in $(gh run view "$RUN_ID" --json jobs \
+    --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'); do
+  echo "=== job $JOB_ID ==="
+  gh run view --job "$JOB_ID" --log-failed
+done
 ```
 
 Diagnose: **build/type errors first** (they cause cascading test failures), then lint/format, then tests.
@@ -237,7 +247,7 @@ Report:
 
 After an iteration, pick exactly one outcome:
 
-- **Exit clean** — all CI checks passed AND, after step 6's inspection, zero threads remain that would produce a new reply on the next run (i.e., every thread in `activeThreads` was either reachable-only-via-sentinel "Skip-reply" in this iteration or has already received a fresh sentinel reply), AND every current nitpick fingerprint is covered by an existing sentinel comment. Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. Report success and stop.
+- **Exit clean** — all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6's inspection or has already received a fresh sentinel reply in this iteration, AND every current nitpick fingerprint is covered by an existing sentinel comment. Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. Report success and stop.
 - **Exit stuck** — iteration made no commits, posted no new replies, and no CI check changed state from the previous iteration. Report state and stop; tell the user to investigate.
 - **Continue** — interval set, normalized `<= 240`, not clean, not stuck:
 
