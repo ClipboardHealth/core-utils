@@ -2,6 +2,7 @@
   "extends": ["./base.json"],
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise", "vitest"],
   "rules": {
+    "max-lines": ["error", { "max": 2000 }],
     "jest/max-expects": "off",
     "jest/max-nested-describe": "off",
     "jest/no-hooks": "off",

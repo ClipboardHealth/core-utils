@@ -41,7 +41,7 @@
     "init-declarations": "off",
     "max-classes-per-file": "off",
     "max-depth": "off",
-    "max-lines": "off",
+    "max-lines": ["error", { "max": 1000 }],
     "max-lines-per-function": "off",
     "max-params": "off",
     "max-statements": "off",
