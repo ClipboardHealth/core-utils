@@ -43,6 +43,11 @@ repo_json="$(gh repo view --json owner,name 2>/dev/null)" || {
 owner="$(printf '%s' "$repo_json" | jq -r '.owner.login')"
 repo="$(printf '%s' "$repo_json" | jq -r '.name')"
 
+if [ -z "$owner" ] || [ "$owner" = "null" ] || [ -z "$repo" ] || [ "$repo" = "null" ]; then
+  printf '{"error":"Failed to parse repository info from gh output."}\n' >&2
+  exit 1
+fi
+
 result="$(gh api "repos/${owner}/${repo}/issues/${PR_NUMBER}/comments" \
   --method POST \
   -f "body=${BODY}" 2>&1)" || {

@@ -110,8 +110,12 @@ Exit codes 0 (pass), 1 (fail), 8 (pending), and 124 (timeout) are expected and h
 
 ### 4. Fetch review data
 
+Script paths are relative to this SKILL.md. The agent's CWD is typically the repo root, not the skill directory, so resolve the script path explicitly. Either `cd` into the skill dir, or pass an absolute/derived path:
+
 ```bash
-bash scripts/unresolvedPrComments.sh
+# Works from any CWD: derive the skill directory and run from there.
+SKILL_DIR="$(git rev-parse --show-toplevel)/plugins/core/skills/babysit-pr"
+bash "$SKILL_DIR/scripts/unresolvedPrComments.sh"
 ```
 
 The output JSON has:

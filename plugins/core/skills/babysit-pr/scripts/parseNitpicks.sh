@@ -6,7 +6,7 @@
 # dedupe to the same fingerprint. Source review timestamps are kept as
 # `createdAt` metadata but NOT included in the fingerprint.
 #
-# Sourced by unresolvedPrComments.sh. Requires: jq, perl, shasum.
+# Sourced by unresolvedPrComments.sh. Requires: jq, perl with Digest::SHA + Encode.
 
 extract_nitpick_comments() {
   local reviews_json="$1"
@@ -16,6 +16,7 @@ use strict;
 use warnings;
 use JSON::PP;
 use Digest::SHA qw(sha256_hex);
+use Encode qw(encode_utf8);
 
 local $/;
 my $reviews_json = <STDIN>;
@@ -62,7 +63,7 @@ while ($nitpick_content =~ /<details>\s*<summary>([^<]+?)\s+\(\d+\)<\/summary>\s
     # Fingerprint: file + normalized line + title + body (NO timestamp,
     # NO author — reposted reviews must dedupe to the same fingerprint).
     my $fingerprint_input = join("\n", $file_name, $line_range, $title, $clean_body);
-    my $fingerprint = substr(sha256_hex($fingerprint_input), 0, 16);
+    my $fingerprint = substr(sha256_hex(encode_utf8($fingerprint_input)), 0, 16);
 
     push @comments, {
       author      => $author,
@@ -109,8 +110,9 @@ sub clean_comment_body {
     $prev = $text;
     $text =~ s/<details>(?:(?!<details>)[\s\S])*?<\/details>//g;
   }
-  $text =~ s/</&lt;/g;
-  $text =~ s/>/&gt;/g;
+  # Do NOT HTML-escape angle brackets: the nitpick body is posted back to GitHub
+  # as Markdown via `gh api`, where `&lt;`/`&gt;` would render literally and
+  # corrupt generic-type expressions or HTML snippets from the original review.
   return trim($text);
 }
 

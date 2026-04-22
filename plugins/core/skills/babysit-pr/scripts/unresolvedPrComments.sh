@@ -4,7 +4,7 @@
 # Adds: thread IDs, per-thread sentinel recency state, stable nitpick fingerprints.
 #
 # Usage: bash unresolvedPrComments.sh [pr-number]
-# Compatible with macOS bash 3.2. Requires: gh, jq, perl, shasum.
+# Compatible with macOS bash 3.2. Requires: gh, jq (>= 1.5), perl with Digest::SHA.
 
 set -euo pipefail
 
@@ -32,8 +32,8 @@ validate_prerequisites() {
   if ! command -v perl >/dev/null 2>&1; then
     output_error "perl not found."
   fi
-  if ! command -v shasum >/dev/null 2>&1; then
-    output_error "shasum not found."
+  if ! perl -MDigest::SHA -e1 >/dev/null 2>&1; then
+    output_error "Perl Digest::SHA module not found (should be in core Perl since 5.9.3)."
   fi
   if ! gh api user --jq '.login' >/dev/null 2>&1; then
     output_error "Not authenticated with GitHub. Run: gh auth login"
