@@ -1,5 +1,6 @@
 import {
   failure,
+  type FailureResult,
   isFailure,
   type LogFunction,
   ServiceError,
@@ -23,11 +24,13 @@ import type { TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
+  CancelRequest,
   LogParams,
   NotificationClientParams,
   SignUserTokenRequest,
   SignUserTokenResponse,
   Span,
+  TraceOptions,
   TriggerBody,
   TriggerChunkedRequest,
   TriggerChunkedResponse,
@@ -47,6 +50,10 @@ const LOG_PARAMS = {
   triggerChunked: {
     traceName: "notifications.triggerChunked",
     destination: "knock.workflows.trigger",
+  },
+  cancel: {
+    traceName: "notifications.cancel",
+    destination: "knock.workflows.cancel",
   },
   appendPushToken: {
     traceName: "notifications.appendPushToken",
@@ -376,6 +383,64 @@ export class NotificationClient {
   }
 
   /**
+   * Cancels any queued workflow runs associated with the given `workflowKey` / `cancellationKey`
+   * pair. Optionally scope to specific recipients.
+   *
+   * Errors from the provider are logged and traced, then re-thrown.
+   *
+   * @see {@link https://docs.knock.app/send-notifications/canceling-workflows}
+   */
+  public async cancel(params: CancelRequest): Promise<void> {
+    const { workflowKey, cancellationKey, recipients, dryRun = false } = params;
+    const logParams = { ...LOG_PARAMS.cancel, workflowKey, dryRun };
+    const traceOptions: TraceOptions = {
+      resource: `notification.${workflowKey}`,
+      tags: {
+        "span.kind": "producer",
+        component: "customer-notifications",
+        "messaging.system": "knock.app",
+        "messaging.operation": "publish",
+        "messaging.destination": LOG_PARAMS.cancel.destination,
+        "notification.dryRun": String(dryRun),
+      },
+    };
+
+    await this.tracer.trace(logParams.traceName, traceOptions, async (span) => {
+      this.logger.info(`${logParams.traceName} request`, {
+        ...logParams,
+        recipientCount: recipients?.length,
+      });
+
+      if (dryRun) {
+        this.logger.info(`${logParams.traceName} response`, { ...logParams, dryRun: true });
+        return;
+      }
+
+      try {
+        await this.provider.workflows.cancel(workflowKey, {
+          cancellation_key: cancellationKey,
+          ...(recipients ? { recipients } : {}),
+        });
+
+        this.logger.info(`${logParams.traceName} response`, logParams);
+      } catch (maybeError) {
+        const error = toError(maybeError);
+        const result = this.createAndLogError({
+          notificationError: {
+            code: ERROR_CODES.unknown,
+            message: error.message,
+          },
+          span,
+          logFunction: this.logger.error,
+          logParams,
+          metadata: { error },
+        });
+        throw result.error;
+      }
+    });
+  }
+
+  /**
    * Append to a user's push tokens.
    *
    * @returns Promise resolving to either an error or successful response.
@@ -552,7 +617,7 @@ export class NotificationClient {
     logFunction?: LogFunction;
     logParams: LogParams;
     metadata?: Record<string, unknown>;
-  }): ServiceResult<never> {
+  }): FailureResult {
     const { logParams, notificationError, span, metadata, logFunction = this.logger.warn } = params;
     const { code, message } = notificationError;
 

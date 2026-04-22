@@ -11,6 +11,7 @@ import {
   type TriggerIdempotencyKey,
 } from "./triggerIdempotencyKey";
 import type {
+  CancelRequest,
   SignUserTokenRequest,
   Span,
   TraceOptions,
@@ -647,6 +648,82 @@ describe(NotificationClient, () => {
         {
           idempotencyKey: expect.any(String),
         },
+      );
+    });
+  });
+
+  describe("cancel", () => {
+    const mockWorkflowKey = "test-workflow";
+    const mockCancellationKey = "cancel-key-123";
+
+    it("cancels workflow with recipients", async () => {
+      const cancelSpy = vi
+        .spyOn(provider.workflows, "cancel")
+        .mockResolvedValue(
+          undefined as unknown as Awaited<ReturnType<Knock["workflows"]["cancel"]>>,
+        );
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+        recipients: ["user-1", "user-2"],
+      };
+
+      await client.cancel(input);
+
+      expect(cancelSpy).toHaveBeenCalledWith(mockWorkflowKey, {
+        cancellation_key: mockCancellationKey,
+        recipients: ["user-1", "user-2"],
+      });
+    });
+
+    it("cancels workflow without recipients", async () => {
+      const cancelSpy = vi
+        .spyOn(provider.workflows, "cancel")
+        .mockResolvedValue(
+          undefined as unknown as Awaited<ReturnType<Knock["workflows"]["cancel"]>>,
+        );
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await client.cancel(input);
+
+      expect(cancelSpy).toHaveBeenCalledWith(mockWorkflowKey, {
+        cancellation_key: mockCancellationKey,
+      });
+    });
+
+    it("skips provider call when dryRun is true", async () => {
+      const cancelSpy = vi.spyOn(provider.workflows, "cancel");
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+        dryRun: true,
+      };
+
+      await client.cancel(input);
+
+      expect(cancelSpy).not.toHaveBeenCalled();
+    });
+
+    it("logs and re-throws provider errors", async () => {
+      const mockError = new Error("Knock cancel failed");
+      vi.spyOn(provider.workflows, "cancel").mockRejectedValue(mockError);
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await expect(client.cancel(input)).rejects.toThrow(ServiceError);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "notifications.cancel [unknown] Knock cancel failed",
+        expect.any(Object),
       );
     });
   });
