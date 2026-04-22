@@ -151,7 +151,7 @@ Diagnose: **build/type errors first** (they cause cascading test failures), then
 - Ambiguous test intent.
 - External checks with no inspectable logs.
 
-Scope check: `git diff --name-only "$(gh pr view --json baseRefName --jq .baseRefName)"...HEAD`. A fix outside these files is out of scope — report it, don't apply it.
+Scope check: `gh pr diff --name-only`. This is PR-authoritative — works even if the local base ref is missing or stale (e.g., in fresh clones or CI sandboxes). A fix outside these files is out of scope — report it, don't apply it.
 
 ### 6. Assess active review threads
 
@@ -160,9 +160,9 @@ For every thread in `activeThreads` (this includes both `"active"` and `"uncerta
 - Group comments by file; read each file once (not per comment).
 - If the referenced file no longer exists, record "comment may be outdated" and classify as **Already fixed**.
 - If `activityState == "uncertain"`, read EVERY entry in `postSentinelBotComments` (not just the newest):
-  - If EVERY entry is a non-actionable acknowledgement → classify the whole thread as **Already fixed** (sentinel already covered it); do NOT post a new reply.
+  - If EVERY entry is a non-actionable acknowledgement → mark the thread **Skip-reply** (the existing sentinel already covers the thread; posting again would be noise). Do not classify it Agree/Disagree/Already-fixed. Record this in the final summary so the skip is visible.
   - If ANY entry carries new actionable content → treat the thread as new feedback and proceed below. Note in the final summary that an uncertain thread was reactivated, citing the specific comment.
-- For each remaining thread, pick one verdict:
+- For each remaining thread (i.e., NOT marked Skip-reply), pick one verdict — each of these will get a reply posted in step 9:
   - **Agree** — the comment identifies a real issue. Apply the fix. Record the thread ID and a one-line what-changed.
   - **Disagree** — the current code is acceptable. Record a short reasoning.
   - **Already fixed** — a prior commit addresses the concern. Record a pointer (commit SHA, file:line).
@@ -174,7 +174,7 @@ For every nitpick in `nitpickComments`:
 - Check whether its `fingerprint` already appears in a prior babysit-pr sentinel comment on the PR. If yes, skip.
 - Otherwise classify (Agree / Disagree / Already fixed) the same way as threads. If Agree, apply the fix.
 
-If no nitpicks remain after filtering, skip step 9.
+If no nitpicks remain after filtering, skip ONLY the top-level nitpick-summary comment in step 9. Still post thread replies for every non-Skip-reply thread from step 6.
 
 ### 8. Commit and push (if any edits)
 
@@ -194,11 +194,13 @@ Capture `NEW_SHA` and build a commit URL: `https://github.com/<owner>/<repo>/com
 
 ### 9. Post replies
 
-For every thread assessed in step 6:
+For every thread assessed in step 6 that was NOT marked **Skip-reply** (i.e., one of Agree / Disagree / Already fixed):
 
 ```bash
 bash scripts/postSentinelReply.sh "$THREAD_ID" "$BODY"
 ```
+
+Skip-reply threads (uncertain threads where every post-sentinel bot comment was a non-actionable ack) are left alone — the existing sentinel already covers them.
 
 Body templates (the script appends the sentinel if missing):
 
@@ -235,7 +237,7 @@ Report:
 
 After an iteration, pick exactly one outcome:
 
-- **Exit clean** — all CI checks passed AND `totalActiveThreads == 0` (no active OR uncertain threads remaining after your inspection) AND every current nitpick fingerprint is covered by an existing sentinel comment. Report success and stop.
+- **Exit clean** — all CI checks passed AND, after step 6's inspection, zero threads remain that would produce a new reply on the next run (i.e., every thread in `activeThreads` was either reachable-only-via-sentinel "Skip-reply" in this iteration or has already received a fresh sentinel reply), AND every current nitpick fingerprint is covered by an existing sentinel comment. Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. Report success and stop.
 - **Exit stuck** — iteration made no commits, posted no new replies, and no CI check changed state from the previous iteration. Report state and stop; tell the user to investigate.
 - **Continue** — interval set, normalized `<= 240`, not clean, not stuck:
 
