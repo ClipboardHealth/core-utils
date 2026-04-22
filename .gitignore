@@ -19,6 +19,7 @@ tmp/
 !.vscode/settings.json
 !.vscode/tasks.json
 .claude/*.local.*
+.claude/scheduled_tasks.lock
 .cursor/rules/nx-rules.mdc
 .DS_Store
 .github/instructions/nx.instructions.md
