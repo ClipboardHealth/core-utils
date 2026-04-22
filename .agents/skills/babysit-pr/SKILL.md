@@ -126,12 +126,12 @@ The output JSON has:
 
 ### 5. Handle CI failures (conservative)
 
-If any check in `statusCheckRollup` has `bucket: "fail"` or `conclusion: "failure"`, pull the failing job logs. Derive `RUN_ID` from the failing check's `detailsUrl`, then loop over every failed job in that run:
+If any check in `statusCheckRollup` has `bucket: "fail"` or `conclusion: "failure"`, pull the failing job logs. The snippet below is self-contained — it re-fetches the rollup so you don't depend on any variable set in an earlier step:
 
 ```bash
-# Pick the first failed check's run id from statusCheckRollup (stored in $ROLLUP_JSON).
-RUN_ID="$(printf '%s' "$ROLLUP_JSON" \
-  | jq -r 'first(.[] | select(.bucket == "fail" or .conclusion == "FAILURE") | .detailsUrl // empty)' \
+# Pull the current rollup fresh, then pick the first failed check's run id.
+RUN_ID="$(gh pr view --json statusCheckRollup \
+    --jq '[.statusCheckRollup[] | select(.bucket == "fail" or .conclusion == "FAILURE") | .detailsUrl // empty] | first // empty' \
   | sed -nE 's#.*/runs/([0-9]+).*#\1#p')"
 [ -n "$RUN_ID" ] || { echo "No failed run id found"; exit 1; }
 
