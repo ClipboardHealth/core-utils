@@ -527,7 +527,7 @@ describe(NotificationClient, () => {
         attempt: mockAttempt,
       };
 
-      const actual = await client.trigger(input as TriggerRequest);
+      const actual = await client.trigger(input);
 
       expectToBeSuccess(actual);
       expect(actual.value.id).toBe(mockWorkflowRunId);

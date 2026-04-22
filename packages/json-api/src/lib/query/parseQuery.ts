@@ -51,5 +51,5 @@ export function parseQuery(query: string): ServerJsonApiQuery {
       return defaultDecoder(decoded, charset, type);
     },
     ignoreQueryPrefix: true,
-  }) as ServerJsonApiQuery;
+  });
 }
