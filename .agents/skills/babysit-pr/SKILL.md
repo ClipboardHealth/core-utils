@@ -126,29 +126,12 @@ The output JSON has:
 
 ### 5. Handle CI failures (conservative)
 
-If any check in `statusCheckRollup` has `bucket: "fail"`, pull the failing job logs. Filter on `bucket` only — it is gh CLI's normalized field (lowercase `"fail"`/`"pass"`/`"pending"`/...). The raw `conclusion` field differs by API: `gh pr view --json statusCheckRollup` returns `"FAILURE"` (uppercase, GraphQL enum) while `gh run view --json jobs` returns `"failure"` (lowercase, REST). `bucket` sidesteps the mismatch.
+Run `bash scripts/fetchFailedLogs.sh` to stream the failed-step output for every failing check on the PR. The first line is either:
 
-The snippet below is self-contained and handles multiple failing runs (one PR can have several):
+- `# babysit-pr: no failing checks` → skip to step 6.
+- `# babysit-pr: failing checks` → followed by one delimited block per failing job (`# --- run=<id> job=<id> ---`, then the log body). The script handles multiple failing runs and uses the `bucket` field (gh CLI's normalized lowercase) rather than the case-inconsistent raw `conclusion`.
 
-```bash
-# Collect every failing run id from the rollup, deduped.
-RUN_IDS="$(gh pr view --json statusCheckRollup \
-    --jq '.statusCheckRollup[] | select(.bucket == "fail") | .detailsUrl // empty' \
-  | sed -nE 's#.*/runs/([0-9]+).*#\1#p' \
-  | sort -u)"
-[ -n "$RUN_IDS" ] || { echo "No failed run id found"; exit 1; }
-
-# Stream only failed steps' output for every failed job across every failed run.
-for RUN_ID in $RUN_IDS; do
-  for JOB_ID in $(gh run view "$RUN_ID" --json jobs \
-      --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'); do
-    echo "=== run $RUN_ID job $JOB_ID ==="
-    gh run view --job "$JOB_ID" --log-failed
-  done
-done
-```
-
-Diagnose: **build/type errors first** (they cause cascading test failures), then lint/format, then tests.
+Read the logs and diagnose: **build/type errors first** (they cause cascading test failures), then lint/format, then tests.
 
 **Apply a fix directly** only when the cause is high-confidence and inside the PR's changed surface:
 
@@ -193,19 +176,25 @@ If no nitpicks remain after filtering, skip ONLY the top-level nitpick-summary c
 
 ### 8. Commit and push (if any edits)
 
-If steps 5, 6, or 7 modified any files:
+If steps 5, 6, or 7 modified any files, decide:
+
+- **Which files are yours this iteration.** The worktree may contain unrelated in-progress work. Only stage files this iteration touched — if in doubt, run `git diff --name-only` and pick from that list deliberately.
+- **A focused commit message.** Prefer something like `babysit-pr: <one-line what-changed>`; the project's commitlint expects conventional-commit form, so a `fix(core): ...` or `docs(core): ...` prefix is usually right.
+
+Then run:
 
 ```bash
-# Stage ONLY files this iteration changed. Never `git add -A`.
-git diff --name-only
-# → pass that list explicitly:
-git add <file1> <file2> ...
-git commit -m "babysit-pr: <short summary of what changed>"
-git push
-NEW_SHA="$(git rev-parse HEAD)"
+bash scripts/commitAndPush.sh "<message>" <file1> [<file2> ...]
 ```
 
-Capture `NEW_SHA` and build a commit URL: `https://github.com/<owner>/<repo>/commit/<NEW_SHA>`.
+The script enforces explicit staging (never `git add -A`), never skips hooks, and prints:
+
+```text
+sha=<commit-sha>
+url=https://github.com/<owner>/<repo>/commit/<sha>
+```
+
+Capture the `url=` line for the reply templates in step 9.
 
 ### 9. Post replies
 
