@@ -52,8 +52,26 @@ else
     || { printf '{"error":"no PR for current branch"}\n' >&2; exit 1; }
 fi
 
+# Check-failure detection combines THREE signals because gh's rollup is a mix of
+# CheckRun (has .conclusion, GraphQL enum UPPER like "FAILURE") and StatusContext
+# (has .state, GraphQL enum UPPER like "FAILURE" or "ERROR"). .bucket is gh CLI's
+# normalized lowercase ("fail" / "pass" / ...) but isn't always populated on
+# every rollup entry — older gh versions, custom app integrations, and certain
+# status contexts have been observed with .bucket == null. Relying only on
+# .bucket silently drops those entries.
 FAILING_RAW="$(printf '%s' "$ROLLUP" \
-  | jq -r '.[] | select(.bucket == "fail") | [.name // "unknown", .detailsUrl // ""] | @tsv')"
+  | jq -r '
+      def normalized_bucket:
+        (.bucket // "") as $b
+        | (.conclusion // "" | ascii_downcase) as $c
+        | (.state // "" | ascii_downcase) as $s
+        | if $b == "fail" or $c == "failure" or $s == "failure" or $s == "error"
+          then "fail" else "" end;
+      .[]
+      | select(normalized_bucket == "fail")
+      | [.name // "unknown", .detailsUrl // ""]
+      | @tsv
+    ')"
 
 if [ -z "$FAILING_RAW" ]; then
   echo "# babysit-pr: no failing checks"
