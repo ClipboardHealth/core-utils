@@ -126,10 +126,12 @@ The output JSON has:
 
 ### 5. Handle CI failures (conservative)
 
-Run `bash scripts/fetchFailedLogs.sh` to stream the failed-step output for every failing check on the PR. The first line is either:
+Run `bash scripts/fetchFailedLogs.sh` to stream failed output for every failing check on the PR. The first line is either:
 
 - `# babysit-pr: no failing checks` → skip to step 6.
-- `# babysit-pr: failing checks` → followed by one delimited block per failing job (`# --- run=<id> job=<id> ---`, then the log body). The script handles multiple failing runs and uses the `bucket` field (gh CLI's normalized lowercase) rather than the case-inconsistent raw `conclusion`.
+- `# babysit-pr: failing checks` → followed by one delimited block per failing job or external check:
+  - `# --- run=<id> job=<id> ---` blocks carry the job's `--log-failed` output (GitHub Actions).
+  - `# --- external check: <name> (<url>) ---` blocks carry no logs — the check isn't a GitHub Actions run (CircleCI, Nx Cloud, semgrep, CodeRabbit, Devin, etc.). Treat these like "External checks with no inspectable logs" in the diagnosis-only list below: stop and report, don't guess a fix.
 
 Read the logs and diagnose: **build/type errors first** (they cause cascading test failures), then lint/format, then tests.
 

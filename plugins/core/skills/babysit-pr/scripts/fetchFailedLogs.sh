@@ -52,17 +52,36 @@ else
     || { printf '{"error":"no PR for current branch"}\n' >&2; exit 1; }
 fi
 
-RUN_IDS="$(printf '%s' "$ROLLUP" \
-  | jq -r '.[] | select(.bucket == "fail") | .detailsUrl // empty' \
-  | sed -nE 's#.*/runs/([0-9]+).*#\1#p' \
-  | sort -u)"
+FAILING_RAW="$(printf '%s' "$ROLLUP" \
+  | jq -r '.[] | select(.bucket == "fail") | [.name // "unknown", .detailsUrl // ""] | @tsv')"
 
-if [ -z "$RUN_IDS" ]; then
+if [ -z "$FAILING_RAW" ]; then
   echo "# babysit-pr: no failing checks"
   exit 0
 fi
 
+# Partition into GitHub-Actions runs (we can fetch --log-failed) vs external
+# checks (CircleCI, Nx Cloud, semgrep, CodeRabbit, Devin, etc. — no inline logs).
+RUN_IDS=""
+EXTERNAL_BLOCK=""
+while IFS=$'\t' read -r NAME URL; do
+  [ -z "$NAME" ] && continue
+  # Match GitHub Actions run URLs specifically. A loose `.*/runs/([0-9]+)` would
+  # misclassify Nx Cloud (`cloud.nx.app/runs/<numeric>`) and other hosts that
+  # reuse the `/runs/` path as GitHub Actions runs.
+  RUN_ID="$(printf '%s' "$URL" | sed -nE 's#^https://github\.com/[^/]+/[^/]+/actions/runs/([0-9]+).*#\1#p')"
+  if [ -n "$RUN_ID" ]; then
+    RUN_IDS="$RUN_IDS $RUN_ID"
+  else
+    EXTERNAL_BLOCK="${EXTERNAL_BLOCK}"$'\n'"# --- external check: ${NAME} (${URL:-no URL}) ---"
+  fi
+done <<EOF
+$FAILING_RAW
+EOF
+RUN_IDS="$(printf '%s\n' $RUN_IDS | sort -u | tr '\n' ' ')"
+
 echo "# babysit-pr: failing checks"
+
 for RUN_ID in $RUN_IDS; do
   for JOB_ID in $(gh run view "$RUN_ID" --json jobs \
       --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'); do
@@ -71,3 +90,10 @@ for RUN_ID in $RUN_IDS; do
     gh run view --job "$JOB_ID" --log-failed
   done
 done
+
+if [ -n "$EXTERNAL_BLOCK" ]; then
+  printf '%s\n' "$EXTERNAL_BLOCK"
+  echo ""
+  echo "# (no inline logs available for external checks — investigate via the URLs above;"
+  echo "#  treat these like \"External checks with no inspectable logs\" in step 5's guidance)"
+fi
