@@ -313,16 +313,20 @@ main() {
     comment_author="$(printf '%s' "$comment" | jq -r '.author')"
 
     local keep=true
-    if [ "$comment_author" = "github-advanced-security" ]; then
-      local comment_body alert_number
-      comment_body="$(printf '%s' "$comment" | jq -r '.body')"
-      alert_number="$(extract_code_scanning_alert_number "$comment_body")"
-      if [ -n "$alert_number" ]; then
-        if is_code_scanning_alert_fixed "$owner" "$repo" "$alert_number"; then
-          keep=false
+    # GitHub Advanced Security's bot posts under either login depending on account
+    # type (app installation vs. direct). Match both forms.
+    case "$comment_author" in
+      "github-advanced-security"|"github-advanced-security[bot]")
+        local comment_body alert_number
+        comment_body="$(printf '%s' "$comment" | jq -r '.body')"
+        alert_number="$(extract_code_scanning_alert_number "$comment_body")"
+        if [ -n "$alert_number" ]; then
+          if is_code_scanning_alert_fixed "$owner" "$repo" "$alert_number"; then
+            keep=false
+          fi
         fi
-      fi
-    fi
+        ;;
+    esac
 
     if [ "$keep" = true ]; then
       unresolved_comments="$(printf '%s' "$unresolved_comments" | jq --argjson c "$comment" '. + [$c]')"

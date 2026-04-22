@@ -126,20 +126,25 @@ The output JSON has:
 
 ### 5. Handle CI failures (conservative)
 
-If any check in `statusCheckRollup` has `bucket: "fail"` or `conclusion: "failure"`, pull the failing job logs. The snippet below is self-contained — it re-fetches the rollup so you don't depend on any variable set in an earlier step:
+If any check in `statusCheckRollup` has `bucket: "fail"`, pull the failing job logs. Filter on `bucket` only — it is gh CLI's normalized field (lowercase `"fail"`/`"pass"`/`"pending"`/...). The raw `conclusion` field differs by API: `gh pr view --json statusCheckRollup` returns `"FAILURE"` (uppercase, GraphQL enum) while `gh run view --json jobs` returns `"failure"` (lowercase, REST). `bucket` sidesteps the mismatch.
+
+The snippet below is self-contained and handles multiple failing runs (one PR can have several):
 
 ```bash
-# Pull the current rollup fresh, then pick the first failed check's run id.
-RUN_ID="$(gh pr view --json statusCheckRollup \
-    --jq '[.statusCheckRollup[] | select(.bucket == "fail" or .conclusion == "FAILURE") | .detailsUrl // empty] | first // empty' \
-  | sed -nE 's#.*/runs/([0-9]+).*#\1#p')"
-[ -n "$RUN_ID" ] || { echo "No failed run id found"; exit 1; }
+# Collect every failing run id from the rollup, deduped.
+RUN_IDS="$(gh pr view --json statusCheckRollup \
+    --jq '.statusCheckRollup[] | select(.bucket == "fail") | .detailsUrl // empty' \
+  | sed -nE 's#.*/runs/([0-9]+).*#\1#p' \
+  | sort -u)"
+[ -n "$RUN_IDS" ] || { echo "No failed run id found"; exit 1; }
 
-# Stream only failed steps' output for every failed job in the run.
-for JOB_ID in $(gh run view "$RUN_ID" --json jobs \
-    --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'); do
-  echo "=== job $JOB_ID ==="
-  gh run view --job "$JOB_ID" --log-failed
+# Stream only failed steps' output for every failed job across every failed run.
+for RUN_ID in $RUN_IDS; do
+  for JOB_ID in $(gh run view "$RUN_ID" --json jobs \
+      --jq '.jobs[] | select(.conclusion == "failure") | .databaseId'); do
+    echo "=== run $RUN_ID job $JOB_ID ==="
+    gh run view --job "$JOB_ID" --log-failed
+  done
 done
 ```
 
