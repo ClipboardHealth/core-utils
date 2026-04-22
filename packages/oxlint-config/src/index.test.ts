@@ -66,6 +66,7 @@ describe("oxlint-config", () => {
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
         rules: {
+          "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
@@ -79,6 +80,7 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
