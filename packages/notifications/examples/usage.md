@@ -90,14 +90,26 @@
          if (isFailure(result)) {
            const code = result.error.issues[0]?.code;
 
-           // Skip errors that retrying won't fix: expired notifications and non-429 4xx responses
-           // from the provider (e.g. validation errors, missing recipients). 429s surface as
-           // `rateLimited` and fall through to the throw below so the job retries with backoff.
-           if (code === ERROR_CODES.expired || code === ERROR_CODES.clientError) {
-             this.logger.warn("TriggerNotificationJob skipped", { ...metadata, code });
+           // Expired: the notification is no longer relevant (e.g. a reminder for an event that
+           // has already started). Not actionable, so log at WARN and move on.
+           if (code === ERROR_CODES.expired) {
+             this.logger.warn("TriggerNotificationJob skipped due to expiry", { ...metadata });
              return;
            }
 
+           // Non-429 4xx from the provider means the request itself is broken (validation error,
+           // missing recipient, etc.). Retrying won't help — log at ERROR so it pages and we can
+           // fix the caller.
+           if (code === ERROR_CODES.clientError) {
+             this.logger.error("TriggerNotificationJob skipped due to client error", {
+               ...metadata,
+               error: result.error,
+             });
+             return;
+           }
+
+           // Everything else (rateLimited, unknown, 5xx, network) is transient — throw so the
+           // job retries with backoff.
            throw result.error;
          }
 
