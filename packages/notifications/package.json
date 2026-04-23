@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/notifications",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Send notifications through third-party providers.",
   "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
