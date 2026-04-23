@@ -10,6 +10,7 @@ import {
 } from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
+import { ERROR_CODES, type ErrorCode } from "./errorCodes";
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
@@ -17,6 +18,7 @@ import { IdempotentKnock } from "./internal/idempotentKnock";
 import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKey";
 import { redact } from "./internal/redact";
 import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
+import { toNotificationError } from "./internal/toNotificationError";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
@@ -72,17 +74,6 @@ const LOG_PARAMS = {
     destination: "knock.users.setPreferences",
   },
 };
-export const ERROR_CODES = {
-  expired: "expired",
-  invalidExpiresAt: "invalidExpiresAt",
-  invalidIdempotencyKey: "invalidIdempotencyKey",
-  recipientCountBelowMinimum: "recipientCountBelowMinimum",
-  recipientCountAboveMaximum: "recipientCountAboveMaximum",
-  missingSigningKey: "missingSigningKey",
-  unknown: "unknown",
-} as const;
-
-export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
 interface NotificationError {
   code: ErrorCode;
@@ -161,12 +152,9 @@ export class NotificationClient {
 
           return success({ id });
         } catch (maybeError) {
-          const error = toError(maybeError);
+          const { code, error, message } = toNotificationError(maybeError);
           return this.createAndLogError({
-            notificationError: {
-              code: ERROR_CODES.unknown,
-              message: error.message,
-            },
+            notificationError: { code, message },
             span,
             logFunction: this.logger.error,
             logParams,
@@ -266,9 +254,13 @@ export class NotificationClient {
    *       const result = await this.client.triggerChunked(request);
    *
    *       if (isFailure(result)) {
-   *         // Skip expired notifications, retrying the job won't help.
-   *         if (result.error.issues[0]?.code === ERROR_CODES.expired) {
-   *           this.logger.warn("TriggerNotificationJob skipped due to expiry", { ...metadata });
+   *         const code = result.error.issues[0]?.code;
+   *
+   *         // Skip errors that retrying won't fix: expired notifications and non-429 4xx responses
+   *         // from the provider (e.g. validation errors, missing recipients). 429s surface as
+   *         // `rateLimited` and fall through to the throw below so the job retries with backoff.
+   *         if (code === ERROR_CODES.expired || code === ERROR_CODES.clientError) {
+   *           this.logger.warn("TriggerNotificationJob skipped", { ...metadata, code });
    *           return;
    *         }
    *
@@ -346,11 +338,11 @@ export class NotificationClient {
 
             responses.push({ chunkNumber: recipientChunk.number, id });
           } catch (maybeError) {
-            const error = toError(maybeError);
+            const { code, error, message } = toNotificationError(maybeError);
             return this.createAndLogError({
               notificationError: {
-                code: ERROR_CODES.unknown,
-                message: `Chunk ${recipientChunk.number}/${chunks.length} failed: ${error.message}`,
+                code,
+                message: `Chunk ${recipientChunk.number}/${chunks.length} failed: ${message}`,
               },
               span,
               logFunction: this.logger.error,
@@ -424,12 +416,9 @@ export class NotificationClient {
 
         this.logger.info(`${logParams.traceName} response`, logParams);
       } catch (maybeError) {
-        const error = toError(maybeError);
+        const { code, error, message } = toNotificationError(maybeError);
         const result = this.createAndLogError({
-          notificationError: {
-            code: ERROR_CODES.unknown,
-            message: error.message,
-          },
+          notificationError: { code, message },
           span,
           logFunction: this.logger.error,
           logParams,
@@ -472,12 +461,9 @@ export class NotificationClient {
 
       return success({ success: true });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -523,12 +509,9 @@ export class NotificationClient {
 
       return success({ token: response });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -561,12 +544,9 @@ export class NotificationClient {
         workplaceId: response.id,
       });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -598,12 +578,9 @@ export class NotificationClient {
 
       return success({ userId });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
