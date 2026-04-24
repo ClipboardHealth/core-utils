@@ -4,11 +4,12 @@ Fetch and display the full APM trace for a given trace ID, or look up a specific
 
 ## Prerequisites
 
-The `pup` CLI must be installed and authenticated. Verify with:
+The `pup` CLI must be installed and authenticated. Two auth paths are supported:
 
-```bash
-pup auth status 2>/dev/null | jq '.status'   # Should show: "valid"
-```
+- **macOS Keychain** (via `pup auth login`) — the default on developer machines.
+- **Environment variables** (`DD_API_KEY` + `DD_APP_KEY`) — the path used in sandboxes and CI.
+
+**Do not run `pup auth status` to verify auth.** It only reads the Keychain, so it fails in sandboxes even when env-var auth is working. Call `pup traces search …` directly — env-var auth takes effect there. If the query fails with an auth error, surface it then (check `DD_API_KEY` / `DD_APP_KEY` or run `pup auth login`).
 
 ## Key pup conventions
 
