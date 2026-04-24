@@ -33,8 +33,12 @@ function makeObs(
   };
 }
 
-function makeBody(content: string, truncated = false): NetworkObservationBody {
-  return { content, contentType: "application/json", truncated, fingerprint: hashBody(content) };
+function makeBody(
+  content: string,
+  truncated = false,
+  contentType = "application/json",
+): NetworkObservationBody {
+  return { content, contentType, truncated, fingerprint: hashBody(content, contentType) };
 }
 
 function assertInvariants(summary: ReturnType<NetworkBuilder["finalize"]>["summary"]): void {
@@ -204,6 +208,20 @@ describe(NetworkBuilder, () => {
       const report = builder.finalize();
       expect(report.groups["g0"]?.firstOffsetMs).toBe(0);
       expect(report.groups["g0"]?.lastOffsetMs).toBe(19 * 100);
+    });
+
+    it("takes min(firstOffsetMs)/max(lastOffsetMs) across out-of-order admissions", () => {
+      // Regression: earlier code froze firstOffsetMs on first admit and overwrote lastOffsetMs
+      // on every admit. Under multi-trace merge, a later admit() can carry an earlier offsetMs,
+      // which would clobber the true bounds. min/max is the only correct bookkeeping.
+      const builder = new NetworkBuilder();
+      builder.admit(makeObs({}, { offsetMs: 500 }));
+      builder.admit(makeObs({}, { offsetMs: 100 })); // earlier than the first
+      builder.admit(makeObs({}, { offsetMs: 900 })); // later than both
+
+      const report = builder.finalize();
+      expect(report.groups["g0"]?.firstOffsetMs).toBe(100);
+      expect(report.groups["g0"]?.lastOffsetMs).toBe(900);
     });
   });
 
@@ -386,6 +404,27 @@ describe(NetworkBuilder, () => {
       expect(Object.keys(report.bodies)).toHaveLength(1);
       expect(report.instances[0]?.requestBodyRef).toBe("b0");
       expect(report.instances[1]?.requestBodyRef).toBe("b0");
+      assertInvariants(report.summary);
+    });
+
+    it("does not collapse bodies with identical bytes but different content types", () => {
+      // Regression for hashBody(content) — without contentType, same bytes across different
+      // MIME types would dedupe to one record carrying the first-seen contentType.
+      const builder = new NetworkBuilder();
+      const jsonBody = makeBody('{"a":1}', false, "application/json");
+      const textBody = makeBody('{"a":1}', false, "text/plain");
+      builder.admit(
+        makeObs({ url: "https://api.example.com/a" }, { offsetMs: 1 }, { requestBody: jsonBody }),
+      );
+      builder.admit(
+        makeObs({ url: "https://api.example.com/b" }, { offsetMs: 2 }, { requestBody: textBody }),
+      );
+
+      const report = builder.finalize();
+      expect(Object.keys(report.bodies)).toHaveLength(2);
+      const contentTypes = Object.values(report.bodies).map((body) => body.contentType);
+      expect(contentTypes).toContain("application/json");
+      expect(contentTypes).toContain("text/plain");
       assertInvariants(report.summary);
     });
 

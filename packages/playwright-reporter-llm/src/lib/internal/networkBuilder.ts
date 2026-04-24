@@ -145,8 +145,17 @@ export class NetworkBuilder {
       const metadata = this.shapeMetadata.get(fingerprint);
       if (metadata) {
         if (instance.offsetMs !== undefined) {
-          metadata.lastOffsetMs = instance.offsetMs;
-          metadata.firstOffsetMs ??= instance.offsetMs;
+          // Track by min/max, not admit order: when multiple trace files are merged, a later
+          // admit() can carry an earlier offsetMs, so plain assignment would clobber the true
+          // bounds.
+          metadata.firstOffsetMs =
+            metadata.firstOffsetMs === undefined
+              ? instance.offsetMs
+              : Math.min(metadata.firstOffsetMs, instance.offsetMs);
+          metadata.lastOffsetMs =
+            metadata.lastOffsetMs === undefined
+              ? instance.offsetMs
+              : Math.max(metadata.lastOffsetMs, instance.offsetMs);
         }
         metadata.totalPostFilterObservations += 1;
       }
