@@ -178,7 +178,7 @@ step(click "Submit") → network(POST /api/orders, 201) → step(waitForURL /con
 For each timeline entry:
 
 - **`kind: "step"`** — test action with `title`, `category`, `durationMs`, `depth`, optional `error`
-- **`kind: "network"`** — HTTP request with `method`, `url`, `status`, optional `durationMs`, `resourceType`, `traceId`, `failureText`, `wasAborted`
+- **`kind: "network"`** — slimmed HTTP entry with `method`, `url`, `status`, and `networkId`. Resolve `networkId` against `attempts[].network.instances[]` for per-request detail (`durationMs`, `timings`, `traceId`/`spanId`/`requestId`/`correlationId`, `requestBodyRef`/`responseBodyRef`, redirect links), and against `attempts[].network.groups[instance.groupId]` for shared shape (`resourceType`, `failureText`, `wasAborted`, occurrence counts)
 - **`kind: "console"`** — browser message with `type` (warning/error/pageerror/page-closed/page-crashed) and `text`
 
 All entries share `offsetMs` (milliseconds since attempt start), giving a single temporal view.
@@ -216,11 +216,11 @@ For each attempt, compare `status`, `durationMs`, and `error` across retries —
 
 ### 4Ee: Inspect network activity and extract trace IDs
 
-Scan `network[]` for 4xx/5xx responses, `failureText`, and `wasAborted` near the failure's `offsetMs`. Use `timings` to isolate slow phases (DNS, connect, wait, receive).
+Scan `attempts[].network.instances[]` for 4xx/5xx responses near the failure's `offsetMs` and use per-instance `timings` to isolate slow phases (DNS, connect, wait, receive). Join each instance to its group via `attempts[].network.groups[instance.groupId]` for shape-level signal (`failureText`, `wasAborted`, `resourceType`, `occurrenceCount`). Resolve payloads via `attempts[].network.bodies[instance.requestBodyRef | instance.responseBodyRef]` when the body matters.
 
-**`traceId`** — when present on a failing request, you must follow [`references/datadog-apm-traces.md`](./references/datadog-apm-traces.md) to correlate with backend behavior. This is the bridge between frontend test failure and potential backend root cause.
+**`traceId`** — when present on a failing instance (`attempts[].network.instances[].traceId`), you must follow [`references/datadog-apm-traces.md`](./references/datadog-apm-traces.md) to correlate with backend behavior. This is the bridge between frontend test failure and potential backend root cause.
 
-If the `network[]` array is full (200 entries) but contains only static assets, the capture is saturated and the relevant API calls may have been dropped — note this as a confidence-reducing factor.
+Check `attempts[].network.summary` for saturation. Non-zero `instancesDroppedByGroupCap`, `instancesDroppedByInstanceCap`, or `instancesEvictedAfterAdmission` means retained content is a sample and the request you care about may have been dropped — note this as a confidence-reducing factor. `instancesDroppedByFilter` alone is expected (static assets are filtered by design). v3 caps: instances 500, groups 200, bodies 100 per attempt.
 
 ### 4Ef: Review test steps
 
@@ -231,10 +231,10 @@ Prefer the timeline view (4Ea) which interleaves steps with network and console.
 Do not propose a fix without concrete artifacts. At minimum, include:
 
 - One **error artifact** — from `tests[].errors[]` (assertion diff, timeout message) or a trace/log entry
-- One **network artifact** — from `tests[].network[]` or `attempts[].network[]` (response status, timing, headers)
+- One **network artifact** — an instance from `attempts[].network.instances[]` (status, timing, trace ids) joined to its group via `attempts[].network.groups[instance.groupId]` (shape, `failureText`/`wasAborted`, occurrence counts), plus the body via `attempts[].network.bodies[instance.requestBodyRef | instance.responseBodyRef]` when relevant
 - A **specific code path** that consumed that state — use `tests[].location` to jump to the source
 - When available: **screenshot** from `failureArtifacts.screenshotBase64` showing page state at failure
-- When available: **Datadog trace** via `network[].traceId` showing backend behavior for the failing request
+- When available: **Datadog trace** via `attempts[].network.instances[].traceId` showing backend behavior for the failing request
 - A **confidence score** from 1 to 5 rating how certain you are in the root cause diagnosis
 
 ### Confidence Score
