@@ -45,7 +45,7 @@ Clipboard's core development tools.
 
 ### babysit-pr
 
-Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize CodeRabbit review-body comments. Invoke with `/babysit-pr` (one pass) or `/babysit-pr 2m` (best-effort same-turn polling).
+Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize CodeRabbit review-body comments. Invoke with `/babysit-pr` for the current branch's PR, or `/babysit-pr <number>` to checkout and babysit a specific PR.
 
 ### cognito-user-analysis
 
