@@ -25,12 +25,36 @@ import {
   collectTraceDiagnosticsFromAttachments,
 } from "./internal/traceDiagnostics";
 import type {
+  ConsoleEntry,
   GlobalError,
   LlmReporterOptions,
   LlmTestEntry,
   LlmTestReport,
+  NetworkReport,
   TestSummary,
 } from "./types";
+
+function emptyNetworkReport(): NetworkReport {
+  return {
+    summary: {
+      observedInstances: 0,
+      retainedInstances: 0,
+      retainedGroups: 0,
+      retainedBodies: 0,
+      instancesDroppedByFilter: 0,
+      instancesDroppedByGroupCap: 0,
+      instancesDroppedByInstanceCap: 0,
+      instancesSuppressedAsDuplicate: 0,
+      instancesEvictedAfterAdmission: 0,
+      bodiesOmittedByBodyCap: 0,
+      bodiesTruncated: 0,
+      bodiesCanonicalized: 0,
+    },
+    instances: [],
+    groups: {},
+    bodies: {},
+  };
+}
 
 export default class LlmReporter implements Reporter {
   private readonly outputFile: string;
@@ -70,13 +94,34 @@ export default class LlmReporter implements Reporter {
     const { attachments, tracePaths } = collectAttachments(result, outputDirectory);
     const errors = result.errors.map(buildTestError);
     const attemptStartTimeMs = result.startTime.getTime();
-    const traceDiagnostics = collectTraceDiagnosticsFromAttachments(tracePaths, attemptStartTimeMs);
+
+    let network: NetworkReport;
+    let consoleMessages: ConsoleEntry[];
+    try {
+      const traceDiagnostics = collectTraceDiagnosticsFromAttachments(
+        tracePaths,
+        attemptStartTimeMs,
+      );
+      ({ network, consoleMessages } = traceDiagnostics);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const globalError: GlobalError = {
+        message: `LlmReporter: trace diagnostics failed for test ${test.id}: ${message}`,
+      };
+      if (error instanceof Error && error.stack) {
+        globalError.stack = error.stack;
+      }
+      this.globalErrors.push(globalError);
+      network = emptyNetworkReport();
+      consoleMessages = [];
+    }
+
     const attemptResult = buildAttemptResult({
       result,
       errors,
       attachments,
-      network: traceDiagnostics.networkRequests,
-      consoleMessages: traceDiagnostics.consoleMessages,
+      network,
+      consoleMessages,
     });
 
     const existingEntry = this.entriesById.get(test.id);
@@ -170,7 +215,7 @@ export default class LlmReporter implements Reporter {
     }
 
     const report: LlmTestReport = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       timestamp: new Date(this.startTimeMs).toISOString(),
       durationMs,
       summary,

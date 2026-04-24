@@ -1,6 +1,14 @@
-import type { NetworkRequest, NetworkTimingBreakdown } from "../types";
+import type { NetworkTimingBreakdown } from "../types";
 import { HEADER_VALUE_CAP, REQUEST_HEADER_ALLOWLIST, RESPONSE_HEADER_ALLOWLIST } from "./constants";
+import {
+  hashBody,
+  type NetworkObservation,
+  type NetworkObservationBody,
+  type NetworkObservationInstance,
+  type NetworkObservationShape,
+} from "./networkBuilder";
 import { capNetworkBody, capText, isJsonOrTextContentType, stripAnsi } from "./textProcessing";
+import { parseTraceparent } from "./traceparent";
 import { computeNetworkOffsetMs, type MonotonicAnchor } from "./traceTiming";
 import { asBoolean, asNumber, asRecord, asString } from "./typeGuards";
 
@@ -102,27 +110,6 @@ function deriveNetworkDurationMs(timings: NetworkTimingBreakdown | undefined): n
   return totalDurationMs;
 }
 
-const INVALID_TRACE_ID = "00000000000000000000000000000000";
-const INVALID_SPAN_ID = "0000000000000000";
-const TRACEPARENT_PATTERN = /^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$/;
-
-function parseTraceparent(
-  header: string | undefined,
-): { traceId: string; spanId: string } | undefined {
-  if (!header) {
-    return undefined;
-  }
-  const match = TRACEPARENT_PATTERN.exec(header.trim().toLowerCase());
-  if (!match) {
-    return undefined;
-  }
-  const [, version, traceId, spanId] = match;
-  if (version === "ff" || traceId === INVALID_TRACE_ID || spanId === INVALID_SPAN_ID) {
-    return undefined;
-  }
-  return { traceId: traceId!, spanId: spanId! };
-}
-
 function extractTraceContext(
   requestHeaders: Record<string, string> | undefined,
   responseHeaders: Record<string, string> | undefined,
@@ -136,13 +123,13 @@ function extractTraceContext(
 function readTraceResourceBody(
   archiveEntries: Record<string, Uint8Array>,
   traceBodyRecord: Record<string, unknown> | undefined,
-): string | undefined {
+): NetworkObservationBody | undefined {
   if (!traceBodyRecord) {
     return undefined;
   }
 
-  const mimeType = asString(traceBodyRecord["mimeType"]);
-  if (!isJsonOrTextContentType(mimeType)) {
+  const contentType = asString(traceBodyRecord["mimeType"]);
+  if (!isJsonOrTextContentType(contentType)) {
     return undefined;
   }
 
@@ -157,102 +144,178 @@ function readTraceResourceBody(
     return undefined;
   }
 
-  const body = Buffer.from(resourceContent).toString("utf8");
-  return capNetworkBody(body);
+  const rawContent = Buffer.from(resourceContent).toString("utf8");
+  const cappedContent = capNetworkBody(rawContent);
+  const truncated = cappedContent !== rawContent;
+
+  const body: NetworkObservationBody = {
+    content: cappedContent,
+    truncated,
+    fingerprint: hashBody(cappedContent, contentType),
+  };
+  if (contentType !== undefined) {
+    body.contentType = contentType;
+  }
+  return body;
 }
 
-function enrichNetworkRequest(params: {
-  networkRequest: NetworkRequest;
-  snapshotRecord: Record<string, unknown>;
-  requestRecord: Record<string, unknown>;
-  responseRecord: Record<string, unknown>;
+const URL_EXTENSION_RESOURCE_TYPES: readonly (readonly [RegExp, string])[] = [
+  [/\.(js|mjs|cjs)(?:$|\?|#)/i, "script"],
+  [/\.css(?:$|\?|#)/i, "stylesheet"],
+  [/\.(png|jpe?g|gif|webp|svg|ico|bmp)(?:$|\?|#)/i, "image"],
+  [/\.(woff2?|ttf|otf|eot)(?:$|\?|#)/i, "font"],
+  [/\.(mp4|webm|ogg|mp3|wav)(?:$|\?|#)/i, "media"],
+];
+
+function inferResourceTypeFromContentType(contentType: string | undefined): string | undefined {
+  if (!contentType) {
+    return undefined;
+  }
+  const normalized = contentType.split(";")[0]?.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
+  if (normalized.startsWith("image/")) {
+    return "image";
+  }
+  if (normalized.startsWith("font/") || normalized.includes("font")) {
+    return "font";
+  }
+  if (normalized.startsWith("video/") || normalized.startsWith("audio/")) {
+    return "media";
+  }
+  if (normalized === "text/css") {
+    return "stylesheet";
+  }
+  if (normalized === "text/javascript" || normalized.includes("javascript")) {
+    return "script";
+  }
+  if (normalized === "text/html") {
+    return "document";
+  }
+  return undefined;
+}
+
+function inferResourceTypeFromUrl(url: string): string | undefined {
+  for (const [pattern, type] of URL_EXTENSION_RESOURCE_TYPES) {
+    if (pattern.test(url)) {
+      return type;
+    }
+  }
+  return undefined;
+}
+
+interface InferResourceTypeInput {
+  declaredResourceType?: string;
+  url: string;
+  responseContentType?: string;
+}
+
+export function inferResourceType(input: InferResourceTypeInput): string | undefined {
+  if (input.declaredResourceType) {
+    return input.declaredResourceType;
+  }
+  return (
+    inferResourceTypeFromContentType(input.responseContentType) ??
+    inferResourceTypeFromUrl(input.url)
+  );
+}
+
+interface BuildNetworkObservationInput {
+  eventRecord: Record<string, unknown>;
   archiveEntries: Record<string, Uint8Array>;
   anchor: MonotonicAnchor | undefined;
   attemptStartTimeMs: number;
-}): void {
+}
+
+function buildShape(params: {
+  method: string;
+  url: string;
+  status: number;
+  snapshotRecord: Record<string, unknown>;
+  responseRecord: Record<string, unknown>;
+  responseContentType: string | undefined;
+}): NetworkObservationShape {
+  const { method, url, status, snapshotRecord, responseRecord, responseContentType } = params;
+  const declaredResourceType = asString(snapshotRecord["_resourceType"]);
+  const resourceType = inferResourceType({
+    url,
+    ...(declaredResourceType !== undefined && { declaredResourceType }),
+    ...(responseContentType !== undefined && { responseContentType }),
+  });
+
+  const failureTextRaw = asString(responseRecord["_failureText"]);
+  const failureText = failureTextRaw ? capNetworkBody(stripAnsi(failureTextRaw)) : undefined;
+  const wasAborted = asBoolean(snapshotRecord["_wasAborted"]);
+
+  const shape: NetworkObservationShape = { method, url, status };
+  if (resourceType !== undefined) {
+    shape.resourceType = resourceType;
+  }
+  if (failureText !== undefined) {
+    shape.failureText = failureText;
+  }
+  if (wasAborted !== undefined) {
+    shape.wasAborted = wasAborted;
+  }
+  return shape;
+}
+
+function buildInstance(params: {
+  snapshotRecord: Record<string, unknown>;
+  responseRecord: Record<string, unknown>;
+  requestHeaders: Record<string, string> | undefined;
+  responseHeaders: Record<string, string> | undefined;
+  anchor: MonotonicAnchor | undefined;
+  attemptStartTimeMs: number;
+}): NetworkObservationInstance {
   const {
-    networkRequest,
     snapshotRecord,
-    requestRecord,
     responseRecord,
-    archiveEntries,
+    requestHeaders,
+    responseHeaders,
     anchor,
     attemptStartTimeMs,
   } = params;
-  const resourceType = asString(snapshotRecord["_resourceType"]);
-  if (resourceType) {
-    networkRequest.resourceType = resourceType;
-  }
 
+  const instance: NetworkObservationInstance = {};
   const timings = extractNetworkTimings(snapshotRecord);
   if (timings) {
-    networkRequest.timings = timings;
+    instance.timings = timings;
   }
-
   const durationMs = deriveNetworkDurationMs(timings);
   if (durationMs !== undefined) {
-    networkRequest.durationMs = durationMs;
+    instance.durationMs = durationMs;
   }
-
-  const failureText = asString(responseRecord["_failureText"]);
-  if (failureText) {
-    networkRequest.failureText = capNetworkBody(stripAnsi(failureText));
-  }
-
-  const wasAborted = asBoolean(snapshotRecord["_wasAborted"]);
-  if (wasAborted !== undefined) {
-    networkRequest.wasAborted = wasAborted;
-  }
-
-  const redirectToUrl = asString(responseRecord["redirectURL"]);
-  if (redirectToUrl) {
-    networkRequest.redirectToUrl = redirectToUrl;
-  }
-
   const networkOffsetMs = computeNetworkOffsetMs(snapshotRecord, anchor, attemptStartTimeMs);
   if (networkOffsetMs !== undefined) {
-    networkRequest.offsetMs = networkOffsetMs;
+    instance.offsetMs = networkOffsetMs;
   }
-
-  const requestHeaders = extractAllowlistedHeaders(
-    requestRecord["headers"],
-    REQUEST_HEADER_ALLOWLIST,
-  );
-  if (requestHeaders) {
-    networkRequest.requestHeaders = requestHeaders;
-  }
-
-  const responseHeaders = extractAllowlistedHeaders(
-    responseRecord["headers"],
-    RESPONSE_HEADER_ALLOWLIST,
-  );
-  if (responseHeaders) {
-    networkRequest.responseHeaders = responseHeaders;
-  }
-
   const traceContext = extractTraceContext(requestHeaders, responseHeaders);
   if (traceContext) {
-    networkRequest.traceId = traceContext.traceId;
-    networkRequest.spanId = traceContext.spanId;
+    instance.traceId = traceContext.traceId;
+    instance.spanId = traceContext.spanId;
   }
-
-  const requestBody = readTraceResourceBody(archiveEntries, asRecord(requestRecord["postData"]));
-  if (requestBody !== undefined) {
-    networkRequest.requestBody = requestBody;
+  const requestId = requestHeaders?.["x-request-id"] ?? responseHeaders?.["x-request-id"];
+  if (requestId !== undefined) {
+    instance.requestId = requestId;
   }
-
-  const responseBody = readTraceResourceBody(archiveEntries, asRecord(responseRecord["content"]));
-  if (responseBody !== undefined) {
-    networkRequest.responseBody = responseBody;
+  const correlationId =
+    requestHeaders?.["x-correlation-id"] ?? responseHeaders?.["x-correlation-id"];
+  if (correlationId !== undefined) {
+    instance.correlationId = correlationId;
   }
+  const redirectToUrl = asString(responseRecord["redirectURL"]);
+  if (redirectToUrl) {
+    instance.redirectToUrl = redirectToUrl;
+  }
+  return instance;
 }
 
-export function buildNetworkRequestFromEvent(
-  eventRecord: Record<string, unknown>,
-  archiveEntries: Record<string, Uint8Array>,
-  anchor: MonotonicAnchor | undefined,
-  attemptStartTimeMs: number,
-): NetworkRequest | undefined {
+export function buildNetworkObservationFromEvent(
+  input: BuildNetworkObservationInput,
+): NetworkObservation | undefined {
+  const { eventRecord, archiveEntries, anchor, attemptStartTimeMs } = input;
   if (eventRecord["type"] !== "resource-snapshot") {
     return undefined;
   }
@@ -271,76 +334,43 @@ export function buildNetworkRequestFromEvent(
     return undefined;
   }
 
-  const networkRequest: NetworkRequest = {
+  const requestHeaders = extractAllowlistedHeaders(
+    requestRecord["headers"],
+    REQUEST_HEADER_ALLOWLIST,
+  );
+  const responseHeaders = extractAllowlistedHeaders(
+    responseRecord["headers"],
+    RESPONSE_HEADER_ALLOWLIST,
+  );
+  const responseContentType = responseHeaders?.["content-type"];
+
+  const shape = buildShape({
     method,
     url,
     status,
-  };
-
-  enrichNetworkRequest({
-    networkRequest,
     snapshotRecord,
-    requestRecord,
     responseRecord,
-    archiveEntries,
+    responseContentType,
+  });
+
+  const instance = buildInstance({
+    snapshotRecord,
+    responseRecord,
+    requestHeaders,
+    responseHeaders,
     anchor,
     attemptStartTimeMs,
   });
 
-  return networkRequest;
-}
+  const requestBody = readTraceResourceBody(archiveEntries, asRecord(requestRecord["postData"]));
+  const responseBody = readTraceResourceBody(archiveEntries, asRecord(responseRecord["content"]));
 
-export function annotateRedirectChains(networkRequests: NetworkRequest[]): void {
-  for (const [index, request] of networkRequests.entries()) {
-    if (!request.redirectToUrl) {
-      continue;
-    }
-
-    const redirectChain = [{ url: request.url, status: request.status }];
-    const visitedRequestIndexes = new Set([index]);
-    let previousRequest = request;
-    let currentIndex = index;
-    let nextUrl: string | undefined = request.redirectToUrl;
-
-    while (nextUrl) {
-      let nextIndex = -1;
-      for (
-        let candidateIndex = currentIndex + 1;
-        candidateIndex < networkRequests.length;
-        candidateIndex++
-      ) {
-        if (visitedRequestIndexes.has(candidateIndex)) {
-          continue;
-        }
-
-        const candidateRequest = networkRequests[candidateIndex];
-        if (candidateRequest?.url !== nextUrl) {
-          continue;
-        }
-
-        nextIndex = candidateIndex;
-        break;
-      }
-
-      if (nextIndex < 0) {
-        break;
-      }
-
-      const nextRequest = networkRequests[nextIndex];
-      if (!nextRequest) {
-        break;
-      }
-
-      nextRequest.redirectFromUrl ??= previousRequest.url;
-      redirectChain.push({ url: nextRequest.url, status: nextRequest.status });
-      visitedRequestIndexes.add(nextIndex);
-      previousRequest = nextRequest;
-      currentIndex = nextIndex;
-      nextUrl = nextRequest.redirectToUrl;
-    }
-
-    if (redirectChain.length > 1) {
-      request.redirectChain = redirectChain;
-    }
+  const observation: NetworkObservation = { shape, instance };
+  if (requestBody) {
+    observation.requestBody = requestBody;
   }
+  if (responseBody) {
+    observation.responseBody = responseBody;
+  }
+  return observation;
 }
