@@ -61,7 +61,7 @@ npx nx run util-ts:test
 npx nx run util-ts:test:ci
 ```
 
-- When modifying ./plugins/core rules or skills, run `node --run sync-ai-rules` to auto-generate the `.rules/` and `.agents/` versions
+- When modifying ./plugins/core rules or skills, run `node --run sync-ai-rules` to auto-generate the `.rules/` and `.agents/skills` versions
 
 # Project Structure
 
