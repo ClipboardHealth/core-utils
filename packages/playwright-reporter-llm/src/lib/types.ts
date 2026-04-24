@@ -62,30 +62,71 @@ export interface NetworkTimingBreakdown {
   sslMs?: number;
 }
 
-export interface NetworkRedirectHop {
-  url: string;
-  status: number;
-}
-
-export interface NetworkRequest {
+export interface NetworkInstance {
+  id: string;
+  groupId: string;
   method: string;
   url: string;
   status: number;
-  durationMs?: number;
-  resourceType?: string;
   offsetMs?: number;
+  durationMs?: number;
+  timings?: NetworkTimingBreakdown;
   traceId?: string;
   spanId?: string;
-  requestBody?: string;
-  responseBody?: string;
+  requestId?: string;
+  correlationId?: string;
+  requestBodyRef?: string;
+  responseBodyRef?: string;
+  redirectFromId?: string;
+  redirectToId?: string;
+}
+
+export interface NetworkGroup {
+  id: string;
+  method: string;
+  url: string;
+  status: number;
+  resourceType?: string;
   failureText?: string;
   wasAborted?: boolean;
-  redirectFromUrl?: string;
-  redirectToUrl?: string;
-  redirectChain?: NetworkRedirectHop[];
-  timings?: NetworkTimingBreakdown;
-  requestHeaders?: Record<string, string>;
-  responseHeaders?: Record<string, string>;
+  occurrenceCount: number;
+  retainedInstanceCount: number;
+  suppressedInstanceCount: number;
+  evictedInstanceCount: number;
+  firstOffsetMs?: number;
+  lastOffsetMs?: number;
+  fingerprint: string;
+}
+
+export interface NetworkBody {
+  id: string;
+  content: string;
+  contentType?: string;
+  truncated: boolean;
+  canonicalized: boolean;
+  fingerprint: string;
+}
+
+export interface NetworkSummary {
+  observedInstances: number;
+  retainedInstances: number;
+  retainedGroups: number;
+  retainedBodies: number;
+  instancesDroppedByFilter: number;
+  instancesDroppedByGroupCap: number;
+  instancesDroppedByInstanceCap: number;
+  instancesSuppressedAsDuplicate: number;
+  instancesEvictedAfterAdmission: number;
+  bodiesOmittedByBodyCap: number;
+  bodiesTruncated: number;
+  bodiesCanonicalized: number;
+}
+
+export interface NetworkReport {
+  summary: NetworkSummary;
+  instances: NetworkInstance[];
+  groups: Record<string, NetworkGroup>;
+  bodies: Record<string, NetworkBody>;
 }
 
 export interface FailureArtifacts {
@@ -112,15 +153,10 @@ export interface TimelineStepEntry {
 export interface TimelineNetworkEntry {
   kind: "network";
   offsetMs: number;
+  networkId: string;
   method: string;
   url: string;
   status: number;
-  durationMs?: number;
-  resourceType?: string;
-  traceId?: string;
-  spanId?: string;
-  failureText?: string;
-  wasAborted?: boolean;
 }
 
 export interface TimelineConsoleEntry {
@@ -144,7 +180,7 @@ export interface AttemptResult {
   stdout: string;
   stderr: string;
   attachments: TestAttachment[];
-  network: NetworkRequest[];
+  network: NetworkReport;
   consoleMessages: ConsoleEntry[];
   timeline: TimelineEntry[];
   failureArtifacts?: FailureArtifacts;
@@ -168,7 +204,7 @@ export interface LlmTestEntry {
   attempts: AttemptResult[];
   error?: TestError;
   steps?: FlatStep[];
-  network?: NetworkRequest[];
+  network?: NetworkReport;
   timeline: TimelineEntry[];
 }
 
@@ -177,7 +213,7 @@ export interface LlmReporterOptions {
 }
 
 export interface LlmTestReport {
-  schemaVersion: 2;
+  schemaVersion: 3;
   timestamp: string;
   durationMs: number;
   summary: TestSummary;

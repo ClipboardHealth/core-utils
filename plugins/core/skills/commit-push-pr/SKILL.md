@@ -7,10 +7,18 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
+- Commits ahead of default branch: !`git log --oneline origin/HEAD..HEAD 2>/dev/null || echo "(unknown)"`
+- Existing PR: !`gh pr view --json url --jq .url 2>/dev/null || echo "none"`
 - Diff summary: !`git diff HEAD --stat`
 - Full diff: !`git diff HEAD`
 
 ## Your task
+
+**First, decide from the context above. If `Commits ahead of default branch` is `(unknown)`, skip this decision and use the full flow below.**
+
+- If `Git status` is empty AND `Commits ahead of default branch` is empty AND `Existing PR` is `none`: stop. Reply with `nothing to ship.` and do nothing else.
+- If `Git status` is empty but there are `Commits ahead of default branch` or an `Existing PR`: skip step 2 only (no changes to commit). Still run step 1 — its "if on main" check needs to fire so local commits on main are moved to a new branch rather than pushed directly to main. Then continue with step 3 and step 4.
+- Otherwise: proceed with all steps below.
 
 Based on the above changes:
 
