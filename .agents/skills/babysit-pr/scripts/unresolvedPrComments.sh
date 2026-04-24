@@ -11,8 +11,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=parseNitpicks.sh
 source "${SCRIPT_DIR}/parseNitpicks.sh"
-
-SENTINEL='<!-- babysit-pr:addressed v1 -->'
+# shellcheck source=_sentinel.sh
+source "${SCRIPT_DIR}/_sentinel.sh"
 
 exec 3>&1
 
@@ -283,7 +283,7 @@ main() {
     ]
   ')"
 
-  # Flattened unresolved_comments (retained for backward compat with the prose summary).
+  # Flattened unresolved_comments — retained for backward compat with the prose summary.
   # Includes comments from "active" AND "uncertain" threads so the agent never misses new feedback.
   local all_unresolved
   all_unresolved="$(printf '%s' "$threads_json" | jq '[
@@ -300,40 +300,45 @@ main() {
       }
   ]')"
 
-  # Filter out fixed code-scanning alerts from github-advanced-security
-  local unresolved_comments="[]"
-  local count
-  count="$(printf '%s' "$all_unresolved" | jq 'length')"
+  # Filter out fixed code-scanning alerts from github-advanced-security.
+  # Two-pass: collect unique alert numbers, query each once, then drop matching
+  # comments in a single jq pass. Avoids the O(N²) rebuild and duplicate gh api
+  # calls the naive per-comment loop would incur.
+  # github-advanced-security posts under either login depending on account type
+  # (app vs direct) — both forms match below.
+  local security_alerts
+  security_alerts="$(printf '%s' "$all_unresolved" | jq -r '
+    .[]
+    | select(.author == "github-advanced-security" or .author == "github-advanced-security[bot]")
+    | try (.body | capture("/code-scanning/(?<n>[0-9]+)") | .n)
+  ' | sort -u)"
 
-  local i=0
-  while [ "$i" -lt "$count" ]; do
-    local comment
-    comment="$(printf '%s' "$all_unresolved" | jq ".[$i]")"
-    local comment_author
-    comment_author="$(printf '%s' "$comment" | jq -r '.author')"
-
-    local keep=true
-    # GitHub Advanced Security's bot posts under either login depending on account
-    # type (app installation vs. direct). Match both forms.
-    case "$comment_author" in
-      "github-advanced-security"|"github-advanced-security[bot]")
-        local comment_body alert_number
-        comment_body="$(printf '%s' "$comment" | jq -r '.body')"
-        alert_number="$(extract_code_scanning_alert_number "$comment_body")"
-        if [ -n "$alert_number" ]; then
-          if is_code_scanning_alert_fixed "$owner" "$repo" "$alert_number"; then
-            keep=false
-          fi
-        fi
-        ;;
-    esac
-
-    if [ "$keep" = true ]; then
-      unresolved_comments="$(printf '%s' "$unresolved_comments" | jq --argjson c "$comment" '. + [$c]')"
+  local fixed_alerts="" alert_number
+  for alert_number in $security_alerts; do
+    if is_code_scanning_alert_fixed "$owner" "$repo" "$alert_number"; then
+      fixed_alerts="${fixed_alerts} ${alert_number}"
     fi
-
-    i=$((i + 1))
   done
+
+  local unresolved_comments
+  if [ -z "$fixed_alerts" ]; then
+    unresolved_comments="$all_unresolved"
+  else
+    # capture() on a non-matching string produces ZERO outputs (not null, not an
+    # error). Without the `// null` guard below, `as $n` would bind to nothing
+    # and the map entry would silently collapse to empty — dropping
+    # github-advanced-security comments that reference no code-scanning URL.
+    unresolved_comments="$(printf '%s' "$all_unresolved" | jq --arg fixed "$fixed_alerts" '
+      ($fixed | split(" ") | map(select(length > 0))) as $fixedSet
+      | map(
+          . as $c
+          | if ($c.author == "github-advanced-security" or $c.author == "github-advanced-security[bot]") then
+              (((try ($c.body | capture("/code-scanning/(?<n>[0-9]+)") | .n)) // null)) as $n
+              | if ($n != null and ($n | IN($fixedSet[]))) then empty else $c end
+            else $c end
+        )
+    ')"
+  fi
 
   # Nitpicks from coderabbit review bodies
   local reviews_json
