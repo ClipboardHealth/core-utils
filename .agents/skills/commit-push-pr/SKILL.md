@@ -17,7 +17,7 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 **First, decide from the context above. If `Commits ahead of default branch` is `(unknown)`, skip this decision and use the full flow below.**
 
 - If `Git status` is empty AND `Commits ahead of default branch` is empty AND `Existing PR` is `none`: stop. Reply with `nothing to ship.` and do nothing else.
-- If `Git status` is empty but there are `Commits ahead of default branch` or an `Existing PR`: skip steps 1 and 2 below. Go straight to step 3 (push if needed) and step 4 (PR reconciliation).
+- If `Git status` is empty but there are `Commits ahead of default branch` or an `Existing PR`: skip step 2 only (no changes to commit). Still run step 1 — its "if on main" check needs to fire so local commits on main are moved to a new branch rather than pushed directly to main. Then continue with step 3 and step 4.
 - Otherwise: proceed with all steps below.
 
 Based on the above changes:
