@@ -7,17 +7,14 @@ Clipboard's core development tools.
 - [Installation](#installation)
 - [Prerequisites](#prerequisites)
 - [Skills](#skills)
+  - [babysit-pr](#babysit-pr)
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
-  - [fix-ci](#fix-ci)
   - [flaky-test-debugger](#flaky-test-debugger)
-  - [iterate-pr](#iterate-pr)
-  - [learn-from-session](#learn-from-session)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
-  - [unresolved-pr-comments](#unresolved-pr-comments)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
   - [Keeping in sync](#keeping-in-sync)
@@ -37,7 +34,7 @@ Clipboard's core development tools.
 ## Prerequisites
 
 - [GitHub CLI](https://cli.github.com/) (`gh`) — used by CI check and PR skills
-- GNU coreutils `timeout` — used by `iterate-pr` for CI watch timeout
+- GNU coreutils `timeout` — used by `babysit-pr` for CI watch timeout
 
   ```bash
   # macOS (via Homebrew)
@@ -45,6 +42,10 @@ Clipboard's core development tools.
   ```
 
 ## Skills
+
+### babysit-pr
+
+Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize CodeRabbit review-body comments. Invoke with `/babysit-pr` (one pass) or `/babysit-pr 2m` (best-effort same-turn polling).
 
 ### cognito-user-analysis
 
@@ -58,21 +59,9 @@ Commit changes, push to origin, and create a PR in one step. Invoke with `/commi
 
 Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase. Invoke with `/datadog-investigate` or by mentioning production errors, latency spikes, error rates, or trace IDs.
 
-### fix-ci
-
-Analyze and fix CI failures for a GitHub pull request. Invoke with `/fix-ci` or `/fix-ci <pr-url>`.
-
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
-
-### iterate-pr
-
-Autonomously iterate on a pull request until CodeRabbit review passes and all CI checks succeed. Each iteration commits changes, waits for CI, and addresses feedback. Invoke with `/iterate-pr` or `/iterate-pr <max-iterations>`.
-
-### learn-from-session
-
-Analyze the current session for agent efficiency, quality, and actionable improvements. Produces scored dimensions, a session reflection, and concrete suggestions for CLAUDE.md updates, hooks, skills, and prompt techniques. Invoke with `/learn-from-session`.
 
 ### local-package
 
@@ -87,10 +76,6 @@ Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HC
 ### simplify
 
 Review all changed files for reuse, quality, and efficiency, then fix any issues found. Launches parallel review agents for dead code, library reuse, and code quality. Invoke with `/simplify`.
-
-### unresolved-pr-comments
-
-Fetch and analyze unresolved review comments from a GitHub pull request. Invoke with `/unresolved-pr-comments` or `/unresolved-pr-comments <pr-number>`.
 
 ## Syncing external plugins
 
