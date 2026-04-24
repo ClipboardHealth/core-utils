@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # parseNitpicks.sh — Parse CodeRabbit nitpick comments from PR review bodies.
-# Copied from plugins/core/skills/unresolved-pr-comments/scripts/parseNitpicks.sh
-# with one addition: each emitted nitpick includes a stable `fingerprint` field
+#
+# Each emitted nitpick includes a stable `fingerprint` field
 # (sha256 of file + normalized line range + title + body), so reposted reviews
 # dedupe to the same fingerprint. Source review timestamps are kept as
 # `createdAt` metadata but NOT included in the fingerprint.
 #
-# Sourced by unresolvedPrComments.sh. Requires: jq, perl with Digest::SHA + Encode.
+# Sourced by unresolvedPrComments.sh. Requires: perl with Digest::SHA + Encode.
 
 extract_nitpick_comments() {
   local reviews_json="$1"
@@ -123,10 +123,4 @@ sub trim {
   return $s;
 }
 '
-}
-
-# Extract code scanning alert number from comment body.
-extract_code_scanning_alert_number() {
-  local body="$1"
-  printf '%s' "$body" | perl -ne 'print $1 if m{/code-scanning/(\d+)}'
 }
