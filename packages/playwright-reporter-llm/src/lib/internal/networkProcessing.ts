@@ -151,7 +151,7 @@ function readTraceResourceBody(
   const body: NetworkObservationBody = {
     content: cappedContent,
     truncated,
-    fingerprint: hashBody(cappedContent),
+    fingerprint: hashBody(cappedContent, contentType),
   };
   if (contentType !== undefined) {
     body.contentType = contentType;

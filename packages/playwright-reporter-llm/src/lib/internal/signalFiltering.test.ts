@@ -1,38 +1,7 @@
 import type { ConsoleEntry } from "../types";
-import {
-  appendConsoleEntryWithPriority,
-  canImproveConsoleSignal,
-  isLowSignalStaticAsset,
-} from "./signalFiltering";
+import { appendConsoleEntryWithPriority, isLowSignalStaticAsset } from "./signalFiltering";
 
 const CONSOLE_MESSAGES_CAP = 50;
-
-describe(canImproveConsoleSignal, () => {
-  it("returns true when below cap", () => {
-    expect(canImproveConsoleSignal([])).toBe(true);
-  });
-
-  it("returns true at cap when low-signal entries exist", () => {
-    const messages: ConsoleEntry[] = [
-      { type: "page-closed", text: "msg-0" },
-      ...Array.from({ length: CONSOLE_MESSAGES_CAP - 1 }, (_, index) => ({
-        type: "error",
-        text: `msg-${index + 1}`,
-      })),
-    ];
-
-    expect(canImproveConsoleSignal(messages)).toBe(true);
-  });
-
-  it("returns false at cap when all are high-signal", () => {
-    const messages: ConsoleEntry[] = Array.from({ length: CONSOLE_MESSAGES_CAP }, (_, index) => ({
-      type: "error",
-      text: `msg-${index}`,
-    }));
-
-    expect(canImproveConsoleSignal(messages)).toBe(false);
-  });
-});
 
 describe(appendConsoleEntryWithPriority, () => {
   it("appends when below cap", () => {

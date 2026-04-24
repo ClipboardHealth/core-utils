@@ -67,8 +67,12 @@ export function hashShape(shape: NetworkObservationShape): string {
   return createHash("sha1").update(canonical).digest("hex");
 }
 
-export function hashBody(content: string): string {
-  return createHash("sha1").update(content).digest("hex");
+export function hashBody(content: string, contentType?: string): string {
+  // Include contentType so two bodies with identical bytes but different MIME types do not
+  // collapse into one deduped record (which would otherwise leave the shared record carrying
+  // the first-seen contentType and serve wrong metadata to later instances).
+  const canonical = JSON.stringify([content, contentType ?? null]);
+  return createHash("sha1").update(canonical).digest("hex");
 }
 
 interface ShapeMetadata {
@@ -182,8 +186,11 @@ export class NetworkBuilder {
   }
 
   public finalize(): NetworkReport {
-    this.annotateRedirects();
+    // Sort first so annotateRedirects walks instances in temporal order (offsetMs, then
+    // instanceSequence). Insertion order diverges from temporal order when multiple trace
+    // files are merged, which would otherwise link a redirect to the wrong later instance.
     this.sortInstances();
+    this.annotateRedirects();
 
     this.summary.retainedInstances = this.instancesById.size;
     this.summary.retainedGroups = this.groupsById.size;
@@ -514,7 +521,7 @@ export class NetworkBuilder {
   }
 
   private annotateRedirects(): void {
-    // Called before sortInstances(), so this array is in insertion order.
+    // Runs after sortInstances(), so iteration is in temporal (offsetMs, instanceSequence) order.
     const instances = [...this.instancesById.values()];
     for (const [index, instance] of instances.entries()) {
       const redirectToUrl = this.instanceRedirectToUrl.get(instance.id);

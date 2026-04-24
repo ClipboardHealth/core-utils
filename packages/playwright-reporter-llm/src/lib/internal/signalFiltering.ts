@@ -16,13 +16,6 @@ function isHighSignalConsoleEntry(entry: ConsoleEntry): boolean {
   return HIGH_SIGNAL_CONSOLE_ENTRY_TYPES.has(entry.type);
 }
 
-export function canImproveConsoleSignal(consoleMessages: ConsoleEntry[]): boolean {
-  if (consoleMessages.length < CONSOLE_MESSAGES_CAP) {
-    return true;
-  }
-  return consoleMessages.some((entry) => !isHighSignalConsoleEntry(entry));
-}
-
 export function appendConsoleEntryWithPriority(
   consoleMessages: ConsoleEntry[],
   consoleEntry: ConsoleEntry,

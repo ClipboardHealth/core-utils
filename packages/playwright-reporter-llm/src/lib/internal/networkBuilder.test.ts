@@ -332,29 +332,41 @@ describe(NetworkBuilder, () => {
     });
   });
 
-  describe("re-admission of evicted shape", () => {
-    it("creates a fresh group with reset sampling counter", () => {
+  describe("group eviction cleanup", () => {
+    it("clears group statistics when a group is cascade-evicted via group cap", () => {
+      // When a group is group-cap evicted, its cascaded instance evictions must be counted
+      // on the evicted group's evictedInstanceCount (matching its occurrenceCount) and in the
+      // summary's instancesEvictedAfterAdmission — not carried forward as stale metadata on a
+      // newly-admitted group with the same URL/status/method by coincidence.
       const builder = new NetworkBuilder();
-      // Fill to GROUPS_CAP with low-priority (tier-8) unique URLs.
+      const targetShape = { url: "https://api.example.com/target", status: 400 }; // tier 8
+
+      // Admit target enough times to push past the sampling threshold and into stride territory:
+      // k=1..3 retained, k=4..12 suppressed, k=13 retained. retained=4, suppressed=9.
+      for (let index = 0; index < 13; index += 1) {
+        builder.admit(makeObs(targetShape, { offsetMs: index }));
+      }
+
+      // Fill groups to capacity with tier-10 shapes, then add one more to force target eviction.
       for (let index = 0; index < GROUPS_CAP; index += 1) {
         builder.admit(
-          makeObs({ url: `https://api.example.com/e-${index}`, status: 400 }, { offsetMs: index }),
+          makeObs(
+            { url: `https://api.example.com/hi-${index}`, status: 500 },
+            { offsetMs: 10_000 + index },
+          ),
         );
       }
-      // Observe target shape a few times to build up sampling counter.
-      const targetShape = { url: "https://api.example.com/target", status: 400 };
-      for (let index = 0; index < 5; index += 1) {
-        builder.admit(makeObs(targetShape, { offsetMs: 1000 + index }));
-      }
-
-      // Force group eviction by admitting a tier-10 with a brand-new shape, saturating again.
-      // First, saturate groups by adding a tier-10 that evicts the oldest tier-8.
-      builder.admit(
-        makeObs({ url: "https://api.example.com/evictor", status: 503 }, { offsetMs: 2000 }),
-      );
 
       const report = builder.finalize();
-      expect(report.summary.retainedGroups).toBeLessThanOrEqual(GROUPS_CAP);
+
+      // Target group should no longer be retained.
+      expect(Object.values(report.groups).some((g) => g.url === targetShape.url)).toBe(false);
+
+      // All 4 retained target instances should be counted as evicted-after-admission.
+      expect(report.summary.instancesEvictedAfterAdmission).toBeGreaterThanOrEqual(4);
+
+      // Summary accounting must still balance — the 13 target observations all land somewhere
+      // (retained=0 post-eviction, suppressed=9, evicted=4, plus the filler observations).
       assertInvariants(report.summary);
     });
   });
@@ -548,6 +560,34 @@ describe(NetworkBuilder, () => {
       expect(start?.redirectToId).toBe(laterFinal?.id);
       expect(laterFinal?.redirectFromId).toBe(start?.id);
       expect(earlierFinal?.redirectFromId).toBeUndefined();
+    });
+
+    it("links in temporal order even when admission order is out of order", () => {
+      // Simulates multi-trace merging: the redirect target is admitted BEFORE the redirect
+      // source in admission/insertion order, but its offsetMs is LATER. Pre-fix code walked
+      // insertion order and missed the target; fix sorts by offsetMs+sequence first.
+      const builder = new NetworkBuilder();
+      // Admit the target first (insertion-order index 0), but give it the later offsetMs.
+      builder.admit(
+        makeObs({ url: "https://app.example.com/final", status: 200 }, { offsetMs: 500 }),
+      );
+      // Admit the redirect source second (insertion-order index 1), with the earlier offsetMs.
+      builder.admit(
+        makeObs(
+          { url: "https://app.example.com/start", status: 302 },
+          { offsetMs: 100, redirectToUrl: "https://app.example.com/final" },
+        ),
+      );
+
+      const report = builder.finalize();
+      const start = report.instances.find(
+        (instance) => instance.url === "https://app.example.com/start",
+      );
+      const final = report.instances.find(
+        (instance) => instance.url === "https://app.example.com/final",
+      );
+      expect(start?.redirectToId).toBe(final?.id);
+      expect(final?.redirectFromId).toBe(start?.id);
     });
   });
 
