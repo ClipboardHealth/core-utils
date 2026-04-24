@@ -7,15 +7,17 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
+- Commits to push: !`git log --oneline @{u}..HEAD 2>/dev/null || echo "(no upstream)"`
+- Existing PR: !`gh pr view --json url --jq .url 2>/dev/null || echo "none"`
 - Diff summary: !`git diff HEAD --stat`
 - Full diff: !`git diff HEAD`
 
 ## Your task
 
-**First, check the `Git status` context above:**
+**First, decide from the context above:**
 
-- If it's empty AND the branch has no commits ahead of main (nothing to push, no existing PR): stop. Reply with `nothing to ship.` and do nothing else.
-- If it's empty but the branch has commits not yet on origin or an existing PR: skip steps 1 and 2 below. Go straight to step 3 (push if needed) and step 4 (PR reconciliation).
+- If `Git status` is empty AND `Commits to push` is empty or `(no upstream)` AND `Existing PR` is `none`: stop. Reply with `nothing to ship.` and do nothing else.
+- If `Git status` is empty but there are `Commits to push` or an `Existing PR`: skip steps 1 and 2 below. Go straight to step 3 (push if needed) and step 4 (PR reconciliation).
 - Otherwise: proceed with all steps below.
 
 Based on the above changes:
