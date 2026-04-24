@@ -188,7 +188,7 @@ For every thread in `activeThreads` (this includes both `"active"` and `"uncerta
 - If `activityState == "uncertain"`, read EVERY entry in `postSentinelBotComments` (not just the newest):
   - If EVERY entry is a non-actionable acknowledgement → mark the thread **Skip-reply** (the existing sentinel already covers the thread; posting again would be noise). Do not classify it Agree/Disagree/Already-fixed. Record this in the final summary so the skip is visible.
   - If ANY entry carries new actionable content → treat the thread as new feedback and proceed below. Note in the final summary that an uncertain thread was reactivated, citing the specific comment.
-- For each remaining thread (i.e., NOT marked Skip-reply), **classify scope first** using the Scope subsection: in-scope or out-of-scope. For comments on deleted lines, record that the anchor is on the removed side of the diff. For any unchanged/context-line comment classified in scope via the narrow escape hatch, record the external signal and the changed `file:line` when applicable.
+- Each remaining thread (i.e., NOT marked Skip-reply) gets a scope classification first. Use the Scope subsection to label it in-scope or out-of-scope. For comments on deleted lines, record that the anchor is on the removed side of the diff. For any unchanged/context-line comment classified in scope via the narrow escape hatch, record the external signal and the changed `file:line` when applicable.
 - Then pick one verdict — each of these (except Skip-reply) will get a reply posted in step 9:
   - **In-scope** threads use the original three verdicts:
     - **Agree** — the comment identifies a real issue. Apply the fix. Record the thread ID and a one-line what-changed.
