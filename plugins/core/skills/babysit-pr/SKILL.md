@@ -1,7 +1,7 @@
 ---
 name: babysit-pr
-description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed CodeRabbit review-body comments with sentinel-tagged comments. Runs once by default; pass a short interval like `30s` or `2m` for best-effort same-turn polling; longer cadences should use an external loop wrapper. Use when the user says 'babysit my PR', 'watch my PR', 'keep my PR moving', 'respond to comments', or 'loop on CI'."
-argument-hint: "[interval]"
+description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed CodeRabbit review-body comments with sentinel-tagged comments. Runs one pass against the current branch's PR; pass a PR number or URL to `gh pr checkout` that PR first. Use when the user says 'babysit my PR', 'babysit PR 482', 'watch my PR', 'keep my PR moving', or 'respond to comments'."
+argument-hint: "[pr-number-or-url]"
 ---
 
 # Babysit PR
@@ -12,22 +12,16 @@ This skill is self-contained: it does not invoke other skills. It works in Claud
 
 ## Inputs
 
-Parse an optional interval from the invocation arguments if the host exposes them; otherwise read the user's request text.
+Parse an optional PR number or URL from the invocation arguments if the host exposes them; otherwise read the user's request text. Parse in **this priority order** and stop at the first match — do not fall back to a generic "first integer in prose" regex, which would grab unrelated numbers (issue refs, quoted counts, etc.):
 
-Recognize intervals with this regex (case-insensitive):
+1. **Full PR URL** — if `$ARGUMENTS` or the user's text contains `https?://github\.com/[^/\s]+/[^/\s]+/pull/\d+`, capture the URL and pass it to `gh pr checkout` as-is.
+2. **Explicit PR token** — match `(?:PR|pr|pull request)\s*#?(\d+)` or a bare `#(\d+)` in the user's text. Capture the numeric group.
+3. **Bare numeric argument** — only when the entire `$ARGUMENTS` string is a positive integer (no surrounding prose).
+4. **None of the above** — operate on the PR for the current branch (existing Step 2 behavior).
 
-```regex
-\b(\d+)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)\b
-```
+When a match is found, the checkout happens in Preflight before Step 2.
 
-Rules:
-
-- If multiple matches appear in the user's text, take the **first** match.
-- Accept a bare number as seconds **only** when the bare number is the entire argument (not embedded in prose).
-- Normalize to seconds: `s*=1`, `m*=60`, `h*=3600`.
-- Empty → one iteration, then exit with a summary.
-- Normalized `<= 240` → best-effort same-turn loop: `sleep <seconds>` between iterations.
-- Normalized `> 240` → run one pass, then report that longer cadences need an external loop wrapper (the Claude Code `/loop` skill or a shell `while` loop outside the agent). Do not sleep inside the agent turn — blocking `sleep` past ~5 minutes will exceed prompt-cache TTLs and may hit tool-call timeouts.
+This skill always runs exactly one pass. It never waits or repeats internally. For recurring execution, wrap the call with `/loop <cadence> /babysit-pr` or an external shell `while` loop.
 
 ## Sentinels
 
@@ -72,11 +66,21 @@ gh auth status
 
 If this fails, stop and tell the user to run `gh auth login`.
 
+If a PR number or URL was parsed from Inputs, check out that PR now:
+
+```bash
+gh pr checkout <pr-number-or-url>
+```
+
+This switches the local worktree to the PR's head branch (and handles forks automatically). If the command fails (PR not found, conflicting local branch, etc.), stop and report. The `git status --short` check above runs first so we never check out over dirty work.
+
 ### 2. Locate the PR
 
 ```bash
 gh pr view --json number,url,headRefName,statusCheckRollup 2>/dev/null
 ```
+
+If Preflight checked out a PR explicitly, `gh pr view` will find it by construction and the fallback below does not apply. The fallback only fires when no PR number was supplied and the current branch has no open PR.
 
 If no PR exists for the current branch:
 
@@ -278,7 +282,7 @@ Report:
 - Review threads replied to, grouped by verdict (including any Defer count: "X threads deferred as follow-ups").
 - Nitpicks summarized (or skipped because already covered), including the Deferred count: "Y nitpicks deferred as follow-ups".
 - Threads left active because of bot-acknowledgement uncertainty (flag by thread URL).
-- The stop condition triggered for this iteration (clean / stuck / continue / long-interval / sanity-cap).
+- The stop condition triggered for this pass (clean / progressing / stuck).
 
 When the report mentions any deferrals, include a one-liner the user can run later to enumerate them, e.g.:
 
@@ -290,20 +294,18 @@ Do not rely only on `gh pr view --json comments,reviews` — that view can miss 
 
 ## Loop control
 
-After an iteration, pick exactly one outcome:
+After the single pass completes, pick exactly one outcome:
 
-- **Exit clean** — all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6's inspection or has already received a fresh sentinel reply in this iteration (Agree / Disagree / Already-fixed / **Defer** all count — a Defer reply is a sentinel reply), AND every current nitpick fingerprint is covered by an existing sentinel comment (deferred nitpicks count; they're in the summary's fingerprint block). Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. A PR with Deferred threads is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
-- **Exit stuck** — iteration made no commits, posted no new replies, and no CI check changed state from the previous iteration. Report state and stop; tell the user to investigate.
-- **Continue** — interval set, normalized `<= 240`, not clean, not stuck:
+- **Exit clean** — all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6's inspection or has already received a fresh sentinel reply in this pass (Agree / Disagree / Already-fixed / **Defer** all count — a Defer reply is a sentinel reply), AND every current nitpick fingerprint is covered by an existing sentinel comment (deferred nitpicks count; they're in the summary's fingerprint block). Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. A PR with Deferred threads is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
+- **Exit progressing** — pass made commits, posted new replies, or both, and the PR is not yet clean (CI is still pending, a new CI run was triggered by this pass's commits, or more work remains). There is real work still in flight that another run would pick up. Report what was done and what is pending, and tell the user to re-run `/babysit-pr` once CI settles, or to wrap the call with `/loop <cadence> /babysit-pr` (or a shell `while true; do ...; done`) for automatic re-runs.
+- **Exit stuck** — pass made no commits and posted no new replies, and the PR is still not clean. Nothing actionable happened this pass. Use this whenever progress is blocked on something outside the skill's scope, including:
+  - CI still running (`gh pr checks --watch` timed out with pending checks).
+  - CI failing with a diagnosis-only verdict from Step 5 (flaky / infra / auth / external check / ambiguous / out-of-scope failure).
+  - Only Skip-reply threads remained AND CI was already red or pending.
 
-  ```bash
-  sleep <interval-seconds>
-  ```
+  Report the specific blocker (pending vs. diagnosed-failure, with the diagnosis text) and tell the user to investigate or re-run once state may have changed.
 
-  Then go back to step 1.
-
-- **Long interval** — interval set, normalized `> 240`. Do not sleep. Run one pass, report state, and tell the user to wrap the call in an external loop (Claude Code `/loop <interval> /babysit-pr` or a shell `while true; do ...; sleep ...; done`).
-- **Sanity cap** — hard-stop at 20 iterations regardless, with a clear "sanity cap hit" message. The cap only applies to internal looping.
+This skill never waits or repeats internally.
 
 ## Portability notes
 
@@ -319,20 +321,22 @@ After an iteration, pick exactly one outcome:
 
 User: `babysit my PR`
 
-- No interval → one iteration.
+- No PR arg → operate on the current branch.
 - Preflight OK, PR #482 found.
 - `gh pr checks --watch` times out at 600s — two checks still pending.
 - `unresolvedPrComments.sh` returns 0 active threads, 0 nitpicks.
 - No commits, no replies posted, CI state unchanged vs. start.
-- Outcome: **stuck**. Report: "CI still running after 10 min; no comments to address. Re-run `/babysit-pr 2m` once CI settles, or wait and invoke again."
+- Outcome: **stuck**. Report: "CI still running after 10 min; no comments to address. Re-run `/babysit-pr` once CI settles, or wrap with `/loop 2m /babysit-pr`."
 
-### Example 2: `babysit-pr 2m` loop, exits clean on iteration 3
+### Example 2: explicit PR number checks out and babysits that PR
 
-User: `babysit-pr 2m`
+User: `babysit PR 482`
 
-- Iteration 1: CI green, 3 active threads (1 Agree, 1 Disagree, 1 Already-fixed), 2 nitpicks (both Agree). Apply fixes, commit `a1b2c3d`, post 3 thread replies + 1 nitpick summary. Not clean (CI needs to re-run), not stuck. `sleep 120`.
-- Iteration 2: CI fails (lint on the nitpick fix). Log shows unused import. High-confidence + in scope → remove import, commit `d4e5f6a`, push. Threads are all addressed. `sleep 120`.
-- Iteration 3: CI green, 0 active threads, 0 new nitpick fingerprints. **Exit clean.** Report final commit SHAs and reply URLs.
+- Preflight OK. Input parser matches the explicit-token rule and captures `482`.
+- `gh pr checkout 482` switches the worktree to PR #482's head branch (say, `feat/xyz`).
+- Step 2's `gh pr view` confirms PR #482 on the now-current branch; the new-PR fallback does not fire.
+- Remainder proceeds as a normal single pass (CI watch, thread / nitpick assessment, replies).
+- Report final state on exit.
 
 ### Example 3: out-of-scope nitpick gets deferred
 
@@ -353,4 +357,4 @@ User: `babysit my PR`
 
 ## Input
 
-Interval: $ARGUMENTS
+PR number or URL: $ARGUMENTS
