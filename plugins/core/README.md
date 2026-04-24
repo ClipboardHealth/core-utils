@@ -12,7 +12,6 @@ Clipboard's core development tools.
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
-  - [learn-from-session](#learn-from-session)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
@@ -48,8 +47,6 @@ Clipboard's core development tools.
 
 Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize CodeRabbit review-body comments. Invoke with `/babysit-pr` (one pass) or `/babysit-pr 2m` (best-effort same-turn polling).
 
-Supersedes the deprecated `fix-ci`, `iterate-pr`, and `unresolved-pr-comments` skills.
-
 ### cognito-user-analysis
 
 Analyze and fix duplicate Cognito users by comparing against backend data. Useful for diagnosing 403 Forbidden errors, duplicate accounts sharing phone/email, and orphaned UNCONFIRMED signups. Invoke with `/cognito-user-analysis`.
@@ -65,10 +62,6 @@ Investigate production issues by querying Datadog logs, metrics, and APM traces,
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
-
-### learn-from-session
-
-Analyze the current session for agent efficiency, quality, and actionable improvements. Produces scored dimensions, a session reflection, and concrete suggestions for CLAUDE.md updates, hooks, skills, and prompt techniques. Invoke with `/learn-from-session`.
 
 ### local-package
 
