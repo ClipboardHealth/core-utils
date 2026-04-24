@@ -148,7 +148,7 @@ Default posture: focus on in-scope feedback. For out-of-scope feedback, apply th
 - Obvious correctness bug (wrong output, broken invariant) confirmed by reading the referenced code.
 - One-line or trivial change that obviously cannot regress anything (typo, missing null check matching surrounding style, etc.).
 
-**Everything else → Defer**: post a Defer reply tagged with the follow-up sentinel (see step 9). Do not expand the PR.
+**Everything else → Defer** (for out-of-scope fix requests that miss the bar): post a Defer reply tagged with the follow-up sentinel (see step 9). Do not expand the PR. Disagree and Already-fixed still apply to out-of-scope comments when the reviewer is wrong or the concern is already handled elsewhere; Defer is specifically for "this is a real but out-of-scope ask we are choosing not to act on here."
 
 ### 5. Handle CI failures (conservative)
 
