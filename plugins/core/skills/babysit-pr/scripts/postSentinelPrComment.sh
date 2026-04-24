@@ -8,7 +8,9 @@
 
 set -euo pipefail
 
-SENTINEL='<!-- babysit-pr:addressed v1 -->'
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=_sentinel.sh
+source "${SCRIPT_DIR}/_sentinel.sh"
 
 if [ $# -lt 2 ]; then
   printf '{"error":"Usage: postSentinelPrComment.sh <pr-number> <body>"}\n' >&2
@@ -27,14 +29,7 @@ if [ -z "$BODY" ]; then
   exit 2
 fi
 
-case "$BODY" in
-  *"$SENTINEL") ;;
-  *)
-    BODY="${BODY}
-
-${SENTINEL}"
-    ;;
-esac
+BODY="$(ensure_sentinel "$BODY")"
 
 repo_json="$(gh repo view --json owner,name 2>/dev/null)" || {
   printf '{"error":"Could not determine repository."}\n' >&2
