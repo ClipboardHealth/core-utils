@@ -57,7 +57,8 @@ describe(collectTraceDiagnosticsFromAttachments, () => {
 
     const result = collectTraceDiagnosticsFromAttachments([tracePath], 1_767_225_600_000);
 
-    expect(result.networkRequests.length).toBeGreaterThan(0);
+    expect(result.network.instances.length).toBeGreaterThan(0);
+    expect(result.network.summary.observedInstances).toBe(result.network.instances.length);
     expect(result.consoleMessages).toContainEqual({ type: "error", text: "trace error" });
   });
 
@@ -70,8 +71,9 @@ describe(collectTraceDiagnosticsFromAttachments, () => {
     });
 
     const result = collectTraceDiagnosticsFromAttachments([tracePath], 0);
+    const bodyContents = Object.values(result.network.bodies).map((body) => body.content);
 
-    expect(result.networkRequests[0]?.requestBody).toBe('{"request":"compressed"}');
+    expect(bodyContents).toContain('{"request":"compressed"}');
     expect(result.consoleMessages).toContainEqual({ type: "warning", text: "deflated warning" });
   });
 
@@ -88,24 +90,24 @@ describe(collectTraceDiagnosticsFromAttachments, () => {
     expect(result.consoleMessages).toContainEqual({ type: "pageerror", text: "page exploded" });
   });
 
-  it("returns empty when trace is an invalid zip", () => {
+  it("returns empty report when trace is an invalid zip", () => {
     const invalidPath = path.join(temporaryDirectory, "invalid.zip");
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(invalidPath, "not a zip archive");
 
     const result = collectTraceDiagnosticsFromAttachments([invalidPath], 0);
 
-    expect(result.networkRequests).toStrictEqual([]);
+    expect(result.network.instances).toStrictEqual([]);
     expect(result.consoleMessages).toStrictEqual([]);
   });
 
-  it("returns empty when trace file does not exist", () => {
+  it("returns empty report when trace file does not exist", () => {
     const result = collectTraceDiagnosticsFromAttachments(
       [path.join(temporaryDirectory, "missing.zip")],
       0,
     );
 
-    expect(result.networkRequests).toStrictEqual([]);
+    expect(result.network.instances).toStrictEqual([]);
     expect(result.consoleMessages).toStrictEqual([]);
   });
 

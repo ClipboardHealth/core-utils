@@ -57,18 +57,19 @@ Report: test-results/llm-report.json
 | Triage failures              | Filter `tests[]` by `status === "failed"`, then read `errors[0].{message,diff,location,snippet}`                                                                 |
 | Identify flakes              | Filter `tests[]` by `flaky === true`; compare `attempts[]` statuses                                                                                              |
 | Reconstruct failure timeline | Pick an attempt where `status !== "passed"` (for flakes this is NOT the last attempt), then read `.timeline[]` (steps + network + console, sorted by `offsetMs`) |
-| Inspect failing requests     | `tests[].attempts[].network[]` — filter by `status >= 400`, `failureText`, or `wasAborted`                                                                       |
-| Correlate with backend trace | `tests[].attempts[].network[].traceId` and `.spanId` (parsed from W3C `traceparent` — works with OpenTelemetry, Datadog, Jaeger, Tempo, Honeycomb, etc.)         |
+| Inspect failing requests     | `tests[].attempts[].network.instances[]` — filter by `status >= 400`, or join `groups[groupId].{failureText,wasAborted}`                                         |
+| Look up request body         | `tests[].attempts[].network.bodies[instance.requestBodyRef \| instance.responseBodyRef]`                                                                         |
+| Correlate with backend trace | `tests[].attempts[].network.instances[].traceId` / `.spanId` / `.requestId` / `.correlationId`                                                                   |
 | Debug uncaught page errors   | `tests[].attempts[].consoleMessages[]` — filter by `type` in `"error" \| "pageerror" \| "page-crashed"`                                                          |
 | Visual debugging             | `tests[].attempts[].failureArtifacts.{screenshotBase64,videoPath}`                                                                                               |
 
 ### Minimal failure example
 
-Walk `attempts[].timeline[]` (steps + network + console, sorted by `offsetMs`) to reconstruct the failure:
+Walk `attempts[].timeline[]` (steps + network + console, sorted by `offsetMs`) to reconstruct the failure. Each timeline network entry carries a `networkId` you can resolve against `attempts[].network.instances[]` for full per-request detail and `attempts[].network.groups[]` / `bodies[]` for shared shape/payload context:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "summary": {
     "total": 10,
     "passed": 9,
@@ -109,11 +110,10 @@ Walk `attempts[].timeline[]` (steps + network + console, sorted by `offsetMs`) t
             {
               "kind": "network",
               "offsetMs": 1100,
+              "networkId": "n3",
               "method": "POST",
               "url": "https://api.example.com/discount",
-              "status": 500,
-              "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
-              "spanId": "00f067aa0ba902b7"
+              "status": 500
             },
             {
               "kind": "console",
@@ -138,7 +138,7 @@ Walk `attempts[].timeline[]` (steps + network + console, sorted by `offsetMs`) t
 }
 ```
 
-Reads as: click Apply → backend returned 500 → page threw → assertion failed. `traceId` lets you correlate the 500 with your tracing backend (Datadog, Jaeger, Tempo, Honeycomb, etc.).
+Reads as: click Apply → backend returned 500 → page threw → assertion failed. Resolve `networkId: "n3"` against `attempts[0].network.instances` for per-request `traceId` / `spanId` / `requestId` / body refs; `groups[instance.groupId]` holds the shape and aggregate counts (occurrences, first/last offset).
 
 ### Flaky test example (pass-vs-fail comparison)
 
@@ -167,6 +167,7 @@ For a test that fails on attempt 1 and passes on attempt 2, the divergence betwe
             {
               "kind": "network",
               "offsetMs": 950,
+              "networkId": "n0",
               "method": "GET",
               "url": "https://api.example.com/cart",
               "status": 200
@@ -197,6 +198,7 @@ For a test that fails on attempt 1 and passes on attempt 2, the divergence betwe
             {
               "kind": "network",
               "offsetMs": 950,
+              "networkId": "n0",
               "method": "GET",
               "url": "https://api.example.com/cart",
               "status": 200
@@ -204,6 +206,7 @@ For a test that fails on attempt 1 and passes on attempt 2, the divergence betwe
             {
               "kind": "network",
               "offsetMs": 1100,
+              "networkId": "n1",
               "method": "GET",
               "url": "https://api.example.com/inventory",
               "status": 200
@@ -242,9 +245,14 @@ See [`docs/example-report.json`](./docs/example-report.json) for a complete repo
 - **`tests[].steps` / `tests[].network` / `tests[].timeline`** -- convenience aliases from the final attempt
 - **`tests[].attempts[].timeline[]`** -- unified, sorted-by-`offsetMs` array of all retained events (`kind: "step" | "network" | "console"`). Slimmed-down entries for quick temporal scanning; full details remain in the source arrays
 - **`offsetMs`** -- milliseconds since the attempt's `startTime`. Always present on steps (from `TestStep.startTime`). Optional on network entries (from trace `_monotonicTime` or `startedDateTime`, converted via the trace's `context-options` anchor) and console entries (from trace monotonic `time` field + anchor). Absent when the trace lacks a `context-options` event. Entries without `offsetMs` are excluded from the timeline
-- **`tests[].attempts[].network[].traceId`** / **`spanId`** -- parsed from the W3C Trace Context [`traceparent`](https://www.w3.org/TR/trace-context/) header (preferring response over request). `traceId` is 32 hex chars (128-bit), `spanId` is 16 hex chars (64-bit). Compatible with OpenTelemetry and Datadog (dd-trace ≥ 2.0 emits `traceparent` by default). Malformed or all-zero values are rejected.
-- **`tests[].attempts[].network[]`** -- max 200 per attempt, priority-based: fetch/xhr requests, error responses (status >= 400), failed, and aborted requests are retained over static assets (script, stylesheet, image, font, media). Includes failure details (`failureText`, `wasAborted`), redirect chain (`redirectToUrl`, `redirectFromUrl`, `redirectChain`), timing breakdown (`timings`), `durationMs` derived from available timing components, allowlisted headers (`requestHeaders`, `responseHeaders`), and JSON/text `requestBody` / `responseBody` pulled from the trace archive (capped at 2KB with `[truncated]` marker)
-- **`tests[].attempts[].network[].requestHeaders`** / **`responseHeaders`** -- allowlisted only: `content-type`, `location` (response), `x-request-id`, `x-correlation-id`, `traceparent`, `tracestate`. Values capped at 256 chars.
+- **`tests[].attempts[].network`** -- a three-layer `NetworkReport` that separates _instances_ (what happened), _groups_ (shared shape), and _bodies_ (payloads). Access patterns:
+  - Filter `network.instances[]` by `status`, `redirectFromId`, `traceId`, etc. to find specific occurrences
+  - Scan `network.groups[groupId]` for aggregate shape info (`resourceType`, `failureText`, `wasAborted`, `occurrenceCount`, `retainedInstanceCount`, `suppressedInstanceCount`, `evictedInstanceCount`, `firstOffsetMs`, `lastOffsetMs`)
+  - Resolve `network.bodies[instance.requestBodyRef]` / `[instance.responseBodyRef]` for JSON/text payloads (2KB cap with `[truncated]` marker, `canonicalized: false` in v3.0)
+  - `network.summary` gives end-to-end accounting: `observedInstances === retainedInstances + instancesDroppedByFilter + instancesDroppedByGroupCap + instancesDroppedByInstanceCap + instancesSuppressedAsDuplicate + instancesEvictedAfterAdmission`. For every group, `occurrenceCount === retainedInstanceCount + suppressedInstanceCount + evictedInstanceCount`
+- **Retention policy** -- instances capped at 500, groups at 200, bodies at 100 per attempt. Low-signal static assets (script/stylesheet/image/font/media with 2xx and no failure) are dropped at the filter. Duplicates of the same shape are sampled: first 3 always admit, then 1-in-10. Under pressure, eviction is by priority tier (5xx > actionable connect/DNS/TLS failure > 4xx > successful xhr/fetch > plain aborted > unknown > other known > static asset) with strict `<` — ties reject rather than churn.
+- **`tests[].attempts[].network.instances[].{traceId,spanId,requestId,correlationId}`** -- `traceId` and `spanId` parsed from the W3C Trace Context [`traceparent`](https://www.w3.org/TR/trace-context/) header (preferring response over request); `requestId` and `correlationId` from `x-request-id` / `x-correlation-id`. Compatible with OpenTelemetry and Datadog (dd-trace ≥ 2.0 emits `traceparent` by default). Malformed or all-zero `traceparent` values are rejected.
+- **Redirects** -- `instance.redirectFromId` / `instance.redirectToId` reference sibling instance ids; walk the graph to reconstruct chains.
 - **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path). Omitted entirely when neither screenshot nor video is available
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
