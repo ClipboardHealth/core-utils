@@ -15,7 +15,7 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 **First, check the `Git status` context above:**
 
 - If it's empty AND the branch has no commits ahead of main (nothing to push, no existing PR): stop. Reply with `nothing to ship.` and do nothing else.
-- If it's empty but the branch has unpushed commits or an existing PR: skip steps 1 and 2 below. Go straight to step 3 (push if needed) and step 4 (PR reconciliation).
+- If it's empty but the branch has commits not yet on origin or an existing PR: skip steps 1 and 2 below. Go straight to step 3 (push if needed) and step 4 (PR reconciliation).
 - Otherwise: proceed with all steps below.
 
 Based on the above changes:
