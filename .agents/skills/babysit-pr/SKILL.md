@@ -1,12 +1,12 @@
 ---
 name: babysit-pr
-description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed CodeRabbit nitpicks with sentinel-tagged comments. Runs once by default; pass a short interval like `30s` or `2m` for best-effort same-turn polling; longer cadences should use an external loop wrapper. Use when the user says 'babysit my PR', 'watch my PR', 'keep my PR moving', 'respond to comments', or 'loop on CI'."
+description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed CodeRabbit review-body comments with sentinel-tagged comments. Runs once by default; pass a short interval like `30s` or `2m` for best-effort same-turn polling; longer cadences should use an external loop wrapper. Use when the user says 'babysit my PR', 'watch my PR', 'keep my PR moving', 'respond to comments', or 'loop on CI'."
 argument-hint: "[interval]"
 ---
 
 # Babysit PR
 
-Watch one PR through CI, auto-fix high-confidence failures, and leave a paper-trail reply on every active review thread and CodeRabbit nitpick. Threads stay open for human resolution — this skill only posts replies, it never resolves.
+Watch one PR through CI, auto-fix high-confidence failures, and leave a paper-trail reply on every active review thread and CodeRabbit review-body comment. Threads stay open for human resolution — this skill only posts replies, it never resolves.
 
 This skill is self-contained: it does not invoke other skills. It works in Claude Code and Codex — no subagents, no `Skill` tool calls, no `!` command interpolation, no `$CLAUDE_PLUGIN_ROOT`.
 
@@ -33,7 +33,7 @@ Rules:
 
 The skill uses two HTML-comment sentinels.
 
-**Addressed sentinel**: `<!-- babysit-pr:addressed v1 -->`. Appended on its own line at the end of every reply the skill posts (both thread replies and the nitpick summary). This is how the skill knows, on re-runs, which threads and nitpicks it already handled.
+**Addressed sentinel**: `<!-- babysit-pr:addressed v1 -->`. Appended on its own line at the end of every reply the skill posts (both thread replies and the CodeRabbit summary). This is how the skill knows, on re-runs, which threads and CodeRabbit review-body comments it already handled.
 
 **Follow-up sentinel**: `<!-- babysit-pr:followup v1 -->`. Attached to replies that defer an out-of-scope comment as a tracked follow-up (see the Scope subsection and the Defer verdict in step 6). Grep `babysit-pr:followup` across PR conversation JSON to enumerate deferred items. This sentinel is additive — the post-reply scripts still append the `addressed` sentinel at the end, so a deferred thread is correctly machine-classified as addressed (the skill _has_ handled it — by deferring). Human reviewers and future sweeps distinguish deferred from resolved by looking for the follow-up sentinel.
 
@@ -50,7 +50,7 @@ The skill uses two HTML-comment sentinels.
 
 The bot detection exists ONLY to downgrade the default for post-sentinel bot activity from `"active"` to `"uncertain"`. It NEVER suppresses bot comments or marks a thread `"addressed"` on its own — CodeRabbit's review content would be lost if it did.
 
-For nitpicks, the script emits a stable `fingerprint` per nitpick (sha256 of file + line + title + body, no timestamp). Before posting a nitpick summary, search existing PR issue-comments for a prior babysit-pr sentinel comment that already contains those fingerprints; if every current fingerprint is already present in a prior sentinel comment, skip posting.
+For CodeRabbit review-body comments, the script emits a stable `fingerprint` per comment (sha256 of file + line + title + body, no timestamp). This includes CodeRabbit's Nitpick comments, Minor comments, and Outside diff range comments sections. Before posting a summary, search existing PR issue-comments for a prior babysit-pr sentinel comment that already contains those fingerprints; if every current fingerprint is already present in a prior sentinel comment, skip posting.
 
 ## One iteration
 
@@ -119,14 +119,14 @@ The output JSON has:
 - `threads`: every unresolved review thread, with `threadId`, `replyToCommentDatabaseId`, `comments[]`, `lastBabysitSentinelAt`, `lastHumanCommentAt`, `lastBotCommentAt`, `postSentinelBotComments[]`, `postSentinelHumanComments[]`, and `activityState` (`"active"` / `"uncertain"` / `"addressed"`).
 - `activeThreads`: threads where `activityState != "addressed"` — these need attention this iteration (active AND uncertain).
 - `uncertainThreads`: just the uncertain subset. For each, read EVERY entry in `postSentinelBotComments` before deciding.
-- `nitpickComments`: parsed CodeRabbit nitpicks, each with a stable `fingerprint`.
+- `nitpickComments`: parsed CodeRabbit review-body comments, each with a stable `fingerprint`. The field name is retained for compatibility, but it includes Nitpick comments, Minor comments, and Outside diff range comments.
 - `totalActiveThreads`, `totalUncertainThreads`, `totalNitpicks`, `totalUnresolvedComments` for quick checks.
 
 ### Scope
 
-This PR's review-feedback scope is strict by default. Steps 6 (threads) and 7 (nitpicks) classify each comment as in-scope or out-of-scope using this rule before choosing a verdict. Step 5 (CI) uses the broader CI-scope rule in that step, not this one — CI can legitimately fail on unchanged lines because the PR changed a contract or dependency path.
+This PR's review-feedback scope is strict by default. Steps 6 (threads) and 7 (CodeRabbit review-body comments) classify each comment as in-scope or out-of-scope using this rule before choosing a verdict. Step 5 (CI) uses the broader CI-scope rule in that step, not this one — CI can legitimately fail on unchanged lines because the PR changed a contract or dependency path.
 
-Build the changed-line set from `gh pr diff` once per iteration. Count changed diff lines on both sides: added lines in the new version, removed lines in the old version, and modified code represented by adjacent remove/add pairs. Do not count diff context lines. A reviewer comment or nitpick is **in scope** when its anchor falls on a changed diff line on either side of the hunk. Deleted-line comments like "why remove this?" or "please add this back" are in scope by definition. For a range like `12-14`, any overlap with a changed diff line is in scope.
+Build the changed-line set from `gh pr diff` once per iteration. Count changed diff lines on both sides: added lines in the new version, removed lines in the old version, and modified code represented by adjacent remove/add pairs. Do not count diff context lines. A reviewer comment or CodeRabbit review-body comment is **in scope** when its anchor falls on a changed diff line on either side of the hunk. Deleted-line comments like "why remove this?" or "please add this back" are in scope by definition. For a range like `12-14`, any overlap with a changed diff line is in scope.
 
 When matching review comments to hunks, use the anchor line provided by `unresolvedPrComments.sh`; it may be the current `line` or the script's fallback to `originalLine`. Compare that anchor against both new-side added ranges and old-side removed ranges.
 
@@ -199,19 +199,19 @@ For every thread in `activeThreads` (this includes both `"active"` and `"uncerta
     - Does not meet the bar → **Defer** (new verdict). Record a one-line rationale and, if relevant, a pointer to where the concern lives.
     - Disagree and Already-fixed can still apply to out-of-scope comments (e.g., reviewer asks for a refactor that's already landed on main, or misreads the code).
 
-### 7. Assess nitpicks
+### 7. Assess CodeRabbit review-body comments
 
-For every nitpick in `nitpickComments`:
+For every parsed CodeRabbit review-body comment in `nitpickComments`:
 
 - Check whether its `fingerprint` already appears in a prior babysit-pr sentinel comment on the PR. If yes, skip.
-- **Classify scope** (in / out) using the Scope subsection. For CodeRabbit nitpick ranges like `12-14`, any overlap with changed diff lines on either side of the hunk is in scope; no overlap is out of scope unless one of the explicit escape-hatch signals applies.
+- **Classify scope** (in / out) using the Scope subsection. For CodeRabbit ranges like `12-14`, any overlap with changed diff lines on either side of the hunk is in scope; no overlap is out of scope unless one of the explicit escape-hatch signals applies.
 - Pick a verdict:
   - In-scope → Agree / Disagree / Already fixed (as with threads). If Agree, apply the fix.
-  - Out-of-scope → apply the out-of-scope fix bar. Meets the bar → Agree and apply the fix, noting in the summary that it was fixed despite being out of scope. Does not meet the bar → **Defer**. A Deferred nitpick does not get its own top-level comment; it goes into the nitpick summary under the **Deferred (out of scope)** heading (see step 9).
+  - Out-of-scope → apply the out-of-scope fix bar. Meets the bar → Agree and apply the fix, noting in the summary that it was fixed despite being out of scope. Does not meet the bar → **Defer**. A Deferred CodeRabbit review-body comment does not get its own top-level comment; it goes into the summary under the **Deferred (out of scope)** heading (see step 9).
 
-Deferred nitpick fingerprints still go into the fenced fingerprint block at the end of the summary alongside addressed ones, so future runs dedupe correctly — the nitpick is handled, just handled by deferring.
+Deferred CodeRabbit fingerprints still go into the fenced fingerprint block at the end of the summary alongside addressed ones, so future runs dedupe correctly — the comment is handled, just handled by deferring.
 
-If no nitpicks remain after filtering, skip ONLY the top-level nitpick-summary comment in step 9. Still post thread replies for every non-Skip-reply thread from step 6.
+If no CodeRabbit review-body comments remain after filtering, skip ONLY the top-level CodeRabbit summary comment in step 9. Still post thread replies for every non-Skip-reply thread from step 6.
 
 ### 8. Commit and push (if any edits)
 
@@ -256,18 +256,18 @@ For Defer replies, include the follow-up sentinel on its own line as shown. The 
 
 The script uses the `addPullRequestReviewThreadReply` GraphQL mutation. It does NOT resolve the thread.
 
-If any nitpicks were assessed in step 7, post ONE top-level PR comment summarizing all of them:
+If any CodeRabbit review-body comments were assessed in step 7, post ONE top-level PR comment summarizing all of them:
 
 ```bash
 bash scripts/postSentinelPrComment.sh "$PR_NUMBER" "$BODY"
 ```
 
-The nitpick summary body should:
+The CodeRabbit summary body should:
 
 - Group verdicts under **Agree / Disagree / Already fixed / Deferred (out of scope)** headings. Omit a heading if its list is empty.
-- Under **Deferred (out of scope)**, list each deferred nitpick as a bullet, followed on its own line by `<!-- babysit-pr:followup v1 -->` so grep catches them individually.
+- Under **Deferred (out of scope)**, list each deferred CodeRabbit review-body comment as a bullet, followed on its own line by `<!-- babysit-pr:followup v1 -->` so grep catches them individually.
 - Include the commit URL for fixes.
-- Include every current nitpick's `fingerprint` — addressed and deferred — in a fenced block at the end (one per line, before the sentinel) so future runs can dedupe. Deferred nitpicks count as handled for dedupe purposes.
+- Include every current CodeRabbit review-body comment's `fingerprint` — addressed and deferred — in a fenced block at the end (one per line, before the sentinel) so future runs can dedupe. Deferred comments count as handled for dedupe purposes.
 
 ### 10. Summarize
 

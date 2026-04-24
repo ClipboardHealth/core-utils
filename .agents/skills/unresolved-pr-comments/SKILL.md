@@ -1,6 +1,6 @@
 ---
 name: unresolved-pr-comments
-description: "Get unresolved review comments from a GitHub pull request. Use this skill when the user asks about PR feedback, review comments, unresolved threads, what reviewers said, CodeRabbit nitpicks, or wants to address PR review feedback. Also use when the user says 'check my PR', 'what's left on my PR', or 'resolve comments'."
+description: "Get unresolved review comments from a GitHub pull request. Use this skill when the user asks about PR feedback, review comments, unresolved threads, what reviewers said, CodeRabbit review-body comments, or wants to address PR review feedback. Also use when the user says 'check my PR', 'what's left on my PR', or 'resolve comments'."
 argument-hint: "[pr-number]"
 ---
 
@@ -26,7 +26,7 @@ Using the JSON output from the script:
 
 1. **If error**: Display the error message and suggest the fix
 2. **If no comments**: Report the PR has no pending feedback
-3. **If comments exist**: Present a brief summary (e.g., "Found 3 unresolved comments and 5 nitpicks")
+3. **If comments exist**: Present a brief summary (e.g., "Found 3 unresolved comments and 5 CodeRabbit review-body comments")
 
 Then, for EVERY comment (both `unresolvedComments` AND `nitpickComments`):
 
