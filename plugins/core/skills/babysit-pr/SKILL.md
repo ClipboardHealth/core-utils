@@ -1,7 +1,7 @@
 ---
 name: babysit-pr
 description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed CodeRabbit review-body comments with sentinel-tagged comments. Runs one pass against the current branch's PR; pass a PR number or URL to `gh pr checkout` that PR first. Use when the user says 'babysit my PR', 'babysit PR 482', 'watch my PR', 'keep my PR moving', or 'respond to comments'."
-argument-hint: "[pr-number]"
+argument-hint: "[pr-number-or-url]"
 ---
 
 # Babysit PR
@@ -357,4 +357,4 @@ User: `babysit my PR`
 
 ## Input
 
-PR number: $ARGUMENTS
+PR number or URL: $ARGUMENTS
