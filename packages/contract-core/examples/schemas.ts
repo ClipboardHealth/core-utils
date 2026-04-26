@@ -5,6 +5,7 @@ import {
   commaSeparatedArray,
   dateTimeSchema,
   ENUM_FALLBACK,
+  type MongoObjectId,
   nonEmptyString,
   objectId,
   optionalEnum,
@@ -59,6 +60,27 @@ console.log(noIds);
 const someDates = dates.parse("2026-01-01T00:00:00.000Z,2026-01-02T00:00:00.000Z");
 // => [Date, Date]
 console.log(someDates[0] instanceof Date); // true
+
+// ObjectId: 24-char hex; TypeScript infers branded MongoObjectId (runtime value is still a string)
+const facilityId: MongoObjectId = objectId.parse("507f1f77bcf86cd799439011");
+console.log(facilityId);
+
+const idList = commaSeparatedArray(objectId).parse(
+  "507f1f77bcf86cd799439011,507f191e810c19729de860ea",
+);
+// => MongoObjectId[] (two ids)
+console.log(idList.length);
+
+// eslint-disable-next-line unicorn/no-useless-undefined
+const noSingleId = objectId.optional().parse(undefined);
+console.log(noSingleId); // => undefined
+
+try {
+  objectId.parse("507f1f77bcf86cd79943901"); // too short
+} catch (error) {
+  logError(error);
+  // => Must be a valid ObjectId
+}
 
 booleanString.parse("true");
 
