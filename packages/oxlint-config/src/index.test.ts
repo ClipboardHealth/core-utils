@@ -66,9 +66,12 @@ describe("oxlint-config", () => {
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
         rules: {
+          "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
+          "jest/prefer-ending-with-an-expect": "off",
+          "jest/prefer-importing-jest-globals": "off",
           "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
         },
@@ -77,9 +80,12 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
+          "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
+          "jest/prefer-ending-with-an-expect": "off",
+          "jest/prefer-importing-jest-globals": "off",
           "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
           "vitest/prefer-called-once": "off",

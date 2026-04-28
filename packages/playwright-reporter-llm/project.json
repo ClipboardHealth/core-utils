@@ -8,7 +8,10 @@
     "build": {
       "executor": "@nx/js:tsc",
       "options": {
-        "assets": ["packages/playwright-reporter-llm/*.md"],
+        "assets": [
+          "packages/playwright-reporter-llm/*.md",
+          "packages/playwright-reporter-llm/docs/*.json"
+        ],
         "main": "packages/playwright-reporter-llm/src/index.js",
         "outputPath": "dist/packages/playwright-reporter-llm",
         "tsConfig": "packages/playwright-reporter-llm/tsconfig.lib.json"

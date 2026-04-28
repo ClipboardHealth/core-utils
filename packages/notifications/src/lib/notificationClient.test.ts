@@ -3,6 +3,7 @@ import { type LogFunction, type Logger, ServiceError } from "@clipboard-health/u
 import type { Knock } from "@knocklabs/node";
 import type { Mocked } from "vitest";
 
+import { ERROR_CODES } from "./errorCodes";
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { IdempotentKnock } from "./internal/idempotentKnock";
 import { NotificationClient } from "./notificationClient";
@@ -11,6 +12,7 @@ import {
   type TriggerIdempotencyKey,
 } from "./triggerIdempotencyKey";
 import type {
+  CancelRequest,
   SignUserTokenRequest,
   Span,
   TraceOptions,
@@ -183,6 +185,47 @@ describe(NotificationClient, () => {
         expect.any(Object),
       );
     });
+
+    it("surfaces 429 responses as rateLimited", async () => {
+      const mockError = createErrorWithStatus("Too many requests", 429);
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        keysToRedact: [],
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.rateLimited);
+    });
+
+    it.each([400, 401, 403, 404, 422])(
+      "surfaces %s responses as clientError",
+      async (status: number) => {
+        const mockError = createErrorWithStatus(`Got ${status}`, status);
+        vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+
+        const input: TriggerRequest = {
+          workflowKey: mockWorkflowKey,
+          body: { recipients: [{ userId: "user-1" }] },
+          idempotencyKey: mockIdempotencyKey,
+          keysToRedact: [],
+          expiresAt: mockExpiresAt,
+          attempt: mockAttempt,
+        };
+
+        const actual = await client.trigger(input);
+
+        expectToBeFailure(actual);
+        expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.clientError);
+      },
+    );
 
     it("redacts sensitive data in logs", async () => {
       const mockBody = {
@@ -651,6 +694,110 @@ describe(NotificationClient, () => {
     });
   });
 
+  describe("cancel", () => {
+    const mockWorkflowKey = "test-workflow";
+    const mockCancellationKey = "cancel-key-123";
+
+    it("cancels workflow with recipients", async () => {
+      const cancelSpy = vi
+        .spyOn(provider.workflows, "cancel")
+        .mockResolvedValue(
+          undefined as unknown as Awaited<ReturnType<Knock["workflows"]["cancel"]>>,
+        );
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+        recipients: ["user-1", "user-2"],
+      };
+
+      await client.cancel(input);
+
+      expect(cancelSpy).toHaveBeenCalledWith(mockWorkflowKey, {
+        cancellation_key: mockCancellationKey,
+        recipients: ["user-1", "user-2"],
+      });
+    });
+
+    it("cancels workflow without recipients", async () => {
+      const cancelSpy = vi
+        .spyOn(provider.workflows, "cancel")
+        .mockResolvedValue(
+          undefined as unknown as Awaited<ReturnType<Knock["workflows"]["cancel"]>>,
+        );
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await client.cancel(input);
+
+      expect(cancelSpy).toHaveBeenCalledWith(mockWorkflowKey, {
+        cancellation_key: mockCancellationKey,
+      });
+    });
+
+    it("skips provider call when dryRun is true", async () => {
+      const cancelSpy = vi.spyOn(provider.workflows, "cancel");
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+        dryRun: true,
+      };
+
+      await client.cancel(input);
+
+      expect(cancelSpy).not.toHaveBeenCalled();
+    });
+
+    it("logs and re-throws provider errors", async () => {
+      const mockError = new Error("Knock cancel failed");
+      vi.spyOn(provider.workflows, "cancel").mockRejectedValue(mockError);
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await expect(client.cancel(input)).rejects.toThrow(ServiceError);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "notifications.cancel [unknown] Knock cancel failed",
+        expect.any(Object),
+      );
+    });
+
+    it("surfaces 429 responses as rateLimited", async () => {
+      const mockError = createErrorWithStatus("Too many requests", 429);
+      vi.spyOn(provider.workflows, "cancel").mockRejectedValue(mockError);
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await expect(client.cancel(input)).rejects.toMatchObject({
+        issues: [{ code: ERROR_CODES.rateLimited, message: "Too many requests" }],
+      });
+    });
+
+    it("surfaces other 4xx responses as clientError", async () => {
+      const mockError = createErrorWithStatus("bad request", 400);
+      vi.spyOn(provider.workflows, "cancel").mockRejectedValue(mockError);
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await expect(client.cancel(input)).rejects.toMatchObject({
+        issues: [{ code: ERROR_CODES.clientError, message: "bad request" }],
+      });
+    });
+  });
+
   describe("triggerChunked", () => {
     const mockWorkflowKey = "test-workflow";
     const mockIdempotencyKey = "job-id-12345";
@@ -832,6 +979,42 @@ describe(NotificationClient, () => {
 
       expectToBeFailure(actual);
       expect(actual.error.message).toContain("Knock API error");
+    });
+
+    it("surfaces 429 responses as rateLimited", async () => {
+      const mockError = createErrorWithStatus("Too many requests", 429);
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.rateLimited);
+    });
+
+    it("surfaces other 4xx responses as clientError", async () => {
+      const mockError = createErrorWithStatus("bad request", 400);
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeFailure(actual);
+      expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.clientError);
     });
 
     it("handles string recipients", async () => {
@@ -1668,7 +1851,11 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 });
 
 function createNotFoundError(): Error & { status: number } {
-  const error = new Error("Not found") as Error & { status: number };
-  error.status = 404;
+  return createErrorWithStatus("Not found", 404);
+}
+
+function createErrorWithStatus(message: string, status: number): Error & { status: number } {
+  const error = new Error(message) as Error & { status: number };
+  error.status = status;
   return error;
 }

@@ -4,7 +4,7 @@ import type {
   AttemptResult,
   ConsoleEntry,
   FlatStep,
-  NetworkRequest,
+  NetworkReport,
   TestAttachment,
   TestError,
   TimelineConsoleEntry,
@@ -19,13 +19,13 @@ interface BuildAttemptResultInput {
   result: TestResult;
   errors: TestError[];
   attachments: TestAttachment[];
-  network: NetworkRequest[];
+  network: NetworkReport;
   consoleMessages: ConsoleEntry[];
 }
 
 function buildTimeline(
   steps: FlatStep[],
-  network: NetworkRequest[],
+  network: NetworkReport,
   consoleMessages: ConsoleEntry[],
 ): TimelineEntry[] {
   const stepEntries: TimelineStepEntry[] = steps.map((step) => {
@@ -45,41 +45,19 @@ function buildTimeline(
     return entry;
   });
 
-  const networkEntries: TimelineNetworkEntry[] = network
+  const networkEntries: TimelineNetworkEntry[] = network.instances
     .filter(
-      (request): request is NetworkRequest & { offsetMs: number } => request.offsetMs !== undefined,
+      (instance): instance is typeof instance & { offsetMs: number } =>
+        instance.offsetMs !== undefined,
     )
-    .map((request) => {
-      const entry: TimelineNetworkEntry = {
-        kind: "network",
-        offsetMs: request.offsetMs,
-        method: request.method,
-        url: request.url,
-        status: request.status,
-      };
-
-      if (request.durationMs !== undefined) {
-        entry.durationMs = request.durationMs;
-      }
-
-      if (request.resourceType) {
-        entry.resourceType = request.resourceType;
-      }
-
-      if (request.traceId) {
-        entry.traceId = request.traceId;
-      }
-
-      if (request.failureText) {
-        entry.failureText = request.failureText;
-      }
-
-      if (request.wasAborted !== undefined) {
-        entry.wasAborted = request.wasAborted;
-      }
-
-      return entry;
-    });
+    .map((instance) => ({
+      kind: "network" as const,
+      offsetMs: instance.offsetMs,
+      networkId: instance.id,
+      method: instance.method,
+      url: instance.url,
+      status: instance.status,
+    }));
 
   const consoleEntries: TimelineConsoleEntry[] = consoleMessages
     .filter((entry): entry is ConsoleEntry & { offsetMs: number } => entry.offsetMs !== undefined)

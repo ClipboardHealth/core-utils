@@ -1,40 +1,7 @@
-import type { ConsoleEntry, NetworkRequest } from "../types";
-import {
-  appendConsoleEntryWithPriority,
-  appendNetworkRequestWithPriority,
-  canImproveConsoleSignal,
-  canImproveNetworkSignal,
-} from "./signalFiltering";
+import type { ConsoleEntry } from "../types";
+import { appendConsoleEntryWithPriority, isLowSignalStaticAsset } from "./signalFiltering";
 
 const CONSOLE_MESSAGES_CAP = 50;
-const NETWORK_REQUESTS_CAP = 200;
-
-describe(canImproveConsoleSignal, () => {
-  it("returns true when below cap", () => {
-    expect(canImproveConsoleSignal([])).toBe(true);
-  });
-
-  it("returns true at cap when low-signal entries exist", () => {
-    const messages: ConsoleEntry[] = [
-      { type: "page-closed", text: "msg-0" },
-      ...Array.from({ length: CONSOLE_MESSAGES_CAP - 1 }, (_, index) => ({
-        type: "error",
-        text: `msg-${index + 1}`,
-      })),
-    ];
-
-    expect(canImproveConsoleSignal(messages)).toBe(true);
-  });
-
-  it("returns false at cap when all are high-signal", () => {
-    const messages: ConsoleEntry[] = Array.from({ length: CONSOLE_MESSAGES_CAP }, (_, index) => ({
-      type: "error",
-      text: `msg-${index}`,
-    }));
-
-    expect(canImproveConsoleSignal(messages)).toBe(false);
-  });
-});
 
 describe(appendConsoleEntryWithPriority, () => {
   it("appends when below cap", () => {
@@ -71,67 +38,38 @@ describe(appendConsoleEntryWithPriority, () => {
   });
 });
 
-describe(canImproveNetworkSignal, () => {
-  it("returns true when below cap", () => {
-    expect(canImproveNetworkSignal([])).toBe(true);
+describe(isLowSignalStaticAsset, () => {
+  it("flags successful static assets", () => {
+    expect(isLowSignalStaticAsset({ status: 200, resourceType: "script" })).toBe(true);
+    expect(isLowSignalStaticAsset({ status: 200, resourceType: "stylesheet" })).toBe(true);
+    expect(isLowSignalStaticAsset({ status: 200, resourceType: "image" })).toBe(true);
+    expect(isLowSignalStaticAsset({ status: 304, resourceType: "script" })).toBe(true);
   });
 
-  it("returns false at cap when all are high-signal", () => {
-    const requests: NetworkRequest[] = Array.from({ length: NETWORK_REQUESTS_CAP }, (_, index) => ({
-      method: "GET",
-      url: `https://api.example.com/${index}`,
-      status: 200,
-      resourceType: "fetch",
-    }));
-
-    expect(canImproveNetworkSignal(requests)).toBe(false);
-  });
-});
-
-describe(appendNetworkRequestWithPriority, () => {
-  it("filters out successful static assets entirely", () => {
-    const requests: NetworkRequest[] = [];
-    const staticAsset: NetworkRequest = {
-      method: "GET",
-      url: "https://cdn.example.com/chunk.js",
-      status: 200,
-      resourceType: "script",
-    };
-
-    appendNetworkRequestWithPriority(requests, staticAsset);
-
-    expect(requests).toHaveLength(0);
+  it("keeps static assets with 4xx/5xx status", () => {
+    expect(isLowSignalStaticAsset({ status: 404, resourceType: "script" })).toBe(false);
+    expect(isLowSignalStaticAsset({ status: 500, resourceType: "image" })).toBe(false);
   });
 
-  it("keeps static assets with error status codes", () => {
-    const requests: NetworkRequest[] = [];
-    const errorAsset: NetworkRequest = {
-      method: "GET",
-      url: "https://cdn.example.com/chunk.js",
-      status: 500,
-      resourceType: "script",
-    };
-
-    appendNetworkRequestWithPriority(requests, errorAsset);
-
-    expect(requests).toHaveLength(1);
+  it("keeps static assets with failureText", () => {
+    expect(
+      isLowSignalStaticAsset({
+        status: 200,
+        resourceType: "script",
+        failureText: "net::ERR_FAILED",
+      }),
+    ).toBe(false);
   });
 
-  it("caps at 200 when all are high-signal", () => {
-    const requests: NetworkRequest[] = Array.from({ length: NETWORK_REQUESTS_CAP }, (_, index) => ({
-      method: "GET",
-      url: `https://api.example.com/${index}`,
-      status: 200,
-      resourceType: "fetch",
-    }));
+  it("keeps static assets that were aborted", () => {
+    expect(isLowSignalStaticAsset({ status: 200, resourceType: "script", wasAborted: true })).toBe(
+      false,
+    );
+  });
 
-    appendNetworkRequestWithPriority(requests, {
-      method: "GET",
-      url: "https://api.example.com/overflow",
-      status: 200,
-      resourceType: "fetch",
-    });
-
-    expect(requests).toHaveLength(NETWORK_REQUESTS_CAP);
+  it("does not flag xhr/fetch or unknown types", () => {
+    expect(isLowSignalStaticAsset({ status: 200, resourceType: "fetch" })).toBe(false);
+    expect(isLowSignalStaticAsset({ status: 200, resourceType: "xhr" })).toBe(false);
+    expect(isLowSignalStaticAsset({ status: 200 })).toBe(false);
   });
 });

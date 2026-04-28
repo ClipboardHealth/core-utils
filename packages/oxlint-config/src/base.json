@@ -41,7 +41,7 @@
     "init-declarations": "off",
     "max-classes-per-file": "off",
     "max-depth": "off",
-    "max-lines": "off",
+    "max-lines": ["error", { "max": 1000 }],
     "max-lines-per-function": "off",
     "max-params": "off",
     "max-statements": "off",
@@ -78,7 +78,9 @@
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-module-boundary-types": "off",
     "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
+    "typescript/no-unnecessary-type-parameters": "off",
     "typescript/parameter-properties": "off",
+    "typescript/prefer-readonly-parameter-types": "off",
     "typescript/require-await": "off",
     "typescript/return-await": ["error", "always"],
     "typescript/strict-boolean-expressions": [

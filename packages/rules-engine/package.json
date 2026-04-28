@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/rules-engine",
-  "version": "3.1.91",
+  "version": "3.2.0",
   "description": "A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.",
   "keywords": [
     "engine",
@@ -25,7 +25,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "type-fest": "5.5.0"
+    "type-fest": "5.6.0"
   },
   "peerDependencies": {
     "type-fest": "^4 || ^5.0.0"

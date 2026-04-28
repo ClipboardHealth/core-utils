@@ -69,12 +69,28 @@ export class TriggerNotificationJob implements BaseHandler<SerializableTriggerCh
       const result = await this.client.triggerChunked(request);
 
       if (isFailure(result)) {
-        // Skip expired notifications, retrying the job won't help.
-        if (result.error.issues[0]?.code === ERROR_CODES.expired) {
+        const code = result.error.issues[0]?.code;
+
+        // Expired: the notification is no longer relevant (e.g. a reminder for an event that
+        // has already started). Not actionable, so log at WARN and move on.
+        if (code === ERROR_CODES.expired) {
           this.logger.warn("TriggerNotificationJob skipped due to expiry", { ...metadata });
           return;
         }
 
+        // Non-429 4xx from the provider means the request itself is broken (validation error,
+        // missing recipient, etc.). Retrying won't help — log at ERROR so it pages and we can
+        // fix the caller.
+        if (code === ERROR_CODES.clientError) {
+          this.logger.error("TriggerNotificationJob skipped due to client error", {
+            ...metadata,
+            error: result.error,
+          });
+          return;
+        }
+
+        // Everything else (rateLimited, unknown, 5xx, network) is transient — throw so the
+        // job retries with backoff.
         throw result.error;
       }
 

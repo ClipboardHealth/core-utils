@@ -1,5 +1,6 @@
 import {
   failure,
+  type FailureResult,
   isFailure,
   type LogFunction,
   ServiceError,
@@ -9,6 +10,7 @@ import {
 } from "@clipboard-health/util-ts";
 import { signUserToken } from "@knocklabs/node";
 
+import { ERROR_CODES, type ErrorCode } from "./errorCodes";
 import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
@@ -16,6 +18,7 @@ import { IdempotentKnock } from "./internal/idempotentKnock";
 import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKey";
 import { redact } from "./internal/redact";
 import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
+import { toNotificationError } from "./internal/toNotificationError";
 import { toTenantSetRequest } from "./internal/toTenantSetRequest";
 import { toTriggerBody } from "./internal/toTriggerBody";
 import { triggerIdempotencyKeyParamsToHash } from "./internal/triggerIdempotencyKeyParamsToHash";
@@ -23,11 +26,13 @@ import type { TriggerIdempotencyKeyParams } from "./triggerIdempotencyKey";
 import type {
   AppendPushTokenRequest,
   AppendPushTokenResponse,
+  CancelRequest,
   LogParams,
   NotificationClientParams,
   SignUserTokenRequest,
   SignUserTokenResponse,
   Span,
+  TraceOptions,
   TriggerBody,
   TriggerChunkedRequest,
   TriggerChunkedResponse,
@@ -48,6 +53,10 @@ const LOG_PARAMS = {
     traceName: "notifications.triggerChunked",
     destination: "knock.workflows.trigger",
   },
+  cancel: {
+    traceName: "notifications.cancel",
+    destination: "knock.workflows.cancel",
+  },
   appendPushToken: {
     traceName: "notifications.appendPushToken",
     destination: "knock.users.setChannelData",
@@ -65,17 +74,6 @@ const LOG_PARAMS = {
     destination: "knock.users.setPreferences",
   },
 };
-export const ERROR_CODES = {
-  expired: "expired",
-  invalidExpiresAt: "invalidExpiresAt",
-  invalidIdempotencyKey: "invalidIdempotencyKey",
-  recipientCountBelowMinimum: "recipientCountBelowMinimum",
-  recipientCountAboveMaximum: "recipientCountAboveMaximum",
-  missingSigningKey: "missingSigningKey",
-  unknown: "unknown",
-} as const;
-
-export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
 interface NotificationError {
   code: ErrorCode;
@@ -154,12 +152,9 @@ export class NotificationClient {
 
           return success({ id });
         } catch (maybeError) {
-          const error = toError(maybeError);
+          const { code, error, message } = toNotificationError(maybeError);
           return this.createAndLogError({
-            notificationError: {
-              code: ERROR_CODES.unknown,
-              message: error.message,
-            },
+            notificationError: { code, message },
             span,
             logFunction: this.logger.error,
             logParams,
@@ -259,12 +254,28 @@ export class NotificationClient {
    *       const result = await this.client.triggerChunked(request);
    *
    *       if (isFailure(result)) {
-   *         // Skip expired notifications, retrying the job won't help.
-   *         if (result.error.issues[0]?.code === ERROR_CODES.expired) {
+   *         const code = result.error.issues[0]?.code;
+   *
+   *         // Expired: the notification is no longer relevant (e.g. a reminder for an event that
+   *         // has already started). Not actionable, so log at WARN and move on.
+   *         if (code === ERROR_CODES.expired) {
    *           this.logger.warn("TriggerNotificationJob skipped due to expiry", { ...metadata });
    *           return;
    *         }
    *
+   *         // Non-429 4xx from the provider means the request itself is broken (validation error,
+   *         // missing recipient, etc.). Retrying won't help — log at ERROR so it pages and we can
+   *         // fix the caller.
+   *         if (code === ERROR_CODES.clientError) {
+   *           this.logger.error("TriggerNotificationJob skipped due to client error", {
+   *             ...metadata,
+   *             error: result.error,
+   *           });
+   *           return;
+   *         }
+   *
+   *         // Everything else (rateLimited, unknown, 5xx, network) is transient — throw so the
+   *         // job retries with backoff.
    *         throw result.error;
    *       }
    *
@@ -339,11 +350,11 @@ export class NotificationClient {
 
             responses.push({ chunkNumber: recipientChunk.number, id });
           } catch (maybeError) {
-            const error = toError(maybeError);
+            const { code, error, message } = toNotificationError(maybeError);
             return this.createAndLogError({
               notificationError: {
-                code: ERROR_CODES.unknown,
-                message: `Chunk ${recipientChunk.number}/${chunks.length} failed: ${error.message}`,
+                code,
+                message: `Chunk ${recipientChunk.number}/${chunks.length} failed: ${message}`,
               },
               span,
               logFunction: this.logger.error,
@@ -373,6 +384,61 @@ export class NotificationClient {
         return success({ responses });
       },
     );
+  }
+
+  /**
+   * Cancels any queued workflow runs associated with the given `workflowKey` / `cancellationKey`
+   * pair. Optionally scope to specific recipients.
+   *
+   * Errors from the provider are logged and traced, then re-thrown.
+   *
+   * @see {@link https://docs.knock.app/send-notifications/canceling-workflows}
+   */
+  public async cancel(params: CancelRequest): Promise<void> {
+    const { workflowKey, cancellationKey, recipients, dryRun = false } = params;
+    const logParams = { ...LOG_PARAMS.cancel, workflowKey, dryRun };
+    const traceOptions: TraceOptions = {
+      resource: `notification.${workflowKey}`,
+      tags: {
+        "span.kind": "producer",
+        component: "customer-notifications",
+        "messaging.system": "knock.app",
+        "messaging.operation": "publish",
+        "messaging.destination": LOG_PARAMS.cancel.destination,
+        "notification.dryRun": String(dryRun),
+      },
+    };
+
+    await this.tracer.trace(logParams.traceName, traceOptions, async (span) => {
+      this.logger.info(`${logParams.traceName} request`, {
+        ...logParams,
+        recipientCount: recipients?.length,
+      });
+
+      if (dryRun) {
+        this.logger.info(`${logParams.traceName} response`, { ...logParams, dryRun: true });
+        return;
+      }
+
+      try {
+        await this.provider.workflows.cancel(workflowKey, {
+          cancellation_key: cancellationKey,
+          ...(recipients ? { recipients } : {}),
+        });
+
+        this.logger.info(`${logParams.traceName} response`, logParams);
+      } catch (maybeError) {
+        const { code, error, message } = toNotificationError(maybeError);
+        const result = this.createAndLogError({
+          notificationError: { code, message },
+          span,
+          logFunction: this.logger.error,
+          logParams,
+          metadata: { error },
+        });
+        throw result.error;
+      }
+    });
   }
 
   /**
@@ -407,12 +473,9 @@ export class NotificationClient {
 
       return success({ success: true });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -458,12 +521,9 @@ export class NotificationClient {
 
       return success({ token: response });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -496,12 +556,9 @@ export class NotificationClient {
         workplaceId: response.id,
       });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -533,12 +590,9 @@ export class NotificationClient {
 
       return success({ userId });
     } catch (maybeError) {
-      const error = toError(maybeError);
+      const { code, error, message } = toNotificationError(maybeError);
       return this.createAndLogError({
-        notificationError: {
-          code: ERROR_CODES.unknown,
-          message: error.message,
-        },
+        notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
         metadata: { error },
@@ -552,7 +606,7 @@ export class NotificationClient {
     logFunction?: LogFunction;
     logParams: LogParams;
     metadata?: Record<string, unknown>;
-  }): ServiceResult<never> {
+  }): FailureResult {
     const { logParams, notificationError, span, metadata, logFunction = this.logger.warn } = params;
     const { code, message } = notificationError;
 

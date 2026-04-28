@@ -11,11 +11,11 @@ import type {
   TestStep,
 } from "@playwright/test/reporter";
 
+import { GROUPS_CAP, INSTANCES_CAP } from "./internal/constants";
 import { writeTraceZipFixture } from "./internal/testHelpers";
+import * as traceDiagnostics from "./internal/traceDiagnostics";
 import LlmReporter from "./reporter";
 import type { AttemptResult, LlmTestEntry, LlmTestReport } from "./types";
-
-const NETWORK_REQUESTS_CAP = 200 as const;
 
 function createMockConfig(overrides: Partial<FullConfig> = {}): FullConfig {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -165,7 +165,7 @@ describe(LlmReporter, () => {
 
     const report = readReport(outputFile);
 
-    expect(report.schemaVersion).toBe(2);
+    expect(report.schemaVersion).toBe(3);
     expect(report.timestamp).toBeDefined();
     expect(report.durationMs).toBeGreaterThanOrEqual(0);
     expect(report.summary).toStrictEqual({
@@ -195,7 +195,7 @@ describe(LlmReporter, () => {
       status: "failed",
       errors: [
         {
-          message: "\u001B[31mExpected: 1\u001B[39m\n\u001B[31mReceived: 2\u001B[39m",
+          message: "[31mExpected: 1[39m\n[31mReceived: 2[39m",
           stack:
             "Error: expect\n    at /project/tests/my-test.spec.ts:12:5\n    at node_modules/playwright/runner.js:100:10",
           location: { file: "/project/tests/my-test.spec.ts", line: 12, column: 5 },
@@ -210,7 +210,7 @@ describe(LlmReporter, () => {
 
     expect(report.summary.failed).toBe(1);
     expect(report.tests[0]?.errors).toHaveLength(1);
-    expect(report.tests[0]?.errors[0]?.message).not.toContain("\u001B[");
+    expect(report.tests[0]?.errors[0]?.message).not.toContain("[");
     expect(report.tests[0]?.errors[0]?.stack).not.toContain("node_modules");
     expect(report.tests[0]?.errors[0]?.location).toStrictEqual({
       file: "/project/tests/my-test.spec.ts",
@@ -287,7 +287,6 @@ describe(LlmReporter, () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
-    // repeatEach produces distinct test.id values for the same test title
     const run1 = createMockTestCase({ id: "repeat-run-1" });
     const run2 = createMockTestCase({ id: "repeat-run-2" });
 
@@ -336,7 +335,7 @@ describe(LlmReporter, () => {
     expect(report.tests[0]?.stderr).toContain("[truncated]");
   });
 
-  it("extracts network requests and JSON bodies from trace attachments", () => {
+  it("extracts network observations into a NetworkReport with bodies", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -378,27 +377,33 @@ describe(LlmReporter, () => {
     const entry = firstTestEntry(report);
     const [attempt] = entry.attempts;
 
-    expect(attempt?.network).toStrictEqual([
-      {
-        method: "POST",
-        url: "https://api.example.com/v1/orders",
-        status: 201,
-        durationMs: 37,
-        offsetMs: 500,
-        resourceType: "fetch",
-        timings: {
-          sendMs: 10,
-          waitMs: 20,
-          receiveMs: 7,
-        },
-        requestBody: '{"request":"hello"}',
-        responseBody: '{"response":"world"}',
-      },
-    ]);
+    expect(attempt?.network.instances).toHaveLength(1);
+    expect(attempt?.network.instances[0]).toMatchObject({
+      id: "n0",
+      groupId: "g0",
+      method: "POST",
+      url: "https://api.example.com/v1/orders",
+      status: 201,
+      offsetMs: 500,
+      durationMs: 37,
+    });
+    expect(attempt?.network.groups["g0"]).toMatchObject({
+      id: "g0",
+      method: "POST",
+      url: "https://api.example.com/v1/orders",
+      status: 201,
+      resourceType: "fetch",
+      occurrenceCount: 1,
+      retainedInstanceCount: 1,
+    });
+    expect(attempt?.network.instances[0]?.requestBodyRef).toBeDefined();
+    expect(attempt?.network.bodies).toMatchObject({
+      [attempt!.network.instances[0]!.requestBodyRef!]: { content: '{"request":"hello"}' },
+    });
     expect(entry.network).toStrictEqual(attempt?.network);
   });
 
-  it("keeps network empty when no trace attachment exists", () => {
+  it("returns an empty NetworkReport when no trace attachment exists", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -415,8 +420,11 @@ describe(LlmReporter, () => {
     const report = readReport(outputFile);
     const entry = firstTestEntry(report);
 
-    expect(entry.attempts[0]?.network).toStrictEqual([]);
-    expect(entry.network).toStrictEqual([]);
+    expect(entry.attempts[0]?.network.instances).toStrictEqual([]);
+    expect(entry.attempts[0]?.network.groups).toStrictEqual({});
+    expect(entry.attempts[0]?.network.bodies).toStrictEqual({});
+    expect(entry.attempts[0]?.network.summary.observedInstances).toBe(0);
+    expect(entry.network).toStrictEqual(entry.attempts[0]?.network);
   });
 
   it("collects global errors", () => {
@@ -493,7 +501,7 @@ describe(LlmReporter, () => {
 
       const report = readReport(path.join(sandboxDirectory, "test-results/llm-report.json"));
 
-      expect(report.schemaVersion).toBe(2);
+      expect(report.schemaVersion).toBe(3);
     } finally {
       process.chdir(originalCwd);
       rmSync(sandboxDirectory, { recursive: true, force: true });
@@ -559,7 +567,7 @@ describe(LlmReporter, () => {
   });
 
   it("warns if onEnd called without onBegin", () => {
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn<() => void>());
     const reporter = new LlmReporter({ outputFile });
 
     reporter.onEnd({ status: "passed" } as FullResult);
@@ -640,7 +648,7 @@ describe(LlmReporter, () => {
 
   it("logs an error when report writing throws", () => {
     const reporter = new LlmReporter({ outputFile });
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn<() => void>());
     const stringifySpy = vi.spyOn(JSON, "stringify").mockImplementation(() => {
       throw new Error("stringify failed");
     });
@@ -664,13 +672,11 @@ describe(LlmReporter, () => {
     const reporter = new LlmReporter({ outputFile });
     const config = createMockConfig();
 
-    // First run: 1 test + 1 global error
     reporter.onBegin(config, createMockSuite());
     reporter.onTestEnd(createMockTestCase(), createMockResult());
     reporter.onError({ message: "first run error" });
     reporter.onEnd({ status: "passed" } as FullResult);
 
-    // Second run: 0 tests, 0 errors
     reporter.onBegin(config, createMockSuite());
     reporter.onEnd({ status: "passed" } as FullResult);
 
@@ -681,7 +687,7 @@ describe(LlmReporter, () => {
     expect(report.globalErrors).toHaveLength(0);
   });
 
-  it("wires trace diagnostics through to attempt results", () => {
+  it("wires trace diagnostics through to attempt results with networkId-carrying timeline", () => {
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
@@ -725,11 +731,88 @@ describe(LlmReporter, () => {
 
     expect(attempt.timeline).toHaveLength(3);
     expect(attempt.timeline[0]).toMatchObject({ kind: "step", offsetMs: 100 });
-    expect(attempt.timeline[1]).toMatchObject({ kind: "network", offsetMs: 200 });
+    expect(attempt.timeline[1]).toMatchObject({
+      kind: "network",
+      offsetMs: 200,
+      networkId: "n0",
+    });
     expect(attempt.timeline[2]).toMatchObject({ kind: "console", offsetMs: 300 });
 
     const entry = firstTestEntry(report);
     expect(entry.timeline).toStrictEqual(attempt.timeline);
+  });
+
+  it("saturates under pressure: retainedInstances <= INSTANCES_CAP and invariants hold", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const observedCount = INSTANCES_CAP + 100;
+    const networkEvents = Array.from({ length: observedCount }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _resourceType: "fetch",
+        request: { method: "GET", url: `https://api.example.com/sat/${index}` },
+        response: { status: 200 },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-saturation.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      networkEvents,
+    });
+    const result = createMockResult({
+      startTime: attemptStart,
+      attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+    });
+
+    reporter.onTestEnd(createMockTestCase({}, { outputDirectory }), result);
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const attempt = firstAttempt(readReport(outputFile));
+    const { summary } = attempt.network;
+
+    expect(attempt.network.instances.length).toBeLessThanOrEqual(INSTANCES_CAP);
+    expect(Object.keys(attempt.network.groups).length).toBeLessThanOrEqual(GROUPS_CAP);
+    expect(
+      summary.retainedInstances +
+        summary.instancesDroppedByFilter +
+        summary.instancesDroppedByGroupCap +
+        summary.instancesDroppedByInstanceCap +
+        summary.instancesSuppressedAsDuplicate +
+        summary.instancesEvictedAfterAdmission,
+    ).toBe(summary.observedInstances);
+  });
+
+  it("substitutes an empty NetworkReport and appends a GlobalError when trace collection throws", () => {
+    vi.spyOn(traceDiagnostics, "collectTraceDiagnosticsFromAttachments").mockImplementationOnce(
+      () => {
+        throw new Error("invariant violation: test-triggered");
+      },
+    );
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-invariant.zip", {
+      requestBody: JSON.stringify({ request: "x" }),
+      responseBody: JSON.stringify({ response: "y" }),
+    });
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network.instances).toStrictEqual([]);
+    expect(attempt.network.groups).toStrictEqual({});
+    expect(attempt.network.summary.observedInstances).toBe(0);
+    expect(report.globalErrors.length).toBeGreaterThan(0);
+    expect(report.globalErrors[0]?.message).toContain("invariant violation: test-triggered");
   });
 
   it("keeps improving console signal after network cap is reached", () => {
@@ -744,7 +827,7 @@ describe(LlmReporter, () => {
       })),
       { type: "console", messageType: "error", text: "error retained after network cap" },
     ];
-    const networkEvents = Array.from({ length: NETWORK_REQUESTS_CAP + 10 }, (_, index) => ({
+    const networkEvents = Array.from({ length: INSTANCES_CAP + 10 }, (_, index) => ({
       type: "resource-snapshot",
       snapshot: {
         _resourceType: "fetch",
@@ -779,7 +862,7 @@ describe(LlmReporter, () => {
     const report = readReport(outputFile);
     const attempt = firstAttempt(report);
 
-    expect(attempt.network).toHaveLength(NETWORK_REQUESTS_CAP);
+    expect(attempt.network.instances.length).toBeLessThanOrEqual(INSTANCES_CAP);
     expect(attempt.consoleMessages).toContainEqual({
       type: "error",
       text: "error retained after network cap",

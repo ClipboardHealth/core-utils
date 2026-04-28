@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/eslint-plugin",
-  "version": "2.1.91",
+  "version": "2.2.0",
   "description": "Clipboard's ESLint Plugin",
   "keywords": [
     "eslint",

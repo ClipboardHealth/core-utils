@@ -40,7 +40,7 @@ export function success<A>(value: A): ServiceResult<A> {
 /**
  * Creates a failed ServiceResult.
  */
-export function failure<A = never>(params: ServiceErrorParams | ServiceError): ServiceResult<A> {
+export function failure(params: ServiceErrorParams | ServiceError): FailureResult {
   const error = params instanceof ServiceError ? params : new ServiceError(params);
   return Object.freeze({
     isRight: false,

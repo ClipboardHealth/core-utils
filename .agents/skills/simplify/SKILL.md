@@ -12,7 +12,7 @@ Run \`git diff\` (or \`git diff HEAD\` if there are staged changes) to see what 
 
 ## Phase 2: Launch Three Review Agents in Parallel
 
-If you can, use the ${AGENT_TOOL_NAME} tool to launch all three agents concurrently in a single message; otherwise, perform the following yourself. Pass each agent the full diff so it has the complete context.
+If the current host supports parallel delegated reviewers, use that mechanism to launch all three reviews concurrently; otherwise, perform the reviews yourself. Pass each reviewer the full diff so it has the complete context.
 
 ### Agent 1: Code Reuse Review
 
@@ -32,6 +32,8 @@ Review the same changes for hacky patterns:
 4. **Leaky abstractions**: exposing internal details that should be encapsulated, or breaking existing abstraction boundaries
 5. **Stringly-typed code**: using raw strings where constants, enums (string unions), or branded types already exist in the codebase
 6. **Unnecessary JSX nesting**: wrapper Boxes/elements that add no layout value — check if inner component props (flexShrink, alignItems, etc.) already provide the needed behavior
+7. **Nested conditionals**: ternary chains (`a ? x : b ? y : ...`), nested if/else, or nested switch 3+ levels deep — flatten with early returns, guard clauses, a lookup table, or an if/else-if cascade
+8. **Unnecessary comments**: comments explaining WHAT the code does (well-named identifiers already do that), narrating the change, or referencing the task/caller — delete; keep only non-obvious WHY (hidden constraints, subtle invariants, workarounds)
 
 ### Agent 3: Efficiency Review
 

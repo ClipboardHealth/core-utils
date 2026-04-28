@@ -224,6 +224,36 @@ export interface TriggerResponse {
 }
 
 /**
+ * Request parameters for cancelling a previously triggered workflow.
+ *
+ * Cancels any queued workflow runs associated with the given `workflowKey` / `cancellationKey`
+ * pair. The `cancellationKey` must match the one passed in {@link TriggerBody.cancellationKey}
+ * when the workflow was triggered.
+ *
+ * @see {@link https://docs.knock.app/send-notifications/canceling-workflows}
+ */
+export interface CancelRequest {
+  /** Workflow key. */
+  workflowKey: string;
+
+  /**
+   * The cancellation key used when originally triggering the workflow.
+   *
+   * @see {@link TriggerBody.cancellationKey}
+   */
+  cancellationKey: string;
+
+  /**
+   * Scope the cancellation to specific user IDs. If omitted, cancels for all recipients
+   * associated with the `cancellationKey`.
+   */
+  recipients?: string[];
+
+  /** If true, the cancellation will not be sent, but the request will be validated and logged. */
+  dryRun?: boolean;
+}
+
+/**
  * Request parameters for appending a push token.
  */
 export interface AppendPushTokenRequest {

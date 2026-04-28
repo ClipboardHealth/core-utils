@@ -39,7 +39,7 @@ describe("LLM Reporter E2E", () => {
   }, 90_000);
 
   it("has valid schema version and timestamp", () => {
-    expect(report.schemaVersion).toBe(2);
+    expect(report.schemaVersion).toBe(3);
     expect(report.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(report.durationMs).toBeGreaterThan(0);
   });
@@ -146,11 +146,15 @@ describe("LLM Reporter E2E", () => {
     expect(ids).toHaveLength(new Set(ids).size);
   });
 
-  it("defaults network to empty arrays when no trace attachment is present", () => {
+  it("defaults network to an empty NetworkReport when no trace attachment is present", () => {
     for (const test of report.tests) {
-      expect(test.network).toStrictEqual([]);
+      expect(test.network?.instances).toStrictEqual([]);
+      expect(test.network?.groups).toStrictEqual({});
+      expect(test.network?.bodies).toStrictEqual({});
       for (const attempt of test.attempts) {
-        expect(attempt.network).toStrictEqual([]);
+        expect(attempt.network.instances).toStrictEqual([]);
+        expect(attempt.network.groups).toStrictEqual({});
+        expect(attempt.network.bodies).toStrictEqual({});
       }
     }
   });
