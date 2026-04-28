@@ -243,7 +243,9 @@ Then:
 export WORKER_EMAIL=invoice-test-$(date +%s)@clipboardhealth.com
 PHONE=$(printf "415555%04d" $((RANDOM % 10000)))
 REFCODE=$(LC_ALL=C tr -dc A-Z0-9 < /dev/urandom | head -c 8)
-SSN_BLOB='bd5xJwROoChe9OxqJP/YhvY7YALpAdfrbblPNZOJoaifIIuUc7+kuuj+F91hYj/...'  # full blob from constants.ts
+# Paste the full encrypted SSN blob from:
+# cbh-core/packages/testing-e2e-admin-app/src/lib/constants.ts (DEFAULT_CREATE_HCP_REQUEST_BODY.fullSocialSecurityNumber)
+SSN_BLOB='<paste full blob here>'
 
 curl -sS -X POST "$API_BASE/api/user/create" \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
