@@ -9,7 +9,7 @@ allowed-tools: Bash, Read, Grep, Glob
 This skill lets you verify Clipboard Health changes end-to-end against `development`. It is opinionated about two things:
 
 - **API-first.** curl against the dev gateway with tokens from `cbh auth gentoken`. No packages to install.
-- **Concepts over memorized payloads.** Field shapes and validation rules change. The skill teaches you *what owns what* and *where to read current truth* — not a fixed cookbook.
+- **Concepts over memorized payloads.** Field shapes and validation rules change. The skill teaches you _what owns what_ and _where to read current truth_ — not a fixed cookbook.
 
 The one area where the skill carries enough detail to run alone is the **core happy-path flow** (create workplace → create worker → create shift → book → clock in/out → trigger pay → generate invoice). Everything else is concept + controller pointer + "read the file before you call it".
 
@@ -34,28 +34,28 @@ Orient around the Clipboard codebase and:
 
 Default root assumed: `$CBH_ROOT=/Users/<me>/repos/cbh` (adjust — the skill should detect `$CWD` and ask if the path differs).
 
-| Repo | What lives there |
-|---|---|
-| `clipboard-health/` | **Main backend monolith (aka backend-main).** Shifts, workers (HCP), workplaces (facilities), invites, shift blocks, bookability rules, invoicing triggers. Mongo. |
-| `payment-service/` | Payments + bonuses. Transfers (Clipboard Stripe → worker Express), payouts (Express → external), bonus entities, external payment accounts, payment blockers. **Own Mongo — source of truth for payment state.** |
-| `home-health-api/` | Home Health product: cases, visits (typed), visit occurrences. **Postgres.** Standalone NestJS. Not behind the gateway. |
-| `documents-service-backend/` | Documents (presigned uploads, approval) and licenses (incl. NLC `multiState` flag). Own deployment + Datadog service (`document-service`). |
-| `shift-reviews-service/` | Post-shift ratings + **preferred workers** (reasons: `FAVORITE`, `RATING`, `INTERNAL_CRITERIA`). Postgres. |
-| `attendance-policy/` | Clock-in windows **plus** attendance scores, score adjustments, restrictions, market-level config. Controllers: `/policies`, `/restrictions`, `/scores`, `/workers`, `/markets`. |
-| `urgent-shifts/` | Urgency tier computation (`NCNS`, `LATE_CANCELLATION`, `LAST_MINUTE`) + urgent-shift-specific rules. |
-| `worker-app-bff/` | Worker-facing BFF. **Read-only / proxy** for most domain data. Don't send writes here. |
-| `worker-service-backend/` | Worker-service endpoints (worker-side reads and some writes). |
-| `cbh-api-gateway/` | API gateway config — routes `/api`, `/payment`, `/worker`, `/license-manager`, `/reviews`, etc. |
-| `license-manager/` | License lifecycle + state sync (backing the documents license flow). |
-| `cbh-backend-notifications/` | Notification dispatch (push, email, SMS). |
-| `cbh-chat-service/` | In-app chat between workers and workplaces. |
-| `cbh-admin-frontend/` | **admin-webapp** — serves both **CBH employees** and **facility users** (mobile-friendly). UI branches on who's logged in. |
-| `admin-app/` | Legacy admin frontend (being superseded by `cbh-admin-frontend`). Check this only if something is missing above. |
-| `cbh-mobile-app/` | Worker mobile app (Ionic + native). Also exposes a dev PWA at `hcp-webapp.development.clipboardhealth.org`. |
-| `clipboard-facility-app/` | Legacy Flutter facility app (being phased out; replaced by `admin-webapp`). Usually don't need this. |
-| `cbh-core/packages/cli/` | The `cbh` CLI — `auth gentoken`, `seed-data`, `local-package`, `dev up`. |
-| `cbh-core/packages/testing-e2e-admin-app/` | Canonical **reference payloads** and **AdminService method shapes** — read but do not import at runtime; shapes can be stale. |
-| `cbh-infrastructure/` | Terraform. URLs, Cognito pools, SES/Mailpit, network firewalls. |
+| Repo                                       | What lives there                                                                                                                                                                                                 |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clipboard-health/`                        | **Main backend monolith (aka backend-main).** Shifts, workers (HCP), workplaces (facilities), invites, shift blocks, bookability rules, invoicing triggers. Mongo.                                               |
+| `payment-service/`                         | Payments + bonuses. Transfers (Clipboard Stripe → worker Express), payouts (Express → external), bonus entities, external payment accounts, payment blockers. **Own Mongo — source of truth for payment state.** |
+| `home-health-api/`                         | Home Health product: cases, visits (typed), visit occurrences. **Postgres.** Standalone NestJS. Not behind the gateway.                                                                                          |
+| `documents-service-backend/`               | Documents (presigned uploads, approval) and licenses (incl. NLC `multiState` flag). Own deployment + Datadog service (`document-service`).                                                                       |
+| `shift-reviews-service/`                   | Post-shift ratings + **preferred workers** (reasons: `FAVORITE`, `RATING`, `INTERNAL_CRITERIA`). Postgres.                                                                                                       |
+| `attendance-policy/`                       | Clock-in windows **plus** attendance scores, score adjustments, restrictions, market-level config. Controllers: `/policies`, `/restrictions`, `/scores`, `/workers`, `/markets`.                                 |
+| `urgent-shifts/`                           | Urgency tier computation (`NCNS`, `LATE_CANCELLATION`, `LAST_MINUTE`) + urgent-shift-specific rules.                                                                                                             |
+| `worker-app-bff/`                          | Worker-facing BFF. **Read-only / proxy** for most domain data. Don't send writes here.                                                                                                                           |
+| `worker-service-backend/`                  | Worker-service endpoints (worker-side reads and some writes).                                                                                                                                                    |
+| `cbh-api-gateway/`                         | API gateway config — routes `/api`, `/payment`, `/worker`, `/license-manager`, `/reviews`, etc.                                                                                                                  |
+| `license-manager/`                         | License lifecycle + state sync (backing the documents license flow).                                                                                                                                             |
+| `cbh-backend-notifications/`               | Notification dispatch (push, email, SMS).                                                                                                                                                                        |
+| `cbh-chat-service/`                        | In-app chat between workers and workplaces.                                                                                                                                                                      |
+| `cbh-admin-frontend/`                      | **admin-webapp** — serves both **CBH employees** and **facility users** (mobile-friendly). UI branches on who's logged in.                                                                                       |
+| `admin-app/`                               | Legacy admin frontend (being superseded by `cbh-admin-frontend`). Check this only if something is missing above.                                                                                                 |
+| `cbh-mobile-app/`                          | Worker mobile app (Ionic + native). Also exposes a dev PWA at `hcp-webapp.development.clipboardhealth.org`.                                                                                                      |
+| `clipboard-facility-app/`                  | Legacy Flutter facility app (being phased out; replaced by `admin-webapp`). Usually don't need this.                                                                                                             |
+| `cbh-core/packages/cli/`                   | The `cbh` CLI — `auth gentoken`, `seed-data`, `local-package`, `dev up`.                                                                                                                                         |
+| `cbh-core/packages/testing-e2e-admin-app/` | Canonical **reference payloads** and **AdminService method shapes** — read but do not import at runtime; shapes can be stale.                                                                                    |
+| `cbh-infrastructure/`                      | Terraform. URLs, Cognito pools, SES/Mailpit, network firewalls.                                                                                                                                                  |
 
 **Long-tail repos** that might be relevant for specific features — `open-shifts/`, `shift-verification/`, `pricing-service/`, `worker-eta/`, `cbh-location-service/`, `authentication/`, `red-planet/`, `cbh-evidence/`, `invite-generator/`. Ask the user which domain a change touches before guessing.
 
@@ -65,12 +65,12 @@ If any of these aren't present in `$CBH_ROOT`, ask the user.
 
 Three human Cognito App Clients + one impersonation variant + S2S.
 
-| clientName | Actor | App surface |
-|---|---|---|
-| `admin-app` | CBH employee | `admin-webapp.development.clipboardhealth.org` (also serves facility users) |
-| `worker-app` | Worker (HCP) | `hcp-webapp.development.clipboardhealth.org` + native mobile |
-| `workplace-app` | Facility user (legacy) | Flutter app being phased out. New facility users log into `admin-webapp` via `admin-app` flow. |
-| `worker-app-impersonated` | Employee acting as a worker | admin-webapp impersonation mode |
+| clientName                | Actor                       | App surface                                                                                    |
+| ------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `admin-app`               | CBH employee                | `admin-webapp.development.clipboardhealth.org` (also serves facility users)                    |
+| `worker-app`              | Worker (HCP)                | `hcp-webapp.development.clipboardhealth.org` + native mobile                                   |
+| `workplace-app`           | Facility user (legacy)      | Flutter app being phased out. New facility users log into `admin-webapp` via `admin-app` flow. |
+| `worker-app-impersonated` | Employee acting as a worker | admin-webapp impersonation mode                                                                |
 
 Token flavours via `cbh auth gentoken`:
 
@@ -90,22 +90,22 @@ All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cb
 
 ## Environment reference — `development` only
 
-| Service | Base URL / mount |
-|---|---|
-| API gateway | `https://apigateway.development.clipboardhealth.org` (`$API_BASE`) |
-| backend-main | `$API_BASE/api` |
-| payment-service | `$API_BASE/payment` |
-| worker-service | `$API_BASE/worker` |
-| license-manager | `$API_BASE/license-manager` |
-| documents (REST) | `$API_BASE/api/documents` |
-| documents (GraphQL) | `$API_BASE/docs/graphql` |
-| shift-reviews | `$API_BASE/reviews` |
-| attendance-policy | `https://attendance-policy.dev.clipboardstaffing.com` (**`dev`**, not `development`) |
-| home-health-api | Confirm — usually `home-health-api.development.clipboardhealth.org` or the gateway-rewritten `$API_BASE/home-health-api`. Ask the user if unsure. |
-| Invoiced.com sandbox | `https://qa.billterms.com` (fully stubbed in dev) |
-| Mailpit | `https://mailpit.tools.cbh.rocks` |
-| Admin webapp | `https://admin-webapp.development.clipboardhealth.org` |
-| Worker PWA | `https://hcp-webapp.development.clipboardhealth.org` |
+| Service              | Base URL / mount                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API gateway          | `https://apigateway.development.clipboardhealth.org` (`$API_BASE`)                                                                                |
+| backend-main         | `$API_BASE/api`                                                                                                                                   |
+| payment-service      | `$API_BASE/payment`                                                                                                                               |
+| worker-service       | `$API_BASE/worker`                                                                                                                                |
+| license-manager      | `$API_BASE/license-manager`                                                                                                                       |
+| documents (REST)     | `$API_BASE/api/documents`                                                                                                                         |
+| documents (GraphQL)  | `$API_BASE/docs/graphql`                                                                                                                          |
+| shift-reviews        | `$API_BASE/reviews`                                                                                                                               |
+| attendance-policy    | `https://attendance-policy.dev.clipboardstaffing.com` (**`dev`**, not `development`)                                                              |
+| home-health-api      | Confirm — usually `home-health-api.development.clipboardhealth.org` or the gateway-rewritten `$API_BASE/home-health-api`. Ask the user if unsure. |
+| Invoiced.com sandbox | `https://qa.billterms.com` (fully stubbed in dev)                                                                                                 |
+| Mailpit              | `https://mailpit.tools.cbh.rocks`                                                                                                                 |
+| Admin webapp         | `https://admin-webapp.development.clipboardhealth.org`                                                                                            |
+| Worker PWA           | `https://hcp-webapp.development.clipboardhealth.org`                                                                                              |
 
 ## Prerequisites
 
@@ -124,6 +124,7 @@ jq --version
 ```
 
 Ask the user for:
+
 - The admin email they want to act as (e.g. `e2e@clipboardhealth.com` or their own).
 - Mailpit credentials if you need to drive signup/login.
 - `$CBH_ROOT` if not `/Users/<me>/repos/cbh/`.
@@ -170,7 +171,7 @@ echo "$PAYLOAD" | tr '_-' '/+' | base64 -d | jq '."custom:cbh_user_id", ."custom
 
 ## Step 1 — Create a workplace (LTC)
 
-Validator at `clipboard-health/src/modules/facilityProfile/services/middlewares/createFacilityProfileValidator.middleware.ts`. Required: `rushFee`, `lateCancellation`, `netTerms`, `disputeTerms`, `ratesTable`, `holidayFee`, `sentHomeChargeHours`, plus a rate entry for **every** qualification enabled for the workplace type (the validator iterates qualifications and `check("rates.{q}").exists()` — missing rate keys are reported as `"Invalid rate - X doesn't exist"`, which means *missing*, not *unrecognized*). For LTC today that's also: `NP`, `QMAP`, `Server`, `Janitor`, `Site Lead`, `Medical Aide`, `Medical Technician`, `Respiratory Therapist`, `Dental Hygienist`, `Dental Assistant`, `CNA On Call`. **`salesforceID` regex: exactly 15 or 18 alphanumeric chars** (`/^[0-9a-zA-Z]{15}([0-9a-zA-Z]{3})?$/`). Response uses `id`, not `_id`.
+Validator at `clipboard-health/src/modules/facilityProfile/services/middlewares/createFacilityProfileValidator.middleware.ts`. Required: `rushFee`, `lateCancellation`, `netTerms`, `disputeTerms`, `ratesTable`, `holidayFee`, `sentHomeChargeHours`, plus a rate entry for **every** qualification enabled for the workplace type (the validator iterates qualifications and `check("rates.{q}").exists()` — missing rate keys are reported as `"Invalid rate - X doesn't exist"`, which means _missing_, not _unrecognized_). For LTC today that's also: `NP`, `QMAP`, `Server`, `Janitor`, `Site Lead`, `Medical Aide`, `Medical Technician`, `Respiratory Therapist`, `Dental Hygienist`, `Dental Assistant`, `CNA On Call`. **`salesforceID` regex: exactly 15 or 18 alphanumeric chars** (`/^[0-9a-zA-Z]{15}([0-9a-zA-Z]{3})?$/`). Response uses `id`, not `_id`.
 
 ```bash
 SFID=$(printf "INVTEST%08d" $((RANDOM)))   # 15 chars
@@ -382,7 +383,7 @@ If admin-assign 4xx's with a bookability error, `override:true` covers most rule
 
 ## Step 8 — Clock in, then clock out (or skip via verified=true)
 
-Live worker path (use this for "real" booking flows in a *future* shift window):
+Live worker path (use this for "real" booking flows in a _future_ shift window):
 
 ```bash
 NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
@@ -392,6 +393,7 @@ curl -sS -X POST "$API_BASE/api/shifts/record_timekeeping_action/$SHIFT_ID" \
 ```
 
 Two important traps for **test data flows**:
+
 - A freshly-created worker has **no background check** → worker-token clock-in returns `422 "You can't work as you don't have a valid background check."` (`WORKER_HAS_INVALID_BACKGROUND_CHECK`). No way around this from the API surface alone.
 - Calling the same endpoint with an admin token does **not** retroactively clock in a past shift — `getActionTimestamp` always uses `startOfMinute(new Date())` for admin-driven actions, ignoring `body.shiftActionTime`. Admin-stamped clock actions only make sense during an active shift window.
 
@@ -492,6 +494,7 @@ For deep verification, read `clipboard-health/src/modules/payment/controllers/pa
 ## Full orchestration — one-shot smoke
 
 Run steps 1–10 in order. Halt on the first non-200. Each step captures the ID the next step needs. Assert at the end:
+
 - Shift has `agentId` populated, `verified:true`, no `cancelledAt`. (Re-read after Step 8 — the `verified:true` update can clear `agentId`.)
 - Transfer row exists in `payment-service` with `status = "COMPLETED"`. (Skipped on the invoice-only fast path.)
 - Payout row exists for this worker, recent. (Skipped on the invoice-only fast path.)
@@ -518,6 +521,7 @@ There is no single `ShiftStatus` enum. Infer from `agentId`, `cancelledAt`, cloc
 ## Shift assignment variants
 
 Four paths to "assigned":
+
 1. **Instant book** — `POST /api/shifts/claim` (default for almost all shifts).
 2. **Invite** — `POST /api/shift-invites` (workplace/admin creates; worker `PATCH` to accept). Controller: `clipboard-health/src/modules/shifts-invites/shift-invite.controller.ts`.
 3. **Shift block** — facility/admin creates a bundle (`POST /api/shift-blocks`); worker claims the block via `POST /api/shift-blocks/:id/booking-requests`. Controllers: `clipboard-health/src/modules/shift-blocks/controllers/{shift-blocks, booking-requests}.controller.ts`.
@@ -545,21 +549,22 @@ Driven by lead time + reason, not a hand-settable flag. Enum in `clipboard-healt
 
 Billing check (from `FcfWorkerPayoutService.getCancellationPaymentParams`):
 
-```
+```ts
 isBillable =
-  leadTime < facility.lateCancellation.period
-  && facility.lateCancellation.feeHours !== 0
-  && !isWorkerLateBeyondThreshold   // >20min late
-  && !hasInvalidPayoutValues
+  leadTime < facility.lateCancellation.period &&
+  facility.lateCancellation.feeHours !== 0 &&
+  !isWorkerLateBeyondThreshold && // >20min late
+  !hasInvalidPayoutValues;
 ```
 
 No reason code exempts the workplace by itself. Escape hatches: outside late-cancel window, `feeHours=0`, worker very late.
 
 Paths:
+
 - Worker cancel — `POST /api/shifts/worker-cancel-request` (reasons: `SICK`, `TRANSPORTATION`, `BABYSITTER_ISSUE`, …).
 - Facility cancel (two-step) — `PATCH /api/shifts/:id/facility-cancelled-me/request` → `.../approve` (or `.../reject`). Reasons: `LOW_CENSUS`, `STAFFED_IN_HOUSE`, `STAFFED_OTHER_REGISTRY`, `NO_CALL_NO_SHOW`, `FACILITY_USER_SUBMIT_SENT_HOME`, `WORKER_IS_LATE`, `OTHER`.
 - Sent home (mid-shift) — routed through the same facility-cancel flow with `FACILITY_USER_SUBMIT_SENT_HOME`; separate `getSentHomePayoutParams` computes partial pay.
-- Left early (recorded *about* a worker, **not** filed *by* one) — `POST /api/worker-left-early-requests`. Body is **JSON:API** with `type: "worker-left-early-request"` and attributes `{shiftId, replacementRequested, leftWithPermission, comment}`. Contract: `node_modules/@clipboard-health/contract-backend-main/src/lib/workerLeftEarlyRequests.contract.ts`. Controller: `src/modules/worker-left-early/entrypoints/worker-left-early.controller.ts`. The route's decorator is `@AllowAnyAuthenticatedUser`, **but** `WorkerLeftEarlyAuthorizer` only accepts: (1) `EMPLOYEE` with an `EmployeeProfile`, or (2) `WORKPLACE_USER` who `worksAt(facilityId)`, is verified+non-suspicious, AND has role `ADMIN | SHIFT_MANAGEMENT | DOCUMENTS` or the `POST_SHIFT_PERMISSION` permission. **Worker tokens get 403 "Unauthorized user".** Use the admin (e2e) token or a facility-user token. Returns the request with optional `replacementShiftId` if `replacementRequested:true`. Read-back: `GET /api/worker-left-early-requests/:id?include[]=shift&include[]=worker` (path param is the WLE request id, not the shift id, despite the contract's `ShiftIdSchema` typing).
+- Left early (recorded _about_ a worker, **not** filed _by_ one) — `POST /api/worker-left-early-requests`. Body is **JSON:API** with `type: "worker-left-early-request"` and attributes `{shiftId, replacementRequested, leftWithPermission, comment}`. Contract: `node_modules/@clipboard-health/contract-backend-main/src/lib/workerLeftEarlyRequests.contract.ts`. Controller: `src/modules/worker-left-early/entrypoints/worker-left-early.controller.ts`. The route's decorator is `@AllowAnyAuthenticatedUser`, **but** `WorkerLeftEarlyAuthorizer` only accepts: (1) `EMPLOYEE` with an `EmployeeProfile`, or (2) `WORKPLACE_USER` who `worksAt(facilityId)`, is verified+non-suspicious, AND has role `ADMIN | SHIFT_MANAGEMENT | DOCUMENTS` or the `POST_SHIFT_PERMISSION` permission. **Worker tokens get 403 "Unauthorized user".** Use the admin (e2e) token or a facility-user token. Returns the request with optional `replacementShiftId` if `replacementRequested:true`. Read-back: `GET /api/worker-left-early-requests/:id?include[]=shift&include[]=worker` (path param is the WLE request id, not the shift id, despite the contract's `ShiftIdSchema` typing).
 - Admin delete — `POST /api/shift/:id/delete` with `ADMIN_EDIT_SHIFT | ADMIN_MIGRATION`.
 
 Always dry-run with `GET /api/shifts/:id/cancellationParams` before asserting `isBillable` / `isPayable`.
@@ -581,6 +586,7 @@ Separate backend (`home-health-api`, Postgres), same mobile and admin apps.
 - **Occurrence** = a completed instance of a visit. For recurring visit types (e.g. "regular visits, X per week for X weeks"), one visit produces multiple occurrences.
 
 Worker paths to a visit:
+
 1. **Discover + book** — `GET /api/v1/in-home-cases?filter[booked]=false&...` → `PATCH /api/v1/visits/:id` with `{data:{attributes:{bookedWorkerId}}}`. No invite required.
 2. **Invite** — workplace/admin `POST /api/v1/:workplaceId/visits/:id/invites`; worker accepts.
 
@@ -669,7 +675,7 @@ Ordered by how often you'll open them:
 
 - `clipboard-health/src/modules/shifts/controllers/shifts.controller.ts` — legacy: `/api/shifts/claim` (worker self-claim AND admin-assign), `/api/shifts/unassign`, `/api/shift/put` (legacy update), `/api/shift/create`. Note path inconsistency: create+put are under `/api/shift/` (singular), most reads under `/api/shifts/`. Mounted with `@Controller(["/api/shifts","/api/shift"])` so both prefixes match.
 - `clipboard-health/src/modules/shifts/entrypoints/shift-create.controller.ts` — **v3** `POST /api/v3/shifts` (JSON:API), the documented replacement for the legacy create. Goes through the same `ShiftCreateAuthorizer`.
-- `clipboard-health/src/modules/shifts/entrypoints/internal/shift-create.authorizer.ts` — the gate behind generic 403 *"Permission to resource denied"* when an admin lacks an `EmployeeProfile`.
+- `clipboard-health/src/modules/shifts/entrypoints/internal/shift-create.authorizer.ts` — the gate behind generic 403 _"Permission to resource denied"_ when an admin lacks an `EmployeeProfile`.
 - `clipboard-health/src/modules/shifts/services/adminShiftAssign.service.ts` — `adminShiftAssign` method; the bookability decisions and `getAdminShiftAssignResponseWithSideEffects` map non-bookable criteria to errors.
 - `clipboard-health/src/modules/shift-offers/admin-shift-offer.controller.ts` + `claim-shift-offer.service.ts` — `POST /api/shifts/:id/offers` (must be created before /claim, even with `override:true`).
 - `clipboard-health/packages/contract-backend-main/src/lib/shifts.contract.ts` — `shiftCreateBodySchema` (flat, legacy), `shiftClaimBodySchema` (`offerId` required), `shiftUpdteInfoSchema` (sic), `shiftAdjustmentSchema` (`adjustmentType` enum: `preInvoicePreference|preInvoiceDispute|postInvoiceDispute|other`).
