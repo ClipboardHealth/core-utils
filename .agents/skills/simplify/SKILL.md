@@ -12,7 +12,7 @@ Run \`git diff\` (or \`git diff HEAD\` if there are staged changes) to see what 
 
 ## Phase 2: Launch Three Review Agents in Parallel
 
-If you can, use the ${AGENT_TOOL_NAME} tool to launch all three agents concurrently in a single message; otherwise, perform the following yourself. Pass each agent the full diff so it has the complete context.
+If the current host supports parallel delegated reviewers, use that mechanism to launch all three reviews concurrently; otherwise, perform the reviews yourself. Pass each reviewer the full diff so it has the complete context.
 
 ### Agent 1: Code Reuse Review
 
