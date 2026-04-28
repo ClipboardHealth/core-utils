@@ -27,7 +27,7 @@ Based on the above changes:
 3. Re-check `git status --short`. If there are changes, create a single conventional commit message.
 4. Push the branch to origin
 5. Check for an existing PR with `gh pr view`.
-   - No PR exists: Create with `gh pr create`. Title = commit subject line. Description = brief explanation of **why**, not what.
+   - No PR exists: Create with `gh pr create`. Title = commit subject line. Description = brief explanation of **why**, not what. Append `<!-- commit-push-pr:created v1 -->` on its own line at the end of the PR description so skill-created PRs can be identified later.
    - PR exists: Report the URL and move on.
 6. You have the capability to call multiple tools in a single response. After the `simplify` skill completes, do the remaining git and PR operations in a single message. Do not use any other tools or do anything else.
 7. After tool calls complete, send one short final text response with the branch name and the full PR URL (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`). Never use shorthand like `repo#123` — always output the complete URL so it is clickable.
