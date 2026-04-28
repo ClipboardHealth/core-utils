@@ -1,59 +1,61 @@
 ---
-description: Implement a plan file end-to-end, then hand off to commit-push-pr to ship it. Use when the user says 'go', 'execute the plan', 'implement the plan', or hands off a plan file for execution.
+description: Implement a plan file or direct request end-to-end, then hand off to commit-push-pr to ship it. Use when the user says 'go', 'execute the plan', 'implement the plan', or gives an implementation request.
 ---
 
-# Go: Execute a Plan and Ship It
+# Go: Execute Work and Ship It
 
-Given a plan file, implement everything the plan describes, then invoke the `commit-push-pr` skill to commit, push, and open a PR.
+Given a plan file or direct implementation request, implement the requested work, then invoke the `commit-push-pr` skill to commit, push, and open a PR.
 
-This skill is the bridge between planning and shipping. It does not re-plan or re-design — the plan is the source of truth. If the plan is wrong, surface that; do not silently improvise.
+This skill is the bridge between intent and shipping. It does not re-plan or re-design unless the user asked for that. If the request is wrong or cannot be implemented safely, surface that; do not silently improvise.
 
-## Phase 1: Locate and Read the Plan
+## Phase 1: Understand the Input
 
-The user invokes this skill with a plan file path or identifier as an argument. Resolve it in this order:
+The user may invoke this skill with either a plan file path/identifier or a direct implementation request such as "add a button to the homepage to log in." Resolve the input in this order:
 
 1. **Absolute path** (starts with `/`): read it directly.
 2. **Relative path** (contains `/` or starts with `./`): resolve from the current working directory.
-3. **Bare name** (no path separators, e.g. `my-plan` or `my-plan.md`): look in the host's plans directory. Use whatever directory the current host stores plan files in — do not hard-code a host-specific path. If the host does not expose a plans directory, ask the user where the plan lives.
-4. **No argument given**: ask the user to provide the plan file path. Do not guess.
+3. **Bare name** (no path separators, e.g. `my-plan` or `my-plan.md`): if the host exposes a plans directory, look there first. Use whatever directory the current host stores plan files in — do not hard-code a host-specific path. If no plan is found and the input is ambiguous, ask whether it is a plan identifier or an implementation request.
+4. **Natural-language request** (for example, contains spaces or reads like an implementation task): treat it as the implementation request. There may be no separate plan file.
+5. **No argument given**: ask the user to provide either the plan file path or the implementation request. Do not guess.
 
-If the plan file does not exist or cannot be read, stop and tell the user. Do not proceed without a plan.
+If a path-like input does not exist or cannot be read, stop and tell the user. Do not reinterpret a missing path as a direct request.
 
-Read the entire plan before starting. Note the **Critical files**, **Approach**, and **Verification** sections (or their equivalents).
+When using a plan, read the entire plan before starting. Note the **Critical files**, **Approach**, and **Verification** sections (or their equivalents).
 
-## Phase 2: Implement the Plan
+## Phase 2: Implement the Request
 
-Treat the plan as the source of truth for scope:
+Treat the plan or direct request as the source of truth for scope:
 
-- Make exactly the changes the plan describes — no more, no less. Do not add extra refactors, tests, or cleanup the plan did not ask for.
-- If the plan references files, functions, or utilities that no longer exist, stop and surface the discrepancy before guessing.
-- If you discover the plan is wrong (the codebase has moved, an assumption is invalid, a constraint was missed), stop and report. Do not silently rewrite the approach.
-- Do **not** modify the plan file itself.
+- Make exactly the changes requested — no more, no less. Do not add extra refactors, tests, or cleanup the request did not ask for.
+- If a plan references files, functions, or utilities that no longer exist, stop and surface the discrepancy before guessing.
+- If you discover the request is wrong (the codebase has moved, an assumption is invalid, a constraint was missed), stop and report. Do not silently rewrite the approach.
+- For direct implementation requests, inspect the relevant code before editing and use the repo's existing patterns.
+- Do **not** modify the plan file itself when working from a plan.
 
 ## Phase 3: Validate
 
-Validation is **mandatory** and runs on every invocation, even when the plan does not include a Verification section. A missing or incomplete Verification section is not permission to skip validation — it is a gap to close.
+Validation should follow the repo's instructions and the cost profile of the repo. Some repos intentionally leave slow checks to CI; do not run broad or slow suites unless the repo instructions explicitly require them.
 
 Run validation in this order:
 
-1. **Repo-mandated pre-PR checks.** Look up the repo's standard pre-PR command. Common signals, in priority order:
+1. **Repo instructions.** Look up the repo's standard validation guidance. Common signals, in priority order:
    - An explicit instruction in the repo's agent or contributor instructions, such as `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or an equivalent host-specific instruction file (e.g. "MUST run before opening PRs"). This wins over everything else.
-   - A conventionally-named script in `package.json` / Python project config / `Makefile` / etc. — `affected`, `precommit`, `validate`, `check`, `verify`, `test`, `lint`, `typecheck`, or repo-equivalent.
-   - If nothing else, run the project's lint + typecheck + test commands directly.
+   - A relevant `package.json` script when the repo instructions point to it, such as `affected`, `precommit`, `validate`, `check`, `verify`, `test`, `lint`, `typecheck`, or repo-equivalent.
+   - A repo-specific equivalent in the rare case the project does not use `package.json`.
 
-   If you cannot determine the right command, ask the user before proceeding — do not silently skip.
+   If the repo primarily relies on git pre-commit or pre-push hooks and does not mandate a manual validation command, do not invent one. Let the hooks run during the `commit-push-pr` handoff.
 
-2. **Plan-specific verification.** If the plan has a Verification section, run those checks too. They are additive to (not a replacement for) the repo-mandated checks.
+2. **Request-specific verification.** If the plan or user request names specific checks, run them when they are practical and consistent with the repo instructions. If a requested check is clearly a slow CI-only suite, ask before running it.
 
-If any check fails, fix the failures and re-run. Do not hand off to `commit-push-pr` with failing checks. If a failure looks pre-existing (unrelated to your changes), confirm that with the user before proceeding — do not assume.
+If any check you run fails, fix the failures and re-run the same check. Do not hand off to `commit-push-pr` with known failing checks unless the user explicitly accepts a pre-existing or unrelated failure.
 
 ## Phase 4: Hand Off to commit-push-pr
 
-Once implementation is complete and Phase 3 validation passes, invoke the `commit-push-pr` skill by name using this agent's normal skill invocation mechanism — not a hard-coded host-specific command. That skill handles branching (if needed), running `simplify` on the changed files, committing, pushing, and opening the PR.
+Once implementation is complete and Phase 3 validation is satisfied, invoke the `commit-push-pr` skill by name using this agent's normal skill invocation mechanism.
 
-Do **not** commit, push, or open the PR yourself in this skill. Let `commit-push-pr` own that flow so the shipping logic stays in one place.
+Do **not** commit, push, or open the PR yourself in this skill. Let `commit-push-pr` own the shipping flow.
 
-If `commit-push-pr` reports `nothing to ship.` (the plan resulted in no actual file changes), surface that to the user — it usually means the plan was already implemented or the plan was a no-op.
+If `commit-push-pr` reports `nothing to ship.` (the work resulted in no actual file changes), surface that to the user — it usually means the request was already implemented or was a no-op.
 
 ## Phase 5: Final Output
 
