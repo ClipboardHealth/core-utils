@@ -23,7 +23,7 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 Based on the above changes:
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`)
-2. Run the `simplify` skill on the files included in the PR before committing, pushing, or opening the PR. If the working tree is clean, run `simplify` against `git diff $(git merge-base HEAD origin/HEAD)..HEAD`. If the working tree has changes, run it against `git diff HEAD`; when local commits also exist, include `git diff $(git merge-base HEAD origin/HEAD)..HEAD` as additional PR context. Invoke the skill by name using this agent's normal skill invocation mechanism, not a hard-coded host-specific command. Wait for the skill to finish, then include any resulting fixes in the commit step below.
+2. Run the `simplify` skill on the files included in the PR before committing, pushing, or opening the PR. If the working tree is clean, run `simplify` against `git diff $(git merge-base HEAD origin/HEAD)..HEAD`. If the working tree has changes, run it against `git diff HEAD`; when local commits also exist, include `git diff $(git merge-base HEAD origin/HEAD)..HEAD` as additional PR context. Invoke the skill by name using this agent's normal skill invocation mechanism. Wait for the skill to finish, then include any resulting fixes in the commit step below.
 3. Re-check `git status --short`. If there are changes, create a single conventional commit message.
 4. Push the branch to origin
 5. Check for an existing PR with `gh pr view`.
