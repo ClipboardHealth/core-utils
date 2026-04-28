@@ -12,7 +12,7 @@ This skill is the bridge between intent and shipping. It does not re-plan or re-
 
 The user may invoke this skill with either a plan file path/identifier or a direct implementation request such as "add a button to the homepage to log in." Resolve the input in this order:
 
-1. **Absolute path** (starts with `/`): read it directly.
+1. **Absolute path** (starts with `/`): read it directly only when it is inside the current workspace/repo root or the host's plans directory. If it is outside those roots, ask the user to confirm before reading it; if they do not confirm, stop and ask for an approved path.
 2. **Relative path** (contains `/` or starts with `./`): resolve from the current working directory.
 3. **Bare name** (no path separators, e.g. `my-plan` or `my-plan.md`): if the host exposes a plans directory, look there first. Use whatever directory the current host stores plan files in — do not hard-code a host-specific path. If no plan is found and the input is ambiguous, ask whether it is a plan identifier or an implementation request.
 4. **Natural-language request** (for example, contains spaces or reads like an implementation task): treat it as the implementation request. There may be no separate plan file.
@@ -59,4 +59,4 @@ If `commit-push-pr` reports `nothing to ship.` (the work resulted in no actual f
 
 ## Phase 5: Final Output
 
-After `commit-push-pr` returns, send one short final response with the branch name and the full PR URL it produced. If `commit-push-pr` reported nothing to ship, say so plainly.
+After `commit-push-pr` returns, ensure the user sees one short final response with the branch name and the full PR URL it produced. If the current host already surfaced that response, do not duplicate it. If `commit-push-pr` reported nothing to ship, say so plainly.
