@@ -153,7 +153,8 @@ The worker token gets minted **after** you create the worker. `POST /api/user/cr
 Resolve your admin userId once (used as `addedBy`/`sessionUser`/`adminId` in many downstream calls — the constants.ts default is stale):
 
 ```bash
-export ADMIN_USERID=$(curl -sS "$API_BASE/api/user/getByEmail?email=$ADMIN_EMAIL" \
+export ADMIN_USERID=$(curl -sS -G "$API_BASE/api/user/getByEmail" \
+  --data-urlencode "email=$ADMIN_EMAIL" \
   -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '._id')
 ```
 
@@ -162,7 +163,7 @@ export ADMIN_USERID=$(curl -sS "$API_BASE/api/user/getByEmail?email=$ADMIN_EMAIL
 ```bash
 PAYLOAD=$(echo "$ADMIN_TOKEN" | cut -d. -f2); LEN=$(( ${#PAYLOAD} % 4 ))
 [ $LEN -ne 0 ] && PAYLOAD="$PAYLOAD$(printf '=%.0s' $(seq 1 $((4-LEN))))"
-echo "$PAYLOAD" | tr '_-' '/+' | base64 -d | jq '."custom:cbh_user_id", ."custom:user_types"'
+echo "$PAYLOAD" | tr '_-' '/+' | { base64 -d 2>/dev/null || base64 -D; } | jq '."custom:cbh_user_id", ."custom:user_types"'
 ```
 
 **Pick an admin with an `EmployeeProfile` doc.** The plain `@AllowClipboardHealthEmployees()` decorator passes for any JWT with `custom:user_types: EMPLOYEE` (so workplace creation works for almost any CBH email). But `ShiftCreateAuthorizer` (`src/modules/shifts/entrypoints/internal/shift-create.authorizer.ts:54`) additionally requires an `EmployeeProfile` keyed by your `userId`, and many real CBH dev users don't have one. Symptom: shift create returns generic `403 {"code":"PermissionDenied","detail":"Forbidden resource"}` with no detail. **Default to `e2e@clipboardhealth.com` for shift writes** unless the user explicitly hands you another admin email and confirms it has an EmployeeProfile.
@@ -233,7 +234,8 @@ The controller's `userManipulationService.createAgent` calls `cognitoService.cre
 Resolve your own admin userId first (it's used as `addedBy` and as `sessionUser` for downstream calls — the constants.ts default `60841c3970071101613e1c50` is stale):
 
 ```bash
-ADMIN_USERID=$(curl -sS "$API_BASE/api/user/getByEmail?email=$ADMIN_EMAIL" \
+ADMIN_USERID=$(curl -sS -G "$API_BASE/api/user/getByEmail" \
+  --data-urlencode "email=$ADMIN_EMAIL" \
   -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '._id')
 ```
 
