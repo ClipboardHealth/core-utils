@@ -553,6 +553,8 @@ Short. Pointers, not recipes. When you need a concrete call, open the controller
 
 Enum in `clipboard-health/src/workers/constants/workerStages/index.ts`. Stages: `ONBOARDING → ENROLLED → PROBATION → RESTRICTED → DEACTIVATED → SOFT_DELETED`. Only `ENROLLED` and `PROBATION` can book freely. `RESTRICTED` books only at **preferred** workplaces. `DEACTIVATED` can still log in unless `loginBlocked=true`.
 
+**Worker mobile-app earnings/bookings tabs filter on two things admin-webapp ignores:** worker stage (`ONBOARDING` → empty state) and `shift.start < now` (future-dated shifts hidden, even verified + paid). So a shift can be paid in payment-service and still missing from Earnings. To make a verified shift visible there, its `start` / `end` must already be in the past at verify time — see the PUT-on-verified-shift gotcha in Troubleshooting.
+
 ## Shift state is derived, not stored
 
 There is no single `ShiftStatus` enum. Infer from `agentId`, `cancelledAt`, clock actions, `deleted`, `isSentHome`. The worker-facing derived state is at `GET /api/shifts/:id/state` — use that, don't build your own.
@@ -650,6 +652,8 @@ To inspect the resulting line item, call `GET $API_BASE/api/upcoming-charges?fac
 **Fee math.** `getTen99PolicyAssignmentFeeInCents` (called from `triggerShiftPayment`) computes `feeInCents = round((basePayInCents × time / 100 / 100) × netRate)`. Records it on the shift document and on the `Ten99PolicyJob` row. Read the recorded value via `GET /api/shifts/:shiftId/1099-policy/assignments` — that endpoint surfaces `assignmentFeeInCents`. The `/api/workers/:workerId/1099-policy/jobs` endpoint **does not** surface the fee field (DTO mapper at `ten99-policy.dto.mapper.ts:135-175` omits it).
 
 **Deduction from worker pay is `TIMESHEET_UPLOAD`-only.** Per `shift-payment.domain.ts:120-168` and the explicit assertion at `shift-payment.domain.spec.ts:199-225` (VAU-1106): the fee is **only subtracted** from the payable amount on `PAYMENT_EVENTS.TIMESHEET_UPLOAD` and `RETRY_MISSING_PAYMENT_TIMESHEET_UPLOAD`. On `SHIFT_VERIFICATION` / `SHIFT_SENT_HOME` / `SHIFT_MISSED_PUNCH_REQUEST_APPROVAL` the fee is recorded but the worker gets full pay; the fee is recovered through the 1099Policy invoice that gets enqueued via `CREATE_TEN99_POLICY_INVOICE_FOR_ASSIGNMENT_JOB_NAME`. So if you're testing "fee deducted from worker pay," you need a manual-timekeeping flow ending in `PUT /api/v2/shifts/timecard/:shiftId` + admin approval, not a regular admin verify.
+
+**Hidden prereq: `TIMESHEET_UPLOAD` deduction needs an `InstantPayShift` row.** `doInstantPay` (`helpers/instantPay.ts:847`) short-circuits when `getInstantShift(shiftId)` returns null. That row is created by the worker self-clock-in flow (`POST /api/shifts/record_timekeeping_action/:shiftId` with `stage: CLOCK_IN`) — **not** by admin-override claim. With admin-claimed shifts the timecard endpoint auto-verifies and surfaces the fee (`ten99PolicyAssignmentFeeInCents`), but no Stripe transfer with the deduction fires — the hourly retry-missing-payment cron eventually transfers the **full** gross via SHIFT_VERIFICATION instead. To prove the deduction at the Stripe level, the worker must self-clock-in (requires a valid background check on file).
 
 ## Home Health — Case → Visit → Occurrence
 
@@ -756,7 +760,8 @@ Ask the user which path they prefer before wiring a lot of curl.
 
 - **API read-back** — primary. Mutation → GET resource → assert a field changed.
 - **Bookability probe** — `GET /api/shifts/:id/state`.
-- **Payment truth** — always `payment-service` endpoints, not backend-main (which can be stale).
+- **Payment truth** — always `payment-service`, not backend-main (which can be stale). Cleanest read for worker payment history: `GET /payment/payment-logs?filter[agentId]=<workerId>` (fields: `sourceEvent`, `amount` (cents), `status`, `paymentTypeId`, `createdAt`). More useful than `GET /payment/accounts/:workerId/transfers`, which needs `startDate`+`endDate` and only returns the raw Stripe transfer object.
+- **Auto-retry of failed transfers** — payment-service has an hourly cron that re-fires missing/failed transfers once the underlying account is healthy. If you trigger SHIFT_VERIFICATION before the worker has a Stripe account, the transfer fails silently; set up the account and wait up to ~1h. The retry's `payment-logs` row uses `sourceEvent: adjustMissingPayment-<original>` (e.g. `adjustMissingPayment-verification`) — same amount, same destination, just a delayed `createdAt`. So you usually don't need to manually re-trigger after fixing a prereq.
 - **Datadog traces** — see the "Datadog service map" section below; **the actual service tag is never `backend-main`**, it's one of ~18 pseudo-services that all run the same monolith code. Hand off to `core:datadog-investigate` for deep dives.
 - **Mailpit** — `$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:<email>` (URL-encode the `+`). Combine with `subject:"Your Clipboard sign-in link"` for magic links, `subject:"Your Clipboard login code"` for OTPs, or a workplace-name fragment for shift-booked / cancellation notices.
 - **UI sanity check** — `$ADMIN_WEBAPP` (serves both employees and facility users) is the last resort for "did this render".
@@ -820,6 +825,7 @@ The `meta.github-html-url` field on each service definition points to the source
 - **403 `{"code":"PermissionDenied","detail":"Forbidden resource"}` on shift create** — your admin user has `custom:user_types: EMPLOYEE` (so workplace creation worked) but no `EmployeeProfile` doc. `ShiftCreateAuthorizer` (`shift-create.authorizer.ts:54`) bounces the request without a useful error. Switch to `e2e@clipboardhealth.com` (or another admin known to have an `EmployeeProfile`) and retry.
 - **400 "The offered rate for this shift is no longer valid"** on `/api/shifts/claim` — `offerId` is required and must point at a real `shift-offer` (the rate-negotiation guard runs even with `override:true`). Create one first via `POST /api/shifts/:shiftId/offers` (JSON:API body) and pass that `id`. Without this two-step, admin manual-assign always 400s.
 - **400 on write** — grep the controller named in the concept's "source" and read the DTO. Payload shapes drift.
+- **`PUT /api/shift/put` 400 `"Cannot update shift because it is already verified."`** Verified shifts are immutable to PUT — edit `start` / `end` / `clockInOut` **before** verifying. Sequence for a past-dated, verified, 1099-fee-bearing shift: create at `start = +1h` → claim → create 1099 assignment (`effective_date` must be future) → PUT to move `start` / `end` / `clockInOut` into the past while still unverified → `POST /api/shift/verification/verify`.
 - **HH-API `PATCH visit-occurrences/:id` returns 500 "Request failed with status code 400"** on `status:APPROVED` — bonus-payment side effect to payment-service is failing. Most common cause: worker has no `Account` in payment-service. Fix in dev: create a Stripe-skipped account via `POST /payment/accounts` with `gatewayAccountCreationIsEnabled:false` and a non-empty synthetic `accountId`. Then retry the approve. REJECTED and PENDING don't trigger this path.
 - **HH-API "Account pricing for visit type does not exist"** (500) on visit create — `AccountPricing` row missing for the tuple `(workplaceId, agentReq, visitType, pricingType, typeOfCare)`. Seed via `POST /home-health-api/api/v1/:workplaceId/account-pricing` before the visit. Remember `agentReq` is auto-coerced to `RN` for admission-family visit types; seed accordingly. See the Home Health concept section for the full body and constraints.
 - **HH-API "Workplace not found" / 403 on `/home-health-api/api/v1/:workplaceId/...`** — you're passing the FacilityProfile `_id` instead of the workplace User.\_id. Use the top-level `id` returned by `POST /api/facilityprofile/create`.
@@ -914,7 +920,8 @@ Ordered by how often you'll open them:
 - `clipboard-health/src/workers/constants/workerStages/index.ts` — worker stages enum.
 - `clipboard-health/src/services/urgentShifts/constants.ts` — urgency tier/reason enums.
 - `clipboard-health/openapi.json` — full spec (grep only, 2.1 MB).
-- `payment-service/src/app/payments/transfers/accounts-transfers.controller.ts` — transfers.
+- `payment-service/src/app/payments/transfers/accounts-transfers.controller.ts` — transfers. GET needs `startDate`+`endDate`; transfers are fired via SQS events from backend-main's `triggerShiftPayment`, no direct POST.
+- `payment-service/src/app/payments/payment-logs/payment-logs.controller.ts` — `GET /payment/payment-logs` is the canonical worker payment history read (see Verification patterns).
 - `payment-service/src/app/accounts/accounts.controller.ts` — account reads.
 - `payment-service/src/app/payouts/payouts.controller.ts` — payouts.
 - `payment-service/src/app/bonuses/bonuses.service.ts` — bonus entity and `createBonusPayment`.

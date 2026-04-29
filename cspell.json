@@ -115,6 +115,7 @@
     "oxlintrc",
     "parallelizable",
     "pipefail",
+    "prereq",
     "promptfoo",
     "promptfooconfig",
     "pushback",
