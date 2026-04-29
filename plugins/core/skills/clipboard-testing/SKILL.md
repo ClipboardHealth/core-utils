@@ -469,7 +469,8 @@ curl -sS -X POST "$API_BASE/payment/accounts/$WORKER_ID/transfers" \
 
 # Verify transfer landed
 curl -sS "$API_BASE/payment/accounts/$WORKER_ID/transfers" \
-  -H "Authorization: Bearer $S2S_BACKEND_MAIN" | jq '.[] | select(.shiftId=="'"$SHIFT_ID"'") | {status, amount, stripeTransferId: .transferObject.id}'
+  -H "Authorization: Bearer $S2S_BACKEND_MAIN" \
+  | jq --arg sid "$SHIFT_ID" '.[] | select(.shiftId == $sid) | {status, amount, stripeTransferId: .transferObject.id}'
 
 # Payout: Express → external account (worker-initiated)
 curl -sS -X POST "$API_BASE/payment/accounts/authenticated/payout" \
@@ -763,7 +764,7 @@ Ask the user which path they prefer before wiring a lot of curl.
 - **Payment truth** — always `payment-service`, not backend-main (which can be stale). Cleanest read for worker payment history: `GET /payment/payment-logs?filter[agentId]=<workerId>` (fields: `sourceEvent`, `amount` (cents), `status`, `paymentTypeId`, `createdAt`). More useful than `GET /payment/accounts/:workerId/transfers`, which needs `startDate`+`endDate` and only returns the raw Stripe transfer object.
 - **Auto-retry of failed transfers** — payment-service has an hourly cron that re-fires missing/failed transfers once the underlying account is healthy. If you trigger SHIFT_VERIFICATION before the worker has a Stripe account, the transfer fails silently; set up the account and wait up to ~1h. The retry's `payment-logs` row uses `sourceEvent: adjustMissingPayment-<original>` (e.g. `adjustMissingPayment-verification`) — same amount, same destination, just a delayed `createdAt`. So you usually don't need to manually re-trigger after fixing a prereq.
 - **Datadog traces** — see the "Datadog service map" section below; **the actual service tag is never `backend-main`**, it's one of ~18 pseudo-services that all run the same monolith code. Hand off to `core:datadog-investigate` for deep dives.
-- **Mailpit** — `$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:<email>` (URL-encode the `+`). Combine with `subject:"Your Clipboard sign-in link"` for magic links, `subject:"Your Clipboard login code"` for OTPs, or a workplace-name fragment for shift-booked / cancellation notices.
+- **Mailpit** — `curl -sS -G -u "$MAILPIT_USER:$MAILPIT_PASS" --data-urlencode "query=from:no-reply+dev@updates.clipboardworks.com to:\"$EMAIL\"" "$MAILPIT_BASE/api/v1/search"` — let `--data-urlencode` handle the `+` and other specials. Combine with `subject:"Your Clipboard sign-in link"` (magic links), `subject:"Your Clipboard login code"` (OTPs), or a workplace-name fragment for shift-booked / cancellation notices.
 - **UI sanity check** — `$ADMIN_WEBAPP` (serves both employees and facility users) is the last resort for "did this render".
 
 # Datadog service map
@@ -847,13 +848,15 @@ Use only when no API exists (the login form itself; visual-only changes; phone-O
 
    ```bash
    # magic link (admin / facility / worker email-link login)
-   curl -sS -u "$MAILPIT_USER:$MAILPIT_PASS" \
-     "$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:%22$EMAIL%22%20subject:%22Your%20Clipboard%20sign-in%20link%22" \
+   curl -sS -G -u "$MAILPIT_USER:$MAILPIT_PASS" \
+     --data-urlencode "query=from:no-reply+dev@updates.clipboardworks.com to:\"$EMAIL\" subject:\"Your Clipboard sign-in link\"" \
+     "$MAILPIT_BASE/api/v1/search" \
      | jq '.messages[0].ID'
 
    # OTP (phone-aliased emails like 4153445892.phone.email@testmail.com)
-   curl -sS -u "$MAILPIT_USER:$MAILPIT_PASS" \
-     "$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:%22$EMAIL%22%20subject:%22Your%20Clipboard%20login%20code%22" \
+   curl -sS -G -u "$MAILPIT_USER:$MAILPIT_PASS" \
+     --data-urlencode "query=from:no-reply+dev@updates.clipboardworks.com to:\"$EMAIL\" subject:\"Your Clipboard login code\"" \
+     "$MAILPIT_BASE/api/v1/search" \
      | jq '.messages[0].ID'
    ```
 
