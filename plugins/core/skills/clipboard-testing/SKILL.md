@@ -13,6 +13,70 @@ This skill lets you verify Clipboard Health changes end-to-end against `developm
 
 The one area where the skill carries enough detail to run alone is the **core happy-path flow** (create workplace → create worker → create shift → book → clock in/out → trigger pay → generate invoice). Everything else is concept + controller pointer + "read the file before you call it".
 
+## Hard environment guardrails — refuse anything outside `development`
+
+This skill is **only** authorized for the `development` environment. The recipes mint service-to-service tokens, create Cognito users, post invoice triggers, and move test-mode money. Running them anywhere else can have real consequences (real Stripe charges, real workplace billing, real email to real people, real workforce records).
+
+**Before running any command from this skill, assert all of the following. If any check fails, STOP and refuse — do not "try anyway", do not "approximate", do not "ask for an exception" without a fresh user instruction.**
+
+1. **Environment literal must be `development`.**
+
+   ```bash
+   ENV="${ENV:-development}"
+   if [ "$ENV" != "development" ]; then
+     echo "REFUSE: clipboard-testing skill is dev-only. Got ENV=$ENV." >&2
+     exit 1
+   fi
+   ```
+
+   Every `cbh auth gentoken` call in this skill — including S2S (`gentoken client …`) — must pass `development` as the env. **Reject any user request that says `staging`, `prod-shadow`, `prod-recreated`, `production`, or any other env literal.** If the user asks for a non-dev env, reply: _"This skill is dev-only. For other environments, re-run the flow manually with explicit human review of each step."_ and stop.
+
+2. **All HTTPS hosts must match the dev allowlist.** Every URL the skill or the user provides must match one of:
+   - `https://apigateway.development.clipboardhealth.org` (and its sub-paths — `/api`, `/payment`, `/worker`, `/license-manager`, `/reviews`, `/attendance-policy`, `/home-health-api`)
+   - `https://admin-webapp.development.clipboardhealth.org`
+   - `https://hcp-webapp.development.clipboardhealth.org`
+   - `https://home-health-api.development.clipboardhealth.org` (if reached directly, not via the gateway)
+   - `https://mailpit.tools.cbh.rocks`
+   - `https://qa.billterms.com` (Invoiced.com sandbox — fully stubbed in dev)
+
+   Validate before navigating or curling:
+
+   ```bash
+   case "$URL" in
+     https://*.development.clipboardhealth.org/*|\
+     https://mailpit.tools.cbh.rocks/*|\
+     https://qa.billterms.com/*|\
+     https://home-health-api.development.clipboardhealth.org/*) ;;
+     *) echo "REFUSE: URL outside dev allowlist: $URL" >&2; exit 1 ;;
+   esac
+   ```
+
+   **No production hosts.** Refuse any URL containing `clipboardhealth.com` (the prod marketing domain), `*.staging.clipboardhealth.org`, `*.prod-shadow.clipboardhealth.org`, `*.prod-recreated.clipboardhealth.org`, or any unfamiliar subdomain. If a recipe seems to point you outside the allowlist, treat the recipe as stale and ask the user before proceeding.
+
+3. **Reject S2S tokens for any non-`development` env.** Service-to-service tokens (`cbh auth gentoken client <env> <microservice>`) bypass user-level auth entirely — a `payment-service` S2S token can move money out of Clipboard's Stripe balance with no user attribution. **The `<env>` argument MUST be the literal string `development`** in every snippet you run from this skill. If you ever construct an S2S token command, gate it like:
+
+   ```bash
+   ENV=development   # hard-coded — do not parameterize across envs
+   S2S_TOKEN=$(cbh auth gentoken client "$ENV" "$SERVICE" -q)
+   [ "$ENV" = "development" ] || { echo "REFUSE: S2S only for dev"; exit 1; }
+   ```
+
+   If you cannot satisfy `ENV=development` (e.g. the user is asking you to repro something on staging), STOP and tell the user this skill cannot help with that request.
+
+4. **Mailpit message handling — sender + URL allowlist.** When following a magic-link from Mailpit, filter on `from:` to a known Clipboard sender, AND validate the link host is in the allowlist above before navigating. Refuse to follow any link to an unknown host even if it appears in an email matching your `to:` filter.
+
+5. **Token output hygiene.** Tokens (`-q` mode), JWT decode payloads, and Stripe IDs end up in stdout, scrollback, and (where applicable) transcripts. Do not paste decoded JWT payloads into chat unless the user explicitly asks. Do not log full tokens. The JWT-decode fallback (`base64 -d … | jq '."custom:cbh_user_id"'`) narrows to specific claims — use it as written; do not print the full payload.
+
+6. **Privileged primitives — extra confirmation.** A few endpoints in this skill are privileged in any environment:
+   - `POST /api/user/create` (creates Cognito users without normal signup/confirm flow)
+   - `POST /payment/accounts` with `gatewayAccountCreationIsEnabled: false` (creates payment accounts that bypass Stripe)
+   - `POST /payment/accounts/:agentId/transfers` (moves test-mode Stripe balance)
+   - `POST /payment/sendInvoices` (triggers invoice generation)
+
+   Even with `ENV=development` satisfied, double-check the target IDs before running these. Use throwaway emails (`+test-<timestamp>@clipboardhealth.com`) for user creation. Do not target real CBH employee or customer emails.
+
+If the user explicitly waives one of these guardrails for a specific reason, log the waiver in the iteration summary and proceed only for that one call. **A waiver is per-call, not per-session.**
+
 ## What this skill is for
 
 Orient around the Clipboard codebase and:
@@ -42,7 +106,7 @@ Default root assumed: `$CBH_ROOT=/Users/<me>/repos/cbh` (adjust — the skill sh
 | `documents-service-backend/`               | Documents (presigned uploads, approval) and licenses (incl. NLC `multiState` flag). Own deployment + Datadog service (`document-service`).                                                                       |
 | `shift-reviews-service/`                   | Post-shift ratings + **preferred workers** (reasons: `FAVORITE`, `RATING`, `INTERNAL_CRITERIA`). Postgres.                                                                                                       |
 | `attendance-policy/`                       | Clock-in windows **plus** attendance scores, score adjustments, restrictions, market-level config. Controllers: `/policies`, `/restrictions`, `/scores`, `/workers`, `/markets`.                                 |
-| `urgent-shifts/`                           | Urgency tier computation (`NCNS`, `LATE_CANCELLATION`, `LAST_MINUTE`) + urgent-shift-specific rules.                                                                                                             |
+| `urgent-shifts/`                           | **Archived** — repo is read-only. Urgency-tier constants (`NCNS`, `LATE_CANCELLATION`, `LAST_MINUTE`) now live in `clipboard-health/src/services/urgentShifts/`.                                                 |
 | `worker-app-bff/`                          | Worker-facing BFF. **Read-only / proxy** for most domain data. Don't send writes here.                                                                                                                           |
 | `worker-service-backend/`                  | Worker-service endpoints (worker-side reads and some writes).                                                                                                                                                    |
 | `cbh-api-gateway/`                         | API gateway config — routes `/api`, `/payment`, `/worker`, `/license-manager`, `/reviews`, etc.                                                                                                                  |
@@ -57,7 +121,7 @@ Default root assumed: `$CBH_ROOT=/Users/<me>/repos/cbh` (adjust — the skill sh
 | `cbh-core/packages/testing-e2e-admin-app/` | Canonical **reference payloads** and **AdminService method shapes** — read but do not import at runtime; shapes can be stale.                                                                                    |
 | `cbh-infrastructure/`                      | Terraform. URLs, Cognito pools, SES/Mailpit, network firewalls.                                                                                                                                                  |
 
-**Long-tail repos** that might be relevant for specific features — `open-shifts/`, `shift-verification/`, `pricing-service/`, `worker-eta/`, `cbh-location-service/`, `authentication/`, `red-planet/`, `cbh-evidence/`, `invite-generator/`. Ask the user which domain a change touches before guessing.
+**Long-tail repos** that might be relevant for specific features — `open-shifts/`, `shift-verification/`, `pricing-service/`, `cbh-location-service/`, `authentication/`, `cbh-evidence/`, `invite-generator/`. Ask the user which domain a change touches before guessing.
 
 If any of these aren't present in `$CBH_ROOT`, ask the user.
 
@@ -88,6 +152,8 @@ cbh auth gentoken client development payment-service
 
 All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cbh.rocks/` (basic-auth; creds in 1Password).
 
+**`USER_TYPE_NOT_ALLOWED` minting cross-type tokens** — `cbh auth gentoken user … -n worker-app` (or `-n workplace-app`) for an EMPLOYEE-typed Cognito user returns `Error initiating custom challenge MAKE_TEST_TOKEN: DefineAuthChallenge failed with error USER_TYPE_NOT_ALLOWED`. You can't reuse your admin email as a worker or workplace-user; create a dedicated account for that role.
+
 ## Environment reference — `development` only
 
 | Service              | Base URL / mount                                                                                                                                                                   |
@@ -100,7 +166,7 @@ All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cb
 | documents (REST)     | `$API_BASE/api/documents`                                                                                                                                                          |
 | documents (GraphQL)  | `$API_BASE/docs/graphql`                                                                                                                                                           |
 | shift-reviews        | `$API_BASE/reviews`                                                                                                                                                                |
-| attendance-policy    | `https://attendance-policy.dev.clipboardstaffing.com` (**`dev`**, not `development`)                                                                                               |
+| attendance-policy    | `$API_BASE/attendance-policy/` (gateway-rewritten in dev)                                                                                                                          |
 | home-health-api      | `$API_BASE/home-health-api` (gateway-rewritten). Controllers mount both `/api/v1/...` and `/home-health-api/api/v1/...`; through the gateway, use the `/home-health-api/...` form. |
 | Invoiced.com sandbox | `https://qa.billterms.com` (fully stubbed in dev)                                                                                                                                  |
 | Mailpit              | `https://mailpit.tools.cbh.rocks`                                                                                                                                                  |
@@ -114,7 +180,7 @@ All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cb
 cbh --version   # expect 8.x
 # upgrade: npm install --global @clipboard-health/cli@latest
 
-# Dev VPN connected (gateway + Mailpit require it)
+# Dev VPN — required for direct development MongoDB access; gateway and Mailpit are reachable without it
 
 # Smoke test
 cbh auth gentoken client development backend-main -q | head -c 40 ; echo
@@ -174,6 +240,8 @@ echo "$PAYLOAD" | tr '_-' '/+' | { base64 -d 2>/dev/null || base64 -D; } | jq '.
 
 Validator at `clipboard-health/src/modules/facilityProfile/services/middlewares/createFacilityProfileValidator.middleware.ts`. Required: `rushFee`, `lateCancellation`, `netTerms`, `disputeTerms`, `ratesTable`, `holidayFee`, `sentHomeChargeHours`, plus a rate entry for **every** qualification enabled for the workplace type (the validator iterates qualifications and `check("rates.{q}").exists()` — missing rate keys are reported as `"Invalid rate - X doesn't exist"`, which means _missing_, not _unrecognized_). For LTC today that's also: `NP`, `QMAP`, `Server`, `Janitor`, `Site Lead`, `Medical Aide`, `Medical Technician`, `Respiratory Therapist`, `Dental Hygienist`, `Dental Assistant`, `CNA On Call`. **`salesforceID` regex: exactly 15 or 18 alphanumeric chars** (`/^[0-9a-zA-Z]{15}([0-9a-zA-Z]{3})?$/`). Response uses `id`, not `_id`.
 
+**1099 coverage testing**: if your test needs 1099 policy coverage, the workplace must be in `CA / FL / MI / NJ` (the four convalescent-home states with the doc-requirement feature flag enabled) and you'll then `POST /api/workplaces/:workplaceId/1099-policy/entities` separately — see the "1099 Policy coverage" concept section.
+
 ```bash
 SFID=$(printf "INVTEST%08d" $((RANDOM)))   # 15 chars
 curl -sS -X POST "$API_BASE/api/facilityprofile/create" \
@@ -230,6 +298,8 @@ Capture `WORKPLACE_ID`. Reference body: `cbh-core/packages/testing-e2e-admin-app
 Endpoint is **`POST /api/user/create`** (handler: `clipboard-health/src/modules/user/controllers/user.controller.ts → createUser`, contract: `userContract.createUser`). The legacy `/api/agentProfile/bulk` is gone.
 
 The controller's `userManipulationService.createAgent` calls `cognitoService.createCognitoUser` at the end of the flow, so you do **not** need to pre-sign-up via hcp-webapp + Mailpit. The Cognito user is created in the same call. Note the contract schema (`createUserRequestSchema`) doesn't actually declare `password` — the field is optional today, but mint the worker token via `cbh auth gentoken user development $WORKER_EMAIL -n worker-app -q` immediately after creation to confirm Cognito is set up.
+
+**Alternative — `POST /api/testHelpers/createUser`** (`src/tests/helpers/api/testHelpers/controller.ts:785`, dev-only via `meta().dev`). Same `userManipulationService.createAgent` underneath, so it produces an equivalent `agentProfile` + Cognito user. Use it when you don't have an admin Cognito user handy: auth is the literal `TEST_HELPER_API_KEY` shared secret as the `Authorization` header (no `Bearer` re-wrapping — pass it verbatim), sourced from 1Password vault **"Engineering - Shared"** → item `REACT_APP_TEST_HELPER_API_KEY`. The value lives in the item's `notesPlain` field (not `password`); strip the `REACT_APP_TEST_HELPER_API_KEY=` prefix and pass the remaining `Bearer …` string as the `Authorization` header. Body shape is the `CreateUserBody` interface in the same controller file (looser than `/api/user/create`'s contract).
 
 Resolve your own admin userId first (it's used as `addedBy` and as `sessionUser` for downstream calls — the constants.ts default `60841c3970071101613e1c50` is stale):
 
@@ -307,11 +377,27 @@ curl -sS -X POST "$API_BASE/license-manager/workers/$WORKER_ID/licenses" \
 
 The contractor-agreement signing (`PATCH $API_BASE/worker/agentprofile/signContractorAgreement` — note: lives on **worker-service**, takes the worker token, not admin) is only needed for the worker-self-claim path. The admin-assign override path skips it. If you need it later: body is `{agreementVersion:"V6", signature:"<name>"}`.
 
-## Step 4 — Connect Stripe (so payments work)
+## Step 4 — Connect Stripe (or skip it explicitly)
 
-Stripe Express account + external bank/card must be attached. The endpoint and body vary — grep `clipboard-health/src/modules/stripe` and `payment-service/src/app/accounts` for current shape. `AdminService.createPaymentAccountForHcp` in `cbh-core/packages/testing-e2e-admin-app/src/lib/admin-service.ts` is the best single reference for the full flow.
+Two choices in dev. **Ask the user which they want** before proceeding. Either is fine for most flows; pick based on whether you need to exercise transfers/payouts.
 
-If you can't reach Stripe sandbox, the transfer step (9) will fail but the rest of the flow still works up to shift-completed. Ask the user if they want to skip Stripe (mark as deferred) or fix it.
+**Option A (default for non-payout flows): bypass Stripe with `gatewayAccountCreationIsEnabled: false`.**
+
+`POST /payment/accounts` with the bypass flag creates the `Account` doc directly with `status: "Instant Payouts Enabled"` and `enabled: true` — no Stripe call, no Express onboarding. Bonus creation works against it; transfers and payouts will fail downstream because there's no real Stripe account behind it. Mongoose validation still requires a non-empty `accountId`, so pass any synthetic value.
+
+The `allowWorkerToCreateAccount` authorizer requires `principal.userId === bodyData.agentId`, so call this **as the worker** (uses `$WORKER_TOKEN` from Step 5 — mint it first if you haven't):
+
+```bash
+curl -sS -X POST "$API_BASE/payment/accounts" \
+  -H "Authorization: Bearer $WORKER_TOKEN" -H "Content-Type: application/json" \
+  -d "{\"agentId\":\"$WORKER_USERID\",\"email\":\"$WORKER_EMAIL\",\"gatewayAccountCreationIsEnabled\":false,\"accountId\":\"acct_test_$WORKER_USERID\"}" | jq
+```
+
+**Option B: real Stripe Express onboarding (needed if you're testing transfers/payouts).**
+
+Call `POST /payment/accounts` _without_ the bypass flag (creates a real Stripe Express account in the sandbox), then `POST /payment/accounts/:id/generate-express-account-link` with `{ "returnUrl": "<any-https>" }`. Surface the returned URL to the user — they complete Express onboarding in the browser (you cannot fill the Stripe-hosted form on their behalf). Once they're back, retry the original flow.
+
+Reference: `AdminService.createPaymentAccountForHcp` in `cbh-core/packages/testing-e2e-admin-app/src/lib/admin-service.ts` is the canonical orchestration; `payment-service/src/app/accounts/accounts.controller.ts:204,360` for the create + link-generation endpoints.
 
 ## Step 5 — Mint the worker token
 
@@ -577,9 +663,40 @@ Always dry-run with `GET /api/shifts/:id/cancellationParams` before asserting `i
 
 Initiated from backend-main for many reasons (shift completion bonuses, sent-home fees, cancellation fees, **Home Health occurrence payouts**, discretionary admin bonuses). worker-app-bff is read-only.
 
-Schema fields that matter: `amount` (paid to worker), `charge` (billed to workplace; `0` or `null` = no charge), `billable` (default `true`; `false` skips from upcoming charges), `facilityId`, `agentId`, `shiftId`, `reason`, `status`. **No `chargesFacility` field.** Reversal: `POST /api/bonus-payments/:id/reversals`.
+DTO at `payment-service/src/app/bonuses/bonuses.dtos.ts → CreateBonusPaymentDto`. Schema fields that matter:
+
+- `amount` (paid to worker), `charge` (billed to workplace; `0` or `null` = no charge), `billable` (default `true`; `false` skips from upcoming charges).
+- `facilityId`, `agentId`, `shiftId`, `reason`, `status`. **No `chargesFacility` field.**
+- **`description` vs `invoiceLine` are two distinct fields with two audiences.** `description` is the worker-facing string (used in transfer descriptors etc.). `invoiceLine` is the workplace-invoice line item label and is what `buildBonusLineItem` writes to `lineItem.description` on the upcoming-charges record. Setting only `description` does **not** put the string on the workplace invoice. See `clipboard-health/src/modules/upcoming-charges/services/upcomingChargesUpdateBonus.job.ts → buildBonusLineItem`.
+- `type` literal values are dotted: `TBIO.SINGLE | TBIO.BACK_TO_BACK | TBIO.OVER_FORTY | HOME_HEALTH` — these are the enum _values_ in `BonusesPayment/types.ts`. Producer code uses `BonusPaymentType.single` (the enum _key_) but on the wire the string is `"TBIO.SINGLE"`. Sending `"single"` returns 500 with a Mongoose enum validation error.
+- `createdBy` must be a Mongo ObjectId (the service does `new Types.ObjectId(createdBy)` and 500s on bad input). **Ask the user for a userId if you don't have one; otherwise fall back to the current admin's `custom:cbh_user_id` claim from the admin token.** Or omit the field — it's optional.
+- **`agentId` is the worker's `userId`, NOT the agentProfile `_id`.** Grab `userId` from the `/api/user/create` response (or `/api/user/agentSearch` lookup) and pass that everywhere payment-service expects an agentId. Account doc `_id` is `Types.ObjectId(agentId)`, so `accounts.findById(agentId)` matches by `_id === userId`.
+
+Reversal: `POST /api/bonus-payments/:id/reversals`.
 
 Upcoming-charges integration is async: `BonusPaymentCreated` SQS → consumer → job inserts if `charge > 0 && billable !== false`, removes if `charge === 0`. Wait ~30s between bonus creation and checking upcoming charges.
+
+To inspect the resulting line item, call `GET $API_BASE/api/upcoming-charges?facilityId=<workplaceId>&periodStartDate=<...>&periodEndDate=<...>` (admin token). The record is keyed by **Sunday-aligned week** (`moment.utc(payPeriodStart).startOf("week")`), so query a range that covers the whole week containing your bonus's `payPeriodStart`. If the response is `[]`, widen to Sunday-of-week → Saturday-end-of-week. The relevant line item shows up under `[0].otherCharges[]` with `bonusId` matching what you sent and `description` matching the `invoiceLine` you sent.
+
+## 1099 Policy coverage
+
+"1099 coverage" is workers' comp / GL insurance issued by **1099Policy.com** for individual contractors per shift. Two-sided opt-in: workplace registers as a contracting entity, worker walks the application + binds a policy. Per shift, an _assignment_ is created tying the worker's policy to a specific job.
+
+**Three IDs to keep straight (all returned by 1099Policy):**
+
+- `ten99PolicyEntityId` (`en_*`) on the workplace.
+- `ten99PolicyContractorId` (`cn_*`) on the worker.
+- `ten99PolicyAssignmentId` (`an_*`) per shift+worker, plus a `ten99PolicyJobId` (`jb_*`) wrapping it.
+
+**Workplace setup (CBH employee).** `POST /api/workplaces/:workplaceId/1099-policy/entities` with `{data:{type:"ten99-policy-entity",attributes:{categoryCode},relationships:{workplace}}}`. Read config via `GET /api/workplaces/:workplaceId/1099-policy/configuration` — `stateOnboarded:true` + a `documentRequirementId` means the LD flag has the workers'-comp doc requirement enabled for that workplace's state. Eligible states only: **CA, FL, MI, NJ** (per `TEN99_POLICY_CONVALESCENT_HOME_STATES` in `ten99-policy.constants.ts`).
+
+**Worker setup (worker token).** `POST /api/1099-policy/application-sessions` returns a `url` like `https://apply.1099policy.com/sandbox/ias_*` — **must be walked in a browser** to bind a policy. Internally, our system creates a `Ten99PolicyJob` row with `ten99PolicySessionId`. After the user walks the sandbox UI to "You've successfully signed up for coverage", 1099Policy fires `application.complete` (and later `policy.active`) back to `POST /api/1099-policy/events`. Without walking through to policy binding, downstream assignment creation 400s.
+
+**Per-shift assignment (worker token).** `POST /api/1099-policy/assignments` with `{data:{type:"ten99-policy-assignment",relationships:{shift,worker}}}`. Returns `netRate` (cents per $100 earned, e.g. `572` = 5.72%). The assignment's `effective_date` (the shift's `start`) **must be in the future** at request time — past-window shifts always 400. Workflow: create the assignment while the shift is still future, then `PUT /api/shift/put` to fast-forward `time` / `clockInOut` / `verified`.
+
+**Fee math.** `getTen99PolicyAssignmentFeeInCents` (called from `triggerShiftPayment`) computes `feeInCents = round((basePayInCents × time / 100 / 100) × netRate)`. Records it on the shift document and on the `Ten99PolicyJob` row. Read the recorded value via `GET /api/shifts/:shiftId/1099-policy/assignments` — that endpoint surfaces `assignmentFeeInCents`. The `/api/workers/:workerId/1099-policy/jobs` endpoint **does not** surface the fee field (DTO mapper at `ten99-policy.dto.mapper.ts:135-175` omits it).
+
+**Deduction from worker pay is `TIMESHEET_UPLOAD`-only.** Per `shift-payment.domain.ts:120-168` and the explicit assertion at `shift-payment.domain.spec.ts:199-225` (VAU-1106): the fee is **only subtracted** from the payable amount on `PAYMENT_EVENTS.TIMESHEET_UPLOAD` and `RETRY_MISSING_PAYMENT_TIMESHEET_UPLOAD`. On `SHIFT_VERIFICATION` / `SHIFT_SENT_HOME` / `SHIFT_MISSED_PUNCH_REQUEST_APPROVAL` the fee is recorded but the worker gets full pay; the fee is recovered through the 1099Policy invoice that gets enqueued via `CREATE_TEN99_POLICY_INVOICE_FOR_ASSIGNMENT_JOB_NAME`. So if you're testing "fee deducted from worker pay," you need a manual-timekeeping flow ending in `PUT /api/v2/shifts/timecard/:shiftId` + admin approval, not a regular admin verify.
 
 ## Home Health — Case → Visit → Occurrence
 
@@ -589,11 +706,40 @@ Separate backend (`home-health-api`, Postgres), same mobile and admin apps. Reac
 - **Visit** = a scheduled appointment, **typed** (e.g. admission visit which must be done by an RN, regular visits, etc.).
 - **Occurrence** = a completed instance of a visit. For recurring visit types (e.g. "regular visits, X per week for X weeks"), one visit produces multiple occurrences.
 
-**Workplace identity gotcha — `workplaceId` is the workplace User.\_id, NOT the FacilityProfile.\_id.** `POST /api/facilityprofile/create` returns top-level `id: <facilityProfile.userId>` (`facilityProfile.service.ts:456`). That's the value HH-API expects in URL paths (`workplaceId: workplace.userId` in `visits.service.ts`). `GET /api/facilityprofile/:id` returns a different `_id` (the FacilityProfile doc's). Use the create-response `id`. If you got the workplace from elsewhere, double-check by hitting `GET $API_BASE/home-health-api/api/v1/<id>/account-pricing` — 200 means correct id.
+**Workplace identity gotcha — `workplaceId` is the workplace User.\_id, NOT the FacilityProfile.\_id.** `POST /api/facilityprofile/create` returns top-level `id: <facilityProfile.userId>` (`facilityProfile.service.ts:456`). That's the value HH-API expects in URL paths (`workplaceId: workplace.userId` in `visits.service.ts`). `GET /api/facilityprofile/:id` returns a different `_id` (the FacilityProfile doc's). Use the create-response `id`.
 
 Workplace type for Home Health is **`"Home Healthcare"`** (mapped to `TypeOfCare.HOME_HEALTH` in `cbh-core/utils.ts → stringTypeOfCareToEnum`). Only 4 qualifications enabled: `CAREGIVER, RN, CNA, LVN` — no other rates needed in the workplace `rates` map.
 
-**Visit creation requires account-pricing to exist first.** Visit create looks up `(workplaceId, agentReq, visitType, pricingType, typeOfCare)` in `AccountPricing` and 500s with `"Account pricing for visit type does not exist"` if missing. Seed via `POST /home-health-api/api/v1/:workplaceId/account-pricing` (admin-only): JSON:API body with `{visitType, agentReq, payRateInMinorUnits, chargeRateInMinorUnits, pricingType, typeOfCare}`. Charge/pay rates capped at `$1,000` (`100_000` minor units).
+**Visit creation requires account-pricing to exist first.** `visits.service.ts → ensurePricingExistsForVisit` looks up the tuple `(workplaceId, agentReq, visitType, pricingType, typeOfCare)` in `AccountPricing` (Prisma `@@unique unique_charge_rate_combination`). Missing row → throws `"Account pricing for visit type does not exist"`, which surfaces as a 500 from the visit-create endpoint. The `agentReq` part of the tuple is server-coerced to `RN` for `RN_VISIT_TYPES` (`ADMISSION`, `ADMISSION_AND_FIRST_VISIT`, `EVALUATION`, `RECERTIFICATION`, `RESUMPTION_OF_CARE`, `NURSING_EVAL`); for `REGULAR`, `DISCHARGE`, `SUPERVISORY` it uses the request's `workerReq` verbatim. Seed accordingly.
+
+**Seeding via API** — `POST /home-health-api/api/v1/:workplaceId/account-pricing` (`AccountPricingController`, `@AllowClipboardHealthEmployees()`):
+
+```json
+{
+  "data": {
+    "type": "accountPricing",
+    "attributes": {
+      "visitType": "REGULAR",
+      "agentReq": "CNA",
+      "payRateInMinorUnits": 5500,
+      "chargeRateInMinorUnits": 7500,
+      "pricingType": "PER_VISIT",
+      "typeOfCare": "HOME_HEALTH"
+    }
+  }
+}
+```
+
+Constraints (`accountPricing.service.ts → createAccountPricing`):
+
+- Workplace must NOT be in `INACTIVE_WORKPLACE_STATUSES`. Newly-created `onboarding` workplaces pass; `closed`/`paused`/`terminated` get `BadRequestException("You cannot create account pricing for an inactive workplace")`.
+- `payRateInMinorUnits` and `chargeRateInMinorUnits` capped at `100_000` (= $1,000) by the DTO.
+- Duplicates on the unique tuple → Prisma `P2002` mapped to `400 "There is another account pricing with the same data."` Use `PATCH /home-health-api/api/v1/:workplaceId/account-pricing/:id` to update an existing row.
+- `pricingType ∈ {PER_VISIT, PER_HOUR}`, `typeOfCare ∈ {HOME_HEALTH, HOSPICE, PRIVATE_DUTY}`.
+
+**Seed once per `(visitType, agentReq)` you intend to create visits for.** Typical e2e seed is one row: `REGULAR` × <worker's qualification> × `PER_VISIT` × `HOME_HEALTH`. For an admission visit, seed `ADMISSION` × `RN` × `PER_VISIT` × `HOME_HEALTH`.
+
+When LD flag `2026-01-configure-visit-rate-setting` is `{enabled: true}` for the workplace, `checkForAccountPricing` swallows the missing-pricing error and the visit is created using fallback rates from `home-health-api/src/modules/visits/fallback-rates/rate-configuration.json`. Seeding is still the cleaner path.
 
 Visit DTO quirks (`createVisit.dto.ts`):
 
@@ -619,10 +765,9 @@ Worker logs the occurrence on arrival/completion via worker token: `POST /home-h
 
 Workplace verifies via `PATCH /home-health-api/api/v1/:workplaceId/visit-occurrences/:id` with `{data:{type:"visitOccurrence", attributes:{status, rejectionReason?, paid?, instantPay?}}}`. Setting `status: REJECTED` requires `rejectionReason`.
 
-**APPROVE side effect — bonus payment to payment-service.** When LD flag `2024-05-home-health-bonus-payment` (keyed by workplaceId) resolves true, the approve calls `POST /payment/bonuses`, which 400s if the worker has no `Account` in payment-service. Surface symptom on the HH-API patch is generic `500 "Internal server error. detail: Request failed with status code 400"`. The whole patch rolls back inside a Prisma transaction, so the occurrence stays PENDING. Two ways through:
+**APPROVE side effect — bonus payment to payment-service.** When LD flag `2024-05-home-health-bonus-payment` (keyed by workplaceId) resolves true, the approve calls `POST /payment/bonuses`, which 400s if the worker has no `Account` in payment-service. Surface symptom on the HH-API patch is generic `500 "Internal server error. detail: Request failed with status code 400"`. The whole patch rolls back inside a Prisma transaction, so the occurrence stays PENDING.
 
-- **Lower-env minimal account (no Stripe).** `POST /payment/accounts` with `{agentId, gatewayAccountCreationIsEnabled: false, accountId: "acct_e2etest_<rand>"}`. **`accountId` is required** at the Mongoose layer even though `CreateAccountDto` marks it optional — pass any non-empty string. Creates an `Account` doc with status `Instant Payouts Enabled`, `isOnboardingCompleted: true`. Bonus call then succeeds. **`gatewayAccountCreationIsEnabled` is rejected in production**, dev/staging only.
-- Full Stripe Express setup if you actually need money to flow.
+Lower-env workaround (no Stripe): `POST /payment/accounts` with `{agentId, gatewayAccountCreationIsEnabled: false, accountId: "acct_e2etest_<rand>"}`. `accountId` is required at the Mongoose layer even though `CreateAccountDto` marks it optional — pass any non-empty string. Creates an `Account` with status `Instant Payouts Enabled`, `isOnboardingCompleted: true`. `gatewayAccountCreationIsEnabled` is rejected in production.
 
 Visit status enum: `OPEN | CANCELED | FILLED | CLOSED | PENDING | CONFIRMED | LOGGED`. Occurrence: `PENDING | APPROVED | REJECTED`.
 
@@ -640,7 +785,7 @@ Document upload is 3-step: presigned URL → PUT S3 → register via `POST /api/
 
 ## Attendance-policy scope
 
-`attendance-policy.dev.clipboardstaffing.com`. Owns more than clock windows — also **attendance scores**, **restrictions** (suspensions tied to scores), and **market-level config**. Controllers: `/policies`, `/restrictions`, `/scores` (`/scores/adjust`, `/scores/:id/reversals`), `/workers`, `/workers/:workerUserId/profile`, `/markets`. If you're touching no-show or late-arrival logic, this is the service.
+Mounted at `$API_BASE/attendance-policy/` in dev (gateway-rewritten). Owns more than clock windows — also **attendance scores**, **restrictions** (suspensions tied to scores), and **market-level config**. Controllers: `/policies`, `/restrictions`, `/scores` (`/scores/adjust`, `/scores/:id/reversals`), `/workers`, `/workers/:workerUserId/profile`, `/markets`. If you're touching no-show or late-arrival logic, this is the service.
 
 ---
 
@@ -659,20 +804,76 @@ Ask the user which path they prefer before wiring a lot of curl.
 - **API read-back** — primary. Mutation → GET resource → assert a field changed.
 - **Bookability probe** — `GET /api/shifts/:id/state`.
 - **Payment truth** — always `payment-service` endpoints, not backend-main (which can be stale).
-- **Datadog traces** — service names: `backend-main`, `worker-app-bff`, `payment-service`, `document-service`, `worker-service`, `urgent-shifts`, `shift-reviews-service`, `attendance-policy`, `license-manager`. Hand off to `core:datadog-investigate` for deep dives.
+- **Datadog traces** — see the "Datadog service map" section below; **the actual service tag is never `backend-main`**, it's one of ~18 pseudo-services that all run the same monolith code. Hand off to `core:datadog-investigate` for deep dives.
 - **Mailpit** — `$MAILPIT_BASE/api/v1/search?query=to:<email>` for signup/login, shift-confirm, cancellation notices, invoice emails.
 - **UI sanity check** — `admin-webapp.development.clipboardhealth.org` (serves both employees and facility users) is the last resort for "did this render".
+
+# Datadog service map
+
+Several Clipboard repos are deployed as **multiple Datadog services running the same code**, each scoped to a different concern (HTTP path, queue, cron, etc.). Searching `service:backend-main` returns nothing — the bare repo name is not the service tag. You need to query the _specific_ pseudo-service for the path/job you care about, or fan out across the whole group.
+
+**Backend-main monolith (`clipboard-health` repo) → 18 pseudo-services.** Same NestJS code, different deployments:
+
+```text
+cbh-backend-main             cbh-backend-main-invoices    cbh-agentprofile
+cbh-bg-jobs                  cbh-bg-jobs-slow             cbh-bg-services
+cbh-calendar                 cbh-cron                     cbh-db-triggers
+cbh-employees                cbh-facility                 cbh-lastminute
+cbh-payment                  cbh-pricing                  cbh-services
+cbh-shiftmonitor             cbh-shifts                   cbh-user
+```
+
+The service-tag boundary tends to track the controller/job module name (e.g. `cbh-shifts` for shift HTTP routes, `cbh-cron` for scheduled tasks, `cbh-bg-jobs*` for queue consumers, `cbh-payment` for the _backend-main_ `/api/payment/*` routes — **not** payment-service, which is `cbh-payment-service`). When unsure which one logged your event, query across all 18 with `service:(cbh-backend-main OR cbh-agentprofile OR cbh-bg-jobs OR …)` or use a wildcard `service:cbh-*` and narrow by other tags.
+
+**Other repos with multiple pseudo-services:**
+
+- `clipboard-facility-app` → `cbh-facility-app`, `hcf_android_mobile_app`, `hcf_ios_mobile_app`
+- `documents-service-backend` → `cbh-documents-service-backend`, `cbh-docs-merge-worker`
+- `document-verification-service` → `cbh-document-verification-service`, `cbh-docverify-worker`
+- `oig-automatization` → `cbh-oig-automatization`, `cbh-oig-crawler`, `cbh-oig-leie`
+- `open-shifts` → `cbh-curated-shifts-web`, `cbh-backfill-service`, `cbh-migration-runner`
+
+**Single-deployment repos (one repo, one DD service):**
+
+`payment-service` → `cbh-payment-service`. `home-health-api` → `cbh-home-health-api-web`. `attendance-policy` → `cbh-attendance-policy`. `worker-service-backend` → `cbh-worker-service-backend`. `shift-reviews-service` → `cbh-shift-reviews-service`. `cbh-shifts-bff` → `cbh-shifts-bff`. `urgent-shifts` → `cbh-urgent-shifts`. `license-manager` → `cbh-license-manager`. `attendance-policy` → `cbh-attendance-policy`. `chat` → `cbh-chat`. `cbh-location-service` → `cbh-location-service`. `worker-eta` → `cbh-worker-eta`. `cbh-employee-lifecycle` → `cbh-employee-lifecycle-web`. `clipboard-staffing-api` → `cbh-staffing-api`. `pricing-parameters` → `cbh-pricing-parameters`. `shift-verification` → `cbh-shiftverify`. `billterms` → `cbh-billterms-api`. `files-storage-service` → `cbh-files-storage-service`. `identity-doc-autoverification-service` → `cbh-identity-doc-autoverification-service`. `cbh-pricing` → `facility-msa-classification`. `zendesk-jwt-service` → `cbh-zendesk-jwt-service`. `cbh-mobile-app` → `hcp_mobile_app`. `cbh-admin-frontend` → `admin_web_app`.
+
+**To re-derive this map** (the list drifts as new pseudo-services are added — re-run when you suspect it's stale):
+
+```bash
+DD_API=$(awk -F= '/apikey/{print $2}' ~/.dogrc | tr -d ' ')
+DD_APP=$(awk -F= '/appkey/{print $2}' ~/.dogrc | tr -d ' ')
+curl -sS "https://api.datadoghq.com/api/v2/services/definitions?page%5Bsize%5D=200" \
+  -H "DD-API-KEY: $DD_API" -H "DD-APPLICATION-KEY: $DD_APP" \
+  | jq -r '
+      .data
+      | map({
+          svc: .attributes.schema."dd-service",
+          repo: ((.attributes.meta."github-html-url" // "")
+                  | capture("ClipboardHealth/(?<r>[^/]+)/").r // "—")
+        })
+      | group_by(.repo)
+      | map({repo: .[0].repo, services: [.[].svc] | sort})
+      | .[]
+      | "## \(.repo) (\(.services | length))\n  \(.services | join("\n  "))\n"
+    '
+```
+
+The `meta.github-html-url` field on each service definition points to the source repo path (`https://github.com/ClipboardHealth/<repo>/blob/main/service.datadog.yaml`), which is how multi-deployment repos reveal their grouping. Definitions without that URL are dd-trace integration sub-services (e.g. `cbh-payment-service-worker`, `cbh-pricing-parameters-aws-sqs`) — same code, just APM-tagged by integration type.
 
 # Troubleshooting by failure mode
 
 - **401 Unauthorized** — token expired (Cognito ID tokens are 5 min) or wrong actor. Regenerate.
-- **403 Forbidden** — wrong App Client (`-n` flag), wrong facility-user role (`ADM | SFT | DMT | INV`), or wrong employee permission (e.g. `DELETE_HCP_DATA` needed for admin payout).
+- **403 Forbidden** — **first try re-minting the token.** Cognito ID tokens expire after ~5 min and stale tokens return 403 with `"Forbidden resource"` — _identical_ to a real permission failure (not 401). After re-minting, if it's still 403: wrong App Client (`-n` flag), wrong facility-user role (`ADM | SFT | DMT | INV`), or wrong employee permission (e.g. `DELETE_HCP_DATA` needed for admin payout).
 - **403 `{"code":"PermissionDenied","detail":"Forbidden resource"}` on shift create** — your admin user has `custom:user_types: EMPLOYEE` (so workplace creation worked) but no `EmployeeProfile` doc. `ShiftCreateAuthorizer` (`shift-create.authorizer.ts:54`) bounces the request without a useful error. Switch to `e2e@clipboardhealth.com` (or another admin known to have an `EmployeeProfile`) and retry.
 - **400 "The offered rate for this shift is no longer valid"** on `/api/shifts/claim` — `offerId` is required and must point at a real `shift-offer` (the rate-negotiation guard runs even with `override:true`). Create one first via `POST /api/shifts/:shiftId/offers` (JSON:API body) and pass that `id`. Without this two-step, admin manual-assign always 400s.
 - **400 on write** — grep the controller named in the concept's "source" and read the DTO. Payload shapes drift.
 - **HH-API `PATCH visit-occurrences/:id` returns 500 "Request failed with status code 400"** on `status:APPROVED` — bonus-payment side effect to payment-service is failing. Most common cause: worker has no `Account` in payment-service. Fix in dev: create a Stripe-skipped account via `POST /payment/accounts` with `gatewayAccountCreationIsEnabled:false` and a non-empty synthetic `accountId`. Then retry the approve. REJECTED and PENDING don't trigger this path.
-- **HH-API "Account pricing for visit type does not exist"** on visit create — seed `POST /home-health-api/api/v1/:workplaceId/account-pricing` first for the `(visitType, agentReq, pricingType, typeOfCare)` you're about to use.
+- **HH-API "Account pricing for visit type does not exist"** (500) on visit create — `AccountPricing` row missing for the tuple `(workplaceId, agentReq, visitType, pricingType, typeOfCare)`. Seed via `POST /home-health-api/api/v1/:workplaceId/account-pricing` before the visit. Remember `agentReq` is auto-coerced to `RN` for admission-family visit types; seed accordingly. See the Home Health concept section for the full body and constraints.
 - **HH-API "Workplace not found" / 403 on `/home-health-api/api/v1/:workplaceId/...`** — you're passing the FacilityProfile `_id` instead of the workplace User.\_id. Use the top-level `id` returned by `POST /api/facilityprofile/create`.
+- **`POST /api/1099-policy/assignments` returns 500 with `"Request failed with status code 400"` in dev.** The underlying 400 is from the 1099Policy.com sandbox; check Datadog `service:backend-main @logger.logContext:Ten99PolicyGateway` for the `error.response.data` body. Three common causes:
+  1. **Production category codes don't exist in the sandbox account.** `ten99-policy.constants.ts` defaults to `jc_LsJrariN5V` (CA convalescent home) and `jc_o5vABnBQRj` — both are _production_ codes. The dev sandbox has its own set. Fetch the sandbox's category list from the 1099Policy sandbox dashboard (Categories tab — graphql query `jobCategory`), then **`PATCH /api/workplaces/:workplaceId`** with `data.attributes.ten99PolicyJobCategoryCode = "<sandbox jc_*>"` (CBH-employee only) to swap. Sandbox equivalents as of Apr 2026: `jc_H6HrYFmcRS` (Convalescent Home, CA), `jc_gFzGNVvd24` (Skilled Nursing), `jc_aKhKXXKTGc` (Retirement), `jc_LAK75HcvTk` (Home Health), `jc_RdPg4vejMw` (Hospital).
+  2. **Assignment `effective_date` must be in the future.** Per the 1099Policy API (see `ten99-policy-api.types.ts:333`). Past-window shifts always 400 here. Create the assignment while the shift's `start` is still in the future, then `PUT /api/shift/put` to fast-forward `time`/`clockInOut`/`verified`.
+  3. **Worker hasn't bound a policy in the sandbox.** Walking the application URL only marks our internal `applicationSubmissionDate` if you fire the webhook ourselves; the policy is only bound after walking through the sandbox UI all the way to "You've successfully signed up for coverage". Until then, no `policy.active` event fires and assignments 400.
 - **Stale read** — payment or upcoming-charges state read from backend-main may lag. Read from the owning service (payment-service, shift-reviews-service, documents-service, home-health-api).
 - **Async delays** — bonus → upcoming-charges is ~30s via SQS; invoice generation is ~30–60s; Stripe sandbox occasionally blips.
 - **"Can't find endpoint"** — grep `clipboard-health/openapi.json` for the path (2.1 MB, grep only — never read in full). Or grep `@Controller`, `@Post`, `@Patch` in the owning service.
@@ -744,7 +945,9 @@ Ordered by how often you'll open them:
 - `home-health-api/src/modules/visits/dtos/createVisit.dto.ts` — note `pricingType` is `@IsOptional` but service requires it; no `typeOfCare` in body.
 - `home-health-api/src/modules/visits-occurrences/visitsOccurrences.workplace.controller.ts` — occurrence approval (`PATCH /api/v1/:workplaceId/visit-occurrences/:id`).
 - `home-health-api/src/modules/visits-occurrences/visitsOccurrences.service.ts` — `triggerPayment` is the bonus-payment side effect on APPROVED; gated by LD flag `2024-05-home-health-bonus-payment` (keyed by workplaceId).
-- `home-health-api/src/modules/account-pricing/accountPricing.workplace.controller.ts` — `POST /api/v1/:workplaceId/account-pricing` to seed pricing.
+- `home-health-api/src/modules/account-pricing/accountPricing.workplace.controller.ts` — `POST /api/v1/:workplaceId/account-pricing` to seed pricing. Service enforces inactive-workplace + P2002-duplicate guards.
+- `home-health-api/src/modules/visits/fallback-rates/rate-configuration.json` — fallback charge rates used when LD flag `2026-01-configure-visit-rate-setting` is on and no pricing row exists.
+- `@clipboard-health/flag-backend-main/src/lib/feature-flags/inHome.featureFlags.ts` — HH LD flag string constants (`VISIT_RATE_SETTING_FEATURE_FLAG`, `BONUS_PAYMENT_HH_ENABLED_FEATURE_FLAG`).
 - `home-health-api/src/modules/cbh-core/utils.ts → stringTypeOfCareToEnum` — workplace.type ("Home Healthcare", "Hospice", …) → `TypeOfCare` enum mapping.
 - `home-health-api/src/modules/cbh-core/cbhPayment.service.ts` — bonus-payment HTTP call to payment-service (`POST /bonuses`).
 - `home-health-api/prisma/schema.prisma` — visit/occurrence/case/patient models, full `VisitType` and `TypeOfCare` and `PricingType` enums.
@@ -757,5 +960,12 @@ Ordered by how often you'll open them:
 - `cbh-core/packages/testing-e2e-admin-app/src/lib/constants.ts` — **reference payloads** (`DEFAULT_*` bodies).
 - `cbh-core/packages/testing-e2e-admin-app/src/lib/admin-service.ts` — `AdminService` orchestration reference.
 - `cbh-core/packages/testing-e2e-admin-app/src/lib/service-urls.ts` — env → URL map.
+- `clipboard-health/src/modules/ten99-policy/ten99-policy.constants.ts` — production-only category codes; CONVALESCENT_HOME state list.
+- `clipboard-health/src/modules/ten99-policy/types/ten99-policy-api.types.ts` — 1099Policy.com API constraints (wage min/max, address shape, `effective_date` must be future).
+- `clipboard-health/src/modules/ten99-policy/logic/ten99-policy.service.ts` — `createAssignment` orchestration (createJob → createAssignment in 1099Policy → record netRate).
+- `clipboard-health/src/modules/ten99-policy/logic/ten99-policy-assignment-fee-calculation.service.ts` + `utils/compute-shift-ten99-policy-fee.ts` — fee math (uses BASE_PAY-named offer rule outputs when present, else falls back to `shift.pay × 100`).
+- `clipboard-health/src/modules/ten99-policy/entrypoints/ten99-policy.dto.mapper.ts` — note: GET-jobs mapper does NOT surface `assignmentFeeInCents`; use `GET /api/shifts/:id/1099-policy/assignments` for the fee read.
+- `clipboard-health/src/modules/worker-payment/domain/shift-payment.domain.ts` (and `.spec.ts`) — deduction code path; **only `TIMESHEET_UPLOAD` and `RETRY_MISSING_PAYMENT_TIMESHEET_UPLOAD` subtract the fee from payable amount** (VAU-1106).
+- `clipboard-health/node_modules/@clipboard-health/contract-backend-main/src/lib/ten99Policy.contract.ts` — endpoints: `POST /api/1099-policy/application-sessions`, `POST /api/1099-policy/assignments`, `POST /api/workplaces/:wpId/1099-policy/entities`, `GET /api/shifts/:id/1099-policy/assignments`, `GET /api/workers/:wId/1099-policy/jobs`, `POST /api/1099-policy/events`.
 
 If any path 404s on your machine, ask the user for the correct location — repos may be under a different root.
