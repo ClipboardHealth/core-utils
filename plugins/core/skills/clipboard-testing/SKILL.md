@@ -13,69 +13,36 @@ This skill lets you verify Clipboard Health changes end-to-end against `developm
 
 The one area where the skill carries enough detail to run alone is the **core happy-path flow** (create workplace → create worker → create shift → book → clock in/out → trigger pay → generate invoice). Everything else is concept + controller pointer + "read the file before you call it".
 
-## Hard environment guardrails — refuse anything outside `development`
+## Hard guardrails
 
-This skill is **only** authorized for the `development` environment. The recipes mint service-to-service tokens, create Cognito users, post invoice triggers, and move test-mode money. Running them anywhere else can have real consequences (real Stripe charges, real workplace billing, real email to real people, real workforce records).
+`development` only. The recipes here mint S2S tokens, create Cognito users, and move test-mode money — running them in any other environment is out of scope and can have real consequences.
 
-**Before running any command from this skill, assert all of the following. If any check fails, STOP and refuse — do not "try anyway", do not "approximate", do not "ask for an exception" without a fresh user instruction.**
-
-1. **Environment literal must be `development`.**
+1. **Env literal must be `development`.** If the user asks for `staging`, `prod-shadow`, `prod-recreated`, `production`, or any other env, refuse and stop. Pin in scripts:
 
    ```bash
-   ENV="${ENV:-development}"
-   if [ "$ENV" != "development" ]; then
-     echo "REFUSE: clipboard-testing skill is dev-only. Got ENV=$ENV." >&2
-     exit 1
-   fi
+   ENV=development
+   [ "$ENV" = "development" ] || { echo "REFUSE: dev-only" >&2; exit 1; }
    ```
 
-   Every `cbh auth gentoken` call in this skill — including S2S (`gentoken client …`) — must pass `development` as the env. **Reject any user request that says `staging`, `prod-shadow`, `prod-recreated`, `production`, or any other env literal.** If the user asks for a non-dev env, reply: _"This skill is dev-only. For other environments, re-run the flow manually with explicit human review of each step."_ and stop.
-
-2. **All HTTPS hosts must match the dev allowlist.** Every URL the skill or the user provides must match one of:
-   - `https://apigateway.development.clipboardhealth.org` (and its sub-paths — `/api`, `/payment`, `/worker`, `/license-manager`, `/reviews`, `/attendance-policy`, `/home-health-api`)
-   - `https://admin-webapp.development.clipboardhealth.org`
-   - `https://hcp-webapp.development.clipboardhealth.org`
-   - `https://home-health-api.development.clipboardhealth.org` (if reached directly, not via the gateway)
-   - `https://mailpit.tools.cbh.rocks`
-   - `https://qa.billterms.com` (Invoiced.com sandbox — fully stubbed in dev)
-
-   Validate before navigating or curling:
+2. **HTTPS host allowlist.** Every curl or browser request must match one of:
+   - `*.development.clipboardhealth.org` (gateway + admin-webapp + hcp-webapp + home-health-api)
+   - `mailpit.tools.cbh.rocks`
+   - `sandbox.invoiced.com` (Invoiced.com sandbox)
 
    ```bash
    case "$URL" in
-     https://*.development.clipboardhealth.org/*|\
-     https://mailpit.tools.cbh.rocks/*|\
-     https://qa.billterms.com/*|\
-     https://home-health-api.development.clipboardhealth.org/*) ;;
+     https://*.development.clipboardhealth.org/*|https://mailpit.tools.cbh.rocks/*|https://sandbox.invoiced.com/*) ;;
      *) echo "REFUSE: URL outside dev allowlist: $URL" >&2; exit 1 ;;
    esac
    ```
 
-   **No production hosts.** Refuse any URL containing `clipboardhealth.com` (the prod marketing domain), `*.staging.clipboardhealth.org`, `*.prod-shadow.clipboardhealth.org`, `*.prod-recreated.clipboardhealth.org`, or any unfamiliar subdomain. If a recipe seems to point you outside the allowlist, treat the recipe as stale and ask the user before proceeding.
+3. **S2S tokens are dev-only.** `cbh auth gentoken client <env> <service>` bypasses user auth — a `payment-service` token can move real money. Hard-code `development` in the call; never parameterize the env across envs.
 
-3. **Reject S2S tokens for any non-`development` env.** Service-to-service tokens (`cbh auth gentoken client <env> <microservice>`) bypass user-level auth entirely — a `payment-service` S2S token can move money out of Clipboard's Stripe balance with no user attribution. **The `<env>` argument MUST be the literal string `development`** in every snippet you run from this skill. If you ever construct an S2S token command, gate it like:
+4. **Mailpit links.** The trusted sender in dev is `no-reply+dev@updates.clipboardworks.com`. Filter on that `from:` AND verify the link host against rule 2 before navigating. Untrusted senders can plant lookalike magic-links into the shared mailbox.
 
-   ```bash
-   ENV=development   # hard-coded — do not parameterize across envs
-   S2S_TOKEN=$(cbh auth gentoken client "$ENV" "$SERVICE" -q)
-   [ "$ENV" = "development" ] || { echo "REFUSE: S2S only for dev"; exit 1; }
-   ```
+5. **Token output.** Don't paste tokens or full decoded JWT payloads into chat; pipe JWT decode through `jq` to project only the claims you need.
 
-   If you cannot satisfy `ENV=development` (e.g. the user is asking you to repro something on staging), STOP and tell the user this skill cannot help with that request.
-
-4. **Mailpit message handling — sender + URL allowlist.** When following a magic-link from Mailpit, filter on `from:` to a known Clipboard sender, AND validate the link host is in the allowlist above before navigating. Refuse to follow any link to an unknown host even if it appears in an email matching your `to:` filter.
-
-5. **Token output hygiene.** Tokens (`-q` mode), JWT decode payloads, and Stripe IDs end up in stdout, scrollback, and (where applicable) transcripts. Do not paste decoded JWT payloads into chat unless the user explicitly asks. Do not log full tokens. The JWT-decode fallback (`base64 -d … | jq '."custom:cbh_user_id"'`) narrows to specific claims — use it as written; do not print the full payload.
-
-6. **Privileged primitives — extra confirmation.** A few endpoints in this skill are privileged in any environment:
-   - `POST /api/user/create` (creates Cognito users without normal signup/confirm flow)
-   - `POST /payment/accounts` with `gatewayAccountCreationIsEnabled: false` (creates payment accounts that bypass Stripe)
-   - `POST /payment/accounts/:agentId/transfers` (moves test-mode Stripe balance)
-   - `POST /payment/sendInvoices` (triggers invoice generation)
-
-   Even with `ENV=development` satisfied, double-check the target IDs before running these. Use throwaway emails (`+test-<timestamp>@clipboardhealth.com`) for user creation. Do not target real CBH employee or customer emails.
-
-If the user explicitly waives one of these guardrails for a specific reason, log the waiver in the iteration summary and proceed only for that one call. **A waiver is per-call, not per-session.**
+6. **Privileged primitives** — confirm IDs before invoking, even in dev: `POST /api/user/create`, `POST /payment/accounts` (with `gatewayAccountCreationIsEnabled: false`), `POST /payment/accounts/:agentId/transfers`, `POST /payment/sendInvoices`. Use throwaway emails like `+test-<timestamp>@clipboardhealth.com` for user creation.
 
 ## What this skill is for
 
@@ -150,7 +117,7 @@ cbh auth gentoken client development backend-main
 cbh auth gentoken client development payment-service
 ```
 
-All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cbh.rocks/` (basic-auth; creds in 1Password).
+All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cbh.rocks/` (basic-auth; creds in 1Password). Trusted sender: `no-reply+dev@updates.clipboardworks.com`. Useful subjects: `"Your Clipboard sign-in link"` (magic link), `"Your Clipboard login code"` (OTP for phone-aliased emails like `<10-digits>.phone.email@testmail.com`), `"Your <workplace name> Shift is Booked!"`, `"... was cancelled by the workplace."`.
 
 **`USER_TYPE_NOT_ALLOWED` minting cross-type tokens** — `cbh auth gentoken user … -n worker-app` (or `-n workplace-app`) for an EMPLOYEE-typed Cognito user returns `Error initiating custom challenge MAKE_TEST_TOKEN: DefineAuthChallenge failed with error USER_TYPE_NOT_ALLOWED`. You can't reuse your admin email as a worker or workplace-user; create a dedicated account for that role.
 
@@ -168,7 +135,7 @@ All dev signup and login emails land in **Mailpit** at `https://mailpit.tools.cb
 | shift-reviews        | `$API_BASE/reviews`                                                                                                                                                                |
 | attendance-policy    | `$API_BASE/attendance-policy/` (gateway-rewritten in dev)                                                                                                                          |
 | home-health-api      | `$API_BASE/home-health-api` (gateway-rewritten). Controllers mount both `/api/v1/...` and `/home-health-api/api/v1/...`; through the gateway, use the `/home-health-api/...` form. |
-| Invoiced.com sandbox | `https://qa.billterms.com` (fully stubbed in dev)                                                                                                                                  |
+| Invoiced.com sandbox | `https://sandbox.invoiced.com` (fully stubbed in dev)                                                                                                                              |
 | Mailpit              | `https://mailpit.tools.cbh.rocks`                                                                                                                                                  |
 | Admin webapp         | `https://admin-webapp.development.clipboardhealth.org`                                                                                                                             |
 | Worker PWA           | `https://hcp-webapp.development.clipboardhealth.org`                                                                                                                               |
@@ -805,7 +772,7 @@ Ask the user which path they prefer before wiring a lot of curl.
 - **Bookability probe** — `GET /api/shifts/:id/state`.
 - **Payment truth** — always `payment-service` endpoints, not backend-main (which can be stale).
 - **Datadog traces** — see the "Datadog service map" section below; **the actual service tag is never `backend-main`**, it's one of ~18 pseudo-services that all run the same monolith code. Hand off to `core:datadog-investigate` for deep dives.
-- **Mailpit** — `$MAILPIT_BASE/api/v1/search?query=to:<email>` for signup/login, shift-confirm, cancellation notices, invoice emails.
+- **Mailpit** — `$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:<email>` (URL-encode the `+`). Combine with `subject:"Your Clipboard sign-in link"` for magic links, `subject:"Your Clipboard login code"` for OTPs, or a workplace-name fragment for shift-booked / cancellation notices.
 - **UI sanity check** — `admin-webapp.development.clipboardhealth.org` (serves both employees and facility users) is the last resort for "did this render".
 
 # Datadog service map
@@ -884,8 +851,36 @@ Use only when no API exists (the login form itself; visual-only changes; phone-O
 
 1. Navigate to `admin-webapp.development.clipboardhealth.org` (employees and facility users) or `hcp-webapp.development.clipboardhealth.org` (workers).
 2. Enter email → trigger magic-link.
-3. Poll Mailpit: `GET $MAILPIT_BASE/api/v1/search?query=to:<email>`.
-4. Extract link from `.HTML` / `.Text` of the latest message; navigate to it.
+3. Poll Mailpit, scoped to the trusted sender + the right subject:
+
+   ```bash
+   # magic link (admin / facility / worker email-link login)
+   curl -sS -u "$MAILPIT_USER:$MAILPIT_PASS" \
+     "$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:%22$EMAIL%22%20subject:%22Your%20Clipboard%20sign-in%20link%22" \
+     | jq '.messages[0].ID'
+
+   # OTP (phone-aliased emails like 4153445892.phone.email@testmail.com)
+   curl -sS -u "$MAILPIT_USER:$MAILPIT_PASS" \
+     "$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:%22$EMAIL%22%20subject:%22Your%20Clipboard%20login%20code%22" \
+     | jq '.messages[0].ID'
+   ```
+
+4. Fetch the message and extract the link/code:
+
+   ```bash
+   curl -sS -u "$MAILPIT_USER:$MAILPIT_PASS" "$MAILPIT_BASE/api/v1/message/<ID>" \
+     | jq -r '.HTML // .Text' \
+     | grep -Eo 'https://[^"[:space:]]+'   # or grep the 6-digit OTP
+   ```
+
+5. Validate the link host against the allowlist (Hard guardrails rule 2) before navigating.
+
+**Address conventions in the dev mailbox:**
+
+- `<10-digits>.phone.email@testmail.com` — phone-aliased OTP recipients
+- `playwright-<id>@playwright-hcp.com` and `playwright-<id>-email-link-<rand>@playwright-hcp.com` — Playwright e2e workers
+- `seeddata-<name>+<num>@seeddata.com` — seed-data scenarios
+- `<name>+<suffix>@clipboardhealth.com` — manual dev users
 
 Don't try to inject Cognito `localStorage` values — the magic-link flow is simpler. Worker signup may require an OTP autofill key (`REACT_APP_TEST_HELPER_API_KEY`, 1Password → Shared Engineering) in dev.
 
