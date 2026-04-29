@@ -172,6 +172,7 @@ This section carries enough to drive the happy path **without reading further**.
 
 ```bash
 export API_BASE=https://apigateway.development.clipboardhealth.org
+export ADMIN_WEBAPP=https://admin-webapp.development.clipboardhealth.org
 
 # Admin (CBH employee) — used for most setup writes
 export ADMIN_EMAIL=<ask user>
@@ -179,25 +180,16 @@ export ADMIN_TOKEN=$(cbh auth gentoken user development "$ADMIN_EMAIL" -q)
 
 # Service-to-service — used for payment-service writes initiated from backend-main
 export S2S_BACKEND_MAIN=$(cbh auth gentoken client development backend-main -q)
-```
 
-The worker token gets minted **after** you create the worker. `POST /api/user/create` (Step 2) creates the Cognito user as a side effect, so you do NOT need to drive hcp-webapp signup + Mailpit to pre-confirm the email — the cbh CLI can mint a worker token immediately after the create call returns.
-
-Resolve your admin userId once (used as `addedBy`/`sessionUser`/`adminId` in many downstream calls — the constants.ts default is stale):
-
-```bash
-export ADMIN_USERID=$(curl -sS -G "$API_BASE/api/user/getByEmail" \
-  --data-urlencode "email=$ADMIN_EMAIL" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '._id')
-```
-
-**Faster fallback — decode the JWT.** If `getByEmail` is unreachable or returns null, `ADMIN_USERID` is in the token at the `custom:cbh_user_id` claim, and the user type is at `custom:user_types`:
-
-```bash
+# Admin userId — claim on the token, no API call needed
 PAYLOAD=$(echo "$ADMIN_TOKEN" | cut -d. -f2); LEN=$(( ${#PAYLOAD} % 4 ))
 [ $LEN -ne 0 ] && PAYLOAD="$PAYLOAD$(printf '=%.0s' $(seq 1 $((4-LEN))))"
-echo "$PAYLOAD" | tr '_-' '/+' | { base64 -d 2>/dev/null || base64 -D; } | jq '."custom:cbh_user_id", ."custom:user_types"'
+export ADMIN_USERID=$(echo "$PAYLOAD" | tr '_-' '/+' | { base64 -d 2>/dev/null || base64 -D; } | jq -r '."custom:cbh_user_id"')
 ```
+
+The worker token is minted **after** Step 2 (see Step 5). `POST /api/user/create` creates the Cognito user as a side effect, so no hcp-webapp signup + Mailpit dance is needed.
+
+`ADMIN_USERID` is used as `addedBy` / `sessionUser` / `adminId` in many downstream calls (the `constants.ts` default is stale). The token-claim path above is preferred — if you ever need an API fallback, hit `GET /api/user/getByEmail?email=…` (URL-encoded) with `$ADMIN_TOKEN`.
 
 **Pick an admin with an `EmployeeProfile` doc.** The plain `@AllowClipboardHealthEmployees()` decorator passes for any JWT with `custom:user_types: EMPLOYEE` (so workplace creation works for almost any CBH email). But `ShiftCreateAuthorizer` (`src/modules/shifts/entrypoints/internal/shift-create.authorizer.ts:54`) additionally requires an `EmployeeProfile` keyed by your `userId`, and many real CBH dev users don't have one. Symptom: shift create returns generic `403 {"code":"PermissionDenied","detail":"Forbidden resource"}` with no detail. **Default to `e2e@clipboardhealth.com` for shift writes** unless the user explicitly hands you another admin email and confirms it has an EmployeeProfile.
 
@@ -268,13 +260,7 @@ The controller's `userManipulationService.createAgent` calls `cognitoService.cre
 
 **Alternative — `POST /api/testHelpers/createUser`** (`src/tests/helpers/api/testHelpers/controller.ts:785`, dev-only via `meta().dev`). Same `userManipulationService.createAgent` underneath, so it produces an equivalent `agentProfile` + Cognito user. Use it when you don't have an admin Cognito user handy: auth is the literal `TEST_HELPER_API_KEY` shared secret as the `Authorization` header (no `Bearer` re-wrapping — pass it verbatim), sourced from 1Password vault **"Engineering - Shared"** → item `REACT_APP_TEST_HELPER_API_KEY`. The value lives in the item's `notesPlain` field (not `password`); strip the `REACT_APP_TEST_HELPER_API_KEY=` prefix and pass the remaining `Bearer …` string as the `Authorization` header. Body shape is the `CreateUserBody` interface in the same controller file (looser than `/api/user/create`'s contract).
 
-Resolve your own admin userId first (it's used as `addedBy` and as `sessionUser` for downstream calls — the constants.ts default `60841c3970071101613e1c50` is stale):
-
-```bash
-ADMIN_USERID=$(curl -sS -G "$API_BASE/api/user/getByEmail" \
-  --data-urlencode "email=$ADMIN_EMAIL" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '._id')
-```
+`ADMIN_USERID` is already exported from Setup. (Used as `addedBy` and `sessionUser` here — the constants.ts default `60841c3970071101613e1c50` is stale.)
 
 Then:
 
@@ -524,7 +510,7 @@ curl -sS -X POST "$API_BASE/api/payment/sendInvoices" \
       "excludedIds": []
     }
   },
-  "appUrl": "https://admin-webapp.development.clipboardhealth.org",
+  "appUrl": "$ADMIN_WEBAPP",
   "sentBy": "$ADMIN_USERID",
   "sentByEmail": "$ADMIN_EMAIL",
   "preview": true
@@ -773,7 +759,7 @@ Ask the user which path they prefer before wiring a lot of curl.
 - **Payment truth** — always `payment-service` endpoints, not backend-main (which can be stale).
 - **Datadog traces** — see the "Datadog service map" section below; **the actual service tag is never `backend-main`**, it's one of ~18 pseudo-services that all run the same monolith code. Hand off to `core:datadog-investigate` for deep dives.
 - **Mailpit** — `$MAILPIT_BASE/api/v1/search?query=from:no-reply%2Bdev@updates.clipboardworks.com%20to:<email>` (URL-encode the `+`). Combine with `subject:"Your Clipboard sign-in link"` for magic links, `subject:"Your Clipboard login code"` for OTPs, or a workplace-name fragment for shift-booked / cancellation notices.
-- **UI sanity check** — `admin-webapp.development.clipboardhealth.org` (serves both employees and facility users) is the last resort for "did this render".
+- **UI sanity check** — `$ADMIN_WEBAPP` (serves both employees and facility users) is the last resort for "did this render".
 
 # Datadog service map
 
@@ -802,7 +788,7 @@ The service-tag boundary tends to track the controller/job module name (e.g. `cb
 
 **Single-deployment repos (one repo, one DD service):**
 
-`payment-service` → `cbh-payment-service`. `home-health-api` → `cbh-home-health-api-web`. `attendance-policy` → `cbh-attendance-policy`. `worker-service-backend` → `cbh-worker-service-backend`. `shift-reviews-service` → `cbh-shift-reviews-service`. `cbh-shifts-bff` → `cbh-shifts-bff`. `urgent-shifts` → `cbh-urgent-shifts`. `license-manager` → `cbh-license-manager`. `attendance-policy` → `cbh-attendance-policy`. `chat` → `cbh-chat`. `cbh-location-service` → `cbh-location-service`. `worker-eta` → `cbh-worker-eta`. `cbh-employee-lifecycle` → `cbh-employee-lifecycle-web`. `clipboard-staffing-api` → `cbh-staffing-api`. `pricing-parameters` → `cbh-pricing-parameters`. `shift-verification` → `cbh-shiftverify`. `billterms` → `cbh-billterms-api`. `files-storage-service` → `cbh-files-storage-service`. `identity-doc-autoverification-service` → `cbh-identity-doc-autoverification-service`. `cbh-pricing` → `facility-msa-classification`. `zendesk-jwt-service` → `cbh-zendesk-jwt-service`. `cbh-mobile-app` → `hcp_mobile_app`. `cbh-admin-frontend` → `admin_web_app`.
+`payment-service` → `cbh-payment-service`. `home-health-api` → `cbh-home-health-api-web`. `attendance-policy` → `cbh-attendance-policy`. `worker-service-backend` → `cbh-worker-service-backend`. `shift-reviews-service` → `cbh-shift-reviews-service`. `cbh-shifts-bff` → `cbh-shifts-bff`. `urgent-shifts` → `cbh-urgent-shifts`. `license-manager` → `cbh-license-manager`. `chat` → `cbh-chat`. `cbh-location-service` → `cbh-location-service`. `worker-eta` → `cbh-worker-eta`. `cbh-employee-lifecycle` → `cbh-employee-lifecycle-web`. `clipboard-staffing-api` → `cbh-staffing-api`. `pricing-parameters` → `cbh-pricing-parameters`. `shift-verification` → `cbh-shiftverify`. `billterms` → `cbh-billterms-api`. `files-storage-service` → `cbh-files-storage-service`. `identity-doc-autoverification-service` → `cbh-identity-doc-autoverification-service`. `cbh-pricing` → `facility-msa-classification`. `zendesk-jwt-service` → `cbh-zendesk-jwt-service`. `cbh-mobile-app` → `hcp_mobile_app`. `cbh-admin-frontend` → `admin_web_app`.
 
 **To re-derive this map** (the list drifts as new pseudo-services are added — re-run when you suspect it's stale):
 
@@ -849,7 +835,7 @@ The `meta.github-html-url` field on each service definition points to the source
 
 Use only when no API exists (the login form itself; visual-only changes; phone-OTP-gated worker signup).
 
-1. Navigate to `admin-webapp.development.clipboardhealth.org` (employees and facility users) or `hcp-webapp.development.clipboardhealth.org` (workers).
+1. Navigate to `$ADMIN_WEBAPP` (employees and facility users) or `https://hcp-webapp.development.clipboardhealth.org` (workers).
 2. Enter email → trigger magic-link.
 3. Poll Mailpit, scoped to the trusted sender + the right subject:
 
