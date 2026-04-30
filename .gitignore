@@ -3,6 +3,7 @@
 .idea/
 .nx/cache
 .nx/workspace-data
+.sbx/
 .tmp-plugin-sync-*/
 .vscode/*
 coverage/
