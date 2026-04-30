@@ -14,12 +14,11 @@ Structure and write Linear bug reports from evidence that already exists in the 
 ## Process
 
 1. **Gather context** — collect evidence from the conversation: investigation findings, user reports, Datadog links, error details
-2. **Check for duplicates** — follow the `linear-duplicate-finder` process (read its [SKILL.md](../linear-duplicate-finder/SKILL.md)). Generate search queries from the symptom description, error messages, and affected service/endpoint. If duplicates are found, present them to the user before proceeding.
-3. **Clarify (conditional)** — if missing: (a) expected behavior, (b) actual behavior, or (c) who's affected — ask before drafting. NEVER invent answers. Up to 3 rounds.
-4. **Draft** — title + description, structure scaled to complexity (see format below)
-5. **Self-review** — check every Red Flag below before presenting
-6. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
-7. **Create in Linear** — only after explicit approval
+2. **Clarify (conditional)** — if missing: (a) expected behavior, (b) actual behavior, or (c) who's affected — ask before drafting. NEVER invent answers. Up to 3 rounds.
+3. **Draft** — title + description, structure scaled to complexity (see format below)
+4. **Self-review** — check every Red Flag below before presenting
+5. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
+6. **Create in Linear** — only after explicit approval
 
 ## Hard Rules
 
