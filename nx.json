@@ -69,9 +69,11 @@
       "cache": true,
       "inputs": [
         "default",
+        "^default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/packages/eslint-config/src/index.js"
+        "{workspaceRoot}/packages/eslint-config/src/index.js",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
       ]
     },
     "@nx/vitest:test": {
