@@ -8,6 +8,7 @@ Clipboard's core development tools.
 - [Prerequisites](#prerequisites)
 - [Skills](#skills)
   - [babysit-pr](#babysit-pr)
+  - [clipboard-testing](#clipboard-testing)
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
@@ -46,6 +47,10 @@ Clipboard's core development tools.
 ### babysit-pr
 
 Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize CodeRabbit review-body comments. Invoke with `/babysit-pr` for the current branch's PR, or `/babysit-pr <number|url>` to check out and babysit a specific PR.
+
+### clipboard-testing
+
+End-to-end testing playbook for Clipboard Health changes. Verify, exercise, or set up test data for a backend or frontend change against a live environment. Defaults to the `development` AWS environment and is API-first (`cbh auth gentoken` + curl). The skill carries enough detail to run the core happy-path flow (workplace → worker → shift → clock in/out → pay → invoice) autonomously; for anything else, it orients around the codebase and asks for missing directories. Invoke with `/clipboard-testing` or by asking to test a change end-to-end.
 
 ### cognito-user-analysis
 
