@@ -51,6 +51,10 @@
         "/ts-jest/",
         "/tslib/"
       ]
+    },
+    {
+      "matchPackageNames": ["node", "npm"],
+      "enabled": false
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
