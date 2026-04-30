@@ -30,3 +30,6 @@ CLAUDE.local.md
 npm-debug.log
 
 .claude/worktrees
+
+.nx/polygraph
+.nx/self-healing
