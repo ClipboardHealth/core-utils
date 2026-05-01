@@ -14,7 +14,7 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 
 ## Your task
 
-If `Commits ahead of default branch` is `(unknown)`, the ahead-probe failed (e.g., `origin/HEAD` not set) — proceed with the full flow rather than risk skipping real commits. Otherwise, if `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
+If `Commits ahead of default branch` is `(unknown)`, `origin/HEAD` couldn't be resolved — stop and tell the user to run `git remote set-head origin -a` (or otherwise set the default branch) before retrying, since the simplify step also depends on it. Otherwise, if `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
 2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. Wait for it to finish, then include any resulting fixes in the commit.
