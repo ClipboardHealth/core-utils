@@ -6,6 +6,10 @@ on:
   merge_group:
     types: [checks_requested]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   pr-title:
     name: Validate PR title
