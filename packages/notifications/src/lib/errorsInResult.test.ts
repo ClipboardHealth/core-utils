@@ -51,7 +51,7 @@ describe(errorsInResult, () => {
     const mockNonRetryableError = new ServiceError({
       issues: [
         {
-          code: "nonRetryableCode" as ErrorCode,
+          code: "nonRetryableCode",
           message: "Non-retryable error",
         },
       ],

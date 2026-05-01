@@ -567,9 +567,7 @@ function getLoadedPresetsModule(value: unknown): {
   }
 
   return {
-    base: value["base"] as {
-      overrides?: { files: string[]; rules?: Record<string, unknown> }[];
-    },
+    base: value["base"],
   };
 }
 
