@@ -7,7 +7,7 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Commits ahead of default branch: !`git log --oneline origin/HEAD..HEAD 2>/dev/null || echo "(unknown)"`
+- Commits ahead of default branch: !`git log --oneline origin/HEAD..HEAD 2>/dev/null || true`
 - Existing PR: !`gh pr view --json url --jq .url 2>/dev/null || echo "none"`
 - Diff summary: !`git diff HEAD --stat`
 - Full diff: !`git diff HEAD`

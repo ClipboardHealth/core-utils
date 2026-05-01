@@ -12,7 +12,7 @@ This skill is the bridge between intent and shipping. It does not re-plan or re-
 
 The user invokes this skill with either a plan file path/identifier or a direct request like "add a login button."
 
-- **Path-like input** (absolute, relative, or bare name): try to read it. For bare names, check the host's plans directory first. If an absolute path lies outside the workspace/repo or the host's plans directory, ask the user to confirm before reading it. If the input doesn't resolve to a readable file, stop and tell the user — do not reinterpret a missing path as a direct request.
+- **Path-like input** (absolute, relative, or bare name): try to read it. For bare names, check the host's plans directory first. Resolve the path first; if it lies outside the workspace/repo or the host's plans directory, ask the user to confirm before reading it (applies to both absolute and relative inputs — `..` escapes count). If the input doesn't resolve to a readable file, stop and tell the user — do not reinterpret a missing path as a direct request.
 - **Natural-language request**: treat as the implementation task. There may be no plan file.
 - **No argument**: ask for either a plan path or the implementation request.
 
