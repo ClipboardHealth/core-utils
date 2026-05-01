@@ -8,7 +8,7 @@ export class ProcessUserJob implements HandlerInterface<ProcessUserJobData> {
   public name = "ProcessUserJob";
   public maxAttempts = 3;
 
-  async perform({ userId }: ProcessUserJobData) {
+  public async perform({ userId }: ProcessUserJobData) {
     // Process user logic
     console.log(`Processing user ${userId}`);
     await this.processUser(userId);

@@ -9,7 +9,7 @@ export class SmsJob implements HandlerInterface<SmsJobData> {
   public name = "SmsJob";
   public maxAttempts = 3;
 
-  async perform({ phoneNumber, message }: SmsJobData) {
+  public async perform({ phoneNumber, message }: SmsJobData) {
     // Send SMS logic
     console.log(`Sending SMS to ${phoneNumber}: ${message}`);
     await this.sendSms(phoneNumber, message);

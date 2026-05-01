@@ -34,7 +34,7 @@ export class Cron {
   private readonly jobsRepo: JobsRepository;
   private readonly registry: Registry;
 
-  constructor(options: ConstructorOptions) {
+  public constructor(options: ConstructorOptions) {
     this.scheduleModel = options.scheduleModel;
     this.jobsRepo = options.jobsRepo;
     this.registry = options.registry;

@@ -2,7 +2,7 @@ export class ActionableQueues {
   private readonly set = new Set<string>();
   private readonly array = new Array<string>();
 
-  add(queue: string) {
+  public add(queue: string) {
     if (this.set.has(queue)) {
       return;
     }
@@ -11,7 +11,7 @@ export class ActionableQueues {
     this.array.push(queue);
   }
 
-  remove(queue: string) {
+  public remove(queue: string) {
     if (!this.set.has(queue)) {
       return;
     }
@@ -22,7 +22,7 @@ export class ActionableQueues {
     this.array.splice(indexOfQueue, 1);
   }
 
-  getRandom(): string | undefined {
+  public getRandom(): string | undefined {
     const arrayLength = this.array.length;
     if (arrayLength === 0) {
       return undefined;

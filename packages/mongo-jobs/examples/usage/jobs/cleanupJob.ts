@@ -9,7 +9,7 @@ export class CleanupJob implements HandlerInterface<CleanupJobData> {
   public name = "CleanupJob";
   public maxAttempts = 3;
 
-  async perform({ resourceType, olderThanDays }: CleanupJobData) {
+  public async perform({ resourceType, olderThanDays }: CleanupJobData) {
     // Cleanup logic
     console.log(`Cleaning up ${resourceType} older than ${olderThanDays} days`);
     await this.cleanupResources(resourceType, olderThanDays);

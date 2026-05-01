@@ -7,7 +7,7 @@ interface JobData {
 export class JobWithDependencies implements HandlerInterface<JobData> {
   public name = "JobWithDependencies";
 
-  constructor(public dependencyName: string) {}
+  public constructor(public dependencyName: string) {}
   public async perform(_data: JobData) {
     await Promise.resolve({});
   }

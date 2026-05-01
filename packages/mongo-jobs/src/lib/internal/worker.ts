@@ -110,7 +110,7 @@ export class Worker {
   private newJobsWatched = false;
   private nextAvailableJobCheck = new Date();
 
-  constructor(options: ConstructorOptions) {
+  public constructor(options: ConstructorOptions) {
     this.metrics = options.metrics;
     this.lockTimeoutMS = options.lockTimeoutMS ?? DEFAULT_LOCK_TIMEOUT;
     this.maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;

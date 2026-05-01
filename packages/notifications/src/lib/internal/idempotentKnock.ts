@@ -13,7 +13,7 @@ export class IdempotentKnock extends Knock {
 
   protected override idempotencyHeader = "Idempotency-Key";
 
-  constructor(params: { apiKey: string; logger: Logger }) {
+  public constructor(params: { apiKey: string; logger: Logger }) {
     const { apiKey, logger } = params;
 
     super({

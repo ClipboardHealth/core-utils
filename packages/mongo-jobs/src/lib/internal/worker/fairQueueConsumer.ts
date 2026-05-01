@@ -15,14 +15,14 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
   private jobsChangeStream?: ChangeStream<BackgroundJobType<unknown>>;
   private refreshQueuesInterval?: NodeJS.Timeout;
 
-  constructor(queues: string[], jobsRepository: JobsRepository) {
+  public constructor(queues: string[], jobsRepository: JobsRepository) {
     super();
     this.consumedQueues = queues;
     this.consumedQueuesSet = new Set(queues);
     this.jobsRepository = jobsRepository;
   }
 
-  async start({ useChangeStream, refreshQueuesIntervalMS }: QueueConsumerStartOptions) {
+  public async start({ useChangeStream, refreshQueuesIntervalMS }: QueueConsumerStartOptions) {
     if (this.consumedQueues.length === 0) {
       return;
     }
@@ -34,14 +34,14 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     }
   }
 
-  async startQueuesRefresh(interval: number) {
+  public async startQueuesRefresh(interval: number) {
     await this.refreshActionableQueuesFromDB();
     this.refreshQueuesInterval = setInterval(() => {
       this.refreshActionableQueuesFromDBSafely();
     }, interval);
   }
 
-  startListeningForQueueChanges() {
+  public startListeningForQueueChanges() {
     this.jobsChangeStream = this.jobsRepository.watchUpserts(this.consumedQueues);
 
     this.jobsChangeStream.on("change", (event: unknown) => {
@@ -64,7 +64,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     });
   }
 
-  async stop() {
+  public async stop() {
     if (this.refreshQueuesInterval) {
       clearInterval(this.refreshQueuesInterval);
     }
@@ -79,7 +79,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     }
   }
 
-  async refreshActionableQueuesFromDB() {
+  public async refreshActionableQueuesFromDB() {
     const queues = await this.jobsRepository.fetchQueuesWithJobs(this.consumedQueues);
     for (const queue of queues) {
       /**
@@ -92,7 +92,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     }
   }
 
-  async acquireNextJob(): Promise<BackgroundJobType<unknown> | undefined> {
+  public async acquireNextJob(): Promise<BackgroundJobType<unknown> | undefined> {
     this.promoteQueues();
     let job;
 
@@ -115,7 +115,7 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
     return job;
   }
 
-  getConsumedQueues(): string[] {
+  public getConsumedQueues(): string[] {
     return [...this.consumedQueues];
   }
 

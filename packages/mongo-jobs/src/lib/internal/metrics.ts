@@ -25,7 +25,7 @@ export class Metrics {
   private started = false;
   private reporting = false;
 
-  constructor(
+  public constructor(
     private readonly reporter: MetricsReporter,
     private readonly jobModel: mongoose.Model<BackgroundJobType<unknown>>,
     private readonly registry: Registry,

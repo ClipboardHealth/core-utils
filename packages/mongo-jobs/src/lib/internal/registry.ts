@@ -41,7 +41,7 @@ export class Registry {
   private readonly queueGroups = new Map<string, Set<string>>();
   private readonly allowHandlerOverride: boolean;
 
-  constructor(options: ConstructorOptions) {
+  public constructor(options: ConstructorOptions) {
     this.allowHandlerOverride = options.allowHandlerOverride ?? false;
   }
 

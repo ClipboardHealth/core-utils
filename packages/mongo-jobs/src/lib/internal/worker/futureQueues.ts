@@ -1,7 +1,7 @@
 export class FutureQueues {
   private readonly actionableSoon = new Map<string, Date>();
 
-  setActionableAt(queue: string, actionableAt: Date): void {
+  public setActionableAt(queue: string, actionableAt: Date): void {
     const oldActionableAt = this.actionableSoon.get(queue);
 
     if (oldActionableAt && oldActionableAt < actionableAt) {
@@ -11,7 +11,7 @@ export class FutureQueues {
     this.actionableSoon.set(queue, actionableAt);
   }
 
-  acquireCurrentlyActionable(): string[] {
+  public acquireCurrentlyActionable(): string[] {
     const actionableQueues = new Array<string>();
     const now = new Date();
 

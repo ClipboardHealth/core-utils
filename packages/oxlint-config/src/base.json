@@ -52,6 +52,7 @@
     "no-named-export": "off",
     "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-ternary": "off",
+    "no-underscore-dangle": "off",
     "no-undefined": "off",
     "no-unused-vars": [
       "error",

@@ -10,9 +10,9 @@ describe("Registering background jobs", () => {
   });
 
   it("is not possible to schedule a job for unregistered handler", async () => {
-    await expect(async () => {
-      await backgroundJobs.enqueue(ExampleJob, { myNumber: 1 });
-    }).rejects.toThrow(/No handler registered/);
+    await expect(backgroundJobs.enqueue(ExampleJob, { myNumber: 1 })).rejects.toThrow(
+      /No handler registered/,
+    );
   });
 
   it("when worker is started with options, options are passed to the worker", () => {

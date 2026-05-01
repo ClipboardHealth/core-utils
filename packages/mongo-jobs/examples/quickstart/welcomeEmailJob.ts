@@ -10,7 +10,7 @@ export class WelcomeEmailJob implements HandlerInterface<WelcomeEmailData> {
   public name = "WelcomeEmailJob";
   public maxAttempts = 3;
 
-  async perform({ userId, email }: WelcomeEmailData) {
+  public async perform({ userId, email }: WelcomeEmailData) {
     await this.sendEmail(email, `Welcome, user ${userId}!`);
   }
 

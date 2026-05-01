@@ -55,6 +55,7 @@ describe("oxlint-config", () => {
         curly: ["error", "all"],
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
         "unicorn/no-null": "off",
+        "no-underscore-dangle": "off",
       });
     });
 
@@ -71,6 +72,7 @@ describe("oxlint-config", () => {
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
           "jest/prefer-ending-with-an-expect": "off",
+          "jest/prefer-expect-assertions": "off",
           "jest/prefer-importing-jest-globals": "off",
           "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
@@ -85,16 +87,23 @@ describe("oxlint-config", () => {
           "jest/max-nested-describe": "off",
           "jest/no-hooks": "off",
           "jest/prefer-ending-with-an-expect": "off",
+          "jest/prefer-expect-assertions": "off",
           "jest/prefer-importing-jest-globals": "off",
           "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+          "vitest/max-expects": "off",
+          "vitest/max-nested-describe": "off",
+          "vitest/no-hooks": "off",
           "vitest/prefer-called-once": "off",
+          "vitest/prefer-expect-assertions": "off",
           "vitest/prefer-import-in-mock": "off",
           "vitest/prefer-importing-vitest-globals": "off",
+          "vitest/prefer-lowercase-title": "off",
           "vitest/prefer-to-be-falsy": "off",
           "vitest/prefer-to-be-truthy": "off",
           "vitest/require-hook": "off",
           "vitest/require-test-timeout": "off",
+          "vitest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
         },
       });
     });
