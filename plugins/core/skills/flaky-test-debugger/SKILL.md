@@ -20,8 +20,6 @@ If the type is ambiguous, check the test file extension and imports to confirm.
 
 **Routing:** After completing Phase 1, always proceed to Phase 1b before investigating further.
 
----
-
 ## Phase 1b: Check for Existing Fixes
 
 Before investigating, check whether someone (or another agent) has already fixed this flake.
@@ -45,8 +43,6 @@ If no existing fix is found, proceed to investigation:
 - **E2E (Playwright):** Go to [Phase 2E: E2E Triage Snapshot](#phase-2e-e2e-triage-snapshot)
 - **Service, React component, or Unit:** Go to [Phase 2: Fast Path](#phase-2-fast-path-non-e2e)
 
----
-
 ## Phase 2: Fast Path (non-E2E)
 
 For service, component, and unit tests, the failure information plus the test source code is usually sufficient to diagnose and fix the flake. Do not over-investigate -- read the evidence, read the code, fix it.
@@ -58,7 +54,6 @@ Capture from the user's input (ask if missing):
 - **Test file and name** -- exact file path and test title
 - **Error message and stack trace** -- the raw failure output
 - **Framework** -- Jest, Vitest, etc.
-- **Whether it's a new flaky** -- first occurrence vs. recurring
 - **Failure metadata** -- branch, pipeline URL, duration, shard, timestamp (when available)
 
 ### 2b: Read the Test and Code Under Test
@@ -82,32 +77,7 @@ Capture from the user's input (ask if missing):
 | **Date/time sensitivity**       | Unit            | Test assumes a specific date, time zone, or `Date.now()` value that shifts across runs                             |
 | **Test ordering dependency**    | All             | Passes in isolation, fails when run with other tests (or vice versa)                                               |
 
-### 2d: Diagnose and Fix
-
-Apply the appropriate fix based on the pattern:
-
-**Service test fixes:**
-
-- Ensure `afterAll` closes the app _and_ awaits all open connections (DB, Redis, queues) before returning
-- Pass `{ forceCloseConnections: true }` to `NestFactory.create()` (NestJS v10+) to auto-close keep-alive connections on shutdown, or explicitly close the Mongoose/TypeORM connection in `afterAll`
-- Use dynamic/random ports (`listen(0)`) to avoid EADDRINUSE
-- Isolate database state: use unique collection prefixes, transaction rollbacks, or per-test database cleanup
-- If the test uses `setTimeout` or event-driven patterns, ensure the test awaits completion rather than relying on timing
-
-**React component test fixes:**
-
-- Wrap state-triggering actions in `act()` or use `waitFor`/`findBy*` queries that handle async updates
-- When using fake timers, advance them explicitly (`jest.advanceTimersByTime`, `jest.runAllTimers`) and restore real timers in `afterEach`
-- Ensure cleanup with `cleanup()` in `afterEach` (React Testing Library does this automatically unless disabled)
-- Restore mocks in `afterEach` -- prefer `jest.restoreAllMocks()` in a shared setup
-
-**Unit test fixes:**
-
-- Eliminate shared mutable state: clone or reset objects in `beforeEach`, or make the module-level binding `const`
-- Mock `Date.now` / `new Date()` explicitly when time matters; restore in `afterEach`
-- If order-dependent, check for missing setup that another test was implicitly providing
-
-### 2e: Evidence Standard (Fast Path)
+### 2d: Diagnose and Fix with Evidence
 
 Before proposing a fix, include at minimum:
 
@@ -118,9 +88,9 @@ Before proposing a fix, include at minimum:
 
 If confidence is 2 or below, recommend reproduction steps or instrumentation before committing to a fix.
 
-Skip to [Phase 5: Fix Decision Tree](#phase-5-fix-decision-tree).
+If >2, apply the appropriate fix.
 
----
+Skip to [Phase 5: Fix Decision Tree](#phase-5-fix-decision-tree).
 
 ## Phase 2E: E2E Triage Snapshot
 
@@ -251,8 +221,6 @@ Rate your confidence in the root cause on a 1-5 scale. Report this score alongsi
 
 If confidence is 2 or below, do not propose a code fix. Instead, recommend specific instrumentation or reproduction steps to raise confidence.
 
----
-
 ## Phase 5: Fix Decision Tree
 
 Applies to all test types.
@@ -294,7 +262,7 @@ Search for siblings when the root cause is a **structural anti-pattern** -- some
 
 ### When NOT to search
 
-Skip this step when the fix is **specific to one test's logic** -- for example, a wrong assertion value, a test-specific race condition in a unique setup, or a one-off typo.
+Skip this step when the fix is **specific to one test's logic** -- for example a test-specific race condition in a unique setup or a one-off typo.
 
 ### How to search
 
@@ -306,7 +274,7 @@ Skip this step when the fix is **specific to one test's logic** -- for example, 
 
 2. Scope the search to the same area of the codebase first (same package or directory), then widen if the pattern is pervasive.
 
-3. Apply the same fix to each sibling. Keep changes minimal -- fix the anti-pattern, nothing else.
+3. Apply the same fix to each sibling. Keep changes minimal; fix the anti-pattern, nothing else.
 
 4. List the sibling files you fixed in the output so reviewers can verify them.
 
@@ -320,11 +288,13 @@ When opening a PR for a flaky test fix, include `--label flaky-test-fix` in the 
 
 When documenting the fix in a PR or issue, use this structure:
 
+- **Test ID:** if provided in prompt
+- **Agent session ID:** your running session ID to resume if needed
 - **Confidence:** score (1-5) with brief justification
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)
 - **Fix:** test-only, product-only, or both
-- **Siblings fixed:** list of other files where the same anti-pattern was corrected (or "N/A -- fix was test-specific")
+- **Siblings fixed:** list of other files where the same anti-pattern was or should be corrected (or "N/A -- fix was test-specific")
 - **Validation:** commands and suites run
 - **Residual risk:** what could still be flaky

@@ -9,7 +9,7 @@ The `pup` CLI must be installed and authenticated. Two auth paths are supported:
 - **macOS Keychain** (via `pup auth login`) — the default on developer machines.
 - **Environment variables** (`DD_API_KEY` + `DD_APP_KEY`) — the path used in sandboxes and CI.
 
-**Do not run `pup auth status` to verify auth.** It only reads the Keychain, so it fails in sandboxes even when env-var auth is working. Call `pup traces search …` directly — env-var auth takes effect there. If the query fails with an auth error, surface it then (check `DD_API_KEY` / `DD_APP_KEY` or run `pup auth login`).
+Don't run `pup auth status` to verify auth. It fails in sandboxes even when env-var auth is working. Call `pup traces search …` directly. If the query fails with an auth error, check `DD_API_KEY` / `DD_APP_KEY` or run `pup auth login`.
 
 ## Key pup conventions
 
@@ -78,3 +78,7 @@ pup traces search --query="trace_id:<TRACE_ID>" --from=30d --limit=1000 \
       error: .attributes.custom.error.message
     }]'
 ```
+
+### 4. Query additional data
+
+If additional data would help diagnose the issue (e.g. logs, rum, cicd), use the pup CLI.
