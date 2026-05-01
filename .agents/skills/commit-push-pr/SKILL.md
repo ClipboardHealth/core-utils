@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr view:*), Bash(gh pr create:*), Bash(git diff:*), Bash(git merge-base:*)
+allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr view:*), Bash(gh pr create:*), Bash(gh pr edit:*), Bash(git diff:*), Bash(git merge-base:*), Bash(bash scripts/find-session-id.sh:*)
 description: Commit, push, and open a PR. Use when the user wants to ship changes, create a pull request, or says things like 'commit and push', 'open a PR', 'ship it', 'send it', 'create a PR for this', or 'push this up'.
 ---
 
@@ -17,10 +17,13 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 If `Commits ahead of default branch` is `(unknown)`, `origin/HEAD` couldn't be resolved — stop and tell the user to run `git remote set-head origin -a` (or otherwise set the default branch) before retrying, since the simplify step also depends on it. Otherwise, if `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
-2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. Wait for it to finish, then include any resulting fixes in the commit.
+2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. When it returns, continue to step 3 in the same turn; do not stop.
 3. If `git status --short` shows changes, create a single conventional commit.
 4. Push the branch to origin.
-5. Check for an existing PR with `gh pr view`.
-   - No PR: create with `gh pr create`. Title = commit subject. Description = brief explanation of **why**, not what. Append `<!-- commit-push-pr:created v1 -->` on its own line at the end so skill-created PRs can be identified later.
-   - PR exists: report the URL and move on.
-6. End with one short text response: branch name and the full PR URL (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`). Never use shorthand like `repo#123` — always output the complete URL.
+5. Look up the current agent session ID with `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. On success the script prints `<agent> <id>`; otherwise nothing — if empty, omit the session ID line below.
+6. Check for an existing PR with `gh pr view`.
+   - No PR: create with `gh pr create`. Title = commit subject. Description = brief explanation of **why**, not what. Append two lines on their own at the end:
+     - `Agent session ID: <output of step 5>` (e.g. `Agent session ID: claude-code c8fb7000-...`) — omit entirely if step 5 produced no output.
+     - `<!-- commit-push-pr:created v1 -->` so skill-created PRs can be identified later.
+   - PR exists: check whether the new commit's changes are already covered by the existing PR description. If not, update the description with `gh pr edit --body` to incorporate the new changes (preserve the existing description content and the `<!-- commit-push-pr:created v1 -->` sentinel if present). When updating, also ensure the `Agent session ID:` line is present and current — replace it if the existing value differs, append it if missing. Then report the URL and move on.
+7. End with one short text response: branch name and the full PR URL (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`). Never use shorthand like `repo#123` — always output the complete URL.
