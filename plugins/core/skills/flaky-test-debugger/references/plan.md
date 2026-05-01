@@ -214,6 +214,7 @@ Choose one of these approaches in priority order:
 Produce the plan with these fields:
 
 - **Test ID:** if provided in prompt
+- **Agent session ID:** your running session ID to resume if needed
 - **Confidence:** score (1-5) with brief justification
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation

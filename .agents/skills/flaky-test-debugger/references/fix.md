@@ -45,7 +45,7 @@ Skip this step when the fix is **specific to one test's logic** -- for example a
 
 ## Verification
 
-Lint and type-check touched files.
+Run the plan's **Validation plan** commands — including the previously-flaky test, repeated enough times to give reasonable confidence the flake is gone. Lint and type-check touched files as the floor; do not stop there.
 
 ## Output Format
 
