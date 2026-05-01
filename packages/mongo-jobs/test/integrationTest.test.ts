@@ -740,7 +740,7 @@ describe("Helper APIs", () => {
     );
 
     await expect(backgroundJobs.retryJobById(job1._id.toString())).rejects.toThrow(
-      "Job was taken off the queue but doesn't have value in originalQueue field",
+      /duplicate key error/,
     );
 
     await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
