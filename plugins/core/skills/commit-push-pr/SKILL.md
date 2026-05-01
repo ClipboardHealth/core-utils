@@ -7,14 +7,14 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Commits ahead of default branch: !`git log --oneline origin/HEAD..HEAD 2>/dev/null || true`
+- Commits ahead of default branch: !`git log --oneline origin/HEAD..HEAD 2>/dev/null || echo "(unknown)"`
 - Existing PR: !`gh pr view --json url --jq .url 2>/dev/null || echo "none"`
 - Diff summary: !`git diff HEAD --stat`
 - Full diff: !`git diff HEAD`
 
 ## Your task
 
-If `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
+If `Commits ahead of default branch` is `(unknown)`, the ahead-probe failed (e.g., `origin/HEAD` not set) — proceed with the full flow rather than risk skipping real commits. Otherwise, if `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
 2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. Wait for it to finish, then include any resulting fixes in the commit.
