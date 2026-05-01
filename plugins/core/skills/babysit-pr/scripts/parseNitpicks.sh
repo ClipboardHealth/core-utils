@@ -59,7 +59,12 @@ for my $section (@sections) {
     my $raw_file_name = trim($1);
     my $file_content = $2;
 
-    while ($file_content =~ /`(\d+(?:-\d+)?)`:\s*(?:_[^_]+_\s*\|\s*_[^_]+_\s*)?\*\*([^*]+)\*\*\s*([\s\S]*?)(?=---|\n`\d|<\/blockquote>|$)/g) {
+    # Category prefix is optional. CodeRabbit emits 0–N `_…_` tags
+    # separated by `|` (e.g. `_⚠️ Potential issue_ | _🟠 Major_ | _⚡ Quick win_`
+    # or just `_💤 Low value_` on lower-confidence findings). The previous
+    # regex required exactly two tags and silently dropped one-tag and
+    # three-tag variants.
+    while ($file_content =~ /`(\d+(?:-\d+)?)`:\s*(?:_[^_]+_(?:\s*\|\s*_[^_]+_)*\s*)?\*\*([^*]+)\*\*\s*([\s\S]*?)(?=---|\n`\d|<\/blockquote>|$)/g) {
       my $line_range = $1;
       my $title = trim($2);
       my $clean_body = clean_comment_body(trim($3));
