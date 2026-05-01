@@ -1,0 +1,53 @@
+name: PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pr-title:
+    name: Validate PR title
+    runs-on: [self-hosted, cbh-amazon-linux-2023]
+    steps:
+      - name: Check PR title conforms to Conventional Commits
+        if: github.event_name == 'pull_request'
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Disallow scopes (except chore(release))
+        if: github.event_name == 'pull_request'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Allow chore(release): ... (Nx release PRs); reject every other scope.
+          if echo "$TITLE" | grep -qE '^[a-zA-Z]+\([^)]+\)!?:'; then
+            if ! echo "$TITLE" | grep -qE '^chore\(release\)!?:'; then
+              echo "::error::PR title must not include a scope (scopes prevent Nx release from bumping package versions). Use 'feat: ...' instead of 'feat(TFR-239): ...'. The only allowed scope is 'chore(release): ...' for Nx release auto-PRs."
+              exit 1
+            fi
+          fi
+      - name: Skip in merge queue
+        if: github.event_name == 'merge_group'
+        run: echo "Not in pull_request context - skipping PR title check"
+      - name: Require versioning type for package changes
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          CHANGED=$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only | grep -c '^packages/.*/src/' || true)
+          if [ "$CHANGED" -gt 0 ]; then
+            if ! echo "$TITLE" | grep -qE '^(feat|fix)(\(.*\))?!?:'; then
+              echo "::error::PR modifies packages/ source files but title uses a non-versioning type. Use feat: or fix: so nx release bumps the package version."
+              exit 1
+            fi
+          fi
+    timeout-minutes: 5
