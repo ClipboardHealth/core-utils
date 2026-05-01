@@ -35,9 +35,11 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          CHANGED=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --name-only | grep -c '^packages/.*/src/' || true)
+          CHANGED=$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only | grep -c '^packages/.*/src/' || true)
           if [ "$CHANGED" -gt 0 ]; then
             if ! echo "$TITLE" | grep -qE '^(feat|fix)(\(.*\))?!?:'; then
               echo "::error::PR modifies packages/ source files but title uses a non-versioning type. Use feat: or fix: so nx release bumps the package version."
