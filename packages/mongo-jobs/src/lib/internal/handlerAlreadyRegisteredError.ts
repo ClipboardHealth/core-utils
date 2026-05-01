@@ -1,3 +1,3 @@
 export class HandlerAlreadyRegisteredError extends Error {
-  override name = "HandlerAlreadyRegisteredError";
+  public override name = "HandlerAlreadyRegisteredError";
 }

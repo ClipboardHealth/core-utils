@@ -24,7 +24,7 @@ describe(processResult, () => {
 
     const actual = processResult(input);
 
-    expect(actual).toEqual([
+    expect(actual).toStrictEqual([
       {
         code: "UPDATE",
         isError: true,
@@ -36,7 +36,7 @@ describe(processResult, () => {
   it("returns empty array when result is empty", () => {
     const actual = processResult(base);
 
-    expect(actual).toEqual([]);
+    expect(actual).toStrictEqual([]);
   });
 
   it("logs additional data when verbose is true", () => {
@@ -50,7 +50,7 @@ describe(processResult, () => {
       verbose: true,
     });
 
-    expect(actual).toEqual([]);
+    expect(actual).toStrictEqual([]);
   });
 
   it("sorts output by code", () => {
@@ -68,7 +68,7 @@ describe(processResult, () => {
 
     const actual = processResult(input);
 
-    expect(actual).toEqual([
+    expect(actual).toStrictEqual([
       {
         code: "NO_CHANGE",
         isError: false,
@@ -105,7 +105,7 @@ describe(processResult, () => {
 
     const actual = processResult(input);
 
-    expect(actual).toEqual([
+    expect(actual).toStrictEqual([
       {
         code: "INVALID_SOURCE",
         isError: true,
@@ -132,7 +132,7 @@ describe(processResult, () => {
 
     const actual = processResult(input);
 
-    expect(actual).toEqual([
+    expect(actual).toStrictEqual([
       {
         code: "UNREFERENCED_SOURCE",
         isError: true,
@@ -159,7 +159,7 @@ describe(processResult, () => {
 
     const actual = processResult(input);
 
-    expect(actual).toEqual([
+    expect(actual).toStrictEqual([
       {
         code: "CIRCULAR_DEPENDENCY",
         isError: true,
@@ -179,7 +179,7 @@ describe(processResult, () => {
 
     const actual = processResult(input);
 
-    expect(actual).toEqual([
+    expect(actual).toStrictEqual([
       {
         code: "NO_MATCH",
         isError: true,

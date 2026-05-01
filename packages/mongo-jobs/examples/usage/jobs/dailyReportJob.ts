@@ -8,7 +8,7 @@ export class DailyReportJob implements HandlerInterface<DailyReportJobData> {
   public name = "DailyReportJob";
   public maxAttempts = 3;
 
-  async perform({ reportType }: DailyReportJobData) {
+  public async perform({ reportType }: DailyReportJobData) {
     // Generate daily report logic
     console.log(`Generating daily ${reportType} report`);
     await this.generateDailyReport(reportType);

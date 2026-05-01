@@ -41,7 +41,7 @@ export class WelcomeEmailJob implements HandlerInterface<WelcomeEmailData> {
   public name = "WelcomeEmailJob";
   public maxAttempts = 3;
 
-  async perform({ userId, email }: WelcomeEmailData) {
+  public async perform({ userId, email }: WelcomeEmailData) {
     await this.sendEmail(email, `Welcome, user ${userId}!`);
   }
 
@@ -131,7 +131,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
   public maxAttempts = 5;
 
   // Required: the actual job logic
-  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
+  public async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
     // Job implementation
     console.log(`Processing ${data.action} for user ${data.userId}`);
 
@@ -234,9 +234,9 @@ export class EmailServiceJob implements HandlerInterface<EmailServiceJobData> {
   public name = "EmailServiceJob";
   public maxAttempts = 3;
 
-  constructor(private readonly emailService: EmailService) {}
+  public constructor(private readonly emailService: EmailService) {}
 
-  async perform({ to, subject, body }: EmailServiceJobData) {
+  public async perform({ to, subject, body }: EmailServiceJobData) {
     await this.emailService.send(to, subject, body);
   }
 }

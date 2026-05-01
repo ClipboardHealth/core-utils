@@ -9,7 +9,7 @@ export class SendEmailJob implements HandlerInterface<SendEmailJobData> {
   public name = "SendEmailJob";
   public maxAttempts = 3;
 
-  async perform({ userId, emailType }: SendEmailJobData) {
+  public async perform({ userId, emailType }: SendEmailJobData) {
     // Send email logic
     console.log(`Sending ${emailType} email to user ${userId}`);
     await this.sendEmail(userId, emailType);

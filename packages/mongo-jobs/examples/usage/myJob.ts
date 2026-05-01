@@ -14,7 +14,7 @@ export class MyJob implements HandlerInterface<MyJobData> {
   public maxAttempts = 5;
 
   // Required: the actual job logic
-  async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
+  public async perform(data: MyJobData, job?: BackgroundJobType<MyJobData>) {
     // Job implementation
     console.log(`Processing ${data.action} for user ${data.userId}`);
 

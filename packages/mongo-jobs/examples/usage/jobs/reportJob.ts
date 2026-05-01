@@ -9,7 +9,7 @@ export class ReportJob implements HandlerInterface<ReportJobData> {
   public name = "ReportJob";
   public maxAttempts = 5;
 
-  async perform({ reportId, format }: ReportJobData) {
+  public async perform({ reportId, format }: ReportJobData) {
     // Generate report logic
     console.log(`Generating report ${reportId} in ${format} format`);
     await this.generateReport(reportId, format);

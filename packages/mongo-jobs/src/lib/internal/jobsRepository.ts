@@ -50,7 +50,7 @@ export class JobsRepository {
   private readonly registry: Registry;
   private readonly jobModel: mongoose.Model<BackgroundJobType<unknown>>;
 
-  constructor(options: ConstructorOptions) {
+  public constructor(options: ConstructorOptions) {
     this.registry = options.registry;
     this.jobModel = options.jobModel;
   }

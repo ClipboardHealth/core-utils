@@ -30,7 +30,7 @@ export interface CbhIssue {
 export class CbhError extends Error {
   public readonly issues: readonly CbhIssue[];
 
-  constructor(messageOrIssues: Arrayable<CbhIssue> | string) {
+  public constructor(messageOrIssues: Arrayable<CbhIssue> | string) {
     const is: readonly CbhIssue[] = getMessageOrIssues(messageOrIssues);
 
     const first = is[0] ?? { message: "Unknown error" };

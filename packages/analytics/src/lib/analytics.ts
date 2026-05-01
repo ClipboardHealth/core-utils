@@ -64,7 +64,7 @@ export class Analytics {
    * @param params.logger - Logger instance for structured logging.
    * @param params.enabled - Whether or not analytics are enabled.
    */
-  constructor(params: { apiKey: string; logger: Logger; enabled: Enabled }) {
+  public constructor(params: { apiKey: string; logger: Logger; enabled: Enabled }) {
     const { apiKey, logger, enabled } = params;
 
     this.segment = new SegmentAnalytics({ writeKey: apiKey });

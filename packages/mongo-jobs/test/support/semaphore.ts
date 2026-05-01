@@ -9,7 +9,7 @@ interface PromiseEntry {
 export class Semaphore {
   private readonly promises = new Map<string | number, PromiseEntry>();
 
-  setNewPromise(index: string | number) {
+  public setNewPromise(index: string | number) {
     const entry: PromiseEntry = {};
 
     entry.promise = new Promise((resolve) => {
@@ -18,7 +18,7 @@ export class Semaphore {
     this.promises.set(index, entry);
   }
 
-  resolvePromise(index: string | number) {
+  public resolvePromise(index: string | number) {
     const resolve = this.promises.get(index)?.resolve;
     if (resolve) {
       resolve();
@@ -26,11 +26,11 @@ export class Semaphore {
     }
   }
 
-  async getPromise(index: string | number) {
+  public async getPromise(index: string | number) {
     return await this.promises.get(index)?.promise;
   }
 
-  cleanup(): void {
+  public cleanup(): void {
     // Resolve pending promises
     [...this.promises.values()]
       .filter((entry): entry is Required<PromiseEntry> => isDefined(entry.resolve))

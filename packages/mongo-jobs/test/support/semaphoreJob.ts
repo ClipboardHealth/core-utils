@@ -9,7 +9,7 @@ interface JobData {
 export class SemaphoreJob implements HandlerInterface<JobData> {
   public name = "SemaphoreJob";
 
-  constructor(private readonly semaphore: Semaphore) {}
+  public constructor(private readonly semaphore: Semaphore) {}
 
   public async perform({ resolvePromise, waitPromise }: JobData) {
     this.semaphore.resolvePromise(resolvePromise);

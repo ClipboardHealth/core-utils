@@ -92,7 +92,7 @@ export class NotificationClient {
   /**
    * Creates a new NotificationClient instance.
    */
-  constructor(params: NotificationClientParams) {
+  public constructor(params: NotificationClientParams) {
     const { logger, signingKey, tracer } = params;
 
     this.logger = logger;

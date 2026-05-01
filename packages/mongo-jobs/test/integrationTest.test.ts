@@ -739,7 +739,9 @@ describe("Helper APIs", () => {
       ),
     );
 
-    await expect(backgroundJobs.retryJobById(job1._id.toString())).rejects.toThrow();
+    await expect(backgroundJobs.retryJobById(job1._id.toString())).rejects.toThrow(
+      /duplicate key error/,
+    );
 
     await expect(backgroundJobs.getJobById(job1._id.toString())).resolves.toMatchObject({
       data: { myNumber: 123 },

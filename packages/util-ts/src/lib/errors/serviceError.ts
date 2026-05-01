@@ -116,7 +116,7 @@ export class ServiceError extends Error {
    * @returns If the value is already a `ServiceError`, returns it unchanged. Otherwise, convert it
    *          to a `ServiceError`.
    */
-  static fromUnknown(value: unknown): ServiceError {
+  public static fromUnknown(value: unknown): ServiceError {
     if (value instanceof ServiceError) {
       return value;
     }
@@ -134,7 +134,7 @@ export class ServiceError extends Error {
    * @param error - A ZodError
    * @returns The converted `ServiceError`
    */
-  static fromZodError(error: ZodError, options?: { source?: ErrorSource }): ServiceError {
+  public static fromZodError(error: ZodError, options?: { source?: ErrorSource }): ServiceError {
     return new ServiceError({
       cause: error,
       issues: error.issues.map(fromZodIssue),
@@ -150,9 +150,9 @@ export class ServiceError extends Error {
    * @param errors - Additional ServiceErrors
    * @returns New ServiceError containing all issues from input errors
    */
-  static merge(error: ServiceError, ...errors: readonly ServiceError[]): ServiceError;
-  static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
-  static merge(error: Readonly<unknown>, ...errors: readonly unknown[]): ServiceError {
+  public static merge(error: ServiceError, ...errors: readonly ServiceError[]): ServiceError;
+  public static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
+  public static merge(error: Readonly<unknown>, ...errors: readonly unknown[]): ServiceError {
     const firstError = error instanceof ServiceError ? error : ServiceError.fromUnknown(error);
     if (errors.length === 0) {
       return firstError;
@@ -173,7 +173,7 @@ export class ServiceError extends Error {
    * @param jsonApiError - JSON:API error object
    * @returns New ServiceError instance
    */
-  static fromJsonApi(jsonApiError: {
+  public static fromJsonApi(jsonApiError: {
     errors: {
       id?: string;
       status?: `${Status}`;
@@ -203,16 +203,16 @@ export class ServiceError extends Error {
     });
   }
 
-  readonly id: string;
-  readonly issues: readonly Issue[];
-  readonly status: Status;
-  readonly source: ErrorSource;
+  public readonly id: string;
+  public readonly issues: readonly Issue[];
+  public readonly status: Status;
+  public readonly source: ErrorSource;
 
   /**
    * Creates a new `ServiceError`
    * @param parameters - Issues contributing to the error or a message string
    */
-  constructor(parameters: ServiceErrorParams) {
+  public constructor(parameters: ServiceErrorParams) {
     const params =
       typeof parameters === "string"
         ? {
@@ -242,7 +242,7 @@ export class ServiceError extends Error {
   /**
    * Return string representation of the error for logging.
    */
-  override toString(): string {
+  public override toString(): string {
     return `${this.name}[${this.id}]: ${this.message}`;
   }
 
@@ -251,7 +251,7 @@ export class ServiceError extends Error {
    * @see {@link https://jsonapi.org/format/#error-objects}
    * @returns Object conforming to JSON:API error format
    */
-  toJsonApi() {
+  public toJsonApi() {
     return {
       errors: this.issues.map((issue) => ({
         id: this.id,

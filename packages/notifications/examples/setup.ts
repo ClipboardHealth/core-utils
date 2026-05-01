@@ -11,9 +11,9 @@ import { type Logger, toError } from "@clipboard-health/util-ts";
  * Assume this is `@clipboard-health/mongo-jobs` or `@clipboard-health/background-jobs-postgres`.
  */
 export class BackgroundJobsService implements BackgroundJobsAdapter {
-  implementation: BackgroundJobsImplementation = "mongo";
+  public implementation: BackgroundJobsImplementation = "mongo";
 
-  async enqueue<T>(
+  public async enqueue<T>(
     _handler: string | HandlerClassOrInstance<T>,
     _data: T,
     _options?: EnqueueOptions,
@@ -25,7 +25,7 @@ export class BackgroundJobsService implements BackgroundJobsAdapter {
 export class CBHLogger {
   public readonly defaultMeta: Record<string, unknown>;
 
-  constructor(params?: { defaultMeta: Record<string, unknown> }) {
+  public constructor(params?: { defaultMeta: Record<string, unknown> }) {
     this.defaultMeta = params?.defaultMeta ?? {};
   }
 

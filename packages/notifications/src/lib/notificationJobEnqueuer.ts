@@ -125,7 +125,7 @@ interface NotificationJobEnqueuerParams {
 export class NotificationJobEnqueuer {
   private readonly adapter: NotificationJobEnqueuerParams["adapter"];
 
-  constructor(params: NotificationJobEnqueuerParams) {
+  public constructor(params: NotificationJobEnqueuerParams) {
     const { adapter } = params;
 
     this.adapter = adapter;
@@ -160,7 +160,7 @@ export class NotificationJobEnqueuer {
    *
    * @deprecated Use {@link NotificationClient.triggerChunked} instead; see the README for details.
    */
-  async enqueueOneOrMore<TEnqueueData extends NotificationEnqueueData>(
+  public async enqueueOneOrMore<TEnqueueData extends NotificationEnqueueData>(
     handlerClassOrInstance: EnqueueParameters[0],
     data: TEnqueueData,
     options?: EnqueueOneOrMoreOptions,

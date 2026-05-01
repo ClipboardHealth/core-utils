@@ -10,7 +10,7 @@ export class AppController {
   private nextId = 0;
 
   @TsRestHandler(contract)
-  async handler() {
+  public async handler() {
     return tsRestHandler(contract, {
       create: async ({ body }) => {
         this.nextId += 1;
