@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/execution-context",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.",
   "keywords": [
     "async-local-storage",

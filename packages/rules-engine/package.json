@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/rules-engine",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.",
   "keywords": [
     "engine",
