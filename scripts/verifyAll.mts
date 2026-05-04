@@ -14,7 +14,7 @@ interface CheckResult {
 const CHECKS = [
   { cmd: "node --run ci:check", name: "ci:check" },
   {
-    cmd: "./node_modules/.bin/nx run-many --configuration ci --parallel 8 --targets build,lint,test",
+    cmd: "npx nx run-many --configuration ci --parallel 8 --targets build,lint,test",
     name: "run-many",
   },
 ] as const;
@@ -101,4 +101,8 @@ function print(message: string): void {
   process.stdout.write(`${message}\n`);
 }
 
-await main();
+main().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`${message}\n`);
+  process.exitCode = 1;
+});
