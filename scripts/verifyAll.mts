@@ -55,7 +55,7 @@ async function runCheck(name: string, cmd: string): Promise<CheckResult> {
           const combinedOutput = combineProcessOutput(stdout, stderr);
 
           if (error !== null) {
-            reject(new Error(combinedOutput.length > 0 ? combinedOutput : error.message));
+            reject(createCheckFailureError(error, combinedOutput));
             return;
           }
 
@@ -94,6 +94,15 @@ function combineProcessOutput(stdout: string, stderr: string): string {
     .map((output) => output.trim())
     .filter((output) => output.length > 0)
     .join("\n");
+}
+
+function createCheckFailureError(error: ExecException, output: string): Error {
+  const message = [error.message, output]
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .join("\n");
+
+  return new Error(message, { cause: error });
 }
 
 function printCheckOutputs(title: string, results: CheckResult[]): void {
