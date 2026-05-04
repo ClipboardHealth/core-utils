@@ -54,7 +54,7 @@ const SYNC_CONFIG: RepoConfig[] = [
   },
 ];
 
-const PLUGIN_ROOT = path.resolve(__dirname, "../plugins/core");
+const PLUGIN_ROOT = path.resolve(import.meta.dirname, "../plugins/core");
 
 function extractRepoName(repoUrl: string): string {
   return (
