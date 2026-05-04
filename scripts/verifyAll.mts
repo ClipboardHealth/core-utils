@@ -12,11 +12,11 @@ interface CheckResult {
 
 // These run a pre-push hook and should not modify files
 const CHECKS = [
-  { cmd: "node --run ci:check", name: "ci:check" },
-  {
-    cmd: "npx nx run-many --configuration ci --parallel 8 --targets build,lint,test",
-    name: "run-many",
-  },
+  { cmd: "node --run format:check", name: "format:check" },
+  { cmd: "node --run lint", name: "lint" },
+  { cmd: "node --run knip", name: "knip" },
+  { cmd: "node --run architecture:check", name: "architecture:check" },
+  { cmd: "node --run affected", name: "affected" },
 ] as const;
 
 async function main(): Promise<void> {
