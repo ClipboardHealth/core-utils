@@ -1,59 +1,12 @@
-This is an Nx monorepo containing TypeScript libraries and utilities for Clipboard.
-
-# Commands
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build, lint, and test only changed files from main; MUST run before opening PRs
-npm run affected
-
-# Format code
-npm run format
-
-# Check formatting, spelling, etc.
-npm run ci:check
-
-# Lint (oxlint), also runs typecheck
-npm run lint
-
-# Check dependency architecture
-npm run architecture:check
-
-# Check formatting
-npm run format:check
-```
-
-## Package-specific Commands
-
-```bash
-# Install dependency in specific package
-npm install --workspace packages/[PROJECT_NAME] [DEPENDENCY]
-
-# Run specific command against a package
-npx nx run [PROJECT_NAME]:[COMMAND]
-
-# Common targets: build, lint, test
-npx nx run json-api:build
-npx nx run util-ts:test
-
-# For test coverage, run with the "ci" configuration
-npx nx run util-ts:test:ci
-```
+## Project-specific rules
 
 - When modifying ./plugins/core rules or skills, run `node --run sync-ai-rules` to auto-generate the `.rules/` and `.agents/skills` versions
 
-# Project Structure
+### Development workflow
 
-Each package in `packages/` has:
-
-- `project.json`: Nx project configuration with build/lint/test targets
-- `src/index.ts`: Main export file
-- `README.md`: Package-specific documentation with usage examples
-- Individual `tsconfig.lib.json`, `vitest.config.ts`, etc.
+1. Use red, green, refactor test-driven development
+2. Validate changes with at least `node --run verify`
+3. Invoke core:go skill for ALL code changes
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

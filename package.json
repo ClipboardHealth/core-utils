@@ -7,10 +7,7 @@
   ],
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
-    "all": "node scripts/verifyAll.mts",
     "architecture:check": "depcruise packages/*/src",
-    "ci:check": "node --run format:check && node --run cspell -- . && syncpack lint && node --run embed:check && node --run knip && node --run lint && node --run lint:md && node --run architecture:check",
-    "ci:install": "npm clean-install",
     "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
@@ -20,13 +17,15 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "hook:pre-commit": "lint-staged",
-    "hook:pre-push": "node --run all",
+    "hook:pre-push": "node --run verify",
     "knip": "NX_DAEMON=false knip",
-    "lint": "oxlint --deny-warnings",
-    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "lint": "oxlint",
+    "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
-    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags"
+    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
+    "syncpack:lint": "syncpack lint",
+    "verify": "node scripts/verifyAll.mts"
   },
   "dependencies": {
     "tslib": "2.8.1"

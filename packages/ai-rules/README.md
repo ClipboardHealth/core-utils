@@ -41,7 +41,7 @@ npm install --save-dev @clipboard-health/ai-rules
    {
      "scripts": {
        "sync-ai-rules": "node ./node_modules/@clipboard-health/ai-rules/scripts/sync.js [PROFILE_NAME]",
-       "postinstall": "npm run sync-ai-rules"
+       "postinstall": "node --run sync-ai-rules"
      }
    }
    ```

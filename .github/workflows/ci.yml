@@ -34,9 +34,8 @@ jobs:
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
-      - run: npm run ci:check
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
-      - run: npx nx affected --configuration ci --targets build,lint,test
+      - run: node --run verify
       - run: docker compose down --volumes
         if: always()
 
@@ -97,7 +96,7 @@ jobs:
           git add package.json packages/*/package.json package-lock.json &&
           git diff --staged --quiet || git commit -m "chore(release): sync package versions [skip actions]" --no-verify &&
           git push --no-verify
-      - run: npm run docs
+      - run: node --run docs
       - uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
         with:
           branch: gh-pages

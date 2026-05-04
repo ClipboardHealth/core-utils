@@ -1,4 +1,6 @@
-import { exec } from "node:child_process";
+/// <reference types="node" />
+
+import { exec, type ExecException } from "node:child_process";
 
 const EXEC_TIMEOUT_MS = 10 * 60_000;
 const EXEC_MAX_BUFFER_BYTES = 10 * 1024 * 1024;
@@ -12,11 +14,15 @@ interface CheckResult {
 
 // These run a pre-push hook and should not modify files
 const CHECKS = [
-  { cmd: "node --run format:check", name: "format:check" },
-  { cmd: "node --run lint", name: "lint" },
-  { cmd: "node --run knip", name: "knip" },
-  { cmd: "node --run architecture:check", name: "architecture:check" },
   { cmd: "node --run affected", name: "affected" },
+  { cmd: "node --run architecture:check", name: "architecture:check" },
+  { cmd: "node --run cspell -- .", name: "cspell" },
+  { cmd: "node --run embed:check", name: "embed:check" },
+  { cmd: "node --run format:check", name: "format:check" },
+  { cmd: "node --run knip", name: "knip" },
+  { cmd: "node --run lint", name: "lint" },
+  { cmd: "node --run markdown:lint", name: "markdown:lint" },
+  { cmd: "node --run syncpack:lint", name: "syncpack:lint" },
 ] as const;
 
 async function main(): Promise<void> {
@@ -40,24 +46,26 @@ async function main(): Promise<void> {
 async function runCheck(name: string, cmd: string): Promise<CheckResult> {
   const start = performance.now();
   try {
-    await new Promise<void>((resolve, reject) => {
+    const output = await new Promise<string>((resolve, reject) => {
       exec(
         cmd,
         {
           maxBuffer: EXEC_MAX_BUFFER_BYTES,
           timeout: EXEC_TIMEOUT_MS,
         },
-        (error, stdout, stderr) => {
-          if (error) {
-            const combined = `${stdout}${stderr}`.trim();
-            reject(new Error(combined || error.message));
-          } else {
-            resolve();
+        (error: ExecException | null, stdout: string, stderr: string) => {
+          const combinedOutput = combineProcessOutput(stdout, stderr);
+
+          if (error !== null) {
+            reject(new Error(combinedOutput.length > 0 ? combinedOutput : error.message));
+            return;
           }
+
+          resolve(combinedOutput);
         },
       );
     });
-    return { durationMs: performance.now() - start, name, ok: true, output: "" };
+    return { durationMs: performance.now() - start, name, ok: true, output };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { durationMs: performance.now() - start, name, ok: false, output: message };
@@ -71,23 +79,53 @@ function printSummary(results: CheckResult[], totalStart: number): void {
   print("\n─── Summary ───");
   print(`Total: ${formatDuration(totalMs)}`);
 
+  const successesWithOutput = results.filter((result) => result.ok && hasOutput(result.output));
+
   if (failures.length === 0) {
     print("All checks passed.");
+    printCheckOutputs(`Passed with output (${successesWithOutput.length}):`, successesWithOutput);
     return;
   }
 
-  print(`\nFailed (${failures.length}):`);
-  for (const failure of failures) {
-    print(`\n  ✗ ${failure.name}`);
-    if (failure.output.trim()) {
-      const indented = failure.output
-        .trim()
-        .split("\n")
-        .map((line) => `    ${line}`)
-        .join("\n");
-      print(indented);
-    }
+  printCheckOutputs(`Failed (${failures.length}):`, failures);
+  printCheckOutputs(`Passed with output (${successesWithOutput.length}):`, successesWithOutput);
+}
+
+function combineProcessOutput(stdout: string, stderr: string): string {
+  return [stdout, stderr]
+    .map((output) => output.trim())
+    .filter((output) => output.length > 0)
+    .join("\n");
+}
+
+function printCheckOutputs(title: string, results: CheckResult[]): void {
+  if (results.length === 0) {
+    return;
   }
+
+  print(`\n${title}`);
+  for (const result of results) {
+    const icon = result.ok ? "✓" : "✗";
+    print(`\n  ${icon} ${result.name}`);
+    printIndentedOutput(result.output);
+  }
+}
+
+function printIndentedOutput(output: string): void {
+  if (!hasOutput(output)) {
+    return;
+  }
+
+  const indented = output
+    .trim()
+    .split("\n")
+    .map((line) => `    ${line}`)
+    .join("\n");
+  print(indented);
+}
+
+function hasOutput(output: string): boolean {
+  return output.trim().length > 0;
 }
 
 function formatDuration(milliseconds: number): string {

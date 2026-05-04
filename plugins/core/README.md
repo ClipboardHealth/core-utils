@@ -89,7 +89,7 @@ This plugin syncs components from external repositories using a sync script. Thi
 To run the sync:
 
 ```bash
-npm run sync-plugins
+node --run sync-plugins
 ```
 
 ### Adding a new repository
@@ -116,7 +116,7 @@ Edit [`syncPlugins.ts`](../../scripts/syncPlugins.ts) and add an entry to `SYNC_
 
 ### Keeping in sync
 
-Run `npm run sync-plugins` periodically or when upstream repositories have changes you want to pull in.
+Run `node --run sync-plugins` periodically or when upstream repositories have changes you want to pull in.
 
 ## Recommended plugins
 

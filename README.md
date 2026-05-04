@@ -49,13 +49,13 @@ See [Nx CLI Commands](https://nx.dev/reference/commands#nx-cli-commands) for opt
 
 ```bash
 # Install dependencies
-npm install
+npm clean-install
 
 # Build, lint, and test only changed files from `main`, helpful prior to opening PRs
-npm run affected
+node --run affected
 
 # For the paranoid: build, lint, and test everything
-npm run all
+node --run verify
 
 # Install a dependency in a specific package
 npm install --workspace packages/[PROJECT_NAME] [DEPENDENCY]
