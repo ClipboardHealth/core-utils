@@ -8,7 +8,6 @@
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
     "architecture:check": "depcruise packages/*/src",
-    "cspell": "cspell --no-summary --no-progress --no-must-find-files",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
     "embed:check": "node --run embed -- --check",
@@ -23,6 +22,7 @@
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
+    "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
     "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"
