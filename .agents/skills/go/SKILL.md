@@ -29,7 +29,7 @@ The plan or request is the source of truth for scope:
 
 ## Phase 3: Validate
 
-- Read `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or equivalent contributor instructions for the mandated pre-PR command (e.g. `npm run affected`). That wins over everything.
+- Read `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or equivalent contributor instructions for the mandated pre-PR command (e.g. `node --run verify`). That wins over everything.
 - If the repo relies on pre-commit/pre-push hooks and mandates no manual command, don't invent one — let the hooks run during the `commit-push-pr` handoff.
 - If the plan names specific checks, run them when practical. Ask before running anything that's clearly a slow CI-only suite.
 
