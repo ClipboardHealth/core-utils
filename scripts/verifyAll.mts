@@ -1,5 +1,3 @@
-/// <reference types="node" />
-
 import { exec, type ExecException } from "node:child_process";
 
 const EXEC_TIMEOUT_MS = 10 * 60_000;
@@ -16,12 +14,12 @@ interface CheckResult {
 const CHECKS = [
   { cmd: "node --run affected", name: "affected" },
   { cmd: "node --run architecture:check", name: "architecture:check" },
-  { cmd: "node --run cspell -- .", name: "cspell" },
   { cmd: "node --run embed:check", name: "embed:check" },
   { cmd: "node --run format:check", name: "format:check" },
   { cmd: "node --run knip", name: "knip" },
   { cmd: "node --run lint", name: "lint" },
   { cmd: "node --run markdown:lint", name: "markdown:lint" },
+  { cmd: "node --run spell:check -- .", name: "spell:check" },
   { cmd: "node --run syncpack:lint", name: "syncpack:lint" },
 ] as const;
 
