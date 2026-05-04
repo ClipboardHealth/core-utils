@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
+    "affected": "nx affected --configuration ci --parallel 8 --targets build,lint,test",
     "architecture:check": "depcruise packages/*/src",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
