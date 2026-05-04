@@ -20,7 +20,7 @@ Before doing any step, output the full 7-step checklist below in your first resp
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
 2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. When it returns, your very next action is to restate the remaining steps (3–7) and continue with step 3 in the same turn. Do not stop, do not end the turn with a simplify summary.
-3. If `git status --short` shows changes, create a single conventional commit.
+3. If `git status --short` shows changes, create a single conventional commit with `git commit --no-gpg-sign`.
 4. Push the branch to origin.
 5. Look up the current agent session ID with `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. On success the script prints `<agent> <id>`; otherwise nothing — if empty, omit the session ID line below.
 6. Check for an existing PR with `gh pr view`.

@@ -18,6 +18,7 @@ IMPORTANT: You MUST read the relevant rule files below before writing or reviewi
 ## Project-specific rules
 
 - When modifying ./plugins/core rules or skills, run `node --run sync-ai-rules` to auto-generate the `.rules/` and `.agents/skills` versions
+- Create agent-agnostic ./plugins/core skills unless explicitly told otherwise
 
 ### Development workflow
 
