@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "affected": "nx affected --base main --configuration ci --parallel 8 --targets build,lint,test",
-    "all": "node --run ci:check && nx run-many --configuration ci --parallel 8 --targets build,lint,test",
+    "all": "node scripts/verifyAll.mts",
     "architecture:check": "depcruise packages/*/src",
     "ci:check": "node --run format:check && node --run cspell -- . && syncpack lint && node --run embed:check && node --run knip && node --run lint && node --run lint:md && node --run architecture:check",
     "ci:install": "npm clean-install",
@@ -20,7 +20,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "hook:pre-commit": "lint-staged",
-    "hook:pre-push": "node --run format:check && node --run lint && node --run knip && node --run architecture:check",
+    "hook:pre-push": "node --run all",
     "knip": "NX_DAEMON=false knip",
     "lint": "oxlint --deny-warnings",
     "lint:md": "markdownlint-cli2 \"**/*.md\"",
