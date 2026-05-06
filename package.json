@@ -23,7 +23,7 @@
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
     "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
-    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
+    "sync-ai-rules": "node scripts/embedPluginVersion.mts && nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"
   },

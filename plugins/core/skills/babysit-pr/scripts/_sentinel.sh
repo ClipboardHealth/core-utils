@@ -1,27 +1,22 @@
 #!/usr/bin/env bash
 # _sentinel.sh — shared SENTINEL constants + append helper.
 # Sourced by unresolvedPrComments.sh, postSentinelReply.sh, postSentinelPrComment.sh.
-# Keeping the sentinel in one place prevents a version bump from silently
-# diverging between the posting scripts and the reader's recency detector.
+#
+# The SENTINEL literal below is rewritten at build time by
+# scripts/embedPluginVersion.ts (invoked from `node --run sync-ai-rules`)
+# so the version stays correct without any runtime path resolution to
+# plugin.json — the skill is agent-agnostic and works under Codex,
+# Claude Code, or any host that bundles only the skill files.
 #
 # Two values are exported:
 #   SENTINEL_PREFIX — version-agnostic substring used for matching/dedupe so
 #     pre-versioning sentinels (`<!-- babysit-pr:addressed v1 -->`) are still
 #     recognized alongside versioned ones.
-#   SENTINEL — full string emitted on new replies, with the current
-#     plugins/core/.claude-plugin/plugin.json version stamped as `core@X.Y.Z`.
+#   SENTINEL — full string emitted on new replies. The `core@X.Y.Z` suffix
+#     is the plugins/core version embedded at build time.
 
 SENTINEL_PREFIX='<!-- babysit-pr:addressed v1 '
-
-__sentinel_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-__plugin_json="${__sentinel_dir}/../../../.claude-plugin/plugin.json"
-if [ -r "$__plugin_json" ]; then
-  __plugin_version="$(jq -r '.version // "unknown"' "$__plugin_json" 2>/dev/null || printf 'unknown')"
-else
-  __plugin_version="unknown"
-fi
-SENTINEL="<!-- babysit-pr:addressed v1 core@${__plugin_version} -->"
-unset __sentinel_dir __plugin_json __plugin_version
+SENTINEL='<!-- babysit-pr:addressed v1 core@3.4.0 -->'
 
 # Echo $1 with SENTINEL appended on its own trailing paragraph, unless the
 # body already contains any version of the sentinel (matched via SENTINEL_PREFIX).
