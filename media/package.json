@@ -23,7 +23,7 @@
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
     "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
-    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
+    "sync-ai-rules": "node scripts/embedPluginVersion.mts && nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"
   },
@@ -45,7 +45,7 @@
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "24.12.2",
-    "@typescript/native-preview": "7.0.0-dev.20260501.1",
+    "@typescript/native-preview": "7.0.0-dev.20260502.1",
     "@vitest/coverage-v8": "4.1.5",
     "cspell": "10.0.0",
     "dependency-cruiser": "17.3.10",
