@@ -105,7 +105,7 @@
       }
     },
     {
-      "files": ["**/scripts/**/*.ts"],
+      "files": ["**/scripts/**/*.ts", "**/scripts/**/*.mts"],
       "rules": {
         "no-console": "off",
         "node/no-process-env": "off",
