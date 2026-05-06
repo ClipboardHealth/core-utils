@@ -192,12 +192,14 @@ main() {
   #       "addressed"  — our sentinel is the newest relevant activity on this thread
   local bots_json='["coderabbitai","coderabbitai[bot]","dependabot","dependabot[bot]","github-actions","github-actions[bot]","github-advanced-security","github-advanced-security[bot]","renovate","renovate[bot]","renovate-bot","pre-commit-ci","pre-commit-ci[bot]","codecov","codecov[bot]","sonarcloud","sonarcloud[bot]"]'
   local threads_json
-  threads_json="$(printf '%s' "$response" | jq --arg sentinel "$SENTINEL" --argjson bots "$bots_json" '
+  threads_json="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --argjson bots "$bots_json" '
     # Exact login equality via IN($bots[]) — do NOT use `inside($bots)`, which
     # does substring matching for strings and would classify login "code" as a
     # bot because it appears inside "codecov".
     def is_bot: ((.author.__typename // "") == "Bot") or ((.author.login // "") | IN($bots[]));
-    def is_sentinel: ((.body // "") | contains($sentinel));
+    # Match by version-agnostic prefix so pre-versioning sentinels left on
+    # older PRs (`<!-- babysit-pr:addressed v1 -->`) still dedupe correctly.
+    def is_sentinel: ((.body // "") | contains($sentinel_prefix));
     [
       .data.repository.pullRequest.reviewThreads.nodes[]
       | select(.isResolved == false)
