@@ -1,6 +1,7 @@
 {
   "threshold": 0,
   "minTokens": 90,
+  "exitCode": 1,
   "reporters": ["console"],
   "pattern": "**/*.{js,cjs,mjs,ts,mts,tsx}",
   "ignore": [
