@@ -25,6 +25,7 @@
     "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
     "sync-ai-rules": "node scripts/embedPluginVersion.mts && nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "syncpack:lint": "syncpack lint",
+    "test": "for config in packages/*/vitest.config.ts; do vitest run --coverage --config \"$config\" || exit $?; done",
     "verify": "node scripts/verifyAll.mts"
   },
   "dependencies": {
