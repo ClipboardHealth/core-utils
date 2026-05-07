@@ -4,7 +4,7 @@
 
 - Avoid acronyms and abbreviations; for those widely known, use camelCase: `httpRequest`, `gpsPosition`, `cliArguments`, `apiResponse`
 - File-scoped constants: `MAX_RETRY_COUNT`
-- Exported constants include feature/domain scope: `WORKER_SEARCH_MIN_INPUT_LENGTH`, not `MIN_SEARCH_LENGTH`
+- Feature-scoped exports (constants, types, functions) include the feature in their name to avoid polluting the global scope with generic names: `WORKER_SEARCH_MIN_INPUT_LENGTH`, not `MIN_SEARCH_LENGTH`
 - Instead of `agentRequirement`, `agentReq`, `workerType`, use `qualification`
 - Instead of `agent`, `hcp`, `healthcareProvider`, use `worker`
 - Instead of `facility`, `hcf`, `healthcareFacility`, use `workplace`
