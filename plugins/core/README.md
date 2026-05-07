@@ -58,7 +58,7 @@ Analyze and fix duplicate Cognito users by comparing against backend data. Usefu
 
 ### commit-push-pr
 
-Commit changes, push to origin, and create a PR in one step. Invoke with `/commit-push-pr`.
+Commit changes, push to origin, and create a PR in one step. Invoke with `/commit-push-pr` (or `/commit-push-pr draft` to open the PR as a draft).
 
 ### datadog-investigate
 
