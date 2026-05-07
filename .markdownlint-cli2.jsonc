@@ -8,5 +8,7 @@
     "MD037": false,
     "MD041": false,
   },
-  "ignores": ["**/node_modules", "**/dist", "**/coverage", ".nx", "**/test-results/**"],
+  "gitignore": true,
+  "globs": ["**/*.{md,mdx}"],
+  "ignores": [".nx/**"],
 }

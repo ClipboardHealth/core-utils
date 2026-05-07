@@ -1,18 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
   "version": "0.2",
-  "ignorePaths": [
-    ".github/CODEOWNERS",
-    ".serena",
-    ".vscode",
-    "coverage",
-    "default.json",
-    "dist",
-    "docs",
-    "node_modules",
-    "prompts",
-    "tmp"
-  ],
+  "useGitignore": true,
+  "ignorePaths": [".github/CODEOWNERS", ".serena", "default.json", "docs", "prompts"],
   "words": [
     "agentprofile",
     "airbyte",

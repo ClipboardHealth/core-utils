@@ -1,7 +1,4 @@
-// @ts-check
-
-/** @type {import("syncpack").RcFile} */
-module.exports = {
+export default {
   semverGroups: [
     {
       dependencyTypes: ["dev", "prod", "resolutions"],
@@ -39,4 +36,5 @@ module.exports = {
       label: "@types packages should only be under devDependencies.",
     },
   ],
-};
+  // oxlint-disable-next-line typescript/consistent-type-imports
+} satisfies import("syncpack").RcFile;
