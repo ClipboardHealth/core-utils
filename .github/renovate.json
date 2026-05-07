@@ -2,62 +2,58 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
-    ":combinePatchMinorReleases",
     ":enableVulnerabilityAlertsWithLabel(SECURITY)",
     ":preserveSemverRanges",
     "config:js-lib",
     "docker:enableMajor",
-    "schedule:automergeDaily",
-    "schedule:daily"
+    "schedule:daily",
+    "schedule:automergeDaily"
   ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "automergeType": "branch"
+  },
   "packageRules": [
     {
-      "automerge": true,
-      "automergeType": "branch",
-      "matchDepTypes": ["devDependencies"]
-    },
-    {
-      "automerge": true,
-      "automergeType": "branch",
-      "matchUpdateTypes": ["patch", "minor"]
-    },
-    {
-      "automerge": true,
-      "automergeType": "branch",
-      "matchUpdateTypes": ["lockFileMaintenance"]
-    },
-    {
-      "groupName": "Clipboard",
-      "matchPackageNames": ["/^@clipboard-health/"]
+      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
+      "rangeStrategy": "widen"
     },
     {
       "groupName": "ts-rest",
       "matchPackageNames": ["/^@ts-rest/"]
     },
     {
-      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
-      "rangeStrategy": "widen"
+      "matchPackageNames": ["node", "npm"],
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "automerge": true,
+      "automergeType": "branch",
+      "matchDepTypes": ["devDependencies"]
+    },
+    {
+      "automerge": false,
+      "matchUpdateTypes": ["major"]
     },
     {
       "enabled": false,
-      "matchPackageNames": [
-        "/@types/jest/",
-        "/^@nx/",
-        "/^@typescript-eslint/",
-        "/^eslint/",
-        "/decamelize/",
-        "/jest/",
-        "/nx/",
-        "/ts-jest/",
-        "/tslib/"
-      ]
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@typescript-eslint\\//", "/^eslint/", "decamelize", "tslib"]
     },
     {
-      "matchPackageNames": ["node", "npm"],
-      "enabled": false
+      "enabled": false,
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@nx\\//", "nx"]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
   "prConcurrentLimit": 15,
-  "prHourlyLimit": 5
+  "prHourlyLimit": 5,
+  "separateMinorPatch": true
 }
