@@ -101,7 +101,7 @@ If `mergeable == "CONFLICTING"` (or `mergeStateStatus == "DIRTY"`), merge the ba
 ```bash
 BASE=$(gh pr view --json baseRefName --jq .baseRefName)
 git fetch origin "$BASE"
-git merge --no-edit "origin/$BASE" || true
+git merge --no-edit "origin/$BASE"
 ```
 
 Apply the same conservative bar as step 5: resolve directly only for lockfile/generated regenerations, additive non-overlapping edits, or trivial textual conflicts in PR-touched files. Anything semantic, ambiguous, or outside the PR's intentional surface — `git merge --abort` and skip to step 10 to exit **stuck** with a diagnosis. After a clean resolution, commit the merge and `git push origin HEAD`.
