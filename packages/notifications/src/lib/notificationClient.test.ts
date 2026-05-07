@@ -699,11 +699,7 @@ describe(NotificationClient, () => {
     const mockCancellationKey = "cancel-key-123";
 
     it("cancels workflow with recipients", async () => {
-      const cancelSpy = vi
-        .spyOn(provider.workflows, "cancel")
-        .mockResolvedValue(
-          undefined as unknown as Awaited<ReturnType<Knock["workflows"]["cancel"]>>,
-        );
+      const cancelSpy = vi.spyOn(provider.workflows, "cancel").mockResolvedValue();
 
       const input: CancelRequest = {
         workflowKey: mockWorkflowKey,
@@ -720,11 +716,7 @@ describe(NotificationClient, () => {
     });
 
     it("cancels workflow without recipients", async () => {
-      const cancelSpy = vi
-        .spyOn(provider.workflows, "cancel")
-        .mockResolvedValue(
-          undefined as unknown as Awaited<ReturnType<Knock["workflows"]["cancel"]>>,
-        );
+      const cancelSpy = vi.spyOn(provider.workflows, "cancel").mockResolvedValue();
 
       const input: CancelRequest = {
         workflowKey: mockWorkflowKey,
