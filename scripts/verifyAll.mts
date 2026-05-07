@@ -14,6 +14,7 @@ interface CheckResult {
 const CHECKS = [
   { cmd: "node --run affected", name: "affected" },
   { cmd: "node --run architecture:check", name: "architecture:check" },
+  { cmd: "node --run cpd", name: "cpd" },
   { cmd: "node --run embed:check", name: "embed:check" },
   { cmd: "node --run format:check", name: "format:check" },
   { cmd: "node --run knip", name: "knip" },
