@@ -20,10 +20,6 @@
       "rangeStrategy": "widen"
     },
     {
-      "groupName": "Clipboard Health",
-      "matchPackageNames": ["/^@clipboard-health/"]
-    },
-    {
       "groupName": "ts-rest",
       "matchPackageNames": ["/^@ts-rest/"]
     },
@@ -46,22 +42,9 @@
       "matchUpdateTypes": ["major"]
     },
     {
-      "matchUpdateTypes": ["security"],
-      "commitMessagePrefix": "fix(deps): ",
-      "commitMessageTopic": "{{depName}}"
-    },
-    {
       "enabled": false,
       "matchManagers": ["npm"],
-      "matchPackageNames": [
-        "/^@types\\/jest$/",
-        "/^@typescript-eslint\\//",
-        "/^eslint/",
-        "decamelize",
-        "jest",
-        "ts-jest",
-        "tslib"
-      ]
+      "matchPackageNames": ["/^@typescript-eslint\\//", "/^eslint/", "decamelize", "tslib"]
     },
     {
       "enabled": false,
