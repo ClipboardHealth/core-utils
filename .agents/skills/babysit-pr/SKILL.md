@@ -77,7 +77,7 @@ This switches the local worktree to the PR's head branch (and handles forks auto
 ### 2. Locate the PR
 
 ```bash
-gh pr view --json number,url,headRefName,statusCheckRollup 2>/dev/null
+gh pr view --json number,url,headRefName,statusCheckRollup,mergeable,mergeStateStatus 2>/dev/null
 ```
 
 If Preflight checked out a PR explicitly, `gh pr view` will find it by construction and the fallback below does not apply. The fallback only fires when no PR number was supplied and the current branch has no open PR.
@@ -92,7 +92,19 @@ If no PR exists for the current branch:
   gh pr create --fill
   ```
 
-- Re-fetch `gh pr view --json number,url,statusCheckRollup`.
+- Re-fetch `gh pr view --json number,url,statusCheckRollup,mergeable,mergeStateStatus`.
+
+#### Resolve merge conflicts (if any)
+
+If `mergeable == "CONFLICTING"` (or `mergeStateStatus == "DIRTY"`), merge the base into the PR branch locally:
+
+```bash
+BASE=$(gh pr view --json baseRefName --jq .baseRefName)
+git fetch origin "$BASE"
+git merge --no-edit "origin/$BASE" || true
+```
+
+Apply the same conservative bar as step 5: resolve directly only for lockfile/generated regenerations, additive non-overlapping edits, or trivial textual conflicts in PR-touched files. Anything semantic, ambiguous, or outside the PR's intentional surface — `git merge --abort` and skip to step 10 to exit **stuck** with a diagnosis. After a clean resolution, commit the merge and `git push origin HEAD`.
 
 ### 3. Wait for CI
 
@@ -278,6 +290,7 @@ The CodeRabbit summary body should:
 Report:
 
 - Commits made (with URLs).
+- Merge conflict status if relevant (resolved or aborted with reason).
 - CI checks fixed / still failing / skipped-with-diagnosis.
 - Review threads replied to, grouped by verdict (including any Defer count: "X threads deferred as follow-ups").
 - Nitpicks summarized (or skipped because already covered), including the Deferred count: "Y nitpicks deferred as follow-ups".
@@ -299,6 +312,7 @@ After the single pass completes, pick exactly one outcome:
 - **Exit clean** — all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6's inspection or has already received a fresh sentinel reply in this pass (Agree / Disagree / Already-fixed / **Defer** all count — a Defer reply is a sentinel reply), AND every current nitpick fingerprint is covered by an existing sentinel comment (deferred nitpicks count; they're in the summary's fingerprint block). Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. A PR with Deferred threads is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
 - **Exit progressing** — pass made commits, posted new replies, or both, and the PR is not yet clean (CI is still pending, a new CI run was triggered by this pass's commits, or more work remains). There is real work still in flight that another run would pick up. Report what was done and what is pending, and tell the user to re-run `/babysit-pr` once CI settles, or to wrap the call with `/loop <cadence> /babysit-pr` (or a shell `while true; do ...; done`) for automatic re-runs.
 - **Exit stuck** — pass made no commits and posted no new replies, and the PR is still not clean. Nothing actionable happened this pass. Use this whenever progress is blocked on something outside the skill's scope, including:
+  - Merge conflict in step 2 that exceeded the high-confidence resolution bar.
   - CI still running (`gh pr checks --watch` timed out with pending checks).
   - CI failing with a diagnosis-only verdict from Step 5 (flaky / infra / auth / external check / ambiguous / out-of-scope failure).
   - Only Skip-reply threads remained AND CI was already red or pending.
