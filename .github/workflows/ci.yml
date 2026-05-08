@@ -85,6 +85,9 @@ jobs:
       - run: npx nx run-many --target=build
       - env:
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          # Skip ts-node/esm loader registration; with a workspace-root tsconfig.json,
+          # ts-node@11.0.0-beta.1 + typescript@5.9.3 crashes resolving package-name `extends`.
+          NX_PREFER_NODE_STRIP_TYPES: "true"
         # Re-publishing an existing version is a no-op, so re-running this workflow recovers from transient NPM registry failures
         run: npx nx release publish
       - env:
