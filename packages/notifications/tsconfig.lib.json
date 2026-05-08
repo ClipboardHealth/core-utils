@@ -2,8 +2,27 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/notifications",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/notifications/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../phone-number/tsconfig.lib.json"
+    },
+    {
+      "path": "../testing-core/tsconfig.lib.json"
+    },
+    {
+      "path": "../util-ts/tsconfig.lib.json"
+    },
+    {
+      "path": "../background-jobs-adapter/tsconfig.lib.json"
+    }
+  ]
 }

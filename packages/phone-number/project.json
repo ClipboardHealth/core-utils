@@ -6,14 +6,18 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/phone-number"],
       "options": {
-        "assets": ["packages/phone-number/*.md"],
-        "main": "packages/phone-number/src/index.js",
-        "outputPath": "dist/packages/phone-number",
-        "tsConfig": "packages/phone-number/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "forwardAllArgs": false
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/phone-number"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

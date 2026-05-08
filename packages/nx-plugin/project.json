@@ -6,31 +6,12 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/nx-plugin"],
       "options": {
-        "assets": [
-          "packages/nx-plugin/*.md",
-          {
-            "input": "./packages/nx-plugin/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/nx-plugin/src",
-            "glob": "**/*.d.ts",
-            "output": "./src"
-          },
-          {
-            "input": "./packages/nx-plugin",
-            "glob": "generators.json",
-            "output": "."
-          }
-        ],
-        "main": "packages/nx-plugin/src/index.js",
-        "outputPath": "dist/packages/nx-plugin",
-        "tsConfig": "packages/nx-plugin/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "forwardAllArgs": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -44,6 +25,12 @@
         "configFile": "packages/nx-plugin/vitest.config.ts"
       },
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/nx-plugin"
+      }
     }
   }
 }

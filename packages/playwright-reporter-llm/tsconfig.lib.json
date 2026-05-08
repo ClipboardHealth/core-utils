@@ -2,7 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/playwright-reporter-llm",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/playwright-reporter-llm/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]

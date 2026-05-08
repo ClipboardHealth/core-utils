@@ -6,14 +6,18 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/util-ts"],
       "options": {
-        "assets": ["packages/util-ts/*.md"],
-        "main": "packages/util-ts/src/index.js",
-        "outputPath": "dist/packages/util-ts",
-        "tsConfig": "packages/util-ts/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "forwardAllArgs": false
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/util-ts"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

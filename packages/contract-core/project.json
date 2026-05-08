@@ -6,14 +6,12 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/contract-core"],
       "options": {
-        "assets": ["packages/contract-core/*.md"],
-        "main": "packages/contract-core/src/index.js",
-        "outputPath": "dist/packages/contract-core",
-        "tsConfig": "packages/contract-core/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "forwardAllArgs": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -27,6 +25,12 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/contract-core/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/contract-core"
       }
     }
   }

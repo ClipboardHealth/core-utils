@@ -6,18 +6,14 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/oxlint-config"],
       "options": {
-        "assets": [
-          "packages/oxlint-config/*.md",
-          "packages/oxlint-config/src/base.json",
-          "packages/oxlint-config/src/vitest.json"
-        ],
-        "main": "packages/oxlint-config/src/index.js",
-        "outputPath": "dist/packages/oxlint-config",
-        "tsConfig": "packages/oxlint-config/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-config && tsgo --build packages/oxlint-config/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-config --no-clean",
+        "forwardAllArgs": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

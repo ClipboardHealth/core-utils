@@ -1,9 +1,22 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "declaration": true,
-    "types": ["node"]
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/phone-number",
+    "rootDir": ".",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/phone-number/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../util-ts/tsconfig.lib.json"
+    },
+    {
+      "path": "../testing-core/tsconfig.lib.json"
+    }
+  ]
 }

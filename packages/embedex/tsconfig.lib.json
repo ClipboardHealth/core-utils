@@ -2,8 +2,13 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/embedex",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/embedex/tsconfig.lib.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["package.json", "src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
 }

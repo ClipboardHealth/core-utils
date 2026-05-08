@@ -24,10 +24,28 @@
       "!{projectRoot}/tsconfig.lint.json",
       "!{projectRoot}/tsconfig.spec.json"
     ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"],
+    "packageBuild": [
+      "production",
+      "{projectRoot}/*.md",
+      "{workspaceRoot}/scripts/prepareTsgoPackage.mts"
+    ]
   },
   "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
   "plugins": [
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "compiler": "tsgo",
+        "typecheck": false,
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    },
     {
       "plugin": "@nx/eslint/plugin",
       "options": {

@@ -6,14 +6,12 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/json-api"],
       "options": {
-        "assets": ["packages/json-api/*.md"],
-        "main": "packages/json-api/src/index.js",
-        "outputPath": "dist/packages/json-api",
-        "tsConfig": "packages/json-api/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "forwardAllArgs": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -27,6 +25,12 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/json-api/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/json-api"
       }
     }
   }

@@ -2,8 +2,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/eslint-config",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/eslint-config/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.js", "src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../eslint-plugin/tsconfig.lib.json"
+    }
+  ]
 }

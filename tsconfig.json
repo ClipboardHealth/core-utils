@@ -1,0 +1,69 @@
+{
+  "extends": "./tsconfig.base.json",
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/background-jobs-adapter"
+    },
+    {
+      "path": "./packages/playwright-reporter-llm"
+    },
+    {
+      "path": "./packages/execution-context"
+    },
+    {
+      "path": "./packages/json-api-nestjs"
+    },
+    {
+      "path": "./packages/example-nestjs"
+    },
+    {
+      "path": "./packages/contract-core"
+    },
+    {
+      "path": "./packages/eslint-config"
+    },
+    {
+      "path": "./packages/eslint-plugin"
+    },
+    {
+      "path": "./packages/notifications"
+    },
+    {
+      "path": "./packages/oxlint-config"
+    },
+    {
+      "path": "./packages/phone-number"
+    },
+    {
+      "path": "./packages/rules-engine"
+    },
+    {
+      "path": "./packages/testing-core"
+    },
+    {
+      "path": "./packages/mongo-jobs"
+    },
+    {
+      "path": "./packages/analytics"
+    },
+    {
+      "path": "./packages/nx-plugin"
+    },
+    {
+      "path": "./packages/ai-rules"
+    },
+    {
+      "path": "./packages/json-api"
+    },
+    {
+      "path": "./packages/embedex"
+    },
+    {
+      "path": "./packages/util-ts"
+    },
+    {
+      "path": "./packages/config"
+    }
+  ]
+}

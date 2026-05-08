@@ -2,7 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/json-api",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/json-api/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"]

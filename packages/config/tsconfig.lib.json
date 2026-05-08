@@ -2,8 +2,21 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/config",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/config/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../util-ts/tsconfig.lib.json"
+    },
+    {
+      "path": "../contract-core/tsconfig.lib.json"
+    }
+  ]
 }

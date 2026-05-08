@@ -2,8 +2,21 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/json-api-nestjs",
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/json-api-nestjs/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../contract-core/tsconfig.lib.json"
+    },
+    {
+      "path": "../testing-core/tsconfig.lib.json"
+    }
+  ]
 }

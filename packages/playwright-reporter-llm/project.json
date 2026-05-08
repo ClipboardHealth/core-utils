@@ -6,17 +6,12 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/playwright-reporter-llm"],
       "options": {
-        "assets": [
-          "packages/playwright-reporter-llm/*.md",
-          "packages/playwright-reporter-llm/docs/*.json"
-        ],
-        "main": "packages/playwright-reporter-llm/src/index.js",
-        "outputPath": "dist/packages/playwright-reporter-llm",
-        "tsConfig": "packages/playwright-reporter-llm/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "forwardAllArgs": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -30,6 +25,12 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/playwright-reporter-llm/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/playwright-reporter-llm"
       }
     }
   }
