@@ -7,7 +7,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/oxlint-config",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/oxlint-config/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]

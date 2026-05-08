@@ -6,7 +6,8 @@
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/testing-core",
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/testing-core/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"],

@@ -8,10 +8,11 @@
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "inputs": ["packageBuild", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/oxlint-config"],
       "options": {
-        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-config && tsgo --build packages/oxlint-config/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-config --no-clean"
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-config && tsgo --build packages/oxlint-config/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-config --no-clean",
+        "forwardAllArgs": false
       }
     },
     "lint": {

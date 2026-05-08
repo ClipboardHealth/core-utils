@@ -6,7 +6,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/execution-context",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/execution-context/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"]

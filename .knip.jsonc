@@ -2,12 +2,8 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     "**/webpack.*.js",
-    "evals/**/*.ts",
     "packages/ai-rules/scripts/*.ts",
     "packages/eslint-config/src/react.js",
-    "plugins/**/*.ts",
-    "scripts/**/*.mts",
-    "scripts/**/*.ts",
     "packages/mongo-jobs/test/support/emulateCompletionOfBackgroundJobs.ts",
   ],
   "ignoreDependencies": [
@@ -20,6 +16,10 @@
   ],
   "webpack": false,
   "workspaces": {
+    ".": {
+      "entry": ["scripts/prepareTsgoPackage.mts"],
+      "project": ["scripts/**/*.mts"],
+    },
     "packages/analytics": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },

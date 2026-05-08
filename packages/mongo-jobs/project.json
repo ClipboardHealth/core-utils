@@ -6,13 +6,11 @@
   "tags": ["scope:util"],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
       "dependsOn": ["prepare-build-package", "^build"],
-      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "inputs": ["packageBuild", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/mongo-jobs"],
       "options": {
-        "command": "tsgo --build tsconfig.lib.json",
-        "cwd": "packages/mongo-jobs"
+        "forwardAllArgs": false
       }
     },
     "lint": {

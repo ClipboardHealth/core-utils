@@ -7,8 +7,11 @@
   "targets": {
     "build": {
       "dependsOn": ["prepare-build-package", "^build"],
-      "inputs": ["production", "^production", "{projectRoot}/*.md"],
-      "outputs": ["{workspaceRoot}/dist/packages/analytics"]
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/analytics"],
+      "options": {
+        "forwardAllArgs": false
+      }
     },
     "prepare-build-package": {
       "executor": "nx:run-commands",

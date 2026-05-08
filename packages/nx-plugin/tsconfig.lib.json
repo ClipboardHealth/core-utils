@@ -6,7 +6,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/nx-plugin",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/nx-plugin/tsconfig.lib.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts",

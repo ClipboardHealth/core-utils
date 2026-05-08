@@ -17,7 +17,6 @@
     "access": "public"
   },
   "scripts": {
-    "build": "nx build mongo-jobs",
     "lint": "nx lint mongo-jobs",
     "test": "nx test mongo-jobs"
   },

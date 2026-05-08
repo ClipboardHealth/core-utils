@@ -6,7 +6,8 @@
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/phone-number",
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/phone-number/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],

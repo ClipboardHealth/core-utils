@@ -6,7 +6,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/embedex",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/embedex/tsconfig.lib.tsbuildinfo"
   },
   "include": ["package.json", "src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"]

@@ -7,7 +7,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/contract-core",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/contract-core/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"],

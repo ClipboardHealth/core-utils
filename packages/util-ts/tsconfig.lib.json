@@ -6,7 +6,8 @@
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/util-ts",
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node"],
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/util-ts/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"]

@@ -2,6 +2,7 @@
 .claude/cache/
 .idea/
 .nx/cache
+.nx/tsbuildinfo
 .nx/workspace-data
 .sbx/
 .tmp-plugin-sync-*/

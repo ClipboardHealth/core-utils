@@ -8,10 +8,11 @@
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "inputs": ["packageBuild", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/embedex"],
       "options": {
-        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/embedex && tsgo --build packages/embedex/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/embedex --no-clean"
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/embedex && tsgo --build packages/embedex/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/embedex --no-clean",
+        "forwardAllArgs": false
       }
     },
     "lint": {

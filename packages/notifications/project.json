@@ -7,8 +7,11 @@
   "targets": {
     "build": {
       "dependsOn": ["prepare-build-package", "^build"],
-      "inputs": ["production", "^production", "{projectRoot}/*.md"],
-      "outputs": ["{workspaceRoot}/dist/packages/notifications"]
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/notifications"],
+      "options": {
+        "forwardAllArgs": false
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

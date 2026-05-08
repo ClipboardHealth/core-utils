@@ -6,7 +6,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/eslint-config",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/eslint-config/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.js", "src/**/*.ts"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts"],

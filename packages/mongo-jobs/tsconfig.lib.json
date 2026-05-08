@@ -6,7 +6,8 @@
     "composite": true,
     "moduleResolution": "bundler",
     "outDir": "../../dist/packages/mongo-jobs",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/mongo-jobs/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
