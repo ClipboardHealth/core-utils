@@ -1,0 +1,79 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Clipboard's default Renovate configuration.",
+  "extends": [
+    "config:best-practices",
+    ":enableVulnerabilityAlertsWithLabel(SECURITY)",
+    ":preserveSemverRanges",
+    "docker:enableMajor",
+    "schedule:daily",
+    "schedule:automergeDaily"
+  ],
+  "hostRules": [
+    {
+      "matchHost": "app.terraform.io",
+      "token": "{{ secrets.APP_TERRAFORM_IO_TOKEN }}"
+    },
+    {
+      "hostType": "github-tags",
+      "matchHost": "https://api.github.com/repos/ClipboardHealth",
+      "token": "{{ secrets.COM_GITHUB_TOKEN }}"
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "automergeType": "branch"
+  },
+  "npmToken": "{{ secrets.NPM_TOKEN }}",
+  "packageRules": [
+    {
+      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
+      "rangeStrategy": "widen"
+    },
+    {
+      "groupName": "Clipboard Health",
+      "matchPackageNames": ["/^@clipboard-health/"]
+    },
+    {
+      "groupName": "ts-rest",
+      "matchPackageNames": ["/^@ts-rest/"]
+    },
+    {
+      "groupName": "Buf",
+      "matchPackageNames": ["/^@bufbuild/"]
+    },
+    {
+      "enabled": false,
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["nx", "/^@nx\\//"]
+    },
+    {
+      "matchPackageNames": ["node", "npm"],
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "automerge": true,
+      "automergeType": "branch",
+      "matchDepTypes": ["devDependencies"]
+    },
+    {
+      "automerge": false,
+      "matchUpdateTypes": ["major"]
+    },
+    {
+      "matchUpdateTypes": ["security"],
+      "commitMessagePrefix": "fix(deps): ",
+      "commitMessageTopic": "{{depName}}"
+    }
+  ],
+  "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
+  "prConcurrentLimit": 15,
+  "prHourlyLimit": 5,
+  "separateMinorPatch": true
+}
