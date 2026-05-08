@@ -95,7 +95,12 @@
       ]
     },
     "@nx/vitest:test": {
-      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.ts"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/vitest.preset.ts",
+        "{workspaceRoot}/vitest.config.ts"
+      ],
       "cache": true,
       "configurations": {
         "ci": {
