@@ -26,7 +26,7 @@ describe("Documents", () => {
 
 ## Test Data
 
-Arrange test data via the public contract (API calls), not direct database inserts or ORM usage.
+Arrange test data via the public contract (API calls), not direct database inserts or ORM usage. Only fall back to direct database manipulation when no API exists to produce the required state.
 
 ## Bug Handling
 
