@@ -67,6 +67,11 @@
       "matchUpdateTypes": ["major"]
     },
     {
+      "enabled": false,
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@typescript-eslint\\//", "/^eslint/", "decamelize", "tslib"]
+    },
+    {
       "matchUpdateTypes": ["security"],
       "commitMessagePrefix": "fix(deps): ",
       "commitMessageTopic": "{{depName}}"
