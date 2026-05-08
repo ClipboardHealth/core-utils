@@ -5,5 +5,13 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../json-api-nestjs/tsconfig.lib.json"
+    },
+    {
+      "path": "../contract-core/tsconfig.lib.json"
+    }
+  ]
 }

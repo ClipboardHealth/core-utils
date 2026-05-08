@@ -29,6 +29,19 @@
   "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
   "plugins": [
     {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "compiler": "tsgo",
+        "typecheck": false,
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    },
+    {
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"

@@ -1,9 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "declaration": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/testing-core",
+    "rootDir": ".",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../util-ts/tsconfig.lib.json"
+    }
+  ]
 }

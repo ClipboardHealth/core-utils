@@ -3,7 +3,11 @@
   "compilerOptions": {
     "declaration": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/oxlint-config",
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json"],
   "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]

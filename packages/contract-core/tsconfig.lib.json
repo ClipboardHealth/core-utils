@@ -3,8 +3,17 @@
   "compilerOptions": {
     "declaration": true,
     "types": ["node"],
-    "stripInternal": true
+    "stripInternal": true,
+    "composite": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/contract-core",
+    "rootDir": "."
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../testing-core/tsconfig.lib.json"
+    }
+  ]
 }

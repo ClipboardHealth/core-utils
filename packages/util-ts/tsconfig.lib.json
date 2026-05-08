@@ -1,7 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "declaration": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/util-ts",
+    "rootDir": ".",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

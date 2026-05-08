@@ -1,9 +1,21 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "composite": true,
     "declaration": true,
+    "moduleResolution": "bundler",
+    "outDir": "../../dist/packages/analytics",
+    "rootDir": ".",
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../util-ts/tsconfig.lib.json"
+    },
+    {
+      "path": "../phone-number/tsconfig.lib.json"
+    }
+  ]
 }

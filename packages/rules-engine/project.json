@@ -6,14 +6,9 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "assets": ["packages/rules-engine/*.md"],
-        "main": "packages/rules-engine/src/index.js",
-        "outputPath": "dist/packages/rules-engine",
-        "tsConfig": "packages/rules-engine/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/rules-engine"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -27,6 +22,12 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/rules-engine/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/rules-engine"
       }
     }
   }

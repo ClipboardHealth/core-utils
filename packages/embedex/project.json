@@ -6,14 +6,13 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/embedex"],
       "options": {
-        "assets": ["packages/embedex/*.md", "packages/embedex/static/**/*"],
-        "main": "packages/embedex/src/index.js",
-        "outputPath": "dist/packages/embedex",
-        "tsConfig": "packages/embedex/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/embedex && tsgo --build packages/embedex/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/embedex --no-clean"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

@@ -6,14 +6,15 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/analytics"]
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
       "options": {
-        "assets": ["packages/analytics/*.md"],
-        "main": "packages/analytics/src/index.js",
-        "outputPath": "dist/packages/analytics",
-        "tsConfig": "packages/analytics/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/analytics"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

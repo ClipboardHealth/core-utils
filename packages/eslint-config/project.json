@@ -6,14 +6,9 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "assets": ["packages/eslint-config/*.md"],
-        "main": "packages/eslint-config/src/index.js",
-        "outputPath": "dist/packages/eslint-config",
-        "tsConfig": "packages/eslint-config/tsconfig.lib.json"
-      },
-      "outputs": ["{options.outputPath}"]
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["production", "^production", "{projectRoot}/*.md"],
+      "outputs": ["{workspaceRoot}/dist/packages/eslint-config"]
     },
     "lint": {
       "executor": "@nx/eslint:lint",
@@ -27,6 +22,12 @@
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/eslint-config/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/eslint-config"
       }
     }
   }
