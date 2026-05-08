@@ -36,6 +36,7 @@ jobs:
           start_services: "true"
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: node --run verify
+      - run: node --run affected
       - run: docker compose down --volumes
         if: always()
 

@@ -12,7 +12,6 @@ interface CheckResult {
 
 // These run a pre-push hook and should not modify files
 const CHECKS = [
-  { cmd: "node --run affected", name: "affected" },
   { cmd: "node --run architecture:check", name: "architecture:check" },
   { cmd: "node --run cpd", name: "cpd" },
   { cmd: "node --run embed:check", name: "embed:check" },
