@@ -7,6 +7,7 @@ import {
 } from "@nx/devkit";
 import { copyAssets as nxCopyAssets, getUpdatedPackageJsonContent } from "@nx/js";
 import { rmSync } from "node:fs";
+import { isAbsolute } from "node:path";
 
 type PackageJson = Parameters<typeof getUpdatedPackageJsonContent>[0];
 type Asset = Parameters<typeof nxCopyAssets>[0]["assets"][number];
@@ -38,13 +39,14 @@ const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
 };
 
 async function main(): Promise<void> {
-  const [projectRoot, ...args] = process.argv.slice(2);
+  const [projectRootArgument, ...args] = process.argv.slice(2);
   const shouldClean = !args.includes("--no-clean");
 
-  if (projectRoot === undefined) {
+  if (projectRootArgument === undefined) {
     throw new Error("Usage: tsx scripts/prepareTsgoPackage.mts <projectRoot> [--no-clean]");
   }
 
+  const projectRoot = normalizeProjectRoot(projectRootArgument);
   const outputPath = joinPathFragments("dist", projectRoot);
 
   if (shouldClean) {
@@ -53,6 +55,27 @@ async function main(): Promise<void> {
 
   await copyAssets({ outputPath, projectRoot });
   await writePackageJson({ outputPath, projectRoot });
+}
+
+function normalizeProjectRoot(projectRoot: string): string {
+  const segments = projectRoot.split("/").filter(Boolean);
+
+  if (
+    isAbsolute(projectRoot) ||
+    projectRoot.includes("\\") ||
+    segments.length === 0 ||
+    segments.some((segment) => segment === "." || segment === "..")
+  ) {
+    throw new Error(`Invalid projectRoot: ${projectRoot}`);
+  }
+
+  const normalizedProjectRoot = joinPathFragments(...segments);
+
+  if (!normalizedProjectRoot.startsWith("packages/")) {
+    throw new Error(`Invalid projectRoot: ${projectRoot}`);
+  }
+
+  return normalizedProjectRoot;
 }
 
 function cleanBuildOutput({
