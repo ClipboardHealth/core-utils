@@ -1,5 +1,6 @@
 export * from "./lib/errorCodes";
 export * from "./lib/errorsInResult";
+export * from "./lib/isClientError";
 export * from "./lib/notificationClient";
 export * from "./lib/notificationJobEnqueuer";
 export * from "./lib/toTriggerChunkedRequest";
