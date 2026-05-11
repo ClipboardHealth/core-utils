@@ -22,6 +22,7 @@
    import type { BaseHandler } from "@clipboard-health/background-jobs-adapter";
    import {
      ERROR_CODES,
+     isClientError,
      type NotificationClient,
      type SerializableTriggerChunkedRequest,
      toTriggerChunkedRequest,
@@ -97,10 +98,10 @@
              return;
            }
 
-           // Non-429 4xx from the provider means the request itself is broken (validation error,
-           // missing recipient, etc.). Retrying won't help — log at ERROR so it pages and we can
-           // fix the caller.
-           if (code === ERROR_CODES.clientError) {
+           // The request itself is broken (empty/over-max recipients, invalid expiresAt or
+           // idempotency key, missing signing key, or a non-429 4xx from the provider).
+           // Retrying won't help — log at ERROR so it pages and we can fix the caller.
+           if (isClientError(code)) {
              this.logger.error("TriggerNotificationJob skipped due to client error", {
                ...metadata,
                error: result.error,

@@ -6,6 +6,7 @@ import type { Mocked } from "vitest";
 import { ERROR_CODES } from "./errorCodes";
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
 import { IdempotentKnock } from "./internal/idempotentKnock";
+import { isClientError } from "./isClientError";
 import { NotificationClient } from "./notificationClient";
 import {
   DO_NOT_CALL_THIS_OUTSIDE_OF_TESTS,
@@ -533,6 +534,8 @@ describe(NotificationClient, () => {
 
       expectToBeFailure(actual);
       expect(actual.error.message).toContain("Got 0 recipients; must be > 0");
+      expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.recipientCountBelowMinimum);
+      expect(isClientError(actual.error.issues[0]?.code)).toBe(true);
     });
 
     it("rejects request with too many recipients", async () => {
@@ -555,6 +558,8 @@ describe(NotificationClient, () => {
       expect(actual.error.message).toContain(
         `Got ${MAXIMUM_RECIPIENTS_COUNT + 1} recipients; must be <= ${MAXIMUM_RECIPIENTS_COUNT}`,
       );
+      expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.recipientCountAboveMaximum);
+      expect(isClientError(actual.error.issues[0]?.code)).toBe(true);
     });
 
     it("handles trigger request without keysToRedact", async () => {
@@ -912,6 +917,8 @@ describe(NotificationClient, () => {
 
       expectToBeFailure(actual);
       expect(actual.error.message).toContain("Got 0 recipients; must be > 0");
+      expect(actual.error.issues[0]?.code).toBe(ERROR_CODES.recipientCountBelowMinimum);
+      expect(isClientError(actual.error.issues[0]?.code)).toBe(true);
       expect(triggerSpy).not.toHaveBeenCalled();
     });
 
