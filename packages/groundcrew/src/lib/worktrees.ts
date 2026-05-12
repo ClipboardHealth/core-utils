@@ -48,6 +48,7 @@ export interface WorktreeSpec {
   strategy: ResolvedIsolationStrategy;
 }
 
+const TICKET_RE = /^[a-z][\da-z]*-\d+$/;
 const TICKET_DIR_RE = /^(.+)-([a-z][\da-z]*-\d+)$/;
 const BRANCH_TICKET_RE = /([a-z][\da-z]*-\d+)$/;
 
@@ -90,16 +91,10 @@ interface BasePaths {
 }
 
 function basePaths(config: ResolvedConfig, repository: string, ticket: string): BasePaths {
-  // Reject path-traversal in CLI ticket args before they reach resolve(),
-  // which would otherwise normalize ".." segments into in-tree siblings.
-  if (
-    ticket.length === 0 ||
-    ticket === "." ||
-    ticket === ".." ||
-    ticket.includes("/") ||
-    ticket.includes("\\") ||
-    ticket.includes("..")
-  ) {
+  // Tickets must match the same shape the worktree discovery regexes use,
+  // so create()/list()/findByTicket() agree on what's a valid worktree.
+  // This also rejects traversal tokens before they reach resolve().
+  if (!TICKET_RE.test(ticket)) {
     throw new Error(`Invalid ticket "${ticket}": must be a plain ticket id`);
   }
 

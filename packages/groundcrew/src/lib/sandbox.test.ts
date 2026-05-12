@@ -32,4 +32,17 @@ describe(sandboxWorktreeDirFor, () => {
       }),
     ).toThrow(/Invalid branchName/);
   });
+
+  it.each([
+    ["dot resolves to the root itself", "."],
+    ["empty string resolves to the root itself", ""],
+  ])("throws when branchName %s", (_label, branchName) => {
+    expect(() =>
+      sandboxWorktreeDirFor({
+        repoDir: "/work/repo-a",
+        sandboxName: "groundcrew-repo-a-claude",
+        branchName,
+      }),
+    ).toThrow(/Invalid branchName/);
+  });
 });

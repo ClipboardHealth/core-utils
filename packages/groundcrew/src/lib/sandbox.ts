@@ -18,7 +18,7 @@ export function sandboxWorktreeDirFor(arguments_: {
 }): string {
   const worktreesRoot = resolve(arguments_.repoDir, ".sbx", `${arguments_.sandboxName}-worktrees`);
   const candidate = resolve(worktreesRoot, arguments_.branchName);
-  if (candidate !== worktreesRoot && !candidate.startsWith(`${worktreesRoot}${sep}`)) {
+  if (!candidate.startsWith(`${worktreesRoot}${sep}`)) {
     throw new Error(`Invalid branchName for sandbox worktree path: ${arguments_.branchName}`);
   }
   return candidate;

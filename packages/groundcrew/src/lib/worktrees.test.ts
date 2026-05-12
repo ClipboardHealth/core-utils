@@ -460,28 +460,26 @@ describe(create, () => {
     ).rejects.toThrow(/Repository not found/);
   });
 
-  it("rejects ticket strings that escape the project directory", async () => {
+  it.each([
+    ["empty string", ""],
+    ["bare dot", "."],
+    ["double dot", ".."],
+    ["forward slash", "team/123"],
+    ["backslash", String.raw`team\123`],
+    ["embedded ..", "team-..-123"],
+    ["traversal segment", `..${sep}evil`],
+    ["wrong shape — no digits", "team-abc"],
+    ["wrong shape — uppercase", "TEAM-123"],
+    ["wrong shape — trailing whitespace", "team-123 "],
+    ["wrong shape — plain word", "foo"],
+  ])("rejects invalid ticket %s", async (_label, ticket) => {
     mkdirSync(join(projectDir, "repo-a"));
     const config = makeConfig({ projectDir });
 
     await expect(
       create(config, {
         repository: "repo-a",
-        ticket: `..${sep}evil`,
-        model: "claude",
-        strategy: "none",
-      }),
-    ).rejects.toThrow(/must be a plain ticket id/);
-  });
-
-  it("rejects ticket strings containing '..' before path resolution", async () => {
-    mkdirSync(join(projectDir, "repo-a"));
-    const config = makeConfig({ projectDir });
-
-    await expect(
-      create(config, {
-        repository: "repo-a",
-        ticket: "..",
+        ticket,
         model: "claude",
         strategy: "none",
       }),
