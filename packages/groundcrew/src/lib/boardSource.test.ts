@@ -256,6 +256,17 @@ describe(createBoardSource, () => {
       );
     });
 
+    it("scopes the board query to active state types so backlog tickets are never returned", async () => {
+      const { source, rawRequest } = makeBoardSource(makeClient({ pages: [[]] }));
+
+      await source.fetch();
+
+      const boardCall = rawRequest.mock.calls.find(([query]) => query.includes("BoardIssues"));
+      expect(boardCall?.[0]).toMatch(
+        /state:\s*\{\s*type:\s*\{\s*in:\s*\[\s*"unstarted",\s*"started",\s*"completed"\s*\]\s*\}\s*\}/,
+      );
+    });
+
     it("resolves the model from an agent-* label", async () => {
       const { source } = makeBoardSource(
         makeClient({

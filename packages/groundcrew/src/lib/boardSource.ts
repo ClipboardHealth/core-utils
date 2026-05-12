@@ -143,7 +143,7 @@ async function fetchBoard(client: LinearClient, config: ResolvedConfig): Promise
         issues(
           filter: {
             project: { slugId: { eq: $slugId } }
-            state: { type: { nin: ["canceled"] } }
+            state: { type: { in: ["unstarted", "started", "completed"] } }
           }
           first: ${ISSUES_PAGE_SIZE}
           after: $after
