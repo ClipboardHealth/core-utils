@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source_path="${BASH_SOURCE[0]}"
+while [ -h "$source_path" ]; do
+  source_dir="$(cd -P "$(dirname "$source_path")" >/dev/null 2>&1 && pwd)"
+  link_target="$(readlink "$source_path")"
+  case "$link_target" in
+    /*) source_path="$link_target" ;;
+    *) source_path="$source_dir/$link_target" ;;
+  esac
+done
+
+script_dir="$(cd -P "$(dirname "$source_path")" >/dev/null 2>&1 && pwd)"
+package_dir="$(cd -P "$script_dir/.." >/dev/null 2>&1 && pwd)"
+
+node "$package_dir/bin/ensure.js" >&2
+
+exec safehouse \
+  --env="$script_dir/clearance.env" \
+  --append-profile="$script_dir/clearance-only.sb" \
+  "$@"

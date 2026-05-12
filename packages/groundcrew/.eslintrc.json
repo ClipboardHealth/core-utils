@@ -1,0 +1,43 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": "off",
+        "@typescript-eslint/consistent-type-assertions": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/only-throw-error": "off",
+        "import/no-duplicates": "off",
+        "jest/no-conditional-in-test": "off",
+        "max-depth": "off",
+        "max-params": "off",
+        "n/no-process-exit": "off",
+        "no-await-in-loop": "off",
+        "no-console": "off",
+        "no-use-before-define": "off",
+        "promise/prefer-await-to-then": "off",
+        "security/detect-non-literal-fs-filename": "off",
+        "security/detect-non-literal-regexp": "off",
+        "security/detect-possible-timing-attacks": "off",
+        "unicorn/consistent-function-scoping": "off",
+        "unicorn/import-style": "off",
+        "unicorn/no-process-exit": "off",
+        "no-restricted-properties": "off",
+        "unicorn/prefer-event-target": "off",
+        "unicorn/prevent-abbreviations": "off"
+      }
+    },
+    {
+      "files": ["./bin/**/*.js", "./src/cli.ts"],
+      "rules": {
+        "n/shebang": "off",
+        "unicorn/prefer-top-level-await": "off"
+      }
+    }
+  ],
+  "parserOptions": {
+    "project": "packages/groundcrew/tsconfig.lint.json"
+  }
+}

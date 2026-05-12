@@ -13,7 +13,28 @@ type PackageJson = Parameters<typeof getUpdatedPackageJsonContent>[0];
 type Asset = Parameters<typeof nxCopyAssets>[0]["assets"][number];
 
 const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
+  "packages/clearance": [
+    {
+      input: "./packages/clearance/safehouse",
+      glob: "**/*",
+      output: "./safehouse",
+    },
+    {
+      input: "./packages/clearance/bin",
+      glob: "**/*",
+      output: "./bin",
+    },
+  ],
   "packages/embedex": ["packages/embedex/static/**/*"],
+  "packages/groundcrew": [
+    "packages/groundcrew/configExample.ts",
+    "packages/groundcrew/clearance-allow-hosts",
+    {
+      input: "./packages/groundcrew/bin",
+      glob: "**/*",
+      output: "./bin",
+    },
+  ],
   "packages/nx-plugin": [
     {
       input: "./packages/nx-plugin/src",
@@ -154,7 +175,7 @@ async function writePackageJson({
   const sourceMain = sourcePackageJson.main ?? "./src/index.js";
   const main = joinPathFragments(projectRoot, sourceMain);
   const packageJson = getUpdatedPackageJsonContent(sourcePackageJson, {
-    format: ["cjs"],
+    format: sourcePackageJson.type === "module" ? ["esm"] : ["cjs"],
     main,
     outputPath,
     projectRoot,

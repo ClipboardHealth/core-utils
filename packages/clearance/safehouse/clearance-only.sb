@@ -1,0 +1,11 @@
+;; Force remote network egress through the local clearance while keeping
+;; localhost available for local-only agent workflows.
+(deny network-outbound
+  (remote ip "*:*")
+  (remote tcp "*:*")
+  (remote udp "*:*"))
+
+(allow network-outbound
+  (remote ip "localhost:*")
+  (remote tcp "localhost:*")
+  (remote udp "localhost:*"))

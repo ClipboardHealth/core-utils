@@ -1,0 +1,35 @@
+{
+  "name": "@clipboard-health/groundcrew",
+  "version": "0.1.0",
+  "description": "Linear-driven orchestrator that launches AI coding agents in isolated git worktrees, with workspace lifecycle, sandbox auth, and usage tracking.",
+  "keywords": [
+    "agent",
+    "ai",
+    "claude",
+    "codex",
+    "linear",
+    "orchestrator",
+    "worktree"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/groundcrew"
+  },
+  "bin": {
+    "crew": "./bin/run.js"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@clipboard-health/clearance": "0.1.0",
+    "@linear/sdk": "83.0.0",
+    "tslib": "2.8.1"
+  }
+}

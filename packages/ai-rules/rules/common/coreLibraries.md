@@ -16,6 +16,7 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **ai-rules**: Pre-built AI agent rules for consistent coding standards.
 - **analytics**: Type-safe analytics wrapper around our third-party analytics provider for user identification and event tracking.
 - **background-jobs-adapter**: Minimal adapter interface for background jobs operations supporting Mongo and Postgres implementations.
+- **clearance**: Localhost HTTP/HTTPS egress proxy with hostname allow-listing, plus a macOS Safehouse integration for sandboxed agent processes.
 - **config**: Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.
 - **contract-core**: Shared Zod schemas for Clipboard's contracts.
 - **embedex**: Embed shared text and code snippets from source files into destination files.
@@ -23,6 +24,7 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **eslint-plugin**: Clipboard's ESLint Plugin
 - **example-nestjs**: A NestJS application using our libraries, primarily for end-to-end testing.
 - **execution-context**: A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
+- **groundcrew**: Linear-driven orchestrator that launches AI coding agents in isolated git worktrees, with workspace lifecycle, sandbox auth, and usage tracking.
 - **json-api**: TypeScript-friendly utilities for adhering to the JSON:API specification.
 - **json-api-nestjs**: TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.
 - **mongo-jobs**: MongoDB-powered background jobs.
