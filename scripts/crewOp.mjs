@@ -7,7 +7,7 @@
 // with `--conditions @clipboard-health/source`, so cross-package
 // `@clipboard-health/*` imports resolve to TypeScript source.
 //
-// Override the env-file location via `CREW_OP_ENV_FILE` (default
+// Override the env-file location via `GROUNDCREW_OP_ENV_FILE` (default
 // `.crew.1password.env` at the repo root).
 
 import { spawn } from "node:child_process";
@@ -18,7 +18,7 @@ const FORCE_KILL_SIGNAL = "SIGKILL";
 const FORCE_KILL_DELAY_MS = 5000;
 
 // oxlint-disable-next-line node/no-process-env -- the CLI is configured through env vars
-const envFile = process.env.CREW_OP_ENV_FILE ?? ".crew.1password.env";
+const envFile = process.env.GROUNDCREW_OP_ENV_FILE ?? ".crew.1password.env";
 const args = process.argv.slice(2);
 const shouldUseProcessGroup = process.platform !== "win32" && args.includes("--watch");
 

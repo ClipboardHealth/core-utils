@@ -139,3 +139,19 @@ crew cleanup <TICKET>
 - **Project must be on a single Linear team in practice.** Cross-team projects work — the orchestrator caches the in-progress state ID per team — but every team in the project must use the same status name for `linear.statuses.inProgress`.
 - **Doctor's command introspection is shallow.** For sandbox-backed models it checks `sbx` plus `sbx diagnose`. For non-sandbox models it tokenizes `cmd` and checks the first two non-flag tokens against PATH (so `safehouse claude --foo` checks both `safehouse` and `claude`). Boolean flags without values, env-var assignments (`FOO=1`), shell pipelines, and subshells are not parsed — verify those manually. In particular, `npx -y claude` and `env FOO=1 claude` only check the wrapper, not the wrapped CLI.
 - **Agent CLI must accept a positional prompt.** The handoff is `<your cmd> "<prompt>"`. `claude`, `codex`, and `cursor-agent` all support this.
+
+## Hacking on groundcrew
+
+For developers working on the package itself, the source lives in [`ClipboardHealth/core-utils`](https://github.com/ClipboardHealth/core-utils). Clone it, run `npm install`, and the repo's `crew` / `crew:op` scripts execute groundcrew straight from TypeScript source — no build step. The bin's `runCli` helper re-execs node with `--conditions @clipboard-health/source` so `@clipboard-health/clearance` also resolves to source.
+
+```bash
+cd ~/dev/c/core-utils
+GROUNDCREW_CONFIG=~/.config/groundcrew/config.ts node --run crew -- doctor
+
+# With 1Password for LINEAR_API_KEY:
+GROUNDCREW_OP_ENV_FILE=~/.config/groundcrew/op.env \
+GROUNDCREW_CONFIG=~/.config/groundcrew/config.ts \
+node --run crew:op -- run --watch
+```
+
+`GROUNDCREW_OP_ENV_FILE` defaults to `.crew.1password.env` at the repo root. Source edits in `packages/{clearance,groundcrew}/src/**` are picked up on the next invocation. Requires Node ≥ 24.3 (the version with native `.ts` type stripping enabled by default).
