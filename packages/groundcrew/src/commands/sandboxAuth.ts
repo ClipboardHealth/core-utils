@@ -1,8 +1,8 @@
-import { runCommandAsync } from "../lib/commandRunner.js";
-import { loadConfig, type ResolvedConfig, type SandboxDefinition } from "../lib/config.js";
-import { sandboxExists, sandboxNameFor } from "../lib/sandbox.js";
-import { log } from "../lib/util.js";
-import { repoDirFor } from "../lib/worktrees.js";
+import { runCommandAsync } from "../lib/commandRunner.ts";
+import { loadConfig, type ResolvedConfig, type SandboxDefinition } from "../lib/config.ts";
+import { sandboxExists, sandboxNameFor } from "../lib/sandbox.ts";
+import { log } from "../lib/util.ts";
+import { repoDirFor } from "../lib/worktrees.ts";
 
 interface SandboxAuthOptions {
   repository: string;

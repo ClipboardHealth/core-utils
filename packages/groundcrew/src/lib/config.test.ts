@@ -6,8 +6,8 @@ import {
   deleteEnvironmentVariable,
   setEnvironmentVariable,
   snapshotEnvironmentVariables,
-} from "../testHelpers/env.js";
-import type { Config, ResolvedConfig } from "./config.js";
+} from "../testHelpers/env.ts";
+import type { Config, ResolvedConfig } from "./config.ts";
 
 const PACKAGE_ROOT = resolve(import.meta.dirname, "..", "..");
 const PACKAGE_CONFIG_PATH = join(PACKAGE_ROOT, "config.ts");
@@ -18,7 +18,7 @@ interface ConfigModule {
 
 async function loadFreshConfig(): Promise<ConfigModule> {
   vi.resetModules();
-  return await import("./config.js");
+  return await import("./config.ts");
 }
 
 const VALID_LINEAR = {

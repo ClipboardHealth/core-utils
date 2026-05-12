@@ -5,12 +5,12 @@
 
 import { existsSync, statSync } from "node:fs";
 
-import { runCommandAsync } from "../lib/commandRunner.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { detectHostCapabilities, type HostCapabilities, which } from "../lib/host.js";
-import { resolveIsolationStrategy, type StrategyResolution } from "../lib/isolation.js";
-import { errorMessage, readEnvironmentVariable, writeOutput } from "../lib/util.js";
-import { resolveWorkspaceKind, type WorkspaceResolution } from "../lib/workspaces.js";
+import { runCommandAsync } from "../lib/commandRunner.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { detectHostCapabilities, type HostCapabilities, which } from "../lib/host.ts";
+import { resolveIsolationStrategy, type StrategyResolution } from "../lib/isolation.ts";
+import { errorMessage, readEnvironmentVariable, writeOutput } from "../lib/util.ts";
+import { resolveWorkspaceKind, type WorkspaceResolution } from "../lib/workspaces.ts";
 
 // Tokenization stops after this many non-flag tokens. Two is enough to
 // catch wrapper + wrapped CLI commands like `safehouse claude --foo`.

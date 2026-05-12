@@ -4,14 +4,14 @@ import { join } from "node:path";
 
 import { ensureClearance } from "@clipboard-health/clearance";
 
-import { fetchResolvedIssue } from "../lib/boardSource.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { detectHostCapabilities } from "../lib/host.js";
-import { resolveIsolationStrategy } from "../lib/isolation.js";
-import { BUILD_SECRET_NAMES, buildLaunchCommand, shellSingleQuote } from "../lib/launchCommand.js";
-import { errorMessage, getLinearClient, log, readEnvironmentVariable } from "../lib/util.js";
-import { workspaces } from "../lib/workspaces.js";
-import { type WorktreeEntry, worktrees } from "../lib/worktrees.js";
+import { fetchResolvedIssue } from "../lib/boardSource.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { detectHostCapabilities } from "../lib/host.ts";
+import { resolveIsolationStrategy } from "../lib/isolation.ts";
+import { BUILD_SECRET_NAMES, buildLaunchCommand, shellSingleQuote } from "../lib/launchCommand.ts";
+import { errorMessage, getLinearClient, log, readEnvironmentVariable } from "../lib/util.ts";
+import { workspaces } from "../lib/workspaces.ts";
+import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
 
 interface TicketDetails {
   title: string;

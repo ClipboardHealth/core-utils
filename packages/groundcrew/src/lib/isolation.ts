@@ -4,8 +4,8 @@
  * it needs as arguments so callers can test without touching the host.
  */
 
-import type { IsolationStrategy, ModelDefinition, ResolvedConfig } from "./config.js";
-import type { HostCapabilities } from "./host.js";
+import type { IsolationStrategy, ModelDefinition, ResolvedConfig } from "./config.ts";
+import type { HostCapabilities } from "./host.ts";
 
 /**
  * The concrete strategy that will run a model. `auto` is never returned —

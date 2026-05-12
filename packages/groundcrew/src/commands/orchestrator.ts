@@ -10,9 +10,9 @@ import {
   type Issue,
   isTerminalStatus,
   RepositoryResolutionError,
-} from "../lib/boardSource.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { getUsageByModel, type UsageByModel } from "../lib/usage.js";
+} from "../lib/boardSource.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { getUsageByModel, type UsageByModel } from "../lib/usage.ts";
 import {
   clearOutput,
   errorMessage,
@@ -20,10 +20,10 @@ import {
   log,
   sleep,
   writeOutput,
-} from "../lib/util.js";
-import { worktrees } from "../lib/worktrees.js";
-import { type Cleaner, createCleaner } from "./cleaner.js";
-import { createDispatcher, type Dispatcher } from "./dispatcher.js";
+} from "../lib/util.ts";
+import { worktrees } from "../lib/worktrees.ts";
+import { type Cleaner, createCleaner } from "./cleaner.ts";
+import { createDispatcher, type Dispatcher } from "./dispatcher.ts";
 
 const RATE_LIMIT_DELAY_MS = 60_000;
 const RETRY_BASE_DELAY_MS = 1000;

@@ -1,4 +1,4 @@
-import type { TeardownResult } from "../lib/worktrees.js";
+import type { TeardownResult } from "../lib/worktrees.ts";
 
 export function emptyTeardownResult(overrides: Partial<TeardownResult> = {}): TeardownResult {
   return {

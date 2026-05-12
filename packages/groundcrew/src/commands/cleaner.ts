@@ -4,11 +4,11 @@
  * invocation; stateless across iterations. Mirrors `Dispatcher`.
  */
 
-import { type BoardState, isTerminalStatus } from "../lib/boardSource.js";
-import type { ResolvedConfig } from "../lib/config.js";
-import { log, logEvent } from "../lib/util.js";
-import { type WorktreeEntry, worktrees } from "../lib/worktrees.js";
-import { logTeardown, recordTeardownEvents } from "./teardownReporter.js";
+import { type BoardState, isTerminalStatus } from "../lib/boardSource.ts";
+import type { ResolvedConfig } from "../lib/config.ts";
+import { log, logEvent } from "../lib/util.ts";
+import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
+import { logTeardown, recordTeardownEvents } from "./teardownReporter.ts";
 
 interface CleanerDeps {
   config: ResolvedConfig;

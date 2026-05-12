@@ -24,7 +24,7 @@
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
     "packages/clearance": {
-      "entry": ["src/index.ts", "src/cli.ts", "src/ensureCli.ts"],
+      "entry": ["src/cli.ts", "src/ensureCli.ts"],
     },
     "packages/config": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
@@ -42,7 +42,7 @@
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
     "packages/groundcrew": {
-      "entry": ["src/index.ts", "src/cli.ts", "configExample.ts"],
+      "entry": ["src/main.ts", "configExample.ts"],
     },
     "packages/json-api": {
       "entry": ["examples/**/*.ts", "src/index.ts"],

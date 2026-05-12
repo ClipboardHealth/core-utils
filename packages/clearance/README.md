@@ -217,3 +217,14 @@ safehouse --env="$HOME/.config/agent-safehouse/clearance.env" \
   --append-profile="$HOME/.config/agent-safehouse/clearance-only.sb" \
   -- curl -I https://example.com
 ```
+
+## Hacking on clearance
+
+For developers working on the package itself, the source lives in [`ClipboardHealth/core-utils`](https://github.com/ClipboardHealth/core-utils). After `npm install` in the repo, the bin scripts dispatch through a `runCli` helper that detects no compiled JS and re-execs node with `--conditions @clipboard-health/source`, so the proxy runs straight from TypeScript source — no build step:
+
+```bash
+cd ~/dev/c/core-utils
+CLEARANCE_ALLOW_HOSTS=api.example.com node ./packages/clearance/bin/run.js
+```
+
+Requires Node ≥ 24.3 (native `.ts` type stripping enabled by default).

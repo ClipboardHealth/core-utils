@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 
-import { resolveAllowlist } from "./allowlist.js";
+import { resolveAllowlist } from "./allowlist.ts";
 
 type ReadFile = (path: string) => string;
 

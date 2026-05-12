@@ -1,8 +1,8 @@
 import type { LinearClient } from "@linear/sdk";
 
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import { createBoardSource, isTerminalStatus } from "./boardSource.js";
-import type { ResolvedConfig } from "./config.js";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import { createBoardSource, isTerminalStatus } from "./boardSource.ts";
+import type { ResolvedConfig } from "./config.ts";
 
 interface IssueNodeStub {
   id: string;

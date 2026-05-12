@@ -34,7 +34,8 @@
     "**/tsconfig*.json",
     "**/__fixtures__/**",
     "**/vitest.config.ts",
-    "**/vitest.config.mts"
+    "**/vitest.config.mts",
+    "**/bin/runCli.js"
   ],
   "absolute": false,
   "gitignore": true

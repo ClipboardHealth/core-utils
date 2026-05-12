@@ -18,12 +18,12 @@ import { type Dirent, existsSync, readdirSync } from "node:fs";
 import { userInfo } from "node:os";
 import { resolve } from "node:path";
 
-import { runCommandAsync, type RunCommandOptions } from "./commandRunner.js";
-import type { ResolvedConfig } from "./config.js";
-import type { ResolvedIsolationStrategy } from "./isolation.js";
-import { sandboxExists, sandboxNameFor, sandboxWorktreeDirFor } from "./sandbox.js";
-import { errorMessage, log } from "./util.js";
-import { type WorkspaceProbe, workspaces } from "./workspaces.js";
+import { runCommandAsync, type RunCommandOptions } from "./commandRunner.ts";
+import type { ResolvedConfig } from "./config.ts";
+import type { ResolvedIsolationStrategy } from "./isolation.ts";
+import { sandboxExists, sandboxNameFor, sandboxWorktreeDirFor } from "./sandbox.ts";
+import { errorMessage, log } from "./util.ts";
+import { type WorkspaceProbe, workspaces } from "./workspaces.ts";
 
 const LONG_RUNNING_COMMAND_OPTIONS = { stdio: "inherit", timeoutMs: 0 } as const;
 

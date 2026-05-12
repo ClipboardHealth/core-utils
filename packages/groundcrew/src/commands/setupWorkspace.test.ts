@@ -2,15 +2,15 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 
 import { ensureClearance } from "@clipboard-health/clearance";
 
-import type { RunCommandOptions } from "../lib/commandRunner.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { detectHostCapabilities } from "../lib/host.js";
-import type * as utilModule from "../lib/util.js";
-import { getLinearClient, log } from "../lib/util.js";
-import { type WorktreeEntry, worktrees, type WorktreeSpec } from "../lib/worktrees.js";
-import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.js";
-import { emptyTeardownResult } from "../testHelpers/teardownResult.js";
-import { setupWorkspace, setupWorkspaceCli } from "./setupWorkspace.js";
+import type { RunCommandOptions } from "../lib/commandRunner.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { detectHostCapabilities } from "../lib/host.ts";
+import type * as utilModule from "../lib/util.ts";
+import { getLinearClient, log } from "../lib/util.ts";
+import { type WorktreeEntry, worktrees, type WorktreeSpec } from "../lib/worktrees.ts";
+import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.ts";
+import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
+import { setupWorkspace, setupWorkspaceCli } from "./setupWorkspace.ts";
 
 // oxlint-disable-next-line jest/no-untyped-mock-factory -- typed dynamic imports conflict with Node builtin module typings
 vi.mock("node:fs", () => ({
@@ -18,11 +18,11 @@ vi.mock("node:fs", () => ({
   rmSync: vi.fn<typeof rmSync>(),
   writeFileSync: vi.fn<typeof writeFileSync>(),
 }));
-vi.mock(import("../lib/config.js"), async (importOriginal) => {
+vi.mock(import("../lib/config.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, loadConfig: vi.fn<typeof loadConfig>() };
 });
-vi.mock(import("../lib/host.js"), async (importOriginal) => {
+vi.mock(import("../lib/host.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, detectHostCapabilities: vi.fn<typeof detectHostCapabilities>() };
 });
@@ -41,7 +41,7 @@ type RunCommandMock = (
 
 const runCommandMock = vi.hoisted(() => vi.fn<RunCommandMock>());
 
-vi.mock(import("../lib/commandRunner.js"), async (importOriginal) => {
+vi.mock(import("../lib/commandRunner.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -50,7 +50,7 @@ vi.mock(import("../lib/commandRunner.js"), async (importOriginal) => {
     runCommandAsync: runCommandMock as unknown as typeof actual.runCommandAsync,
   };
 });
-vi.mock(import("../lib/util.js"), async (importOriginal) => {
+vi.mock(import("../lib/util.ts"), async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
@@ -58,7 +58,7 @@ vi.mock(import("../lib/util.js"), async (importOriginal) => {
     log: vi.fn<typeof actual.log>(),
   };
 });
-vi.mock(import("../lib/worktrees.js"), async (importOriginal) => {
+vi.mock(import("../lib/worktrees.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

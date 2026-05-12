@@ -10,7 +10,7 @@ import {
   isClearanceListening,
   spawnClearance,
   type SpawnClearanceInput,
-} from "./launcher.js";
+} from "./launcher.ts";
 
 function createTempCacheDir(): string {
   return mkdtempSync(join(tmpdir(), "clearance-"));

@@ -1,7 +1,7 @@
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { log } from "../lib/util.js";
-import { worktrees } from "../lib/worktrees.js";
-import { logTeardown } from "./teardownReporter.js";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { log } from "../lib/util.ts";
+import { worktrees } from "../lib/worktrees.ts";
+import { logTeardown } from "./teardownReporter.ts";
 
 export interface CleanupWorkspaceOptions {
   ticket: string;

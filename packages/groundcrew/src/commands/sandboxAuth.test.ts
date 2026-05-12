@@ -1,7 +1,7 @@
-import type { RunCommandOptions } from "../lib/commandRunner.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { repoDirFor } from "../lib/worktrees.js";
-import { authSandbox, sandboxAuthCli } from "./sandboxAuth.js";
+import type { RunCommandOptions } from "../lib/commandRunner.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { repoDirFor } from "../lib/worktrees.ts";
+import { authSandbox, sandboxAuthCli } from "./sandboxAuth.ts";
 
 type RunCommandMock = (
   command: string,
@@ -11,7 +11,7 @@ type RunCommandMock = (
 
 const runCommandMock = vi.hoisted(() => vi.fn<RunCommandMock>());
 
-vi.mock(import("../lib/commandRunner.js"), async (importOriginal) => {
+vi.mock(import("../lib/commandRunner.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -20,11 +20,11 @@ vi.mock(import("../lib/commandRunner.js"), async (importOriginal) => {
     runCommandAsync: runCommandMock as unknown as typeof actual.runCommandAsync,
   };
 });
-vi.mock(import("../lib/config.js"), async (importOriginal) => {
+vi.mock(import("../lib/config.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, loadConfig: vi.fn<typeof loadConfig>() };
 });
-vi.mock(import("../lib/worktrees.js"), async (importOriginal) => {
+vi.mock(import("../lib/worktrees.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, repoDirFor: vi.fn<typeof repoDirFor>() };
 });

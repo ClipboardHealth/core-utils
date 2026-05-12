@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
-import { run } from "../src/cli.js";
+import { dirname } from "node:path";
 
-await run(process.argv.slice(2));
+import { runCli } from "./runCli.js";
+
+await runCli(dirname(import.meta.dirname), "main");

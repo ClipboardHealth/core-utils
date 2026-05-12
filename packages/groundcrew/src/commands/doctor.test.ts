@@ -1,23 +1,23 @@
 import { existsSync, statSync } from "node:fs";
 
-import type { RunCommandOptions } from "../lib/commandRunner.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { detectHostCapabilities } from "../lib/host.js";
-import { readEnvironmentVariable } from "../lib/util.js";
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.js";
-import { doctor } from "./doctor.js";
+import type { RunCommandOptions } from "../lib/commandRunner.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { detectHostCapabilities } from "../lib/host.ts";
+import { readEnvironmentVariable } from "../lib/util.ts";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.ts";
+import { doctor } from "./doctor.ts";
 
 // oxlint-disable-next-line jest/no-untyped-mock-factory -- typed dynamic imports conflict with Node builtin module typings
 vi.mock("node:fs", () => ({
   existsSync: vi.fn<typeof existsSync>(),
   statSync: vi.fn<typeof statSync>(),
 }));
-vi.mock(import("../lib/config.js"), async (importOriginal) => {
+vi.mock(import("../lib/config.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, loadConfig: vi.fn<typeof loadConfig>() };
 });
-vi.mock(import("../lib/host.js"), async (importOriginal) => {
+vi.mock(import("../lib/host.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, detectHostCapabilities: vi.fn<typeof detectHostCapabilities>() };
 });
@@ -29,7 +29,7 @@ type RunCommandMock = (
 
 const runCommandMock = vi.hoisted(() => vi.fn<RunCommandMock>());
 
-vi.mock(import("../lib/commandRunner.js"), async (importOriginal) => {
+vi.mock(import("../lib/commandRunner.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

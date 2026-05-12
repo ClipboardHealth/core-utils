@@ -1,13 +1,13 @@
-import type { Issue } from "../lib/boardSource.js";
-import type { ResolvedConfig } from "../lib/config.js";
-import type { UsageByModel } from "../lib/usage.js";
-import type { WorktreeEntry } from "../lib/worktrees.js";
+import type { Issue } from "../lib/boardSource.ts";
+import type { ResolvedConfig } from "../lib/config.ts";
+import type { UsageByModel } from "../lib/usage.ts";
+import type { WorktreeEntry } from "../lib/worktrees.ts";
 import {
   type ClassifyArguments,
   classifyBlockers,
   classifyEligibility,
   pickBestModel,
-} from "./eligibility.js";
+} from "./eligibility.ts";
 
 function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
   return {

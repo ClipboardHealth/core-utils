@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { readEnvironmentVariable } from "./util.js";
+import { readEnvironmentVariable } from "./util.ts";
 
 /**
  * Reserved model name. A ticket labeled `agent-any` resolves at runtime
