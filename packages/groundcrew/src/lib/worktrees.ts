@@ -16,7 +16,7 @@
 
 import { type Dirent, existsSync, readdirSync } from "node:fs";
 import { userInfo } from "node:os";
-import { relative, resolve, sep } from "node:path";
+import { resolve } from "node:path";
 
 import { runCommandAsync, type RunCommandOptions } from "./commandRunner.js";
 import type { ResolvedConfig } from "./config.js";
@@ -107,12 +107,6 @@ function basePaths(config: ResolvedConfig, repository: string, ticket: string): 
   const repoDir = repoDirFor(config, repository);
   const hostWorktreeName = `${repository}-${ticket}`;
   const hostWorktreeDir = resolve(projectDir, hostWorktreeName);
-
-  // Belt-and-braces: any residual path that escapes projectDir is also rejected.
-  const rel = relative(projectDir, hostWorktreeDir);
-  if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || rel.includes(sep)) {
-    throw new Error(`Invalid ticket "${ticket}": resolves outside ${projectDir}`);
-  }
 
   return {
     projectDir,
