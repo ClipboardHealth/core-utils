@@ -2,6 +2,7 @@ import type { ChangeStream } from "mongodb";
 
 import type { BackgroundJobType } from "../../job";
 import type { JobsRepository, UpsertChangeStreamEvent } from "../jobsRepository";
+import type { Logger } from "../logger";
 import { ActionableQueues } from "./actionableQueues";
 import { FutureQueues } from "./futureQueues";
 import type { QueueConsumer, QueueConsumerStartOptions } from "./queueConsumer";
@@ -12,14 +13,16 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
   private readonly consumedQueuesSet: Set<string>;
   private readonly actionableQueues = new ActionableQueues();
   private readonly futureQueues = new FutureQueues();
-  private jobsChangeStream?: ChangeStream<BackgroundJobType<unknown>>;
+  private readonly logger: Logger | undefined;
+  private jobsChangeStream: ChangeStream<BackgroundJobType<unknown>> | undefined;
   private refreshQueuesInterval?: NodeJS.Timeout;
 
-  public constructor(queues: string[], jobsRepository: JobsRepository) {
+  public constructor(queues: string[], jobsRepository: JobsRepository, logger?: Logger) {
     super();
     this.consumedQueues = queues;
     this.consumedQueuesSet = new Set(queues);
     this.jobsRepository = jobsRepository;
+    this.logger = logger;
   }
 
   public async start({ useChangeStream, refreshQueuesIntervalMS }: QueueConsumerStartOptions) {
@@ -42,9 +45,10 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
   }
 
   public startListeningForQueueChanges() {
-    this.jobsChangeStream = this.jobsRepository.watchUpserts(this.consumedQueues);
+    const stream = this.jobsRepository.watchUpserts(this.consumedQueues);
+    this.jobsChangeStream = stream;
 
-    this.jobsChangeStream.on("change", (event: unknown) => {
+    stream.on("change", (event: unknown) => {
       const typedEvent = event as UpsertChangeStreamEvent;
       const queue = typedEvent.fullDocument?.queue;
       const nextRunAt = typedEvent.fullDocument?.nextRunAt;
@@ -61,6 +65,23 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
 
       this.futureQueues.setActionableAt(queue, nextRunAt);
       this.dispatchNewJobEvent();
+    });
+
+    /**
+     * Without this listener, transient MongoDB network errors (e.g. ECONNRESET
+     * during a connection pool reset) crash the process because Node's
+     * `EventEmitter` throws on an unhandled `"error"` event. The worker can
+     * keep making progress via the queue refresh interval and worker loop
+     * polling, so we log and clear the stream instead.
+     */
+    stream.on("error", (error: unknown) => {
+      this.logger?.error("Jobs change stream error; falling back to polling", { error });
+
+      if (this.jobsChangeStream === stream) {
+        this.jobsChangeStream = undefined;
+      }
+
+      void this.closeStreamSafely(stream);
     });
   }
 
@@ -168,6 +189,14 @@ export class FairQueueConsumer extends EventTarget implements QueueConsumer {
         // Ignore rejections from detached queue future refreshes.
       }
     })();
+  }
+
+  private async closeStreamSafely(stream: ChangeStream<BackgroundJobType<unknown>>): Promise<void> {
+    try {
+      await stream.close();
+    } catch {
+      // Stream may already be closed.
+    }
   }
 
   private dispatchNewJobEvent() {

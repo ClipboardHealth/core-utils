@@ -132,7 +132,7 @@ export class Worker {
       }
     }
 
-    this.queueConsumer = new FairQueueConsumer(queues, options.jobsRepo);
+    this.queueConsumer = new FairQueueConsumer(queues, options.jobsRepo, options.logger);
   }
 
   public async start() {
