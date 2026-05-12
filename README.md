@@ -20,6 +20,7 @@
 - [ai-rules](./packages/ai-rules/README.md): Pre-built AI agent rules for consistent coding standards.
 - [analytics](./packages/analytics/README.md): Type-safe analytics wrapper around our third-party analytics provider for user identification and event tracking.
 - [background-jobs-adapter](./packages/background-jobs-adapter/README.md): Minimal adapter interface for background jobs operations supporting Mongo and Postgres implementations.
+- [clearance](./packages/clearance/README.md): Localhost HTTP/HTTPS egress proxy with hostname allow-listing, plus a macOS Safehouse integration for sandboxed agent processes.
 - [config](./packages/config/README.md): Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.
 - [contract-core](./packages/contract-core/README.md): Shared Zod schemas for Clipboard's contracts.
 - [embedex](./packages/embedex/README.md): Embed shared text and code snippets from source files into destination files.
@@ -27,6 +28,7 @@
 - [eslint-plugin](./packages/eslint-plugin/README.md): Clipboard's ESLint Plugin
 - [example-nestjs](./packages/example-nestjs/README.md): A NestJS application using our libraries, primarily for end-to-end testing.
 - [execution-context](./packages/execution-context/README.md): A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
+- [groundcrew](./packages/groundcrew/README.md): Linear-driven orchestrator that launches AI coding agents in isolated git worktrees, with workspace lifecycle, sandbox auth, and usage tracking.
 - [json-api](./packages/json-api/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification.
 - [json-api-nestjs](./packages/json-api-nestjs/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.
 - [mongo-jobs](./packages/mongo-jobs/README.md): MongoDB-powered background jobs.
