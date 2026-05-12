@@ -471,7 +471,21 @@ describe(create, () => {
         model: "claude",
         strategy: "none",
       }),
-    ).rejects.toThrow(/resolves outside/);
+    ).rejects.toThrow(/must be a plain ticket id/);
+  });
+
+  it("rejects ticket strings containing '..' before path resolution", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      create(config, {
+        repository: "repo-a",
+        ticket: "..",
+        model: "claude",
+        strategy: "none",
+      }),
+    ).rejects.toThrow(/must be a plain ticket id/);
   });
 
   it("throws when the OS username is empty", async () => {

@@ -143,10 +143,10 @@ export async function runCommandAsync(
       streamName: "stderr" | "stdout";
     }): number {
       const buffer = Buffer.isBuffer(input.chunk) ? input.chunk : Buffer.from(input.chunk, "utf8");
-      const nextLength = input.currentLength + buffer.length;
-      if (nextLength > RUN_MAX_BUFFER_BYTES) {
+      const nextCombinedLength = stdoutLength + stderrLength + buffer.length;
+      if (nextCombinedLength > RUN_MAX_BUFFER_BYTES) {
         settleWithError(
-          Object.assign(new Error(`${input.streamName} maxBuffer exceeded`), {
+          Object.assign(new Error("combined stdout/stderr maxBuffer exceeded"), {
             signal: TIMEOUT_SIGNAL,
           }),
         );
@@ -154,7 +154,7 @@ export async function runCommandAsync(
         return input.currentLength;
       }
       input.chunks.push(buffer);
-      return nextLength;
+      return input.currentLength + buffer.length;
     }
 
     if (options.stdio !== "inherit") {

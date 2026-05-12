@@ -90,12 +90,25 @@ interface BasePaths {
 }
 
 function basePaths(config: ResolvedConfig, repository: string, ticket: string): BasePaths {
+  // Reject path-traversal in CLI ticket args before they reach resolve(),
+  // which would otherwise normalize ".." segments into in-tree siblings.
+  if (
+    ticket.length === 0 ||
+    ticket === "." ||
+    ticket === ".." ||
+    ticket.includes("/") ||
+    ticket.includes("\\") ||
+    ticket.includes("..")
+  ) {
+    throw new Error(`Invalid ticket "${ticket}": must be a plain ticket id`);
+  }
+
   const projectDir = resolve(config.workspace.projectDir);
   const repoDir = repoDirFor(config, repository);
   const hostWorktreeName = `${repository}-${ticket}`;
   const hostWorktreeDir = resolve(projectDir, hostWorktreeName);
 
-  // Reject path-traversal in CLI ticket args before git/rm-rf sees them.
+  // Belt-and-braces: any residual path that escapes projectDir is also rejected.
   const rel = relative(projectDir, hostWorktreeDir);
   if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || rel.includes(sep)) {
     throw new Error(`Invalid ticket "${ticket}": resolves outside ${projectDir}`);

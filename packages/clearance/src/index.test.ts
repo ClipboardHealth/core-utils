@@ -104,9 +104,18 @@ describe("@clipboard-health/clearance", () => {
     expect(() =>
       resolveClearanceConfig({
         CLEARANCE_ALLOW_HOSTS: "agent-safehouse.dev",
-        CLEARANCE_ALLOW_PORTS: "abc",
+        CLEARANCE_ALLOW_PORTS: " ",
       }),
     ).toThrow("CLEARANCE_ALLOW_PORTS must include at least one valid TCP port");
+  });
+
+  it("rejects malformed port entries instead of silently dropping them", () => {
+    expect(() =>
+      resolveClearanceConfig({
+        CLEARANCE_ALLOW_HOSTS: "agent-safehouse.dev",
+        CLEARANCE_ALLOW_PORTS: "443,abc",
+      }),
+    ).toThrow("invalid TCP port in CLEARANCE_ALLOW_PORTS: abc");
   });
 
   it("starts from environment config and logs the active policy", async () => {

@@ -104,12 +104,17 @@ async function codexbarUsage(definition: ModelDefinition, signal?: AbortSignal):
   // codexbar can return multiple entries when a provider has several
   // accounts/sources. When the user pinned a specific source, only an exact
   // match counts — falling back to a different account would silently
-  // misreport quotas. When `auto`/`cli` was inferred, fall back to any
-  // provider match so codexbar's resolved backend label ("openai-web",
-  // "local", etc.) doesn't have to equal the request literal.
+  // misreport quotas. When `auto`/`cli` was inferred, fall back to a provider
+  // match only when it is unambiguous (a single entry) so codexbar's resolved
+  // backend label ("openai-web", "local", etc.) doesn't have to equal the
+  // request literal. Ambiguous fallbacks fail closed and the caller surfaces
+  // EXHAUSTED_USAGE.
   const providerMatches = parsed.filter((entry) => entry.provider === provider);
   const exact = providerMatches.find((entry) => entry.source === source);
-  const match = configuredSource === undefined ? (exact ?? providerMatches[0]) : exact;
+  const match =
+    configuredSource === undefined
+      ? (exact ?? (providerMatches.length === 1 ? providerMatches[0] : undefined))
+      : exact;
   if (!match) {
     throw new Error(
       `codexbar returned no matching entry for provider=${provider}, source=${source}`,

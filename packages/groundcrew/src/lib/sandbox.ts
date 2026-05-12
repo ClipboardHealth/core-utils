@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { resolve, sep } from "node:path";
 
 import { runCommandAsync } from "./commandRunner.js";
 
@@ -16,12 +16,12 @@ export function sandboxWorktreeDirFor(arguments_: {
   sandboxName: string;
   branchName: string;
 }): string {
-  return resolve(
-    arguments_.repoDir,
-    ".sbx",
-    `${arguments_.sandboxName}-worktrees`,
-    arguments_.branchName,
-  );
+  const worktreesRoot = resolve(arguments_.repoDir, ".sbx", `${arguments_.sandboxName}-worktrees`);
+  const candidate = resolve(worktreesRoot, arguments_.branchName);
+  if (candidate !== worktreesRoot && !candidate.startsWith(`${worktreesRoot}${sep}`)) {
+    throw new Error(`Invalid branchName for sandbox worktree path: ${arguments_.branchName}`);
+  }
+  return candidate;
 }
 
 export async function sandboxExists(sandboxName: string, signal?: AbortSignal): Promise<boolean> {

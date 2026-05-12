@@ -295,7 +295,23 @@ describe(runCommandAsync, () => {
     child.stdout.emit("data", Buffer.alloc(10 * 1024 * 1024 + 1));
     child.emit("close", null, "SIGTERM");
 
-    await expect(promise).rejects.toThrow("stdout maxBuffer exceeded");
+    await expect(promise).rejects.toThrow("combined stdout/stderr maxBuffer exceeded");
+    expect(child.kill).toHaveBeenCalledWith("SIGTERM");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("rejects when combined stdout+stderr exceed the max buffer", async () => {
+    vi.useFakeTimers();
+    const child = makeChildProcess();
+    spawnMock.mockReturnValue(child);
+
+    const promise = runCommandAsync("tool", []);
+    // Each stream stays under the per-stream-sized cap, but combined they breach.
+    child.stdout.emit("data", Buffer.alloc(6 * 1024 * 1024));
+    child.stderr.emit("data", Buffer.alloc(5 * 1024 * 1024));
+    child.emit("close", null, "SIGTERM");
+
+    await expect(promise).rejects.toThrow("combined stdout/stderr maxBuffer exceeded");
     expect(child.kill).toHaveBeenCalledWith("SIGTERM");
     expect(vi.getTimerCount()).toBe(0);
   });
