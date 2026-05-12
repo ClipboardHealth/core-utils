@@ -155,6 +155,16 @@ describe(doctor, () => {
     expect(consoleLog.output()).toContain("config: bad config");
   });
 
+  it("returns false when host-capability probing throws", async () => {
+    loadConfigMock.mockResolvedValue(makeConfig());
+    detectHostMock.mockRejectedValue(new Error("probe blew up"));
+
+    const actual = await doctor();
+
+    expect(actual).toBe(false);
+    expect(consoleLog.output()).toContain("host: probe blew up");
+  });
+
   it("returns true when all required checks pass", async () => {
     loadConfigMock.mockResolvedValue(makeConfig());
 

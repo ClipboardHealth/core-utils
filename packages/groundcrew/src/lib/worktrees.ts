@@ -16,7 +16,7 @@
 
 import { type Dirent, existsSync, readdirSync } from "node:fs";
 import { userInfo } from "node:os";
-import { relative, resolve, sep } from "node:path";
+import { resolve } from "node:path";
 
 import { runCommandAsync, type RunCommandOptions } from "./commandRunner.js";
 import type { ResolvedConfig } from "./config.js";
@@ -48,6 +48,7 @@ export interface WorktreeSpec {
   strategy: ResolvedIsolationStrategy;
 }
 
+const TICKET_RE = /^[a-z][\da-z]*-\d+$/;
 const TICKET_DIR_RE = /^(.+)-([a-z][\da-z]*-\d+)$/;
 const BRANCH_TICKET_RE = /([a-z][\da-z]*-\d+)$/;
 
@@ -90,16 +91,17 @@ interface BasePaths {
 }
 
 function basePaths(config: ResolvedConfig, repository: string, ticket: string): BasePaths {
+  // Tickets must match the same shape the worktree discovery regexes use,
+  // so create()/list()/findByTicket() agree on what's a valid worktree.
+  // This also rejects traversal tokens before they reach resolve().
+  if (!TICKET_RE.test(ticket)) {
+    throw new Error(`Invalid ticket "${ticket}": must be a plain ticket id`);
+  }
+
   const projectDir = resolve(config.workspace.projectDir);
   const repoDir = repoDirFor(config, repository);
   const hostWorktreeName = `${repository}-${ticket}`;
   const hostWorktreeDir = resolve(projectDir, hostWorktreeName);
-
-  // Reject path-traversal in CLI ticket args before git/rm-rf sees them.
-  const rel = relative(projectDir, hostWorktreeDir);
-  if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || rel.includes(sep)) {
-    throw new Error(`Invalid ticket "${ticket}": resolves outside ${projectDir}`);
-  }
 
   return {
     projectDir,

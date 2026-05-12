@@ -323,4 +323,29 @@ describe(getUsageByModel, () => {
       "codexbar returned no matching entry for provider=codex",
     );
   });
+
+  it("fails closed when an inferred source has multiple ambiguous provider matches", async () => {
+    stubPlatform("darwin");
+    runCommandMock.mockReturnValue(
+      JSON.stringify([
+        {
+          provider: "codex",
+          source: "openai-web",
+          usage: { primary: { usedPercent: 25 } },
+        },
+        {
+          provider: "codex",
+          source: "local",
+          usage: { primary: { usedPercent: 90 } },
+        },
+      ]),
+    );
+
+    const actual = await getUsageByModel(makeConfig());
+
+    expect(actual["codex"]).toStrictEqual(EXHAUSTED_USAGE);
+    expect(consoleCapture.output()).toContain(
+      "codexbar returned no matching entry for provider=codex",
+    );
+  });
 });

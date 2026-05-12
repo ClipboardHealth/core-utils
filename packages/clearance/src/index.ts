@@ -626,9 +626,14 @@ function parseConnectionHeaderTokens(value: http.OutgoingHttpHeader | undefined)
 }
 
 function normalizeAllowedPorts(rawPorts: readonly (number | string)[]): number[] {
-  const ports = rawPorts
-    .map((rawPort) => (typeof rawPort === "number" ? rawPort : Number(rawPort)))
-    .filter((port) => isValidPort(port));
+  const ports = rawPorts.map((rawPort) => {
+    const port = typeof rawPort === "number" ? rawPort : Number(rawPort);
+    if (!isValidPort(port)) {
+      throw new Error(`invalid TCP port in CLEARANCE_ALLOW_PORTS: ${String(rawPort)}`);
+    }
+
+    return port;
+  });
 
   if (ports.length === 0) {
     throw new Error("CLEARANCE_ALLOW_PORTS must include at least one valid TCP port");

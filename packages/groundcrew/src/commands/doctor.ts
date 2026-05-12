@@ -182,7 +182,13 @@ export async function doctor(): Promise<boolean> {
     return false;
   }
 
-  const host = await detectHostCapabilities();
+  let host: HostCapabilities;
+  try {
+    host = await detectHostCapabilities();
+  } catch (error) {
+    writeOutput(`[--] host: ${errorMessage(error)}`);
+    return false;
+  }
   const resolutions = resolveAllStrategies(config, host);
   reportIsolationStrategies(config, resolutions);
 
