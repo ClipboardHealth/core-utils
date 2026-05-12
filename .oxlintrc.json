@@ -46,6 +46,16 @@
       }
     },
     {
+      "files": ["packages/clearance/**/*.ts", "packages/groundcrew/**/*.ts"],
+      "rules": {
+        "no-console": "off",
+        "no-throw-literal": "off",
+        "node/no-process-env": "off",
+        "typescript/consistent-return": "off",
+        "typescript/no-unsafe-argument": "off"
+      }
+    },
+    {
       "files": ["packages/nx-plugin/src/index.ts"],
       "rules": {
         "unicorn/no-empty-file": "off"

@@ -1,0 +1,202 @@
+import { run } from "./cli.js";
+import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.js";
+import { doctor } from "./commands/doctor.js";
+import { orchestrate } from "./commands/orchestrator.js";
+import { setupWorkspaceCli } from "./commands/setupWorkspace.js";
+import {
+  captureConsoleError,
+  captureConsoleLog,
+  type ConsoleCapture,
+} from "./testHelpers/consoleCapture.js";
+
+vi.mock(import("./commands/cleanupWorkspace.js"), () => ({
+  cleanupWorkspaceCli: vi.fn<typeof cleanupWorkspaceCli>(),
+}));
+vi.mock(import("./commands/doctor.js"), () => ({
+  doctor: vi.fn<typeof doctor>(),
+}));
+vi.mock(import("./commands/orchestrator.js"), () => ({
+  orchestrate: vi.fn<typeof orchestrate>(),
+}));
+vi.mock(import("./commands/setupWorkspace.js"), () => ({
+  setupWorkspaceCli: vi.fn<typeof setupWorkspaceCli>(),
+}));
+
+const orchestrateMock = vi.mocked(orchestrate);
+const doctorMock = vi.mocked(doctor);
+const setupMock = vi.mocked(setupWorkspaceCli);
+const cleanupMock = vi.mocked(cleanupWorkspaceCli);
+
+describe(run, () => {
+  let consoleLog: ConsoleCapture;
+  let consoleError: ConsoleCapture;
+
+  beforeEach(() => {
+    consoleLog = captureConsoleLog();
+    consoleError = captureConsoleError();
+    process.exitCode = undefined;
+    orchestrateMock.mockResolvedValue();
+    doctorMock.mockResolvedValue(true);
+    setupMock.mockResolvedValue();
+    cleanupMock.mockResolvedValue();
+  });
+
+  afterEach(() => {
+    consoleLog.restore();
+    consoleError.restore();
+    process.exitCode = undefined;
+    vi.clearAllMocks();
+  });
+
+  it("prints help and exits with code 1 when no subcommand is provided", async () => {
+    await run([]);
+
+    expect(consoleLog.calls.length).toBeGreaterThan(0);
+    const helpOutput = consoleLog.output();
+    expect(helpOutput).toContain("Usage: crew <command>");
+    expect(helpOutput).toContain("run");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("prints help on -h without setting exit code", async () => {
+    await run(["-h"]);
+
+    expect(consoleLog.calls.length).toBeGreaterThan(0);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("prints help on --help without setting exit code", async () => {
+    await run(["--help"]);
+
+    expect(consoleLog.calls.length).toBeGreaterThan(0);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("reports unknown subcommands and exits with code 1", async () => {
+    await run(["bogus"]);
+
+    expect(consoleError.output()).toContain("Unknown command: bogus");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("dispatches `run` (no flags) to a one-shot orchestrator tick", async () => {
+    await run(["run"]);
+
+    expect(orchestrateMock).toHaveBeenCalledWith({ watch: false, dryRun: false });
+    expect(setupMock).not.toHaveBeenCalled();
+  });
+
+  it("dispatches `run --watch` to the orchestrator with watch=true", async () => {
+    await run(["run", "--watch"]);
+
+    expect(orchestrateMock).toHaveBeenCalledWith({ watch: true, dryRun: false });
+  });
+
+  it("dispatches `run --dry-run` to the orchestrator with dryRun=true", async () => {
+    await run(["run", "--dry-run"]);
+
+    expect(orchestrateMock).toHaveBeenCalledWith({ watch: false, dryRun: true });
+  });
+
+  it("dispatches `run --watch --dry-run` with both flags forwarded", async () => {
+    await run(["run", "--watch", "--dry-run"]);
+
+    expect(orchestrateMock).toHaveBeenCalledWith({ watch: true, dryRun: true });
+  });
+
+  it("dispatches `run --ticket <id>` to setupWorkspaceCli", async () => {
+    await run(["run", "--ticket", "team-220"]);
+
+    expect(setupMock).toHaveBeenCalledWith("team-220", { dryRun: false });
+    expect(orchestrateMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards --dry-run to setupWorkspaceCli on the --ticket path", async () => {
+    await run(["run", "--ticket", "team-220", "--dry-run"]);
+
+    expect(setupMock).toHaveBeenCalledWith("team-220", { dryRun: true });
+    expect(orchestrateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects `run --ticket` combined with --watch", async () => {
+    await run(["run", "--watch", "--ticket", "team-220"]);
+
+    expect(consoleError.output()).toContain("--watch and --ticket are mutually exclusive");
+    expect(process.exitCode).toBe(1);
+    expect(setupMock).not.toHaveBeenCalled();
+    expect(orchestrateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects `run --ticket` with no value", async () => {
+    await run(["run", "--ticket"]);
+
+    expect(consoleError.output()).toContain("ticket id is required");
+    expect(process.exitCode).toBe(1);
+    expect(setupMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects `run --ticket --dry-run` (flag value missing, dash-prefixed value)", async () => {
+    await run(["run", "--ticket", "--dry-run"]);
+
+    expect(consoleError.output()).toContain("ticket id is required");
+    expect(process.exitCode).toBe(1);
+    expect(setupMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects `run --ticket` with an empty-string value", async () => {
+    await run(["run", "--ticket", ""]);
+
+    expect(consoleError.output()).toContain("ticket id is required");
+    expect(process.exitCode).toBe(1);
+    expect(setupMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects unknown args under `run` (e.g. --help) instead of swallowing them", async () => {
+    await run(["run", "--help"]);
+
+    expect(consoleError.output()).toContain("unknown argument: --help");
+    expect(process.exitCode).toBe(1);
+    expect(orchestrateMock).not.toHaveBeenCalled();
+    expect(setupMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects extra positional args after `run --ticket <id>`", async () => {
+    await run(["run", "--ticket", "team-220", "extra"]);
+
+    expect(consoleError.output()).toContain("unknown argument: extra");
+    expect(process.exitCode).toBe(1);
+    expect(setupMock).not.toHaveBeenCalled();
+  });
+
+  it("calls doctor and leaves exit code untouched on success", async () => {
+    doctorMock.mockResolvedValue(true);
+
+    await run(["doctor"]);
+
+    expect(doctorMock).toHaveBeenCalledWith();
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("sets exit code to 1 when doctor fails", async () => {
+    doctorMock.mockResolvedValue(false);
+
+    await run(["doctor"]);
+
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("dispatches cleanup to cleanupWorkspaceCli with the remaining argv", async () => {
+    await run(["cleanup", "--force", "TEAM-1"]);
+
+    expect(cleanupMock).toHaveBeenCalledWith(["--force", "TEAM-1"]);
+  });
+
+  it("prints the error message and sets exit code 1 when a subcommand throws", async () => {
+    setupMock.mockRejectedValue(new Error("boom"));
+
+    await run(["run", "--ticket", "team-1"]);
+
+    expect(consoleError.output()).toBe("boom");
+    expect(process.exitCode).toBe(1);
+  });
+});

@@ -1,0 +1,33 @@
+{
+  "name": "@clipboard-health/clearance",
+  "version": "0.1.0",
+  "description": "Localhost HTTP/HTTPS egress proxy with hostname allow-listing, plus a macOS Safehouse integration for sandboxed agent processes.",
+  "keywords": [
+    "agent",
+    "allowlist",
+    "egress",
+    "proxy",
+    "safehouse",
+    "sandbox"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/clearance"
+  },
+  "bin": {
+    "clearance": "./bin/run.js",
+    "clearance-ensure": "./bin/ensure.js"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "tslib": "2.8.1"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "groundcrew",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "packages/groundcrew/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/groundcrew"],
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/groundcrew && tsgo --build packages/groundcrew/tsconfig.lib.json && env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/groundcrew --no-clean",
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/groundcrew/**/*.[jt]s"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "packages/groundcrew/vitest.config.ts"
+      }
+    }
+  }
+}

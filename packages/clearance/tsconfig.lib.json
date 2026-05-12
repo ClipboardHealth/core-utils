@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "composite": true,
+    "declaration": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rewriteRelativeImportExtensions": true,
+    "outDir": "../../dist/packages/clearance",
+    "rootDir": ".",
+    "types": ["node"],
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/clearance/tsconfig.lib.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts"]
+}
