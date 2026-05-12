@@ -1,7 +1,7 @@
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import type { RunCommandOptions } from "./commandRunner.js";
-import type { ResolvedConfig } from "./config.js";
-import { EXHAUSTED_USAGE, getUsageByModel } from "./usage.js";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import type { RunCommandOptions } from "./commandRunner.ts";
+import type { ResolvedConfig } from "./config.ts";
+import { EXHAUSTED_USAGE, getUsageByModel } from "./usage.ts";
 
 type RunCommandMock = (
   command: string,
@@ -11,7 +11,7 @@ type RunCommandMock = (
 
 const runCommandMock = vi.hoisted(() => vi.fn<RunCommandMock>());
 
-vi.mock(import("./commandRunner.js"), async (importOriginal) => {
+vi.mock(import("./commandRunner.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

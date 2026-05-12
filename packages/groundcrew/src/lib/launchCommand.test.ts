@@ -1,5 +1,5 @@
-import type { ModelDefinition } from "./config.js";
-import { buildLaunchCommand } from "./launchCommand.js";
+import type { ModelDefinition } from "./config.ts";
+import { buildLaunchCommand } from "./launchCommand.ts";
 
 function arguments_(
   overrides: Partial<Parameters<typeof buildLaunchCommand>[0]> = {},

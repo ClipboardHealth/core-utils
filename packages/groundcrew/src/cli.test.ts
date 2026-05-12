@@ -1,24 +1,24 @@
-import { run } from "./cli.js";
-import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.js";
-import { doctor } from "./commands/doctor.js";
-import { orchestrate } from "./commands/orchestrator.js";
-import { setupWorkspaceCli } from "./commands/setupWorkspace.js";
+import { run } from "./cli.ts";
+import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
+import { doctor } from "./commands/doctor.ts";
+import { orchestrate } from "./commands/orchestrator.ts";
+import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
 import {
   captureConsoleError,
   captureConsoleLog,
   type ConsoleCapture,
-} from "./testHelpers/consoleCapture.js";
+} from "./testHelpers/consoleCapture.ts";
 
-vi.mock(import("./commands/cleanupWorkspace.js"), () => ({
+vi.mock(import("./commands/cleanupWorkspace.ts"), () => ({
   cleanupWorkspaceCli: vi.fn<typeof cleanupWorkspaceCli>(),
 }));
-vi.mock(import("./commands/doctor.js"), () => ({
+vi.mock(import("./commands/doctor.ts"), () => ({
   doctor: vi.fn<typeof doctor>(),
 }));
-vi.mock(import("./commands/orchestrator.js"), () => ({
+vi.mock(import("./commands/orchestrator.ts"), () => ({
   orchestrate: vi.fn<typeof orchestrate>(),
 }));
-vi.mock(import("./commands/setupWorkspace.js"), () => ({
+vi.mock(import("./commands/setupWorkspace.ts"), () => ({
   setupWorkspaceCli: vi.fn<typeof setupWorkspaceCli>(),
 }));
 

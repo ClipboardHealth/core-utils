@@ -3,11 +3,11 @@ import type * as nodeOs from "node:os";
 import { tmpdir, userInfo } from "node:os";
 import { join, sep } from "node:path";
 
-import { probeError } from "../testHelpers/workspaceProbe.js";
-import type { RunCommandOptions } from "./commandRunner.js";
-import type { ResolvedConfig } from "./config.js";
-import { workspaces } from "./workspaces.js";
-import { type WorktreeEntry, worktrees } from "./worktrees.js";
+import { probeError } from "../testHelpers/workspaceProbe.ts";
+import type { RunCommandOptions } from "./commandRunner.ts";
+import type { ResolvedConfig } from "./config.ts";
+import { workspaces } from "./workspaces.ts";
+import { type WorktreeEntry, worktrees } from "./worktrees.ts";
 
 const { create, findByBranch, findByTicket, list, remove, teardown } = worktrees;
 
@@ -19,7 +19,7 @@ type RunCommandMock = (
 
 const runCommandMock = vi.hoisted(() => vi.fn<RunCommandMock>());
 
-vi.mock(import("./commandRunner.js"), async (importOriginal) => {
+vi.mock(import("./commandRunner.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -28,7 +28,7 @@ vi.mock(import("./commandRunner.js"), async (importOriginal) => {
     runCommandAsync: runCommandMock as unknown as typeof actual.runCommandAsync,
   };
 });
-vi.mock(import("./workspaces.js"), async (importOriginal) => {
+vi.mock(import("./workspaces.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

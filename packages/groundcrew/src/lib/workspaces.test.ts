@@ -1,10 +1,10 @@
-import { probeError } from "../testHelpers/workspaceProbe.js";
-import type { RunCommandOptions } from "./commandRunner.js";
-import type { ResolvedConfig, WorkspaceKindSetting } from "./config.js";
-import type * as hostModule from "./host.js";
-import { detectHostCapabilities, type HostCapabilities } from "./host.js";
-import type * as utilModule from "./util.js";
-import { resolveWorkspaceKind, workspaces } from "./workspaces.js";
+import { probeError } from "../testHelpers/workspaceProbe.ts";
+import type { RunCommandOptions } from "./commandRunner.ts";
+import type { ResolvedConfig, WorkspaceKindSetting } from "./config.ts";
+import type * as hostModule from "./host.ts";
+import { detectHostCapabilities, type HostCapabilities } from "./host.ts";
+import type * as utilModule from "./util.ts";
+import { resolveWorkspaceKind, workspaces } from "./workspaces.ts";
 
 type RunCommandMock = (
   command: string,
@@ -14,7 +14,7 @@ type RunCommandMock = (
 
 const runMock = vi.hoisted(() => vi.fn<RunCommandMock>());
 
-vi.mock(import("./commandRunner.js"), async (importOriginal) => {
+vi.mock(import("./commandRunner.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -23,14 +23,14 @@ vi.mock(import("./commandRunner.js"), async (importOriginal) => {
     runCommandAsync: runMock as unknown as typeof actual.runCommandAsync,
   };
 });
-vi.mock(import("./util.js"), async (importOriginal) => {
+vi.mock(import("./util.ts"), async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
     log: vi.fn<typeof actual.log>(),
   };
 });
-vi.mock(import("./host.js"), async (importOriginal) => {
+vi.mock(import("./host.ts"), async (importOriginal) => {
   const actual = await importOriginal<typeof hostModule>();
   return {
     ...actual,

@@ -5,10 +5,10 @@ import * as http from "node:http";
 import * as net from "node:net";
 import type { Duplex } from "node:stream";
 
-import { resolveAllowlist } from "./allowlist.js";
-import { normalizeHost, normalizeRules, parseList } from "./hostRule.js";
+import { resolveAllowlist } from "./allowlist.ts";
+import { normalizeHost, normalizeRules, parseList } from "./hostRule.ts";
 
-export { resolveAllowlist, type ResolveAllowlistInput } from "./allowlist.js";
+export { resolveAllowlist, type ResolveAllowlistInput } from "./allowlist.ts";
 export {
   type ClearanceCheckInput,
   type ClearanceListenerCheck,
@@ -19,7 +19,7 @@ export {
   isClearanceListening,
   spawnClearance,
   type SpawnClearanceInput,
-} from "./launcher.js";
+} from "./launcher.ts";
 
 export const CLEARANCE_PACKAGE_NAME = "@clipboard-health/clearance";
 

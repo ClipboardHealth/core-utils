@@ -1,12 +1,12 @@
-import type { BoardState, Issue } from "../lib/boardSource.js";
-import type { ResolvedConfig } from "../lib/config.js";
-import { sandboxNameFor } from "../lib/sandbox.js";
-import { type WorktreeEntry, worktrees } from "../lib/worktrees.js";
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import { emptyTeardownResult } from "../testHelpers/teardownResult.js";
-import { createCleaner } from "./cleaner.js";
+import type { BoardState, Issue } from "../lib/boardSource.ts";
+import type { ResolvedConfig } from "../lib/config.ts";
+import { sandboxNameFor } from "../lib/sandbox.ts";
+import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
+import { createCleaner } from "./cleaner.ts";
 
-vi.mock(import("../lib/worktrees.js"), async (importOriginal) => {
+vi.mock(import("../lib/worktrees.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 
-import { runCommandAsync } from "./commandRunner.js";
+import { runCommandAsync } from "./commandRunner.ts";
 
 export function sandboxNameFor(arguments_: { repository: string; model: string }): string {
   const raw = `groundcrew-${arguments_.repository}-${arguments_.model}`.toLowerCase();

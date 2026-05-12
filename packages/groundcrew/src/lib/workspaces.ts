@@ -5,10 +5,10 @@
  * backend uses opaque refs.
  */
 
-import { runCommandAsync } from "./commandRunner.js";
-import type { ResolvedConfig, WorkspaceKindSetting } from "./config.js";
-import { detectHostCapabilities, type HostCapabilities } from "./host.js";
-import { errorMessage, log } from "./util.js";
+import { runCommandAsync } from "./commandRunner.ts";
+import type { ResolvedConfig, WorkspaceKindSetting } from "./config.ts";
+import { detectHostCapabilities, type HostCapabilities } from "./host.ts";
+import { errorMessage, log } from "./util.ts";
 
 export type WorkspaceKind = "cmux" | "tmux";
 

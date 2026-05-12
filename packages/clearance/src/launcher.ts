@@ -4,7 +4,7 @@ import * as net from "node:net";
 import { homedir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
 
-import { resolveAllowlist } from "./allowlist.js";
+import { resolveAllowlist } from "./allowlist.ts";
 
 const CLEARANCE_HOST = "127.0.0.1";
 const CLEARANCE_PORT = 19_999;

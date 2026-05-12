@@ -1,19 +1,19 @@
 import type { LinearClient } from "@linear/sdk";
 
-import type { BoardState, Issue } from "../lib/boardSource.js";
-import type { ResolvedConfig } from "../lib/config.js";
-import { EXHAUSTED_USAGE } from "../lib/usage.js";
-import { workspaces } from "../lib/workspaces.js";
-import type { WorktreeEntry } from "../lib/worktrees.js";
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import { createDispatcher } from "./dispatcher.js";
-import { setupWorkspace } from "./setupWorkspace.js";
+import type { BoardState, Issue } from "../lib/boardSource.ts";
+import type { ResolvedConfig } from "../lib/config.ts";
+import { EXHAUSTED_USAGE } from "../lib/usage.ts";
+import { workspaces } from "../lib/workspaces.ts";
+import type { WorktreeEntry } from "../lib/worktrees.ts";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import { createDispatcher } from "./dispatcher.ts";
+import { setupWorkspace } from "./setupWorkspace.ts";
 
-vi.mock(import("./setupWorkspace.js"), async (importOriginal) => {
+vi.mock(import("./setupWorkspace.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, setupWorkspace: vi.fn<typeof setupWorkspace>() };
 });
-vi.mock(import("../lib/workspaces.js"), async (importOriginal) => {
+vi.mock(import("../lib/workspaces.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

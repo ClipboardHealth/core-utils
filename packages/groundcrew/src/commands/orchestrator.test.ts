@@ -1,26 +1,26 @@
 import type { LinearClient } from "@linear/sdk";
 
-import type * as configModule from "../lib/config.js";
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { getUsageByModel } from "../lib/usage.js";
-import type * as utilModule from "../lib/util.js";
-import { getLinearClient, sleep } from "../lib/util.js";
-import { workspaces } from "../lib/workspaces.js";
-import { type WorktreeEntry, worktrees } from "../lib/worktrees.js";
+import type * as configModule from "../lib/config.ts";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { getUsageByModel } from "../lib/usage.ts";
+import type * as utilModule from "../lib/util.ts";
+import { getLinearClient, sleep } from "../lib/util.ts";
+import { workspaces } from "../lib/workspaces.ts";
+import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
 import {
   captureConsoleClear,
   captureConsoleLog,
   type ConsoleCapture,
-} from "../testHelpers/consoleCapture.js";
-import { emptyTeardownResult } from "../testHelpers/teardownResult.js";
-import { orchestrate } from "./orchestrator.js";
-import { setupWorkspace } from "./setupWorkspace.js";
+} from "../testHelpers/consoleCapture.ts";
+import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
+import { orchestrate } from "./orchestrator.ts";
+import { setupWorkspace } from "./setupWorkspace.ts";
 
-vi.mock(import("../lib/config.js"), async (importOriginal) => {
+vi.mock(import("../lib/config.ts"), async (importOriginal) => {
   const actual = await importOriginal<typeof configModule>();
   return { ...actual, loadConfig: vi.fn<typeof loadConfig>() };
 });
-vi.mock(import("../lib/util.js"), async (importOriginal) => {
+vi.mock(import("../lib/util.ts"), async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
@@ -33,7 +33,7 @@ vi.mock(import("../lib/util.js"), async (importOriginal) => {
     }),
   };
 });
-vi.mock(import("../lib/workspaces.js"), async (importOriginal) => {
+vi.mock(import("../lib/workspaces.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -44,7 +44,7 @@ vi.mock(import("../lib/workspaces.js"), async (importOriginal) => {
     },
   };
 });
-vi.mock(import("../lib/worktrees.js"), async (importOriginal) => {
+vi.mock(import("../lib/worktrees.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -55,11 +55,11 @@ vi.mock(import("../lib/worktrees.js"), async (importOriginal) => {
     },
   };
 });
-vi.mock(import("../lib/usage.js"), async (importOriginal) => {
+vi.mock(import("../lib/usage.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, getUsageByModel: vi.fn<typeof getUsageByModel>() };
 });
-vi.mock(import("./setupWorkspace.js"), async (importOriginal) => {
+vi.mock(import("./setupWorkspace.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, setupWorkspace: vi.fn<typeof setupWorkspace>() };
 });

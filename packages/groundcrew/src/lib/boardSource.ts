@@ -6,8 +6,8 @@
 
 import type { LinearClient } from "@linear/sdk";
 
-import { AGENT_ANY_MODEL, type ResolvedConfig } from "./config.js";
-import { log } from "./util.js";
+import { AGENT_ANY_MODEL, type ResolvedConfig } from "./config.ts";
+import { log } from "./util.ts";
 
 const AGENT_LABEL_PREFIX = "agent-";
 const ISSUES_PAGE_SIZE = 250;

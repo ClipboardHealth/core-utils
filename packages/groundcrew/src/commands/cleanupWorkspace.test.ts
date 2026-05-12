@@ -1,14 +1,14 @@
-import { loadConfig, type ResolvedConfig } from "../lib/config.js";
-import { type WorktreeEntry, worktrees } from "../lib/worktrees.js";
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import { emptyTeardownResult } from "../testHelpers/teardownResult.js";
-import { cleanupWorkspace, cleanupWorkspaceCli } from "./cleanupWorkspace.js";
+import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
+import { cleanupWorkspace, cleanupWorkspaceCli } from "./cleanupWorkspace.ts";
 
-vi.mock(import("../lib/config.js"), async (importOriginal) => {
+vi.mock(import("../lib/config.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, loadConfig: vi.fn<typeof loadConfig>() };
 });
-vi.mock(import("../lib/worktrees.js"), async (importOriginal) => {
+vi.mock(import("../lib/worktrees.ts"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

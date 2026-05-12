@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { delimiter as PATH_DELIMITER } from "node:path";
 
-import { normalizeRule, parseList } from "./hostRule.js";
+import { normalizeRule, parseList } from "./hostRule.ts";
 
 const COMMENT_PREFIX = "#";
 

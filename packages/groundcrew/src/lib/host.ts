@@ -6,7 +6,7 @@
 
 import { platform } from "node:process";
 
-import { runCommandAsync } from "./commandRunner.js";
+import { runCommandAsync } from "./commandRunner.ts";
 
 export interface HostCapabilities {
   /** True when the `safehouse` binary is on PATH. */

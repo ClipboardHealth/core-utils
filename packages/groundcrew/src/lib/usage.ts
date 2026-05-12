@@ -6,9 +6,9 @@
  * `codexbar` itself is the user-facing inspection tool.
  */
 
-import { runCommandAsync } from "./commandRunner.js";
-import type { ModelDefinition, ResolvedConfig } from "./config.js";
-import { errorMessage, log } from "./util.js";
+import { runCommandAsync } from "./commandRunner.ts";
+import type { ModelDefinition, ResolvedConfig } from "./config.ts";
+import { errorMessage, log } from "./util.ts";
 
 interface UsageWindow {
   usedPercent: number;

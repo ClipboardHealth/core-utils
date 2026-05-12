@@ -1,5 +1,5 @@
-import { errorMessage, log, logEvent } from "../lib/util.js";
-import type { TeardownResult } from "../lib/worktrees.js";
+import { errorMessage, log, logEvent } from "../lib/util.ts";
+import type { TeardownResult } from "../lib/worktrees.ts";
 
 export function logTeardown(result: TeardownResult): void {
   if (result.workspaceProbe.kind === "unavailable" && result.workspaceProbe.error !== undefined) {

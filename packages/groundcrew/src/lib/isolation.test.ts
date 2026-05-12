@@ -1,6 +1,6 @@
-import type { IsolationStrategy, ResolvedConfig } from "./config.js";
-import type { HostCapabilities } from "./host.js";
-import { resolveIsolationStrategy } from "./isolation.js";
+import type { IsolationStrategy, ResolvedConfig } from "./config.ts";
+import type { HostCapabilities } from "./host.ts";
+import { resolveIsolationStrategy } from "./isolation.ts";
 
 const SUPPORTED_HOST: HostCapabilities = {
   hasSafehouse: true,

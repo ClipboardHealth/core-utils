@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { EventEmitter } from "node:events";
 
-import { runCommand, runCommandAsync } from "./commandRunner.js";
+import { runCommand, runCommandAsync } from "./commandRunner.ts";
 
 const spawnMock = vi.hoisted(() =>
   vi.fn<(command: string, arguments_: readonly string[], options: unknown) => FakeChildProcess>(),

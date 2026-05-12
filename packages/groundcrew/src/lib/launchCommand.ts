@@ -4,8 +4,8 @@ import {
   DEFAULT_HOST_SETUP_COMMAND,
   DEFAULT_SANDBOX_SETUP_COMMAND,
   type ModelDefinition,
-} from "./config.js";
-import type { ResolvedIsolationStrategy } from "./isolation.js";
+} from "./config.ts";
+import type { ResolvedIsolationStrategy } from "./isolation.ts";
 
 /**
  * Build-time secrets we shuttle from groundcrew's process env into the

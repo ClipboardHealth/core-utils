@@ -1,7 +1,7 @@
-import type { TeardownResult, WorktreeEntry } from "../lib/worktrees.js";
-import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.js";
-import { emptyTeardownResult } from "../testHelpers/teardownResult.js";
-import { logTeardown, recordTeardownEvents } from "./teardownReporter.js";
+import type { TeardownResult, WorktreeEntry } from "../lib/worktrees.ts";
+import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
+import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
+import { logTeardown, recordTeardownEvents } from "./teardownReporter.ts";
 
 function hostEntry(ticket: string): WorktreeEntry {
   return {

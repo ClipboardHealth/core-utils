@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ensureClearance } from "./launcher.js";
+import { ensureClearance } from "./launcher.ts";
 
 ensureClearance({
   logger: (message) => {

@@ -10,7 +10,7 @@ import {
   createClearanceServer,
   resolveClearanceConfig,
   startClearanceFromEnv,
-} from "./index.js";
+} from "./index.ts";
 
 const servers: (http.Server | net.Server)[] = [];
 

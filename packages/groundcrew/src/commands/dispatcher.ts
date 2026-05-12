@@ -9,19 +9,19 @@
 
 import type { LinearClient } from "@linear/sdk";
 
-import type { BoardState, Issue } from "../lib/boardSource.js";
-import type { ResolvedConfig } from "../lib/config.js";
-import type { UsageByModel } from "../lib/usage.js";
-import { errorMessage, log, logEvent } from "../lib/util.js";
-import { type WorkspaceProbe, workspaces } from "../lib/workspaces.js";
-import type { WorktreeEntry } from "../lib/worktrees.js";
+import type { BoardState, Issue } from "../lib/boardSource.ts";
+import type { ResolvedConfig } from "../lib/config.ts";
+import type { UsageByModel } from "../lib/usage.ts";
+import { errorMessage, log, logEvent } from "../lib/util.ts";
+import { type WorkspaceProbe, workspaces } from "../lib/workspaces.ts";
+import type { WorktreeEntry } from "../lib/worktrees.ts";
 import {
   classifyBlockers,
   classifyEligibility,
   type SkipVerdict,
   type StartVerdict,
-} from "./eligibility.js";
-import { setupWorkspace } from "./setupWorkspace.js";
+} from "./eligibility.ts";
+import { setupWorkspace } from "./setupWorkspace.ts";
 
 const PERCENT_FRACTION_DIVISOR = 100;
 const DAYS_PER_WEEK = 7;

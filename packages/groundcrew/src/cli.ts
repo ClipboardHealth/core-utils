@@ -1,9 +1,9 @@
-import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.js";
-import { doctor } from "./commands/doctor.js";
-import { orchestrate } from "./commands/orchestrator.js";
-import { sandboxAuthCli } from "./commands/sandboxAuth.js";
-import { setupWorkspaceCli } from "./commands/setupWorkspace.js";
-import { errorMessage, writeError, writeOutput } from "./lib/util.js";
+import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
+import { doctor } from "./commands/doctor.ts";
+import { orchestrate } from "./commands/orchestrator.ts";
+import { sandboxAuthCli } from "./commands/sandboxAuth.ts";
+import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
+import { errorMessage, writeError, writeOutput } from "./lib/util.ts";
 
 interface Subcommand {
   summary: string;

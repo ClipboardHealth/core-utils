@@ -7,11 +7,11 @@
  * effects.
  */
 
-import { type Blocker, type Issue, isTerminalStatus } from "../lib/boardSource.js";
-import { AGENT_ANY_MODEL, type ResolvedConfig } from "../lib/config.js";
-import type { UsageByModel } from "../lib/usage.js";
-import type { WorkspaceProbe } from "../lib/workspaces.js";
-import type { WorktreeEntry } from "../lib/worktrees.js";
+import { type Blocker, type Issue, isTerminalStatus } from "../lib/boardSource.ts";
+import { AGENT_ANY_MODEL, type ResolvedConfig } from "../lib/config.ts";
+import type { UsageByModel } from "../lib/usage.ts";
+import type { WorkspaceProbe } from "../lib/workspaces.ts";
+import type { WorktreeEntry } from "../lib/worktrees.ts";
 
 type SkipReason =
   | "blocked"

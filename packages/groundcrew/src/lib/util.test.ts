@@ -1,7 +1,7 @@
 import { LinearClient } from "@linear/sdk";
 
-import { captureConsoleLog } from "../testHelpers/consoleCapture.js";
-import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.js";
+import { captureConsoleLog } from "../testHelpers/consoleCapture.ts";
+import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.ts";
 import {
   errorMessage,
   getLinearClient,
@@ -9,7 +9,7 @@ import {
   logEvent,
   readEnvironmentVariable,
   sleep,
-} from "./util.js";
+} from "./util.ts";
 
 describe(sleep, () => {
   beforeEach(() => {
