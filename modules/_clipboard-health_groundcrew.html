@@ -114,7 +114,7 @@
 <tr>
 <td><code>workspace.knownRepositories</code></td>
 <td><strong>required</strong></td>
-<td>Repos searched for in ticket descriptions to infer where work belongs. Tickets fail fast when no known repo appears.</td>
+<td>Repos searched for in ticket descriptions to infer where work belongs. A ticket labeled for groundcrew (<code>agent-*</code>) fails fast when no known repo appears; unlabeled tickets are ignored.</td>
 </tr>
 <tr>
 <td><code>orchestrator.maximumInProgress</code></td>
@@ -134,7 +134,7 @@
 <tr>
 <td><code>models.default</code></td>
 <td><code>&quot;claude&quot;</code></td>
-<td>Agent used when a ticket has no agent label. Must exist in <code>models.definitions</code>.</td>
+<td>Tiebreak for <code>agent-any</code> resolution and fallback for explicit but unknown <code>agent-*</code> labels. Also used by <code>crew setup &lt;TICKET&gt;</code> for unlabeled tickets. <code>crew run</code> ignores unlabeled tickets and does not apply this default. Must exist in <code>models.definitions</code>.</td>
 </tr>
 <tr>
 <td><code>models.isolation</code></td>
@@ -183,7 +183,7 @@
 </tr>
 </tbody>
 </table>
-<p>The branch prefix (<code>&lt;prefix&gt;-&lt;TICKET&gt;</code>) is derived from your OS username (<code>os.userInfo().username</code>), not configured. Agent selection looks for a top-level Linear label named <code>agent-&lt;model&gt;</code> (e.g. <code>agent-claude</code>, <code>agent-codex</code>). The reserved label <code>agent-any</code> routes the ticket to the configured model with the most available session capacity (lowest codexbar session-used percent), skipping any model already over <code>sessionLimitPercentage</code>. With no usage data, <code>agent-any</code> resolves to <code>models.default</code>. The name <code>any</code> cannot be used in <code>models.definitions</code>. Todo tickets blocked by Linear issues that are not in <code>linear.statuses.terminal</code> are skipped until their blockers reach a terminal status.</p>
+<p>The branch prefix (<code>&lt;prefix&gt;-&lt;TICKET&gt;</code>) is derived from your OS username (<code>os.userInfo().username</code>), not configured. Agent selection looks for a top-level Linear label named <code>agent-&lt;model&gt;</code> (e.g. <code>agent-claude</code>, <code>agent-codex</code>). <strong><code>crew run</code> only fetches tickets with an <code>agent-*</code> label</strong> — the GraphQL query filters them server-side, so unlabeled tickets are never returned by Linear's API and do not appear in the rendered board. Use <code>crew setup &lt;TICKET&gt;</code> to provision an unlabeled ticket on demand (manual setup falls back to <code>models.default</code>). The reserved label <code>agent-any</code> routes the ticket to the configured model with the most available session capacity (lowest codexbar session-used percent), skipping any model already over <code>sessionLimitPercentage</code>. With no usage data, <code>agent-any</code> resolves to <code>models.default</code>. The name <code>any</code> cannot be used in <code>models.definitions</code>. Todo tickets blocked by Linear issues that are not in <code>linear.statuses.terminal</code> are skipped until their blockers reach a terminal status.</p>
 <h2 id="manual-commands" class="tsd-anchor-link">Manual commands<a href="#manual-commands" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <pre><code class="bash"><span class="hl-1">crew</span><span class="hl-2"> </span><span class="hl-3">sandbox</span><span class="hl-2"> </span><span class="hl-3">auth</span><span class="hl-2"> &lt;</span><span class="hl-3">rep</span><span class="hl-2">o&gt; </span><span class="hl-4">--model</span><span class="hl-2"> </span><span class="hl-3">claude</span><br/><span class="hl-1">crew</span><span class="hl-2"> </span><span class="hl-3">sandbox</span><span class="hl-2"> </span><span class="hl-3">auth</span><span class="hl-2"> &lt;</span><span class="hl-3">rep</span><span class="hl-2">o&gt; </span><span class="hl-4">--model</span><span class="hl-2"> </span><span class="hl-3">codex</span><br/><span class="hl-1">crew</span><span class="hl-2"> </span><span class="hl-3">run</span><span class="hl-2"> </span><span class="hl-4">--ticket</span><span class="hl-2"> &lt;</span><span class="hl-3">TICKE</span><span class="hl-2">T&gt;</span><br/><span class="hl-1">crew</span><span class="hl-2"> </span><span class="hl-3">cleanup</span><span class="hl-2"> &lt;</span><span class="hl-3">TICKE</span><span class="hl-2">T&gt;</span>
 </code><button type="button">Copy</button></pre>
