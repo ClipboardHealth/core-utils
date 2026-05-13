@@ -117,12 +117,9 @@ If any of the following are true, **stop and ask the user before continuing**:
 Warn template (substitute the verified state):
 
 > Freshness check for `<owner>/<repo>` at `<worktree-path>`:
-
 > - on branch `<HEAD-branch>` (expected `<base>` for Path A)
 > - `<N>` commit(s) ahead, `<M>` commit(s) behind `origin/<base>` (last remote commit: `<short-sha> <iso-date>`)
 > - working tree: `<clean | dirty: N file(s)>`
-
->
 > Reading code from this worktree may surface findings based on stale or local-only state.
 > Reply: `proceed` (use worktree anyway and accept the risk), `use-origin` (read context via `git show origin/<base>:<path>` instead — recommended, no checkout needed), or `stop` (let me clean up and re-run).
 
@@ -161,18 +158,12 @@ Subagent rule: if a finding's load-bearing evidence is in another repo, the suba
 Moderator rule: after Round 1, collect every `evidence_required` block across all subagents and ask the user **before Round 2**:
 
 > Some findings depend on code outside `<primary-repo>`. To verify, I need access to:
-
 > - `<repo-1>` — to check `<what_to_verify>` (raised by agent <X>)
 > - `<repo-2>` — to check `<what_to_verify>` (raised by agent <Y>)
-
->
 > For each repo, reply with one of:
-
 > - a local path (e.g. `/Users/you/repos/cbh/<repo>`) — I will run the freshness preflight on it before reading
 > - `gh:<owner>/<repo>` — I will fetch the file content via `gh api repos/<owner>/<repo>/contents/<path>?ref=main` instead of cloning
 > - `skip` — the finding will be downgraded to "speculative — cross-repo evidence not verified" and capped at MINOR
-
->
 > Or reply `skip all` to downgrade every cross-repo finding.
 
 For each user-provided local path, run the **same freshness preflight** as on the primary repo (fetch, check ahead/behind, check working-tree cleanliness). If the external repo is stale or on a non-default branch, warn with the same template and require explicit user acknowledgement before reading. Always read external code via `git show "${external_context_ref}:<path>"` / `git grep ... "${external_context_ref}" -- <paths>`, never via the worktree filesystem.
@@ -206,7 +197,7 @@ Do not surface any of:
 - Restating the obvious ("consider a comment explaining what this does").
 - Hypothetical future-caller scenarios with no current caller.
 - Style/formatting a linter or formatter already covers.
-- Test-coverage demands on trivially-verifiable code (one-line pass-throughs, simple getters).
+- Test-coverage demands on trivially-verifiable code (one-line forwarding helpers, simple getters).
 - "Add observability" without naming a concrete failure mode it would help debug.
 - Abstract SOLID-style "consider extracting…" suggestions without a concrete failure mode.
 - Aesthetic naming preferences. Only raise names that mislead about behavior.
