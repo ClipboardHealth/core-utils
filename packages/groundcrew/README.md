@@ -26,7 +26,7 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
    At minimum set `linear.projectSlug` (paste the trailing segment of your Linear project URL, e.g. `ai-strategy-5152195762f3`), `workspace.projectDir`, and `workspace.knownRepositories`. Everything else has a default.
 
-   If `GROUNDCREW_CONFIG` is unset, `crew` falls back to a `config.ts` at the installed package root. That's useful when hacking on groundcrew itself; use `GROUNDCREW_CONFIG` for real work.
+   `GROUNDCREW_CONFIG` is effectively required for npm-installed use. If it's unset, `crew` falls back to a `config.ts` sitting next to its own source files — only useful when running from a local checkout (see [Hacking on groundcrew](#hacking-on-groundcrew)).
 
 4. **Provide a Linear API key.** `crew` expects `LINEAR_API_KEY` in its environment. Any mechanism works — shell export, [direnv](https://direnv.net/), a `.env` file you `source`, or piping through `op run` if you store the credential in 1Password:
 
