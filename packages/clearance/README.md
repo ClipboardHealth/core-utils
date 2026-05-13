@@ -1,6 +1,9 @@
 # @clipboard-health/clearance
 
-HTTP/HTTPS clearance for deny-by-default sandboxes.
+A local HTTP/HTTPS forward proxy that gates network egress against a
+hostname allowlist. Built for deny-by-default sandboxes — coding agents,
+CI workers, isolated build steps — where you want one choke point the
+sandbox can permit, with every other route to the network closed.
 
 The proxy ships with **zero compiled-in opinions** about which hosts to allow.
 Bring your own list — either inline via env or by pointing at one or more
@@ -100,8 +103,9 @@ kill "$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.pid")"
 
 ## Safehouse integration (macOS)
 
-Safehouse uses macOS sandbox profiles, so this section is for macOS hosts
-only. Safehouse allows network access by default for agent compatibility.
+[Safehouse](https://agent-safehouse.dev/) uses macOS sandbox profiles, so
+this section is for macOS hosts only. Safehouse allows network access by
+default for agent compatibility.
 To force a wrapped agent through this proxy, run the proxy outside
 Safehouse, then append a Safehouse profile that denies direct remote
 egress while leaving `localhost` open for `http://127.0.0.1:19999`.
