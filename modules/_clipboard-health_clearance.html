@@ -1,5 +1,8 @@
 <!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@clipboard-health/clearance | core-utils</title><meta name="description" content="Documentation for core-utils"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="../index.html" class="title">core-utils</a><div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><ul class="tsd-breadcrumb" aria-label="Breadcrumb"><li><a href="" aria-current="page">@clipboard-health/clearance</a></li></ul><h1>Module @clipboard-health/clearance</h1></div><section class="tsd-panel tsd-typography"><h1 id="clipboard-healthclearance" class="tsd-anchor-link">@clipboard-health/clearance<a href="#clipboard-healthclearance" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
-<p>HTTP/HTTPS clearance for deny-by-default sandboxes.</p>
+<p>A local HTTP/HTTPS forward proxy that gates network egress against a
+hostname allowlist. Built for deny-by-default sandboxes — coding agents,
+CI workers, isolated build steps — where you want one choke point the
+sandbox can permit, with every other route to the network closed.</p>
 <p>The proxy ships with <strong>zero compiled-in opinions</strong> about which hosts to allow.
 Bring your own list — either inline via env or by pointing at one or more
 plain-text files. Teams typically check those files into their repo so
@@ -117,8 +120,9 @@ pid at <code>…/clearance.pid</code>.</p>
 </code><button type="button">Copy</button></pre>
 
 <h2 id="safehouse-integration-macos" class="tsd-anchor-link">Safehouse integration (macOS)<a href="#safehouse-integration-macos" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<p>Safehouse uses macOS sandbox profiles, so this section is for macOS hosts
-only. Safehouse allows network access by default for agent compatibility.
+<p><a href="https://agent-safehouse.dev/">Safehouse</a> uses macOS sandbox profiles, so
+this section is for macOS hosts only. Safehouse allows network access by
+default for agent compatibility.
 To force a wrapped agent through this proxy, run the proxy outside
 Safehouse, then append a Safehouse profile that denies direct remote
 egress while leaving <code>localhost</code> open for <code>http://127.0.0.1:19999</code>.</p>
