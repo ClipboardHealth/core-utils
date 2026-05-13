@@ -688,10 +688,18 @@ describe(orchestrate, () => {
 
     const out = consoleLog.output();
     expect(out).toContain("showing 20 most recent of 25; 5 older hidden");
-    // Most recent (index 24, TEAM-025) is visible.
-    expect(out).toContain("team-025");
-    // Oldest (index 0, TEAM-001) is truncated.
-    expect(out).not.toContain("team-001");
+
+    // Exactly 20 visible rows. With 25 ascending-updatedAt items, sort desc
+    // and slice 20 keeps indices 24..5 (team-025..team-006); 5 oldest hidden.
+    const visibleRows = [...out.matchAll(/team-\d{3}\b/g)].map((match) => match[0]);
+    expect(visibleRows).toHaveLength(20);
+
+    // Newest (team-025) and the boundary (team-006, 20th-newest) are visible.
+    expect(visibleRows).toContain("team-025");
+    expect(visibleRows).toContain("team-006");
+    // team-005 is the first one truncated; oldest (team-001) is also hidden.
+    expect(visibleRows).not.toContain("team-005");
+    expect(visibleRows).not.toContain("team-001");
   });
 
   it("filters out parent issues that have children", async () => {
