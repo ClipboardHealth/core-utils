@@ -24,6 +24,13 @@ Before doing any step, output the full 7-step checklist below in your first resp
 4. Push the branch to origin.
 5. Look up the current agent session ID with `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. On success the script prints `<agent> <id>`; otherwise nothing — if empty, omit the session ID line below.
 6. Check for an existing PR with `gh pr view`.
-   - No PR: create with `gh pr create`. Title = commit subject. Description = brief explanation of **why**, not what. Append `Agent session ID: <output of step 5>` (omit if step 5 produced no output) and `<!-- commit-push-pr:created v1 core@3.4.0 -->` on their own lines at the end.
-   - PR exists: refresh the body via `gh pr edit --body` so (a) the new commit's changes are reflected in the prose, (b) `Agent session ID: <output of step 5>` appears in the body — append if missing, never remove or rewrite existing session ID lines so each contributing session is preserved — and (c) any existing `<!-- commit-push-pr:created v1 ... -->` line is preserved verbatim (append `<!-- commit-push-pr:created v1 core@3.4.0 -->` if absent). Then report the URL.
+   - No PR: create with `gh pr create`. Title = commit subject. Description = brief explanation of **why**, not what (see PR description rules below). Append `Agent session ID: <output of step 5>` (omit if step 5 produced no output) and `<!-- commit-push-pr:created v1 core@3.4.0 -->` on their own lines at the end.
+   - PR exists: refresh the body via `gh pr edit --body` so (a) the **why** reflects the current commits (per the PR description rules below), (b) `Agent session ID: <output of step 5>` appears in the body — append if missing, never remove or rewrite existing session ID lines so each contributing session is preserved — and (c) any existing `<!-- commit-push-pr:created v1 ... -->` line is preserved verbatim (append `<!-- commit-push-pr:created v1 core@3.4.0 -->` if absent). Then report the URL.
+
+   PR description rules (apply to both create and edit):
+   - **Why, not what.** Find the intent in session/conversation history. If it isn't there, stop and ask the user as your final turn — skip step 7 and resume on their reply. Never fabricate intent.
+   - No file lists. Do not include "Files Changed", "Files Updated", or any inventory of touched paths — GitHub renders the file tree already.
+   - No narration of the diff. Do not restate in prose what the code does; the diff shows the implementation.
+   - No risks unless the user explicitly named one. Do not speculate.
+
 7. End with one short text response: branch name and the full PR URL (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`). Never use shorthand like `repo#123` — always output the complete URL.
