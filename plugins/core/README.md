@@ -13,6 +13,7 @@ Clipboard's core development tools.
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
+  - [in-depth-review](#in-depth-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
@@ -67,6 +68,10 @@ Investigate production issues by querying Datadog logs, metrics, and APM traces,
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
+
+### in-depth-review
+
+Run a multi-agent code review on the current branch or a PR identified by argument. Defaults to engineering, minimalist, and conventions reviewers, conditionally adds security/database/frontend specialists based on changed files, and includes the adversarial reviewer only when explicitly requested. Invoke with `/in-depth-review` or `/in-depth-review <number|url>`.
 
 ### local-package
 
