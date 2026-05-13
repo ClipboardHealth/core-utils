@@ -256,6 +256,43 @@ describe(createBoardSource, () => {
       );
     });
 
+    it("scopes the board query to the orchestrator's configured state names so off-board tickets are never returned", async () => {
+      const { source, rawRequest } = makeBoardSource(makeClient({ pages: [[]] }));
+
+      await source.fetch();
+
+      const boardCall = rawRequest.mock.calls.find(([query]) => query.includes("BoardIssues"));
+      expect(boardCall?.[0]).toMatch(/state:\s*\{\s*name:\s*\{\s*in:\s*\$stateNames\s*\}\s*\}/);
+      expect(boardCall?.[1]).toMatchObject({
+        stateNames: ["Todo", "In Progress", "Done"],
+      });
+    });
+
+    it("dedupes overlapping terminal state names in the query variables", async () => {
+      const config = makeConfig({
+        linear: {
+          projectSlug: "ai-strategy-aaaaaaaaaaaa",
+          slugId: "aaaaaaaaaaaa",
+          // Done appears in both `done` and `terminal`; "Won't Do" is a custom
+          // terminal state. The query should carry each name exactly once.
+          statuses: {
+            todo: "Todo",
+            inProgress: "In Progress",
+            done: "Done",
+            terminal: ["Done", "Won't Do"],
+          },
+        },
+      });
+      const { source, rawRequest } = makeBoardSource(makeClient({ pages: [[]] }), config);
+
+      await source.fetch();
+
+      const boardCall = rawRequest.mock.calls.find(([query]) => query.includes("BoardIssues"));
+      expect(boardCall?.[1]).toMatchObject({
+        stateNames: ["Todo", "In Progress", "Done", "Won't Do"],
+      });
+    });
+
     it("resolves the model from an agent-* label", async () => {
       const { source } = makeBoardSource(
         makeClient({
