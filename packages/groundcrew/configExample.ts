@@ -76,4 +76,11 @@ export const config: Config = {
   // // backend is missing. tmux windows live in a dedicated `groundcrew`
   // // session and lose status-pill painting (cmux-only feature).
   // workspaceKind: "auto",
+  //
+  // logging: {
+  //   // Append-mode log file destination. `log()` / `logEvent()` tee here
+  //   // in addition to stdout, so a vanished workspace doesn't take the
+  //   // evidence with it. Default: `${XDG_STATE_HOME:-~/.local/state}/groundcrew/groundcrew.log`.
+  //   file: "~/Library/Logs/groundcrew/groundcrew.log",
+  // },
 };

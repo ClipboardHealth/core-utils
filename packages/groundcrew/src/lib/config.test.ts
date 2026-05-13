@@ -1,6 +1,6 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import {
   deleteEnvironmentVariable,
@@ -57,18 +57,24 @@ function restorePackageConfig(original: string | undefined): void {
 
 describe("loadConfig", () => {
   const originalEnvironment = snapshotEnvironmentVariables();
+  const ENV_KEYS = ["GROUNDCREW_CONFIG", "HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME"] as const;
   let temporary: string;
 
   beforeEach(() => {
     temporary = mkdtempSync(join(tmpdir(), "groundcrew-config-"));
-    deleteEnvironmentVariable("GROUNDCREW_CONFIG");
-    deleteEnvironmentVariable("PROJECT_DIR");
-    deleteEnvironmentVariable("HOME");
+    for (const key of ENV_KEYS) {
+      deleteEnvironmentVariable(key);
+    }
+    // Point XDG away from the host's real ~/.config/groundcrew so the
+    // fallback resolver doesn't accidentally pick up a developer's
+    // actual config.ts during test runs.
+    setEnvironmentVariable("XDG_CONFIG_HOME", join(temporary, "xdg-config"));
+    setEnvironmentVariable("XDG_STATE_HOME", join(temporary, "xdg-state"));
   });
 
   afterEach(() => {
     rmSync(temporary, { recursive: true, force: true });
-    for (const key of ["GROUNDCREW_CONFIG", "PROJECT_DIR", "HOME"]) {
+    for (const key of ENV_KEYS) {
       const original = originalEnvironment[key];
       if (original === undefined) {
         deleteEnvironmentVariable(key);
@@ -712,25 +718,8 @@ describe("loadConfig", () => {
     expect(actual.workspace.projectDir).toBe(temporary);
   });
 
-  it("uses PROJECT_DIR override when it is non-empty", async () => {
-    setEnvironmentVariable("PROJECT_DIR", temporary);
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: { ...VALID_WORKSPACE(temporary), projectDir: "/should/be/ignored" },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.workspace.projectDir).toBe(temporary);
-  });
-
-  it("ignores empty PROJECT_DIR override", async () => {
-    setEnvironmentVariable("PROJECT_DIR", "");
+  it("defaults logging.file to the XDG state path", async () => {
+    setEnvironmentVariable("XDG_STATE_HOME", join(temporary, "state"));
     const path = writeConfigFile(
       temporary,
       configSource({
@@ -743,7 +732,99 @@ describe("loadConfig", () => {
     const { loadConfig } = await loadFreshConfig();
     const actual = await loadConfig();
 
-    expect(actual.workspace.projectDir).toBe(temporary);
+    expect(actual.logging.file).toBe(join(temporary, "state", "groundcrew", "groundcrew.log"));
+  });
+
+  it("uses HOME when XDG_STATE_HOME is unset", async () => {
+    deleteEnvironmentVariable("XDG_STATE_HOME");
+    setEnvironmentVariable("HOME", temporary);
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+    const actual = await loadConfig();
+
+    expect(actual.logging.file).toBe(
+      join(temporary, ".local", "state", "groundcrew", "groundcrew.log"),
+    );
+  });
+
+  it("respects a user-supplied logging.file", async () => {
+    const overridePath = join(temporary, "custom", "crew.log");
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        logging: { file: overridePath },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+    const actual = await loadConfig();
+
+    expect(actual.logging.file).toBe(overridePath);
+  });
+
+  it("expands a leading ~ in logging.file", async () => {
+    setEnvironmentVariable("HOME", temporary);
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        logging: { file: "~/logs/crew.log" },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+    const actual = await loadConfig();
+
+    expect(actual.logging.file).toBe(join(temporary, "logs", "crew.log"));
+  });
+
+  it("rejects an empty logging.file", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        logging: { file: "   " },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/logging.file/);
+  });
+
+  it("falls back to the XDG config path when GROUNDCREW_CONFIG is unset", async () => {
+    const xdgConfigHome = join(temporary, "xdg-config");
+    setEnvironmentVariable("XDG_CONFIG_HOME", xdgConfigHome);
+    const xdgConfigPath = join(xdgConfigHome, "groundcrew", "config.ts");
+    mkdirSync(dirname(xdgConfigPath), { recursive: true });
+    writeFileSync(
+      xdgConfigPath,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+      }),
+    );
+    deleteEnvironmentVariable("GROUNDCREW_CONFIG");
+
+    const { loadConfig } = await loadFreshConfig();
+    const actual = await loadConfig();
+
+    expect(actual.linear.slugId).toBe("5152195762f3");
   });
 
   it("fails when the config file does not exist", async () => {

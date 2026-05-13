@@ -1,3 +1,6 @@
+import { appendFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
+
 import { LinearClient } from "@linear/sdk";
 
 export async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
@@ -38,9 +41,36 @@ export function clearOutput(): void {
   console.clear();
 }
 
+// Module-scoped sink for tee-ing log()/logEvent() to disk. Unset by default
+// so tests don't write to the host filesystem; the CLI arms it after
+// loadConfig() resolves `logging.file`.
+let logFilePath: string | undefined;
+
+export function setLogFile(path: string | undefined): void {
+  logFilePath = path;
+}
+
+function appendLogLine(line: string): void {
+  if (logFilePath === undefined) {
+    return;
+  }
+  try {
+    mkdirSync(dirname(logFilePath), { recursive: true });
+    appendFileSync(logFilePath, `${line}\n`);
+  } catch {
+    // A broken log destination must not crash the CLI. Stdout still has
+    // the line; surface the failure once so the user notices.
+    const broken = logFilePath;
+    logFilePath = undefined;
+    writeError(`groundcrew: disabling file logging — could not write to ${broken}`);
+  }
+}
+
 export function log(message: string): void {
   const timestamp = new Date().toLocaleTimeString();
-  writeOutput(`[${timestamp}] ${message}`);
+  const line = `[${timestamp}] ${message}`;
+  writeOutput(line);
+  appendLogLine(line);
 }
 
 type LogEventFieldValue = boolean | number | string | readonly string[] | undefined;
@@ -61,7 +91,9 @@ export function logEvent(event: string, fields: Record<string, LogEventFieldValu
     }
     parts.push(`${key}=${formatLogEventFieldValue(value)}`);
   }
-  writeOutput(parts.join(" "));
+  const line = parts.join(" ");
+  writeOutput(line);
+  appendLogLine(line);
 }
 
 export function readEnvironmentVariable(name: string): string | undefined {
