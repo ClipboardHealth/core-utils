@@ -1,6 +1,9 @@
 # @clipboard-health/clearance
 
-HTTP/HTTPS clearance for deny-by-default sandboxes.
+A local HTTP/HTTPS forward proxy that gates network egress against a
+hostname allowlist. Built for deny-by-default sandboxes — coding agents,
+CI workers, isolated build steps — where you want one choke point the
+sandbox can permit, with every other route to the network closed.
 
 The proxy ships with **zero compiled-in opinions** about which hosts to allow.
 Bring your own list — either inline via env or by pointing at one or more
