@@ -14,8 +14,8 @@ Run a multi-agent code review on the current branch _or_ on a PR identified by a
 
 ### Agent roster
 
-| Letter | Name        | Role                                  | Default state                                |
-| ------ | ----------- | ------------------------------------- | -------------------------------------------- |
+| Letter | Name       | Role                                  | Default state                                |
+| ------ | ---------- | ------------------------------------- | -------------------------------------------- |
 | A      | Adversarial | First-principles adversarial          | Opt-in only (`with adversarial`, `+A`, etc.) |
 | B      | Engineering | High engineering standards + customer | Always on                                    |
 | C      | Minimalist  | Smallest-diff posture                 | Always on                                    |
