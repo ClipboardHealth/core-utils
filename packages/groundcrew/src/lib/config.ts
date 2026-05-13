@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { readEnvironmentVariable } from "./util.ts";
+import { log, readEnvironmentVariable, setLogFile } from "./util.ts";
 
 /**
  * Reserved model name. A ticket labeled `agent-any` resolves at runtime
@@ -198,6 +198,15 @@ export interface Config {
    * to fail loudly when the chosen backend is missing.
    */
   workspaceKind?: WorkspaceKindSetting;
+  logging?: {
+    /**
+     * Append-mode log file destination. `log()` and `logEvent()` tee here
+     * in addition to stdout, so a vanished workspace doesn't take the
+     * evidence with it. Defaults to
+     * `${XDG_STATE_HOME:-~/.local/state}/groundcrew/groundcrew.log`.
+     */
+    file?: string;
+  };
 }
 
 /**
@@ -246,6 +255,9 @@ export interface ResolvedConfig {
    * `auto` resolves to cmux on macOS when installed, else tmux.
    */
   workspaceKind: WorkspaceKindSetting;
+  logging: {
+    file: string;
+  };
 }
 
 const DEFAULT_STATUSES: ResolvedConfig["linear"]["statuses"] = {
@@ -298,11 +310,44 @@ const ALLOWED_PROMPT_PLACEHOLDERS = new Set([
 const PROMPT_PLACEHOLDER_RE = /{{[^{}]*}}/g;
 
 // import.meta.dirname is `<package>/src/lib`; the user's `config.ts` lives
-// at the package root (gitignored), two levels up.
-const DEFAULT_CONFIG_PATH = resolve(import.meta.dirname, "..", "..", "config.ts");
+// at the package root (gitignored), two levels up. Last-resort fallback
+// when neither GROUNDCREW_CONFIG nor the XDG path resolves to a file.
+const PACKAGE_CONFIG_PATH = resolve(import.meta.dirname, "..", "..", "config.ts");
 
 const PERCENT_MIN_EXCLUSIVE = 0;
 const PERCENT_MAX = 100;
+
+function xdgBase(envName: string, fallbackSegments: readonly string[]): string {
+  const override = readEnvironmentVariable(envName);
+  if (override !== undefined && override.length > 0) {
+    return override;
+  }
+  return resolve(homedir(), ...fallbackSegments);
+}
+
+function xdgConfigPath(...segments: string[]): string {
+  return resolve(xdgBase("XDG_CONFIG_HOME", [".config"]), ...segments);
+}
+
+function xdgStatePath(...segments: string[]): string {
+  return resolve(xdgBase("XDG_STATE_HOME", [".local", "state"]), ...segments);
+}
+
+function defaultLogFile(): string {
+  return xdgStatePath("groundcrew", "groundcrew.log");
+}
+
+function resolveConfigPath(): string {
+  const override = readEnvironmentVariable("GROUNDCREW_CONFIG");
+  if (override !== undefined && override.length > 0) {
+    return resolve(override);
+  }
+  const xdgPath = xdgConfigPath("groundcrew", "config.ts");
+  if (existsSync(xdgPath)) {
+    return xdgPath;
+  }
+  return PACKAGE_CONFIG_PATH;
+}
 
 function expandHome(p: string): string {
   if (p === "~") {
@@ -608,7 +653,7 @@ function applyDefaults(user: Config): ResolvedConfig {
     },
     git: { ...DEFAULT_GIT, ...user.git },
     workspace: {
-      projectDir: user.workspace.projectDir,
+      projectDir: expandHome(user.workspace.projectDir),
       knownRepositories: user.workspace.knownRepositories,
     },
     orchestrator: { ...DEFAULT_ORCHESTRATOR, ...user.orchestrator },
@@ -621,6 +666,11 @@ function applyDefaults(user: Config): ResolvedConfig {
       initial: user.prompts?.initial ?? DEFAULT_PROMPT_INITIAL,
     },
     workspaceKind: normalizeWorkspaceKind(user.workspaceKind, "workspaceKind") ?? "auto",
+    logging: {
+      file: expandHome(
+        normalizeOptionalString(user.logging?.file, "logging.file") ?? defaultLogFile(),
+      ),
+    },
   };
 }
 
@@ -701,6 +751,8 @@ function validate(config: ResolvedConfig): void {
 
   requireString(config.prompts.initial, "prompts.initial");
   validatePromptPlaceholders(config.prompts.initial);
+
+  requireString(config.logging.file, "logging.file");
 }
 
 let cached: Readonly<ResolvedConfig> | undefined;
@@ -710,12 +762,13 @@ export async function loadConfig(): Promise<Readonly<ResolvedConfig>> {
     return cached;
   }
 
-  const path = resolve(readEnvironmentVariable("GROUNDCREW_CONFIG") ?? DEFAULT_CONFIG_PATH);
+  const path = resolveConfigPath();
   if (!existsSync(path)) {
     fail(
-      `${path} not found. Copy configExample.ts to config.ts and edit it (or set GROUNDCREW_CONFIG to a different path).`,
+      `${path} not found. Copy configExample.ts to ${xdgConfigPath("groundcrew", "config.ts")} (or set GROUNDCREW_CONFIG to a different path) and edit it.`,
     );
   }
+  log(`Loaded config from ${path}`);
 
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- user config is TS-typed against Config; runtime fields are validated below
   const module_ = (await import(pathToFileURL(path).href)) as { config?: Config };
@@ -728,14 +781,9 @@ export async function loadConfig(): Promise<Readonly<ResolvedConfig>> {
 
   const resolved = applyDefaults(userConfig);
 
-  const projectDirOverride = readEnvironmentVariable("PROJECT_DIR");
-  resolved.workspace.projectDir = expandHome(
-    projectDirOverride !== undefined && projectDirOverride.length > 0
-      ? projectDirOverride
-      : resolved.workspace.projectDir,
-  );
-
   validate(resolved);
+
+  setLogFile(resolved.logging.file);
 
   cached = Object.freeze(resolved);
   return cached;

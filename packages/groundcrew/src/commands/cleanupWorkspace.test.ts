@@ -64,6 +64,7 @@ const config: ResolvedConfig = {
   },
   prompts: { initial: "x" },
   workspaceKind: "auto",
+  logging: { file: "/tmp/groundcrew-test.log" },
 };
 
 describe(cleanupWorkspace, () => {

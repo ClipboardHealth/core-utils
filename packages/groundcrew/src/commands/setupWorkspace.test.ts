@@ -169,6 +169,7 @@ function makeConfig(overrides: Partial<ResolvedConfig["models"]> = {}): Resolved
       initial: "Begin {{ticket}} ({{title}}) in {{worktree}}\n{{description}}",
     },
     workspaceKind: "auto",
+    logging: { file: "/tmp/groundcrew-test.log" },
   };
 }
 

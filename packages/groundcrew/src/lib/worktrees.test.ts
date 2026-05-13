@@ -73,6 +73,7 @@ function makeConfig(overrides: {
     models: { default: "claude", isolation: "auto", definitions: models },
     prompts: { initial: "x" },
     workspaceKind: "auto",
+    logging: { file: "/tmp/groundcrew-test.log" },
   };
 }
 

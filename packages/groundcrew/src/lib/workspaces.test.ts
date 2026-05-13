@@ -78,6 +78,7 @@ function makeConfig(workspaceKind: WorkspaceKindSetting = "auto"): ResolvedConfi
     },
     prompts: { initial: "x" },
     workspaceKind,
+    logging: { file: "/tmp/groundcrew-test.log" },
   };
 }
 

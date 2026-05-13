@@ -71,6 +71,7 @@ function makeConfig(overrides: Partial<ResolvedConfig["models"]> = {}): Resolved
     },
     prompts: { initial: "x" },
     workspaceKind: "auto",
+    logging: { file: "/tmp/groundcrew-test.log" },
   };
 }
 

@@ -7,18 +7,26 @@
 // with `--conditions @clipboard-health/source`, so cross-package
 // `@clipboard-health/*` imports resolve to TypeScript source.
 //
-// Override the env-file location via `GROUNDCREW_OP_ENV_FILE` (default
-// `.crew.1password.env` at the repo root).
+// The 1Password env-file path is fixed at
+// `${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/op.env`. Symlink there if
+// you keep yours elsewhere.
 
 import { spawn } from "node:child_process";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 const SHUTDOWN_EXIT_CODE = 130;
 const SIGTERM_EXIT_CODE = 143;
 const FORCE_KILL_SIGNAL = "SIGKILL";
 const FORCE_KILL_DELAY_MS = 5000;
 
-// oxlint-disable-next-line node/no-process-env -- the CLI is configured through env vars
-const envFile = process.env.GROUNDCREW_OP_ENV_FILE ?? ".crew.1password.env";
+// oxlint-disable-next-line node/no-process-env -- XDG base-directory lookup
+const xdgConfigHome = process.env.XDG_CONFIG_HOME;
+const configBase =
+  xdgConfigHome !== undefined && xdgConfigHome.length > 0
+    ? xdgConfigHome
+    : join(homedir(), ".config");
+const envFile = join(configBase, "groundcrew", "op.env");
 const args = process.argv.slice(2);
 const shouldUseProcessGroup = process.platform !== "win32" && args.includes("--watch");
 
