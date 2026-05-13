@@ -199,6 +199,24 @@ describe(createDispatcher, () => {
       expect(consoleLog.output()).toContain("No Todo tickets");
     });
 
+    it("ignores Todo tickets without an agent-* label (model: undefined)", async () => {
+      // Unlabeled Todo tickets reach the dispatcher in the board snapshot
+      // but should be filtered out via isGroundcrewIssue before eligibility.
+      const client = makeClient();
+      const dispatcher = createDispatcher({ config: makeConfig(), client: asLinearClient(client) });
+
+      await dispatcher.runOnce({
+        state: boardOf([todoIssue({ model: undefined, repository: undefined })]),
+        worktreeEntries: [],
+        usage: async () => ({}),
+        dryRun: false,
+      });
+
+      expect(setupMock).not.toHaveBeenCalled();
+      expect(client.updateIssue).not.toHaveBeenCalled();
+      expect(consoleLog.output()).toContain("No Todo tickets");
+    });
+
     it("stops scanning Todo issues once eligible count reaches the slot cap", async () => {
       const config = makeConfig({
         orchestrator: {
