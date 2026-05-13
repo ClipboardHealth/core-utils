@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/groundcrew",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Linear-driven orchestrator that launches AI coding agents in isolated git worktrees, with workspace lifecycle, sandbox auth, and usage tracking.",
   "keywords": [
     "agent",
@@ -37,7 +37,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/clearance": "1.0.2",
+    "@clipboard-health/clearance": "1.0.3",
     "@linear/sdk": "84.0.0",
     "tslib": "2.8.1"
   }
