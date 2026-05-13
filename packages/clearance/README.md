@@ -103,8 +103,9 @@ kill "$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.pid")"
 
 ## Safehouse integration (macOS)
 
-Safehouse uses macOS sandbox profiles, so this section is for macOS hosts
-only. Safehouse allows network access by default for agent compatibility.
+[Safehouse](https://agent-safehouse.dev/) uses macOS sandbox profiles, so
+this section is for macOS hosts only. Safehouse allows network access by
+default for agent compatibility.
 To force a wrapped agent through this proxy, run the proxy outside
 Safehouse, then append a Safehouse profile that denies direct remote
 egress while leaving `localhost` open for `http://127.0.0.1:19999`.

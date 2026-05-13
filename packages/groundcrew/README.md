@@ -12,7 +12,7 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
 ## Quickstart
 
-1. **Install prereqs.** Node 24, `git`, `cmux` _or_ `tmux`, and the runtimes you actually want: Docker Sandboxes (`sbx`) for sandbox-backed agents, [Safehouse](https://github.com/anthropics/safehouse) for macOS sandboxing, and the agent CLIs themselves (`claude`, `codex`, `cursor-agent`, ...). Optional: `codexbar` for session-usage gating. The `workspaceKind` config key picks the workspace backend (`auto` resolves to cmux when installed, else tmux).
+1. **Install prereqs.** Node 24, `git`, `cmux` _or_ `tmux`, and the runtimes you actually want: Docker Sandboxes (`sbx`) for sandbox-backed agents, [Safehouse](https://agent-safehouse.dev/) for macOS sandboxing, and the agent CLIs themselves (`claude`, `codex`, `cursor-agent`, ...). Optional: `codexbar` for session-usage gating. The `workspaceKind` config key picks the workspace backend (`auto` resolves to cmux when installed, else tmux).
 
 2. **Create a Linear project to scope your work.** Any team works — make a project inside it and drop tickets in. The orchestrator polls by project, not by team, so you don't need a dedicated team.
 
