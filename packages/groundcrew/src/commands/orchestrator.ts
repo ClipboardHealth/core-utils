@@ -30,6 +30,7 @@ const RETRY_BASE_DELAY_MS = 1000;
 const RETRY_MAX_ATTEMPTS = 3;
 const STATUS_CARD_TITLE_WIDTH = 42;
 const STATUS_CARD_ID_WIDTH = 8;
+const STATUS_CARD_LIMIT = 20;
 const HEADER_BAR_WIDTH = 70;
 const SECTION_BAR_WIDTH = 50;
 const MS_PER_SECOND = 1000;
@@ -152,7 +153,16 @@ function render(state: BoardState, config: ResolvedConfig, previous?: BoardState
     writeOutput(`${statusIconFor(status, config)} ${status} (${issues.length})${delta}`);
     writeOutput("-".repeat(SECTION_BAR_WIDTH));
 
-    for (const issue of issues) {
+    // Cap each status at the N most recent so a backlog of hundreds of Done
+    // tickets doesn't clog the terminal. Sort only when truncating so smaller
+    // statuses keep whatever order Linear returned.
+    const visible =
+      issues.length > STATUS_CARD_LIMIT
+        ? issues
+            .toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+            .slice(0, STATUS_CARD_LIMIT)
+        : issues;
+    for (const issue of visible) {
       const previousIssue = previousById?.get(issue.id);
       const changed =
         previousIssue && previousIssue.status !== issue.status
@@ -160,6 +170,11 @@ function render(state: BoardState, config: ResolvedConfig, previous?: BoardState
           : "";
       writeOutput(
         `   ${issue.id.padEnd(STATUS_CARD_ID_WIDTH)}  ${issue.title.slice(0, STATUS_CARD_TITLE_WIDTH).padEnd(STATUS_CARD_TITLE_WIDTH)}  ${issue.assignee}${changed}`,
+      );
+    }
+    if (issues.length > STATUS_CARD_LIMIT) {
+      writeOutput(
+        `   … showing ${STATUS_CARD_LIMIT} most recent of ${issues.length}; ${issues.length - STATUS_CARD_LIMIT} older hidden`,
       );
     }
     writeOutput();

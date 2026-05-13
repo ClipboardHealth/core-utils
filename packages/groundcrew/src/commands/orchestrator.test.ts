@@ -670,6 +670,38 @@ describe(orchestrate, () => {
     expect(out).toContain("Total: 2");
   });
 
+  it("caps each status section at 20 most recent and prints a truncation hint", async () => {
+    const doneIssues = Array.from({ length: 25 }, (_unused, index) =>
+      issue({
+        identifier: `TEAM-${String(index + 1).padStart(3, "0")}`,
+        id: `uuid-done-${index}`,
+        title: `Done item ${index + 1}`,
+        state: { id: "state-done", name: "Done" },
+        // ascending updatedAt: index 24 is the most recent.
+        updatedAt: `2025-01-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
+      }),
+    );
+    const client = makeClient({ pages: [doneIssues] });
+    mockLinearClient(client);
+
+    await orchestrate({ watch: false, dryRun: false });
+
+    const out = consoleLog.output();
+    expect(out).toContain("showing 20 most recent of 25; 5 older hidden");
+
+    // Exactly 20 visible rows. With 25 ascending-updatedAt items, sort desc
+    // and slice 20 keeps indices 24..5 (team-025..team-006); 5 oldest hidden.
+    const visibleRows = [...out.matchAll(/team-\d{3}\b/g)].map((match) => match[0]);
+    expect(visibleRows).toHaveLength(20);
+
+    // Newest (team-025) and the boundary (team-006, 20th-newest) are visible.
+    expect(visibleRows).toContain("team-025");
+    expect(visibleRows).toContain("team-006");
+    // team-005 is the first one truncated; oldest (team-001) is also hidden.
+    expect(visibleRows).not.toContain("team-005");
+    expect(visibleRows).not.toContain("team-001");
+  });
+
   it("filters out parent issues that have children", async () => {
     const client = makeClient({
       pages: [
