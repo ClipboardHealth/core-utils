@@ -5,7 +5,7 @@ description: Run a multi-agent code review on the current branch or a PR, with e
 
 # In-Depth Review
 
-Run a multi-agent code review on the current branch *or* on a PR identified by argument. By default dispatches three parallel reviewers (engineering+customer, minimalist, conventions) and conditionally adds up to three domain specialists (security, database, frontend) when the diff touches their surface. The first-principles adversarial agent (Agent A) is **opt-in** — include it only when the user explicitly asks (see Invocation). Agents review in parallel, debate once, and the main agent moderator-filters and synthesizes a report. Author vs reviewer mode adapts the post-review flow.
+Run a multi-agent code review on the current branch _or_ on a PR identified by argument. By default dispatches three parallel reviewers (engineering+customer, minimalist, conventions) and conditionally adds up to three domain specialists (security, database, frontend) when the diff touches their surface. The first-principles adversarial agent (Agent A) is **opt-in** — include it only when the user explicitly asks (see Invocation). Agents review in parallel, debate once, and the main agent moderator-filters and synthesizes a report. Author vs reviewer mode adapts the post-review flow.
 
 ## Invocation
 
@@ -14,15 +14,15 @@ Run a multi-agent code review on the current branch *or* on a PR identified by a
 
 ### Agent roster
 
-| Letter | Name           | Role                                  | Default state                                |
-| ------ | -------------- | ------------------------------------- | -------------------------------------------- |
-| A      | Adversarial    | First-principles adversarial          | Opt-in only (`with adversarial`, `+A`, etc.) |
-| B      | Engineering    | High engineering standards + customer | Always on                                    |
-| C      | Minimalist     | Smallest-diff posture                 | Always on                                    |
-| D      | Conventions    | Repo-rules / docs                     | Always on                                    |
-| E      | Security       | Security & API surface                | Conditional (auth/route/contract files)      |
-| F      | Database       | DB schema, queries, migrations        | Conditional (migration/schema/model files)   |
-| G      | Frontend       | FE conventions & UX correctness       | Conditional (FE files)                       |
+| Letter | Name        | Role                                  | Default state                                |
+| ------ | ----------- | ------------------------------------- | -------------------------------------------- |
+| A      | Adversarial | First-principles adversarial          | Opt-in only (`with adversarial`, `+A`, etc.) |
+| B      | Engineering | High engineering standards + customer | Always on                                    |
+| C      | Minimalist  | Smallest-diff posture                 | Always on                                    |
+| D      | Conventions | Repo-rules / docs                     | Always on                                    |
+| E      | Security    | Security & API surface                | Conditional (auth/route/contract files)      |
+| F      | Database    | DB schema, queries, migrations        | Conditional (migration/schema/model files)   |
+| G      | Frontend    | FE conventions & UX correctness       | Conditional (FE files)                       |
 
 **Refer to agents by name in everything the user sees** (Summary, Actionable items, Raised-by lines, Disagreements, Withdrawn). The letter is a compact prefix for finding IDs (`B1`, `C3`, `Adversarial`/`A1`, …) and a shorthand inside this document — never the only label in user-facing prose. The Round 2 `original_author` field stores the **name**, not the letter.
 
@@ -104,7 +104,7 @@ git log -1 --format='%h %ci' "origin/${base}"
 Decide `context_ref` (the ref subagents must read for repo context, distinct from the diff itself):
 
 - **Path A (reviewer mode, PR-arg):** ideal `context_ref = origin/${base}` (whatever the PR's base branch is, usually `main`). The worktree filesystem must **only** be used as `context_ref` when `HEAD == origin/${base}` AND working tree is clean AND `git fetch` succeeded.
-- **Path B (author mode, current-branch):** `context_ref = origin/${base}`. The user's local feature-branch files are the *diff*, not the *pre-PR context*; pre-PR convention/neighbor reads must come from `origin/${base}`.
+- **Path B (author mode, current-branch):** `context_ref = origin/${base}`. The user's local feature-branch files are the _diff_, not the _pre-PR context_; pre-PR convention/neighbor reads must come from `origin/${base}`.
 
 If any of the following are true, **stop and ask the user before continuing**:
 
@@ -216,7 +216,7 @@ Dispatch all selected agents **in the same message** via the `Agent` tool with `
 
 **Every subagent prompt must include the following input contract verbatim** (substitute `<context_ref>` with the value resolved in the Freshness preflight):
 
-> **Context-read contract.** The verified-fresh ref for repo context is `<context_ref>`. For any file you read that is part of the primary repo's tracked content (i.e. *not* a brand-new file in this PR's diff), use `git show "<context_ref>:<path>"` or `git grep -n <pattern> "<context_ref>" -- <paths>` rather than the Read tool on the worktree. If you read from the worktree because the file is new in the diff or untracked at `<context_ref>`, say so in the finding's `point`.
+> **Context-read contract.** The verified-fresh ref for repo context is `<context_ref>`. For any file you read that is part of the primary repo's tracked content (i.e. _not_ a brand-new file in this PR's diff), use `git show "<context_ref>:<path>"` or `git grep -n <pattern> "<context_ref>" -- <paths>` rather than the Read tool on the worktree. If you read from the worktree because the file is new in the diff or untracked at `<context_ref>`, say so in the finding's `point`.
 >
 > **Cross-repo evidence contract.** If a finding's load-bearing evidence is in any repo other than this one, do NOT silently read another local checkout — those checkouts may be stale or on unrelated branches. Instead, emit the finding with an `evidence_required` field naming the repo(s) and the specific verification question, and cap your severity at MAJOR. The moderator will ask the user for verified access before Round 2 and re-dispatch you if needed.
 
@@ -238,23 +238,23 @@ Required output per finding: `id` (`A1`, `B3`, `C2`, `D4`, `E1`, `F1`, `G1`, …
 
 #### Always-on agents (Engineering / Minimalist / Conventions) and the opt-in Adversarial agent
 
-**Adversarial (A) — First-principles. Opt-in only.** Dispatch only when the user explicitly asks (see Invocation — "Agent A is opt-in"). Skip silently otherwise. Posture: *"What is the single most important thing this PR gets wrong? Then up to 7 more, ranked."* Question whether the change actually solves the underlying problem and whether the chosen approach is right. Challenge specific library / pattern / approach choices when they don't hold up on their own merits. Do **not** challenge foundational stack choices that are out of scope for the PR. Flag internal inconsistencies inside the diff itself. Specifically also probe:
+**Adversarial (A) — First-principles. Opt-in only.** Dispatch only when the user explicitly asks (see Invocation — "Agent A is opt-in"). Skip silently otherwise. Posture: _"What is the single most important thing this PR gets wrong? Then up to 7 more, ranked."_ Question whether the change actually solves the underlying problem and whether the chosen approach is right. Challenge specific library / pattern / approach choices when they don't hold up on their own merits. Do **not** challenge foundational stack choices that are out of scope for the PR. Flag internal inconsistencies inside the diff itself. Specifically also probe:
 
 - Should this PR be split, or is it bundling unrelated tickets?
-- Is the root cause of the bug clear, and is it fixed in *every* place it manifests?
+- Is the root cause of the bug clear, and is it fixed in _every_ place it manifests?
 - Is a feature flag warranted but missing?
 - Are there old feature flags or dead references this change makes deletable?
 
 Conventions are the Conventions agent's (D) job — do not double up.
 
-**Engineering (B) — High engineering standards + customer-centric.** Posture: *"For each change, name a realistic input or condition that would expose a bug. If you cannot, do not raise it."* Evaluate edge cases, error paths, observability, tests (coverage of real risk, not lines), high-level security (E does the deep dive when dispatched), concurrency, performance at real scale, data integrity, accessibility, UX, degraded-mode behavior, backward compatibility, on-call implications, and domain assumptions in the diff. Specifically also probe:
+**Engineering (B) — High engineering standards + customer-centric.** Posture: _"For each change, name a realistic input or condition that would expose a bug. If you cannot, do not raise it."_ Evaluate edge cases, error paths, observability, tests (coverage of real risk, not lines), high-level security (E does the deep dive when dispatched), concurrency, performance at real scale, data integrity, accessibility, UX, degraded-mode behavior, backward compatibility, on-call implications, and domain assumptions in the diff. Specifically also probe:
 
 - Async/await correctness — ordering matches the actual dependency between calls.
 - Timezone correctness in date-handling code; currency variables explicitly in minor units.
 - When API surface changed: AuthN, AuthZ, sensitive-data leakage, PII handling. Hand the deep dive to Security (E) if dispatched.
 - When a migration is in the diff: rollback strategy, backward compatibility during rolling deploy, ETL / downstream impact. Hand to Database (F) if dispatched.
 - When DB schema or queries changed: indexes for new query patterns, N+1 risk, cascade-delete semantics, data-type fit. Hand to Database (F) if dispatched.
-- Telemetry covers *business / product* value, not only engineering surface metrics (latency / error rate).
+- Telemetry covers _business / product_ value, not only engineering surface metrics (latency / error rate).
 - Contract / backward-compatibility for any consumer-visible response shape change.
 
 Skip items that fail the realistic-input test.
@@ -264,7 +264,7 @@ Skip items that fail the realistic-input test.
 - Duplicated error handlers in the same scope.
 - Commented-out code or dead branches (still gated by `failure_mode`).
 
-For every "delete this" finding, `failure_mode` must state the *concrete cost of keeping the code*.
+For every "delete this" finding, `failure_mode` must state the _concrete cost of keeping the code_.
 
 **Conventions (D) — Repo-rules.** Sole owner of convention checks (backend / shared). Read `AGENTS.md`, `CLAUDE.md`, `.rules/`, Cursor rules, `docs/adr/` (or equivalent), package READMEs in the diff's path, and one or two neighboring files in the same service for in-practice patterns. Then check the diff for:
 
@@ -283,7 +283,7 @@ For every "delete this" finding, `failure_mode` must state the *concrete cost of
 - Logging library standard for the repo (e.g. Winston) — derive from existing code, not hardcoded.
 - Pinned dependencies; lock file (`package-lock.json` / `yarn.lock`) in sync with `package.json`.
 - RESTful route shape and uniform response format within a service.
-- Internal inconsistency *within the diff itself* (e.g. half of imports from one package family, half from upstream).
+- Internal inconsistency _within the diff itself_ (e.g. half of imports from one package family, half from upstream).
 
 Frontend conventions are the Frontend agent's (G) territory when G is dispatched. If Frontend is not dispatched (no FE files), Conventions (D) may surface FE convention drift if it appears.
 
@@ -291,7 +291,7 @@ Tag every finding `[CONVENTION]`. Cap severity at MAJOR (only when behavior dive
 
 #### Conditional agents
 
-**Security (E) — API surface.** Dispatched when the diff touches auth / route / permission / serializer / contract files. Posture: *"Where could this change leak data, bypass authorization, or expand the trust boundary?"* Specifically check:
+**Security (E) — API surface.** Dispatched when the diff touches auth / route / permission / serializer / contract files. Posture: _"Where could this change leak data, bypass authorization, or expand the trust boundary?"_ Specifically check:
 
 - AuthN: every new or modified endpoint has authenticated identity unless explicitly public.
 - AuthZ: per-endpoint and per-resource permission checks; cross-tenant / cross-user access.
@@ -304,7 +304,7 @@ Tag every finding `[CONVENTION]`. Cap severity at MAJOR (only when behavior dive
 
 Cap output at 8 findings. `failure_mode` required.
 
-**Database (F) — Schema, queries, migrations.** Dispatched when the diff touches migrations / SQL / schema / model / query files. Posture: *"What breaks at production scale or during deploy?"* Specifically check:
+**Database (F) — Schema, queries, migrations.** Dispatched when the diff touches migrations / SQL / schema / model / query files. Posture: _"What breaks at production scale or during deploy?"_ Specifically check:
 
 - Index coverage for new query patterns; missing compound indexes.
 - N+1 query shapes; loops issuing per-iteration queries.
@@ -318,7 +318,7 @@ Cap output at 8 findings. `failure_mode` required.
 
 Cap output at 8 findings. `failure_mode` required.
 
-**Frontend (G) — Conventions & UX-correctness.** Dispatched when the diff touches `*.tsx` / `*.jsx` / FE component / hook / page paths. Posture: *"Does this follow our FE conventions, and will it behave correctly under realistic user conditions?"* Specifically check:
+**Frontend (G) — Conventions & UX-correctness.** Dispatched when the diff touches `*.tsx` / `*.jsx` / FE component / hook / page paths. Posture: _"Does this follow our FE conventions, and will it behave correctly under realistic user conditions?"_ Specifically check:
 
 - API calls go through v2 / custom hooks, not raw `fetch` / `axios` in components.
 - React Query: thin wrappers (`useGetQuery`, etc.), not raw `useQuery` / `useMutation`.
@@ -371,7 +371,7 @@ Up to 6 items that survived scrutiny and the moderator filter. Format each:
 - **Point:** one sentence.
 - **Why it matters:** the `failure_mode` sentence.
 - **Counterpoint (if any):** one sentence on the rebuttal and why it didn't overturn.
-- **Suggested fix (before → after):** two stacked fenced code blocks with language tags — first labeled `// Before` (the current code from `file:lines`), then `// After` (the replacement). Use the same language tag for both. Omit when the fix is structural (no clean drop-in) and explain in prose instead. For a pure deletion, show the `Before` block and write "*Delete these lines.*" under it. For a pure addition, show only the `After` block prefixed with `// Add after line <N>`.
+- **Suggested fix (before → after):** two stacked fenced code blocks with language tags — first labeled `// Before` (the current code from `file:lines`), then `// After` (the replacement). Use the same language tag for both. Omit when the fix is structural (no clean drop-in) and explain in prose instead. For a pure deletion, show the `Before` block and write "_Delete these lines._" under it. For a pure addition, show only the `After` block prefixed with `// Add after line <N>`.
 - **Raised by:** comma-separated agent **names** (e.g. `Engineering, Conventions`); **agreed by:** comma-separated agent names. Do not use bare letters in this field — the user shouldn't have to decode A/B/C.
 
 Render template:
@@ -402,7 +402,7 @@ Items where agents substantively disagreed and did not converge. One sentence pe
 
 ### Nits
 
-Do **not** print the nits list by default. Print only one line: *"N nits available (M from convention audit). Reply `show nits` to see them."* If N is 0, omit the section entirely. When the user replies `show nits`, print the gated NITs as one-liners with `file:lines`, the raising agent's **name**, and `[CONVENTION]` tag where applicable, then re-prompt user gate 1.
+Do **not** print the nits list by default. Print only one line: _"N nits available (M from convention audit). Reply `show nits` to see them."_ If N is 0, omit the section entirely. When the user replies `show nits`, print the gated NITs as one-liners with `file:lines`, the raising agent's **name**, and `[CONVENTION]` tag where applicable, then re-prompt user gate 1.
 
 ### Withdrawn
 
@@ -410,7 +410,7 @@ Terse one-liners of Round 1 comments that were withdrawn or filtered. Each line 
 
 ## User gate 1 — select items
 
-Ask exactly: *"Which items do you want to act on? Reply with ids (e.g. `B1, C2`), `all actionable`, `show nits`, or `none`."* Do not proceed until the user answers. `none` ends the skill cleanly. `show nits` prints the hidden list, then re-asks the same question.
+Ask exactly: _"Which items do you want to act on? Reply with ids (e.g. `B1, C2`), `all actionable`, `show nits`, or `none`."_ Do not proceed until the user answers. `none` ends the skill cleanly. `show nits` prints the hidden list, then re-asks the same question.
 
 ## Branch on mode
 
@@ -418,7 +418,7 @@ Ask exactly: *"Which items do you want to act on? Reply with ids (e.g. `B1, C2`)
 
 **Plan.** For the selected ids only, produce an ordered implementation plan: steps, files touched per step, tests to add/update, verification commands. Do **not** edit any files yet.
 
-**User gate 2 (author mode).** Ask: *"What do you want to do? (`implement-locally` / `post-as-review` / `both` / `edit-plan` / `cancel`)"*
+**User gate 2 (author mode).** Ask: _"What do you want to do? (`implement-locally` / `post-as-review` / `both` / `edit-plan` / `cancel`)"_
 
 - `implement-locally` → execute (see below).
 - `post-as-review` → post anchored review (see below); skill ends.
@@ -432,7 +432,7 @@ Ask exactly: *"Which items do you want to act on? Reply with ids (e.g. `B1, C2`)
 
 Skip the plan step entirely — you are not implementing someone else's code.
 
-**User gate 2 (reviewer mode).** Ask: *"Post these on the PR? (`post` / `edit` / `cancel`)"*
+**User gate 2 (reviewer mode).** Ask: _"Post these on the PR? (`post` / `edit` / `cancel`)"_
 
 - `post` → post anchored review (see below).
 - `edit` → ask which items to drop or refine, then re-prompt.
@@ -478,7 +478,7 @@ The `body` field on the review (not the inline comment bodies) must contain thre
 
 **1. Attribution line.** A single sentence disclosing that the review was generated by an automated skill. Use exactly:
 
-> *These comments were generated by @\<viewer-login\> using the In-Depth Review Claude Code skill.*
+> _These comments were generated by @\<viewer-login\> using the In-Depth Review Claude Code skill._
 
 Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line so it renders as muted text. This is non-negotiable — collaborators must be able to tell at a glance that the review is AI-assisted.
 
@@ -523,7 +523,7 @@ Rules for code and links inside the comment body:
 
 - **Include a code snippet whenever it makes the bug or fix clearer than prose alone** — the established pattern being violated, the two diverging imports inside the diff, the corrected control-flow, or the comparison to existing usage. Skip the snippet only when the issue is purely structural or when the `suggestion` block alone says everything.
 - **`suggestion` block stands alone on the PR.** GitHub already renders the diff vs. the anchored line(s) inside the suggestion block (red `-` lines + green `+` lines + one-click apply). Do **NOT** also include a `// Before` fenced block — it duplicates what GitHub already shows and makes the comment twice as long. This is different from the in-chat **Actionable** section, which DOES render `// Before` + `// After` pairs so the user can review the change before approving the post (the user has no GitHub renderer in their terminal).
-- **When to skip the `suggestion` block:** the fix is structural with no clean drop-in (e.g. "move this file"), OR `suggested_fix.after` is empty (pure deletion — write "*Delete the anchored line(s).*" instead), OR `suggested_fix.before` is empty (pure addition — the `suggestion` block still works, but prefix `suggested_fix.after` with a `// Add after line <N>` comment so the intent reads cleanly).
+- **When to skip the `suggestion` block:** the fix is structural with no clean drop-in (e.g. "move this file"), OR `suggested_fix.after` is empty (pure deletion — write "_Delete the anchored line(s)._" instead), OR `suggested_fix.before` is empty (pure addition — the `suggestion` block still works, but prefix `suggested_fix.after` with a `// Add after line <N>` comment so the intent reads cleanly).
 - **For structural fixes with no `suggestion`**, you may use a regular language-tagged fenced block to show the target shape, and explain the move/rename in prose.
 - **Example / context block (optional, separate from the fix).** When a code snippet clarifies the bug — the established pattern being violated, the two diverging imports inside the diff, an existing usage to compare against — render it as a regular language-tagged fenced block under a `**Example / context:**` heading, with a permalink in the prose above pointing to where it lives in the tree. This is NOT a duplicate of the anchored lines; if you're tempted to paste the anchored lines as "context," you're rebuilding the `// Before` block GitHub already renders — drop it.
 - **Permalinks for in-prose line references.** Build them as `https://github.com/<owner>/<repo>/blob/<head_sha>/<path>#L<start>-L<end>` (single line: `#L<n>`). Always pin to `head_sha`, never `main` or a branch name — branch links break as soon as the branch moves. Use Markdown link syntax with a short, meaningful label (e.g. `[the existing ServiceResult pattern](https://github.com/...#L88-L104)`), not the raw URL.
@@ -547,4 +547,4 @@ After posting, print the review `html_url` and a one-line summary of how many co
 - Freshness preflight is mandatory before any agent dispatch. Subagents read repo context via `git show "<context_ref>:<path>"` / `git grep ... "<context_ref>"`, not the worktree filesystem, unless the resolved `context_ref` is `worktree (stale, user accepted risk)`.
 - Never run state-modifying git commands on the user's behalf (`checkout`, `stash`, `reset`, `clean`, `pull` with merge). The skill warns and asks; the user resolves local state. `git fetch` is allowed because it does not modify the working tree.
 - Cross-repo evidence is opt-in by the user. Subagents tag findings with `evidence_required` and cap them at MAJOR until verified; the moderator asks the user for paths or `gh:owner/repo` slugs and runs the freshness preflight on each before treating the evidence as load-bearing. `skip` downgrades the finding to MINOR with a "speculative" prefix.
-- `suggested_fix` is always a `{ before, after }` object of language-matched code snippets (never prose). **In-chat synthesis Actionable section:** render both halves as separate language-tagged fenced blocks (`// Before` then `// After`) — the user has no GitHub renderer in their terminal, so they need the pair to review the change before approving the post. **PR-review inline comments:** render ONLY the `suggestion` block — GitHub already renders the diff vs. the anchored line(s), so a separate `// Before` block would duplicate what's on screen. Empty `before` means pure addition (still emit a `suggestion` block; prefix `after` with `// Add after line <N>`). Empty `after` means pure deletion (omit the `suggestion` block and write "*Delete the anchored line(s).*"). Omit `suggested_fix` entirely for structural changes with no clean drop-in.
+- `suggested_fix` is always a `{ before, after }` object of language-matched code snippets (never prose). **In-chat synthesis Actionable section:** render both halves as separate language-tagged fenced blocks (`// Before` then `// After`) — the user has no GitHub renderer in their terminal, so they need the pair to review the change before approving the post. **PR-review inline comments:** render ONLY the `suggestion` block — GitHub already renders the diff vs. the anchored line(s), so a separate `// Before` block would duplicate what's on screen. Empty `before` means pure addition (still emit a `suggestion` block; prefix `after` with `// Add after line <N>`). Empty `after` means pure deletion (omit the `suggestion` block and write "_Delete the anchored line(s)._"). Omit `suggested_fix` entirely for structural changes with no clean drop-in.
