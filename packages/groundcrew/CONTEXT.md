@@ -55,3 +55,5 @@ Cleanup decisions are recorded under `logEvent("cleanup", ...)`. Distinct from d
 The Linear adapter that turns the project's GraphQL state into a `BoardState` snapshot. One per `orchestrate()` invocation; stateless across calls.
 
 Lifecycle lives in `src/lib/boardSource.ts`. Callers ask `boardSource.verify()` once at startup (fail-fast on a missing project) and `boardSource.fetch()` per tick; nothing else in the package reaches Linear's GraphQL API. The module owns label-based model parsing (`agent-*` labels) and description-based repository parsing — callers consume a typed `Issue[]`.
+
+Tickets without an `agent-*` label remain in the board snapshot (so dashboard counts and blocker accounting still work), but they are not auto-picked: `parseModel` returns `undefined`, `parseRepository` is skipped, and `Issue.model`/`Issue.repository` are `undefined`. The dispatcher narrows to `GroundcrewIssue` via `isGroundcrewIssue` before selecting work. `fetchResolvedIssue` (manual `crew setup`) keeps the historic default to `models.default` because the user is opting in to that specific ticket.

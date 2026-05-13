@@ -26,11 +26,24 @@ export interface Issue {
   statusId: string;
   assignee: string;
   updatedAt: string;
-  repository: string;
-  model: string;
+  /** `undefined` when the ticket has no `agent-*` label — i.e. not groundcrew's concern. */
+  repository: string | undefined;
+  /** `undefined` when the ticket has no `agent-*` label — i.e. not groundcrew's concern. */
+  model: string | undefined;
   teamId: string;
   blockers: Blocker[];
   hasMoreBlockers: boolean;
+}
+
+/**
+ * `Issue` narrowed to "this ticket is for groundcrew" — produced by filtering
+ * through `isGroundcrewIssue`. Use this type wherever downstream code reads
+ * `model`/`repository` and the issue has already been through that filter.
+ */
+export type GroundcrewIssue = Issue & { model: string; repository: string };
+
+export function isGroundcrewIssue(issue: Issue): issue is GroundcrewIssue {
+  return issue.model !== undefined && issue.repository !== undefined;
 }
 
 export interface BoardState {
@@ -206,27 +219,37 @@ async function fetchBoard(client: LinearClient, config: ResolvedConfig): Promise
 
   const repositoryRegex = buildRepositoryRegex(config);
 
+  // Only parse `repository` for tickets that opted in via an `agent-*` label.
+  // Without this gate, a single human-owned ticket without a parseable repo
+  // would abort the whole `crew run` before the Todo filter ever runs.
   const issues: Issue[] = nodes
     .filter((node) => node.children.nodes.length === 0)
-    .map((node) => ({
-      id: node.identifier.toLowerCase(),
-      uuid: node.id,
-      title: node.title,
-      status: node.state?.name ?? "Unknown",
-      statusId: node.state?.id ?? "",
-      assignee: node.assignee?.name ?? "Unassigned",
-      updatedAt: node.updatedAt,
-      repository: parseRepository({
-        description: node.description ?? undefined,
-        config,
-        repositoryRegex,
-        ticket: node.identifier,
-      }),
-      model: parseModel(node.labels.nodes, config),
-      teamId: node.team?.id ?? "",
-      blockers: blockersFromRelations(node.inverseRelations?.nodes ?? []),
-      hasMoreBlockers: node.inverseRelations?.pageInfo.hasNextPage ?? false,
-    }));
+    .map((node) => {
+      const model = parseModel(node.labels.nodes, config);
+      const repository =
+        model === undefined
+          ? undefined
+          : parseRepository({
+              description: node.description ?? undefined,
+              config,
+              repositoryRegex,
+              ticket: node.identifier,
+            });
+      return {
+        id: node.identifier.toLowerCase(),
+        uuid: node.id,
+        title: node.title,
+        status: node.state?.name ?? "Unknown",
+        statusId: node.state?.id ?? "",
+        assignee: node.assignee?.name ?? "Unassigned",
+        updatedAt: node.updatedAt,
+        repository,
+        model,
+        teamId: node.team?.id ?? "",
+        blockers: blockersFromRelations(node.inverseRelations?.nodes ?? []),
+        hasMoreBlockers: node.inverseRelations?.pageInfo.hasNextPage ?? false,
+      };
+    });
 
   return { timestamp: new Date().toISOString(), issues };
 }
@@ -296,8 +319,11 @@ export async function fetchResolvedIssue(arguments_: {
     repositoryRegex: buildRepositoryRegex(config),
     ticket: ticket.toUpperCase(),
   });
+  // Manual setup is an explicit per-ticket opt-in by the user, so an
+  // unlabeled ticket still resolves to `models.default` — different from
+  // the auto-pickup path, where unlabeled tickets are ignored.
   const parsed = parseModel(issue.labels.nodes, config);
-  const model = parsed === AGENT_ANY_MODEL ? config.models.default : parsed;
+  const model = parsed === undefined || parsed === AGENT_ANY_MODEL ? config.models.default : parsed;
   return { title: issue.title, description, repository, model };
 }
 
@@ -326,16 +352,25 @@ function parseRepository(arguments_: ParseRepositoryArguments): string {
   return repository;
 }
 
-function parseModel(labels: { name: string }[], config: ResolvedConfig): string {
+/**
+ * Returns the resolved model name for a ticket, or `undefined` when the
+ * ticket has no `agent-*` label — those tickets are not groundcrew's concern
+ * and downstream code skips them. An explicit `agent-<unknown>` label still
+ * falls back to `models.default` because the user opted in by labeling.
+ */
+function parseModel(labels: { name: string }[], config: ResolvedConfig): string | undefined {
   const agentLabel = labels.find((label) => label.name.startsWith(AGENT_LABEL_PREFIX));
   if (!agentLabel) {
-    return config.models.default;
+    return undefined;
   }
   const name = agentLabel.name.slice(AGENT_LABEL_PREFIX.length);
   if (name === AGENT_ANY_MODEL) {
     return AGENT_ANY_MODEL;
   }
-  if (name in config.models.definitions) {
+  // Own-property check, not `in`: a label like `agent-toString` or
+  // `agent-__proto__` would otherwise resolve through the prototype chain
+  // instead of falling back to `models.default`.
+  if (Object.hasOwn(config.models.definitions, name)) {
     return name;
   }
   return config.models.default;
