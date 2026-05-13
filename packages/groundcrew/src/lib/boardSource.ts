@@ -135,15 +135,28 @@ async function verifyProject(client: LinearClient, config: ResolvedConfig): Prom
 async function fetchBoard(client: LinearClient, config: ResolvedConfig): Promise<BoardState> {
   const nodes: IssueNode[] = [];
   let after: string | null = null;
+  // Fetch only the state names the orchestrator actually consumes — Todo to
+  // dispatch, In-Progress to count active capacity, Done + any extra terminal
+  // states to drive cleanup. Anything else (Backlog, Triage, custom columns)
+  // is filtered server-side so the eager `parseRepository` below never sees a
+  // ticket that isn't a candidate for orchestration.
+  const stateNames = [
+    ...new Set([
+      config.linear.statuses.todo,
+      config.linear.statuses.inProgress,
+      config.linear.statuses.done,
+      ...config.linear.statuses.terminal,
+    ]),
+  ];
 
   for (;;) {
     // oxlint-disable-next-line no-await-in-loop -- pagination cursor depends on the previous response
     const response: { data?: unknown } = await client.client.rawRequest(
-      `query BoardIssues($slugId: String!, $after: String) {
+      `query BoardIssues($slugId: String!, $stateNames: [String!]!, $after: String) {
         issues(
           filter: {
             project: { slugId: { eq: $slugId } }
-            state: { type: { in: ["unstarted", "started", "completed"] } }
+            state: { name: { in: $stateNames } }
           }
           first: ${ISSUES_PAGE_SIZE}
           after: $after
@@ -179,7 +192,7 @@ async function fetchBoard(client: LinearClient, config: ResolvedConfig): Promise
           pageInfo { hasNextPage endCursor }
         }
       }`,
-      { slugId: config.linear.slugId, after },
+      { slugId: config.linear.slugId, stateNames, after },
     );
 
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- shape is fixed by our GraphQL query above
