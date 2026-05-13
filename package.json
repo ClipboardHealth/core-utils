@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "0.2.138",
-    "@commitlint/cli": "20.5.3",
-    "@commitlint/config-conventional": "20.5.3",
+    "@commitlint/cli": "21.0.0",
+    "@commitlint/config-conventional": "21.0.0",
     "@nx/devkit": "22.7.1",
     "@nx/eslint": "22.7.1",
     "@nx/eslint-plugin": "22.7.1",
