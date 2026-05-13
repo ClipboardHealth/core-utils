@@ -59,7 +59,7 @@
     "jscpd": "4.0.9",
     "jsonc-eslint-parser": "3.1.0",
     "knip": "6.12.2",
-    "lint-staged": "16.4.0",
+    "lint-staged": "17.0.4",
     "markdownlint-cli2": "0.22.1",
     "nx": "22.7.1",
     "oxfmt": "0.48.0",
