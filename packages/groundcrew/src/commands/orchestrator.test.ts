@@ -670,6 +670,30 @@ describe(orchestrate, () => {
     expect(out).toContain("Total: 2");
   });
 
+  it("caps each status section at 20 most recent and prints a truncation hint", async () => {
+    const doneIssues = Array.from({ length: 25 }, (_unused, index) =>
+      issue({
+        identifier: `TEAM-${String(index + 1).padStart(3, "0")}`,
+        id: `uuid-done-${index}`,
+        title: `Done item ${index + 1}`,
+        state: { id: "state-done", name: "Done" },
+        // ascending updatedAt: index 24 is the most recent.
+        updatedAt: `2025-01-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
+      }),
+    );
+    const client = makeClient({ pages: [doneIssues] });
+    mockLinearClient(client);
+
+    await orchestrate({ watch: false, dryRun: false });
+
+    const out = consoleLog.output();
+    expect(out).toContain("showing 20 most recent of 25; 5 older hidden");
+    // Most recent (index 24, TEAM-025) is visible.
+    expect(out).toContain("team-025");
+    // Oldest (index 0, TEAM-001) is truncated.
+    expect(out).not.toContain("team-001");
+  });
+
   it("filters out parent issues that have children", async () => {
     const client = makeClient({
       pages: [
