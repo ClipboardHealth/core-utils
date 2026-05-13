@@ -324,6 +324,20 @@ describe(createBoardSource, () => {
       });
     });
 
+    it("filters the board query to tickets with an agent-* label so unlabeled tickets never leave Linear", async () => {
+      const { source, rawRequest } = makeBoardSource(makeClient({ pages: [[]] }));
+
+      await source.fetch();
+
+      const boardCall = rawRequest.mock.calls.find(([query]) => query.includes("BoardIssues"));
+      expect(boardCall?.[0]).toMatch(
+        /labels:\s*\{\s*some:\s*\{\s*name:\s*\{\s*startsWith:\s*\$agentLabelPrefix\s*\}\s*\}\s*\}/,
+      );
+      expect(boardCall?.[1]).toMatchObject({
+        agentLabelPrefix: "agent-",
+      });
+    });
+
     it("dedupes overlapping terminal state names in the query variables", async () => {
       const config = makeConfig({
         linear: {
