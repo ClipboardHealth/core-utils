@@ -40,7 +40,7 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
    op run --env-file .env.1password -- crew doctor
    ```
 
-5. **Prepare isolation and agent auth.** With `models.isolation: "auto"`, groundcrew prefers Safehouse (Safehouse is macOS-only). When Safehouse is unavailable, it falls back to persistent Docker Sandboxes if the model has a `sandbox` config. Set `models.isolation: "none"` only when you intentionally want direct, non-isolated execution.
+5. **Prepare isolation and agent auth.** With `models.isolation: "auto"`, groundcrew prefers Safehouse on macOS. On non-macOS hosts, it falls back to persistent Docker Sandboxes if the model has a `sandbox` config. Set `models.isolation: "none"` only when you intentionally want direct, non-isolated execution.
 
    If you use Docker Sandboxes, start the daemon and log in before `crew run`:
 
