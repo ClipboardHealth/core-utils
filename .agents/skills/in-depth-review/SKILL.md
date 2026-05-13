@@ -41,6 +41,7 @@ Two entry paths:
 - Mode is **locked to reviewer**. Skip mode detection.
 
 Gather in parallel:
+
 ```bash
 gh pr view <N> --repo <owner>/<repo> --json number,url,title,body,baseRefName,author,headRefOid,headRepository,files
 gh pr diff <N> --repo <owner>/<repo>
@@ -48,6 +49,7 @@ gh api user --jq .login
 ```
 
 Persist:
+
 - Diff stdout from `gh pr diff` → `/tmp/in-depth-review-diff.patch`.
 - `pr.title + pr.body` → `/tmp/in-depth-review-context.md`.
 - `pr.files[].path` → `/tmp/in-depth-review-files.txt`.
@@ -62,6 +64,7 @@ If `pr.author.login == viewer.login`, still proceed in reviewer mode (the user e
 - **Never** review uncommitted working-tree changes. If the branch has no diff vs base, stop and report.
 
 Gather in parallel:
+
 ```bash
 git rev-parse --abbrev-ref HEAD
 git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||'
@@ -72,11 +75,13 @@ git diff --name-only "$base"...HEAD
 ```
 
 Determine **mode**:
+
 - PR exists and `pr.author.login == viewer.login` → **author mode**.
 - PR exists and authors differ → **reviewer mode**.
 - No PR exists → **author mode** (reviewing your own pre-PR branch).
 
 Persist context so subagents read it from disk:
+
 - Diff → `/tmp/in-depth-review-diff.patch`
 - Context (PR body or commit log) → `/tmp/in-depth-review-context.md`
 - Changed-file list → `/tmp/in-depth-review-files.txt`
@@ -97,6 +102,7 @@ git log -1 --format='%h %ci' "origin/${base}"
 ```
 
 Decide `context_ref` (the ref subagents must read for repo context, distinct from the diff itself):
+
 - **Path A (reviewer mode, PR-arg):** ideal `context_ref = origin/${base}` (whatever the PR's base branch is, usually `main`). The worktree filesystem must **only** be used as `context_ref` when `HEAD == origin/${base}` AND working tree is clean AND `git fetch` succeeded.
 - **Path B (author mode, current-branch):** `context_ref = origin/${base}`. The user's local feature-branch files are the *diff*, not the *pre-PR context*; pre-PR convention/neighbor reads must come from `origin/${base}`.
 
@@ -111,9 +117,11 @@ If any of the following are true, **stop and ask the user before continuing**:
 Warn template (substitute the verified state):
 
 > Freshness check for `<owner>/<repo>` at `<worktree-path>`:
+
 > - on branch `<HEAD-branch>` (expected `<base>` for Path A)
 > - `<N>` commit(s) ahead, `<M>` commit(s) behind `origin/<base>` (last remote commit: `<short-sha> <iso-date>`)
 > - working tree: `<clean | dirty: N file(s)>`
+
 >
 > Reading code from this worktree may surface findings based on stale or local-only state.
 > Reply: `proceed` (use worktree anyway and accept the risk), `use-origin` (read context via `git show origin/<base>:<path>` instead — recommended, no checkout needed), or `stop` (let me clean up and re-run).
@@ -125,10 +133,12 @@ Record the resolved `context_ref` (e.g. `origin/main`, or the literal string `wo
 ### Reading code in subagents
 
 When `context_ref` is `origin/<base>`:
+
 - Read repo context via `git show "${context_ref}:<path>"` (for whole files) and `git grep -n <pattern> "${context_ref}" -- <paths>` (for searches).
 - The Read tool reads the working tree, which may be stale; subagents must **prefer** `git show` for context reads. The working tree may only be read when the file isn't tracked at `context_ref` (e.g. brand-new file in the PR diff) and that fact is explicitly noted in the finding.
 
 When `context_ref` is `worktree (stale, user accepted risk)`:
+
 - Subagents may use Read on the worktree, but every finding must include a one-line "verified against: worktree-stale" caveat in the `point`, and the moderator filter must downgrade CRITICAL/MAJOR to MINOR unless the evidence is internal to the diff itself.
 
 ## Cross-repo evidence policy (binding for all agents)
@@ -151,13 +161,17 @@ Subagent rule: if a finding's load-bearing evidence is in another repo, the suba
 Moderator rule: after Round 1, collect every `evidence_required` block across all subagents and ask the user **before Round 2**:
 
 > Some findings depend on code outside `<primary-repo>`. To verify, I need access to:
+
 > - `<repo-1>` — to check `<what_to_verify>` (raised by agent <X>)
 > - `<repo-2>` — to check `<what_to_verify>` (raised by agent <Y>)
+
 >
 > For each repo, reply with one of:
+
 > - a local path (e.g. `/Users/you/repos/cbh/<repo>`) — I will run the freshness preflight on it before reading
 > - `gh:<owner>/<repo>` — I will fetch the file content via `gh api repos/<owner>/<repo>/contents/<path>?ref=main` instead of cloning
 > - `skip` — the finding will be downgraded to "speculative — cross-repo evidence not verified" and capped at MINOR
+
 >
 > Or reply `skip all` to downgrade every cross-repo finding.
 
@@ -182,16 +196,17 @@ Record the dispatched set in `/tmp/in-depth-review-meta.json` so Round 2 knows t
 - **MINOR** — cheap, concrete improvement with a named benefit.
 - **NIT** — only admissible if (a) repeats ≥2× in the diff, (b) conflicts with a documented convention, or (c) is a one-line trivial fix. Otherwise drop silently.
 
-Every finding **must** include a `failure_mode` field: one sentence on the concrete user-, oncall-, or maintainer-visible bad outcome that would occur if not fixed. Hypotheticals like "a future caller might…" do not satisfy this; such findings will be dropped during moderation.
+Every finding **must** include a `failure_mode` field: one sentence on the concrete user-, on-call-, or maintainer-visible bad outcome that would occur if not fixed. Hypotheticals like "a future caller might…" do not satisfy this; such findings will be dropped during moderation.
 
 ### Do-not-raise list (binding)
 
 Do not surface any of:
+
 - Speculative defensiveness at trusted internal boundaries (e.g. "what if this private helper got null?").
 - Restating the obvious ("consider a comment explaining what this does").
 - Hypothetical future-caller scenarios with no current caller.
 - Style/formatting a linter or formatter already covers.
-- Test-coverage demands on trivially-verifiable code (one-line passthroughs, simple getters).
+- Test-coverage demands on trivially-verifiable code (one-line pass-throughs, simple getters).
 - "Add observability" without naming a concrete failure mode it would help debug.
 - Abstract SOLID-style "consider extracting…" suggestions without a concrete failure mode.
 - Aesthetic naming preferences. Only raise names that mislead about behavior.
@@ -227,6 +242,7 @@ Required output per finding: `id` (`A1`, `B3`, `C2`, `D4`, `E1`, `F1`, `G1`, …
 #### Always-on agents (Engineering / Minimalist / Conventions) and the opt-in Adversarial agent
 
 **Adversarial (A) — First-principles. Opt-in only.** Dispatch only when the user explicitly asks (see Invocation — "Agent A is opt-in"). Skip silently otherwise. Posture: *"What is the single most important thing this PR gets wrong? Then up to 7 more, ranked."* Question whether the change actually solves the underlying problem and whether the chosen approach is right. Challenge specific library / pattern / approach choices when they don't hold up on their own merits. Do **not** challenge foundational stack choices that are out of scope for the PR. Flag internal inconsistencies inside the diff itself. Specifically also probe:
+
 - Should this PR be split, or is it bundling unrelated tickets?
 - Is the root cause of the bug clear, and is it fixed in *every* place it manifests?
 - Is a feature flag warranted but missing?
@@ -235,6 +251,7 @@ Required output per finding: `id` (`A1`, `B3`, `C2`, `D4`, `E1`, `F1`, `G1`, …
 Conventions are the Conventions agent's (D) job — do not double up.
 
 **Engineering (B) — High engineering standards + customer-centric.** Posture: *"For each change, name a realistic input or condition that would expose a bug. If you cannot, do not raise it."* Evaluate edge cases, error paths, observability, tests (coverage of real risk, not lines), high-level security (E does the deep dive when dispatched), concurrency, performance at real scale, data integrity, accessibility, UX, degraded-mode behavior, backward compatibility, on-call implications, and domain assumptions in the diff. Specifically also probe:
+
 - Async/await correctness — ordering matches the actual dependency between calls.
 - Timezone correctness in date-handling code; currency variables explicitly in minor units.
 - When API surface changed: AuthN, AuthZ, sensitive-data leakage, PII handling. Hand the deep dive to Security (E) if dispatched.
@@ -246,16 +263,18 @@ Conventions are the Conventions agent's (D) job — do not double up.
 Skip items that fail the realistic-input test.
 
 **Minimalist (C).** Posture: the smallest diff that ships the intent is the best diff. Identify unneeded abstractions, speculative generality, dead branches, redundant validation, defensive code at trusted internal boundaries, comments that restate code, new files / utilities that duplicate existing ones, tests that test the framework rather than behavior, flags / config knobs without a concrete caller. Specifically also probe:
+
 - Duplicated error handlers in the same scope.
 - Commented-out code or dead branches (still gated by `failure_mode`).
 
 For every "delete this" finding, `failure_mode` must state the *concrete cost of keeping the code*.
 
-**Conventions (D) — Repo-rules.** Sole owner of convention checks (backend / shared). Read `AGENTS.md`, `CLAUDE.md`, `.rules/`, `.cursorrules`, `docs/adr/` (or equivalent), package READMEs in the diff's path, and one or two neighboring files in the same service for in-practice patterns. Then check the diff for:
+**Conventions (D) — Repo-rules.** Sole owner of convention checks (backend / shared). Read `AGENTS.md`, `CLAUDE.md`, `.rules/`, Cursor rules, `docs/adr/` (or equivalent), package READMEs in the diff's path, and one or two neighboring files in the same service for in-practice patterns. Then check the diff for:
+
 - Preferred internal packages over third-party ones (e.g. `@clipboard-health/*`, internal `lib/*`).
 - Terminology rules (worker/workplace, not HCP/facility).
 - `lodash` removal preference.
-- `@clipboard-health/datetime` over `date-fns`, `date-fns-tz`, `moment`, `luxon`.
+- `@clipboard-health/datetime` over ad hoc date-library choices.
 - Internal `Money` package for currencies; explicit minor-units variable names.
 - Logging conventions (`longContext`, `ObjectId.toString()`, no variables in log messages).
 - Null/undefined checks via `isDefined` / `isNil` over truthy.
@@ -276,11 +295,12 @@ Tag every finding `[CONVENTION]`. Cap severity at MAJOR (only when behavior dive
 #### Conditional agents
 
 **Security (E) — API surface.** Dispatched when the diff touches auth / route / permission / serializer / contract files. Posture: *"Where could this change leak data, bypass authorization, or expand the trust boundary?"* Specifically check:
+
 - AuthN: every new or modified endpoint has authenticated identity unless explicitly public.
 - AuthZ: per-endpoint and per-resource permission checks; cross-tenant / cross-user access.
 - Secrets in configuration — no hardcoded keys, no secrets in client bundles.
 - No self-made or client-side cryptography.
-- SQL / NoSQL injection vectors (string-concatenated queries, unvalidated `$where`, raw aggregation pipelines from user input).
+- SQL / NoSQL injection vectors (string-concatenated queries, untrusted `$where`, raw aggregation pipelines from user input).
 - Sensitive data in response payloads — over-fetching, over-serialization, internal IDs leaked.
 - PII handling — PII fields logged, cached, or sent to telemetry.
 - Input validation at the boundary (Zod / class-validator) on every new endpoint.
@@ -288,6 +308,7 @@ Tag every finding `[CONVENTION]`. Cap severity at MAJOR (only when behavior dive
 Cap output at 8 findings. `failure_mode` required.
 
 **Database (F) — Schema, queries, migrations.** Dispatched when the diff touches migrations / SQL / schema / model / query files. Posture: *"What breaks at production scale or during deploy?"* Specifically check:
+
 - Index coverage for new query patterns; missing compound indexes.
 - N+1 query shapes; loops issuing per-iteration queries.
 - Schema normalization — denormalization that creates write-amplification or update anomalies.
@@ -301,6 +322,7 @@ Cap output at 8 findings. `failure_mode` required.
 Cap output at 8 findings. `failure_mode` required.
 
 **Frontend (G) — Conventions & UX-correctness.** Dispatched when the diff touches `*.tsx` / `*.jsx` / FE component / hook / page paths. Posture: *"Does this follow our FE conventions, and will it behave correctly under realistic user conditions?"* Specifically check:
+
 - API calls go through v2 / custom hooks, not raw `fetch` / `axios` in components.
 - React Query: thin wrappers (`useGetQuery`, etc.), not raw `useQuery` / `useMutation`.
 - Falsy-value checks use `isDefined()` / `isNil()`, not `!value`.
@@ -317,6 +339,7 @@ Cap output at 8 findings. `failure_mode` required.
 ### Round 2 — debate
 
 Dispatch the **same set of agents** that ran in Round 1, in parallel. Each agent receives **all Round 1 outputs** (passed inline) and must:
+
 - Re-examine each of their own comments and **withdraw** any that don't survive scrutiny.
 - For each comment from the other agents: mark `agree`, `disagree` (with reasoning), or `refine` (propose a tighter version).
 - Flag items where disagreement is substantive and unlikely to resolve.
@@ -340,20 +363,23 @@ Filtered items go into Withdrawn (one-liner) so nothing is invisible.
 ## Synthesize (main agent)
 
 ### Summary
+
 One short paragraph: what the change does, each agent's headline verdict in a clause (refer to agents by **name** — "Engineering says …", "Minimalist says …", "Conventions says …"), overall recommendation (ship / ship with changes / do not ship). State the **mode** ("Author mode" or "Reviewer mode — PR by @\<author\>"), whether **Adversarial ran or was skipped** (and why — "opted in via …" or "skipped — default; ask `with adversarial` to include"), and which conditional agents ran or were skipped (e.g. "Security ran; Database skipped — no migration/schema files; Frontend ran"). Letters are fine as parenthetical shorthand if it aids reading (e.g. "Engineering (B) says …"), but every agent reference must include the name.
 
 ### Actionable
+
 Up to 6 items that survived scrutiny and the moderator filter. Format each:
+
 - **[SEVERITY] Title** — `file:lines`
 - **Point:** one sentence.
 - **Why it matters:** the `failure_mode` sentence.
 - **Counterpoint (if any):** one sentence on the rebuttal and why it didn't overturn.
-- **Suggested fix (before → after):** two stacked fenced code blocks with language tags — first labeled `// Before` (the current code from `file:lines`), then `// After` (the replacement). Use the same language tag for both. Omit when the fix is structural (no clean drop-in) and explain in prose instead. For a pure deletion, show the `Before` block and write "_Delete these lines._" under it. For a pure addition, show only the `After` block prefixed with `// Add after line <N>`.
+- **Suggested fix (before → after):** two stacked fenced code blocks with language tags — first labeled `// Before` (the current code from `file:lines`), then `// After` (the replacement). Use the same language tag for both. Omit when the fix is structural (no clean drop-in) and explain in prose instead. For a pure deletion, show the `Before` block and write "*Delete these lines.*" under it. For a pure addition, show only the `After` block prefixed with `// Add after line <N>`.
 - **Raised by:** comma-separated agent **names** (e.g. `Engineering, Conventions`); **agreed by:** comma-separated agent names. Do not use bare letters in this field — the user shouldn't have to decode A/B/C.
 
 Render template:
 
-````
+````markdown
 **Suggested fix (before → after):**
 
 ```ts
@@ -374,12 +400,15 @@ return isDefined(x) ? x : undefined;
 Order by severity (CRITICAL → MAJOR → MINOR), then by file.
 
 ### Disagreements
+
 Items where agents substantively disagreed and did not converge. One sentence per side (attribute each by agent **name**, e.g. "Engineering: …" / "Minimalist: …"), then the moderator's call with a one-line reason.
 
 ### Nits
+
 Do **not** print the nits list by default. Print only one line: *"N nits available (M from convention audit). Reply `show nits` to see them."* If N is 0, omit the section entirely. When the user replies `show nits`, print the gated NITs as one-liners with `file:lines`, the raising agent's **name**, and `[CONVENTION]` tag where applicable, then re-prompt user gate 1.
 
 ### Withdrawn
+
 Terse one-liners of Round 1 comments that were withdrawn or filtered. Each line ends with the raising agent's **name** in parentheses (e.g. "C7 — superseded by C4 (Minimalist)"). For transparency only.
 
 ## User gate 1 — select items
@@ -424,6 +453,7 @@ gh api -X POST "repos/<owner>/<repo>/pulls/<N>/reviews" --input /tmp/in-depth-re
 ```
 
 Payload shape:
+
 ```json
 {
   "event": "COMMENT",
@@ -437,10 +467,11 @@ Payload shape:
 ```
 
 Rules for posting:
+
 - `event` is **always `COMMENT`** — never `APPROVE` or `REQUEST_CHANGES`. Approval / blocking is a human decision, not the skill's.
 - For multi-line ranges, set `start_line`, `line`, `start_side: "RIGHT"`, `side: "RIGHT"`.
 - For findings without a clean line anchor (rare), pick the first changed line of the most relevant file rather than dropping the comment or going loose.
-- If literally nothing is anchorable for a given finding, fold it into the review `body` as a labeled "general note" and flag this in the post-confirmation summary so the user knows.
+- If there is no usable line anchor for a given finding, fold it into the review `body` as a labeled "general note" and flag this in the post-confirmation summary so the user knows.
 - Use `commit_id` from `pr.headRefOid` so comments anchor to the reviewed commit.
 - Resolve `<owner>/<repo>` once via `gh repo view --json nameWithOwner --jq .nameWithOwner` and stash it in `/tmp/in-depth-review-meta.json` alongside `head_sha` so permalinks below can be built without re-querying.
 
@@ -450,7 +481,7 @@ The `body` field on the review (not the inline comment bodies) must contain thre
 
 **1. Attribution line.** A single sentence disclosing that the review was generated by an automated skill. Use exactly:
 
-> _These comments were generated by @\<viewer-login\> using the In-Depth Review Claude Code skill._
+> *These comments were generated by @\<viewer-login\> using the In-Depth Review Claude Code skill.*
 
 Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line so it renders as muted text. This is non-negotiable — collaborators must be able to tell at a glance that the review is AI-assisted.
 
@@ -458,7 +489,7 @@ Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line s
 
 **3. "Apply all comments at once" prompt.** A fenced block containing a self-contained Claude Code prompt the PR author (or any agent operator) can copy-paste into a Claude Code session on a checkout of this branch to address every inline comment in one shot. Template (substitute the `<…>` placeholders before posting):
 
-````
+````markdown
 **Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
 
 ```
@@ -470,7 +501,7 @@ Build the body in `/tmp/in-depth-review-payload.json` with literal newlines (use
 
 Each comment body:
 
-````
+````markdown
 **[SEVERITY] Title**
 
 <Point — one or two sentences. Any reference to a specific file/line elsewhere in the codebase must be a GitHub permalink pinned to head_sha, not a bare `file:lines` string. The line(s) the comment is already anchored to do not need to be relinked.>
@@ -492,9 +523,10 @@ Each comment body:
 ````
 
 Rules for code and links inside the comment body:
+
 - **Include a code snippet whenever it makes the bug or fix clearer than prose alone** — the established pattern being violated, the two diverging imports inside the diff, the corrected control-flow, or the comparison to existing usage. Skip the snippet only when the issue is purely structural or when the `suggestion` block alone says everything.
 - **`suggestion` block stands alone on the PR.** GitHub already renders the diff vs. the anchored line(s) inside the suggestion block (red `-` lines + green `+` lines + one-click apply). Do **NOT** also include a `// Before` fenced block — it duplicates what GitHub already shows and makes the comment twice as long. This is different from the in-chat **Actionable** section, which DOES render `// Before` + `// After` pairs so the user can review the change before approving the post (the user has no GitHub renderer in their terminal).
-- **When to skip the `suggestion` block:** the fix is structural with no clean drop-in (e.g. "move this file"), OR `suggested_fix.after` is empty (pure deletion — write "_Delete the anchored line(s)._" instead), OR `suggested_fix.before` is empty (pure addition — the `suggestion` block still works, but prefix `suggested_fix.after` with a `// Add after line <N>` comment so the intent reads cleanly).
+- **When to skip the `suggestion` block:** the fix is structural with no clean drop-in (e.g. "move this file"), OR `suggested_fix.after` is empty (pure deletion — write "*Delete the anchored line(s).*" instead), OR `suggested_fix.before` is empty (pure addition — the `suggestion` block still works, but prefix `suggested_fix.after` with a `// Add after line <N>` comment so the intent reads cleanly).
 - **For structural fixes with no `suggestion`**, you may use a regular language-tagged fenced block to show the target shape, and explain the move/rename in prose.
 - **Example / context block (optional, separate from the fix).** When a code snippet clarifies the bug — the established pattern being violated, the two diverging imports inside the diff, an existing usage to compare against — render it as a regular language-tagged fenced block under a `**Example / context:**` heading, with a permalink in the prose above pointing to where it lives in the tree. This is NOT a duplicate of the anchored lines; if you're tempted to paste the anchored lines as "context," you're rebuilding the `// Before` block GitHub already renders — drop it.
 - **Permalinks for in-prose line references.** Build them as `https://github.com/<owner>/<repo>/blob/<head_sha>/<path>#L<start>-L<end>` (single line: `#L<n>`). Always pin to `head_sha`, never `main` or a branch name — branch links break as soon as the branch moves. Use Markdown link syntax with a short, meaningful label (e.g. `[the existing ServiceResult pattern](https://github.com/...#L88-L104)`), not the raw URL.
@@ -518,4 +550,4 @@ After posting, print the review `html_url` and a one-line summary of how many co
 - Freshness preflight is mandatory before any agent dispatch. Subagents read repo context via `git show "<context_ref>:<path>"` / `git grep ... "<context_ref>"`, not the worktree filesystem, unless the resolved `context_ref` is `worktree (stale, user accepted risk)`.
 - Never run state-modifying git commands on the user's behalf (`checkout`, `stash`, `reset`, `clean`, `pull` with merge). The skill warns and asks; the user resolves local state. `git fetch` is allowed because it does not modify the working tree.
 - Cross-repo evidence is opt-in by the user. Subagents tag findings with `evidence_required` and cap them at MAJOR until verified; the moderator asks the user for paths or `gh:owner/repo` slugs and runs the freshness preflight on each before treating the evidence as load-bearing. `skip` downgrades the finding to MINOR with a "speculative" prefix.
-- `suggested_fix` is always a `{ before, after }` object of language-matched code snippets (never prose). **In-chat synthesis Actionable section:** render both halves as separate language-tagged fenced blocks (`// Before` then `// After`) — the user has no GitHub renderer in their terminal, so they need the pair to review the change before approving the post. **PR-review inline comments:** render ONLY the `suggestion` block — GitHub already renders the diff vs. the anchored line(s), so a separate `// Before` block would duplicate what's on screen. Empty `before` means pure addition (still emit a `suggestion` block; prefix `after` with `// Add after line <N>`). Empty `after` means pure deletion (omit the `suggestion` block and write "_Delete the anchored line(s)._"). Omit `suggested_fix` entirely for structural changes with no clean drop-in.
+- `suggested_fix` is always a `{ before, after }` object of language-matched code snippets (never prose). **In-chat synthesis Actionable section:** render both halves as separate language-tagged fenced blocks (`// Before` then `// After`) — the user has no GitHub renderer in their terminal, so they need the pair to review the change before approving the post. **PR-review inline comments:** render ONLY the `suggestion` block — GitHub already renders the diff vs. the anchored line(s), so a separate `// Before` block would duplicate what's on screen. Empty `before` means pure addition (still emit a `suggestion` block; prefix `after` with `// Add after line <N>`). Empty `after` means pure deletion (omit the `suggestion` block and write "*Delete the anchored line(s).*"). Omit `suggested_fix` entirely for structural changes with no clean drop-in.
