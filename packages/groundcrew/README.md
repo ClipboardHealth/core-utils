@@ -78,7 +78,31 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
    Watch `${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.log` for `DENY` lines and add only the domains your agents actually need.
 
-7. **Run.** Doctor first, then a dry run, then the real thing:
+7. **Optional: prepare a remote Sprite runner.** A Sprite is a remote Linux runner, so setup is intentionally explicit: choose which agent CLIs and MCP servers to authenticate. `--mcp` only adds the servers you name; it does not attempt to authenticate every MCP server visible in your Claude account.
+
+   ```bash
+   crew sprite setup crew-claude-1 \
+     --claude \
+     --github \
+     --git-name "Rocky Warren" \
+     --git-email "1085683+therockstorm@users.noreply.github.com" \
+     --mcp linear \
+     --mcp slack \
+     --checkpoint
+   ```
+
+   Known MCP aliases are `linear`, `slack`, and `notion`. For another HTTP MCP server, pass `--mcp name=https://example.com/mcp`. The command creates the Sprite if needed, prepares `~/dev`, configures Git, runs selected auth flows, adds selected MCP servers to Claude Code, and then opens Claude so you can run `/mcp` and authenticate only those selected servers. Use `--skip-mcp-auth` when you only want to add MCP definitions, and run the `/mcp` step later.
+
+   Repo setup is separate from runner setup and should run after the ticket branch exists, immediately before launching an agent. It clones/fetches the repo in the Sprite, checks out the requested branch (creating it from the base branch when it does not exist on origin), forwards only build-time secrets for the dependency install, removes the temporary secret file, clears those env vars, and then exits. It reuses the same Node/npm bootstrap command as groundcrew's Docker Sandboxes path.
+
+   ```bash
+   op run --env-file "${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/op.env" -- \
+     crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123
+   ```
+
+   By default bootstrap forwards any locally set `NPM_TOKEN` and `BUF_TOKEN`. Use repeated `--secret <ENV_NAME>` to require a specific set, or `--no-secrets` for public installs. Do not checkpoint after repo bootstrap; dependency state is branch-specific and should be refreshed per ticket.
+
+8. **Run.** Doctor first, then a dry run, then the real thing:
 
    ```bash
    crew doctor
@@ -123,6 +147,8 @@ The branch prefix (`<prefix>-<TICKET>`) is derived from your OS username (`os.us
 ```bash
 crew sandbox auth <repo> --model claude
 crew sandbox auth <repo> --model codex
+crew sprite setup crew-claude-1 --claude --github --mcp linear --checkpoint
+crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123
 crew run --ticket <TICKET>
 crew cleanup <TICKET>
 ```
