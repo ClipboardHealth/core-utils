@@ -3,6 +3,7 @@ import { doctor } from "./commands/doctor.ts";
 import { orchestrate } from "./commands/orchestrator.ts";
 import { sandboxAuthCli } from "./commands/sandboxAuth.ts";
 import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
+import { spriteCli } from "./commands/spriteSetup.ts";
 import { errorMessage, writeError, writeOutput } from "./lib/util.ts";
 
 interface Subcommand {
@@ -73,6 +74,13 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     summary: "Prepare persistent Docker Sandboxes auth",
     usage: "auth <repo> [--model <name>]",
     invoke: sandboxAuthCli,
+  },
+  sprite: {
+    summary: "Create, authenticate, and bootstrap a remote Sprite runner",
+    usage:
+      "setup <sprite-name> [--claude] [--github] [--mcp <alias|name=url>] [--checkpoint]\n" +
+      "           → crew sprite bootstrap <sprite-name> <repo> [--branch <branch>]",
+    invoke: spriteCli,
   },
 };
 
