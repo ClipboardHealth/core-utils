@@ -1,4 +1,4 @@
-import type { ModelDefinition } from "./config.ts";
+import { DEFAULT_SANDBOX_SETUP_COMMAND, type ModelDefinition } from "./config.ts";
 import { buildLaunchCommand } from "./launchCommand.ts";
 
 function arguments_(
@@ -15,6 +15,13 @@ function arguments_(
 }
 
 describe(buildLaunchCommand, () => {
+  it("keeps the default sandbox setup command valid for shell control flow", () => {
+    expect(DEFAULT_SANDBOX_SETUP_COMMAND).not.toContain("then;");
+    expect(DEFAULT_SANDBOX_SETUP_COMMAND).not.toContain("then ;");
+    expect(DEFAULT_SANDBOX_SETUP_COMMAND).toContain('nvm install "$required_node"');
+    expect(DEFAULT_SANDBOX_SETUP_COMMAND).toContain('n_path="$(command -v n || true)"');
+  });
+
   it("none strategy cd's into the worktree, runs setup, then execs the agent with the prompt", () => {
     const out = buildLaunchCommand(arguments_({ strategy: "none" }));
 
