@@ -63,6 +63,15 @@ function mockExistingSpriteForBootstrap(): void {
   });
 }
 
+function mockSpriteListWithExistingMcp(output: string): void {
+  runCommandMock.mockImplementation(async (command, arguments_) => {
+    if (command === "sprite" && arguments_[0] === "list") {
+      return output;
+    }
+    return "";
+  });
+}
+
 describe(spriteCli, () => {
   beforeEach(() => {
     mockSpriteList("NAME STATUS\ncrew-claude-1 running");
@@ -121,6 +130,91 @@ describe(spriteCli, () => {
     await expect(spriteCli(["setup", "crew-claude-1", "--mcp", "unknown"])).rejects.toThrow(
       /Unknown MCP alias/,
     );
+  });
+
+  it("rejects missing setup values and invalid custom MCP names", async () => {
+    await expect(spriteCli(["setup"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["setup", "crew-claude-1", "--mcp"])).rejects.toThrow(
+      /--mcp requires a value/,
+    );
+    await expect(
+      spriteCli(["setup", "crew-claude-1", "--mcp", "bad$name=https://example.com/mcp"]),
+    ).rejects.toThrow(/Invalid MCP server name/);
+    await expect(spriteCli(["setup", "crew-claude-1", "--bogus"])).rejects.toThrow(
+      /Unknown sprite setup argument/,
+    );
+  });
+
+  it("rejects malformed or non-HTTPS MCP URLs", async () => {
+    await expect(
+      spriteCli(["setup", "crew-claude-1", "--mcp", "custom=http://example.com/mcp"]),
+    ).rejects.toThrow(/Invalid MCP server URL/);
+    await expect(
+      spriteCli(["setup", "crew-claude-1", "--mcp", "custom=https:// invalid"]),
+    ).rejects.toThrow(/Invalid MCP server URL/);
+  });
+
+  it("rejects unknown sprite actions", async () => {
+    await expect(spriteCli(["unknown"])).rejects.toThrow(/Usage: crew sprite/);
+  });
+
+  it("parses setup options for selected agent auth, git identity, and checkpoint", async () => {
+    await spriteCli([
+      "setup",
+      "crew-claude-1",
+      "--claude",
+      "--codex",
+      "--github",
+      "--git-name",
+      "Rocky Warren",
+      "--git-email",
+      "1085683+therockstorm@users.noreply.github.com",
+      "--checkpoint",
+      "--checkpoint-comment",
+      "custom baseline",
+      "--no-create",
+    ]);
+
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["git", "config", "--global", "user.name", "Rocky Warren"]),
+    );
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining([
+        "git",
+        "config",
+        "--global",
+        "user.email",
+        "1085683+therockstorm@users.noreply.github.com",
+      ]),
+    );
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["gh", "auth", "setup-git"]),
+    );
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["codex", "login"]),
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["checkpoint", "create", "-s", "crew-claude-1", "--comment", "custom baseline"],
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+  });
+
+  it("skips adding MCP servers that already exist", async () => {
+    mockSpriteListWithExistingMcp("NAME STATUS\ncrew-claude-1 running");
+
+    await spriteCli(["setup", "crew-claude-1", "--mcp", "linear", "--skip-mcp-auth"]);
+
+    expect(
+      runCommandMock.mock.calls.some((call) =>
+        hasRemoteCommand(call, ["claude", "mcp", "add", "linear"]),
+      ),
+    ).toBe(false);
   });
 
   it("dispatches bootstrap with branch and selected build secrets", async () => {
@@ -235,6 +329,46 @@ describe(setupSprite, () => {
       { stdio: "inherit", timeoutMs: 0 },
     );
   });
+
+  it("rejects missing sprites when creation is disabled", async () => {
+    mockSpriteList("");
+
+    await expect(
+      setupSprite({
+        spriteName: "missing",
+        shouldCreate: false,
+        shouldAuthenticateClaude: false,
+        shouldAuthenticateCodex: false,
+        shouldAuthenticateGithub: false,
+        shouldAuthenticateMcp: false,
+        shouldCheckpoint: false,
+        checkpointComment: "",
+        mcpServers: [],
+      }),
+    ).rejects.toThrow(/does not exist and --no-create was set/);
+  });
+
+  it("authenticates codex when requested", async () => {
+    mockSpriteList("NAME STATUS\ncrew-claude-1 running");
+
+    await setupSprite({
+      spriteName: "crew-claude-1",
+      shouldCreate: false,
+      shouldAuthenticateClaude: false,
+      shouldAuthenticateCodex: true,
+      shouldAuthenticateGithub: false,
+      shouldAuthenticateMcp: false,
+      shouldCheckpoint: false,
+      checkpointComment: "",
+      mcpServers: [],
+    });
+
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["codex", "login"]),
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+  });
 });
 
 describe(bootstrapSpriteRepository, () => {
@@ -251,7 +385,7 @@ describe(bootstrapSpriteRepository, () => {
       repository: "ClipboardHealth/core-utils",
       owner: "ClipboardHealth",
       baseBranch: "main",
-      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      secretNames: [],
       shouldRequireSelectedSecrets: false,
       shouldUseSecrets: false,
     });
@@ -260,6 +394,113 @@ describe(bootstrapSpriteRepository, () => {
       stdio: "inherit",
       timeoutMs: 0,
     });
+  });
+
+  it("skips unset optional build secrets without uploading a file", async () => {
+    mockExistingSpriteForBootstrap();
+    vi.stubEnv("NPM_TOKEN", "");
+    vi.stubEnv("BUF_TOKEN", "");
+
+    await bootstrapSpriteRepository({
+      spriteName: "crew-claude-1",
+      repository: "core-utils",
+      owner: "ClipboardHealth",
+      baseBranch: "main",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      shouldRequireSelectedSecrets: false,
+      shouldUseSecrets: true,
+    });
+
+    expect(runCommandMock).toHaveBeenCalledWith("sprite", expect.not.arrayContaining(["--file"]), {
+      stdio: "inherit",
+      timeoutMs: 0,
+    });
+  });
+
+  it("uploads populated optional build secrets while skipping unset ones", async () => {
+    mockExistingSpriteForBootstrap();
+    vi.stubEnv("NPM_TOKEN", "npm-token");
+    vi.stubEnv("BUF_TOKEN", "");
+
+    await bootstrapSpriteRepository({
+      spriteName: "crew-claude-1",
+      repository: "core-utils",
+      owner: "ClipboardHealth",
+      baseBranch: "main",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      shouldRequireSelectedSecrets: false,
+      shouldUseSecrets: true,
+    });
+
+    const bootstrapCall = runCommandMock.mock.calls.find((call) =>
+      hasRemoteCommand(call, ["bash", "-lc"]),
+    );
+    expect(bootstrapCall?.[1]).toStrictEqual(
+      expect.arrayContaining(["--file", expect.stringMatching(/secrets\.env:/)]),
+    );
+  });
+
+  it("parses bootstrap base, owner, and no-secrets options", async () => {
+    mockExistingSpriteForBootstrap();
+
+    await spriteCli([
+      "bootstrap",
+      "crew-claude-1",
+      "core-utils",
+      "--base",
+      "develop",
+      "--owner",
+      "ClipboardHealth",
+      "--no-secrets",
+    ]);
+
+    const bootstrapCall = runCommandMock.mock.calls.find((call) =>
+      hasRemoteCommand(call, ["bash", "-lc"]),
+    );
+    expect(bootstrapCall?.[1]).toStrictEqual(expect.not.arrayContaining(["--file"]));
+    expect(bootstrapCall?.[1]?.at(-1)).toStrictEqual(
+      expect.stringContaining("git checkout -B 'develop' 'origin/develop'"),
+    );
+  });
+
+  it("strips .git suffixes when choosing the remote repository directory", async () => {
+    mockExistingSpriteForBootstrap();
+
+    await bootstrapSpriteRepository({
+      spriteName: "crew-claude-1",
+      repository: "core-utils.git",
+      owner: "ClipboardHealth",
+      baseBranch: "main",
+      secretNames: [],
+      shouldRequireSelectedSecrets: false,
+      shouldUseSecrets: false,
+    });
+
+    const bootstrapCall = runCommandMock.mock.calls.find((call) =>
+      hasRemoteCommand(call, ["bash", "-lc"]),
+    );
+    expect(bootstrapCall?.[1]?.at(-1)).toStrictEqual(
+      expect.stringContaining('repo_dir="$HOME/dev/core-utils"'),
+    );
+  });
+
+  it("rejects invalid bootstrap arguments before running remote setup", async () => {
+    await expect(spriteCli(["bootstrap"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["bootstrap", "crew-claude-1", "a/b/c"])).rejects.toThrow(
+      /Invalid repository/,
+    );
+    await expect(
+      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--branch", "..bad"]),
+    ).rejects.toThrow(/Invalid branch/);
+    await expect(
+      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--owner", "bad owner"]),
+    ).rejects.toThrow(/Invalid repository owner/);
+    await expect(
+      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--secret", "bad-secret"]),
+    ).rejects.toThrow(/Invalid secret name/);
+    await expect(
+      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--bogus"]),
+    ).rejects.toThrow(/Unknown sprite bootstrap argument/);
   });
 
   it("requires explicitly selected secrets to exist locally", async () => {

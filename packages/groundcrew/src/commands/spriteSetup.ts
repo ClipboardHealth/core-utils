@@ -99,9 +99,15 @@ function validateMcpName(name: string): void {
 }
 
 function validateMcpUrl(url: string): void {
-  if (!url.startsWith("https://")) {
-    throw new Error(`Invalid MCP server URL "${url}". Remote MCP URLs must start with https://.`);
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol === "https:") {
+      return;
+    }
+  } catch {
+    // Fall through to the user-facing validation error below.
   }
+  throw new Error(`Invalid MCP server URL "${url}". Remote MCP URLs must start with https://.`);
 }
 
 function validateRepository(value: string): void {
@@ -498,7 +504,9 @@ function repositorySlug(options: SpriteBootstrapOptions): string {
 }
 
 function repositoryDirectoryName(repository: string): string {
-  const [, name = repository] = /(?:^|\/)([^/]+)$/.exec(repository) ?? [];
+  const name = repository.includes("/")
+    ? repository.slice(repository.lastIndexOf("/") + 1)
+    : repository;
   return name.endsWith(".git") ? name.slice(0, -4) : name;
 }
 
@@ -544,7 +552,7 @@ interface StagedSecrets {
 }
 
 function noSecretCleanup(): void {
-  return undefined;
+  // No staged secrets file was created.
 }
 
 function stageBuildSecrets(options: SpriteBootstrapOptions): StagedSecrets {
