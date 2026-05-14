@@ -11,7 +11,6 @@
 ab.chatgpt.com
 api.anthropic.com
 api.openai.com
-auth.openai.com
 chatgpt.com
 platform.claude.com
 
@@ -19,20 +18,19 @@ platform.claude.com
 api.linear.app
 api.notion.com
 api.slack.com
+developers.notion.com
 linear.app
 mcp.linear.app
 mcp.notion.com
 mcp.slack.com
 slack.com
 
-# Datadog (logs/metrics queries)
-*.datadoghq.com
+# Datadog (logs/metrics queries). No wildcard — blocks http-intake.logs.*.
 api.datadoghq.com
 app.datadoghq.com
 datadoghq.com
 
 # GitHub + GHA artifact storage (Azure blobs)
-*.githubusercontent.com
 api.github.com
 cafe.github.com
 github.com
@@ -56,6 +54,8 @@ productionresultssa16.blob.core.windows.net
 productionresultssa17.blob.core.windows.net
 productionresultssa18.blob.core.windows.net
 productionresultssa19.blob.core.windows.net
+raw.githubusercontent.com
+results-receiver.actions.githubusercontent.com
 
 # npm registry
 api.npmjs.org
