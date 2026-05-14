@@ -1,5 +1,6 @@
 ---
-description: Implement a plan file or direct request end-to-end, then hand off to commit-push-pr to ship it. Use when the user says 'go', 'execute the plan', 'implement the plan', or gives an implementation request.
+description: Implement a plan file or direct request end-to-end, then hand off to commit-push-pr to ship it. Pass `--draft` to open the resulting PR as a draft (default is ready-for-review); `--ready` is accepted for forward-compat. Use when the user says 'go', 'execute the plan', 'implement the plan', or gives an implementation request.
+argument-hint: "[--draft|--ready] [plan-path-or-request]"
 ---
 
 # Go: Execute Work and Ship It
@@ -9,6 +10,15 @@ Given a plan file or direct implementation request, implement the requested work
 This skill is the bridge between intent and shipping. It does not re-plan or re-design unless the user asked for that. If the request is wrong or cannot be implemented safely, surface that; do not silently improvise.
 
 ## Phase 1: Resolve the Input
+
+### Flags
+
+Before resolving the input as a path or request, scan the entire argument string for these flags. They may appear in any position — leading, trailing, or surrounded by other text (including a quoted natural-language request). Strip every match before resolving the remainder.
+
+- `--draft`: open the resulting PR as a draft. Remember this for Phase 4.
+- `--ready`: open the resulting PR as ready-for-review. This is the current default and is accepted as a no-op for forward-compatibility, so a future team-default flip remains reversible per-invocation without re-editing the skill.
+- If both `--draft` and `--ready` appear, stop and ask the user which one to use rather than guessing — mirrors the "default to safer outcome and flag it" pattern used elsewhere.
+- If neither appears, behavior is unchanged (ready-for-review).
 
 The user invokes this skill with either a plan file path/identifier or a direct request like "add a login button."
 
@@ -37,7 +47,7 @@ Fix any failures before handing off. Do not hand off with known failing checks u
 
 ## Phase 4: Hand Off
 
-Invoke the `commit-push-pr` skill. Do not commit, push, or open the PR yourself.
+Invoke the `commit-push-pr` skill, passing `draft` as its argument when `--draft` was set in Phase 1. `--ready` is the current default and does not need to be passed. Do not commit, push, or open the PR yourself.
 
 If `commit-push-pr` reports `nothing to ship.`, surface that.
 
