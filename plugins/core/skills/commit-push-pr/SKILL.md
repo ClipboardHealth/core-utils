@@ -23,7 +23,7 @@ Use this PR body shape when creating or refreshing descriptions:
 ```md
 ## Summary
 
-Brief "why" and the meaningful behavior/system change.
+Briefly explain the user intent from session history and the meaningful behavior/system change. If intent cannot be determined from the session or diff, ask the user before creating or refreshing the PR. Do not write a file-by-file changelog.
 
 ## Validation
 
@@ -32,22 +32,17 @@ Brief "why" and the meaningful behavior/system change.
 ## Notes
 
 Optional: ticket links, rollout plan, residual risk, or areas for reviewers to focus on.
-
-Agent session: <copyable resume command>
-
-<!-- commit-push-pr:created v1 core@3.4.0 -->
 ```
 
-- Omit `## Notes` when there are no useful notes beyond the metadata footer.
+- Omit `## Notes` when there are no useful notes.
 - Do not invent ticket links, validation evidence, rollout plans, or risks. Use `Not run: <reason>` when validation was not run.
-- Keep agent session lines and `<!-- commit-push-pr:created ... -->` sentinels as footer metadata, separate from the prose. Preserve existing session and sentinel lines exactly, including older `Agent session ID: ...` lines.
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
 2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. When it returns, your very next action is to restate the remaining steps (3–7) and continue with step 3 in the same turn. Do not stop, do not end the turn with a simplify summary.
 3. If `git status --short` shows changes, create a single conventional commit with `git commit --no-gpg-sign`.
 4. Push the branch to origin.
-5. Look up the current agent session ID with `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. On success the script prints `<agent> <id>`; otherwise nothing. Convert known outputs to a copyable resume command for the PR footer: `codex <id>` -> `Agent session: codex resume <id>`; `claude-code <id>` -> `Agent session: claude --resume <id>`. If empty, omit the session line below.
+5. Look up the current agent session ID with `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. If the script prints `codex <id>`, use `Agent session: codex resume <id>`. If it prints `claude-code <id>`, use `Agent session: claude --resume <id>`. If empty, there is no session footer line.
 6. Check for an existing PR with `gh pr view`.
-   - No PR: create with `gh pr create`. Title = commit subject. Description = the PR body shape above. Append the converted agent session line from step 5 (omit if step 5 produced no output) and `<!-- commit-push-pr:created v1 core@3.4.0 -->` on their own lines at the end.
-   - PR exists: refresh the body via `gh pr edit --body` so (a) the new commit's changes are reflected in the prose while existing `## Summary`, `## Validation`, and `## Notes` sections are preserved unless clearly stale, (b) the converted agent session line from step 5 appears in the footer — append if missing, never remove or rewrite existing session lines so each contributing session is preserved — and (c) any existing `<!-- commit-push-pr:created v1 ... -->` line is preserved verbatim (append `<!-- commit-push-pr:created v1 core@3.4.0 -->` if absent). Then report the URL.
+   - No PR: create with `gh pr create`. Title = commit subject. Description = the PR body shape above, followed by the session footer line if known and `<!-- commit-push-pr:created v1 core@3.4.0 -->`.
+   - PR exists: refresh the body via `gh pr edit --body` so (a) the new commit's changes are reflected in the prose while existing `## Summary`, `## Validation`, and `## Notes` sections are preserved unless clearly stale, (b) any known session footer line is appended if missing, never removing or rewriting existing `Agent session: ...` or `Agent session ID: ...` lines, and (c) any existing `<!-- commit-push-pr:created v1 ... -->` line is preserved verbatim, appending `<!-- commit-push-pr:created v1 core@3.4.0 -->` if absent. Then report the URL.
 7. End with one short text response: branch name and the full PR URL (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`). Never use shorthand like `repo#123` — always output the complete URL.
