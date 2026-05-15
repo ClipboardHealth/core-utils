@@ -53,6 +53,15 @@ export interface SpriteAttachOptions {
   spriteName?: string;
 }
 
+export interface SpriteProcessOptions {
+  spriteName?: string;
+}
+
+export interface SpriteInterruptOptions {
+  processGroupId: string;
+  spriteName?: string;
+}
+
 const DEFAULT_CHECKPOINT_COMMENT =
   "groundcrew sprite baseline: selected agent auth, git identity, and MCP config";
 const CLAUDE_SUBSCRIPTION_LOGIN_FLAG = ["--claude", "ai"].join("");
@@ -69,6 +78,8 @@ function usage(): string {
     "  crew sprite bootstrap <sprite-name> <repository> [options]",
     "  crew sprite sessions [<sprite-name>]",
     "  crew sprite attach <session-id-or-command> [--sprite <sprite-name>]",
+    "  crew sprite ps [<sprite-name>]",
+    "  crew sprite interrupt <process-group-id> [--sprite <sprite-name>]",
     "",
     "Setup options:",
     "  --claude                    Authenticate Claude Code with a Claude subscription",
@@ -100,6 +111,8 @@ function usage(): string {
     "Session examples:",
     "  crew sprite sessions",
     "  crew sprite attach 12345",
+    "  crew sprite ps crew-claude-1",
+    "  crew sprite interrupt 27673 --sprite crew-claude-1",
   ].join("\n");
 }
 
@@ -361,8 +374,36 @@ function parseAttachArguments(argv: readonly string[]): SpriteAttachOptions {
     throw new Error(usage());
   }
 
+  const spriteName = parseOptionalSpriteFlag(argv, 1);
+
+  return {
+    target,
+    ...(spriteName === undefined ? {} : { spriteName }),
+  };
+}
+
+function parseInterruptArguments(argv: readonly string[]): SpriteInterruptOptions {
+  const [processGroupId] = argv;
+  if (
+    processGroupId === undefined ||
+    processGroupId.length === 0 ||
+    processGroupId.startsWith("--") ||
+    !/^[1-9]\d*$/.test(processGroupId)
+  ) {
+    throw new Error(usage());
+  }
+
+  const spriteName = parseOptionalSpriteFlag(argv, 1);
+
+  return {
+    processGroupId,
+    ...(spriteName === undefined ? {} : { spriteName }),
+  };
+}
+
+function parseOptionalSpriteFlag(argv: readonly string[], startIndex: number): string | undefined {
   let spriteName: string | undefined;
-  for (let index = 1; index < argv.length; index += 1) {
+  for (let index = startIndex; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "--sprite") {
       spriteName = requireValue(argv, index, "--sprite");
@@ -372,10 +413,7 @@ function parseAttachArguments(argv: readonly string[]): SpriteAttachOptions {
     throw new Error(usage());
   }
 
-  return {
-    target,
-    ...(spriteName === undefined ? {} : { spriteName }),
-  };
+  return spriteName;
 }
 
 function spriteExecArguments(spriteName: string, remoteArguments: readonly string[]): string[] {
@@ -761,6 +799,27 @@ export async function attachSpriteSession(options: SpriteAttachOptions): Promise
   });
 }
 
+export async function listSpriteProcesses(options: SpriteProcessOptions): Promise<void> {
+  const spriteName = await resolveSpriteName(options.spriteName);
+  const output = await runCommandAsync(
+    "sprite",
+    ["exec", "-s", spriteName, "--", "ps", "-eo", "pid,ppid,pgid,sid,stat,etime,pcpu,pmem,cmd"],
+    { trim: false },
+  );
+  if (output.length > 0) {
+    writeOutput(output.trimEnd());
+  }
+}
+
+export async function interruptSpriteProcessGroup(options: SpriteInterruptOptions): Promise<void> {
+  const spriteName = await resolveSpriteName(options.spriteName);
+  await runCommandAsync(
+    "sprite",
+    ["exec", "-s", spriteName, "--", "kill", "-INT", "--", `-${options.processGroupId}`],
+    { stdio: "inherit" },
+  );
+}
+
 function rewriteSessionsFooter(output: string, spriteName: string): string {
   return output.replace(
     "  sprite exec -id <session_id>",
@@ -812,6 +871,14 @@ export async function spriteCli(argv: string[]): Promise<void> {
   }
   if (action === "attach") {
     await attachSpriteSession(parseAttachArguments(rest));
+    return;
+  }
+  if (action === "ps") {
+    await listSpriteProcesses(parseSessionsArguments(rest));
+    return;
+  }
+  if (action === "interrupt") {
+    await interruptSpriteProcessGroup(parseInterruptArguments(rest));
     return;
   }
   throw new Error(usage());

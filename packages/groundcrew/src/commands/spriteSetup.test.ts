@@ -314,10 +314,49 @@ describe(spriteCli, () => {
     );
   });
 
-  it("rejects missing attach targets and unknown session wrapper flags before running sprite", async () => {
+  it("lists remote processes using an explicit sprite", async () => {
+    const consoleLog = vi.spyOn(console, "log").mockReturnValue();
+    runCommandMock.mockResolvedValue("PID PPID PGID CMD\n23001 0 23001 claude\n");
+
+    await spriteCli(["ps", "crew-claude-1"]);
+
+    expect(loadConfigMock).not.toHaveBeenCalled();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      [
+        "exec",
+        "-s",
+        "crew-claude-1",
+        "--",
+        "ps",
+        "-eo",
+        "pid,ppid,pgid,sid,stat,etime,pcpu,pmem,cmd",
+      ],
+      { trim: false },
+    );
+    expect(consoleLog).toHaveBeenCalledWith("PID PPID PGID CMD\n23001 0 23001 claude");
+  });
+
+  it("interrupts a selected remote process group using the configured default sprite", async () => {
+    await spriteCli(["interrupt", "27673"]);
+
+    expect(loadConfigMock).toHaveBeenCalledWith();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["exec", "-s", "crew-default", "--", "kill", "-INT", "--", "-27673"],
+      { stdio: "inherit" },
+    );
+  });
+
+  it("rejects missing targets and unknown session wrapper flags before running sprite", async () => {
     await expect(spriteCli(["attach"])).rejects.toThrow(/Usage:/);
     await expect(spriteCli(["attach", "12345", "--bogus"])).rejects.toThrow(/Usage:/);
     await expect(spriteCli(["sessions", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["ps", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt", "0"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt", "abc"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt", "27673", "--bogus"])).rejects.toThrow(/Usage:/);
 
     expect(runCommandMock).not.toHaveBeenCalled();
   });
