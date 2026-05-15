@@ -60,12 +60,9 @@ describe("nonEmptyArray.safeParse", () => {
 });
 
 describe("nonEmptyArray type", () => {
-  it("infers output as a non-empty tuple", () => {
-    const schema = nonEmptyArray(z.string());
-    type Output = z.output<typeof schema>;
-
-    const value: Output = ["a"];
-    const [first] = value;
+  it("infers parse output as a non-empty tuple", () => {
+    const parsed = nonEmptyArray(z.string()).parse(["a"]);
+    const [first] = parsed;
     const firstString: string = first;
 
     expect(firstString).toBe("a");
