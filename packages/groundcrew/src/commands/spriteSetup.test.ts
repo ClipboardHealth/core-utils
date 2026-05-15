@@ -167,6 +167,7 @@ describe(spriteCli, () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -247,25 +248,48 @@ describe(spriteCli, () => {
   });
 
   it("lists sessions using the configured default sprite", async () => {
+    const consoleLog = vi.spyOn(console, "log").mockReturnValue();
+    runCommandMock.mockResolvedValue(
+      [
+        "ID         Command",
+        "23001      claude --permission-m...",
+        "",
+        "To attach to a session:",
+        "  sprite exec -id <session_id>",
+        "",
+      ].join("\n"),
+    );
+
     await spriteCli(["sessions"]);
 
     expect(loadConfigMock).toHaveBeenCalledWith();
     expect(runCommandMock).toHaveBeenCalledWith(
       "sprite",
       ["sessions", "list", "-s", "crew-default"],
-      { stdio: "inherit" },
+      { trim: false },
     );
+    expect(consoleLog.mock.calls.join("\n")).toContain(
+      "crew sprite attach <session_id> --sprite crew-default",
+    );
+    expect(consoleLog.mock.calls.join("\n")).toContain(
+      "sprite sessions attach <session_id> -s crew-default",
+    );
+    expect(consoleLog.mock.calls.join("\n")).not.toContain("sprite exec -id");
   });
 
   it("lists sessions using an explicit sprite without loading config", async () => {
+    const consoleLog = vi.spyOn(console, "log").mockReturnValue();
+    runCommandMock.mockResolvedValue("No active sessions found.\n");
+
     await spriteCli(["sessions", "crew-claude-1"]);
 
     expect(loadConfigMock).not.toHaveBeenCalled();
     expect(runCommandMock).toHaveBeenCalledWith(
       "sprite",
       ["sessions", "list", "-s", "crew-claude-1"],
-      { stdio: "inherit" },
+      { trim: false },
     );
+    expect(consoleLog).toHaveBeenCalledWith("No active sessions found.");
   });
 
   it("attaches to a session using the configured default sprite", async () => {

@@ -745,7 +745,12 @@ async function resolveSpriteName(spriteName: string | undefined): Promise<string
 
 export async function listSpriteSessions(options: SpriteSessionsOptions): Promise<void> {
   const spriteName = await resolveSpriteName(options.spriteName);
-  await runCommandAsync("sprite", ["sessions", "list", "-s", spriteName], { stdio: "inherit" });
+  const output = await runCommandAsync("sprite", ["sessions", "list", "-s", spriteName], {
+    trim: false,
+  });
+  if (output.length > 0) {
+    writeOutput(rewriteSessionsFooter(output, spriteName).trimEnd());
+  }
 }
 
 export async function attachSpriteSession(options: SpriteAttachOptions): Promise<void> {
@@ -754,6 +759,16 @@ export async function attachSpriteSession(options: SpriteAttachOptions): Promise
     stdio: "inherit",
     timeoutMs: 0,
   });
+}
+
+function rewriteSessionsFooter(output: string, spriteName: string): string {
+  return output.replace(
+    "  sprite exec -id <session_id>",
+    [
+      `  crew sprite attach <session_id> --sprite ${spriteName}`,
+      `  sprite sessions attach <session_id> -s ${spriteName}`,
+    ].join("\n"),
+  );
 }
 
 export async function setupSprite(options: SpriteSetupOptions): Promise<void> {
