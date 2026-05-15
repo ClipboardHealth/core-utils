@@ -148,6 +148,10 @@ async function applyCmuxStatus(
   await runWorkspaceCommand("cmux", arguments_, signal);
 }
 
+async function closeCmuxWorkspace(refOrName: string, signal?: AbortSignal): Promise<void> {
+  await runWorkspaceCommand("cmux", ["close-workspace", "--workspace", refOrName], signal);
+}
+
 const cmuxAdapter: Adapter = {
   async open(spec, signal) {
     const output = await runWorkspaceCommand(
@@ -176,7 +180,7 @@ const cmuxAdapter: Adapter = {
         await applyCmuxStatus(ref, spec.status, signal);
       } catch (error) {
         try {
-          await runWorkspaceCommand("cmux", ["close-workspace", "--workspace", ref], signal);
+          await closeCmuxWorkspace(ref, signal);
         } catch (closeError) {
           log(`cmux close-workspace failed for ${spec.name}: ${errorMessage(closeError)}`);
         }
@@ -191,6 +195,7 @@ const cmuxAdapter: Adapter = {
   async close(name, signal) {
     const raw = await listCmuxRaw(signal);
     if (raw === undefined) {
+      await closeCmuxWorkspace(name, signal);
       return;
     }
     const match = raw.find((ws) => ws.title === name);
@@ -198,7 +203,7 @@ const cmuxAdapter: Adapter = {
       return;
     }
     try {
-      await runWorkspaceCommand("cmux", ["close-workspace", "--workspace", match.ref], signal);
+      await closeCmuxWorkspace(match.ref, signal);
     } catch (error) {
       if (isSignalAborted(signal)) {
         throw error;

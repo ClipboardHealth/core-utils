@@ -1104,13 +1104,15 @@ describe(teardown, () => {
 
     const result = await teardown(config, [hostEntry("team-1")]);
 
+    expect(workspacesCloseMock).toHaveBeenCalledWith(config, "team-1", undefined);
     expect(result.workspaceProbe).toStrictEqual({ kind: "unavailable" });
+    expect(result.closed).toStrictEqual(["team-1"]);
     expect(result.removed).toHaveLength(1);
   });
 
   // Regression: a flaky cmux/tmux throwing from probe must not abort the
   // batch; otherwise every on-disk worktree gets stranded.
-  it("captures the error on workspaceProbe and still removes every worktree", async () => {
+  it("captures the error on workspaceProbe, best-effort closes, and still removes every worktree", async () => {
     workspacesProbeMock.mockResolvedValue({
       kind: "unavailable",
       error: new Error("cmux exploded"),
@@ -1122,7 +1124,26 @@ describe(teardown, () => {
 
     expect(result.workspaceProbe.kind).toBe("unavailable");
     expect(probeError(result.workspaceProbe)).toBeInstanceOf(Error);
-    expect(workspacesCloseMock).not.toHaveBeenCalled();
+    expect(workspacesCloseMock).toHaveBeenCalledTimes(2);
+    expect(workspacesCloseMock).toHaveBeenCalledWith(config, "team-1", undefined);
+    expect(workspacesCloseMock).toHaveBeenCalledWith(config, "team-2", undefined);
+    expect(result.closed).toStrictEqual(["team-1", "team-2"]);
+    expect(result.removed).toHaveLength(2);
+  });
+
+  it("only best-effort closes a ticket once when duplicate entries exist and probe is unavailable", async () => {
+    workspacesProbeMock.mockResolvedValue({ kind: "unavailable" });
+    const config = makeConfig({
+      projectDir,
+      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
+    });
+    const entries = [hostEntry("team-1"), sandboxEntry("team-1")];
+
+    const result = await teardown(config, entries);
+
+    expect(workspacesCloseMock).toHaveBeenCalledTimes(1);
+    expect(workspacesCloseMock).toHaveBeenCalledWith(config, "team-1", undefined);
+    expect(result.closed).toStrictEqual(["team-1"]);
     expect(result.removed).toHaveLength(2);
   });
 

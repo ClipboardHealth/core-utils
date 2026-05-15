@@ -691,7 +691,10 @@ async function teardown(
   };
 
   for (const entry of entries) {
-    if (!closedTickets.has(entry.ticket) && liveNames.has(entry.ticket)) {
+    if (
+      !closedTickets.has(entry.ticket) &&
+      (workspaceProbe.kind === "unavailable" || liveNames.has(entry.ticket))
+    ) {
       try {
         // oxlint-disable-next-line no-await-in-loop -- teardown is intentionally sequential per ticket
         await workspaces.close(config, entry.ticket, options?.signal);

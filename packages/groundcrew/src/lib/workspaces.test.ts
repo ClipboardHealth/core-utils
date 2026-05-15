@@ -365,12 +365,27 @@ describe("workspaces.close (cmux)", () => {
     expect(runMock).not.toHaveBeenCalledWith("cmux", expect.arrayContaining(["close-workspace"]));
   });
 
-  it("is a no-op when the cmux list itself fails", async () => {
-    runMock.mockImplementation(() => {
-      throw new Error("cmux down");
-    });
+  it("falls back to closing by workspace name when the cmux list itself fails", async () => {
+    runMock
+      .mockImplementationOnce(() => {
+        throw new Error("cmux down");
+      })
+      .mockReturnValueOnce("");
 
     await expect(workspaces.close(makeConfig(), "TEAM-1")).resolves.toBeUndefined();
+    expect(runMock).toHaveBeenCalledWith("cmux", ["close-workspace", "--workspace", "TEAM-1"]);
+  });
+
+  it("rethrows fallback close failures when the cmux list itself fails", async () => {
+    runMock
+      .mockImplementationOnce(() => {
+        throw new Error("cmux down");
+      })
+      .mockImplementationOnce(() => {
+        throw new Error("close down");
+      });
+
+    await expect(workspaces.close(makeConfig(), "TEAM-1")).rejects.toThrow("close down");
   });
 
   it("is a no-op when the workspace disappears between cmux list and close", async () => {
