@@ -14,6 +14,7 @@ Clipboard's core development tools.
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
   - [in-depth-review](#in-depth-review)
+  - [simple-review](#simple-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
@@ -71,7 +72,11 @@ Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. I
 
 ### in-depth-review
 
-Run a multi-agent code review on the current branch or a PR identified by argument. Defaults to engineering, minimalist, and conventions reviewers, conditionally adds security/database/frontend specialists based on changed files, and includes the adversarial reviewer only when explicitly requested. Invoke with `/in-depth-review` or `/in-depth-review <number|url>`.
+Run a multi-agent code review on the current branch or a PR identified by argument. Defaults to engineering, minimalist, conventions, and AntiSlop reviewers, conditionally adds security/database/frontend specialists based on changed files, and includes the adversarial reviewer only when explicitly requested. Invoke with `/in-depth-review` or `/in-depth-review <number|url>`.
+
+### simple-review
+
+Run a single-pass code review on the current branch or a PR identified by argument. Uses the in-depth review rubric without subagents for smaller reviews or lower-budget passes. Invoke with `/simple-review` or `/simple-review <number|url>`.
 
 ### local-package
 

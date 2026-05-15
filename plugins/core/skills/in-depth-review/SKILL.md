@@ -1,11 +1,11 @@
 ---
 name: in-depth-review
-description: Run a multi-agent code review on the current branch or a PR, with engineering, minimalist, conventions, and conditional specialist reviewers.
+description: Run a multi-agent code review on the current branch or a PR, with engineering, minimalist, conventions, AntiSlop, and conditional specialist reviewers.
 ---
 
 # In-Depth Review
 
-Run a multi-agent code review on the current branch _or_ on a PR identified by argument. By default dispatches three parallel reviewers (engineering+customer, minimalist, conventions) and conditionally adds up to three domain specialists (security, database, frontend) when the diff touches their surface. The first-principles adversarial agent (Agent A) is **opt-in** — include it only when the user explicitly asks (see Invocation). Agents review in parallel, debate once, and the main agent moderator-filters and synthesizes a report. Author vs reviewer mode adapts the post-review flow.
+Run a multi-agent code review on the current branch _or_ on a PR identified by argument. By default dispatches four parallel reviewers (engineering+customer, minimalist, conventions, anti-AI-slop) and conditionally adds up to three domain specialists (security, database, frontend) when the diff touches their surface. The first-principles adversarial agent (Agent A) is **opt-in** — include it only when the user explicitly asks (see Invocation). Agents review in parallel, debate once, and the main agent moderator-filters and synthesizes a report. Author vs reviewer mode adapts the post-review flow.
 
 ## Invocation
 
@@ -14,8 +14,8 @@ Run a multi-agent code review on the current branch _or_ on a PR identified by a
 
 ### Agent roster
 
-| Letter | Name       | Role                                  | Default state                                |
-| ------ | ---------- | ------------------------------------- | -------------------------------------------- |
+| Letter | Name        | Role                                  | Default state                                |
+| ------ | ----------- | ------------------------------------- | -------------------------------------------- |
 | A      | Adversarial | First-principles adversarial          | Opt-in only (`with adversarial`, `+A`, etc.) |
 | B      | Engineering | High engineering standards + customer | Always on                                    |
 | C      | Minimalist  | Smallest-diff posture                 | Always on                                    |
@@ -23,6 +23,7 @@ Run a multi-agent code review on the current branch _or_ on a PR identified by a
 | E      | Security    | Security & API surface                | Conditional (auth/route/contract files)      |
 | F      | Database    | DB schema, queries, migrations        | Conditional (migration/schema/model files)   |
 | G      | Frontend    | FE conventions & UX correctness       | Conditional (FE files)                       |
+| H      | AntiSlop    | Anti-AI-bias / pushback on slop       | Always on                                    |
 
 **Refer to agents by name in everything the user sees** (Summary, Actionable items, Raised-by lines, Disagreements, Withdrawn). The letter is a compact prefix for finding IDs (`B1`, `C3`, `Adversarial`/`A1`, …) and a shorthand inside this document — never the only label in user-facing prose. The Round 2 `original_author` field stores the **name**, not the letter.
 
@@ -193,7 +194,7 @@ Record the dispatched set in `/tmp/in-depth-review-meta.json` so Round 2 knows t
 - **MINOR** — cheap, concrete improvement with a named benefit.
 - **NIT** — only admissible if (a) repeats ≥2× in the diff, (b) conflicts with a documented convention, or (c) is a one-line trivial fix. Otherwise drop silently.
 
-Every finding **must** include a `failure_mode` field: one sentence on the concrete user-, on-call-, or maintainer-visible bad outcome that would occur if not fixed. Hypotheticals like "a future caller might…" do not satisfy this; such findings will be dropped during moderation.
+Every finding **must** include a `failure_mode` field: one sentence on the concrete user-, oncall-, or maintainer-visible bad outcome that would occur if not fixed. Hypotheticals like "a future caller might…" do not satisfy this; such findings will be dropped during moderation.
 
 ### Do-not-raise list (binding)
 
@@ -203,7 +204,7 @@ Do not surface any of:
 - Restating the obvious ("consider a comment explaining what this does").
 - Hypothetical future-caller scenarios with no current caller.
 - Style/formatting a linter or formatter already covers.
-- Test-coverage demands on trivially-verifiable code (one-line forwarding helpers, simple getters).
+- Test-coverage demands on trivially-verifiable code (one-line passthroughs, simple getters).
 - "Add observability" without naming a concrete failure mode it would help debug.
 - Abstract SOLID-style "consider extracting…" suggestions without a concrete failure mode.
 - Aesthetic naming preferences. Only raise names that mislead about behavior.
@@ -212,7 +213,7 @@ Do not surface any of:
 
 ### Round 1 — parallel independent reviews
 
-Dispatch all selected agents **in the same message** via the `Agent` tool with `subagent_type: general-purpose`. The default selected set is **Engineering, Minimalist, Conventions** (B/C/D), plus **Security, Database, Frontend** (E/F/G) when triggered by classification. **The Adversarial agent (A) is dispatched only when `agent_a_enabled` is true** (see Invocation — "Agent A is opt-in"). Each agent gets the file paths above, their role brief, and permission to Read repo files for context. Do **not** let agents see each other's output in this round. **Each agent emits at most 8 findings, prioritized — not exhaustive.**
+Dispatch all selected agents **in the same message** via the `Agent` tool with `subagent_type: general-purpose`. The default selected set is **Engineering, Minimalist, Conventions, AntiSlop** (B/C/D/H), plus **Security, Database, Frontend** (E/F/G) when triggered by classification. **The Adversarial agent (A) is dispatched only when `agent_a_enabled` is true** (see Invocation — "Agent A is opt-in"). Each agent gets the file paths above, their role brief, and permission to Read repo files for context. Do **not** let agents see each other's output in this round. **Each agent emits at most 8 findings, prioritized — not exhaustive.**
 
 **Every subagent prompt must include the following input contract verbatim** (substitute `<context_ref>` with the value resolved in the Freshness preflight):
 
@@ -220,7 +221,7 @@ Dispatch all selected agents **in the same message** via the `Agent` tool with `
 >
 > **Cross-repo evidence contract.** If a finding's load-bearing evidence is in any repo other than this one, do NOT silently read another local checkout — those checkouts may be stale or on unrelated branches. Instead, emit the finding with an `evidence_required` field naming the repo(s) and the specific verification question, and cap your severity at MAJOR. The moderator will ask the user for verified access before Round 2 and re-dispatch you if needed.
 
-Required output per finding: `id` (`A1`, `B3`, `C2`, `D4`, `E1`, `F1`, `G1`, …), `severity`, `file:lines`, `title` (one sentence), `point` (one short paragraph), `failure_mode` (one sentence), optional `suggested_fix` (see schema below), and optional `evidence_required` (object with `repos: string[]` and `what_to_verify: string` — required whenever the finding depends on cross-repo state).
+Required output per finding: `id` (`A1`, `B3`, `C2`, `D4`, `E1`, `F1`, `G1`, `H1`, …), `severity`, `file:lines`, `title` (one sentence), `point` (one short paragraph), `failure_mode` (one sentence), optional `suggested_fix` (see schema below), and optional `evidence_required` (object with `repos: string[]` and `what_to_verify: string` — required whenever the finding depends on cross-repo state).
 
 **`suggested_fix` schema** (when present): an object with two string fields, both code (not prose), preserving the file's actual indentation:
 
@@ -236,7 +237,7 @@ Required output per finding: `id` (`A1`, `B3`, `C2`, `D4`, `E1`, `F1`, `G1`, …
 - For a **structural change** with no clean drop-in (e.g. "move this file"), omit `suggested_fix` entirely and put the guidance in `point` / `failure_mode`.
 - Both fields must be code snippets directly usable to compute a diff. Do not include surrounding prose, do not paraphrase, and do not elide content with `// ...`. If the change is too large to inline both, omit `suggested_fix` and describe the fix in `point`.
 
-#### Always-on agents (Engineering / Minimalist / Conventions) and the opt-in Adversarial agent
+#### Always-on agents (Engineering / Minimalist / Conventions / AntiSlop) and the opt-in Adversarial agent
 
 **Adversarial (A) — First-principles. Opt-in only.** Dispatch only when the user explicitly asks (see Invocation — "Agent A is opt-in"). Skip silently otherwise. Posture: _"What is the single most important thing this PR gets wrong? Then up to 7 more, ranked."_ Question whether the change actually solves the underlying problem and whether the chosen approach is right. Challenge specific library / pattern / approach choices when they don't hold up on their own merits. Do **not** challenge foundational stack choices that are out of scope for the PR. Flag internal inconsistencies inside the diff itself. Specifically also probe:
 
@@ -266,12 +267,12 @@ Skip items that fail the realistic-input test.
 
 For every "delete this" finding, `failure_mode` must state the _concrete cost of keeping the code_.
 
-**Conventions (D) — Repo-rules.** Sole owner of convention checks (backend / shared). Read `AGENTS.md`, `CLAUDE.md`, `.rules/`, Cursor rules, `docs/adr/` (or equivalent), package READMEs in the diff's path, and one or two neighboring files in the same service for in-practice patterns. Then check the diff for:
+**Conventions (D) — Repo-rules.** Sole owner of convention checks (backend / shared). Read `AGENTS.md`, `CLAUDE.md`, `.rules/`, `.cursorrules`, `docs/adr/` (or equivalent), package READMEs in the diff's path, and one or two neighboring files in the same service for in-practice patterns. Then check the diff for:
 
 - Preferred internal packages over third-party ones (e.g. `@clipboard-health/*`, internal `lib/*`).
 - Terminology rules (worker/workplace, not HCP/facility).
 - `lodash` removal preference.
-- `@clipboard-health/datetime` over ad hoc date-library choices.
+- `@clipboard-health/datetime` over `date-fns`, `date-fns-tz`, `moment`, `luxon`.
 - Internal `Money` package for currencies; explicit minor-units variable names.
 - Logging conventions (`longContext`, `ObjectId.toString()`, no variables in log messages).
 - Null/undefined checks via `isDefined` / `isNil` over truthy.
@@ -289,6 +290,56 @@ Frontend conventions are the Frontend agent's (G) territory when G is dispatched
 
 Tag every finding `[CONVENTION]`. Cap severity at MAJOR (only when behavior diverges as a result of the violation) or MINOR otherwise. At the top of your output, list the specific files/sources you checked.
 
+**AntiSlop (H) — Anti-AI-bias.** Posture: _"This PR may have been written or assisted by an LLM. For each addition, ask: 'is this line earning its keep, or is it pattern-matching what code is supposed to look like?' If a reasonable senior engineer wouldn't have written it, call it out and propose deleting or shrinking it."_ Your job is to push back on AI-shaped padding that the other agents are too polite to call slop. Specifically watch for, **inside the diff itself**:
+
+- **Defensive code at trusted internal boundaries.** Null / undefined guards on private helpers whose callers' types already guarantee non-null. `try` / `catch` wrapping a single call that doesn't itself throw, or that re-throws unchanged, or that "logs and swallows" without naming what to do next. Optional-chaining cascades through types that don't include optionality.
+- **Defensiveness against unrealistic product / domain scenarios.** Code that guards against situations that wouldn't actually arise when the product is used as designed. Ask the litmus question: _"In the real product flow this code participates in, what user action, system event, or upstream call could land us in this branch?"_ If the answer is "none" or "I had to invent one to justify the guard", the code is slop. Concrete shapes this takes:
+  - A `null` / `undefined` guard on an ID immediately after that ID was used to load (and find) the entity.
+  - A `null` / `undefined` / `""` / `0` branch on a field whose TypeScript type permits only one of those values, or whose Zod / class-validator schema already rejected the others at the request boundary.
+  - A re-validation of a value the request DTO already validated upstream in the same request lifecycle.
+  - A consistency check (`if (a !== b) throw`) between two fields the data model forbids being unequal.
+  - A branch for a product-impossible state — e.g. "what if the worker is assigned to two workplaces at once" when the product enforces single-active-assignment; "what if the shift end is before its start" after the schema already enforces ordering; "what if the dispute amount is negative" when the validator caps it.
+  - A retry / fallback layer around an SDK or library call that already retries or already returns a typed error you can ignore.
+  - A `catch` clause for an error class the underlying code is statically known not to throw, or that "logs and swallows" without naming what to do next.
+  - A "future-proof" code path (`if (feature === "v2")`) when there is no `v2` and no concrete ticket creating one.
+
+  Don't accept "but what if upstream changes?" as a defense — that's the hypothetical-future-caller anti-pattern. The fix when upstream genuinely changes is a typed-error / schema update in the same PR, not preemptive guards.
+
+- **Restating-the-code comments.** `// fetch the user`, `// loop through items`, `// add 1 to counter`. JSDoc on private helpers that only restates the signature. `// Note: this is important` lines. Section banners (`// === HELPERS ===`) inside short files.
+- **Empty scaffolding.** `// TODO` comments with no owner, ticket, or trigger condition. Redundant pre-conditions (`if (!x) throw` immediately after a Zod parse). Log lines added "for debugging" that survive into the PR. Default `else { return undefined; }` after already-exhaustive branching. `_unused` parameter prefixes that should just be deletions.
+- **Speculative generality.** A helper called once that wraps two trivial lines. A `Map` / `Set` / config object keyed by a single hardcoded value. A "strategy" / "registry" pattern with one strategy. Type unions whose only second case is `never`, a placeholder, or a string literal nobody emits.
+- **Unused parameters / overloads / fields.** Function args destructured but never read; interface methods with empty implementations; type fields written but never consumed downstream in the diff; new optional fields with no producer or consumer.
+- **Tests that exercise the framework, not the code.** Tests that assert "the mock returns what the mock returned" via `jest.fn().mockReturnValue(x); expect(fn()).toBe(x)`. Snapshot tests with no semantic assertion. Tests that mock the unit under test. Tests with names that describe the implementation (`it("calls foo.bar"…)`) rather than the behavior.
+- **Dead AI breadcrumbs.** Variables whose only use is being logged or echoed in a debug branch; `console.log` / `console.error` calls that should have been removed before commit; commented-out alternative implementations left in the diff; "\_legacy" parameter renames where nothing actually changed about how it's read.
+- **Tone / description mismatch.** PR description / commit message claims behavior the diff doesn't have, or describes the diff in language that pattern-matches engineering writing without naming the actual change. Variable / function names that sound right but don't reflect the value's role (`data`, `result`, `processed`, `_handle`, `doStuff`).
+
+For every finding, `failure_mode` must name the _concrete cost of leaving the code in_ — e.g. "future readers waste cycles understanding a wrapper that does nothing", "the unused parameter masks the next refactor's mistake", "the `try` / `catch` silently swallows an unrelated runtime error", "the restating comment goes stale in the next change and misleads readers", "the speculative helper makes call-site search return one false hit per call". A finding without a concrete cost-of-keeping fails the moderator filter.
+
+The default `suggested_fix` shape is **delete** (empty `after`) or **simplify** (smaller `after` than `before`). Suggesting "add a justifying comment" is itself slop — do not propose it. If the right move is structural (e.g. inline the wrapper), omit `suggested_fix` and describe the move in `point`.
+
+Stay in your lane:
+
+- Do **not** raise items that the Conventions agent (D) owns (terminology, lodash, datetime / money libraries, logging context shape) — that's their turf.
+- Do **not** demand observability, tests, or error handling that **does not exist** in the diff — that's the inverse of your job. You only call out what's _present_ and unnecessary.
+- Do **not** challenge whether the PR solves the right problem — that's the Adversarial agent's (A) turf when opted in.
+- A change that's small but unnecessary is still slop. A change that's large but earns each line is not.
+
+Cap output at 8 findings. `failure_mode` required.
+
+**Round 2 expanded role — audit the other agents' findings, not just your own.** In Round 2 you receive every other agent's Round 1 findings. In addition to defending or withdrawing your own (the standard Round 2 contract), you are the AI-bias counterweight in the debate: audit every other agent's finding for the same slop patterns you scan code for. Mark each such finding `disagree` with a one-line `slop:` label in the `reasoning` field. Specifically watch for:
+
+- **Asks-for-more-defensiveness.** "Add a null check", "wrap in try / catch", "validate this input", "guard against …". If the value is already typed, already validated upstream, or already guaranteed by a preceding call inside the same scope, tag `slop: asks for defensive guard on already-narrowed value`.
+- **Hypothetical concerns.** "What if a future caller passes …", "consider the case where …", "if someone later …". If the finding cannot name a current realistic input or product flow that hits the concern, tag `slop: hypothetical future caller — no current path`.
+- **Restating-the-obvious comment requests.** "Add a JSDoc explaining what this does", "consider a comment here". If the name + signature already convey intent, tag `slop: restating-the-obvious comment request`.
+- **Abstract "extract this helper" / SOLID-aesthetic refactors.** Refactor suggestions whose `failure_mode` is shape-of-the-code rather than a concrete cost of keeping the inline version. Tag `slop: refactor with no concrete cost-of-keeping`.
+- **Observability demands without a named failure mode.** "Add a log here", "emit a metric". If the finding can't name the specific failure the telemetry would help debug, tag `slop: observability without named failure mode`.
+- **Test-coverage demands on trivially-verifiable code.** "Add a unit test for this getter / passthrough / one-line wrapper". If the code's correctness is type-evident or already exercised by a higher-level test in the same PR, tag `slop: test for trivially-verifiable code`.
+- **Domain-impossible scenarios surfaced by other agents.** Any finding that worries about a state the product cannot produce given how it actually works. Apply the same litmus question to _the finding_ that you apply to code: "what real product flow could land us here?" If none, tag `slop: defends against a state the product cannot produce`.
+
+The moderator filter weighs your slop tags heavily — see the moderator filter step on AntiSlop tags. The original author gets a chance to defend in their own Round 2 entry (a concrete `final_failure_mode` naming a real, product-specific cost); without that defense, the finding is dropped.
+
+Even when your Round 1 findings are sparse because the diff is genuinely clean, do not under-spend on the Round 2 audit. The audit is often the bigger lever — it stops slop _suggestions_ from polluting the final review.
+
 #### Conditional agents
 
 **Security (E) — API surface.** Dispatched when the diff touches auth / route / permission / serializer / contract files. Posture: _"Where could this change leak data, bypass authorization, or expand the trust boundary?"_ Specifically check:
@@ -297,7 +348,7 @@ Tag every finding `[CONVENTION]`. Cap severity at MAJOR (only when behavior dive
 - AuthZ: per-endpoint and per-resource permission checks; cross-tenant / cross-user access.
 - Secrets in configuration — no hardcoded keys, no secrets in client bundles.
 - No self-made or client-side cryptography.
-- SQL / NoSQL injection vectors (string-concatenated queries, untrusted `$where`, raw aggregation pipelines from user input).
+- SQL / NoSQL injection vectors (string-concatenated queries, unvalidated `$where`, raw aggregation pipelines from user input).
 - Sensitive data in response payloads — over-fetching, over-serialization, internal IDs leaked.
 - PII handling — PII fields logged, cached, or sent to telemetry.
 - Input validation at the boundary (Zod / class-validator) on every new endpoint.
@@ -341,7 +392,9 @@ Dispatch the **same set of agents** that ran in Round 1, in parallel. Each agent
 - For each comment from the other agents: mark `agree`, `disagree` (with reasoning), or `refine` (propose a tighter version).
 - Flag items where disagreement is substantive and unlikely to resolve.
 
-Output per item: `id`, `original_author` (agent **name**, e.g. `Engineering`, `Minimalist`, `Conventions`, `Security`, `Database`, `Frontend`, `Adversarial` — not the bare letter), `verdict` (keep | withdraw | agree | disagree | refine), `final_severity`, `final_title`, `final_failure_mode`, `reasoning`, `suggested_fix`, and rebuttals `[{from, stance, reasoning}]` where `from` is also the agent name.
+Output per item: `id`, `original_author` (agent **name**, e.g. `Engineering`, `Minimalist`, `Conventions`, `AntiSlop`, `Security`, `Database`, `Frontend`, `Adversarial` — not the bare letter), `verdict` (keep | withdraw | agree | disagree | refine), `final_severity`, `final_title`, `final_failure_mode`, `reasoning`, `suggested_fix`, and rebuttals `[{from, stance, reasoning}]` where `from` is also the agent name.
+
+**AntiSlop (H) plays an enhanced Round 2 role.** Beyond defending / withdrawing its own findings and voting on the others, AntiSlop audits every other agent's findings for AI-bias patterns — asks-for-more-defensiveness, hypothetical "future caller" concerns, restating-the-obvious comment requests, abstract "extract this helper" refactors, observability / test-coverage demands without a named failure mode, and guards-against-states-the-product-cannot-produce. AntiSlop tags those `disagree` with a one-line `slop:` label in `reasoning`. These tags feed the moderator filter (see step 2 there); the original author's Round 2 entry is their chance to rebut with a concrete, product-specific `final_failure_mode`. When other agents see an AntiSlop slop tag on one of their own findings, they should either rebut with a concrete failure mode or withdraw — not both stand on the original framing and re-assert the same wording.
 
 **This is the last round.** Residual disagreement goes to the Disagreements section.
 
@@ -350,10 +403,11 @@ Output per item: `id`, `original_author` (agent **name**, e.g. `Engineering`, `M
 Apply these filters in order. They are non-negotiable:
 
 1. **Drop findings with empty or hypothetical `failure_mode`.** "A future caller might…", "in case someone…" → drop.
-2. **Drop do-not-raise items** that slipped through.
-3. **Apply the NIT gate**. NITs that don't meet (a)/(b)/(c) → drop. NITs that do meet are kept internally but hidden by default in synthesis.
-4. **Merge near-duplicates** across agents into one item (preserve all attributions in `Raised by:`).
-5. **Apply hard caps**: at most **6 actionable** items (CRITICAL/MAJOR/MINOR) and **8 NITs** retained internally. Anything beyond is summarized as "N additional items omitted; ask for the full list."
+2. **Apply AntiSlop slop tags.** For every Round 2 entry where AntiSlop voted `disagree` with a `slop:` label in `reasoning`, check the original author's Round 2 rebuttal. If the author did not provide a concrete, product-specific `final_failure_mode` (a real user-, oncall-, or maintainer-visible cost realized through an actual product flow) that addresses AntiSlop's specific tag, **drop the finding**. AntiSlop's audit is not a unilateral veto, but the burden of proof shifts to the original author once AntiSlop tags slop. Record dropped findings in Withdrawn with the slop label so the user can audit AntiSlop's calls (e.g. `B4 — dropped: AntiSlop tagged "slop: asks for defensive guard on already-narrowed value", Engineering did not rebut with concrete failure_mode`).
+3. **Drop do-not-raise items** that slipped through.
+4. **Apply the NIT gate**. NITs that don't meet (a)/(b)/(c) → drop. NITs that do meet are kept internally but hidden by default in synthesis.
+5. **Merge near-duplicates** across agents into one item (preserve all attributions in `Raised by:`).
+6. **Apply hard caps**: at most **6 actionable** items (CRITICAL/MAJOR/MINOR) and **8 NITs** retained internally. Anything beyond is summarized as "N additional items omitted; ask for the full list."
 
 Filtered items go into Withdrawn (one-liner) so nothing is invisible.
 
@@ -361,7 +415,7 @@ Filtered items go into Withdrawn (one-liner) so nothing is invisible.
 
 ### Summary
 
-One short paragraph: what the change does, each agent's headline verdict in a clause (refer to agents by **name** — "Engineering says …", "Minimalist says …", "Conventions says …"), overall recommendation (ship / ship with changes / do not ship). State the **mode** ("Author mode" or "Reviewer mode — PR by @\<author\>"), whether **Adversarial ran or was skipped** (and why — "opted in via …" or "skipped — default; ask `with adversarial` to include"), and which conditional agents ran or were skipped (e.g. "Security ran; Database skipped — no migration/schema files; Frontend ran"). Letters are fine as parenthetical shorthand if it aids reading (e.g. "Engineering (B) says …"), but every agent reference must include the name.
+One short paragraph: what the change does and your overall recommendation (ship / ship with changes / do not ship). Do not state the mode, name which agents ran, attribute headline verdicts to specific agents, or note whether Adversarial ran — that methodology metadata is noise for the user. Keep it to substance: the headline concerns and the recommendation.
 
 ### Actionable
 
@@ -376,7 +430,7 @@ Up to 6 items that survived scrutiny and the moderator filter. Format each:
 
 Render template:
 
-````markdown
+````
 **Suggested fix (before → after):**
 
 ```ts
@@ -446,6 +500,7 @@ Build the payload as JSON and pipe it through `gh api --input`:
 
 ```bash
 # /tmp/in-depth-review-payload.json contains: {event, commit_id, body, comments: [...]}
+
 gh api -X POST "repos/<owner>/<repo>/pulls/<N>/reviews" --input /tmp/in-depth-review-payload.json
 ```
 
@@ -458,7 +513,14 @@ Payload shape:
   "body": "<summary>",
   "comments": [
     { "path": "src/foo.ts", "line": 42, "side": "RIGHT", "body": "..." },
-    { "path": "src/bar.ts", "start_line": 10, "line": 14, "start_side": "RIGHT", "side": "RIGHT", "body": "..." }
+    {
+      "path": "src/bar.ts",
+      "start_line": 10,
+      "line": 14,
+      "start_side": "RIGHT",
+      "side": "RIGHT",
+      "body": "..."
+    }
   ]
 }
 ```
@@ -468,7 +530,7 @@ Rules for posting:
 - `event` is **always `COMMENT`** — never `APPROVE` or `REQUEST_CHANGES`. Approval / blocking is a human decision, not the skill's.
 - For multi-line ranges, set `start_line`, `line`, `start_side: "RIGHT"`, `side: "RIGHT"`.
 - For findings without a clean line anchor (rare), pick the first changed line of the most relevant file rather than dropping the comment or going loose.
-- If there is no usable line anchor for a given finding, fold it into the review `body` as a labeled "general note" and flag this in the post-confirmation summary so the user knows.
+- If literally nothing is anchorable for a given finding, fold it into the review `body` as a labeled "general note" and flag this in the post-confirmation summary so the user knows.
 - Use `commit_id` from `pr.headRefOid` so comments anchor to the reviewed commit.
 - Resolve `<owner>/<repo>` once via `gh repo view --json nameWithOwner --jq .nameWithOwner` and stash it in `/tmp/in-depth-review-meta.json` alongside `head_sha` so permalinks below can be built without re-querying.
 
@@ -476,17 +538,17 @@ Rules for posting:
 
 The `body` field on the review (not the inline comment bodies) must contain three blocks, in order:
 
-**1. Attribution line.** A single sentence disclosing that the review was generated by an automated skill. Use exactly:
+**1. Attribution line.** A single sentence disclosing that the review was generated by Claude Code. Use exactly:
 
-> _These comments were generated by @\<viewer-login\> using the In-Depth Review Claude Code skill._
+> _These comments were generated by @\<viewer-login\> using Claude Code._
 
-Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line so it renders as muted text. This is non-negotiable — collaborators must be able to tell at a glance that the review is AI-assisted.
+Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line so it renders as muted text. This is non-negotiable — collaborators must be able to tell at a glance that the review is AI-assisted. Do **not** mention the In-Depth Review skill by name; it's a local skill the PR author can't see or use.
 
-**2. Synthesis Summary.** The same one-paragraph summary printed in the in-chat synthesis: what the change does, headline verdicts per agent, overall recommendation (ship / ship with changes / do not ship), the mode, and which conditional agents ran.
+**2. Synthesis Summary.** The same one-paragraph summary printed in the in-chat synthesis: what the change does and your recommendation. Do not include mode, per-agent headline verdicts, or which agents ran — that's methodology noise.
 
 **3. "Apply all comments at once" prompt.** A fenced block containing a self-contained Claude Code prompt the PR author (or any agent operator) can copy-paste into a Claude Code session on a checkout of this branch to address every inline comment in one shot. Template (substitute the `<…>` placeholders before posting):
 
-````markdown
+````
 **Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
 
 ```
@@ -498,7 +560,7 @@ Build the body in `/tmp/in-depth-review-payload.json` with literal newlines (use
 
 Each comment body:
 
-````markdown
+````
 **[SEVERITY] Title**
 
 <Point — one or two sentences. Any reference to a specific file/line elsewhere in the codebase must be a GitHub permalink pinned to head_sha, not a bare `file:lines` string. The line(s) the comment is already anchored to do not need to be relinked.>
@@ -542,7 +604,7 @@ After posting, print the review `html_url` and a one-line summary of how many co
 - Hide nits by default. Only print them when the user replies `show nits`.
 - Reviews are always `event: COMMENT`. Never approve or request changes on the user's behalf.
 - Conditional agents (E/F/G) run only when classification matches. Do not invent triggers; if the user wants a forced full run, they will say so.
-- The Adversarial agent (A) is opt-in. Default selected set is Engineering / Minimalist / Conventions (B/C/D), plus the classified subset of Security / Database / Frontend (E/F/G). Dispatch Adversarial only when the user explicitly asks (`with adversarial`, `with agent a`, `+A`, etc.). Surface the Adversarial on/off decision in the Summary so the user can see what ran.
+- The Adversarial agent (A) is opt-in. Default selected set is Engineering / Minimalist / Conventions / AntiSlop (B/C/D/H), plus the classified subset of Security / Database / Frontend (E/F/G). Dispatch Adversarial only when the user explicitly asks (`with adversarial`, `with agent a`, `+A`, etc.). Surface the Adversarial on/off decision in the Summary so the user can see what ran.
 - **Refer to agents by name in every user-facing surface** — Summary, Actionable items (`Raised by` / `agreed by`), Disagreements, Withdrawn, and `original_author` / `rebuttals[].from` in Round 2 output. Bare letters (A/B/C/D/E/F/G) are acceptable only as ID prefixes (`B1`, `C3`) and as parenthetical shorthand next to the name. The agent-name table in the "Agent roster" section is the authoritative mapping; do not invent alternative names.
 - Freshness preflight is mandatory before any agent dispatch. Subagents read repo context via `git show "<context_ref>:<path>"` / `git grep ... "<context_ref>"`, not the worktree filesystem, unless the resolved `context_ref` is `worktree (stale, user accepted risk)`.
 - Never run state-modifying git commands on the user's behalf (`checkout`, `stash`, `reset`, `clean`, `pull` with merge). The skill warns and asks; the user resolves local state. `git fetch` is allowed because it does not modify the working tree.
