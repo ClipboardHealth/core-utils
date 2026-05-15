@@ -4,6 +4,7 @@ export * from "./commaSeparatedArray";
 export * from "./dateTime";
 export * from "./enum";
 export * from "./money";
+export * from "./nonEmptyArray";
 export * from "./nonEmptyString";
 export * from "./objectId";
 export * from "./uuid";

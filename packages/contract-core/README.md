@@ -85,6 +85,7 @@ import {
   commaSeparatedArray,
   dateTimeSchema,
   ENUM_FALLBACK,
+  nonEmptyArray,
   nonEmptyString,
   objectId,
   optionalEnum,
@@ -155,6 +156,21 @@ try {
 } catch (error) {
   logError(error);
   // => String must contain at least 1 character(s)
+}
+
+// Non-empty array examples
+// Output type is the tuple [T, ...T[]], so consumers get a type-level
+// non-empty guarantee (unlike nonEmptyString, which is runtime-only).
+const tagsSchema = nonEmptyArray(nonEmptyString);
+const tags = tagsSchema.parse(["red", "blue"]);
+// => ["red", "blue"], typed as [string, ...string[]]
+console.log(tags[0]); // string, not string | undefined
+
+try {
+  tagsSchema.parse([]);
+} catch (error) {
+  logError(error);
+  // => Array must contain at least 1 element(s)
 }
 
 // UUID validation examples

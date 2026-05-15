@@ -1,6 +1,6 @@
 import { type NonEmptyArray, type OneOrNonEmptyArray, toNonEmptyArray } from "./nonEmptyArray";
 
-describe("[deprecated] NonEmptyArray", () => {
+describe("NonEmptyArray type", () => {
   it("should allow creation of a non-empty array", () => {
     const array: NonEmptyArray<number> = [1, 2, 3];
     expect(array).toStrictEqual([1, 2, 3]);
@@ -19,7 +19,7 @@ describe("[deprecated] OneOrNonEmptyArray", () => {
   });
 });
 
-describe("[deprecated] toNonEmptyArray", () => {
+describe(toNonEmptyArray, () => {
   it("should convert a single value to a non-empty array", () => {
     const result = toNonEmptyArray(5);
     expect(result).toStrictEqual([5]);
