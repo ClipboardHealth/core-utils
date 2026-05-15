@@ -77,6 +77,22 @@ export const config: Config = {
   // // session and lose status-pill painting (cmux-only feature).
   // workspaceKind: "auto",
   //
+  // remote: {
+  //   sprite: {
+  //     // Tickets labeled `agent-remote` run through this shared Sprite.
+  //     spriteName: "crew-claude-1",
+  //     // Bare repository names are cloned as `${owner}/${repo}` inside the Sprite.
+  //     owner: "ClipboardHealth",
+  //     // Absolute paths inside the Sprite. Groundcrew creates one shared clone
+  //     // per repo and one remote git worktree per ticket.
+  //     repoRoot: "/home/sprite/dev",
+  //     worktreeRoot: "/home/sprite/groundcrew/worktrees",
+  //     // Build-only env vars forwarded for remote dependency setup, then
+  //     // unset before the agent process starts.
+  //     secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+  //   },
+  // },
+  //
   // logging: {
   //   // Append-mode log file destination. `log()` / `logEvent()` tee here
   //   // in addition to stdout, so a vanished workspace doesn't take the

@@ -5,13 +5,22 @@ import { join } from "node:path";
 import { ensureClearance } from "@clipboard-health/clearance";
 
 import { fetchResolvedIssue } from "../lib/boardSource.ts";
-import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
+import {
+  BUILD_SECRET_NAMES,
+  loadConfig,
+  type ResolvedConfig,
+  type WorkspaceRunner,
+} from "../lib/config.ts";
 import { detectHostCapabilities } from "../lib/host.ts";
 import { resolveIsolationStrategy } from "../lib/isolation.ts";
-import { BUILD_SECRET_NAMES, buildLaunchCommand, shellSingleQuote } from "../lib/launchCommand.ts";
+import {
+  buildLaunchCommand,
+  buildSpriteLaunchCommand,
+  shellSingleQuote,
+} from "../lib/launchCommand.ts";
 import { errorMessage, getLinearClient, log, readEnvironmentVariable } from "../lib/util.ts";
 import { workspaces } from "../lib/workspaces.ts";
-import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
+import { repoDirFor, type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
 
 interface TicketDetails {
   title: string;
@@ -31,6 +40,7 @@ export interface SetupWorkspaceOptions {
   ticket: string;
   repository: string;
   model: string;
+  runner?: WorkspaceRunner;
   /** When provided, skip the Linear lookup for prompt-template fields. */
   details?: TicketDetails;
 }
@@ -57,9 +67,12 @@ function renderPrompt(
  * dir is `rm -rf`'d by the launch command (and rollback path), so cleanup
  * is already handled.
  */
-function stageBuildSecrets(promptDir: string): string | undefined {
+function stageBuildSecrets(
+  promptDir: string,
+  secretNames: readonly string[] = BUILD_SECRET_NAMES,
+): string | undefined {
   const lines: string[] = [];
-  for (const name of BUILD_SECRET_NAMES) {
+  for (const name of secretNames) {
     const value = readEnvironmentVariable(name);
     if (value === undefined || value.length === 0) {
       continue;
@@ -80,10 +93,20 @@ export async function setupWorkspace(
   runOptions: SetupWorkspaceRunOptions = {},
 ): Promise<void> {
   const { ticket, repository, model } = options;
+  const runner = options.runner ?? "local";
   const { signal } = runOptions;
   const definition = config.models.definitions[model];
   if (!definition) {
     throw new Error(`Unknown model: ${model}`);
+  }
+
+  if (runner === "sprite") {
+    await setupSpriteWorkspace({
+      config,
+      options: { ...options, runner },
+      ...(signal === undefined ? {} : { signal }),
+    });
+    return;
   }
 
   const { resolved: strategy, reason } = resolveIsolationStrategy({
@@ -97,7 +120,7 @@ export async function setupWorkspace(
     await ensureClearance({ logger: log });
   }
 
-  const spec = { repository, ticket, model, strategy };
+  const spec = { repository, ticket, model, strategy, runner };
   const created =
     signal === undefined
       ? await worktrees.create(config, spec)
@@ -169,6 +192,87 @@ export async function setupWorkspace(
   }
 }
 
+async function resolveTicketDetails(options: SetupWorkspaceOptions): Promise<TicketDetails> {
+  if (options.details !== undefined) {
+    return options.details;
+  }
+  log(`Fetching ${options.ticket} from Linear...`);
+  return await fetchTicket(options.ticket);
+}
+
+async function setupSpriteWorkspace(arguments_: {
+  config: ResolvedConfig;
+  options: SetupWorkspaceOptions & { runner: "sprite" };
+  signal?: AbortSignal;
+}): Promise<void> {
+  const { config, options, signal } = arguments_;
+  const { ticket, repository, model } = options;
+  const definition = config.models.definitions[model];
+  /* v8 ignore next 3 @preserve -- setupWorkspace validates the model before routing here */
+  if (definition === undefined) {
+    throw new Error(`Unknown model: ${model}`);
+  }
+
+  log(`Workspace runner: sprite (${config.remote.sprite.spriteName})`);
+  const spec = { repository, ticket, model, strategy: "none" as const, runner: "sprite" as const };
+  const created =
+    signal === undefined
+      ? await worktrees.create(config, spec)
+      : await worktrees.create(config, spec, signal);
+  const { branchName, dir: remoteWorktreeDir } = created;
+  const worktreeName = `${repository}-${ticket}`;
+
+  let promptDir: string | undefined;
+  try {
+    const ticketDetails = await resolveTicketDetails(options);
+    promptDir = mkdtempSync(join(tmpdir(), `groundcrew-${ticket}-`));
+    const promptFile = join(promptDir, "prompt.txt");
+    writeFileSync(
+      promptFile,
+      renderPrompt(config.prompts.initial, {
+        ticket,
+        worktree: worktreeName,
+        title: ticketDetails.title,
+        description: ticketDetails.description,
+      }),
+    );
+
+    const secretsFile = stageBuildSecrets(promptDir, config.remote.sprite.secretNames);
+    const remotePromptFile = `/tmp/groundcrew-${ticket}-prompt.txt`;
+    const remoteSecretsFile =
+      secretsFile === undefined ? undefined : `/tmp/groundcrew-${ticket}-secrets.env`;
+    const launchCmd = buildSpriteLaunchCommand({
+      definition,
+      spriteName: config.remote.sprite.spriteName,
+      promptFile,
+      remotePromptFile,
+      worktreeDir: remoteWorktreeDir,
+      secretNames: config.remote.sprite.secretNames,
+      ...(secretsFile === undefined ? {} : { secretsFile, remoteSecretsFile }),
+    });
+
+    log("Opening workspace...");
+    await workspaces.open(
+      config,
+      {
+        name: ticket,
+        cwd: repoDirFor(config, repository),
+        command: launchCmd,
+        status: { text: `${model}:remote`, color: definition.color, icon: "sparkle" },
+      },
+      signal,
+    );
+
+    log(`Workspace "${ticket}" launched (${model}, sprite)`);
+    log(`  Worktree: ${remoteWorktreeDir}`);
+    log(`  Branch:   ${branchName}`);
+    log(`  Sprite:   ${config.remote.sprite.spriteName}`);
+  } catch (error) {
+    await rollbackWorktree({ config, entry: created, promptDir });
+    throw error;
+  }
+}
+
 async function rollbackWorktree(arguments_: {
   config: ResolvedConfig;
   entry: WorktreeEntry;
@@ -219,15 +323,20 @@ export async function setupWorkspaceCli(
   const config = await loadConfig();
   const client = getLinearClient();
   const resolved = await fetchResolvedIssue({ client, config, ticket });
-  log(`Resolved ${ticket}: repository=${resolved.repository}, model=${resolved.model}`);
+  log(
+    `Resolved ${ticket}: repository=${resolved.repository}, model=${resolved.model}, runner=${resolved.runner}`,
+  );
   if (options.dryRun === true) {
-    log(`[dry-run] Would launch ${ticket} in ${resolved.repository} (${resolved.model})`);
+    log(
+      `[dry-run] Would launch ${ticket} in ${resolved.repository} (${resolved.model}, ${resolved.runner})`,
+    );
     return;
   }
   await setupWorkspace(config, {
     ticket: ticket.toLowerCase(),
     repository: resolved.repository,
     model: resolved.model,
+    runner: resolved.runner,
     details: { title: resolved.title, description: resolved.description },
   });
 }

@@ -1,7 +1,7 @@
 import type { LinearClient } from "@linear/sdk";
 
 import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
-import { createBoardSource, isTerminalStatus } from "./boardSource.ts";
+import { createBoardSource, fetchResolvedIssue, isTerminalStatus } from "./boardSource.ts";
 import type { ResolvedConfig } from "./config.ts";
 
 interface IssueNodeStub {
@@ -60,6 +60,16 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
     logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
+    remote: {
+      sprite: {
+        spriteName: "crew-claude-1",
+        owner: "ClipboardHealth",
+        repoRoot: "/home/sprite/dev",
+        worktreeRoot: "/home/sprite/groundcrew/worktrees",
+        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      },
+      ...overrides.remote,
+    },
   };
 }
 
@@ -124,6 +134,17 @@ function makeClient(options: { projectFound?: boolean; pages?: IssueNodeStub[][]
           issues: {
             nodes: page,
             pageInfo: { hasNextPage: hasNext, endCursor: hasNext ? `cursor-${index}` : "" },
+          },
+        },
+      };
+    }
+    if (query.includes("ResolveIssue")) {
+      return {
+        data: {
+          issue: {
+            title: "Title",
+            description: "Touches repo-a.",
+            labels: { nodes: [] },
           },
         },
       };
@@ -372,6 +393,19 @@ describe(createBoardSource, () => {
       const state = await source.fetch();
       const [first] = state.issues;
       expect(first?.model).toBe("codex");
+      expect(first?.runner).toBe("local");
+    });
+
+    it("defaults the local runner for labeled tickets without agent-remote", async () => {
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [[issueNode({ labels: { nodes: [{ name: "agent-claude" }] } })]],
+        }),
+      );
+
+      const state = await source.fetch();
+
+      expect(state.issues[0]?.runner).toBe("local");
     });
 
     it("preserves agent-any as the model name (resolution happens later)", async () => {
@@ -383,6 +417,57 @@ describe(createBoardSource, () => {
       const state = await source.fetch();
       const [first] = state.issues;
       expect(first?.model).toBe("any");
+    });
+
+    it("treats agent-remote alone as a Sprite runner with the default model", async () => {
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [[issueNode({ labels: { nodes: [{ name: "agent-remote" }] } })]],
+        }),
+      );
+
+      const state = await source.fetch();
+
+      expect(state.issues[0]?.model).toBe("claude");
+      expect(state.issues[0]?.runner).toBe("sprite");
+    });
+
+    it("treats agent-remote as a modifier alongside a concrete model", async () => {
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                labels: { nodes: [{ name: "agent-remote" }, { name: "agent-codex" }] },
+              }),
+            ],
+          ],
+        }),
+      );
+
+      const state = await source.fetch();
+
+      expect(state.issues[0]?.model).toBe("codex");
+      expect(state.issues[0]?.runner).toBe("sprite");
+    });
+
+    it("preserves agent-any when combined with agent-remote", async () => {
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                labels: { nodes: [{ name: "agent-remote" }, { name: "agent-any" }] },
+              }),
+            ],
+          ],
+        }),
+      );
+
+      const state = await source.fetch();
+
+      expect(state.issues[0]?.model).toBe("any");
+      expect(state.issues[0]?.runner).toBe("sprite");
     });
 
     it("falls back to the default model when an agent-* label names a prototype property", async () => {
@@ -416,6 +501,24 @@ describe(createBoardSource, () => {
       expect(first?.model).toBe("claude");
     });
 
+    it("uses the first recognized model when an unknown label appears first", async () => {
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                labels: { nodes: [{ name: "agent-ghost" }, { name: "agent-codex" }] },
+              }),
+            ],
+          ],
+        }),
+      );
+
+      const state = await source.fetch();
+
+      expect(state.issues[0]?.model).toBe("codex");
+    });
+
     it("sets model and repository to undefined for tickets without an agent-* label", async () => {
       // Tickets without an `agent-*` label aren't groundcrew's concern. The
       // board snapshot still includes them (for dashboard counts and blocker
@@ -429,6 +532,7 @@ describe(createBoardSource, () => {
       const [first] = state.issues;
       expect(first?.model).toBeUndefined();
       expect(first?.repository).toBeUndefined();
+      expect(first?.runner).toBeUndefined();
     });
 
     it("falls back to defaults when state, team, and assignee are missing", async () => {
@@ -517,6 +621,30 @@ describe(createBoardSource, () => {
       const [first] = state.issues;
       expect(first?.hasMoreBlockers).toBe(true);
     });
+  });
+});
+
+describe(fetchResolvedIssue, () => {
+  it("preserves the Sprite runner for crew run --ticket", async () => {
+    const client = makeClient({ pages: [[]] });
+    client.client.rawRequest.mockResolvedValueOnce({
+      data: {
+        issue: {
+          title: "Title",
+          description: "Touches repo-a.",
+          labels: { nodes: [{ name: "agent-remote" }, { name: "agent-codex" }] },
+        },
+      },
+    });
+
+    const actual = await fetchResolvedIssue({
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- tests use the LinearClient surface consumed by boardSource
+      client: client as unknown as LinearClient,
+      config: makeConfig(),
+      ticket: "team-1",
+    });
+
+    expect(actual).toMatchObject({ repository: "repo-a", model: "codex", runner: "sprite" });
   });
 });
 

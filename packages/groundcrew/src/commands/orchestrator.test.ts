@@ -110,6 +110,16 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
     logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
+    remote: {
+      sprite: {
+        spriteName: "crew-claude-1",
+        owner: "ClipboardHealth",
+        repoRoot: "/home/sprite/dev",
+        worktreeRoot: "/home/sprite/groundcrew/worktrees",
+        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      },
+      ...overrides.remote,
+    },
   };
 }
 

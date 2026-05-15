@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import type { RunCommandOptions } from "../lib/commandRunner.ts";
 import { bootstrapSpriteRepository, setupSprite, spriteCli } from "./spriteSetup.ts";
 
@@ -70,6 +74,35 @@ function mockSpriteListWithExistingMcp(output: string): void {
     }
     return "";
   });
+}
+
+function mockSpriteListWithCodexStatus(options: {
+  failuresBeforeSuccess?: number;
+  alwaysFail?: boolean;
+}): () => number {
+  let codexStatusCalls = 0;
+  runCommandMock.mockImplementation(async (command, arguments_) => {
+    if (command === "sprite" && arguments_[0] === "list") {
+      return "NAME STATUS\ncrew-claude-1 running";
+    }
+    if (hasRemoteCommand([command, arguments_], ["codex", "login", "status"])) {
+      codexStatusCalls += 1;
+      if (options.alwaysFail === true || codexStatusCalls <= (options.failuresBeforeSuccess ?? 0)) {
+        throw new Error("codex missing");
+      }
+    }
+    return "";
+  });
+  return () => codexStatusCalls;
+}
+
+function isInteractiveCodexLoginCall(call: readonly unknown[]): boolean {
+  const [, arguments_] = call;
+  return (
+    Array.isArray(arguments_) &&
+    hasRemoteCommand(call, ["codex", "login"]) &&
+    !arguments_.includes("status")
+  );
 }
 
 describe(spriteCli, () => {
@@ -159,6 +192,8 @@ describe(spriteCli, () => {
   });
 
   it("parses setup options for selected agent auth, git identity, and checkpoint", async () => {
+    const codexStatusCalls = mockSpriteListWithCodexStatus({ failuresBeforeSuccess: 1 });
+
     await spriteCli([
       "setup",
       "crew-claude-1",
@@ -203,6 +238,7 @@ describe(spriteCli, () => {
       ["checkpoint", "create", "-s", "crew-claude-1", "--comment", "custom baseline"],
       { stdio: "inherit", timeoutMs: 0 },
     );
+    expect(codexStatusCalls()).toBe(2);
   });
 
   it("skips adding MCP servers that already exist", async () => {
@@ -349,7 +385,7 @@ describe(setupSprite, () => {
   });
 
   it("authenticates codex when requested", async () => {
-    mockSpriteList("NAME STATUS\ncrew-claude-1 running");
+    const codexStatusCalls = mockSpriteListWithCodexStatus({ failuresBeforeSuccess: 1 });
 
     await setupSprite({
       spriteName: "crew-claude-1",
@@ -368,6 +404,108 @@ describe(setupSprite, () => {
       expect.arrayContaining(["codex", "login"]),
       { stdio: "inherit", timeoutMs: 0 },
     );
+    expect(codexStatusCalls()).toBe(2);
+  });
+
+  it("skips codex auth when status is already valid", async () => {
+    mockSpriteList("NAME STATUS\ncrew-claude-1 running");
+
+    await setupSprite({
+      spriteName: "crew-claude-1",
+      shouldCreate: false,
+      shouldAuthenticateClaude: false,
+      shouldAuthenticateCodex: true,
+      shouldAuthenticateGithub: false,
+      shouldAuthenticateMcp: false,
+      shouldCheckpoint: false,
+      checkpointComment: "",
+      mcpServers: [],
+    });
+
+    expect(runCommandMock.mock.calls.some(isInteractiveCodexLoginCall)).toBe(false);
+  });
+
+  it("copies local codex auth when requested and validates it", async () => {
+    const temporaryCodexHome = mkdtempSync(join(tmpdir(), "groundcrew-codex-home-"));
+    const localAuthFile = join(temporaryCodexHome, "auth.json");
+    writeFileSync(localAuthFile, JSON.stringify({ token: "redacted" }));
+    vi.stubEnv("CODEX_HOME", temporaryCodexHome);
+    const codexStatusCalls = mockSpriteListWithCodexStatus({ failuresBeforeSuccess: 1 });
+
+    try {
+      await spriteCli([
+        "setup",
+        "crew-claude-1",
+        "--codex",
+        "--copy-local-codex-auth",
+        "--no-create",
+      ]);
+    } finally {
+      rmSync(temporaryCodexHome, { recursive: true, force: true });
+    }
+
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["--file", `${localAuthFile}:/tmp/groundcrew-codex-auth.json`]),
+    );
+    const copyCall = runCommandMock.mock.calls.find((call) =>
+      call[1].includes(`${localAuthFile}:/tmp/groundcrew-codex-auth.json`),
+    );
+    const command = copyCall?.[1].at(-1);
+    expect(command).toStrictEqual(expect.stringContaining("/home/sprite/.codex/auth.json"));
+    expect(command).toStrictEqual(expect.stringContaining("install -m 600"));
+    expect(command).toStrictEqual(
+      expect.stringContaining("rm -f '/tmp/groundcrew-codex-auth.json'"),
+    );
+    expect(codexStatusCalls()).toBe(2);
+  });
+
+  it("rejects copy-local-codex-auth when the local auth file is missing", async () => {
+    const temporaryCodexHome = mkdtempSync(join(tmpdir(), "groundcrew-codex-home-"));
+    vi.stubEnv("CODEX_HOME", temporaryCodexHome);
+    mockSpriteListWithCodexStatus({ alwaysFail: true });
+
+    try {
+      await expect(
+        spriteCli(["setup", "crew-claude-1", "--codex", "--copy-local-codex-auth", "--no-create"]),
+      ).rejects.toThrow(/Local Codex auth file not found/);
+    } finally {
+      rmSync(temporaryCodexHome, { recursive: true, force: true });
+    }
+  });
+
+  it("fails when copied codex auth still does not validate", async () => {
+    const temporaryCodexHome = mkdtempSync(join(tmpdir(), "groundcrew-codex-home-"));
+    writeFileSync(join(temporaryCodexHome, "auth.json"), JSON.stringify({ token: "redacted" }));
+    vi.stubEnv("CODEX_HOME", temporaryCodexHome);
+    mockSpriteListWithCodexStatus({ alwaysFail: true });
+
+    try {
+      await expect(
+        spriteCli(["setup", "crew-claude-1", "--codex", "--copy-local-codex-auth", "--no-create"]),
+      ).rejects.toThrow(/Codex auth copy completed/);
+    } finally {
+      rmSync(temporaryCodexHome, { recursive: true, force: true });
+    }
+  });
+
+  it("fails with copy-auth guidance when codex login still does not validate", async () => {
+    mockSpriteListWithCodexStatus({ alwaysFail: true });
+
+    await expect(
+      setupSprite({
+        spriteName: "crew-claude-1",
+        shouldCreate: false,
+        shouldAuthenticateClaude: false,
+        shouldAuthenticateCodex: true,
+        shouldCopyLocalCodexAuth: false,
+        shouldAuthenticateGithub: false,
+        shouldAuthenticateMcp: false,
+        shouldCheckpoint: false,
+        checkpointComment: "",
+        mcpServers: [],
+      }),
+    ).rejects.toThrow(/copy-local-codex-auth/);
   });
 });
 

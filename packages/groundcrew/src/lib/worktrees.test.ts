@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import type * as nodeOs from "node:os";
 import { tmpdir, userInfo } from "node:os";
 import { join, sep } from "node:path";
@@ -74,6 +74,15 @@ function makeConfig(overrides: {
     prompts: { initial: "x" },
     workspaceKind: "auto",
     logging: { file: "/tmp/groundcrew-test.log" },
+    remote: {
+      sprite: {
+        spriteName: "crew-claude-1",
+        owner: "ClipboardHealth",
+        repoRoot: "/home/sprite/dev",
+        worktreeRoot: "/home/sprite/groundcrew/worktrees",
+        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      },
+    },
   };
 }
 
@@ -86,14 +95,29 @@ let projectDir: string;
 function setupTempProjectDir(): void {
   beforeEach(() => {
     projectDir = mkdtempSync(join(tmpdir(), "groundcrew-worktrees-"));
+    vi.stubEnv("XDG_STATE_HOME", join(projectDir, "state"));
     userInfoMock.mockReturnValue(makeUserInfo("rocky"));
     runCommandMock.mockReturnValue("");
   });
 
   afterEach(() => {
     rmSync(projectDir, { recursive: true, force: true });
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
   });
+}
+
+function spriteStatePath(): string {
+  return join(projectDir, "state", "groundcrew", "sprite-worktrees.json");
+}
+
+function writeSpriteState(entries: WorktreeEntry[]): void {
+  mkdirSync(join(projectDir, "state", "groundcrew"), { recursive: true });
+  writeFileSync(spriteStatePath(), `${JSON.stringify({ entries }, undefined, 2)}\n`);
+}
+
+function readSpriteStateEntries(): WorktreeEntry[] {
+  return JSON.parse(readFileSync(spriteStatePath(), "utf8")).entries as WorktreeEntry[];
 }
 
 describe(list, () => {
@@ -199,6 +223,59 @@ describe(list, () => {
     expect(actual).toHaveLength(2);
     expect(actual.map((entry) => entry.kind).toSorted()).toStrictEqual(["host", "sandbox"]);
     expect(actual.every((entry) => entry.ticket === "team-1")).toBe(true);
+  });
+
+  it("includes locally tracked Sprite worktrees", () => {
+    const config = makeConfig({ projectDir });
+    writeSpriteState([
+      {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+        kind: "sprite",
+        spriteName: "crew-claude-1",
+        remoteRepoDir: "/home/sprite/dev/repo-a",
+      },
+    ]);
+
+    expect(list(config)).toContainEqual({
+      repository: "repo-a",
+      ticket: "team-1",
+      branchName: "rocky-team-1",
+      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      kind: "sprite",
+      spriteName: "crew-claude-1",
+      remoteRepoDir: "/home/sprite/dev/repo-a",
+    });
+  });
+
+  it("ignores malformed locally tracked Sprite entries", () => {
+    const config = makeConfig({ projectDir });
+    mkdirSync(join(projectDir, "state", "groundcrew"), { recursive: true });
+    const validEntry: WorktreeEntry = {
+      repository: "repo-a",
+      ticket: "team-1",
+      branchName: "rocky-team-1",
+      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      kind: "sprite",
+      spriteName: "crew-claude-1",
+      remoteRepoDir: "/home/sprite/dev/repo-a",
+    };
+    writeFileSync(
+      spriteStatePath(),
+      `${JSON.stringify({ entries: [null, "bad", { kind: "sprite" }, validEntry] })}\n`,
+    );
+
+    expect(list(config)).toStrictEqual([validEntry]);
+  });
+
+  it("ignores Sprite state files whose entries field is not an array", () => {
+    const config = makeConfig({ projectDir });
+    mkdirSync(join(projectDir, "state", "groundcrew"), { recursive: true });
+    writeFileSync(spriteStatePath(), `${JSON.stringify({ entries: null })}\n`);
+
+    expect(list(config)).toStrictEqual([]);
   });
 });
 
@@ -339,6 +416,106 @@ describe(create, () => {
     expect(actual.sandboxName).toBe("groundcrew-repo-a-claude");
   });
 
+  it("creates a Sprite worktree using the host-computed branch name", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+
+    const actual = await create(config, {
+      repository: "repo-a",
+      ticket: "team-1",
+      model: "claude",
+      strategy: "none",
+      runner: "sprite",
+    });
+
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["exec", "-s", "crew-claude-1", "--", "bash", "-lc"]),
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+    const spriteCommand = runCommandMock.mock.calls.find(([cmd]) => cmd === "sprite")?.[1].at(-1);
+    expect(spriteCommand).toStrictEqual(expect.stringContaining("branch='rocky-team-1'"));
+    expect(spriteCommand).toStrictEqual(
+      expect.stringContaining("repo_dir='/home/sprite/dev/repo-a'"),
+    );
+    expect(spriteCommand).toStrictEqual(
+      expect.stringContaining("worktree_dir='/home/sprite/groundcrew/worktrees/repo-a-team-1'"),
+    );
+    expect(actual).toStrictEqual({
+      repository: "repo-a",
+      ticket: "team-1",
+      branchName: "rocky-team-1",
+      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      kind: "sprite",
+      spriteName: "crew-claude-1",
+      remoteRepoDir: "/home/sprite/dev/repo-a",
+    });
+    expect(readSpriteStateEntries()).toStrictEqual([actual]);
+  });
+
+  it("creates Sprite worktrees for owner-qualified repositories without double-prefixing the owner", async () => {
+    mkdirSync(join(projectDir, "ClipboardHealth", "repo-a"), { recursive: true });
+    const config = makeConfig({ projectDir, knownRepositories: ["ClipboardHealth/repo-a"] });
+
+    const actual = await create(config, {
+      repository: "ClipboardHealth/repo-a",
+      ticket: "team-1",
+      model: "claude",
+      strategy: "none",
+      runner: "sprite",
+    });
+
+    const spriteCommand = runCommandMock.mock.calls.find(([cmd]) => cmd === "sprite")?.[1].at(-1);
+    expect(spriteCommand).toStrictEqual(
+      expect.stringContaining("gh repo clone 'ClipboardHealth/repo-a'"),
+    );
+    expect(spriteCommand).toStrictEqual(
+      expect.stringContaining("repo_dir='/home/sprite/dev/repo-a'"),
+    );
+    expect(spriteCommand).toStrictEqual(
+      expect.stringContaining("worktree_dir='/home/sprite/groundcrew/worktrees/repo-a-team-1'"),
+    );
+    expect(actual).toMatchObject({
+      repository: "ClipboardHealth/repo-a",
+      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      remoteRepoDir: "/home/sprite/dev/repo-a",
+    });
+  });
+
+  it("strips .git suffixes from Sprite remote directory names", async () => {
+    mkdirSync(join(projectDir, "repo-a.git"));
+    const config = makeConfig({ projectDir, knownRepositories: ["repo-a.git"] });
+
+    const actual = await create(config, {
+      repository: "repo-a.git",
+      ticket: "team-1",
+      model: "claude",
+      strategy: "none",
+      runner: "sprite",
+    });
+
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+  });
+
+  it("normalizes trailing slashes in configured Sprite remote roots", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+    config.remote.sprite.repoRoot = "/home/sprite/dev///";
+    config.remote.sprite.worktreeRoot = "/home/sprite/groundcrew/worktrees///";
+
+    const actual = await create(config, {
+      repository: "repo-a",
+      ticket: "team-1",
+      model: "claude",
+      strategy: "none",
+      runner: "sprite",
+    });
+
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+  });
+
   it("passes AbortSignal through sandbox existence and creation commands", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const { signal } = new AbortController();
@@ -417,6 +594,32 @@ describe(create, () => {
         ticket: "team-1",
         model: "claude",
         strategy: "none",
+      }),
+    ).rejects.toThrow(/already exists/);
+  });
+
+  it("rejects when a Sprite worktree is already tracked for the same ticket", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+    writeSpriteState([
+      {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+        kind: "sprite",
+        spriteName: "crew-claude-1",
+        remoteRepoDir: "/home/sprite/dev/repo-a",
+      },
+    ]);
+
+    await expect(
+      create(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        model: "claude",
+        strategy: "none",
+        runner: "sprite",
       }),
     ).rejects.toThrow(/already exists/);
   });
@@ -724,6 +927,36 @@ describe(remove, () => {
       ),
     ).rejects.toThrow("interrupted branch delete");
   });
+
+  it("rejects malformed Sprite entries without spriteName", async () => {
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      remove(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+        kind: "sprite",
+        remoteRepoDir: "/home/sprite/dev/repo-a",
+      }),
+    ).rejects.toThrow(/missing spriteName/);
+  });
+
+  it("rejects malformed Sprite entries without remoteRepoDir", async () => {
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      remove(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+        kind: "sprite",
+        spriteName: "crew-claude-1",
+      }),
+    ).rejects.toThrow(/missing remoteRepoDir/);
+  });
 });
 
 describe(teardown, () => {
@@ -786,6 +1019,59 @@ describe(teardown, () => {
     expect(Number(workspacesCloseMock.mock.invocationCallOrder[0])).toBeLessThan(
       Number(runCommandMock.mock.invocationCallOrder[0]),
     );
+  });
+
+  it("removes a Sprite worktree remotely and deletes the local state entry after success", async () => {
+    const config = makeConfig({ projectDir });
+    const entry: WorktreeEntry = {
+      repository: "repo-a",
+      ticket: "team-1",
+      branchName: "rocky-team-1",
+      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      kind: "sprite",
+      spriteName: "crew-claude-1",
+      remoteRepoDir: "/home/sprite/dev/repo-a",
+    };
+    writeSpriteState([entry]);
+
+    await remove(config, entry, { force: true });
+
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      expect.arrayContaining(["exec", "-s", "crew-claude-1", "--", "bash", "-lc"]),
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+    const command = runCommandMock.mock.calls.find(([cmd]) => cmd === "sprite")?.[1].at(-1);
+    expect(command).toStrictEqual(
+      expect.stringContaining(
+        "git -C '/home/sprite/dev/repo-a' worktree remove --force '/home/sprite/groundcrew/worktrees/repo-a-team-1'",
+      ),
+    );
+    expect(command).toStrictEqual(
+      expect.stringContaining("git -C '/home/sprite/dev/repo-a' branch -D 'rocky-team-1' || true"),
+    );
+    expect(readSpriteStateEntries()).toStrictEqual([]);
+  });
+
+  it("keeps the Sprite state entry when remote removal fails", async () => {
+    const config = makeConfig({ projectDir });
+    const entry: WorktreeEntry = {
+      repository: "repo-a",
+      ticket: "team-1",
+      branchName: "rocky-team-1",
+      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      kind: "sprite",
+      spriteName: "crew-claude-1",
+      remoteRepoDir: "/home/sprite/dev/repo-a",
+    };
+    writeSpriteState([entry]);
+    runCommandMock.mockImplementation(() => {
+      throw new Error("worktree busy");
+    });
+
+    await expect(remove(config, entry)).rejects.toThrow(/worktree busy/);
+
+    expect(readSpriteStateEntries()).toStrictEqual([entry]);
   });
 
   it("dedupes the workspace close across host+sandbox kinds for one ticket", async () => {
