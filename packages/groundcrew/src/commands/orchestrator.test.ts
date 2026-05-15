@@ -109,6 +109,7 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     },
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
+    logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
   };
 }
 
@@ -147,7 +148,9 @@ function issue(overrides: Partial<IssueNodeStub>): IssueNodeStub {
     team: overrides.team === undefined ? { id: "team-default", key: "TEAM" } : overrides.team,
     assignee: overrides.assignee === undefined ? { name: "Alice" } : overrides.assignee,
     children: overrides.children ?? { nodes: [] },
-    labels: overrides.labels ?? { nodes: [] },
+    // Default to a groundcrew-eligible label. Tests that exercise unlabeled
+    // tickets explicitly override with `labels: { nodes: [] }`.
+    labels: overrides.labels ?? { nodes: [{ name: "agent-claude" }] },
     ...(overrides.inverseRelations === undefined
       ? {}
       : { inverseRelations: overrides.inverseRelations }),

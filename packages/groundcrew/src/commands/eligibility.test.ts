@@ -1,4 +1,4 @@
-import type { Issue } from "../lib/boardSource.ts";
+import type { GroundcrewIssue } from "../lib/boardSource.ts";
 import type { ResolvedConfig } from "../lib/config.ts";
 import type { UsageByModel } from "../lib/usage.ts";
 import type { WorktreeEntry } from "../lib/worktrees.ts";
@@ -40,10 +40,11 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     },
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
+    logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
   };
 }
 
-function todoIssue(overrides: Partial<Issue> = {}): Issue {
+function todoIssue(overrides: Partial<GroundcrewIssue> = {}): GroundcrewIssue {
   return {
     id: "team-1",
     uuid: "uuid-1",

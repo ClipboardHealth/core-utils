@@ -9,7 +9,12 @@
 
 import type { LinearClient } from "@linear/sdk";
 
-import type { BoardState, Issue } from "../lib/boardSource.ts";
+import {
+  type BoardState,
+  type GroundcrewIssue,
+  isGroundcrewIssue,
+  type Issue,
+} from "../lib/boardSource.ts";
 import type { ResolvedConfig } from "../lib/config.ts";
 import type { UsageByModel } from "../lib/usage.ts";
 import { errorMessage, log, logEvent } from "../lib/util.ts";
@@ -211,7 +216,12 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
       (issue) => issue.status === config.linear.statuses.inProgress,
     ).length;
     const slots = config.orchestrator.maximumInProgress - activeCount;
-    const todo = state.issues.filter((issue) => issue.status === config.linear.statuses.todo);
+    // Narrow Todo to tickets that opted in via an `agent-*` label.
+    // Unlabeled tickets are not groundcrew's concern even when in Todo.
+    const todo: readonly GroundcrewIssue[] = state.issues.filter(
+      (issue): issue is GroundcrewIssue =>
+        issue.status === config.linear.statuses.todo && isGroundcrewIssue(issue),
+    );
 
     if (slots <= 0) {
       log(

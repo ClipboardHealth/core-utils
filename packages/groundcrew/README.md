@@ -16,17 +16,18 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
 2. **Create a Linear project to scope your work.** Any team works — make a project inside it and drop tickets in. The orchestrator polls by project, not by team, so you don't need a dedicated team.
 
-3. **Create your config.** Copy the shipped example, edit it, and point `crew` at it via `GROUNDCREW_CONFIG`:
+3. **Create your config.** Copy the shipped example into the XDG config path and edit it:
 
    ```bash
-   cp "$(npm root -g)/@clipboard-health/groundcrew/configExample.ts" ./config.ts
-   $EDITOR ./config.ts
-   export GROUNDCREW_CONFIG="$PWD/config.ts"
+   mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew"
+   cp "$(npm root -g)/@clipboard-health/groundcrew/configExample.ts" \
+      "${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/config.ts"
+   $EDITOR "${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/config.ts"
    ```
 
    At minimum set `linear.projectSlug` (paste the trailing segment of your Linear project URL, e.g. `ai-strategy-5152195762f3`), `workspace.projectDir`, and `workspace.knownRepositories`. Everything else has a default.
 
-   `GROUNDCREW_CONFIG` is effectively required for npm-installed use. If it's unset, `crew` falls back to a `config.ts` sitting next to its own source files — only useful when running from a local checkout (see [Hacking on groundcrew](#hacking-on-groundcrew)).
+   `crew` resolves the config path as: `GROUNDCREW_CONFIG` if set → `${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/config.ts` if it exists → a `config.ts` sitting next to `crew`'s own source files (only useful from a local checkout; see [Hacking on groundcrew](#hacking-on-groundcrew)). Set `GROUNDCREW_CONFIG` only when you want to override the XDG location.
 
 4. **Provide a Linear API key.** `crew` expects `LINEAR_API_KEY` in its environment. Any mechanism works — shell export, [direnv](https://direnv.net/), a `.env` file you `source`, or piping through `op run` if you store the credential in 1Password:
 
@@ -77,7 +78,31 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
    Watch `${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.log` for `DENY` lines and add only the domains your agents actually need.
 
-7. **Run.** Doctor first, then a dry run, then the real thing:
+7. **Optional: prepare a remote Sprite runner.** A Sprite is a remote Linux runner, so setup is intentionally explicit: choose which agent CLIs and MCP servers to authenticate. `--mcp` only adds the servers you name; it does not attempt to authenticate every MCP server visible in your Claude account.
+
+   ```bash
+   crew sprite setup crew-claude-1 \
+     --claude \
+     --github \
+     --git-name "Rocky Warren" \
+     --git-email "1085683+therockstorm@users.noreply.github.com" \
+     --mcp linear \
+     --mcp slack \
+     --checkpoint
+   ```
+
+   Known MCP aliases are `linear`, `slack`, and `notion`. For another HTTP MCP server, pass `--mcp name=https://example.com/mcp`. The command creates the Sprite if needed, prepares `~/dev`, configures Git, runs selected auth flows, adds selected MCP servers to Claude Code, and then opens Claude so you can run `/mcp` and authenticate only those selected servers. Use `--skip-mcp-auth` when you only want to add MCP definitions, and run the `/mcp` step later.
+
+   Repo setup is separate from runner setup and should run after the ticket branch exists, immediately before launching an agent. It clones/fetches the repo in the Sprite, checks out the requested branch (creating it from the base branch when it does not exist on origin), forwards only build-time secrets for the dependency install, removes the temporary secret file, clears those env vars, and then exits. It reuses the same Node/npm bootstrap command as groundcrew's Docker Sandboxes path.
+
+   ```bash
+   op run --env-file "${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/op.env" -- \
+     crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123
+   ```
+
+   By default bootstrap forwards any locally set `NPM_TOKEN` and `BUF_TOKEN`. Use repeated `--secret <ENV_NAME>` to require a specific set, or `--no-secrets` for public installs. Do not checkpoint after repo bootstrap; dependency state is branch-specific and should be refreshed per ticket.
+
+8. **Run.** Doctor first, then a dry run, then the real thing:
 
    ```bash
    crew doctor
@@ -90,37 +115,40 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
 Required fields are marked **required**; everything else has a default and can be omitted from `config.ts`.
 
-| Key                                     | Default             | What it does                                                                                                                                                                                                                                      |
-| --------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linear.projectSlug`                    | **required**        | Linear project URL slug (e.g. `ai-strategy-5152195762f3`). The trailing 12-char hex `slugId` is what's matched against Linear's API; the leading name keeps `config.ts` self-documenting and the lookup survives project renames.                 |
-| `linear.statuses.todo`                  | `"Todo"`            | Status name picked up for new work.                                                                                                                                                                                                               |
-| `linear.statuses.inProgress`            | `"In Progress"`     | Status set after a workspace is provisioned; counts toward `maximumInProgress`.                                                                                                                                                                   |
-| `linear.statuses.done`                  | `"Done"`            | Status that triggers worktree cleanup.                                                                                                                                                                                                            |
-| `linear.statuses.terminal`              | `["Done"]`          | Additional status names treated as terminal for cleanup, board remaining counts, and blocker checks. The `done` status is always included.                                                                                                        |
-| `git.remote`                            | `"origin"`          | Remote used for `fetch` and as the worktree base ref.                                                                                                                                                                                             |
-| `git.defaultBranch`                     | `"main"`            | Branch fetched from `git.remote` and used as the worktree base.                                                                                                                                                                                   |
-| `workspace.projectDir`                  | **required**        | Parent dir for cloned repos. `$PROJECT_DIR` env var overrides. Sandbox-backed ticket worktrees live under each repo's `.sbx/` directory.                                                                                                          |
-| `workspace.knownRepositories`           | **required**        | Repos searched for in ticket descriptions to infer where work belongs. Tickets fail fast when no known repo appears.                                                                                                                              |
-| `orchestrator.maximumInProgress`        | `4`                 | Cap on tickets in `linear.statuses.inProgress` at once.                                                                                                                                                                                           |
-| `orchestrator.pollIntervalMilliseconds` | `120_000`           | Poll interval in `--watch` mode.                                                                                                                                                                                                                  |
-| `orchestrator.sessionLimitPercentage`   | `85`                | Number in `(0, 100]`. A model whose codexbar session window exceeds this percentage is skipped that tick.                                                                                                                                         |
-| `models.default`                        | `"claude"`          | Agent used when a ticket has no agent label. Must exist in `models.definitions`.                                                                                                                                                                  |
-| `models.isolation`                      | `"auto"`            | Isolation strategy. `"auto"` picks Safehouse on macOS, else Docker Sandboxes when the model has a sandbox config. Safehouse or a model sandbox config is required; if neither is available, setup fails. Set `"none"` explicitly to run directly. |
-| `models.definitions`                    | `{ claude, codex }` | Agent definitions. Additive merge with shipped defaults.                                                                                                                                                                                          |
-| `models.definitions.<name>.cmd`         | —                   | Shell command launched for the model. For sandbox-backed models this runs inside the persistent sandbox; otherwise it runs in the workspace. `{{worktree}}` and `{{sandbox}}` are replaced before launch.                                         |
-| `models.definitions.<name>.color`       | —                   | Color for the workspace status pill (cmux only; tmux silently drops it).                                                                                                                                                                          |
-| `models.definitions.<name>.sandbox`     | `{ agent }`         | Optional Docker Sandboxes backing. Defaults set `claude` → `agent: "claude"` and `codex` → `agent: "codex"`. Set `sandbox: false` on an override to run the command outside Docker Sandboxes.                                                     |
-| `models.definitions.<name>.usage`       | optional            | If set, codexbar usage is fetched for this model and gated by `sessionLimitPercentage`. Omit to never gate. When `usage.codexbar.source` is omitted, groundcrew uses `auto` on macOS and `cli` elsewhere.                                         |
-| `prompts.initial`                       | (template)          | First message sent to the agent. Placeholders: `{{ticket}}`, `{{worktree}}`, `{{title}}`, `{{description}}`.                                                                                                                                      |
-| `workspaceKind`                         | `"auto"`            | Terminal session manager. `"auto"` picks `cmux` when on PATH, else `tmux`. Set to `"cmux"` or `"tmux"` to fail loudly when the chosen backend is missing. tmux windows live in a dedicated `groundcrew` session.                                  |
+| Key                                     | Default             | What it does                                                                                                                                                                                                                                                    |
+| --------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linear.projectSlug`                    | **required**        | Linear project URL slug (e.g. `ai-strategy-5152195762f3`). The trailing 12-char hex `slugId` is what's matched against Linear's API; the leading name keeps `config.ts` self-documenting and the lookup survives project renames.                               |
+| `linear.statuses.todo`                  | `"Todo"`            | Status name picked up for new work.                                                                                                                                                                                                                             |
+| `linear.statuses.inProgress`            | `"In Progress"`     | Status set after a workspace is provisioned; counts toward `maximumInProgress`.                                                                                                                                                                                 |
+| `linear.statuses.done`                  | `"Done"`            | Status that triggers worktree cleanup.                                                                                                                                                                                                                          |
+| `linear.statuses.terminal`              | `["Done"]`          | Additional status names treated as terminal for cleanup, board remaining counts, and blocker checks. The `done` status is always included.                                                                                                                      |
+| `git.remote`                            | `"origin"`          | Remote used for `fetch` and as the worktree base ref.                                                                                                                                                                                                           |
+| `git.defaultBranch`                     | `"main"`            | Branch fetched from `git.remote` and used as the worktree base.                                                                                                                                                                                                 |
+| `workspace.projectDir`                  | **required**        | Parent dir for cloned repos. Sandbox-backed ticket worktrees live under each repo's `.sbx/` directory.                                                                                                                                                          |
+| `workspace.knownRepositories`           | **required**        | Repos searched for in ticket descriptions to infer where work belongs. A ticket labeled for groundcrew (`agent-*`) fails fast when no known repo appears; unlabeled tickets are ignored.                                                                        |
+| `orchestrator.maximumInProgress`        | `4`                 | Cap on tickets in `linear.statuses.inProgress` at once.                                                                                                                                                                                                         |
+| `orchestrator.pollIntervalMilliseconds` | `120_000`           | Poll interval in `--watch` mode.                                                                                                                                                                                                                                |
+| `orchestrator.sessionLimitPercentage`   | `85`                | Number in `(0, 100]`. A model whose codexbar session window exceeds this percentage is skipped that tick.                                                                                                                                                       |
+| `models.default`                        | `"claude"`          | Tiebreak for `agent-any` resolution and fallback for explicit but unknown `agent-*` labels. Also used by `crew setup <TICKET>` for unlabeled tickets. `crew run` ignores unlabeled tickets and does not apply this default. Must exist in `models.definitions`. |
+| `models.isolation`                      | `"auto"`            | Isolation strategy. `"auto"` picks Safehouse on macOS, else Docker Sandboxes when the model has a sandbox config. Safehouse or a model sandbox config is required; if neither is available, setup fails. Set `"none"` explicitly to run directly.               |
+| `models.definitions`                    | `{ claude, codex }` | Agent definitions. Additive merge with shipped defaults.                                                                                                                                                                                                        |
+| `models.definitions.<name>.cmd`         | —                   | Shell command launched for the model. For sandbox-backed models this runs inside the persistent sandbox; otherwise it runs in the workspace. `{{worktree}}` and `{{sandbox}}` are replaced before launch.                                                       |
+| `models.definitions.<name>.color`       | —                   | Color for the workspace status pill (cmux only; tmux silently drops it).                                                                                                                                                                                        |
+| `models.definitions.<name>.sandbox`     | `{ agent }`         | Optional Docker Sandboxes backing. Defaults set `claude` → `agent: "claude"` and `codex` → `agent: "codex"`. Set `sandbox: false` on an override to run the command outside Docker Sandboxes.                                                                   |
+| `models.definitions.<name>.usage`       | optional            | If set, codexbar usage is fetched for this model and gated by `sessionLimitPercentage`. Omit to never gate. When `usage.codexbar.source` is omitted, groundcrew uses `auto` on macOS and `cli` elsewhere.                                                       |
+| `prompts.initial`                       | (template)          | First message sent to the agent. Placeholders: `{{ticket}}`, `{{worktree}}`, `{{title}}`, `{{description}}`.                                                                                                                                                    |
+| `workspaceKind`                         | `"auto"`            | Terminal session manager. `"auto"` picks `cmux` when on PATH, else `tmux`. Set to `"cmux"` or `"tmux"` to fail loudly when the chosen backend is missing. tmux windows live in a dedicated `groundcrew` session.                                                |
+| `logging.file`                          | XDG state path      | Append-mode log file destination. `log()` / `logEvent()` tee here in addition to stdout, so a vanished workspace doesn't take the evidence with it. Defaults to `${XDG_STATE_HOME:-$HOME/.local/state}/groundcrew/groundcrew.log`.                              |
 
-The branch prefix (`<prefix>-<TICKET>`) is derived from your OS username (`os.userInfo().username`), not configured. Agent selection looks for a top-level Linear label named `agent-<model>` (e.g. `agent-claude`, `agent-codex`). The reserved label `agent-any` routes the ticket to the configured model with the most available session capacity (lowest codexbar session-used percent), skipping any model already over `sessionLimitPercentage`. With no usage data, `agent-any` resolves to `models.default`. The name `any` cannot be used in `models.definitions`. Todo tickets blocked by Linear issues that are not in `linear.statuses.terminal` are skipped until their blockers reach a terminal status.
+The branch prefix (`<prefix>-<TICKET>`) is derived from your OS username (`os.userInfo().username`), not configured. Agent selection looks for a top-level Linear label named `agent-<model>` (e.g. `agent-claude`, `agent-codex`). **`crew run` only fetches tickets with an `agent-*` label** — the GraphQL query filters them server-side, so unlabeled tickets are never returned by Linear's API and do not appear in the rendered board. Use `crew setup <TICKET>` to provision an unlabeled ticket on demand (manual setup falls back to `models.default`). The reserved label `agent-any` routes the ticket to the configured model with the most available session capacity (lowest codexbar session-used percent), skipping any model already over `sessionLimitPercentage`. With no usage data, `agent-any` resolves to `models.default`. The name `any` cannot be used in `models.definitions`. Todo tickets blocked by Linear issues that are not in `linear.statuses.terminal` are skipped until their blockers reach a terminal status.
 
 ## Manual commands
 
 ```bash
 crew sandbox auth <repo> --model claude
 crew sandbox auth <repo> --model codex
+crew sprite setup crew-claude-1 --claude --github --mcp linear --checkpoint
+crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123
 crew run --ticket <TICKET>
 crew cleanup <TICKET>
 ```
@@ -147,12 +175,14 @@ For developers working on the package itself, the source lives in [`ClipboardHea
 
 ```bash
 cd ~/dev/c/core-utils
-GROUNDCREW_CONFIG=~/.config/groundcrew/config.ts node --run crew -- doctor
+node --run crew -- doctor
 
 # With 1Password for LINEAR_API_KEY:
-GROUNDCREW_OP_ENV_FILE=~/.config/groundcrew/op.env \
-GROUNDCREW_CONFIG=~/.config/groundcrew/config.ts \
 node --run crew:op -- run --watch
 ```
 
-`GROUNDCREW_OP_ENV_FILE` defaults to `.crew.1password.env` at the repo root. Source edits in `packages/{clearance,groundcrew}/src/**` are picked up on the next invocation. Requires Node ≥ 24.3 (the version with native `.ts` type stripping enabled by default).
+Both forms read `${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/config.ts` by default; set `GROUNDCREW_CONFIG` to point elsewhere. The `crew:op` wrapper additionally reads `${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/op.env` (1Password env-file with `op://` references resolved at launch) — symlink it there if you keep yours elsewhere; the path is not configurable.
+
+Logs land in `${XDG_STATE_HOME:-$HOME/.local/state}/groundcrew/groundcrew.log` by default (override via `logging.file` in your config). The "Loaded config from …" line at startup tells you which config won.
+
+Source edits in `packages/{clearance,groundcrew}/src/**` are picked up on the next invocation. Requires Node ≥ 24.3 (the version with native `.ts` type stripping enabled by default).

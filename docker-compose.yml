@@ -1,6 +1,6 @@
 services:
   test-mongo:
-    image: mongo:8.3@sha256:ce32a4b67580c982e2020b07d4ffafdbd9ce474088434294d89c6bd9257f7788
+    image: mongo:8.3@sha256:94b405c5aa83d5160e6dd97383c4687d471f8a6bd247ed3ff6463c092ebf7a8c
     command: --replSet "rs0"
     ports:
       - 127.0.0.1:27017:27017

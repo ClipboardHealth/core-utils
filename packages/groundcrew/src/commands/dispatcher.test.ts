@@ -59,6 +59,7 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     },
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
+    logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
   };
 }
 
@@ -195,6 +196,24 @@ describe(createDispatcher, () => {
         dryRun: false,
       });
 
+      expect(consoleLog.output()).toContain("No Todo tickets");
+    });
+
+    it("ignores Todo tickets without an agent-* label (model: undefined)", async () => {
+      // Unlabeled Todo tickets reach the dispatcher in the board snapshot
+      // but should be filtered out via isGroundcrewIssue before eligibility.
+      const client = makeClient();
+      const dispatcher = createDispatcher({ config: makeConfig(), client: asLinearClient(client) });
+
+      await dispatcher.runOnce({
+        state: boardOf([todoIssue({ model: undefined, repository: undefined })]),
+        worktreeEntries: [],
+        usage: async () => ({}),
+        dryRun: false,
+      });
+
+      expect(setupMock).not.toHaveBeenCalled();
+      expect(client.updateIssue).not.toHaveBeenCalled();
       expect(consoleLog.output()).toContain("No Todo tickets");
     });
 

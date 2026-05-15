@@ -59,6 +59,7 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     },
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
+    logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
   };
 }
 
@@ -216,7 +217,14 @@ describe(createBoardSource, () => {
     it("infers the repository from a known repo name in the description", async () => {
       const { source } = makeBoardSource(
         makeClient({
-          pages: [[issueNode({ description: "Affects api-admin somewhere." })]],
+          pages: [
+            [
+              issueNode({
+                description: "Affects api-admin somewhere.",
+                labels: { nodes: [{ name: "agent-claude" }] },
+              }),
+            ],
+          ],
         }),
       );
       const state = await source.fetch();
@@ -228,7 +236,14 @@ describe(createBoardSource, () => {
       // Without the descending-length sort, `api` would match first.
       const { source } = makeBoardSource(
         makeClient({
-          pages: [[issueNode({ description: "ticket about api-admin only" })]],
+          pages: [
+            [
+              issueNode({
+                description: "ticket about api-admin only",
+                labels: { nodes: [{ name: "agent-claude" }] },
+              }),
+            ],
+          ],
         }),
       );
       const state = await source.fetch();
@@ -236,9 +251,18 @@ describe(createBoardSource, () => {
       expect(first?.repository).toBe("api-admin");
     });
 
-    it("rejects when no known repo appears in the description", async () => {
+    it("rejects when a labeled ticket has no known repo in its description", async () => {
       const { source } = makeBoardSource(
-        makeClient({ pages: [[issueNode({ description: "no repo here" })]] }),
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                description: "no repo here",
+                labels: { nodes: [{ name: "agent-claude" }] },
+              }),
+            ],
+          ],
+        }),
       );
 
       await expect(source.fetch()).rejects.toThrow(
@@ -246,14 +270,46 @@ describe(createBoardSource, () => {
       );
     });
 
-    it("rejects when description is missing", async () => {
+    it("rejects when a labeled ticket has a missing description", async () => {
       const { source } = makeBoardSource(
-        makeClient({ pages: [[issueNode({ description: undefined })]] }),
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                description: undefined,
+                labels: { nodes: [{ name: "agent-claude" }] },
+              }),
+            ],
+          ],
+        }),
       );
 
       await expect(source.fetch()).rejects.toThrow(
         /No known repository found in ticket TEAM-1 description/,
       );
+    });
+
+    it("does not reject when an unlabeled ticket has no parseable repo", async () => {
+      // Regression guard: previously aborted the whole board load on any
+      // human-owned ticket whose description happened not to mention one
+      // of `workspace.knownRepositories`.
+      const { source } = makeBoardSource(
+        makeClient({ pages: [[issueNode({ description: "no repo here" })]] }),
+      );
+      const state = await source.fetch();
+      const [first] = state.issues;
+      expect(first?.repository).toBeUndefined();
+      expect(first?.model).toBeUndefined();
+    });
+
+    it("does not reject when an unlabeled ticket has a missing description", async () => {
+      const { source } = makeBoardSource(
+        makeClient({ pages: [[issueNode({ description: undefined })]] }),
+      );
+      const state = await source.fetch();
+      const [first] = state.issues;
+      expect(first?.repository).toBeUndefined();
+      expect(first?.model).toBeUndefined();
     });
 
     it("scopes the board query to the orchestrator's configured state names so off-board tickets are never returned", async () => {
@@ -265,6 +321,20 @@ describe(createBoardSource, () => {
       expect(boardCall?.[0]).toMatch(/state:\s*\{\s*name:\s*\{\s*in:\s*\$stateNames\s*\}\s*\}/);
       expect(boardCall?.[1]).toMatchObject({
         stateNames: ["Todo", "In Progress", "Done"],
+      });
+    });
+
+    it("filters the board query to tickets with an agent-* label so unlabeled tickets never leave Linear", async () => {
+      const { source, rawRequest } = makeBoardSource(makeClient({ pages: [[]] }));
+
+      await source.fetch();
+
+      const boardCall = rawRequest.mock.calls.find(([query]) => query.includes("BoardIssues"));
+      expect(boardCall?.[0]).toMatch(
+        /labels:\s*\{\s*some:\s*\{\s*name:\s*\{\s*startsWith:\s*\$agentLabelPrefix\s*\}\s*\}\s*\}/,
+      );
+      expect(boardCall?.[1]).toMatchObject({
+        agentLabelPrefix: "agent-",
       });
     });
 
@@ -315,6 +385,26 @@ describe(createBoardSource, () => {
       expect(first?.model).toBe("any");
     });
 
+    it("falls back to the default model when an agent-* label names a prototype property", async () => {
+      // Guard against `in`-operator prototype lookup: `agent-toString` must
+      // not resolve to `toString`, it must fall back to models.default.
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                description: "Touches repo-a.",
+                labels: { nodes: [{ name: "agent-toString" }] },
+              }),
+            ],
+          ],
+        }),
+      );
+      const state = await source.fetch();
+      const [first] = state.issues;
+      expect(first?.model).toBe("claude");
+    });
+
     it("falls back to the default model when the label names an unknown model", async () => {
       const { source } = makeBoardSource(
         makeClient({
@@ -326,7 +416,10 @@ describe(createBoardSource, () => {
       expect(first?.model).toBe("claude");
     });
 
-    it("uses the default model when no agent-* label exists", async () => {
+    it("sets model and repository to undefined for tickets without an agent-* label", async () => {
+      // Tickets without an `agent-*` label aren't groundcrew's concern. The
+      // board snapshot still includes them (for dashboard counts and blocker
+      // checks), but downstream dispatch skips them via isGroundcrewIssue.
       const { source } = makeBoardSource(
         makeClient({
           pages: [[issueNode({ labels: { nodes: [{ name: "feature" }] } })]],
@@ -334,7 +427,8 @@ describe(createBoardSource, () => {
       );
       const state = await source.fetch();
       const [first] = state.issues;
-      expect(first?.model).toBe("claude");
+      expect(first?.model).toBeUndefined();
+      expect(first?.repository).toBeUndefined();
     });
 
     it("falls back to defaults when state, team, and assignee are missing", async () => {

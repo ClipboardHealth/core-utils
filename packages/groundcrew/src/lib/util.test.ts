@@ -1,6 +1,10 @@
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { LinearClient } from "@linear/sdk";
 
-import { captureConsoleLog } from "../testHelpers/consoleCapture.ts";
+import { captureConsoleError, captureConsoleLog } from "../testHelpers/consoleCapture.ts";
 import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.ts";
 import {
   errorMessage,
@@ -8,6 +12,7 @@ import {
   log,
   logEvent,
   readEnvironmentVariable,
+  setLogFile,
   sleep,
 } from "./util.ts";
 
@@ -85,6 +90,85 @@ describe(logEvent, () => {
       'event=dispatch outcome=skipped reason=blocked blockers="TEAM-1:In Progress"',
     );
     consoleLog.restore();
+  });
+});
+
+describe(setLogFile, () => {
+  let temporary: string;
+
+  beforeEach(() => {
+    temporary = mkdtempSync(join(tmpdir(), "groundcrew-log-file-"));
+  });
+
+  afterEach(() => {
+    setLogFile(undefined);
+    rmSync(temporary, { recursive: true, force: true });
+  });
+
+  it("tees log() output to the configured file, creating the parent dir", () => {
+    const consoleLog = captureConsoleLog();
+    const path = join(temporary, "nested", "groundcrew.log");
+    setLogFile(path);
+
+    log("hello world");
+
+    expect(consoleLog.output()).toMatch(/^\[.+] hello world$/);
+    expect(readFileSync(path, "utf8")).toMatch(/^\[.+] hello world\n$/);
+    consoleLog.restore();
+  });
+
+  it("tees logEvent() output to the configured file", () => {
+    const consoleLog = captureConsoleLog();
+    const path = join(temporary, "events.log");
+    setLogFile(path);
+
+    logEvent("dispatch", { outcome: "started", ticket: "TEAM-1" });
+
+    expect(readFileSync(path, "utf8")).toBe("event=dispatch outcome=started ticket=TEAM-1\n");
+    consoleLog.restore();
+  });
+
+  it("appends successive writes to the same file", () => {
+    const consoleLog = captureConsoleLog();
+    const path = join(temporary, "events.log");
+    setLogFile(path);
+
+    logEvent("dispatch", { outcome: "started" });
+    logEvent("cleanup", { outcome: "workspace_closed" });
+
+    expect(readFileSync(path, "utf8")).toBe(
+      "event=dispatch outcome=started\nevent=cleanup outcome=workspace_closed\n",
+    );
+    consoleLog.restore();
+  });
+
+  it("does not write to disk when no log file has been set", () => {
+    const consoleLog = captureConsoleLog();
+    const path = join(temporary, "events.log");
+
+    logEvent("dispatch", { outcome: "started" });
+
+    expect(existsSync(path)).toBe(false);
+    consoleLog.restore();
+  });
+
+  it("disables file logging after a broken destination, warning once", () => {
+    const consoleLog = captureConsoleLog();
+    const consoleError = captureConsoleError();
+    // A path whose parent is an existing regular file — mkdir will throw.
+    const path = join(temporary, "events.log");
+    setLogFile(path);
+    logEvent("first", {});
+    setLogFile(join(path, "trapped.log"));
+
+    logEvent("second", {});
+    logEvent("third", {});
+
+    expect(consoleError.output()).toMatch(/disabling file logging/);
+    expect(consoleError.calls).toHaveLength(1);
+    expect(readFileSync(path, "utf8")).toBe("event=first\n");
+    consoleLog.restore();
+    consoleError.restore();
   });
 });
 

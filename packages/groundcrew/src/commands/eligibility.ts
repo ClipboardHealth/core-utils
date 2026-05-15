@@ -7,7 +7,7 @@
  * effects.
  */
 
-import { type Blocker, type Issue, isTerminalStatus } from "../lib/boardSource.ts";
+import { type Blocker, type GroundcrewIssue, isTerminalStatus } from "../lib/boardSource.ts";
 import { AGENT_ANY_MODEL, type ResolvedConfig } from "../lib/config.ts";
 import type { UsageByModel } from "../lib/usage.ts";
 import type { WorkspaceProbe } from "../lib/workspaces.ts";
@@ -23,7 +23,7 @@ type SkipReason =
 
 export interface StartVerdict {
   kind: "start";
-  issue: Issue;
+  issue: GroundcrewIssue;
   recovery: boolean;
   /** Set when the verdict resolved an `agent-any` label to a concrete model. */
   resolvedFromAny: boolean;
@@ -31,7 +31,7 @@ export interface StartVerdict {
 
 export interface SkipVerdict {
   kind: "skip";
-  issue: Issue;
+  issue: GroundcrewIssue;
   /** Human log line. */
   message: string;
   /** Stable kebab-case enum surfaced as `logEvent.reason`. */
@@ -57,7 +57,7 @@ export interface ClassifyArguments {
    * (skipping the codexbar usage HTTP call and the cmux/tmux shell-out)
    * when every Todo is blocked.
    */
-  unblocked: readonly Issue[];
+  unblocked: readonly GroundcrewIssue[];
   worktreeEntries: readonly WorktreeEntry[];
   workspaceProbe: WorkspaceProbe;
   usage: UsageByModel;
@@ -69,7 +69,7 @@ export interface ClassifyArguments {
 }
 
 interface BlockerClassification {
-  unblocked: Issue[];
+  unblocked: GroundcrewIssue[];
   skips: SkipVerdict[];
 }
 
@@ -77,7 +77,10 @@ function blockerSummary(blocker: Blocker): string {
   return `${blocker.id}:${blocker.status ?? "missing"}`;
 }
 
-function blockerVerdictFor(issue: Issue, config: ResolvedConfig): SkipVerdict | undefined {
+function blockerVerdictFor(
+  issue: GroundcrewIssue,
+  config: ResolvedConfig,
+): SkipVerdict | undefined {
   if (issue.hasMoreBlockers) {
     const blockers = issue.blockers.map(blockerSummary);
     return {
@@ -135,7 +138,7 @@ export function pickBestModel(
 }
 
 interface RecoveryArguments {
-  issue: Issue;
+  issue: GroundcrewIssue;
   worktreeEntries: readonly WorktreeEntry[];
   workspaceProbe: WorkspaceProbe;
   dryRun: boolean;
@@ -184,9 +187,9 @@ function classifyRecovery(
  */
 export function classifyBlockers(
   config: ResolvedConfig,
-  todo: readonly Issue[],
+  todo: readonly GroundcrewIssue[],
 ): BlockerClassification {
-  const unblocked: Issue[] = [];
+  const unblocked: GroundcrewIssue[] = [];
   const skips: SkipVerdict[] = [];
   for (const issue of todo) {
     const verdict = blockerVerdictFor(issue, config);
