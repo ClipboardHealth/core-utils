@@ -68,6 +68,7 @@
     "favorited",
     "fieldsets",
     "flamegraph",
+    "forwardable",
     "frontmatter",
     "gentoken",
     "gitleaks",

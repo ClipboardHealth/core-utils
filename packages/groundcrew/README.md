@@ -104,7 +104,7 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
    By default bootstrap forwards any locally set `NPM_TOKEN` and `BUF_TOKEN`. Use repeated `--secret <ENV_NAME>` to require a specific set, or `--no-secrets` for public installs. Do not checkpoint after repo bootstrap; dependency state is branch-specific and should be refreshed per ticket.
 
-   To run a ticket remotely through the orchestrator or `crew run --ticket`, label it with `agent-remote` plus the agent label you want, for example `agent-claude` or `agent-codex`. `agent-remote` alone uses `models.default`. Groundcrew keeps cmux/tmux local, creates a per-ticket git worktree in the Sprite under `/home/sprite/groundcrew/worktrees`, and runs the agent with `sprite exec --tty`.
+   To run a ticket remotely through the orchestrator or `crew run --ticket`, label it with `agent-remote` plus the agent label you want, for example `agent-claude` or `agent-codex`. `agent-remote` alone uses `models.default`. Groundcrew keeps cmux/tmux local, creates a per-ticket git worktree in the Sprite under `/home/sprite/groundcrew/worktrees`, and runs the agent with `sprite exec --tty`. Use `crew sprite sessions [<sprite-name>]` to inspect active Sprite sessions and `crew sprite attach <session-id-or-command> [--sprite <sprite-name>]` to attach to one; both commands default to `remote.sprite.spriteName` when the Sprite name is omitted.
 
 8. **Run.** Doctor first, then a dry run, then the real thing:
 
@@ -158,11 +158,13 @@ crew sandbox auth <repo> --model claude
 crew sandbox auth <repo> --model codex
 crew sprite setup crew-claude-1 --claude --codex --copy-local-codex-auth --github --mcp linear --checkpoint
 crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123
+crew sprite sessions
+crew sprite attach <session-id-or-command> --sprite crew-claude-1
 crew run --ticket <TICKET>
 crew cleanup <TICKET>
 ```
 
-`crew run --ticket <TICKET>` provisions a single ticket the same way the orchestrator would: the repo is parsed from the ticket's Linear description, the model comes from the ticket's `agent-*` label, and `agent-remote` is honored. If the description does not mention a repo from `workspace.knownRepositories`, setup fails before provisioning. `--watch` and `--ticket` are mutually exclusive — `--watch` drives the orchestrator loop; `--ticket` provisions one ticket and exits. `crew cleanup <TICKET>` resolves to every worktree carrying that ticket id (host, sandbox, and Sprite kinds, across repos) and tears them all down. To inspect remote sessions directly, run `sprite sessions list -s crew-claude-1`; if cleanup cannot remove a remote worktree because the agent is still running, stop that session with `sprite sessions kill -s crew-claude-1 <session-id>` and retry cleanup. To inspect codexbar session windows directly, run `codexbar usage`; the orchestrator already gates on this internally via `orchestrator.sessionLimitPercentage`.
+`crew run --ticket <TICKET>` provisions a single ticket the same way the orchestrator would: the repo is parsed from the ticket's Linear description, the model comes from the ticket's `agent-*` label, and `agent-remote` is honored. If the description does not mention a repo from `workspace.knownRepositories`, setup fails before provisioning. `--watch` and `--ticket` are mutually exclusive — `--watch` drives the orchestrator loop; `--ticket` provisions one ticket and exits. `crew cleanup <TICKET>` resolves to every worktree carrying that ticket id (host, sandbox, and Sprite kinds, across repos) and tears them all down. To inspect remote sessions, run `crew sprite sessions` or pass an explicit Sprite name. To attach to a listed session id or command selector, run `crew sprite attach <session-id-or-command>`. If cleanup cannot remove a remote worktree because the agent is still running, stop that session with `sprite sessions kill -s crew-claude-1 <session-id>` and retry cleanup. To inspect codexbar session windows directly, run `codexbar usage`; the orchestrator already gates on this internally via `orchestrator.sessionLimitPercentage`.
 
 ## Gotchas
 
@@ -170,7 +172,7 @@ crew cleanup <TICKET>
 - **Safehouse-already-wrapped commands are not re-wrapped.** If a `models.definitions.<name>.cmd` already starts with `safehouse`, groundcrew assumes that command owns its Safehouse flags and does not add the `safehouse-clearance` wrapper a second time. Changing the proxy's allowlist after it's running requires killing the PID in `${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.pid` so the next launch picks up the new env.
 - **Authenticate before first ticket setup.** Run `crew sandbox auth <repo> --model <name>` before `crew run` for a repo/model. That first run carries no ticket prompt, so a required OAuth `/login` cannot consume task context.
 - **Sandbox cleanup is intentionally conservative.** `crew cleanup` removes the per-ticket worktree and branch, but keeps the persistent sandbox so OAuth sessions, installed packages, and agent config survive later tickets. Use `sbx ls` and `sbx rm --force <name>` when you intentionally want to delete that persisted sandbox state.
-- **Sprite cleanup is also conservative.** `crew cleanup` removes tracked remote worktrees and branches, but it does not kill active Sprite sessions. Use `sprite sessions list -s <sprite>` and `sprite sessions kill -s <sprite> <session-id>` when Git reports a worktree is busy.
+- **Sprite cleanup is also conservative.** `crew cleanup` removes tracked remote worktrees and branches, but it does not kill active Sprite sessions. Use `crew sprite sessions [<sprite>]` to inspect sessions and `sprite sessions kill -s <sprite> <session-id>` when Git reports a worktree is busy.
 - **Codex auth in Sprites may need auth-file copy.** If `crew sprite setup <sprite> --codex` finishes interactive login but `codex login status` still fails inside the Sprite, rerun with `--copy-local-codex-auth` after confirming local Codex auth works.
 - **Usage source defaults are OS-aware.** `codexbar` usage uses `--source auto` on macOS so CodexBar can prefer account/web sources and fall back as it supports. On Linux/WSL it uses `--source cli`, so install the CodexBar Linux CLI and authenticate the provider CLIs inside that environment.
 - **Status names matter.** If your team uses `Started` instead of `In Progress`, set `linear.statuses.inProgress = "Started"`.
