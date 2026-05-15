@@ -93,7 +93,7 @@ export interface ModelDefinition {
    * positional argument. `{{worktree}}` and `{{sandbox}}` placeholders are
    * replaced before launch.
    *
-   * Keep this agent-native (e.g., `claude --permission-mode auto`).
+   * Keep this agent-native (e.g., `claude --permission-mode bypassPermissions`).
    * The isolation strategy adds wrappers like `safehouse` or `sbx exec`.
    */
   cmd: string;
@@ -318,7 +318,7 @@ const DEFAULT_ORCHESTRATOR: ResolvedConfig["orchestrator"] = {
 
 const DEFAULT_MODEL_DEFINITIONS: Record<string, ModelDefinition> = {
   claude: {
-    cmd: "claude --permission-mode auto",
+    cmd: "claude --permission-mode bypassPermissions",
     color: "#C15F3C",
     sandbox: { agent: "claude" },
     usage: { codexbar: { provider: "claude" } },

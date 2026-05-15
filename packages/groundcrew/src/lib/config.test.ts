@@ -114,7 +114,9 @@ describe("loadConfig", () => {
     });
     expect(actual.models.default).toBe("claude");
     expect(Object.keys(actual.models.definitions).toSorted()).toStrictEqual(["claude", "codex"]);
-    expect(actual.models.definitions["claude"]?.cmd).toBe("claude --permission-mode auto");
+    expect(actual.models.definitions["claude"]?.cmd).toBe(
+      "claude --permission-mode bypassPermissions",
+    );
     expect(actual.models.definitions["claude"]?.sandbox).toStrictEqual({ agent: "claude" });
     expect(actual.models.definitions["codex"]?.cmd).toBe(
       "codex --dangerously-bypass-approvals-and-sandbox",
