@@ -348,6 +348,17 @@ describe(spriteCli, () => {
     );
   });
 
+  it("interrupts a selected remote process group using an explicit sprite", async () => {
+    await spriteCli(["interrupt", "27673", "--sprite", "crew-claude-1"]);
+
+    expect(loadConfigMock).not.toHaveBeenCalled();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["exec", "-s", "crew-claude-1", "--", "kill", "-INT", "--", "-27673"],
+      { stdio: "inherit" },
+    );
+  });
+
   it("rejects missing targets and unknown session wrapper flags before running sprite", async () => {
     await expect(spriteCli(["attach"])).rejects.toThrow(/Usage:/);
     await expect(spriteCli(["attach", "12345", "--bogus"])).rejects.toThrow(/Usage:/);

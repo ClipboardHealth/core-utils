@@ -786,9 +786,7 @@ export async function listSpriteSessions(options: SpriteSessionsOptions): Promis
   const output = await runCommandAsync("sprite", ["sessions", "list", "-s", spriteName], {
     trim: false,
   });
-  if (output.length > 0) {
-    writeOutput(rewriteSessionsFooter(output, spriteName).trimEnd());
-  }
+  writeOutput(rewriteSessionsFooter(output, spriteName).trimEnd());
 }
 
 export async function attachSpriteSession(options: SpriteAttachOptions): Promise<void> {
@@ -806,9 +804,7 @@ export async function listSpriteProcesses(options: SpriteProcessOptions): Promis
     ["exec", "-s", spriteName, "--", "ps", "-eo", "pid,ppid,pgid,sid,stat,etime,pcpu,pmem,cmd"],
     { trim: false },
   );
-  if (output.length > 0) {
-    writeOutput(output.trimEnd());
-  }
+  writeOutput(output.trimEnd());
 }
 
 export async function interruptSpriteProcessGroup(options: SpriteInterruptOptions): Promise<void> {
