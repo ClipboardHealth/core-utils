@@ -498,6 +498,24 @@ describe(create, () => {
     expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
   });
 
+  it("normalizes trailing slashes in configured Sprite remote roots", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+    config.remote.sprite.repoRoot = "/home/sprite/dev///";
+    config.remote.sprite.worktreeRoot = "/home/sprite/groundcrew/worktrees///";
+
+    const actual = await create(config, {
+      repository: "repo-a",
+      ticket: "team-1",
+      model: "claude",
+      strategy: "none",
+      runner: "sprite",
+    });
+
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+  });
+
   it("passes AbortSignal through sandbox existence and creation commands", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const { signal } = new AbortController();

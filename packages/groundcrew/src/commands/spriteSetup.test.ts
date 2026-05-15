@@ -453,7 +453,10 @@ describe(setupSprite, () => {
     );
     const command = copyCall?.[1].at(-1);
     expect(command).toStrictEqual(expect.stringContaining("/home/sprite/.codex/auth.json"));
-    expect(command).toStrictEqual(expect.stringContaining("chmod 600"));
+    expect(command).toStrictEqual(expect.stringContaining("install -m 600"));
+    expect(command).toStrictEqual(
+      expect.stringContaining("rm -f '/tmp/groundcrew-codex-auth.json'"),
+    );
     expect(codexStatusCalls()).toBe(2);
   });
 

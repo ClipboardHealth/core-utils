@@ -428,7 +428,11 @@ function deleteSpriteEntry(entry: WorktreeEntry): void {
 }
 
 function remotePathJoin(root: string, leaf: string): string {
-  return `${root.replace(/\/+$/u, "")}/${leaf}`;
+  let end = root.length;
+  while (end > 0 && root[end - 1] === "/") {
+    end -= 1;
+  }
+  return `${root.slice(0, end)}/${leaf}`;
 }
 
 function repositorySlug(owner: string, repository: string): string {

@@ -470,8 +470,8 @@ async function copyLocalCodexAuth(spriteName: string): Promise<void> {
     "-lc",
     [
       "mkdir -p /home/sprite/.codex",
-      `mv ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)} ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
-      `chmod 600 ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
+      `install -m 600 ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)} ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
+      `rm -f ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)}`,
     ].join(" && "),
   ]);
 }

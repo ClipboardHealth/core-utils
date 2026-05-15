@@ -501,6 +501,24 @@ describe(createBoardSource, () => {
       expect(first?.model).toBe("claude");
     });
 
+    it("uses the first recognized model when an unknown label appears first", async () => {
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [
+            [
+              issueNode({
+                labels: { nodes: [{ name: "agent-ghost" }, { name: "agent-codex" }] },
+              }),
+            ],
+          ],
+        }),
+      );
+
+      const state = await source.fetch();
+
+      expect(state.issues[0]?.model).toBe("codex");
+    });
+
     it("sets model and repository to undefined for tickets without an agent-* label", async () => {
       // Tickets without an `agent-*` label aren't groundcrew's concern. The
       // board snapshot still includes them (for dashboard counts and blocker

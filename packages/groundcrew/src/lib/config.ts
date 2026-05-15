@@ -532,9 +532,10 @@ function normalizeSpriteRunnerConfig(user: Config["remote"] | undefined): Resolv
       worktreeRoot:
         normalizeOptionalString(sprite?.worktreeRoot, "remote.sprite.worktreeRoot") ??
         DEFAULT_REMOTE.sprite.worktreeRoot,
-      secretNames:
-        normalizeSecretNames(sprite?.secretNames, "remote.sprite.secretNames") ??
-        DEFAULT_REMOTE.sprite.secretNames,
+      secretNames: [
+        ...(normalizeSecretNames(sprite?.secretNames, "remote.sprite.secretNames") ??
+          DEFAULT_REMOTE.sprite.secretNames),
+      ],
     },
   };
 }

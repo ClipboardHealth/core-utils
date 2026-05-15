@@ -393,19 +393,20 @@ function parseAgentLabels(
     return undefined;
   }
   const runner = agentLabels.some((label) => label.name === "agent-remote") ? "sprite" : "local";
-  const modelLabel = agentLabels.find((label) => label.name !== "agent-remote");
-  if (modelLabel === undefined) {
-    return { model: config.models.default, runner };
-  }
-  const name = modelLabel.name.slice(AGENT_LABEL_PREFIX.length);
-  if (name === AGENT_ANY_MODEL) {
-    return { model: AGENT_ANY_MODEL, runner };
-  }
-  // Own-property check, not `in`: a label like `agent-toString` or
-  // `agent-__proto__` would otherwise resolve through the prototype chain
-  // instead of falling back to `models.default`.
-  if (Object.hasOwn(config.models.definitions, name)) {
-    return { model: name, runner };
+  for (const label of agentLabels) {
+    if (label.name === "agent-remote") {
+      continue;
+    }
+    const name = label.name.slice(AGENT_LABEL_PREFIX.length);
+    if (name === AGENT_ANY_MODEL) {
+      return { model: AGENT_ANY_MODEL, runner };
+    }
+    // Own-property check, not `in`: a label like `agent-toString` or
+    // `agent-__proto__` would otherwise resolve through the prototype chain
+    // instead of falling back to `models.default`.
+    if (Object.hasOwn(config.models.definitions, name)) {
+      return { model: name, runner };
+    }
   }
   return { model: config.models.default, runner };
 }
