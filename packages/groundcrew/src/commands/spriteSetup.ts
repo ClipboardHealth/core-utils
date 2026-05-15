@@ -1,10 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { runCommandAsync } from "../lib/commandRunner.ts";
-import { DEFAULT_SANDBOX_SETUP_COMMAND } from "../lib/config.ts";
-import { BUILD_SECRET_NAMES, shellSingleQuote } from "../lib/launchCommand.ts";
+import { BUILD_SECRET_NAMES, DEFAULT_SANDBOX_SETUP_COMMAND } from "../lib/config.ts";
+import { shellSingleQuote } from "../lib/launchCommand.ts";
 import { log, readEnvironmentVariable, writeOutput } from "../lib/util.ts";
 
 const KNOWN_MCP_SERVER_URLS: Record<string, string> = {
@@ -23,6 +23,7 @@ export interface SpriteSetupOptions {
   shouldCreate: boolean;
   shouldAuthenticateClaude: boolean;
   shouldAuthenticateCodex: boolean;
+  shouldCopyLocalCodexAuth?: boolean;
   shouldAuthenticateGithub: boolean;
   shouldAuthenticateMcp: boolean;
   shouldCheckpoint: boolean;
@@ -49,6 +50,8 @@ const CLAUDE_SUBSCRIPTION_LOGIN_FLAG = ["--claude", "ai"].join("");
 const DEFAULT_REPOSITORY_OWNER = "ClipboardHealth";
 const DEFAULT_BASE_BRANCH = "main";
 const REMOTE_SECRETS_FILE = "/tmp/groundcrew-build-secrets.env";
+const REMOTE_CODEX_AUTH_UPLOAD_FILE = "/tmp/groundcrew-codex-auth.json";
+const REMOTE_CODEX_AUTH_FILE = "/home/sprite/.codex/auth.json";
 
 function usage(): string {
   return [
@@ -59,6 +62,7 @@ function usage(): string {
     "Setup options:",
     "  --claude                    Authenticate Claude Code with a Claude subscription",
     "  --codex                     Authenticate Codex CLI",
+    "  --copy-local-codex-auth     With --codex, copy local CODEX_HOME auth.json into the sprite",
     "  --github                    Authenticate gh for GitHub PRs",
     "  --mcp <alias|name=url>      Add/authenticate one MCP server; repeat for multiple",
     "                              Known aliases: linear, slack, notion",
@@ -171,6 +175,7 @@ function parseArguments(argv: readonly string[]): SpriteSetupOptions {
   let shouldCreate = true;
   let shouldAuthenticateClaude = false;
   let shouldAuthenticateCodex = false;
+  let shouldCopyLocalCodexAuth = false;
   let shouldAuthenticateGithub = false;
   let shouldAuthenticateMcp = true;
   let shouldCheckpoint = false;
@@ -187,6 +192,11 @@ function parseArguments(argv: readonly string[]): SpriteSetupOptions {
     }
     if (argument === "--codex") {
       shouldAuthenticateCodex = true;
+      continue;
+    }
+    if (argument === "--copy-local-codex-auth") {
+      shouldAuthenticateCodex = true;
+      shouldCopyLocalCodexAuth = true;
       continue;
     }
     if (argument === "--github") {
@@ -235,6 +245,7 @@ function parseArguments(argv: readonly string[]): SpriteSetupOptions {
     shouldCreate,
     shouldAuthenticateClaude,
     shouldAuthenticateCodex,
+    shouldCopyLocalCodexAuth,
     shouldAuthenticateGithub,
     shouldAuthenticateMcp,
     shouldCheckpoint,
@@ -427,12 +438,68 @@ async function authenticateClaude(spriteName: string): Promise<void> {
   );
 }
 
-async function authenticateCodex(spriteName: string): Promise<void> {
+function localCodexAuthFile(): string {
+  const codexHome = readEnvironmentVariable("CODEX_HOME");
+  /* v8 ignore next 2 @preserve -- tests pass CODEX_HOME explicitly to avoid depending on the developer's real home */
+  const baseDir =
+    codexHome === undefined || codexHome.length === 0 ? join(homedir(), ".codex") : codexHome;
+  return resolve(baseDir, "auth.json");
+}
+
+async function validateCodexLogin(spriteName: string): Promise<boolean> {
+  return await commandSucceeds(
+    "sprite",
+    spriteExecArguments(spriteName, ["codex", "login", "status"]),
+  );
+}
+
+async function copyLocalCodexAuth(spriteName: string): Promise<void> {
+  const authFile = localCodexAuthFile();
+  if (!existsSync(authFile)) {
+    throw new Error(`Local Codex auth file not found: ${authFile}`);
+  }
+  log("Copying local Codex auth into the sprite");
+  await runCommandAsync("sprite", [
+    "exec",
+    "-s",
+    spriteName,
+    "--file",
+    `${authFile}:${REMOTE_CODEX_AUTH_UPLOAD_FILE}`,
+    "--",
+    "bash",
+    "-lc",
+    [
+      "mkdir -p /home/sprite/.codex",
+      `mv ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)} ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
+      `chmod 600 ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
+    ].join(" && "),
+  ]);
+}
+
+async function authenticateCodex(spriteName: string, shouldCopyLocalAuth: boolean): Promise<void> {
+  if (await validateCodexLogin(spriteName)) {
+    return;
+  }
+  if (shouldCopyLocalAuth) {
+    await copyLocalCodexAuth(spriteName);
+    if (await validateCodexLogin(spriteName)) {
+      return;
+    }
+    throw new Error(
+      "Codex auth copy completed, but `codex login status` still reports not logged in inside the Sprite. Re-run `crew sprite setup <sprite-name> --codex --copy-local-codex-auth` after refreshing local Codex auth.",
+    );
+  }
   log("Starting Codex auth inside the sprite");
   await runCommandAsync("sprite", spriteTtyExecArguments(spriteName, ["codex", "login"]), {
     stdio: "inherit",
     timeoutMs: 0,
   });
+  if (await validateCodexLogin(spriteName)) {
+    return;
+  }
+  throw new Error(
+    "Codex login finished, but `codex login status` still reports not logged in inside the Sprite. Try `crew sprite setup <sprite-name> --codex --copy-local-codex-auth`.",
+  );
 }
 
 async function addMcpServer(spriteName: string, server: McpServer): Promise<void> {
@@ -624,7 +691,7 @@ export async function setupSprite(options: SpriteSetupOptions): Promise<void> {
     await authenticateClaude(options.spriteName);
   }
   if (options.shouldAuthenticateCodex) {
-    await authenticateCodex(options.spriteName);
+    await authenticateCodex(options.spriteName, options.shouldCopyLocalCodexAuth === true);
   }
 
   for (const server of options.mcpServers) {

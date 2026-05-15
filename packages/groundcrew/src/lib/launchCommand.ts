@@ -1,19 +1,12 @@
 import { dirname, resolve } from "node:path";
 
 import {
+  BUILD_SECRET_NAMES,
   DEFAULT_HOST_SETUP_COMMAND,
   DEFAULT_SANDBOX_SETUP_COMMAND,
   type ModelDefinition,
 } from "./config.ts";
 import type { ResolvedIsolationStrategy } from "./isolation.ts";
-
-/**
- * Build-time secrets we shuttle from groundcrew's process env into the
- * setup phase of the launched workspace and then strip before exec'ing
- * the agent. Adding a name here makes it flow through every isolation
- * strategy automatically.
- */
-export const BUILD_SECRET_NAMES = ["NPM_TOKEN", "BUF_TOKEN"] as const;
 
 /**
  * Single-quote `value` for safe shell embedding. Embedded single quotes
@@ -61,8 +54,8 @@ function sourceSecretsLine(secretsFile: string): string {
   return `if [ -f ${shellSingleQuote(secretsFile)} ]; then set -a && . ${shellSingleQuote(secretsFile)} && set +a; fi`;
 }
 
-function unsetSecretsLine(): string {
-  return `unset ${BUILD_SECRET_NAMES.join(" ")}`;
+function unsetSecretsLine(secretNames: readonly string[] = BUILD_SECRET_NAMES): string {
+  return `unset ${secretNames.join(" ")}`;
 }
 
 interface LaunchCommandArguments {
@@ -79,6 +72,17 @@ interface LaunchCommandArguments {
    * agent process never inherits them.
    */
   secretsFile?: string | undefined;
+}
+
+interface SpriteLaunchCommandArguments {
+  definition: ModelDefinition;
+  spriteName: string;
+  promptFile: string;
+  remotePromptFile: string;
+  worktreeDir: string;
+  secretNames: readonly string[];
+  secretsFile?: string | undefined;
+  remoteSecretsFile?: string | undefined;
 }
 
 /**
@@ -151,4 +155,58 @@ export function buildLaunchCommand(arguments_: LaunchCommandArguments): string {
     `exec ${wrapped} "$_p"`,
   );
   return lines.join(" && ");
+}
+
+export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArguments): string {
+  const promptDir = dirname(arguments_.promptFile);
+  const agentCmd = renderAgentCommand({
+    agentCmd: arguments_.definition.cmd,
+    worktreeDir: arguments_.worktreeDir,
+    sandboxName: "",
+  });
+  const uploadedFiles = [
+    `--file ${shellSingleQuote(`${arguments_.promptFile}:${arguments_.remotePromptFile}`)}`,
+  ];
+  if (arguments_.secretsFile !== undefined && arguments_.remoteSecretsFile !== undefined) {
+    uploadedFiles.push(
+      `--file ${shellSingleQuote(`${arguments_.secretsFile}:${arguments_.remoteSecretsFile}`)}`,
+    );
+  }
+
+  const remoteCleanupFiles = [arguments_.remotePromptFile];
+  if (arguments_.remoteSecretsFile !== undefined) {
+    remoteCleanupFiles.push(arguments_.remoteSecretsFile);
+  }
+  const remoteCleanupLine = `rm -f ${remoteCleanupFiles.map(shellSingleQuote).join(" ")}`;
+  const remoteLines = [`cleanup_remote() { ${remoteCleanupLine}; }`, "trap cleanup_remote EXIT"];
+  if (arguments_.remoteSecretsFile !== undefined) {
+    remoteLines.push(sourceSecretsLine(arguments_.remoteSecretsFile));
+  }
+  remoteLines.push(setupWithStatusReporting(DEFAULT_SANDBOX_SETUP_COMMAND));
+  if (arguments_.remoteSecretsFile !== undefined) {
+    remoteLines.push(unsetSecretsLine(arguments_.secretNames));
+  }
+  remoteLines.push(
+    `_p=$(cat ${shellSingleQuote(arguments_.remotePromptFile)})`,
+    "cleanup_remote",
+    "trap - EXIT",
+    `exec ${agentCmd} "$_p"`,
+  );
+
+  return [
+    `cleanup() { rm -rf ${shellSingleQuote(promptDir)}; }`,
+    "trap cleanup EXIT",
+    [
+      "sprite exec --tty",
+      "-s",
+      shellSingleQuote(arguments_.spriteName),
+      ...uploadedFiles,
+      "--dir",
+      shellSingleQuote(arguments_.worktreeDir),
+      "--",
+      "bash",
+      "-lc",
+      shellSingleQuote(remoteLines.join(" && ")),
+    ].join(" "),
+  ].join("\n");
 }

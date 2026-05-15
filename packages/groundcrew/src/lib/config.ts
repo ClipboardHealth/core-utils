@@ -14,6 +14,16 @@ import { log, readEnvironmentVariable, setLogFile } from "./util.ts";
 export const AGENT_ANY_MODEL = "any";
 
 /**
+ * Build-time secrets we shuttle into setup phases only. The launched agent
+ * process must not inherit these values.
+ */
+export const BUILD_SECRET_NAMES = ["NPM_TOKEN", "BUF_TOKEN"] as const;
+
+export type WorkspaceRunner = "local" | "sprite";
+
+export const WORKSPACE_RUNNERS: readonly WorkspaceRunner[] = ["local", "sprite"] as const;
+
+/**
  * How a model's launch command is wrapped before it runs:
  *
  * - `auto`: pick the first available — safehouse on a supported host with
@@ -97,6 +107,14 @@ export interface ModelDefinition {
   usage?: {
     codexbar: { provider: string; source?: string };
   };
+}
+
+export interface SpriteRunnerConfig {
+  spriteName: string;
+  owner: string;
+  repoRoot: string;
+  worktreeRoot: string;
+  secretNames: string[];
 }
 
 type UserModelDefinition = Omit<Partial<ModelDefinition>, "sandbox"> & {
@@ -212,6 +230,9 @@ export interface Config {
    * to fail loudly when the chosen backend is missing.
    */
   workspaceKind?: WorkspaceKindSetting;
+  remote?: {
+    sprite?: Partial<SpriteRunnerConfig>;
+  };
   logging?: {
     /**
      * Append-mode log file destination. `log()` and `logEvent()` tee here
@@ -269,6 +290,9 @@ export interface ResolvedConfig {
    * `auto` resolves to cmux on macOS when installed, else tmux.
    */
   workspaceKind: WorkspaceKindSetting;
+  remote: {
+    sprite: SpriteRunnerConfig;
+  };
   logging: {
     file: string;
   };
@@ -314,6 +338,16 @@ const DEFAULT_PROMPT_INITIAL = [
   "",
   "{{description}}",
 ].join("\n");
+
+const DEFAULT_REMOTE: ResolvedConfig["remote"] = {
+  sprite: {
+    spriteName: "crew-claude-1",
+    owner: "ClipboardHealth",
+    repoRoot: "/home/sprite/dev",
+    worktreeRoot: "/home/sprite/groundcrew/worktrees",
+    secretNames: [...BUILD_SECRET_NAMES],
+  },
+};
 
 const ALLOWED_PROMPT_PLACEHOLDERS = new Set([
   "{{ticket}}",
@@ -466,6 +500,42 @@ function normalizeStatuses(
     inProgress,
     done,
     terminal: uniqueStrings([...terminal, done]),
+  };
+}
+
+function normalizeSecretNames(value: unknown, path: string): string[] | undefined {
+  const names = normalizeOptionalStringArray(value, path);
+  if (names === undefined) {
+    return undefined;
+  }
+  names.forEach((name, index) => {
+    if (!/^[A-Z_][A-Z0-9_]*$/.test(name)) {
+      fail(`${path}[${index}] must be a valid environment variable name`);
+    }
+  });
+  return names;
+}
+
+function normalizeSpriteRunnerConfig(user: Config["remote"] | undefined): ResolvedConfig["remote"] {
+  const sprite = user?.sprite;
+  return {
+    sprite: {
+      spriteName:
+        normalizeOptionalString(sprite?.spriteName, "remote.sprite.spriteName") ??
+        DEFAULT_REMOTE.sprite.spriteName,
+      owner:
+        normalizeOptionalString(sprite?.owner, "remote.sprite.owner") ??
+        DEFAULT_REMOTE.sprite.owner,
+      repoRoot:
+        normalizeOptionalString(sprite?.repoRoot, "remote.sprite.repoRoot") ??
+        DEFAULT_REMOTE.sprite.repoRoot,
+      worktreeRoot:
+        normalizeOptionalString(sprite?.worktreeRoot, "remote.sprite.worktreeRoot") ??
+        DEFAULT_REMOTE.sprite.worktreeRoot,
+      secretNames:
+        normalizeSecretNames(sprite?.secretNames, "remote.sprite.secretNames") ??
+        DEFAULT_REMOTE.sprite.secretNames,
+    },
   };
 }
 
@@ -680,6 +750,7 @@ function applyDefaults(user: Config): ResolvedConfig {
       initial: user.prompts?.initial ?? DEFAULT_PROMPT_INITIAL,
     },
     workspaceKind: normalizeWorkspaceKind(user.workspaceKind, "workspaceKind") ?? "auto",
+    remote: normalizeSpriteRunnerConfig(user.remote),
     logging: {
       file: expandHome(
         normalizeOptionalString(user.logging?.file, "logging.file") ?? defaultLogFile(),
@@ -765,6 +836,18 @@ function validate(config: ResolvedConfig): void {
 
   requireString(config.prompts.initial, "prompts.initial");
   validatePromptPlaceholders(config.prompts.initial);
+
+  requireString(config.remote.sprite.spriteName, "remote.sprite.spriteName");
+  requireString(config.remote.sprite.owner, "remote.sprite.owner");
+  requireString(config.remote.sprite.repoRoot, "remote.sprite.repoRoot");
+  requireString(config.remote.sprite.worktreeRoot, "remote.sprite.worktreeRoot");
+  config.remote.sprite.secretNames.forEach((name, index) => {
+    requireString(name, `remote.sprite.secretNames[${index}]`);
+    /* v8 ignore next 3 @preserve -- normalizeSecretNames already enforces this before validate() runs */
+    if (!/^[A-Z_][A-Z0-9_]*$/.test(name)) {
+      fail(`remote.sprite.secretNames[${index}] must be a valid environment variable name`);
+    }
+  });
 
   requireString(config.logging.file, "logging.file");
 }

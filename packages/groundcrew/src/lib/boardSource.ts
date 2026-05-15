@@ -6,7 +6,7 @@
 
 import type { LinearClient } from "@linear/sdk";
 
-import { AGENT_ANY_MODEL, type ResolvedConfig } from "./config.ts";
+import { AGENT_ANY_MODEL, type ResolvedConfig, type WorkspaceRunner } from "./config.ts";
 import { log } from "./util.ts";
 
 const AGENT_LABEL_PREFIX = "agent-";
@@ -30,6 +30,8 @@ export interface Issue {
   repository: string | undefined;
   /** `undefined` when the ticket has no `agent-*` label — i.e. not groundcrew's concern. */
   model: string | undefined;
+  /** `undefined` when the ticket has no `agent-*` label — i.e. not groundcrew's concern. */
+  runner: WorkspaceRunner | undefined;
   teamId: string;
   blockers: Blocker[];
   hasMoreBlockers: boolean;
@@ -40,10 +42,14 @@ export interface Issue {
  * through `isGroundcrewIssue`. Use this type wherever downstream code reads
  * `model`/`repository` and the issue has already been through that filter.
  */
-export type GroundcrewIssue = Issue & { model: string; repository: string };
+export type GroundcrewIssue = Issue & {
+  model: string;
+  repository: string;
+  runner: WorkspaceRunner;
+};
 
 export function isGroundcrewIssue(issue: Issue): issue is GroundcrewIssue {
-  return issue.model !== undefined && issue.repository !== undefined;
+  return issue.model !== undefined && issue.repository !== undefined && issue.runner !== undefined;
 }
 
 export interface BoardState {
@@ -236,9 +242,9 @@ async function fetchBoard(client: LinearClient, config: ResolvedConfig): Promise
   const issues: Issue[] = nodes
     .filter((node) => node.children.nodes.length === 0)
     .map((node) => {
-      const model = parseModel(node.labels.nodes, config);
+      const parsedAgentLabels = parseAgentLabels(node.labels.nodes, config);
       const repository =
-        model === undefined
+        parsedAgentLabels === undefined
           ? undefined
           : parseRepository({
               description: node.description ?? undefined,
@@ -255,7 +261,8 @@ async function fetchBoard(client: LinearClient, config: ResolvedConfig): Promise
         assignee: node.assignee?.name ?? "Unassigned",
         updatedAt: node.updatedAt,
         repository,
-        model,
+        model: parsedAgentLabels?.model,
+        runner: parsedAgentLabels?.runner,
         teamId: node.team?.id ?? "",
         blockers: blockersFromRelations(node.inverseRelations?.nodes ?? []),
         hasMoreBlockers: node.inverseRelations?.pageInfo.hasNextPage ?? false,
@@ -285,6 +292,7 @@ interface ResolvedIssue {
   description: string;
   repository: string;
   model: string;
+  runner: WorkspaceRunner;
 }
 
 const ISSUE_LABEL_PAGE_SIZE = 50;
@@ -333,9 +341,11 @@ export async function fetchResolvedIssue(arguments_: {
   // Manual setup is an explicit per-ticket opt-in by the user, so an
   // unlabeled ticket still resolves to `models.default` — different from
   // the auto-pickup path, where unlabeled tickets are ignored.
-  const parsed = parseModel(issue.labels.nodes, config);
-  const model = parsed === undefined || parsed === AGENT_ANY_MODEL ? config.models.default : parsed;
-  return { title: issue.title, description, repository, model };
+  const parsed = parseAgentLabels(issue.labels.nodes, config);
+  const model =
+    parsed === undefined || parsed.model === AGENT_ANY_MODEL ? config.models.default : parsed.model;
+  const runner = parsed?.runner ?? "local";
+  return { title: issue.title, description, repository, model, runner };
 }
 
 interface ParseRepositoryArguments {
@@ -364,27 +374,40 @@ function parseRepository(arguments_: ParseRepositoryArguments): string {
 }
 
 /**
- * Returns the resolved model name for a ticket, or `undefined` when the
+ * Returns the resolved agent metadata for a ticket, or `undefined` when the
  * ticket has no `agent-*` label — those tickets are not groundcrew's concern
  * and downstream code skips them. An explicit `agent-<unknown>` label still
  * falls back to `models.default` because the user opted in by labeling.
  */
-function parseModel(labels: { name: string }[], config: ResolvedConfig): string | undefined {
-  const agentLabel = labels.find((label) => label.name.startsWith(AGENT_LABEL_PREFIX));
-  if (!agentLabel) {
+interface ParsedAgentLabels {
+  model: string;
+  runner: WorkspaceRunner;
+}
+
+function parseAgentLabels(
+  labels: { name: string }[],
+  config: ResolvedConfig,
+): ParsedAgentLabels | undefined {
+  const agentLabels = labels.filter((label) => label.name.startsWith(AGENT_LABEL_PREFIX));
+  if (agentLabels.length === 0) {
     return undefined;
   }
-  const name = agentLabel.name.slice(AGENT_LABEL_PREFIX.length);
+  const runner = agentLabels.some((label) => label.name === "agent-remote") ? "sprite" : "local";
+  const modelLabel = agentLabels.find((label) => label.name !== "agent-remote");
+  if (modelLabel === undefined) {
+    return { model: config.models.default, runner };
+  }
+  const name = modelLabel.name.slice(AGENT_LABEL_PREFIX.length);
   if (name === AGENT_ANY_MODEL) {
-    return AGENT_ANY_MODEL;
+    return { model: AGENT_ANY_MODEL, runner };
   }
   // Own-property check, not `in`: a label like `agent-toString` or
   // `agent-__proto__` would otherwise resolve through the prototype chain
   // instead of falling back to `models.default`.
   if (Object.hasOwn(config.models.definitions, name)) {
-    return name;
+    return { model: name, runner };
   }
-  return config.models.default;
+  return { model: config.models.default, runner };
 }
 
 function blockersFromRelations(relations: IssueRelationNode[]): Blocker[] {

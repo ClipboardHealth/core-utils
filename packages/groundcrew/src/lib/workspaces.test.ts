@@ -79,6 +79,15 @@ function makeConfig(workspaceKind: WorkspaceKindSetting = "auto"): ResolvedConfi
     prompts: { initial: "x" },
     workspaceKind,
     logging: { file: "/tmp/groundcrew-test.log" },
+    remote: {
+      sprite: {
+        spriteName: "crew-claude-1",
+        owner: "ClipboardHealth",
+        repoRoot: "/home/sprite/dev",
+        worktreeRoot: "/home/sprite/groundcrew/worktrees",
+        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      },
+    },
   };
 }
 

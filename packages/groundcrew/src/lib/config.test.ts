@@ -121,6 +121,76 @@ describe("loadConfig", () => {
     );
     expect(actual.models.definitions["codex"]?.sandbox).toStrictEqual({ agent: "codex" });
     expect(actual.prompts.initial).toContain("{{ticket}}");
+    expect(actual.remote.sprite).toStrictEqual({
+      spriteName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+    });
+  });
+
+  it("accepts remote Sprite config overrides", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        remote: {
+          sprite: {
+            spriteName: "crew-codex-1",
+            owner: "ClipboardHealth",
+            repoRoot: "/srv/repos",
+            worktreeRoot: "/srv/worktrees",
+            secretNames: ["NPM_TOKEN", "CUSTOM_BUILD_TOKEN"],
+          },
+        },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+    const actual = await loadConfig();
+
+    expect(actual.remote.sprite).toStrictEqual({
+      spriteName: "crew-codex-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/srv/repos",
+      worktreeRoot: "/srv/worktrees",
+      secretNames: ["NPM_TOKEN", "CUSTOM_BUILD_TOKEN"],
+    });
+  });
+
+  it("rejects empty remote Sprite names", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        remote: { sprite: { spriteName: "" } },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/remote\.sprite\.spriteName/);
+  });
+
+  it("rejects invalid remote Sprite secret names", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        remote: { sprite: { secretNames: ["bad-name"] } },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/remote\.sprite\.secretNames\[0\]/);
   });
 
   it("accepts custom terminal statuses and dedupes them with done", async () => {

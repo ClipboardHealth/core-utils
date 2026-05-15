@@ -9,6 +9,12 @@ export {
   type SpriteBootstrapOptions,
   type SpriteSetupOptions,
 } from "./commands/spriteSetup.ts";
-export type { Config, ModelDefinition, ResolvedConfig } from "./lib/config.ts";
+export type {
+  Config,
+  ModelDefinition,
+  ResolvedConfig,
+  SpriteRunnerConfig,
+  WorkspaceRunner,
+} from "./lib/config.ts";
 export { loadConfig } from "./lib/config.ts";
 export { getUsageByModel, type UsageByModel } from "./lib/usage.ts";

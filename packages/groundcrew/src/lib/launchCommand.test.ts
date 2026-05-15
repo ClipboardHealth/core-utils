@@ -1,5 +1,5 @@
 import { DEFAULT_SANDBOX_SETUP_COMMAND, type ModelDefinition } from "./config.ts";
-import { buildLaunchCommand } from "./launchCommand.ts";
+import { buildLaunchCommand, buildSpriteLaunchCommand } from "./launchCommand.ts";
 
 function arguments_(
   overrides: Partial<Parameters<typeof buildLaunchCommand>[0]> = {},
@@ -10,6 +10,20 @@ function arguments_(
     worktreeDir: "/work/repo-a-team-1",
     sandboxName: undefined,
     strategy: "none",
+    ...overrides,
+  };
+}
+
+function spriteArguments(
+  overrides: Partial<Parameters<typeof buildSpriteLaunchCommand>[0]> = {},
+): Parameters<typeof buildSpriteLaunchCommand>[0] {
+  return {
+    definition: { cmd: "claude --worktree {{worktree}}", color: "#fff" } satisfies ModelDefinition,
+    spriteName: "crew-claude-1",
+    promptFile: "/tmp/prompt-team-1/prompt.txt",
+    remotePromptFile: "/tmp/groundcrew-team-1-prompt.txt",
+    worktreeDir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+    secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
     ...overrides,
   };
 }
@@ -209,5 +223,58 @@ describe(buildLaunchCommand, () => {
         "exec sbx exec -it -w '/work/repo-a-team-1' 'groundcrew-repo-a-claude' sh -lc",
       );
     });
+  });
+});
+
+describe(buildSpriteLaunchCommand, () => {
+  it("uploads the prompt, runs in the remote worktree, and execs the agent with the prompt", () => {
+    const out = buildSpriteLaunchCommand(spriteArguments());
+
+    expect(out).toContain("cleanup() { rm -rf '/tmp/prompt-team-1'; }");
+    expect(out).toContain("sprite exec --tty -s 'crew-claude-1'");
+    expect(out).toContain(
+      "--file '/tmp/prompt-team-1/prompt.txt:/tmp/groundcrew-team-1-prompt.txt'",
+    );
+    expect(out).toContain("--dir '/home/sprite/groundcrew/worktrees/repo-a-team-1'");
+    expect(out).toContain("_p=$(cat");
+    expect(out).toContain("/tmp/groundcrew-team-1-prompt.txt");
+    expect(out).toContain("exec claude --worktree");
+    expect(out).toContain("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+    expect(out).toContain('"$_p"');
+  });
+
+  it("uploads build secrets for setup only and clears configured names before agent exec", () => {
+    const out = buildSpriteLaunchCommand(
+      spriteArguments({
+        secretsFile: "/tmp/prompt-team-1/secrets.env",
+        remoteSecretsFile: "/tmp/groundcrew-team-1-secrets.env",
+      }),
+    );
+
+    expect(out).toContain(
+      "--file '/tmp/prompt-team-1/secrets.env:/tmp/groundcrew-team-1-secrets.env'",
+    );
+    expect(out).toContain("set -a && .");
+    expect(out).toContain("/tmp/groundcrew-team-1-secrets.env");
+    expect(out).toContain("unset NPM_TOKEN BUF_TOKEN");
+    expect(out).not.toContain("npm_test_token");
+    expect(out).not.toContain("buf_test_token");
+    expect(out.indexOf("set -a && .")).toBeLessThan(out.indexOf("setup_status=$?"));
+    expect(out.indexOf("unset NPM_TOKEN BUF_TOKEN")).toBeLessThan(out.indexOf("exec claude"));
+  });
+
+  it("substitutes {{sandbox}} with an empty value for the Sprite runner", () => {
+    const out = buildSpriteLaunchCommand(
+      spriteArguments({
+        definition: {
+          cmd: "claude --sandbox {{sandbox}} --worktree {{worktree}}",
+          color: "#fff",
+        },
+      }),
+    );
+
+    expect(out).toContain("--sandbox");
+    expect(out).not.toContain("{{sandbox}}");
+    expect(out).not.toContain("{{worktree}}");
   });
 });
