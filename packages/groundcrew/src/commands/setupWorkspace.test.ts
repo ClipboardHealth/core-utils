@@ -239,6 +239,12 @@ function lastRunArgumentFromCallWithArgument(argument: string): string {
   return typeof lastArgument === "string" ? lastArgument : "";
 }
 
+function decodedSpriteRemoteCommand(command: string): string {
+  const matches = [...command.matchAll(/[A-Za-z0-9+/]{40,}={0,2}/g)];
+  expect(matches).toHaveLength(1);
+  return Buffer.from(matches[0]?.[0] ?? "", "base64").toString("utf8");
+}
+
 function runArgumentsFromCallWithArgument(argument: string): readonly string[] {
   const call = runCommandMock.mock.calls.find((candidate) => candidate[1].includes(argument));
   return call?.[1] ?? [];
@@ -351,9 +357,10 @@ describe(setupWorkspace, () => {
       expect.arrayContaining(["set-status", "model", "claude:remote"]),
     );
     const command = lastRunArgumentFromCallWithArgument("new-workspace");
+    const remoteCommand = decodedSpriteRemoteCommand(command);
     expect(command).toContain("sprite exec --tty -s 'crew-claude-1'");
     expect(command).toContain("--dir '/home/sprite/groundcrew/worktrees/repo-a-team-1'");
-    expect(command).toContain('exec claude --auto "$_p"');
+    expect(remoteCommand).toContain('exec claude --auto "$_p"');
   });
 
   it("uses configured Sprite build-secret names without exposing values in the final command", async () => {
@@ -376,8 +383,9 @@ describe(setupWorkspace, () => {
         { mode: 0o600 },
       );
       const command = lastRunArgumentFromCallWithArgument("new-workspace");
+      const remoteCommand = decodedSpriteRemoteCommand(command);
       expect(command).toContain("--file '/tmp/groundcrew-team-1-x/secrets.env:");
-      expect(command).toContain("unset NPM_TOKEN BUF_TOKEN");
+      expect(remoteCommand).toContain("unset NPM_TOKEN BUF_TOKEN");
       expect(command).not.toContain("npm_test_token");
       expect(command).not.toContain("buf_test_token");
     } finally {

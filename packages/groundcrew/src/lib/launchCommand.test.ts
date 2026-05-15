@@ -28,6 +28,12 @@ function spriteArguments(
   };
 }
 
+function decodedSpriteRemoteCommand(command: string): string {
+  const matches = [...command.matchAll(/[A-Za-z0-9+/]{40,}={0,2}/g)];
+  expect(matches).toHaveLength(1);
+  return Buffer.from(matches[0]?.[0] ?? "", "base64").toString("utf8");
+}
+
 describe(buildLaunchCommand, () => {
   it("keeps the default sandbox setup command valid for shell control flow", () => {
     expect(DEFAULT_SANDBOX_SETUP_COMMAND).not.toContain("then;");
@@ -227,8 +233,15 @@ describe(buildLaunchCommand, () => {
 });
 
 describe(buildSpriteLaunchCommand, () => {
+  it("keeps the host command on one physical line for cmux", () => {
+    const out = buildSpriteLaunchCommand(spriteArguments());
+
+    expect(out).not.toContain("\n");
+  });
+
   it("uploads the prompt, runs in the remote worktree, and execs the agent with the prompt", () => {
     const out = buildSpriteLaunchCommand(spriteArguments());
+    const remoteCommand = decodedSpriteRemoteCommand(out);
 
     expect(out).toContain("cleanup() { rm -rf '/tmp/prompt-team-1'; }");
     expect(out).toContain("sprite exec --tty -s 'crew-claude-1'");
@@ -236,11 +249,11 @@ describe(buildSpriteLaunchCommand, () => {
       "--file '/tmp/prompt-team-1/prompt.txt:/tmp/groundcrew-team-1-prompt.txt'",
     );
     expect(out).toContain("--dir '/home/sprite/groundcrew/worktrees/repo-a-team-1'");
-    expect(out).toContain("_p=$(cat");
-    expect(out).toContain("/tmp/groundcrew-team-1-prompt.txt");
-    expect(out).toContain("exec claude --worktree");
-    expect(out).toContain("/home/sprite/groundcrew/worktrees/repo-a-team-1");
-    expect(out).toContain('"$_p"');
+    expect(remoteCommand).toContain("_p=$(cat");
+    expect(remoteCommand).toContain("/tmp/groundcrew-team-1-prompt.txt");
+    expect(remoteCommand).toContain("exec claude --worktree");
+    expect(remoteCommand).toContain("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+    expect(remoteCommand).toContain('"$_p"');
   });
 
   it("uploads build secrets for setup only and clears configured names before agent exec", () => {
@@ -250,17 +263,22 @@ describe(buildSpriteLaunchCommand, () => {
         remoteSecretsFile: "/tmp/groundcrew-team-1-secrets.env",
       }),
     );
+    const remoteCommand = decodedSpriteRemoteCommand(out);
 
     expect(out).toContain(
       "--file '/tmp/prompt-team-1/secrets.env:/tmp/groundcrew-team-1-secrets.env'",
     );
-    expect(out).toContain("set -a && .");
-    expect(out).toContain("/tmp/groundcrew-team-1-secrets.env");
-    expect(out).toContain("unset NPM_TOKEN BUF_TOKEN");
+    expect(remoteCommand).toContain("set -a && .");
+    expect(remoteCommand).toContain("/tmp/groundcrew-team-1-secrets.env");
+    expect(remoteCommand).toContain("unset NPM_TOKEN BUF_TOKEN");
     expect(out).not.toContain("npm_test_token");
     expect(out).not.toContain("buf_test_token");
-    expect(out.indexOf("set -a && .")).toBeLessThan(out.indexOf("setup_status=$?"));
-    expect(out.indexOf("unset NPM_TOKEN BUF_TOKEN")).toBeLessThan(out.indexOf("exec claude"));
+    expect(remoteCommand.indexOf("set -a && .")).toBeLessThan(
+      remoteCommand.indexOf("setup_status=$?"),
+    );
+    expect(remoteCommand.indexOf("unset NPM_TOKEN BUF_TOKEN")).toBeLessThan(
+      remoteCommand.indexOf("exec claude"),
+    );
   });
 
   it("substitutes {{sandbox}} with an empty value for the Sprite runner", () => {
@@ -272,9 +290,10 @@ describe(buildSpriteLaunchCommand, () => {
         },
       }),
     );
+    const remoteCommand = decodedSpriteRemoteCommand(out);
 
-    expect(out).toContain("--sandbox");
-    expect(out).not.toContain("{{sandbox}}");
-    expect(out).not.toContain("{{worktree}}");
+    expect(remoteCommand).toContain("--sandbox");
+    expect(remoteCommand).not.toContain("{{sandbox}}");
+    expect(remoteCommand).not.toContain("{{worktree}}");
   });
 });

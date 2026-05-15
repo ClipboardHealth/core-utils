@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { dirname, resolve } from "node:path";
 
 import {
@@ -193,6 +194,9 @@ export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArgument
     `exec ${agentCmd} "$_p"`,
   );
 
+  const encodedRemoteCommand = Buffer.from(remoteLines.join(" && "), "utf8").toString("base64");
+  const remoteLauncher = `eval "$(printf %s ${shellSingleQuote(encodedRemoteCommand)} | base64 -d)"`;
+
   return [
     `cleanup() { rm -rf ${shellSingleQuote(promptDir)}; }`,
     "trap cleanup EXIT",
@@ -206,7 +210,7 @@ export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArgument
       "--",
       "bash",
       "-lc",
-      shellSingleQuote(remoteLines.join(" && ")),
+      shellSingleQuote(remoteLauncher),
     ].join(" "),
-  ].join("\n");
+  ].join("; ");
 }
