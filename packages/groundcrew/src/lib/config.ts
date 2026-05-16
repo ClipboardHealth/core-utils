@@ -659,6 +659,7 @@ function validate(config: ResolvedConfig): void {
   requireString(config.prompts.initial, "prompts.initial");
   validatePromptPlaceholders(config.prompts.initial);
 
+  /* v8 ignore next 3 @preserve -- normalizeRemoteProvider rejects this before validate() runs */
   if (config.remote.provider !== "sprite") {
     fail(`remote.provider must be "sprite" (got ${JSON.stringify(config.remote.provider)})`);
   }

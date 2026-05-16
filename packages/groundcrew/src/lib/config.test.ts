@@ -178,6 +178,24 @@ describe("loadConfig", () => {
     await expect(loadConfig()).rejects.toThrow(/remote\.runnerName/);
   });
 
+  it("rejects unsupported remote provider names", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  remote: { provider: 'other' },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/remote\.provider must be "sprite"/);
+  });
+
   it("rejects invalid remote secret names", async () => {
     const path = writeConfigFile(
       temporary,

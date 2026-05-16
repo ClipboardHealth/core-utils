@@ -142,6 +142,7 @@ function capturedRunOptions(
   if (stdio === undefined) {
     return rest;
   }
+  /* v8 ignore next 3 @preserve -- runSprite handles inherited stdio before capturedRunOptions */
   if (stdio === "inherit") {
     throw new Error("Inherited stdio options must be handled before capturedRunOptions.");
   }
