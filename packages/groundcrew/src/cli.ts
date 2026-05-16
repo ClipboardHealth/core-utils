@@ -76,10 +76,14 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     invoke: sandboxAuthCli,
   },
   sprite: {
-    summary: "Create, authenticate, and bootstrap a remote Sprite runner",
+    summary: "Create, authenticate, bootstrap, and inspect a remote Sprite runner",
     usage:
       "setup <sprite-name> [--claude] [--github] [--mcp <alias|name=url>] [--checkpoint]\n" +
-      "           → crew sprite bootstrap <sprite-name> <repo> [--branch <branch>]",
+      "           → crew sprite bootstrap <sprite-name> <repo> [--branch <branch>]\n" +
+      "           → crew sprite sessions [<sprite-name>]\n" +
+      "           → crew sprite attach <session-id-or-command> [--sprite <sprite-name>]\n" +
+      "           → crew sprite ps [<sprite-name>]\n" +
+      "           → crew sprite interrupt <process-group-id> [--sprite <sprite-name>]",
     invoke: spriteCli,
   },
 };

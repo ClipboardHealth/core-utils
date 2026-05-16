@@ -3,7 +3,7 @@ import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { runCommandAsync } from "../lib/commandRunner.ts";
-import { BUILD_SECRET_NAMES, DEFAULT_SANDBOX_SETUP_COMMAND } from "../lib/config.ts";
+import { BUILD_SECRET_NAMES, DEFAULT_SANDBOX_SETUP_COMMAND, loadConfig } from "../lib/config.ts";
 import { shellSingleQuote } from "../lib/launchCommand.ts";
 import { log, readEnvironmentVariable, writeOutput } from "../lib/util.ts";
 
@@ -44,6 +44,24 @@ export interface SpriteBootstrapOptions {
   branchName?: string;
 }
 
+export interface SpriteSessionsOptions {
+  spriteName?: string;
+}
+
+export interface SpriteAttachOptions {
+  target: string;
+  spriteName?: string;
+}
+
+export interface SpriteProcessOptions {
+  spriteName?: string;
+}
+
+export interface SpriteInterruptOptions {
+  processGroupId: string;
+  spriteName?: string;
+}
+
 const DEFAULT_CHECKPOINT_COMMENT =
   "groundcrew sprite baseline: selected agent auth, git identity, and MCP config";
 const CLAUDE_SUBSCRIPTION_LOGIN_FLAG = ["--claude", "ai"].join("");
@@ -58,6 +76,10 @@ function usage(): string {
     "Usage:",
     "  crew sprite setup <sprite-name> [options]",
     "  crew sprite bootstrap <sprite-name> <repository> [options]",
+    "  crew sprite sessions [<sprite-name>]",
+    "  crew sprite attach <session-id-or-command> [--sprite <sprite-name>]",
+    "  crew sprite ps [<sprite-name>]",
+    "  crew sprite interrupt <process-group-id> [--sprite <sprite-name>]",
     "",
     "Setup options:",
     "  --claude                    Authenticate Claude Code with a Claude subscription",
@@ -85,6 +107,12 @@ function usage(): string {
     "",
     "Bootstrap example:",
     "  crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123",
+    "",
+    "Session examples:",
+    "  crew sprite sessions",
+    "  crew sprite attach 12345",
+    "  crew sprite ps crew-claude-1",
+    "  crew sprite interrupt 27673 --sprite crew-claude-1",
   ].join("\n");
 }
 
@@ -320,6 +348,72 @@ function parseBootstrapArguments(argv: readonly string[]): SpriteBootstrapOption
     shouldUseSecrets,
     ...(branchName === undefined ? {} : { branchName }),
   };
+}
+
+function parseSessionsArguments(argv: readonly string[]): SpriteSessionsOptions {
+  if (argv.length === 0) {
+    return {};
+  }
+
+  const [spriteName, ...rest] = argv;
+  if (
+    spriteName === undefined ||
+    spriteName.length === 0 ||
+    spriteName.startsWith("--") ||
+    rest.length > 0
+  ) {
+    throw new Error(usage());
+  }
+
+  return { spriteName };
+}
+
+function parseAttachArguments(argv: readonly string[]): SpriteAttachOptions {
+  const [target] = argv;
+  if (target === undefined || target.length === 0 || target.startsWith("--")) {
+    throw new Error(usage());
+  }
+
+  const spriteName = parseOptionalSpriteFlag(argv, 1);
+
+  return {
+    target,
+    ...(spriteName === undefined ? {} : { spriteName }),
+  };
+}
+
+function parseInterruptArguments(argv: readonly string[]): SpriteInterruptOptions {
+  const [processGroupId] = argv;
+  if (
+    processGroupId === undefined ||
+    processGroupId.length === 0 ||
+    processGroupId.startsWith("--") ||
+    !/^[1-9]\d*$/.test(processGroupId)
+  ) {
+    throw new Error(usage());
+  }
+
+  const spriteName = parseOptionalSpriteFlag(argv, 1);
+
+  return {
+    processGroupId,
+    ...(spriteName === undefined ? {} : { spriteName }),
+  };
+}
+
+function parseOptionalSpriteFlag(argv: readonly string[], startIndex: number): string | undefined {
+  let spriteName: string | undefined;
+  for (let index = startIndex; index < argv.length; index += 1) {
+    const argument = argv[index];
+    if (argument === "--sprite") {
+      spriteName = requireValue(argv, index, "--sprite");
+      index += 1;
+      continue;
+    }
+    throw new Error(usage());
+  }
+
+  return spriteName;
 }
 
 function spriteExecArguments(spriteName: string, remoteArguments: readonly string[]): string[] {
@@ -679,6 +773,59 @@ export async function bootstrapSpriteRepository(options: SpriteBootstrapOptions)
   }
 }
 
+async function resolveSpriteName(spriteName: string | undefined): Promise<string> {
+  if (spriteName !== undefined) {
+    return spriteName;
+  }
+  const config = await loadConfig();
+  return config.remote.sprite.spriteName;
+}
+
+export async function listSpriteSessions(options: SpriteSessionsOptions): Promise<void> {
+  const spriteName = await resolveSpriteName(options.spriteName);
+  const output = await runCommandAsync("sprite", ["sessions", "list", "-s", spriteName], {
+    trim: false,
+  });
+  writeOutput(rewriteSessionsFooter(output, spriteName).trimEnd());
+}
+
+export async function attachSpriteSession(options: SpriteAttachOptions): Promise<void> {
+  const spriteName = await resolveSpriteName(options.spriteName);
+  await runCommandAsync("sprite", ["attach", "-s", spriteName, options.target], {
+    stdio: "inherit",
+    timeoutMs: 0,
+  });
+}
+
+export async function listSpriteProcesses(options: SpriteProcessOptions): Promise<void> {
+  const spriteName = await resolveSpriteName(options.spriteName);
+  const output = await runCommandAsync(
+    "sprite",
+    ["exec", "-s", spriteName, "--", "ps", "-eo", "pid,ppid,pgid,sid,stat,etime,pcpu,pmem,cmd"],
+    { trim: false },
+  );
+  writeOutput(output.trimEnd());
+}
+
+export async function interruptSpriteProcessGroup(options: SpriteInterruptOptions): Promise<void> {
+  const spriteName = await resolveSpriteName(options.spriteName);
+  await runCommandAsync(
+    "sprite",
+    ["exec", "-s", spriteName, "--", "kill", "-INT", "--", `-${options.processGroupId}`],
+    { stdio: "inherit" },
+  );
+}
+
+function rewriteSessionsFooter(output: string, spriteName: string): string {
+  return output.replace(
+    "  sprite exec -id <session_id>",
+    [
+      `  crew sprite attach <session_id> --sprite ${spriteName}`,
+      `  sprite sessions attach <session_id> -s ${spriteName}`,
+    ].join("\n"),
+  );
+}
+
 export async function setupSprite(options: SpriteSetupOptions): Promise<void> {
   await ensureSprite(options);
   await prepareHome(options.spriteName);
@@ -714,5 +861,21 @@ export async function spriteCli(argv: string[]): Promise<void> {
     await bootstrapSpriteRepository(parseBootstrapArguments(rest));
     return;
   }
-  throw new Error("Usage: crew sprite <setup|bootstrap> ...");
+  if (action === "sessions") {
+    await listSpriteSessions(parseSessionsArguments(rest));
+    return;
+  }
+  if (action === "attach") {
+    await attachSpriteSession(parseAttachArguments(rest));
+    return;
+  }
+  if (action === "ps") {
+    await listSpriteProcesses(parseSessionsArguments(rest));
+    return;
+  }
+  if (action === "interrupt") {
+    await interruptSpriteProcessGroup(parseInterruptArguments(rest));
+    return;
+  }
+  throw new Error(usage());
 }

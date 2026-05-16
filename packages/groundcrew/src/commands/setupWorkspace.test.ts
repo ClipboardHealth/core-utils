@@ -239,6 +239,18 @@ function lastRunArgumentFromCallWithArgument(argument: string): string {
   return typeof lastArgument === "string" ? lastArgument : "";
 }
 
+function decodedSpriteRemoteCommand(command: string): string {
+  const matches = [...command.matchAll(/[A-Za-z0-9+/]{40,}={0,2}/g)];
+  expect(matches).toHaveLength(1);
+  return Buffer.from(matches[0]?.[0] ?? "", "base64").toString("utf8");
+}
+
+function writtenFileContent(path: string): string {
+  const call = writeFileMock.mock.calls.find(([candidate]) => String(candidate) === path);
+  const content = call?.[1];
+  return typeof content === "string" ? content : "";
+}
+
 function runArgumentsFromCallWithArgument(argument: string): readonly string[] {
   const call = runCommandMock.mock.calls.find((candidate) => candidate[1].includes(argument));
   return call?.[1] ?? [];
@@ -351,9 +363,34 @@ describe(setupWorkspace, () => {
       expect.arrayContaining(["set-status", "model", "claude:remote"]),
     );
     const command = lastRunArgumentFromCallWithArgument("new-workspace");
-    expect(command).toContain("sprite exec --tty -s 'crew-claude-1'");
-    expect(command).toContain("--dir '/home/sprite/groundcrew/worktrees/repo-a-team-1'");
-    expect(command).toContain('exec claude --auto "$_p"');
+    const launchScript = writtenFileContent("/tmp/groundcrew-team-1-x/launch.sh");
+    const remoteCommand = decodedSpriteRemoteCommand(launchScript);
+    expect(command).toBe("bash '/tmp/groundcrew-team-1-x/launch.sh'");
+    expect(command).not.toContain("sprite exec");
+    expect(launchScript).toContain("sprite exec --tty -s 'crew-claude-1'");
+    expect(launchScript).toContain("--dir '/home/sprite/groundcrew/worktrees/repo-a-team-1'");
+    expect(remoteCommand).toContain('exec claude --auto "$_p"');
+  });
+
+  it("keeps the Sprite cmux command short by staging the full launcher in a local script", async () => {
+    const config = makeConfig();
+    mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
+
+    await setupWorkspace(config, {
+      ticket: "team-1",
+      repository: "repo-a",
+      model: "claude",
+      runner: "sprite",
+    });
+
+    const command = lastRunArgumentFromCallWithArgument("new-workspace");
+    const launchScript = writtenFileContent("/tmp/groundcrew-team-1-x/launch.sh");
+
+    expect(command).toBe("bash '/tmp/groundcrew-team-1-x/launch.sh'");
+    expect(command).not.toContain("cleanup()");
+    expect(command).not.toContain("sprite exec");
+    expect(launchScript).toContain("cleanup()");
+    expect(launchScript).toContain("sprite exec --tty");
   });
 
   it("uses configured Sprite build-secret names without exposing values in the final command", async () => {
@@ -376,10 +413,15 @@ describe(setupWorkspace, () => {
         { mode: 0o600 },
       );
       const command = lastRunArgumentFromCallWithArgument("new-workspace");
-      expect(command).toContain("--file '/tmp/groundcrew-team-1-x/secrets.env:");
-      expect(command).toContain("unset NPM_TOKEN BUF_TOKEN");
+      const launchScript = writtenFileContent("/tmp/groundcrew-team-1-x/launch.sh");
+      const remoteCommand = decodedSpriteRemoteCommand(launchScript);
+      expect(command).toBe("bash '/tmp/groundcrew-team-1-x/launch.sh'");
+      expect(launchScript).toContain("--file '/tmp/groundcrew-team-1-x/secrets.env:");
+      expect(remoteCommand).toContain("unset NPM_TOKEN BUF_TOKEN");
       expect(command).not.toContain("npm_test_token");
       expect(command).not.toContain("buf_test_token");
+      expect(launchScript).not.toContain("npm_test_token");
+      expect(launchScript).not.toContain("buf_test_token");
     } finally {
       deleteEnvironmentVariable("NPM_TOKEN");
       deleteEnvironmentVariable("BUF_TOKEN");

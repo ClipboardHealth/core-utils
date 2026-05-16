@@ -87,6 +87,12 @@ function stageBuildSecrets(
   return secretsFile;
 }
 
+function stageLaunchScript(promptDir: string, command: string): string {
+  const launcherFile = join(promptDir, "launch.sh");
+  writeFileSync(launcherFile, `#!/usr/bin/env bash\n${command}\n`, { mode: 0o700 });
+  return launcherFile;
+}
+
 export async function setupWorkspace(
   config: ResolvedConfig,
   options: SetupWorkspaceOptions,
@@ -241,7 +247,7 @@ async function setupSpriteWorkspace(arguments_: {
     const remotePromptFile = `/tmp/groundcrew-${ticket}-prompt.txt`;
     const remoteSecretsFile =
       secretsFile === undefined ? undefined : `/tmp/groundcrew-${ticket}-secrets.env`;
-    const launchCmd = buildSpriteLaunchCommand({
+    const spriteLaunchCommand = buildSpriteLaunchCommand({
       definition,
       spriteName: config.remote.sprite.spriteName,
       promptFile,
@@ -250,6 +256,7 @@ async function setupSpriteWorkspace(arguments_: {
       secretNames: config.remote.sprite.secretNames,
       ...(secretsFile === undefined ? {} : { secretsFile, remoteSecretsFile }),
     });
+    const launchCmd = `bash ${shellSingleQuote(stageLaunchScript(promptDir, spriteLaunchCommand))}`;
 
     log("Opening workspace...");
     await workspaces.open(

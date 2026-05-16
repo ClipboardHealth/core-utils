@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import type { RunCommandOptions } from "../lib/commandRunner.ts";
+import type { ResolvedConfig } from "../lib/config.ts";
 import { bootstrapSpriteRepository, setupSprite, spriteCli } from "./spriteSetup.ts";
 
 type RunCommandAsyncMock = (
@@ -12,6 +13,7 @@ type RunCommandAsyncMock = (
 ) => Promise<string | undefined>;
 
 const runCommandMock = vi.hoisted(() => vi.fn<RunCommandAsyncMock>());
+const loadConfigMock = vi.hoisted(() => vi.fn<() => Promise<Readonly<ResolvedConfig>>>());
 const CLAUDE_SUBSCRIPTION_LOGIN_FLAG = ["--claude", "ai"].join("");
 
 vi.mock(import("../lib/commandRunner.ts"), async (importOriginal) => {
@@ -22,6 +24,58 @@ vi.mock(import("../lib/commandRunner.ts"), async (importOriginal) => {
     runCommandAsync: runCommandMock as unknown as typeof actual.runCommandAsync,
   };
 });
+
+vi.mock(import("../lib/config.ts"), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    loadConfig: loadConfigMock as unknown as typeof actual.loadConfig,
+  };
+});
+
+function makeConfig(spriteName = "crew-default"): ResolvedConfig {
+  return {
+    linear: {
+      projectSlug: "ai-strategy-5152195762f3",
+      slugId: "5152195762f3",
+      statuses: {
+        todo: "Todo",
+        inProgress: "In Progress",
+        done: "Done",
+        terminal: ["Done"],
+      },
+    },
+    git: { remote: "origin", defaultBranch: "main" },
+    workspace: { projectDir: "/repo", knownRepositories: ["core-utils"] },
+    orchestrator: {
+      maximumInProgress: 4,
+      pollIntervalMilliseconds: 120_000,
+      sessionLimitPercentage: 85,
+    },
+    models: {
+      default: "claude",
+      isolation: "none",
+      definitions: {
+        claude: {
+          cmd: "claude --permission-mode auto",
+          color: "#C15F3C",
+        },
+      },
+    },
+    prompts: { initial: "{{ticket}} {{worktree}} {{title}} {{description}}" },
+    workspaceKind: "tmux",
+    remote: {
+      sprite: {
+        spriteName,
+        owner: "ClipboardHealth",
+        repoRoot: "/home/sprite/dev",
+        worktreeRoot: "/home/sprite/groundcrew/worktrees",
+        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      },
+    },
+    logging: { file: "/tmp/groundcrew.log" },
+  };
+}
 
 function hasRemoteCommand(call: readonly unknown[], remoteCommand: readonly string[]): boolean {
   const [, arguments_] = call;
@@ -107,11 +161,13 @@ function isInteractiveCodexLoginCall(call: readonly unknown[]): boolean {
 
 describe(spriteCli, () => {
   beforeEach(() => {
+    loadConfigMock.mockResolvedValue(makeConfig());
     mockSpriteList("NAME STATUS\ncrew-claude-1 running");
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -188,7 +244,132 @@ describe(spriteCli, () => {
   });
 
   it("rejects unknown sprite actions", async () => {
-    await expect(spriteCli(["unknown"])).rejects.toThrow(/Usage: crew sprite/);
+    await expect(spriteCli(["unknown"])).rejects.toThrow(/crew sprite setup/);
+  });
+
+  it("lists sessions using the configured default sprite", async () => {
+    const consoleLog = vi.spyOn(console, "log").mockReturnValue();
+    runCommandMock.mockResolvedValue(
+      [
+        "ID         Command",
+        "23001      claude --permission-m...",
+        "",
+        "To attach to a session:",
+        "  sprite exec -id <session_id>",
+        "",
+      ].join("\n"),
+    );
+
+    await spriteCli(["sessions"]);
+
+    expect(loadConfigMock).toHaveBeenCalledWith();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["sessions", "list", "-s", "crew-default"],
+      { trim: false },
+    );
+    expect(consoleLog.mock.calls.join("\n")).toContain(
+      "crew sprite attach <session_id> --sprite crew-default",
+    );
+    expect(consoleLog.mock.calls.join("\n")).toContain(
+      "sprite sessions attach <session_id> -s crew-default",
+    );
+    expect(consoleLog.mock.calls.join("\n")).not.toContain("sprite exec -id");
+  });
+
+  it("lists sessions using an explicit sprite without loading config", async () => {
+    const consoleLog = vi.spyOn(console, "log").mockReturnValue();
+    runCommandMock.mockResolvedValue("No active sessions found.\n");
+
+    await spriteCli(["sessions", "crew-claude-1"]);
+
+    expect(loadConfigMock).not.toHaveBeenCalled();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["sessions", "list", "-s", "crew-claude-1"],
+      { trim: false },
+    );
+    expect(consoleLog).toHaveBeenCalledWith("No active sessions found.");
+  });
+
+  it("attaches to a session using the configured default sprite", async () => {
+    await spriteCli(["attach", "12345"]);
+
+    expect(loadConfigMock).toHaveBeenCalledWith();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["attach", "-s", "crew-default", "12345"],
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+  });
+
+  it("attaches to a command selector using an explicit sprite", async () => {
+    await spriteCli(["attach", "bash", "--sprite", "crew-claude-1"]);
+
+    expect(loadConfigMock).not.toHaveBeenCalled();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["attach", "-s", "crew-claude-1", "bash"],
+      { stdio: "inherit", timeoutMs: 0 },
+    );
+  });
+
+  it("lists remote processes using an explicit sprite", async () => {
+    const consoleLog = vi.spyOn(console, "log").mockReturnValue();
+    runCommandMock.mockResolvedValue("PID PPID PGID CMD\n23001 0 23001 claude\n");
+
+    await spriteCli(["ps", "crew-claude-1"]);
+
+    expect(loadConfigMock).not.toHaveBeenCalled();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      [
+        "exec",
+        "-s",
+        "crew-claude-1",
+        "--",
+        "ps",
+        "-eo",
+        "pid,ppid,pgid,sid,stat,etime,pcpu,pmem,cmd",
+      ],
+      { trim: false },
+    );
+    expect(consoleLog).toHaveBeenCalledWith("PID PPID PGID CMD\n23001 0 23001 claude");
+  });
+
+  it("interrupts a selected remote process group using the configured default sprite", async () => {
+    await spriteCli(["interrupt", "27673"]);
+
+    expect(loadConfigMock).toHaveBeenCalledWith();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["exec", "-s", "crew-default", "--", "kill", "-INT", "--", "-27673"],
+      { stdio: "inherit" },
+    );
+  });
+
+  it("interrupts a selected remote process group using an explicit sprite", async () => {
+    await spriteCli(["interrupt", "27673", "--sprite", "crew-claude-1"]);
+
+    expect(loadConfigMock).not.toHaveBeenCalled();
+    expect(runCommandMock).toHaveBeenCalledWith(
+      "sprite",
+      ["exec", "-s", "crew-claude-1", "--", "kill", "-INT", "--", "-27673"],
+      { stdio: "inherit" },
+    );
+  });
+
+  it("rejects missing targets and unknown session wrapper flags before running sprite", async () => {
+    await expect(spriteCli(["attach"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["attach", "12345", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["sessions", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["ps", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt", "0"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt", "abc"])).rejects.toThrow(/Usage:/);
+    await expect(spriteCli(["interrupt", "27673", "--bogus"])).rejects.toThrow(/Usage:/);
+
+    expect(runCommandMock).not.toHaveBeenCalled();
   });
 
   it("parses setup options for selected agent auth, git identity, and checkpoint", async () => {
