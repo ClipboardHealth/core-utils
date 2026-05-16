@@ -284,6 +284,7 @@ describe(doctor, () => {
     expect(actual).toBe(false);
     expect(consoleLog.output()).toContain("local runner (macOS + Safehouse)");
     expect(consoleLog.output()).toContain("install Safehouse");
+    expect(consoleLog.output().match(/local runner \(macOS \+ Safehouse\)/g)).toHaveLength(1);
   });
 
   it("adds an optional codexbar check when any model has usage configured", async () => {

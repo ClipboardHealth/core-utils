@@ -382,6 +382,20 @@ describe(create, () => {
     });
   });
 
+  it("rejects unknown workspace runners instead of falling back to host worktrees", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      create(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        model: "claude",
+        runner: "docker",
+      } as unknown as Parameters<typeof create>[1]),
+    ).rejects.toThrow(/Unknown workspace runner: "docker"/);
+  });
+
   it("strips .git suffixes from Sprite remote directory names", async () => {
     mkdirSync(join(projectDir, "repo-a.git"));
     const config = makeConfig({ projectDir, knownRepositories: ["repo-a.git"] });
@@ -671,6 +685,20 @@ describe(remove, () => {
         remoteRepoDir: "/home/sprite/dev/repo-a",
       }),
     ).rejects.toThrow(/missing spriteName/);
+  });
+
+  it("rejects unknown worktree kinds instead of falling back to host removal", async () => {
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      remove(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/work/repo-a-team-1",
+        kind: "sandbox",
+      } as unknown as WorktreeEntry),
+    ).rejects.toThrow(/Unknown worktree kind: "sandbox"/);
   });
 
   it("rejects malformed Sprite entries without remoteRepoDir", async () => {

@@ -152,7 +152,8 @@ export async function doctor(): Promise<boolean> {
     writeOutput(`[--] host: ${errorMessage(error)}`);
     return false;
   }
-  reportLocalCapability(host);
+  const localCapability = localCapabilityCheck(host);
+  reportLocalCapability(localCapability);
 
   const workspaceOutcome = resolveWorkspaceOutcome(config, host);
   reportWorkspaceKind(config, workspaceOutcome);
@@ -162,7 +163,7 @@ export async function doctor(): Promise<boolean> {
     await checkCmd("git", true, "https://git-scm.com/"),
     ...(await workspaceChecks(workspaceOutcome)),
     checkDir(config.workspace.projectDir, "workspace.projectDir"),
-    localCapabilityCheck(host),
+    localCapability,
   ];
 
   const toolTokens = gatherToolTokens(config);
@@ -177,6 +178,9 @@ export async function doctor(): Promise<boolean> {
   }
 
   for (const check of checks) {
+    if (check === localCapability) {
+      continue;
+    }
     writeOutput(format(check));
   }
 
@@ -209,8 +213,7 @@ function localCapabilityCheck(host: HostCapabilities): Check {
   };
 }
 
-function reportLocalCapability(host: HostCapabilities): void {
-  const check = localCapabilityCheck(host);
+function reportLocalCapability(check: Check): void {
   writeOutput();
   writeOutput("Local runner");
   writeOutput("------------");

@@ -263,6 +263,23 @@ describe("loadConfig", () => {
     await expect(loadConfig()).rejects.toThrow(/linear.statuses.terminal\[1\]/);
   });
 
+  it("fails when terminal statuses is not an array", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: { ...${JSON.stringify(VALID_LINEAR)}, statuses: { terminal: 'Done' } },`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/linear.statuses.terminal must be an array/);
+  });
+
   it("caches the resolved config across calls", async () => {
     const path = writeConfigFile(
       temporary,
@@ -328,6 +345,42 @@ describe("loadConfig", () => {
     await expect(loadConfig()).rejects.toThrow(
       /models.isolation is no longer supported: local isolation is always Safehouse; remove this key/,
     );
+  });
+
+  it("rejects non-object model definitions", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  models: { definitions: [] },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/models.definitions must be an object/);
+  });
+
+  it("rejects non-object per-model definitions", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  models: { definitions: { claude: null } },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/models.definitions.claude must be an object/);
   });
 
   it("rejects legacy per-model isolation config", async () => {

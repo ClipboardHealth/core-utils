@@ -483,7 +483,10 @@ function normalizeWorkspaceKind(value: unknown, path: string): WorkspaceKindSett
   return value;
 }
 
-function failIfLegacyModelKeys(name: string, override: UserModelDefinition): void {
+function failIfLegacyModelKeys(
+  name: string,
+  override: unknown,
+): asserts override is UserModelDefinition {
   if (!isPlainObject(override)) {
     fail(`models.definitions.${name} must be an object`);
   }
@@ -502,6 +505,9 @@ function failIfLegacyModelKeys(name: string, override: UserModelDefinition): voi
 function mergeDefinitions(
   user: Record<string, UserModelDefinition> | undefined,
 ): Record<string, ModelDefinition> {
+  if (user !== undefined && !isPlainObject(user)) {
+    fail("models.definitions must be an object");
+  }
   const merged: Record<string, ModelDefinition> = Object.fromEntries(
     Object.entries(DEFAULT_MODEL_DEFINITIONS).map(([name, definition]) => [
       name,

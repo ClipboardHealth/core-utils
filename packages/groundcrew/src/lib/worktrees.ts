@@ -466,17 +466,23 @@ const spriteWorktreeAdapter: WorktreeAdapter = {
 };
 
 function adapterForEntry(entry: WorktreeEntry): WorktreeAdapter {
+  if (entry.kind === "host") {
+    return hostWorktreeAdapter;
+  }
   if (entry.kind === "sprite") {
     return spriteWorktreeAdapter;
   }
-  return hostWorktreeAdapter;
+  throw new Error(`Unknown worktree kind: ${JSON.stringify(entry.kind)}`);
 }
 
 function adapterForSpec(spec: WorktreeSpec): WorktreeAdapter {
+  if (spec.runner === undefined || spec.runner === "local") {
+    return hostWorktreeAdapter;
+  }
   if (spec.runner === "sprite") {
     return spriteWorktreeAdapter;
   }
-  return hostWorktreeAdapter;
+  throw new Error(`Unknown workspace runner: ${JSON.stringify(spec.runner)}`);
 }
 
 /** Returns every tracked worktree kind for a ticket; callers must not assume uniqueness. */
