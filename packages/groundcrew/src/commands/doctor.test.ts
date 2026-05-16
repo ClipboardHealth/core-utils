@@ -269,7 +269,7 @@ describe(doctor, () => {
     expect(checked).not.toContain("script.ts");
   });
 
-  it("reports missing Safehouse as a local runner failure", async () => {
+  it("reports missing Safehouse as a local runner warning", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: false,
       hasCmux: true,
@@ -281,10 +281,34 @@ describe(doctor, () => {
 
     const actual = await doctor();
 
-    expect(actual).toBe(false);
+    expect(actual).toBe(true);
     expect(consoleLog.output()).toContain("local runner (macOS + Safehouse)");
     expect(consoleLog.output()).toContain("install Safehouse");
     expect(consoleLog.output().match(/local runner \(macOS \+ Safehouse\)/g)).toHaveLength(1);
+  });
+
+  it("downgrades local model command checks when only Sprite can run on the host", async () => {
+    detectHostMock.mockResolvedValue({
+      hasSafehouse: false,
+      hasCmux: false,
+      hasTmux: true,
+      isMacOS: false,
+      isSafehouseSupported: false,
+    });
+    loadConfigMock.mockResolvedValue(
+      makeConfig({
+        definitions: {
+          claude: { cmd: "missing-cli", color: "#fff" },
+        },
+      }),
+    );
+    mockWhichFailure("missing-cli", "not installed");
+
+    const actual = await doctor();
+
+    expect(actual).toBe(true);
+    expect(consoleLog.output()).toContain("[? ] missing-cli");
+    expect(consoleLog.output()).toContain("Sprite runs need this inside the Sprite");
   });
 
   it("adds an optional codexbar check when any model has usage configured", async () => {

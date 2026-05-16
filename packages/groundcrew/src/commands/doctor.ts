@@ -168,8 +168,13 @@ export async function doctor(): Promise<boolean> {
 
   const toolTokens = gatherToolTokens(config);
   for (const token of toolTokens) {
+    const required = localCapability.ok;
     // oxlint-disable-next-line no-await-in-loop -- doctor reports tools in deterministic order
-    const check = await checkCmd(token, true);
+    const check = await checkCmd(
+      token,
+      required,
+      required ? undefined : "required for local runs; Sprite runs need this inside the Sprite",
+    );
     checks.push(check);
   }
 
@@ -199,17 +204,17 @@ function localCapabilityCheck(host: HostCapabilities): Check {
     return {
       name: "local runner (macOS + Safehouse)",
       ok: false,
-      required: true,
-      hint: "local runs require macOS; on Linux/WSL use agent-remote with Sprite",
+      required: false,
+      hint: "required for local runs; on Linux/WSL use agent-remote with Sprite",
     };
   }
   return {
     name: "local runner (macOS + Safehouse)",
     ok: host.hasSafehouse,
-    required: true,
+    required: false,
     hint: host.hasSafehouse
       ? "ready"
-      : "install Safehouse from https://agent-safehouse.dev/ and ensure `safehouse` is on PATH",
+      : "required for local runs; install Safehouse from https://agent-safehouse.dev/ and ensure `safehouse` is on PATH",
   };
 }
 

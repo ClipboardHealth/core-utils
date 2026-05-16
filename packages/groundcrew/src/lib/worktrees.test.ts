@@ -237,7 +237,8 @@ describe(findByTicket, () => {
 
   it("returns every entry matching the ticket regardless of repo or kind", () => {
     mkdirSync(join(projectDir, "repo-a-team-1"));
-    const config = makeConfig({ projectDir });
+    mkdirSync(join(projectDir, "repo-b-team-1"));
+    const config = makeConfig({ projectDir, knownRepositories: ["repo-a", "repo-b"] });
     writeSpriteState([
       {
         repository: "repo-a",
@@ -252,7 +253,7 @@ describe(findByTicket, () => {
 
     const actual = findByTicket(config, "team-1");
 
-    expect(actual).toHaveLength(2);
+    expect(actual).toHaveLength(3);
   });
 
   it("returns an empty array when the ticket has no worktree", () => {
