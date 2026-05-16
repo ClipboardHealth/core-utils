@@ -187,35 +187,57 @@ const hostWorktreeAdapter: WorktreeAdapter = {
     const projectDir = resolve(config.workspace.projectDir);
     const entries: WorktreeEntry[] = [];
 
-    let projectChildren: Dirent[];
-    try {
-      projectChildren = readdirSync(projectDir, { withFileTypes: true });
-    } catch {
-      projectChildren = [];
+    // Worktrees live at `projectDir/<repository>-<ticket>`. When `repository`
+    // contains a slash (e.g. "owner/repo"), `resolve()` nests one level
+    // deeper, so the worktree path is `projectDir/owner/repo-<ticket>`.
+    // Scan each known repository's parent directory rather than the project
+    // root, so nested worktrees are discovered alongside bare ones.
+    const reposByParent = new Map<string, Map<string, string>>();
+    for (const repository of config.workspace.knownRepositories) {
+      const lastSlash = repository.lastIndexOf("/");
+      const parentDir =
+        lastSlash === -1 ? projectDir : resolve(projectDir, repository.slice(0, lastSlash));
+      const basename = lastSlash === -1 ? repository : repository.slice(lastSlash + 1);
+      let repoByBasename = reposByParent.get(parentDir);
+      if (repoByBasename === undefined) {
+        repoByBasename = new Map();
+        reposByParent.set(parentDir, repoByBasename);
+      }
+      repoByBasename.set(basename, repository);
     }
-    for (const entry of projectChildren) {
-      if (!entry.isDirectory()) {
-        continue;
+
+    for (const [parentDir, repoByBasename] of reposByParent) {
+      let children: Dirent[];
+      try {
+        children = readdirSync(parentDir, { withFileTypes: true });
+      } catch {
+        children = [];
       }
-      const match = TICKET_DIR_RE.exec(entry.name);
-      if (!match) {
-        continue;
+      for (const entry of children) {
+        if (!entry.isDirectory()) {
+          continue;
+        }
+        const match = TICKET_DIR_RE.exec(entry.name);
+        if (!match) {
+          continue;
+        }
+        const [, repoBasename, ticket] = match;
+        /* v8 ignore next 3 @preserve -- TICKET_DIR_RE always captures both groups when it matches */
+        if (repoBasename === undefined || ticket === undefined) {
+          continue;
+        }
+        const repository = repoByBasename.get(repoBasename);
+        if (repository === undefined) {
+          continue;
+        }
+        entries.push({
+          repository,
+          ticket,
+          branchName: branchNameForTicket(ticket),
+          dir: resolve(parentDir, entry.name),
+          kind: "host",
+        });
       }
-      const [, repository, ticket] = match;
-      /* v8 ignore next 3 @preserve -- TICKET_DIR_RE always captures both groups when it matches */
-      if (repository === undefined || ticket === undefined) {
-        continue;
-      }
-      if (!config.workspace.knownRepositories.includes(repository)) {
-        continue;
-      }
-      entries.push({
-        repository,
-        ticket,
-        branchName: branchNameForTicket(ticket),
-        dir: resolve(projectDir, entry.name),
-        kind: "host",
-      });
     }
 
     return entries;

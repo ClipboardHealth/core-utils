@@ -167,6 +167,54 @@ describe(list, () => {
     expect(list(config)).toStrictEqual([]);
   });
 
+  it("finds nested host worktrees when knownRepositories contains <owner>/<repo>", () => {
+    // `resolve(projectDir, "owner/repo-team-1")` produces a path one level
+    // deeper than `projectDir`, so the worktree lives at
+    // `projectDir/owner/repo-team-1`. list() has to scan the parent dir,
+    // not the project root, to find it.
+    mkdirSync(join(projectDir, "owner", "repo"), { recursive: true });
+    mkdirSync(join(projectDir, "owner", "repo-team-1"));
+    const config = makeConfig({ projectDir, knownRepositories: ["owner/repo"] });
+
+    expect(list(config)).toStrictEqual([
+      {
+        repository: "owner/repo",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: join(projectDir, "owner", "repo-team-1"),
+        kind: "host",
+      },
+    ]);
+  });
+
+  it("disambiguates same-basename repos across owners by parent dir", () => {
+    // Two owners with a same-named repo. The worktree at
+    // owner1/repo-team-1 must resolve to owner1/repo, not owner2/repo.
+    mkdirSync(join(projectDir, "owner1", "repo-team-1"), { recursive: true });
+    mkdirSync(join(projectDir, "owner2", "repo-team-2"), { recursive: true });
+    const config = makeConfig({
+      projectDir,
+      knownRepositories: ["owner1/repo", "owner2/repo"],
+    });
+
+    expect(list(config).toSorted((a, b) => a.ticket.localeCompare(b.ticket))).toStrictEqual([
+      {
+        repository: "owner1/repo",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: join(projectDir, "owner1", "repo-team-1"),
+        kind: "host",
+      },
+      {
+        repository: "owner2/repo",
+        ticket: "team-2",
+        branchName: "rocky-team-2",
+        dir: join(projectDir, "owner2", "repo-team-2"),
+        kind: "host",
+      },
+    ]);
+  });
+
   it("ignores legacy .sbx worktree directories", () => {
     const repoDir = join(projectDir, "repo-a");
     const sandboxRoot = join(repoDir, ".sbx", "groundcrew-repo-a-claude-worktrees");
