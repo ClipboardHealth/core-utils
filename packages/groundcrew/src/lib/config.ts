@@ -24,27 +24,6 @@ export type WorkspaceRunner = "local" | "sprite";
 export const WORKSPACE_RUNNERS: readonly WorkspaceRunner[] = ["local", "sprite"] as const;
 
 /**
- * How a model's launch command is wrapped before it runs:
- *
- * - `auto`: pick the first available — safehouse on a supported host with
- *   the binary installed, else Docker Sandboxes when configured. Fails if
- *   no isolated runner is available.
- * - `safehouse`: require the safehouse binary on a supported host; fail
- *   loudly if missing.
- * - `docker`: require the model's `sandbox` config and the `sbx` binary;
- *   fail loudly if missing.
- * - `none`: run the agent command directly with no wrapper.
- */
-export type IsolationStrategy = "auto" | "safehouse" | "docker" | "none";
-
-export const ISOLATION_STRATEGIES: readonly IsolationStrategy[] = [
-  "auto",
-  "safehouse",
-  "docker",
-  "none",
-] as const;
-
-/**
  * Which terminal session manager hosts the agent process:
  *
  * - `auto`: pick the first available — cmux on macOS when installed,
@@ -60,50 +39,18 @@ export const WORKSPACE_KIND_SETTINGS: readonly WorkspaceKindSetting[] = [
   "tmux",
 ] as const;
 
-export interface SandboxDefinition {
-  /**
-   * Docker Sandboxes agent/template name used to create the persistent
-   * repo/model sandbox. Examples: `claude`, `codex`.
-   */
-  agent: string;
-  /**
-   * Optional Docker Sandboxes template image used when creating the
-   * persistent sandbox. Existing sandboxes keep their current template.
-   */
-  template?: string;
-  /**
-   * Optional Docker Sandboxes kits applied when creating the persistent
-   * sandbox. Existing sandboxes keep their current kits.
-   */
-  kits?: string[];
-  /**
-   * Shell command run inside each sbx branch worktree before the agent
-   * command. Defaults to syncing a simple `.nvmrc` Node version, honoring
-   * `package.json` npm engines, then running `.claude/setup.sh --deps-only`
-   * when present, falling back to `npm clean-install`.
-   */
-  setupCommand?: string;
-}
-
 export interface ModelDefinition {
   /**
-   * Shell command launched for the model. For sandbox-backed models this
-   * runs inside the persistent Docker sandbox; otherwise it runs in the
-   * workspace. The rendered prompt is appended as a single quoted
-   * positional argument. `{{worktree}}` and `{{sandbox}}` placeholders are
-   * replaced before launch.
+   * Shell command launched for the model. For local runs this is wrapped
+   * with Safehouse/clearance; for Sprite runs it executes inside the remote
+   * Sprite workspace. The rendered prompt is appended as a single quoted
+   * positional argument. `{{worktree}}` is replaced before launch.
    *
    * Keep this agent-native (e.g., `claude --permission-mode bypassPermissions`).
-   * The isolation strategy adds wrappers like `safehouse` or `sbx exec`.
+   * Groundcrew adds the Safehouse wrapper for local runs.
    */
   cmd: string;
   color: string;
-  sandbox?: SandboxDefinition;
-  /**
-   * Per-model override of `models.isolation`. When unset, falls back to
-   * the global setting.
-   */
-  isolation?: IsolationStrategy;
   usage?: {
     codexbar: { provider: string; source?: string };
   };
@@ -117,15 +64,9 @@ export interface SpriteRunnerConfig {
   secretNames: string[];
 }
 
-type UserModelDefinition = Omit<Partial<ModelDefinition>, "sandbox"> & {
-  /**
-   * `false` disables sandbox mode for a shipped default model while keeping
-   * per-key override behavior for fields like color/usage.
-   */
-  sandbox?: false | Partial<SandboxDefinition>;
-};
+type UserModelDefinition = Partial<ModelDefinition>;
 
-export const DEFAULT_SANDBOX_SETUP_COMMAND = [
+export const DEFAULT_REMOTE_SETUP_COMMAND = [
   [
     "if [ -f .nvmrc ]; then",
     "required_node=$(tr -d '[:space:]' < .nvmrc | sed 's/^v//')",
@@ -158,10 +99,9 @@ export const DEFAULT_SANDBOX_SETUP_COMMAND = [
 ].join(" && ");
 
 /**
- * Setup command run inside sibling worktrees on the host (safehouse and
- * none strategies). The host is assumed to already have the right Node
- * and npm versions, so this skips the `n`/global-npm bootstrap that the
- * Docker setup command does.
+ * Setup command run inside sibling worktrees on the host. The host is
+ * assumed to already have the right Node and npm versions, so this skips
+ * the `n`/global-npm bootstrap that the remote Sprite setup command does.
  */
 export const DEFAULT_HOST_SETUP_COMMAND =
   "if [ -x .claude/setup.sh ]; then ./.claude/setup.sh --deps-only; elif [ -f .claude/setup.sh ] && command -v bash >/dev/null 2>&1; then bash .claude/setup.sh --deps-only; else npm clean-install; fi";
@@ -205,14 +145,6 @@ export interface Config {
   };
   models?: {
     default?: string;
-    /**
-     * Global isolation strategy applied to every model unless the model
-     * declares its own `isolation`. Defaults to `"auto"`, which picks
-     * safehouse when installed on a supported host, else Docker
-     * Sandboxes when configured. If neither isolated runner is available,
-     * setup fails; set `"none"` explicitly to run directly.
-     */
-    isolation?: IsolationStrategy;
     /**
      * Additive: each entry merges over the shipped default for that key.
      * Override `claude.cmd` only by declaring `{ claude: { cmd: "..." } }` —
@@ -275,11 +207,6 @@ export interface ResolvedConfig {
   };
   models: {
     default: string;
-    /**
-     * Global default isolation strategy. Per-model overrides win over
-     * this. Always present — defaults to `"auto"`.
-     */
-    isolation: IsolationStrategy;
     definitions: Record<string, ModelDefinition>;
   };
   prompts: {
@@ -320,13 +247,11 @@ const DEFAULT_MODEL_DEFINITIONS: Record<string, ModelDefinition> = {
   claude: {
     cmd: "claude --permission-mode bypassPermissions",
     color: "#C15F3C",
-    sandbox: { agent: "claude" },
     usage: { codexbar: { provider: "claude" } },
   },
   codex: {
     cmd: "codex --dangerously-bypass-approvals-and-sandbox",
     color: "#3267e3",
-    sandbox: { agent: "codex" },
     usage: { codexbar: { provider: "codex" } },
   },
 };
@@ -540,91 +465,6 @@ function normalizeSpriteRunnerConfig(user: Config["remote"] | undefined): Resolv
   };
 }
 
-function normalizeSandboxDefinition(
-  name: string,
-  sandbox: Partial<SandboxDefinition>,
-): SandboxDefinition {
-  if (typeof sandbox.agent !== "string" || sandbox.agent.trim().length === 0) {
-    fail(`models.definitions.${name}.sandbox.agent must be a non-empty string`);
-  }
-
-  const definition: SandboxDefinition = { agent: sandbox.agent.trim() };
-  const template = normalizeOptionalString(
-    sandbox.template,
-    `models.definitions.${name}.sandbox.template`,
-  );
-  if (template !== undefined) {
-    definition.template = template;
-  }
-
-  const kits = normalizeOptionalStringArray(
-    sandbox.kits,
-    `models.definitions.${name}.sandbox.kits`,
-  );
-  if (kits !== undefined) {
-    definition.kits = kits;
-  }
-
-  const setupCommand = normalizeOptionalString(
-    sandbox.setupCommand,
-    `models.definitions.${name}.sandbox.setupCommand`,
-  );
-  if (setupCommand !== undefined) {
-    definition.setupCommand = setupCommand;
-  }
-
-  return definition;
-}
-
-function mergeSandboxDefinition(arguments_: {
-  name: string;
-  override: false | Partial<SandboxDefinition> | undefined;
-  base: SandboxDefinition | undefined;
-}): SandboxDefinition | undefined {
-  if (arguments_.override === false) {
-    return undefined;
-  }
-  if (arguments_.override === undefined) {
-    return arguments_.base;
-  }
-
-  const agent = arguments_.override.agent ?? arguments_.base?.agent;
-  if (agent === undefined) {
-    fail(`models.definitions.${arguments_.name}.sandbox.agent must be a non-empty string`);
-  }
-
-  const sandbox: Partial<SandboxDefinition> = { agent };
-  const template = arguments_.override.template ?? arguments_.base?.template;
-  if (template !== undefined) {
-    sandbox.template = template;
-  }
-  const kits = arguments_.override.kits ?? arguments_.base?.kits;
-  if (kits !== undefined) {
-    sandbox.kits = kits;
-  }
-  const setupCommand = arguments_.override.setupCommand ?? arguments_.base?.setupCommand;
-  if (setupCommand !== undefined) {
-    sandbox.setupCommand = setupCommand;
-  }
-  return normalizeSandboxDefinition(arguments_.name, sandbox);
-}
-
-function isIsolationStrategy(value: unknown): value is IsolationStrategy {
-  return typeof value === "string" && (ISOLATION_STRATEGIES as readonly string[]).includes(value);
-}
-
-function normalizeIsolation(value: unknown, path: string): IsolationStrategy | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (!isIsolationStrategy(value)) {
-    fail(
-      `${path} must be one of ${ISOLATION_STRATEGIES.join(", ")} (got ${JSON.stringify(value)})`,
-    );
-  }
-  return value;
-}
-
 function isWorkspaceKindSetting(value: unknown): value is WorkspaceKindSetting {
   return (
     typeof value === "string" && (WORKSPACE_KIND_SETTINGS as readonly string[]).includes(value)
@@ -643,6 +483,22 @@ function normalizeWorkspaceKind(value: unknown, path: string): WorkspaceKindSett
   return value;
 }
 
+function failIfLegacyModelKeys(name: string, override: UserModelDefinition): void {
+  if (!isPlainObject(override)) {
+    fail(`models.definitions.${name} must be an object`);
+  }
+  if (Object.hasOwn(override, "isolation")) {
+    fail(
+      `models.definitions.${name}.isolation is no longer supported: per-model isolation is no longer supported`,
+    );
+  }
+  if (Object.hasOwn(override, "sandbox")) {
+    fail(
+      `models.definitions.${name}.sandbox is no longer supported: Docker Sandboxes are no longer supported`,
+    );
+  }
+}
+
 function mergeDefinitions(
   user: Record<string, UserModelDefinition> | undefined,
 ): Record<string, ModelDefinition> {
@@ -653,9 +509,9 @@ function mergeDefinitions(
     ]),
   );
   for (const [name, override] of Object.entries(user ?? {})) {
+    failIfLegacyModelKeys(name, override);
     const base: Partial<ModelDefinition> =
       merged[name] === undefined ? {} : cloneModelDefinition(merged[name]);
-    const { sandbox: baseSandbox } = base;
     // Per-key spread so overriding `cmd` alone preserves the default
     // `color` / `usage`. Brand-new entries must supply both required fields.
     const candidate: Partial<ModelDefinition> = { ...base };
@@ -668,15 +524,6 @@ function mergeDefinitions(
     if (override.usage !== undefined) {
       candidate.usage = override.usage;
     }
-    const isolation = normalizeIsolation(
-      override.isolation ?? base.isolation,
-      `models.definitions.${name}.isolation`,
-    );
-    const sandbox = mergeSandboxDefinition({
-      name,
-      override: override.sandbox,
-      base: baseSandbox,
-    });
     const { cmd, color, usage } = candidate;
     if (typeof cmd !== "string" || cmd.length === 0) {
       fail(`models.definitions.${name}.cmd must be a non-empty string`);
@@ -685,12 +532,6 @@ function mergeDefinitions(
       fail(`models.definitions.${name}.color must be a non-empty string`);
     }
     const definition: ModelDefinition = { cmd, color };
-    if (sandbox !== undefined) {
-      definition.sandbox = sandbox;
-    }
-    if (isolation !== undefined) {
-      definition.isolation = isolation;
-    }
     if (usage !== undefined) {
       definition.usage = usage;
     }
@@ -723,6 +564,11 @@ function applyDefaults(user: Config): ResolvedConfig {
   requireObject(user.linear, "linear");
   requireString(user.linear.projectSlug, "linear.projectSlug");
   requireObject(user.workspace, "workspace");
+  if (isPlainObject(user.models) && Object.hasOwn(user.models, "isolation")) {
+    fail(
+      "models.isolation is no longer supported: local isolation is always Safehouse; remove this key",
+    );
+  }
 
   const slugId = extractSlugId(user.linear.projectSlug);
   if (slugId === undefined) {
@@ -744,7 +590,6 @@ function applyDefaults(user: Config): ResolvedConfig {
     orchestrator: { ...DEFAULT_ORCHESTRATOR, ...user.orchestrator },
     models: {
       default: user.models?.default ?? "claude",
-      isolation: normalizeIsolation(user.models?.isolation, "models.isolation") ?? "auto",
       definitions: mergeDefinitions(user.models?.definitions),
     },
     prompts: {

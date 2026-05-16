@@ -63,7 +63,6 @@ function makeConfig(overrides: Partial<ResolvedConfig["models"]> = {}): Resolved
     },
     models: {
       default: "claude",
-      isolation: "auto",
       definitions: {
         claude: { cmd: "safehouse claude --permission-mode auto", color: "#fff" },
       },
@@ -134,7 +133,6 @@ describe(doctor, () => {
     statMock.mockReturnValue(statsWithDirectoryValue(true));
     detectHostMock.mockResolvedValue({
       hasSafehouse: true,
-      hasSbx: true,
       hasCmux: true,
       hasTmux: false,
       isMacOS: true,
@@ -271,14 +269,21 @@ describe(doctor, () => {
     expect(checked).not.toContain("script.ts");
   });
 
-  it("annotates safehouse with the macOS-only hint when missing", async () => {
+  it("reports missing Safehouse as a local runner failure", async () => {
+    detectHostMock.mockResolvedValue({
+      hasSafehouse: false,
+      hasCmux: true,
+      hasTmux: false,
+      isMacOS: true,
+      isSafehouseSupported: true,
+    });
     loadConfigMock.mockResolvedValue(makeConfig());
-    mockWhichFailure("safehouse", "nope");
 
     const actual = await doctor();
 
     expect(actual).toBe(false);
-    expect(consoleLog.output()).toContain("macOS-only sandbox");
+    expect(consoleLog.output()).toContain("local runner (macOS + Safehouse)");
+    expect(consoleLog.output()).toContain("install Safehouse");
   });
 
   it("adds an optional codexbar check when any model has usage configured", async () => {
@@ -354,254 +359,35 @@ describe(doctor, () => {
     expect(checked).toContain("alpha");
   });
 
-  it("checks sbx readiness without requiring host agent binaries for sbx commands", async () => {
+  it("reports non-macOS hosts as unsupported for local runs", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: false,
-      hasSbx: true,
       hasCmux: true,
       hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
+      isMacOS: false,
+      isSafehouseSupported: false,
     });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        definitions: {
-          claude: {
-            cmd: "claude --permission-mode auto",
-            color: "#fff",
-            isolation: "docker",
-            sandbox: { agent: "claude" },
-          },
-        },
-      }),
-    );
-
-    const actual = await doctor();
-
-    expect(actual).toBe(true);
-    expect(runCommandMock).toHaveBeenCalledWith("sbx", ["diagnose"]);
-    const checked = checkedCommands();
-    expect(checked).toContain("sbx");
-    expect(checked).not.toContain("run");
-    expect(checked).not.toContain("claude");
-  });
-
-  it("skips sbx diagnose when the sbx binary is missing", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        definitions: {
-          claude: {
-            cmd: "claude --permission-mode auto",
-            color: "#fff",
-            isolation: "docker",
-            sandbox: { agent: "claude" },
-          },
-        },
-      }),
-    );
-    mockWhichFailure("sbx", "not installed");
-
-    const actual = await doctor();
-
-    expect(actual).toBe(false);
-    expect(runCommandMock).not.toHaveBeenCalledWith("sbx", ["diagnose"]);
-    expect(consoleLog.output()).not.toContain("sbx diagnose");
-  });
-
-  it("fails with an actionable hint when sbx diagnose fails", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: true,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        definitions: {
-          claude: {
-            cmd: "claude --permission-mode auto",
-            color: "#fff",
-            isolation: "docker",
-            sandbox: { agent: "claude" },
-          },
-        },
-      }),
-    );
-    runCommandMock
-      .mockReturnValueOnce("/usr/bin/git\n")
-      .mockReturnValueOnce("/usr/bin/cmux\n")
-      .mockReturnValueOnce("/usr/bin/sbx\n")
-      .mockImplementationOnce(() => {
-        throw new Error("not signed in");
-      });
+    loadConfigMock.mockResolvedValue(makeConfig());
 
     const actual = await doctor();
 
     expect(actual).toBe(false);
     const lines = consoleLog.output();
-    expect(lines).toContain("sbx diagnose");
-    expect(lines).toContain("sbx daemon start");
-    expect(lines).toContain("sbx login");
-  });
-
-  it("reports the resolved isolation strategy per model", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: true,
-      hasSbx: false,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        definitions: {
-          claude: { cmd: "claude --permission-mode auto", color: "#fff" },
-        },
-      }),
-    );
-
-    await doctor();
-
-    const lines = consoleLog.output();
-    expect(lines).toContain("Isolation strategy");
-    expect(lines).toMatch(/claude:.*resolved=safehouse/);
-  });
-
-  it("falls back to the global isolation when reporting a model with no per-model override", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        isolation: "safehouse",
-        definitions: {
-          claude: { cmd: "claude --permission-mode auto", color: "#fff" },
-        },
-      }),
-    );
-
-    const actual = await doctor();
-
-    expect(actual).toBe(false);
-    const lines = consoleLog.output();
-    expect(lines).toMatch(/claude: requested=safehouse/);
-  });
-
-  it("checks only the agent command when the strategy resolves to none", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        isolation: "none",
-        definitions: {
-          claude: { cmd: "claude --permission-mode auto", color: "#fff" },
-        },
-      }),
-    );
-
-    await doctor();
-
-    const checked = checkedCommands();
-    expect(checked).toContain("claude");
-    expect(checked).not.toContain("safehouse");
-    expect(checked).not.toContain("sbx");
-  });
-
-  it("reports auto isolation failure when no isolated runner is available", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        definitions: {
-          claude: { cmd: "claude --permission-mode auto", color: "#fff" },
-        },
-      }),
-    );
-
-    const actual = await doctor();
-
-    expect(actual).toBe(false);
-    const lines = consoleLog.output();
-    expect(lines).toMatch(/claude: requested=auto/);
-    expect(lines).toContain("could not find an isolated runner");
-  });
-
-  it("reports a per-model isolation failure without throwing", async () => {
-    detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
-      hasCmux: true,
-      hasTmux: false,
-      isMacOS: true,
-      isSafehouseSupported: true,
-    });
-    loadConfigMock.mockResolvedValue(
-      makeConfig({
-        default: "claude",
-        definitions: {
-          claude: {
-            cmd: "claude --permission-mode auto",
-            color: "#fff",
-            isolation: "safehouse",
-          },
-        },
-      }),
-    );
-
-    const actual = await doctor();
-
-    expect(actual).toBe(false);
-    const lines = consoleLog.output();
-    expect(lines).toMatch(/claude: requested=safehouse/);
-    expect(lines).toContain("safehouse binary is not on PATH");
+    expect(lines).toContain("Local runner");
+    expect(lines).toContain("use agent-remote with Sprite");
+    expect(lines).not.toContain("sbx diagnose");
   });
 
   it("checks tmux instead of cmux when workspaceKind resolves to tmux", async () => {
     detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
+      hasSafehouse: true,
       hasCmux: false,
       hasTmux: true,
       isMacOS: true,
       isSafehouseSupported: true,
     });
     loadConfigMock.mockResolvedValue({
-      ...makeConfig({ isolation: "none" }),
+      ...makeConfig(),
       workspaceKind: "tmux",
     });
 
@@ -616,8 +402,7 @@ describe(doctor, () => {
 
   it("reports a workspaceKind failure when the chosen backend's binary is missing", async () => {
     detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
+      hasSafehouse: true,
       hasCmux: false,
       hasTmux: false,
       isMacOS: true,

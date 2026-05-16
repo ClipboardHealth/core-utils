@@ -1,0 +1,14 @@
+import type { HostCapabilities } from "./host.ts";
+
+export function assertLocalRunnerRequirements(host: HostCapabilities): void {
+  if (!host.isMacOS) {
+    throw new Error(
+      "Local groundcrew runs require macOS with Safehouse. On Linux/WSL, label tickets `agent-remote` to run through Sprite.",
+    );
+  }
+  if (!host.hasSafehouse) {
+    throw new Error(
+      "Local groundcrew runs require `safehouse` on PATH. Install Safehouse from https://agent-safehouse.dev/ and retry.",
+    );
+  }
+}

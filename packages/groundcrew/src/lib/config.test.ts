@@ -117,11 +117,9 @@ describe("loadConfig", () => {
     expect(actual.models.definitions["claude"]?.cmd).toBe(
       "claude --permission-mode bypassPermissions",
     );
-    expect(actual.models.definitions["claude"]?.sandbox).toStrictEqual({ agent: "claude" });
     expect(actual.models.definitions["codex"]?.cmd).toBe(
       "codex --dangerously-bypass-approvals-and-sandbox",
     );
-    expect(actual.models.definitions["codex"]?.sandbox).toStrictEqual({ agent: "codex" });
     expect(actual.prompts.initial).toContain("{{ticket}}");
     expect(actual.remote.sprite).toStrictEqual({
       spriteName: "crew-claude-1",
@@ -306,206 +304,20 @@ describe("loadConfig", () => {
     expect(actual.models.definitions["claude"]?.usage).toStrictEqual({
       codexbar: { provider: "claude" },
     });
-    expect(actual.models.definitions["claude"]?.sandbox).toStrictEqual({ agent: "claude" });
     expect(actual.models.definitions["cursor"]).toStrictEqual({
       cmd: "cursor-agent",
       color: "#929292",
     });
   });
 
-  it("allows default model overrides to disable sandbox backing", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { cmd: "safehouse claude", sandbox: false },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.models.definitions["claude"]?.cmd).toBe("safehouse claude");
-    expect(actual.models.definitions["claude"]?.sandbox).toBeUndefined();
-  });
-
-  it("allows default model overrides to replace the sandbox agent", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { sandbox: { agent: " custom-claude " } },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.models.definitions["claude"]?.sandbox).toStrictEqual({ agent: "custom-claude" });
-  });
-
-  it("allows default model overrides to configure sandbox launch options", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: {
-              sandbox: {
-                template: " groundcrew-node24:latest ",
-                kits: [" ./.sbx/kit ", "oci://example.com/base:1"],
-                setupCommand: " corepack enable && npm clean-install ",
-              },
-            },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.models.definitions["claude"]?.sandbox).toStrictEqual({
-      agent: "claude",
-      template: "groundcrew-node24:latest",
-      kits: ["./.sbx/kit", "oci://example.com/base:1"],
-      setupCommand: "corepack enable && npm clean-install",
-    });
-  });
-
-  it("fails when a new sandbox-backed model omits sandbox.agent", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            cursor: { cmd: "cursor-agent", color: "#929292", sandbox: {} },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-
-    await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.cursor.sandbox.agent must be a non-empty string/,
-    );
-  });
-
-  it("fails when a sandbox-backed model has an empty sandbox.agent", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { sandbox: { agent: "" } },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-
-    await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.sandbox.agent must be a non-empty string/,
-    );
-  });
-
-  it("fails when a sandbox-backed model has a whitespace-only sandbox.agent", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { sandbox: { agent: "   " } },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-
-    await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.sandbox.agent must be a non-empty string/,
-    );
-  });
-
-  it("fails when a sandbox template is empty", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { sandbox: { template: "   " } },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-
-    await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.sandbox.template must be a non-empty string/,
-    );
-  });
-
-  it("fails when a sandbox kit is empty", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { sandbox: { kits: ["./.sbx/kit", ""] } },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-
-    await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.sandbox.kits\[1\] must be a non-empty string/,
-    );
-  });
-
-  it("fails when sandbox kits is not an array", async () => {
+  it("rejects legacy models.isolation config", async () => {
     const path = writeConfigFile(
       temporary,
       [
         "export const config = {",
         `  linear: ${JSON.stringify(VALID_LINEAR)},`,
         `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
-        "  models: { definitions: { claude: { sandbox: { kits: './.sbx/kit' } } } },",
+        "  models: { isolation: 'docker' },",
         "};",
       ].join("\n"),
     );
@@ -514,127 +326,47 @@ describe("loadConfig", () => {
     const { loadConfig } = await loadFreshConfig();
 
     await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.sandbox.kits must be an array/,
+      /models.isolation is no longer supported: local isolation is always Safehouse; remove this key/,
     );
   });
 
-  it("fails when a sandbox setup command is empty", async () => {
+  it("rejects legacy per-model isolation config", async () => {
     const path = writeConfigFile(
       temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { sandbox: { setupCommand: "" } },
-          },
-        },
-      }),
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  models: { definitions: { claude: { isolation: 'safehouse' } } },",
+        "};",
+      ].join("\n"),
     );
     setEnvironmentVariable("GROUNDCREW_CONFIG", path);
 
     const { loadConfig } = await loadFreshConfig();
 
     await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.sandbox.setupCommand must be a non-empty string/,
+      /models.definitions.claude.isolation is no longer supported: per-model isolation is no longer supported/,
     );
   });
 
-  it("defaults models.isolation to auto", async () => {
+  it("rejects legacy per-model sandbox config", async () => {
     const path = writeConfigFile(
       temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.models.isolation).toBe("auto");
-  });
-
-  it("accepts a global models.isolation override", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: { isolation: "docker" },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.models.isolation).toBe("docker");
-  });
-
-  it("accepts per-model isolation overrides", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            claude: { isolation: "safehouse" },
-            codex: { isolation: "none" },
-          },
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-    const actual = await loadConfig();
-
-    expect(actual.models.definitions["claude"]?.isolation).toBe("safehouse");
-    expect(actual.models.definitions["codex"]?.isolation).toBe("none");
-  });
-
-  it("rejects an unknown global models.isolation value", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- intentionally invalid value for the test
-          isolation: "podman" as never,
-        },
-      }),
-    );
-    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
-
-    const { loadConfig } = await loadFreshConfig();
-
-    await expect(loadConfig()).rejects.toThrow(/models.isolation must be one of/);
-  });
-
-  it("rejects an unknown per-model isolation value", async () => {
-    const path = writeConfigFile(
-      temporary,
-      configSource({
-        linear: { ...VALID_LINEAR },
-        workspace: VALID_WORKSPACE(temporary),
-        models: {
-          definitions: {
-            // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- intentionally invalid value for the test
-            claude: { isolation: "podman" as never },
-          },
-        },
-      }),
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  models: { definitions: { claude: { sandbox: { agent: 'claude' } } } },",
+        "};",
+      ].join("\n"),
     );
     setEnvironmentVariable("GROUNDCREW_CONFIG", path);
 
     const { loadConfig } = await loadFreshConfig();
 
     await expect(loadConfig()).rejects.toThrow(
-      /models.definitions.claude.isolation must be one of/,
+      /models.definitions.claude.sandbox is no longer supported: Docker Sandboxes are no longer supported/,
     );
   });
 

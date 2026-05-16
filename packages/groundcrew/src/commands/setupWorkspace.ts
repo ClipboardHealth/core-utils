@@ -12,12 +12,12 @@ import {
   type WorkspaceRunner,
 } from "../lib/config.ts";
 import { detectHostCapabilities } from "../lib/host.ts";
-import { resolveIsolationStrategy } from "../lib/isolation.ts";
 import {
   buildLaunchCommand,
   buildSpriteLaunchCommand,
   shellSingleQuote,
 } from "../lib/launchCommand.ts";
+import { assertLocalRunnerRequirements } from "../lib/localRunner.ts";
 import { errorMessage, getLinearClient, log, readEnvironmentVariable } from "../lib/util.ts";
 import { workspaces } from "../lib/workspaces.ts";
 import { repoDirFor, type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
@@ -115,23 +115,15 @@ export async function setupWorkspace(
     return;
   }
 
-  const { resolved: strategy, reason } = resolveIsolationStrategy({
-    config,
-    model,
-    host: await detectHostCapabilities(signal),
-  });
-  log(`Isolation strategy: ${strategy} (${reason})`);
+  assertLocalRunnerRequirements(await detectHostCapabilities(signal));
+  await ensureClearance({ logger: log });
 
-  if (strategy === "safehouse") {
-    await ensureClearance({ logger: log });
-  }
-
-  const spec = { repository, ticket, model, strategy, runner };
+  const spec = { repository, ticket, model, runner };
   const created =
     signal === undefined
       ? await worktrees.create(config, spec)
       : await worktrees.create(config, spec, signal);
-  const { branchName, dir: launchDir, sandboxName } = created;
+  const { branchName, dir: launchDir } = created;
   const worktreeName = `${repository}-${ticket}`;
 
   // Anything that fails after the worktree is on disk must roll it back
@@ -169,8 +161,6 @@ export async function setupWorkspace(
       definition,
       promptFile,
       worktreeDir: launchDir,
-      sandboxName,
-      strategy,
       secretsFile,
     });
 
@@ -189,9 +179,6 @@ export async function setupWorkspace(
     log(`Workspace "${ticket}" launched (${model})`);
     log(`  Worktree: ${launchDir}`);
     log(`  Branch:   ${branchName}`);
-    if (sandboxName !== undefined) {
-      log(`  sbx:      ${sandboxName}`);
-    }
   } catch (error) {
     await rollbackWorktree({ config, entry: created, promptDir });
     throw error;
@@ -220,7 +207,7 @@ async function setupSpriteWorkspace(arguments_: {
   }
 
   log(`Workspace runner: sprite (${config.remote.sprite.spriteName})`);
-  const spec = { repository, ticket, model, strategy: "none" as const, runner: "sprite" as const };
+  const spec = { repository, ticket, model, runner: "sprite" as const };
   const created =
     signal === undefined
       ? await worktrees.create(config, spec)

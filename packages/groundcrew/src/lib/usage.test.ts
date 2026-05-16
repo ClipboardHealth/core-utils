@@ -66,7 +66,6 @@ function makeConfig(
     },
     models: {
       default: "codex",
-      isolation: "auto",
       definitions: definitions ?? {
         codex: {
           cmd: "safehouse codex --dangerously-bypass-approvals-and-sandbox",

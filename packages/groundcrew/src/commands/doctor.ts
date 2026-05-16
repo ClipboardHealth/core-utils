@@ -5,17 +5,13 @@
 
 import { existsSync, statSync } from "node:fs";
 
-import { runCommandAsync } from "../lib/commandRunner.ts";
 import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
 import { detectHostCapabilities, type HostCapabilities, which } from "../lib/host.ts";
-import { resolveIsolationStrategy, type StrategyResolution } from "../lib/isolation.ts";
 import { errorMessage, readEnvironmentVariable, writeOutput } from "../lib/util.ts";
 import { resolveWorkspaceKind, type WorkspaceResolution } from "../lib/workspaces.ts";
 
 // Tokenization stops after this many non-flag tokens. Two is enough to
 // catch wrapper + wrapped CLI commands like `safehouse claude --foo`.
-// `sbx run` is handled specially because `run` is a subcommand, not a
-// dependency the user installs separately.
 const MAX_TOKENS_PER_CMD = 2;
 
 interface Check {
@@ -37,25 +33,6 @@ async function checkCmd(cmd: string, required: boolean, hint?: string): Promise<
     result.hint = resolvedHint;
   }
   return result;
-}
-
-async function checkSbxDiagnose(): Promise<Check> {
-  try {
-    await runCommandAsync("sbx", ["diagnose"]);
-    return {
-      name: "sbx diagnose",
-      ok: true,
-      required: true,
-      hint: "Docker Sandboxes ready",
-    };
-  } catch {
-    return {
-      name: "sbx diagnose",
-      ok: false,
-      required: true,
-      hint: "run `sbx daemon start` and `sbx login`, then retry",
-    };
-  }
 }
 
 function checkEnvironment(name: string): Check {
@@ -123,25 +100,11 @@ function commandTokensToCheck(cmd: string): string[] {
   return result;
 }
 
-function gatherToolTokens(
-  config: ResolvedConfig,
-  resolutions: Map<string, IsolationOutcome>,
-): string[] {
+function gatherToolTokens(config: ResolvedConfig): string[] {
   const all = new Set<string>();
-  for (const [name, definition] of Object.entries(config.models.definitions)) {
-    const outcome = resolutions.get(name);
-    if (outcome === undefined || outcome.kind === "error") {
-      continue;
-    }
-    if (outcome.resolution.resolved === "docker") {
-      all.add("sbx");
-      continue;
-    }
-    if (outcome.resolution.resolved === "safehouse") {
-      all.add("safehouse");
-    }
-    // The agent command (claude, codex, …) still has to be on PATH for the
-    // host strategies, so tokenize it regardless.
+  for (const definition of Object.values(config.models.definitions)) {
+    // Local runs execute the agent command on the host; Sprite runs need the
+    // same command remotely, but doctor cannot know ticket labels in advance.
     for (const token of commandTokensToCheck(definition.cmd)) {
       all.add(token);
     }
@@ -189,8 +152,7 @@ export async function doctor(): Promise<boolean> {
     writeOutput(`[--] host: ${errorMessage(error)}`);
     return false;
   }
-  const resolutions = resolveAllStrategies(config, host);
-  reportIsolationStrategies(config, resolutions);
+  reportLocalCapability(host);
 
   const workspaceOutcome = resolveWorkspaceOutcome(config, host);
   reportWorkspaceKind(config, workspaceOutcome);
@@ -200,26 +162,14 @@ export async function doctor(): Promise<boolean> {
     await checkCmd("git", true, "https://git-scm.com/"),
     ...(await workspaceChecks(workspaceOutcome)),
     checkDir(config.workspace.projectDir, "workspace.projectDir"),
-    ...isolationChecks(resolutions),
+    localCapabilityCheck(host),
   ];
 
-  const toolTokens = gatherToolTokens(config, resolutions);
-  let sbxAvailable = false;
+  const toolTokens = gatherToolTokens(config);
   for (const token of toolTokens) {
-    let hint: string | undefined;
-    if (token === "safehouse") {
-      hint = "macOS-only sandbox; edit config.ts to remove if you're not on macOS";
-    }
     // oxlint-disable-next-line no-await-in-loop -- doctor reports tools in deterministic order
-    const check = await checkCmd(token, true, hint);
+    const check = await checkCmd(token, true);
     checks.push(check);
-    if (token === "sbx" && check.ok) {
-      sbxAvailable = true;
-    }
-  }
-
-  if (sbxAvailable) {
-    checks.push(await checkSbxDiagnose());
   }
 
   if (anyModelUsesUsage(config)) {
@@ -240,59 +190,31 @@ export async function doctor(): Promise<boolean> {
   return true;
 }
 
-type IsolationOutcome =
-  | { kind: "ok"; resolution: StrategyResolution }
-  | { kind: "error"; requested: StrategyResolution["requested"]; reason: string };
-
-function resolveAllStrategies(
-  config: ResolvedConfig,
-  host: HostCapabilities,
-): Map<string, IsolationOutcome> {
-  const out = new Map<string, IsolationOutcome>();
-  for (const [name, definition] of Object.entries(config.models.definitions)) {
-    try {
-      const resolution = resolveIsolationStrategy({ config, model: name, host });
-      out.set(name, { kind: "ok", resolution });
-    } catch (error) {
-      const requested = definition.isolation ?? config.models.isolation;
-      out.set(name, { kind: "error", requested, reason: errorMessage(error) });
-    }
-  }
-  return out;
-}
-
-function isolationChecks(resolutions: Map<string, IsolationOutcome>): Check[] {
-  const checks: Check[] = [];
-  for (const [name, outcome] of resolutions) {
-    if (outcome.kind === "ok") {
-      continue;
-    }
-    checks.push({
-      name: `isolation[${name}]`,
+function localCapabilityCheck(host: HostCapabilities): Check {
+  if (!host.isMacOS) {
+    return {
+      name: "local runner (macOS + Safehouse)",
       ok: false,
       required: true,
-      hint: outcome.reason,
-    });
+      hint: "local runs require macOS; on Linux/WSL use agent-remote with Sprite",
+    };
   }
-  return checks;
+  return {
+    name: "local runner (macOS + Safehouse)",
+    ok: host.hasSafehouse,
+    required: true,
+    hint: host.hasSafehouse
+      ? "ready"
+      : "install Safehouse from https://agent-safehouse.dev/ and ensure `safehouse` is on PATH",
+  };
 }
 
-function reportIsolationStrategies(
-  config: ResolvedConfig,
-  resolutions: Map<string, IsolationOutcome>,
-): void {
+function reportLocalCapability(host: HostCapabilities): void {
+  const check = localCapabilityCheck(host);
   writeOutput();
-  writeOutput("Isolation strategy");
-  writeOutput("------------------");
-  writeOutput(`global default: ${config.models.isolation}`);
-  for (const [name, outcome] of resolutions) {
-    if (outcome.kind === "ok") {
-      const { requested, resolved, reason } = outcome.resolution;
-      writeOutput(`[ok] ${name}: requested=${requested}, resolved=${resolved} (${reason})`);
-    } else {
-      writeOutput(`[--] ${name}: requested=${outcome.requested} — ${outcome.reason}`);
-    }
-  }
+  writeOutput("Local runner");
+  writeOutput("------------");
+  writeOutput(format(check));
 }
 
 type WorkspaceOutcome =

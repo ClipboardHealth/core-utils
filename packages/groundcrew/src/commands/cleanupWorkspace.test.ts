@@ -32,13 +32,14 @@ const hostEntry: WorktreeEntry = {
   kind: "host",
 };
 
-const sandboxEntry: WorktreeEntry = {
+const spriteEntry: WorktreeEntry = {
   repository: "repo-a",
   ticket: "team-1",
   branchName: "rocky-team-1",
-  dir: "/work/repo-a/.sbx/groundcrew-repo-a-claude-worktrees/rocky-team-1",
-  kind: "sandbox",
-  sandboxName: "groundcrew-repo-a-claude",
+  dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+  kind: "sprite",
+  spriteName: "crew-claude-1",
+  remoteRepoDir: "/home/sprite/dev/repo-a",
 };
 
 const config: ResolvedConfig = {
@@ -59,7 +60,6 @@ const config: ResolvedConfig = {
   },
   models: {
     default: "claude",
-    isolation: "auto",
     definitions: { claude: { cmd: "claude", color: "#fff" } },
   },
   prompts: { initial: "x" },
@@ -116,22 +116,22 @@ describe(cleanupWorkspace, () => {
     expect(consoleLog.output()).toContain("nothing to clean up");
   });
 
-  it("hands a sandbox-kind entry to teardown", async () => {
-    findByTicketMock.mockReturnValue([sandboxEntry]);
-    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [sandboxEntry] }));
+  it("hands a Sprite-kind entry to teardown", async () => {
+    findByTicketMock.mockReturnValue([spriteEntry]);
+    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [spriteEntry] }));
 
     await cleanupWorkspace(config, { ticket: "team-1" });
 
-    expect(teardownMock).toHaveBeenCalledWith(config, [sandboxEntry], { force: false });
+    expect(teardownMock).toHaveBeenCalledWith(config, [spriteEntry], { force: false });
   });
 
-  it("hands BOTH a host and sandbox worktree to teardown for the same ticket", async () => {
-    findByTicketMock.mockReturnValue([hostEntry, sandboxEntry]);
-    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [hostEntry, sandboxEntry] }));
+  it("hands BOTH host and Sprite worktrees to teardown for the same ticket", async () => {
+    findByTicketMock.mockReturnValue([hostEntry, spriteEntry]);
+    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [hostEntry, spriteEntry] }));
 
     await cleanupWorkspace(config, { ticket: "team-1" });
 
-    expect(teardownMock).toHaveBeenCalledWith(config, [hostEntry, sandboxEntry], { force: false });
+    expect(teardownMock).toHaveBeenCalledWith(config, [hostEntry, spriteEntry], { force: false });
   });
 
   it("logs `workspace list failed: ...` when teardown reports a probe-throw error", async () => {

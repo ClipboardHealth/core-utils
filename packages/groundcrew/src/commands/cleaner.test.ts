@@ -1,6 +1,5 @@
 import type { BoardState, Issue } from "../lib/boardSource.ts";
 import type { ResolvedConfig } from "../lib/config.ts";
-import { sandboxNameFor } from "../lib/sandbox.ts";
 import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
 import { captureConsoleLog, type ConsoleCapture } from "../testHelpers/consoleCapture.ts";
 import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
@@ -41,7 +40,6 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     },
     models: {
       default: "claude",
-      isolation: "auto",
       definitions: { claude: { cmd: "claude", color: "#fff" } },
       ...overrides.models,
     },
@@ -98,15 +96,15 @@ function hostEntryFor(repository: string, ticket: string): WorktreeEntry {
   };
 }
 
-function sandboxEntryFor(repository: string, ticket: string, model = "claude"): WorktreeEntry {
-  const sandboxName = sandboxNameFor({ repository, model });
+function spriteEntryFor(repository: string, ticket: string): WorktreeEntry {
   return {
     repository,
     ticket,
     branchName: `rocky-${ticket.toLowerCase()}`,
-    dir: `/work/${repository}/.sbx/${sandboxName}-worktrees/rocky-${ticket.toLowerCase()}`,
-    kind: "sandbox",
-    sandboxName,
+    dir: `/home/sprite/groundcrew/worktrees/${repository}-${ticket}`,
+    kind: "sprite",
+    spriteName: "crew-claude-1",
+    remoteRepoDir: `/home/sprite/dev/${repository}`,
   };
 }
 
@@ -292,31 +290,31 @@ describe(createCleaner, () => {
     expect(out).toContain("event=cleanup outcome=skipped reason=dry_run");
   });
 
-  it("passes both kinds of worktree to teardown when both exist for one terminal ticket", async () => {
+  it("passes both local and Sprite worktrees to teardown when both exist for one terminal ticket", async () => {
     const host = hostEntryFor("repo-a", "team-1");
-    const sandbox = sandboxEntryFor("repo-a", "team-1");
+    const sprite = spriteEntryFor("repo-a", "team-1");
     const cleaner = createCleaner({ config: makeConfig() });
 
     await cleaner.runOnce({
       state: boardOf([doneIssue("team-1")]),
-      worktreeEntries: [host, sandbox],
+      worktreeEntries: [host, sprite],
       dryRun: false,
     });
 
-    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [host, sandbox]);
+    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [host, sprite]);
   });
 
-  it("passes a sandbox-kind worktree directly to teardown", async () => {
-    const sandbox = sandboxEntryFor("repo-a", "team-1");
+  it("passes a Sprite-kind worktree directly to teardown", async () => {
+    const sprite = spriteEntryFor("repo-a", "team-1");
     const cleaner = createCleaner({ config: makeConfig() });
 
     await cleaner.runOnce({
       state: boardOf([doneIssue("team-1")]),
-      worktreeEntries: [sandbox],
+      worktreeEntries: [sprite],
       dryRun: false,
     });
 
-    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [sandbox]);
+    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [sprite]);
   });
 
   it("passes the shutdown signal into teardown", async () => {

@@ -3,15 +3,12 @@
  *
  * - **Host worktree** — a `git worktree add`'d sibling at
  *   `<projectDir>/<repo>-<TICKET>/`.
- * - **Sandbox worktree** — an `sbx run --branch` worktree inside the
- *   persistent Docker Sandboxes container at
- *   `<repoDir>/.sbx/<sandboxName>-worktrees/<branchName>/`.
+ * - **Sprite worktree** — a remote git worktree tracked in local state.
  *
- * Each kind has its own adapter (`hostWorktreeAdapter`,
- * `sandboxWorktreeAdapter`). Callers go through the `worktrees` namespace
- * and never branch on kind themselves — the dispatchers below pick the
- * adapter by `spec.strategy` (for `create`) or `entry.kind` (for `remove`),
- * mirroring the `workspaces` module's adapter pattern.
+ * Each kind has its own adapter. Callers go through the `worktrees`
+ * namespace and never branch on kind themselves — the dispatchers below
+ * pick the adapter by `spec.runner` (for `create`) or `entry.kind` (for
+ * `remove`), mirroring the `workspaces` module's adapter pattern.
  */
 
 import {
@@ -27,15 +24,13 @@ import { dirname, resolve } from "node:path";
 
 import { runCommandAsync, type RunCommandOptions } from "./commandRunner.ts";
 import type { ResolvedConfig, WorkspaceRunner } from "./config.ts";
-import type { ResolvedIsolationStrategy } from "./isolation.ts";
 import { shellSingleQuote } from "./launchCommand.ts";
-import { sandboxExists, sandboxNameFor, sandboxWorktreeDirFor } from "./sandbox.ts";
 import { errorMessage, log, readEnvironmentVariable } from "./util.ts";
 import { type WorkspaceProbe, workspaces } from "./workspaces.ts";
 
 const LONG_RUNNING_COMMAND_OPTIONS = { stdio: "inherit", timeoutMs: 0 } as const;
 
-export type WorktreeKind = "host" | "sandbox" | "sprite";
+export type WorktreeKind = "host" | "sprite";
 
 export interface WorktreeEntry {
   repository: string;
@@ -45,8 +40,6 @@ export interface WorktreeEntry {
   branchName: string;
   dir: string;
   kind: WorktreeKind;
-  /** Set iff `kind === "sandbox"`. */
-  sandboxName?: string;
   /** Set iff `kind === "sprite"`. */
   spriteName?: string;
   /** Set iff `kind === "sprite"`. */
@@ -57,13 +50,11 @@ export interface WorktreeSpec {
   repository: string;
   ticket: string;
   model: string;
-  strategy: ResolvedIsolationStrategy;
   runner?: WorkspaceRunner;
 }
 
 const TICKET_RE = /^[a-z][\da-z]*-\d+$/;
 const TICKET_DIR_RE = /^(.+)-([a-z][\da-z]*-\d+)$/;
-const BRANCH_TICKET_RE = /([a-z][\da-z]*-\d+)$/;
 
 function branchPrefix(): string {
   const name = userInfo().username;
@@ -75,10 +66,6 @@ function branchPrefix(): string {
 
 export function branchNameForTicket(ticket: string): string {
   return `${branchPrefix()}-${ticket}`;
-}
-
-function ticketFromBranchDir(name: string): string | undefined {
-  return BRANCH_TICKET_RE.exec(name)?.[1];
 }
 
 export function repoDirFor(config: ResolvedConfig, repository: string): string {
@@ -251,109 +238,6 @@ const hostWorktreeAdapter: WorktreeAdapter = {
     await deleteBranchBestEffort({
       cmd: "git",
       cmdArgs: ["-C", repoDir, "branch", "-D", entry.branchName],
-      branchName: entry.branchName,
-      ...signalProperty(options.signal),
-    });
-  },
-};
-
-const sandboxWorktreeAdapter: WorktreeAdapter = {
-  async create(config, spec, signal) {
-    const base = basePaths(config, spec.repository, spec.ticket);
-    const definition = config.models.definitions[spec.model];
-    if (definition?.sandbox === undefined) {
-      throw new Error(
-        `Cannot resolve docker worktree for model "${spec.model}": no sandbox config defined.`,
-      );
-    }
-    const sandboxName = sandboxNameFor({ repository: spec.repository, model: spec.model });
-    const sandboxDir = sandboxWorktreeDirFor({
-      repoDir: base.repoDir,
-      sandboxName,
-      branchName: base.branchName,
-    });
-
-    if (!(await sandboxExists(sandboxName, signal))) {
-      throw new Error(
-        `Persistent sbx sandbox ${sandboxName} not found. Run \`crew sandbox auth ${spec.repository} --model ${spec.model}\` first so OAuth happens before the ticket prompt.`,
-      );
-    }
-    log(
-      `Creating sbx worktree ${spec.repository}-${spec.ticket} (branch ${base.branchName}) in ${sandboxName}...`,
-    );
-    // Sandbox-backed: sbx fetches inside the container, so we skip the
-    // host-side fetch.
-    await runCommandAsync(
-      "sbx",
-      ["run", "--branch", base.branchName, sandboxName, "--", "--version"],
-      longRunningCommandOptions(signal),
-    );
-    return {
-      repository: spec.repository,
-      ticket: spec.ticket,
-      branchName: base.branchName,
-      dir: sandboxDir,
-      kind: "sandbox",
-      sandboxName,
-    };
-  },
-  list(config) {
-    const projectDir = resolve(config.workspace.projectDir);
-    const entries: WorktreeEntry[] = [];
-
-    for (const repository of config.workspace.knownRepositories) {
-      const repoDir = resolve(projectDir, repository);
-      for (const [model, definition] of Object.entries(config.models.definitions)) {
-        if (definition.sandbox === undefined) {
-          continue;
-        }
-        const sandboxName = sandboxNameFor({ repository, model });
-        const root = resolve(repoDir, ".sbx", `${sandboxName}-worktrees`);
-        let children: Dirent[];
-        try {
-          children = readdirSync(root, { withFileTypes: true });
-        } catch {
-          continue;
-        }
-        for (const entry of children) {
-          if (!entry.isDirectory()) {
-            continue;
-          }
-          const ticket = ticketFromBranchDir(entry.name);
-          if (ticket === undefined) {
-            continue;
-          }
-          entries.push({
-            repository,
-            ticket,
-            branchName: entry.name,
-            dir: resolve(root, entry.name),
-            kind: "sandbox",
-            sandboxName,
-          });
-        }
-      }
-    }
-
-    return entries;
-  },
-  async remove(config, entry, options) {
-    const projectDir = resolve(config.workspace.projectDir);
-    const repoDir = resolve(projectDir, entry.repository);
-    /* v8 ignore next 3 @preserve -- list() always populates sandboxName for kind==="sandbox" */
-    if (entry.sandboxName === undefined) {
-      throw new Error(`Sandbox worktree entry missing sandboxName: ${entry.dir}`);
-    }
-    log(`Removing sbx worktree ${entry.dir}${options.force ? " (--force)" : ""}...`);
-    const removeArguments = ["exec", entry.sandboxName, "git", "-C", repoDir, "worktree", "remove"];
-    if (options.force) {
-      removeArguments.push("--force");
-    }
-    removeArguments.push(entry.dir);
-    await runCommandAsync("sbx", removeArguments, longRunningCommandOptions(options.signal));
-    await deleteBranchBestEffort({
-      cmd: "sbx",
-      cmdArgs: ["exec", entry.sandboxName, "git", "-C", repoDir, "branch", "-D", entry.branchName],
       branchName: entry.branchName,
       ...signalProperty(options.signal),
     });
@@ -585,23 +469,19 @@ function adapterForEntry(entry: WorktreeEntry): WorktreeAdapter {
   if (entry.kind === "sprite") {
     return spriteWorktreeAdapter;
   }
-  return entry.kind === "sandbox" ? sandboxWorktreeAdapter : hostWorktreeAdapter;
+  return hostWorktreeAdapter;
 }
 
 function adapterForSpec(spec: WorktreeSpec): WorktreeAdapter {
   if (spec.runner === "sprite") {
     return spriteWorktreeAdapter;
   }
-  return spec.strategy === "docker" ? sandboxWorktreeAdapter : hostWorktreeAdapter;
+  return hostWorktreeAdapter;
 }
 
-/** Returns BOTH kinds for a ticket when both exist; callers must not assume uniqueness. */
+/** Returns every tracked worktree kind for a ticket; callers must not assume uniqueness. */
 function list(config: ResolvedConfig): WorktreeEntry[] {
-  return [
-    ...hostWorktreeAdapter.list(config),
-    ...sandboxWorktreeAdapter.list(config),
-    ...spriteWorktreeAdapter.list(config),
-  ];
+  return [...hostWorktreeAdapter.list(config), ...spriteWorktreeAdapter.list(config)];
 }
 
 function findByTicket(config: ResolvedConfig, ticket: string): WorktreeEntry[] {

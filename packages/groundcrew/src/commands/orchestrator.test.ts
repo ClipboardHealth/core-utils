@@ -100,7 +100,6 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     },
     models: {
       default: "claude",
-      isolation: "auto",
       definitions: {
         claude: { cmd: "claude", color: "#fff" },
         codex: { cmd: "codex", color: "#000" },
@@ -259,15 +258,15 @@ function hostEntryFor(repository: string, ticket: string): WorktreeEntry {
   };
 }
 
-function sandboxEntryFor(repository: string, ticket: string, model = "claude"): WorktreeEntry {
-  const sandboxName = `groundcrew-${repository}-${model}`;
+function spriteEntryFor(repository: string, ticket: string): WorktreeEntry {
   return {
     repository,
     ticket,
     branchName: `rocky-${ticket.toLowerCase()}`,
-    dir: `/work/${repository}/.sbx/${sandboxName}-worktrees/rocky-${ticket.toLowerCase()}`,
-    kind: "sandbox",
-    sandboxName,
+    dir: `/home/sprite/groundcrew/worktrees/${repository}-${ticket}`,
+    kind: "sprite",
+    spriteName: "crew-claude-1",
+    remoteRepoDir: `/home/sprite/dev/${repository}`,
   };
 }
 
@@ -565,7 +564,6 @@ describe(orchestrate, () => {
       makeConfig({
         models: {
           default: "codex",
-          isolation: "auto",
           definitions: {
             claude: { cmd: "claude", color: "#fff" },
             codex: { cmd: "codex", color: "#000" },
@@ -1153,8 +1151,8 @@ describe(orchestrate, () => {
     expect(out).toContain("Run `crew cleanup");
   });
 
-  it("treats a sandbox-kind worktree as existing for eligibility", async () => {
-    listMock.mockReturnValue([sandboxEntryFor("repo-a", "team-1")]);
+  it("treats a Sprite-kind worktree as existing for eligibility", async () => {
+    listMock.mockReturnValue([spriteEntryFor("repo-a", "team-1")]);
     workspacesProbeMock.mockResolvedValue({ kind: "ok", names: new Set<string>() });
     const client = makeClient({
       pages: [
@@ -1361,10 +1359,10 @@ describe(orchestrate, () => {
     expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [entry]);
   });
 
-  it("hands a sandbox-kind worktree to teardown", async () => {
-    const sandbox = sandboxEntryFor("repo-a", "team-1");
-    listMock.mockReturnValue([sandbox]);
-    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [sandbox] }));
+  it("hands a Sprite-kind worktree to teardown", async () => {
+    const sprite = spriteEntryFor("repo-a", "team-1");
+    listMock.mockReturnValue([sprite]);
+    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [sprite] }));
     const client = makeClient({
       pages: [
         [
@@ -1380,14 +1378,14 @@ describe(orchestrate, () => {
 
     await orchestrate({ watch: false, dryRun: false });
 
-    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [sandbox]);
+    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [sprite]);
   });
 
-  it("hands BOTH a host and sandbox worktree to teardown for one terminal ticket", async () => {
+  it("hands BOTH host and Sprite worktrees to teardown for one terminal ticket", async () => {
     const host = hostEntryFor("repo-a", "team-1");
-    const sandbox = sandboxEntryFor("repo-a", "team-1");
-    listMock.mockReturnValue([host, sandbox]);
-    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [host, sandbox] }));
+    const sprite = spriteEntryFor("repo-a", "team-1");
+    listMock.mockReturnValue([host, sprite]);
+    teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [host, sprite] }));
     const client = makeClient({
       pages: [
         [
@@ -1403,7 +1401,7 @@ describe(orchestrate, () => {
 
     await orchestrate({ watch: false, dryRun: false });
 
-    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [host, sandbox]);
+    expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [host, sprite]);
   });
 
   it("logs Cleanup failed when teardown reports a worktree_remove failure", async () => {

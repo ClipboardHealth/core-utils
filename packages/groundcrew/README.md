@@ -8,11 +8,11 @@ Watch a Linear project and farm out ready tickets to coding-agent CLIs running i
 npm install -g @clipboard-health/groundcrew
 ```
 
-This installs the `crew` binary. `@clipboard-health/clearance` is pulled in transitively and provides the `clearance` / `clearance-ensure` bins used by Safehouse isolation.
+This installs the `crew` binary. `@clipboard-health/clearance` is pulled in transitively and provides the `clearance` / `clearance-ensure` bins used by local Safehouse execution.
 
 ## Quickstart
 
-1. **Install prereqs.** Node 24, `git`, `cmux` _or_ `tmux`, and the runtimes you actually want: Docker Sandboxes (`sbx`) for sandbox-backed agents, [Safehouse](https://agent-safehouse.dev/) for macOS sandboxing, and the agent CLIs themselves (`claude`, `codex`, `cursor-agent`, ...). Optional: `codexbar` for session-usage gating. The `workspaceKind` config key picks the workspace backend (`auto` resolves to cmux when installed, else tmux).
+1. **Install prereqs.** Node 24, `git`, `cmux` _or_ `tmux`, and the agent CLIs themselves (`claude`, `codex`, `cursor-agent`, ...). Local runs require macOS with [Safehouse](https://agent-safehouse.dev/) on `PATH`; Linux/WSL hosts must run tickets remotely through Sprite by adding the `agent-remote` label. Optional: `codexbar` for session-usage gating. The `workspaceKind` config key picks the workspace backend (`auto` resolves to cmux when installed, else tmux).
 
 2. **Create a Linear project to scope your work.** Any team works — make a project inside it and drop tickets in. The orchestrator polls by project, not by team, so you don't need a dedicated team.
 
@@ -41,28 +41,14 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
    op run --env-file .env.1password -- crew doctor
    ```
 
-5. **Prepare isolation and agent auth.** With `models.isolation: "auto"`, groundcrew prefers Safehouse on macOS. On non-macOS hosts, it falls back to persistent Docker Sandboxes if the model has a `sandbox` config. Set `models.isolation: "none"` only when you intentionally want direct, non-isolated execution.
+5. **Prepare the runner and agent auth.** Groundcrew supports one local runner and one remote runner:
+   - macOS local: `cmux` or `tmux` workspace, Safehouse on `PATH`, `clearance`, and locally authenticated agent CLIs.
+   - macOS remote: local `cmux` or `tmux` workspace that launches a Sprite session.
+   - Linux/WSL remote: `tmux` workspace that launches a Sprite session. Label tickets `agent-remote`; local execution is not supported.
 
-   If you use Docker Sandboxes, start the daemon and log in before `crew run`:
+   Local setup fails before creating a worktree when the host is not macOS or `safehouse` is missing. `models.isolation`, per-model `isolation`, and per-model `sandbox` are legacy keys and now fail config validation.
 
-   ```bash
-   sbx daemon start
-   sbx login
-   ```
-
-   Then prepare each repo/model sandbox once. For Claude, this opens the agent with no ticket prompt so you can complete `/login` without losing task context:
-
-   ```bash
-   crew sandbox auth <repo> --model claude
-   ```
-
-   For Codex, groundcrew starts Docker's host-side OpenAI OAuth flow before preparing the sandbox:
-
-   ```bash
-   crew sandbox auth <repo> --model codex
-   ```
-
-6. **Set the clearance allowlist (Safehouse only).** When the resolved isolation strategy is Safehouse, groundcrew starts `clearance` from `@clipboard-health/clearance` on `http://127.0.0.1:19999` (skipping the launch if something is already listening) and runs the agent through the bundled `safehouse-clearance` wrapper. Clearance refuses to start without an allowlist — see [its README](../clearance/README.md) for the proxy's env vars, log paths, and DNS rules. The shortest path is to set the env before `crew run`:
+6. **Set the clearance allowlist for local macOS runs.** Groundcrew starts `clearance` from `@clipboard-health/clearance` on `http://127.0.0.1:19999` (skipping the launch if something is already listening) and runs the agent through the bundled `safehouse-clearance` wrapper. Clearance refuses to start without an allowlist — see [its README](../clearance/README.md) for the proxy's env vars, log paths, and DNS rules. The shortest path is to set the env before `crew run`:
 
    ```bash
    CLEARANCE_ALLOW_HOSTS="api.openai.com,auth.openai.com,api.anthropic.com,mcp.linear.app,api.linear.app" \
@@ -95,7 +81,7 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
    Known MCP aliases are `linear`, `slack`, and `notion`. For another HTTP MCP server, pass `--mcp name=https://example.com/mcp`. The command creates the Sprite if needed, prepares `~/dev`, configures Git, runs selected auth flows, adds selected MCP servers to Claude Code, and then opens Claude so you can run `/mcp` and authenticate only those selected servers. `--copy-local-codex-auth` copies `${CODEX_HOME:-$HOME/.codex}/auth.json` into `/home/sprite/.codex/auth.json` and then verifies `codex login status`; it never prints the file contents. Use `--skip-mcp-auth` when you only want to add MCP definitions, and run the `/mcp` step later.
 
-   Repo setup is separate from runner setup and should run after the ticket branch exists, immediately before launching an agent. It clones/fetches the repo in the Sprite, checks out the requested branch (creating it from the base branch when it does not exist on origin), forwards only build-time secrets for the dependency install, removes the temporary secret file, clears those env vars, and then exits. It reuses the same Node/npm bootstrap command as groundcrew's Docker Sandboxes path.
+   Repo setup is separate from runner setup and should run after the ticket branch exists, immediately before launching an agent. It clones/fetches the repo in the Sprite, checks out the requested branch (creating it from the base branch when it does not exist on origin), forwards only build-time secrets for the dependency install, removes the temporary secret file, clears those env vars, and then exits. It uses groundcrew's remote setup command.
 
    ```bash
    op run --env-file "${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/op.env" -- \
@@ -128,17 +114,15 @@ Required fields are marked **required**; everything else has a default and can b
 | `linear.statuses.terminal`              | `["Done"]`                            | Additional status names treated as terminal for cleanup, board remaining counts, and blocker checks. The `done` status is always included.                                                                                                                      |
 | `git.remote`                            | `"origin"`                            | Remote used for `fetch` and as the worktree base ref.                                                                                                                                                                                                           |
 | `git.defaultBranch`                     | `"main"`                              | Branch fetched from `git.remote` and used as the worktree base.                                                                                                                                                                                                 |
-| `workspace.projectDir`                  | **required**                          | Parent dir for cloned repos. Sandbox-backed ticket worktrees live under each repo's `.sbx/` directory.                                                                                                                                                          |
+| `workspace.projectDir`                  | **required**                          | Parent dir for cloned repos and local sibling ticket worktrees. Sprite ticket worktrees live in `remote.sprite.worktreeRoot` on the remote runner.                                                                                                              |
 | `workspace.knownRepositories`           | **required**                          | Repos searched for in ticket descriptions to infer where work belongs. A ticket labeled for groundcrew (`agent-*`) fails fast when no known repo appears; unlabeled tickets are ignored.                                                                        |
 | `orchestrator.maximumInProgress`        | `4`                                   | Cap on tickets in `linear.statuses.inProgress` at once.                                                                                                                                                                                                         |
 | `orchestrator.pollIntervalMilliseconds` | `120_000`                             | Poll interval in `--watch` mode.                                                                                                                                                                                                                                |
 | `orchestrator.sessionLimitPercentage`   | `85`                                  | Number in `(0, 100]`. A model whose codexbar session window exceeds this percentage is skipped that tick.                                                                                                                                                       |
 | `models.default`                        | `"claude"`                            | Tiebreak for `agent-any` resolution and fallback for explicit but unknown `agent-*` labels. Also used by `crew setup <TICKET>` for unlabeled tickets. `crew run` ignores unlabeled tickets and does not apply this default. Must exist in `models.definitions`. |
-| `models.isolation`                      | `"auto"`                              | Isolation strategy. `"auto"` picks Safehouse on macOS, else Docker Sandboxes when the model has a sandbox config. Safehouse or a model sandbox config is required; if neither is available, setup fails. Set `"none"` explicitly to run directly.               |
 | `models.definitions`                    | `{ claude, codex }`                   | Agent definitions. Additive merge with shipped defaults.                                                                                                                                                                                                        |
-| `models.definitions.<name>.cmd`         | —                                     | Shell command launched for the model. For sandbox-backed models this runs inside the persistent sandbox; otherwise it runs in the workspace. `{{worktree}}` and `{{sandbox}}` are replaced before launch.                                                       |
+| `models.definitions.<name>.cmd`         | —                                     | Shell command launched for the model. Local macOS runs execute in the worktree through Safehouse/clearance; Sprite runs execute inside the remote worktree. `{{worktree}}` is replaced before launch and legacy `{{sandbox}}` expands to an empty string.       |
 | `models.definitions.<name>.color`       | —                                     | Color for the workspace status pill (cmux only; tmux silently drops it).                                                                                                                                                                                        |
-| `models.definitions.<name>.sandbox`     | `{ agent }`                           | Optional Docker Sandboxes backing. Defaults set `claude` → `agent: "claude"` and `codex` → `agent: "codex"`. Set `sandbox: false` on an override to run the command outside Docker Sandboxes.                                                                   |
 | `models.definitions.<name>.usage`       | optional                              | If set, codexbar usage is fetched for this model and gated by `sessionLimitPercentage`. Omit to never gate. When `usage.codexbar.source` is omitted, groundcrew uses `auto` on macOS and `cli` elsewhere.                                                       |
 | `prompts.initial`                       | (template)                            | First message sent to the agent. Placeholders: `{{ticket}}`, `{{worktree}}`, `{{title}}`, `{{description}}`.                                                                                                                                                    |
 | `workspaceKind`                         | `"auto"`                              | Terminal session manager. `"auto"` picks `cmux` when on PATH, else `tmux`. Set to `"cmux"` or `"tmux"` to fail loudly when the chosen backend is missing. tmux windows live in a dedicated `groundcrew` session.                                                |
@@ -154,8 +138,6 @@ The branch prefix (`<prefix>-<TICKET>`) is derived from your OS username (`os.us
 ## Manual commands
 
 ```bash
-crew sandbox auth <repo> --model claude
-crew sandbox auth <repo> --model codex
 crew sprite setup crew-claude-1 --claude --codex --copy-local-codex-auth --github --mcp linear --checkpoint
 crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123
 crew sprite sessions
@@ -166,14 +148,13 @@ crew run --ticket <TICKET>
 crew cleanup <TICKET>
 ```
 
-`crew run --ticket <TICKET>` provisions a single ticket the same way the orchestrator would: the repo is parsed from the ticket's Linear description, the model comes from the ticket's `agent-*` label, and `agent-remote` is honored. If the description does not mention a repo from `workspace.knownRepositories`, setup fails before provisioning. `--watch` and `--ticket` are mutually exclusive — `--watch` drives the orchestrator loop; `--ticket` provisions one ticket and exits. `crew cleanup <TICKET>` resolves to every worktree carrying that ticket id (host, sandbox, and Sprite kinds, across repos) and tears them all down. To inspect remote sessions, run `crew sprite sessions` or pass an explicit Sprite name. To attach to a listed session id or command selector, run `crew sprite attach <session-id-or-command>`. If an attached agent appears stuck in a long-running shell tool, use `crew sprite ps <sprite>` to find the child process group (`PGID`) under the agent, then use `crew sprite interrupt <PGID> --sprite <sprite>` to send SIGINT to that child command without killing the agent session. If cleanup cannot remove a remote worktree because the agent is still running, stop that session with `sprite sessions kill -s crew-claude-1 <session-id>` and retry cleanup. To inspect codexbar session windows directly, run `codexbar usage`; the orchestrator already gates on this internally via `orchestrator.sessionLimitPercentage`.
+`crew run --ticket <TICKET>` provisions a single ticket the same way the orchestrator would: the repo is parsed from the ticket's Linear description, the model comes from the ticket's `agent-*` label, and `agent-remote` is honored. If the description does not mention a repo from `workspace.knownRepositories`, setup fails before provisioning. `--watch` and `--ticket` are mutually exclusive — `--watch` drives the orchestrator loop; `--ticket` provisions one ticket and exits. `crew cleanup <TICKET>` resolves to every tracked worktree carrying that ticket id (host and Sprite kinds, across repos) and tears them all down. To inspect remote sessions, run `crew sprite sessions` or pass an explicit Sprite name. To attach to a listed session id or command selector, run `crew sprite attach <session-id-or-command>`. If an attached agent appears stuck in a long-running shell tool, use `crew sprite ps <sprite>` to find the child process group (`PGID`) under the agent, then use `crew sprite interrupt <PGID> --sprite <sprite>` to send SIGINT to that child command without killing the agent session. If cleanup cannot remove a remote worktree because the agent is still running, stop that session with `sprite sessions kill -s crew-claude-1 <session-id>` and retry cleanup. To inspect codexbar session windows directly, run `codexbar usage`; the orchestrator already gates on this internally via `orchestrator.sessionLimitPercentage`.
 
 ## Gotchas
 
-- **Auto isolation prefers Safehouse.** The shipped `models.isolation: "auto"` uses Safehouse on macOS. On non-macOS hosts (Linux/WSL), shipped models with Docker Sandbox config use a persistent sandbox per repo/model, named `groundcrew-<repo>-<model>`. `crew run --ticket` creates per-ticket `sbx --branch` worktrees inside that sandbox and launches the task with `sbx exec`, so `npm clean-install` and the agent both run inside Docker.
+- **Local execution is macOS plus Safehouse only.** There is no `models.isolation` strategy and no direct local execution mode. On Linux/WSL, label tickets `agent-remote` and run them through Sprite.
 - **Safehouse-already-wrapped commands are not re-wrapped.** If a `models.definitions.<name>.cmd` already starts with `safehouse`, groundcrew assumes that command owns its Safehouse flags and does not add the `safehouse-clearance` wrapper a second time. Changing the proxy's allowlist after it's running requires killing the PID in `${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.pid` so the next launch picks up the new env.
-- **Authenticate before first ticket setup.** Run `crew sandbox auth <repo> --model <name>` before `crew run` for a repo/model. That first run carries no ticket prompt, so a required OAuth `/login` cannot consume task context.
-- **Sandbox cleanup is intentionally conservative.** `crew cleanup` removes the per-ticket worktree and branch, but keeps the persistent sandbox so OAuth sessions, installed packages, and agent config survive later tickets. Use `sbx ls` and `sbx rm --force <name>` when you intentionally want to delete that persisted sandbox state.
+- **Legacy Docker Sandboxes state is unmanaged.** Groundcrew no longer discovers or cleans `.sbx` worktrees or persistent Docker Sandboxes containers. If you have old state, inspect and remove it manually with `sbx`.
 - **Sprite cleanup is also conservative.** `crew cleanup` removes tracked remote worktrees and branches, but it does not kill active Sprite sessions. Use `crew sprite sessions [<sprite>]` to inspect sessions and `sprite sessions kill -s <sprite> <session-id>` when Git reports a worktree is busy.
 - **Long-running remote shell tools block agent input.** Claude Code and similar TUI agents cannot accept a new prompt while one of their shell tools is still running. Use `crew sprite ps <sprite>` to inspect the remote process tree; interrupt the tool's child `PGID`, not the agent session `PGID`, with `crew sprite interrupt <PGID> --sprite <sprite>`.
 - **Codex auth in Sprites may need auth-file copy.** If `crew sprite setup <sprite> --codex` finishes interactive login but `codex login status` still fails inside the Sprite, rerun with `--copy-local-codex-auth` after confirming local Codex auth works.
@@ -183,7 +164,7 @@ crew cleanup <TICKET>
 - **Tickets stay in the in-progress status until something else moves them.** Groundcrew sets a ticket to `inProgress` when it provisions a workspace and never advances it. The next transition (typically "in review" when a PR opens) is left to your team's Linear automation rules.
 - **Project must be on a single Linear team in practice.** Cross-team projects work — the orchestrator caches the in-progress state ID per team — but every team in the project must use the same status name for `linear.statuses.inProgress`.
 - **Claude launches in bypass-permissions mode by default.** Groundcrew creates isolated per-ticket worktrees and unattended remote sessions, so the shipped `claude` command is `claude --permission-mode bypassPermissions` to avoid workspace-trust and tool-permission prompts blocking automation. Override `models.definitions.claude.cmd` if you want a stricter mode.
-- **Doctor's command introspection is shallow.** For sandbox-backed models it checks `sbx` plus `sbx diagnose`. For non-sandbox models it tokenizes `cmd` and checks the first two non-flag tokens against PATH (so `safehouse claude --foo` checks both `safehouse` and `claude`). Boolean flags without values, env-var assignments (`FOO=1`), shell pipelines, and subshells are not parsed — verify those manually. In particular, `npx -y claude` and `env FOO=1 claude` only check the wrapper, not the wrapped CLI.
+- **Doctor's command introspection is shallow.** Doctor reports whether the host can run local tickets with macOS plus Safehouse, then tokenizes model `cmd` and checks the first two non-flag tokens against PATH (so `safehouse claude --foo` checks both `safehouse` and `claude`). Boolean flags without values, env-var assignments (`FOO=1`), shell pipelines, and subshells are not parsed — verify those manually. In particular, `npx -y claude` and `env FOO=1 claude` only check the wrapper, not the wrapped CLI.
 - **Agent CLI must accept a positional prompt.** The handoff is `<your cmd> "<prompt>"`. `claude`, `codex`, and `cursor-agent` all support this.
 
 ## Hacking on groundcrew

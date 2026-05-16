@@ -13,14 +13,15 @@ function hostEntry(ticket: string): WorktreeEntry {
   };
 }
 
-function sandboxEntry(ticket: string): WorktreeEntry {
+function spriteEntry(ticket: string): WorktreeEntry {
   return {
     repository: "repo-a",
     ticket,
     branchName: `rocky-${ticket}`,
-    dir: `/work/repo-a/.sbx/groundcrew-repo-a-claude-worktrees/rocky-${ticket}`,
-    kind: "sandbox",
-    sandboxName: "groundcrew-repo-a-claude",
+    dir: `/home/sprite/groundcrew/worktrees/repo-a-${ticket}`,
+    kind: "sprite",
+    spriteName: "crew-claude-1",
+    remoteRepoDir: "/home/sprite/dev/repo-a",
   };
 }
 
@@ -66,13 +67,13 @@ describe(logTeardown, () => {
   });
 
   it("logs `Cleanup complete` and `Worktree: <dir> (removed)` for each removed entry", () => {
-    logTeardown(emptyTeardownResult({ removed: [hostEntry("team-1"), sandboxEntry("team-2")] }));
+    logTeardown(emptyTeardownResult({ removed: [hostEntry("team-1"), spriteEntry("team-2")] }));
 
     const out = consoleLog.output();
     expect(out).toContain("Cleanup complete for team-1 (host)");
     expect(out).toContain("/work/repo-a-team-1 (removed)");
-    expect(out).toContain("Cleanup complete for team-2 (sandbox)");
-    expect(out).toContain("rocky-team-2 (removed)");
+    expect(out).toContain("Cleanup complete for team-2 (sprite)");
+    expect(out).toContain("/home/sprite/groundcrew/worktrees/repo-a-team-2 (removed)");
   });
 
   it("logs workspace_close failures with the standard wording", () => {
@@ -147,7 +148,7 @@ describe(recordTeardownEvents, () => {
 
   it("emits cleaned events for each removed entry with repository and kind", () => {
     recordTeardownEvents(
-      emptyTeardownResult({ removed: [hostEntry("team-1"), sandboxEntry("team-2")] }),
+      emptyTeardownResult({ removed: [hostEntry("team-1"), spriteEntry("team-2")] }),
     );
 
     const out = consoleLog.output();
@@ -155,7 +156,7 @@ describe(recordTeardownEvents, () => {
       "event=cleanup outcome=cleaned ticket=team-1 repository=repo-a kind=host",
     );
     expect(out).toContain(
-      "event=cleanup outcome=cleaned ticket=team-2 repository=repo-a kind=sandbox",
+      "event=cleanup outcome=cleaned ticket=team-2 repository=repo-a kind=sprite",
     );
   });
 

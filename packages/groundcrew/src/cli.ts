@@ -1,7 +1,6 @@
 import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
 import { doctor } from "./commands/doctor.ts";
 import { orchestrate } from "./commands/orchestrator.ts";
-import { sandboxAuthCli } from "./commands/sandboxAuth.ts";
 import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
 import { spriteCli } from "./commands/spriteSetup.ts";
 import { errorMessage, writeError, writeOutput } from "./lib/util.ts";
@@ -69,11 +68,6 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     summary: "Tear down a worktree",
     usage: "[--force] <ticket>",
     invoke: cleanupWorkspaceCli,
-  },
-  sandbox: {
-    summary: "Prepare persistent Docker Sandboxes auth",
-    usage: "auth <repo> [--model <name>]",
-    invoke: sandboxAuthCli,
   },
   sprite: {
     summary: "Create, authenticate, bootstrap, and inspect a remote Sprite runner",
