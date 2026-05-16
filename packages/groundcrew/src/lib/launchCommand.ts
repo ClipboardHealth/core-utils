@@ -6,16 +6,12 @@ import {
   DEFAULT_HOST_SETUP_COMMAND,
   DEFAULT_REMOTE_SETUP_COMMAND,
   type ModelDefinition,
+  type RemoteRunnerConfig,
 } from "./config.ts";
+import { shellSingleQuote } from "./shell.ts";
+import type { RemoteRunnerProvider } from "./spriteRemoteRunnerProvider.ts";
 
-/**
- * Single-quote `value` for safe shell embedding. Embedded single quotes
- * are closed, escaped, and reopened — `'foo'\''bar'` is "foo'bar" in
- * shell.
- */
-export function shellSingleQuote(value: string): string {
-  return `'${value.replaceAll("'", String.raw`'\''`)}'`;
-}
+export { shellSingleQuote } from "./shell.ts";
 
 // import.meta.dirname is `<groundcrew>/{src,dist}/lib`; the shipped Safehouse
 // proxy wrapper lives in the sibling clearance package.
@@ -67,9 +63,10 @@ interface LaunchCommandArguments {
   secretsFile?: string | undefined;
 }
 
-interface SpriteLaunchCommandArguments {
+interface RemoteLaunchCommandArguments {
   definition: ModelDefinition;
-  spriteName: string;
+  provider: RemoteRunnerProvider;
+  remoteConfig: RemoteRunnerConfig;
   promptFile: string;
   remotePromptFile: string;
   worktreeDir: string;
@@ -115,19 +112,20 @@ export function buildLaunchCommand(arguments_: LaunchCommandArguments): string {
   return lines.join(" && ");
 }
 
-export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArguments): string {
+export function buildRemoteLaunchCommand(arguments_: RemoteLaunchCommandArguments): string {
   const promptDir = dirname(arguments_.promptFile);
   const agentCmd = renderAgentCommand({
     agentCmd: arguments_.definition.cmd,
     worktreeDir: arguments_.worktreeDir,
   });
   const uploadedFiles = [
-    `--file ${shellSingleQuote(`${arguments_.promptFile}:${arguments_.remotePromptFile}`)}`,
+    { localPath: arguments_.promptFile, remotePath: arguments_.remotePromptFile },
   ];
   if (arguments_.secretsFile !== undefined && arguments_.remoteSecretsFile !== undefined) {
-    uploadedFiles.push(
-      `--file ${shellSingleQuote(`${arguments_.secretsFile}:${arguments_.remoteSecretsFile}`)}`,
-    );
+    uploadedFiles.push({
+      localPath: arguments_.secretsFile,
+      remotePath: arguments_.remoteSecretsFile,
+    });
   }
 
   const remoteCleanupFiles = [arguments_.remotePromptFile];
@@ -156,17 +154,11 @@ export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArgument
   return [
     `cleanup() { rm -rf ${shellSingleQuote(promptDir)}; }`,
     "trap cleanup EXIT",
-    [
-      "sprite exec --tty",
-      "-s",
-      shellSingleQuote(arguments_.spriteName),
-      ...uploadedFiles,
-      "--dir",
-      shellSingleQuote(arguments_.worktreeDir),
-      "--",
-      "bash",
-      "-lc",
-      shellSingleQuote(remoteLauncher),
-    ].join(" "),
+    arguments_.provider.buildTtyCommand({
+      config: arguments_.remoteConfig,
+      files: uploadedFiles,
+      workingDirectory: arguments_.worktreeDir,
+      remoteArguments: ["bash", "-lc", remoteLauncher],
+    }),
   ].join("; ");
 }

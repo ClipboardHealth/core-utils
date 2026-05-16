@@ -392,7 +392,7 @@ function parseAgentLabels(
   if (agentLabels.length === 0) {
     return undefined;
   }
-  const runner = agentLabels.some((label) => label.name === "agent-remote") ? "sprite" : "local";
+  const runner = agentLabels.some((label) => label.name === "agent-remote") ? "remote" : "local";
   for (const label of agentLabels) {
     if (label.name === "agent-remote") {
       continue;

@@ -103,8 +103,8 @@ function commandTokensToCheck(cmd: string): string[] {
 function gatherToolTokens(config: ResolvedConfig): string[] {
   const all = new Set<string>();
   for (const definition of Object.values(config.models.definitions)) {
-    // Local runs execute the agent command on the host; Sprite runs need the
-    // same command remotely, but doctor cannot know ticket labels in advance.
+    // Local runs execute the agent command on the host; remote runs need the
+    // same command in the remote runner, but doctor cannot know ticket labels in advance.
     for (const token of commandTokensToCheck(definition.cmd)) {
       all.add(token);
     }
@@ -173,7 +173,9 @@ export async function doctor(): Promise<boolean> {
     const check = await checkCmd(
       token,
       required,
-      required ? undefined : "required for local runs; Sprite runs need this inside the Sprite",
+      required
+        ? undefined
+        : "required for local runs; remote runs need this inside the remote runner",
     );
     checks.push(check);
   }
@@ -205,7 +207,7 @@ function localCapabilityCheck(host: HostCapabilities): Check {
       name: "local runner (macOS + Safehouse)",
       ok: false,
       required: false,
-      hint: "required for local runs; on Linux/WSL use agent-remote with Sprite",
+      hint: "required for local runs; on Linux/WSL use agent-remote with the remote runner",
     };
   }
   return {

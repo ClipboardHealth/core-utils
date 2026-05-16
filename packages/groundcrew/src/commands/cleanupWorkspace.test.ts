@@ -37,8 +37,9 @@ const spriteEntry: WorktreeEntry = {
   ticket: "team-1",
   branchName: "rocky-team-1",
   dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-  kind: "sprite",
-  spriteName: "crew-claude-1",
+  kind: "remote",
+  remoteProvider: "sprite",
+  remoteRunnerName: "crew-claude-1",
   remoteRepoDir: "/home/sprite/dev/repo-a",
 };
 
@@ -66,13 +67,12 @@ const config: ResolvedConfig = {
   workspaceKind: "auto",
   logging: { file: "/tmp/groundcrew-test.log" },
   remote: {
-    sprite: {
-      spriteName: "crew-claude-1",
-      owner: "ClipboardHealth",
-      repoRoot: "/home/sprite/dev",
-      worktreeRoot: "/home/sprite/groundcrew/worktrees",
-      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-    },
+    provider: "sprite",
+    runnerName: "crew-claude-1",
+    owner: "ClipboardHealth",
+    repoRoot: "/home/sprite/dev",
+    worktreeRoot: "/home/sprite/groundcrew/worktrees",
+    secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
   },
 };
 
@@ -116,7 +116,7 @@ describe(cleanupWorkspace, () => {
     expect(consoleLog.output()).toContain("nothing to clean up");
   });
 
-  it("hands a Sprite-kind entry to teardown", async () => {
+  it("hands a remote-kind entry to teardown", async () => {
     findByTicketMock.mockReturnValue([spriteEntry]);
     teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [spriteEntry] }));
 
@@ -125,7 +125,7 @@ describe(cleanupWorkspace, () => {
     expect(teardownMock).toHaveBeenCalledWith(config, [spriteEntry], { force: false });
   });
 
-  it("hands BOTH host and Sprite worktrees to teardown for the same ticket", async () => {
+  it("hands both host and remote worktrees to teardown for the same ticket", async () => {
     findByTicketMock.mockReturnValue([hostEntry, spriteEntry]);
     teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [hostEntry, spriteEntry] }));
 

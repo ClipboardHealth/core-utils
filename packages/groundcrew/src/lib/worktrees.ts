@@ -3,7 +3,7 @@
  *
  * - **Host worktree** — a `git worktree add`'d sibling at
  *   `<projectDir>/<repo>-<TICKET>/`.
- * - **Sprite worktree** — a remote git worktree tracked in local state.
+ * - **Remote worktree** — a remote git worktree tracked in local state.
  *
  * Each kind has its own adapter. Callers go through the `worktrees`
  * namespace and never branch on kind themselves — the dispatchers below
@@ -24,13 +24,16 @@ import { dirname, resolve } from "node:path";
 
 import { runCommandAsync, type RunCommandOptions } from "./commandRunner.ts";
 import type { ResolvedConfig, WorkspaceRunner } from "./config.ts";
-import { shellSingleQuote } from "./launchCommand.ts";
+import {
+  getRemoteRunnerProvider,
+  type RemoteRunnerProvider,
+} from "./spriteRemoteRunnerProvider.ts";
 import { errorMessage, log, readEnvironmentVariable } from "./util.ts";
 import { type WorkspaceProbe, workspaces } from "./workspaces.ts";
 
 const LONG_RUNNING_COMMAND_OPTIONS = { stdio: "inherit", timeoutMs: 0 } as const;
 
-export type WorktreeKind = "host" | "sprite";
+export type WorktreeKind = "host" | "remote";
 
 export interface WorktreeEntry {
   repository: string;
@@ -40,9 +43,11 @@ export interface WorktreeEntry {
   branchName: string;
   dir: string;
   kind: WorktreeKind;
-  /** Set iff `kind === "sprite"`. */
-  spriteName?: string;
-  /** Set iff `kind === "sprite"`. */
+  /** Set iff `kind === "remote"`. */
+  remoteProvider?: ResolvedConfig["remote"]["provider"];
+  /** Set iff `kind === "remote"`. */
+  remoteRunnerName?: string;
+  /** Set iff `kind === "remote"`. */
   remoteRepoDir?: string;
 }
 
@@ -244,7 +249,7 @@ const hostWorktreeAdapter: WorktreeAdapter = {
   },
 };
 
-interface SpriteStateFile {
+interface RemoteStateFile {
   entries?: unknown;
 }
 
@@ -258,11 +263,11 @@ function stateBaseDir(): string {
   return resolve(homedir(), ".local", "state");
 }
 
-function spriteStateFilePath(): string {
-  return resolve(stateBaseDir(), "groundcrew", "sprite-worktrees.json");
+function remoteStateFilePath(): string {
+  return resolve(stateBaseDir(), "groundcrew", "remote-worktrees.json");
 }
 
-function isSpriteEntry(value: unknown): value is WorktreeEntry {
+function isRemoteEntry(value: unknown): value is WorktreeEntry {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -272,196 +277,93 @@ function isSpriteEntry(value: unknown): value is WorktreeEntry {
     typeof entry.ticket === "string" &&
     typeof entry.branchName === "string" &&
     typeof entry.dir === "string" &&
-    entry.kind === "sprite" &&
-    typeof entry.spriteName === "string" &&
+    entry.kind === "remote" &&
+    entry.remoteProvider === "sprite" &&
+    typeof entry.remoteRunnerName === "string" &&
     typeof entry.remoteRepoDir === "string"
   );
 }
 
-function readSpriteEntries(): WorktreeEntry[] {
+function readRemoteEntries(): WorktreeEntry[] {
   try {
-    const parsed = JSON.parse(readFileSync(spriteStateFilePath(), "utf8")) as SpriteStateFile;
-    return Array.isArray(parsed.entries) ? parsed.entries.filter(isSpriteEntry) : [];
+    const parsed = JSON.parse(readFileSync(remoteStateFilePath(), "utf8")) as RemoteStateFile;
+    return Array.isArray(parsed.entries) ? parsed.entries.filter(isRemoteEntry) : [];
   } catch {
     return [];
   }
 }
 
-function writeSpriteEntries(entries: readonly WorktreeEntry[]): void {
-  const path = spriteStateFilePath();
+function writeRemoteEntries(entries: readonly WorktreeEntry[]): void {
+  const path = remoteStateFilePath();
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify({ entries }, undefined, 2)}\n`);
 }
 
-function upsertSpriteEntry(entry: WorktreeEntry): void {
-  writeSpriteEntries([...readSpriteEntries(), entry]);
+function upsertRemoteEntry(entry: WorktreeEntry): void {
+  writeRemoteEntries([...readRemoteEntries(), entry]);
 }
 
-function deleteSpriteEntry(entry: WorktreeEntry): void {
-  writeSpriteEntries(
-    readSpriteEntries().filter(
+function deleteRemoteEntry(entry: WorktreeEntry): void {
+  writeRemoteEntries(
+    readRemoteEntries().filter(
       (candidate) =>
         !(
           candidate.repository === entry.repository &&
           candidate.ticket === entry.ticket &&
           candidate.dir === entry.dir &&
-          candidate.kind === "sprite"
+          candidate.kind === "remote"
         ),
     ),
   );
 }
 
-function remotePathJoin(root: string, leaf: string): string {
-  let end = root.length;
-  while (end > 0 && root[end - 1] === "/") {
-    end -= 1;
-  }
-  return `${root.slice(0, end)}/${leaf}`;
+function remoteProviderFor(config: ResolvedConfig, entry?: WorktreeEntry): RemoteRunnerProvider {
+  return getRemoteRunnerProvider(entry?.remoteProvider ?? config.remote.provider);
 }
 
-function repositorySlug(owner: string, repository: string): string {
-  return repository.includes("/") ? repository : `${owner}/${repository}`;
-}
-
-function repositoryDirectoryName(repository: string): string {
-  const name = repository.includes("/")
-    ? repository.slice(repository.lastIndexOf("/") + 1)
-    : repository;
-  return name.endsWith(".git") ? name.slice(0, -4) : name;
-}
-
-function spriteCreateCommand(arguments_: {
-  owner: string;
-  repository: string;
-  repoDir: string;
-  worktreeDir: string;
-  branchName: string;
-  baseBranch: string;
-  repoRoot: string;
-  worktreeRoot: string;
-}): string {
-  const slug = repositorySlug(arguments_.owner, arguments_.repository);
-  return [
-    "set -euo pipefail",
-    `repo_root=${shellSingleQuote(arguments_.repoRoot)}`,
-    `worktree_root=${shellSingleQuote(arguments_.worktreeRoot)}`,
-    `repo_dir=${shellSingleQuote(arguments_.repoDir)}`,
-    `worktree_dir=${shellSingleQuote(arguments_.worktreeDir)}`,
-    `branch=${shellSingleQuote(arguments_.branchName)}`,
-    `base_branch=${shellSingleQuote(arguments_.baseBranch)}`,
-    'mkdir -p "$repo_root" "$worktree_root"',
-    'if [ ! -d "$repo_dir/.git" ]; then',
-    `  gh repo clone ${shellSingleQuote(slug)} "$repo_dir"`,
-    "fi",
-    'git -C "$repo_dir" fetch origin --prune',
-    'if [ -e "$worktree_dir" ]; then',
-    '  echo "Sprite worktree already exists: $worktree_dir" >&2',
-    "  exit 1",
-    "fi",
-    'if git -C "$repo_dir" show-ref --verify --quiet "refs/remotes/origin/$branch"; then',
-    '  git -C "$repo_dir" worktree add -B "$branch" "$worktree_dir" "origin/$branch"',
-    "else",
-    '  git -C "$repo_dir" worktree add -b "$branch" "$worktree_dir" "origin/$base_branch"',
-    "fi",
-  ].join("\n");
-}
-
-function spriteRemoveCommand(entry: WorktreeEntry, force: boolean): string {
-  if (entry.remoteRepoDir === undefined) {
-    throw new Error(`Sprite worktree entry missing remoteRepoDir: ${entry.dir}`);
-  }
-  const removeArguments = [
-    "git",
-    "-C",
-    shellSingleQuote(entry.remoteRepoDir),
-    "worktree",
-    "remove",
-  ];
-  if (force) {
-    removeArguments.push("--force");
-  }
-  removeArguments.push(shellSingleQuote(entry.dir));
-  return [
-    "set -euo pipefail",
-    removeArguments.join(" "),
-    `git -C ${shellSingleQuote(entry.remoteRepoDir)} branch -D ${shellSingleQuote(entry.branchName)} || true`,
-    `git -C ${shellSingleQuote(entry.remoteRepoDir)} worktree prune`,
-  ].join("\n");
-}
-
-const spriteWorktreeAdapter: WorktreeAdapter = {
+const remoteWorktreeAdapter: WorktreeAdapter = {
   async create(config, spec, signal) {
     const base = basePaths(config, spec.repository, spec.ticket);
-    const { sprite } = config.remote;
-    const remoteRepositoryName = repositoryDirectoryName(spec.repository);
-    const remoteRepoDir = remotePathJoin(sprite.repoRoot, remoteRepositoryName);
-    const remoteWorktreeDir = remotePathJoin(
-      sprite.worktreeRoot,
-      `${remoteRepositoryName}-${spec.ticket}`,
-    );
-
     log(
-      `Creating Sprite worktree ${spec.repository}-${spec.ticket} (branch ${base.branchName}) in ${sprite.spriteName}...`,
+      `Creating remote worktree ${spec.repository}-${spec.ticket} (branch ${base.branchName}) in ${config.remote.provider}:${config.remote.runnerName}...`,
     );
-    await runCommandAsync(
-      "sprite",
-      [
-        "exec",
-        "-s",
-        sprite.spriteName,
-        "--",
-        "bash",
-        "-lc",
-        spriteCreateCommand({
-          owner: sprite.owner,
-          repository: spec.repository,
-          repoDir: remoteRepoDir,
-          worktreeDir: remoteWorktreeDir,
-          branchName: base.branchName,
-          baseBranch: config.git.defaultBranch,
-          repoRoot: sprite.repoRoot,
-          worktreeRoot: sprite.worktreeRoot,
-        }),
-      ],
-      longRunningCommandOptions(signal),
-    );
+    const provider = remoteProviderFor(config);
+    const { remoteRepoDir, remoteWorktreeDir } = await provider.createWorktree({
+      config: config.remote,
+      repository: spec.repository,
+      ticket: spec.ticket,
+      branchName: base.branchName,
+      baseBranch: config.git.defaultBranch,
+      ...signalProperty(signal),
+    });
 
     const entry: WorktreeEntry = {
       repository: spec.repository,
       ticket: spec.ticket,
       branchName: base.branchName,
       dir: remoteWorktreeDir,
-      kind: "sprite",
-      spriteName: sprite.spriteName,
+      kind: "remote",
+      remoteProvider: config.remote.provider,
+      remoteRunnerName: config.remote.runnerName,
       remoteRepoDir,
     };
-    upsertSpriteEntry(entry);
+    upsertRemoteEntry(entry);
     return entry;
   },
   list(config) {
-    return readSpriteEntries().filter((entry) =>
+    return readRemoteEntries().filter((entry) =>
       config.workspace.knownRepositories.includes(entry.repository),
     );
   },
-  async remove(_config, entry, options) {
-    if (entry.spriteName === undefined) {
-      throw new Error(`Sprite worktree entry missing spriteName: ${entry.dir}`);
-    }
-    log(`Removing Sprite worktree ${entry.dir}${options.force ? " (--force)" : ""}...`);
-    await runCommandAsync(
-      "sprite",
-      [
-        "exec",
-        "-s",
-        entry.spriteName,
-        "--",
-        "bash",
-        "-lc",
-        spriteRemoveCommand(entry, options.force),
-      ],
-      longRunningCommandOptions(options.signal),
-    );
-    deleteSpriteEntry(entry);
+  async remove(config, entry, options) {
+    log(`Removing remote worktree ${entry.dir}${options.force ? " (--force)" : ""}...`);
+    await remoteProviderFor(config, entry).removeWorktree({
+      config: config.remote,
+      entry,
+      force: options.force,
+      ...signalProperty(options.signal),
+    });
+    deleteRemoteEntry(entry);
   },
 };
 
@@ -469,8 +371,8 @@ function adapterForEntry(entry: WorktreeEntry): WorktreeAdapter {
   if (entry.kind === "host") {
     return hostWorktreeAdapter;
   }
-  if (entry.kind === "sprite") {
-    return spriteWorktreeAdapter;
+  if (entry.kind === "remote") {
+    return remoteWorktreeAdapter;
   }
   throw new Error(`Unknown worktree kind: ${JSON.stringify(entry.kind)}`);
 }
@@ -479,15 +381,15 @@ function adapterForSpec(spec: WorktreeSpec): WorktreeAdapter {
   if (spec.runner === undefined || spec.runner === "local") {
     return hostWorktreeAdapter;
   }
-  if (spec.runner === "sprite") {
-    return spriteWorktreeAdapter;
+  if (spec.runner === "remote") {
+    return remoteWorktreeAdapter;
   }
   throw new Error(`Unknown workspace runner: ${JSON.stringify(spec.runner)}`);
 }
 
 /** Returns every tracked worktree kind for a ticket; callers must not assume uniqueness. */
 function list(config: ResolvedConfig): WorktreeEntry[] {
-  return [...hostWorktreeAdapter.list(config), ...spriteWorktreeAdapter.list(config)];
+  return [...hostWorktreeAdapter.list(config), ...remoteWorktreeAdapter.list(config)];
 }
 
 function findByTicket(config: ResolvedConfig, ticket: string): WorktreeEntry[] {

@@ -2,9 +2,18 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { runCommandAsync } from "../lib/commandRunner.ts";
-import { BUILD_SECRET_NAMES, DEFAULT_REMOTE_SETUP_COMMAND, loadConfig } from "../lib/config.ts";
-import { shellSingleQuote } from "../lib/launchCommand.ts";
+import {
+  BUILD_SECRET_NAMES,
+  DEFAULT_REMOTE_SETUP_COMMAND,
+  loadConfig,
+  type RemoteRunnerConfig,
+} from "../lib/config.ts";
+import { shellSingleQuote } from "../lib/shell.ts";
+import {
+  getRemoteRunnerProvider,
+  remoteConfigWithRunnerName,
+  type RemoteRunnerProvider,
+} from "../lib/spriteRemoteRunnerProvider.ts";
 import { log, readEnvironmentVariable, writeOutput } from "../lib/util.ts";
 
 const KNOWN_MCP_SERVER_URLS: Record<string, string> = {
@@ -18,8 +27,8 @@ export interface McpServer {
   url: string;
 }
 
-export interface SpriteSetupOptions {
-  spriteName: string;
+export interface RemoteSetupOptions {
+  runnerName: string;
   shouldCreate: boolean;
   shouldAuthenticateClaude: boolean;
   shouldAuthenticateCodex: boolean;
@@ -33,8 +42,8 @@ export interface SpriteSetupOptions {
   mcpServers: McpServer[];
 }
 
-export interface SpriteBootstrapOptions {
-  spriteName: string;
+export interface RemoteBootstrapOptions {
+  runnerName: string;
   repository: string;
   owner: string;
   baseBranch: string;
@@ -44,26 +53,26 @@ export interface SpriteBootstrapOptions {
   branchName?: string;
 }
 
-export interface SpriteSessionsOptions {
-  spriteName?: string;
+export interface RemoteSessionsOptions {
+  runnerName?: string;
 }
 
-export interface SpriteAttachOptions {
+export interface RemoteAttachOptions {
   target: string;
-  spriteName?: string;
+  runnerName?: string;
 }
 
-export interface SpriteProcessOptions {
-  spriteName?: string;
+export interface RemoteProcessOptions {
+  runnerName?: string;
 }
 
-export interface SpriteInterruptOptions {
+export interface RemoteInterruptOptions {
   processGroupId: string;
-  spriteName?: string;
+  runnerName?: string;
 }
 
 const DEFAULT_CHECKPOINT_COMMENT =
-  "groundcrew sprite baseline: selected agent auth, git identity, and MCP config";
+  "groundcrew remote runner baseline: selected agent auth, git identity, and MCP config";
 const CLAUDE_SUBSCRIPTION_LOGIN_FLAG = ["--claude", "ai"].join("");
 const DEFAULT_REPOSITORY_OWNER = "ClipboardHealth";
 const DEFAULT_BASE_BRANCH = "main";
@@ -74,29 +83,29 @@ const REMOTE_CODEX_AUTH_FILE = "/home/sprite/.codex/auth.json";
 function usage(): string {
   return [
     "Usage:",
-    "  crew sprite setup <sprite-name> [options]",
-    "  crew sprite bootstrap <sprite-name> <repository> [options]",
-    "  crew sprite sessions [<sprite-name>]",
-    "  crew sprite attach <session-id-or-command> [--sprite <sprite-name>]",
-    "  crew sprite ps [<sprite-name>]",
-    "  crew sprite interrupt <process-group-id> [--sprite <sprite-name>]",
+    "  crew remote setup <runner-name> [options]",
+    "  crew remote bootstrap <runner-name> <repository> [options]",
+    "  crew remote sessions [<runner-name>]",
+    "  crew remote attach <session-id-or-command> [--runner <runner-name>]",
+    "  crew remote ps [<runner-name>]",
+    "  crew remote interrupt <process-group-id> [--runner <runner-name>]",
     "",
     "Setup options:",
     "  --claude                    Authenticate Claude Code with a Claude subscription",
     "  --codex                     Authenticate Codex CLI",
-    "  --copy-local-codex-auth     With --codex, copy local CODEX_HOME auth.json into the sprite",
+    "  --copy-local-codex-auth     With --codex, copy local CODEX_HOME auth.json into the remote runner",
     "  --github                    Authenticate gh for GitHub PRs",
     "  --mcp <alias|name=url>      Add/authenticate one MCP server; repeat for multiple",
     "                              Known aliases: linear, slack, notion",
     "  --skip-mcp-auth             Add selected MCP servers but do not launch Claude /mcp",
-    "  --git-name <name>           Set git user.name inside the sprite",
-    "  --git-email <email>         Set git user.email inside the sprite",
-    "  --checkpoint                Create a checkpoint after setup",
+    "  --git-name <name>           Set git user.name inside the remote runner",
+    "  --git-email <email>         Set git user.email inside the remote runner",
+    "  --checkpoint                Create a provider checkpoint after setup",
     "  --checkpoint-comment <text> Override the checkpoint comment",
-    "  --no-create                 Require the sprite to already exist",
+    "  --no-create                 Require the remote runner to already exist",
     "",
     "Example:",
-    "  crew sprite setup crew-claude-1 --claude --github --mcp linear --mcp slack --checkpoint",
+    "  crew remote setup crew-claude-1 --claude --github --mcp linear --mcp slack --checkpoint",
     "",
     "Bootstrap options:",
     "  --branch <branch>           Checkout/create a ticket branch before installing deps",
@@ -106,13 +115,13 @@ function usage(): string {
     "  --no-secrets                Do not forward NPM_TOKEN/BUF_TOKEN even if present",
     "",
     "Bootstrap example:",
-    "  crew sprite bootstrap crew-claude-1 core-utils --branch rocky-team-123",
+    "  crew remote bootstrap crew-claude-1 core-utils --branch rocky-team-123",
     "",
     "Session examples:",
-    "  crew sprite sessions",
-    "  crew sprite attach 12345",
-    "  crew sprite ps crew-claude-1",
-    "  crew sprite interrupt 27673 --sprite crew-claude-1",
+    "  crew remote sessions",
+    "  crew remote attach 12345",
+    "  crew remote ps crew-claude-1",
+    "  crew remote interrupt 27673 --runner crew-claude-1",
   ].join("\n");
 }
 
@@ -170,10 +179,6 @@ function validateSecretName(value: string): void {
   }
 }
 
-function escapeRegExp(value: string): string {
-  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-}
-
 function parseMcpServer(value: string): McpServer {
   const separatorIndex = value.indexOf("=");
   if (separatorIndex !== -1) {
@@ -194,9 +199,9 @@ function parseMcpServer(value: string): McpServer {
   return { name: alias, url };
 }
 
-function parseArguments(argv: readonly string[]): SpriteSetupOptions {
-  const [spriteName] = argv;
-  if (spriteName === undefined || spriteName.startsWith("--")) {
+function parseArguments(argv: readonly string[]): RemoteSetupOptions {
+  const [runnerName] = argv;
+  if (runnerName === undefined || runnerName.startsWith("--")) {
     throw new Error(usage());
   }
 
@@ -265,11 +270,11 @@ function parseArguments(argv: readonly string[]): SpriteSetupOptions {
       shouldCreate = false;
       continue;
     }
-    throw new Error(`Unknown sprite setup argument: ${argument}\n${usage()}`);
+    throw new Error(`Unknown remote setup argument: ${argument}\n${usage()}`);
   }
 
   return {
-    spriteName,
+    runnerName,
     shouldCreate,
     shouldAuthenticateClaude,
     shouldAuthenticateCodex,
@@ -284,11 +289,11 @@ function parseArguments(argv: readonly string[]): SpriteSetupOptions {
   };
 }
 
-function parseBootstrapArguments(argv: readonly string[]): SpriteBootstrapOptions {
-  const [spriteName, repository] = argv;
+function parseBootstrapArguments(argv: readonly string[]): RemoteBootstrapOptions {
+  const [runnerName, repository] = argv;
   if (
-    spriteName === undefined ||
-    spriteName.startsWith("--") ||
+    runnerName === undefined ||
+    runnerName.startsWith("--") ||
     repository === undefined ||
     repository.startsWith("--")
   ) {
@@ -335,11 +340,11 @@ function parseBootstrapArguments(argv: readonly string[]): SpriteBootstrapOption
       shouldUseSecrets = false;
       continue;
     }
-    throw new Error(`Unknown sprite bootstrap argument: ${argument}\n${usage()}`);
+    throw new Error(`Unknown remote bootstrap argument: ${argument}\n${usage()}`);
   }
 
   return {
-    spriteName,
+    runnerName,
     repository,
     owner,
     baseBranch,
@@ -350,39 +355,39 @@ function parseBootstrapArguments(argv: readonly string[]): SpriteBootstrapOption
   };
 }
 
-function parseSessionsArguments(argv: readonly string[]): SpriteSessionsOptions {
+function parseSessionsArguments(argv: readonly string[]): RemoteSessionsOptions {
   if (argv.length === 0) {
     return {};
   }
 
-  const [spriteName, ...rest] = argv;
+  const [runnerName, ...rest] = argv;
   if (
-    spriteName === undefined ||
-    spriteName.length === 0 ||
-    spriteName.startsWith("--") ||
+    runnerName === undefined ||
+    runnerName.length === 0 ||
+    runnerName.startsWith("--") ||
     rest.length > 0
   ) {
     throw new Error(usage());
   }
 
-  return { spriteName };
+  return { runnerName };
 }
 
-function parseAttachArguments(argv: readonly string[]): SpriteAttachOptions {
+function parseAttachArguments(argv: readonly string[]): RemoteAttachOptions {
   const [target] = argv;
   if (target === undefined || target.length === 0 || target.startsWith("--")) {
     throw new Error(usage());
   }
 
-  const spriteName = parseOptionalSpriteFlag(argv, 1);
+  const runnerName = parseOptionalRunnerFlag(argv, 1);
 
   return {
     target,
-    ...(spriteName === undefined ? {} : { spriteName }),
+    ...(runnerName === undefined ? {} : { runnerName }),
   };
 }
 
-function parseInterruptArguments(argv: readonly string[]): SpriteInterruptOptions {
+function parseInterruptArguments(argv: readonly string[]): RemoteInterruptOptions {
   const [processGroupId] = argv;
   if (
     processGroupId === undefined ||
@@ -393,143 +398,137 @@ function parseInterruptArguments(argv: readonly string[]): SpriteInterruptOption
     throw new Error(usage());
   }
 
-  const spriteName = parseOptionalSpriteFlag(argv, 1);
+  const runnerName = parseOptionalRunnerFlag(argv, 1);
 
   return {
     processGroupId,
-    ...(spriteName === undefined ? {} : { spriteName }),
+    ...(runnerName === undefined ? {} : { runnerName }),
   };
 }
 
-function parseOptionalSpriteFlag(argv: readonly string[], startIndex: number): string | undefined {
-  let spriteName: string | undefined;
+function parseOptionalRunnerFlag(argv: readonly string[], startIndex: number): string | undefined {
+  let runnerName: string | undefined;
   for (let index = startIndex; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (argument === "--sprite") {
-      spriteName = requireValue(argv, index, "--sprite");
+    if (argument === "--runner") {
+      runnerName = requireValue(argv, index, "--runner");
       index += 1;
       continue;
     }
     throw new Error(usage());
   }
 
-  return spriteName;
+  return runnerName;
 }
 
-function spriteExecArguments(spriteName: string, remoteArguments: readonly string[]): string[] {
-  return ["exec", "-s", spriteName, "--", ...remoteArguments];
+function providerFor(config: RemoteRunnerConfig): RemoteRunnerProvider {
+  return getRemoteRunnerProvider(config.provider);
 }
 
-function spriteTtyExecArguments(spriteName: string, remoteArguments: readonly string[]): string[] {
-  return ["exec", "--tty", "-s", spriteName, "--", ...remoteArguments];
-}
-
-async function commandSucceeds(command: string, arguments_: readonly string[]): Promise<boolean> {
+async function commandSucceeds(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  remoteArguments: readonly string[];
+}): Promise<boolean> {
   try {
-    await runCommandAsync(command, arguments_);
+    await arguments_.provider.runCommand({
+      config: arguments_.config,
+      remoteArguments: arguments_.remoteArguments,
+    });
     return true;
   } catch {
     return false;
   }
 }
 
-async function spriteExists(spriteName: string): Promise<boolean> {
-  const output = await runCommandAsync("sprite", ["list", "--sprite", spriteName]);
-  return new RegExp(`(^|\\s)${escapeRegExp(spriteName)}(\\s|$)`, "m").test(output);
-}
-
-async function ensureSprite(options: SpriteSetupOptions): Promise<void> {
-  if (await spriteExists(options.spriteName)) {
-    log(`Reusing existing sprite ${options.spriteName}`);
+async function ensureRemoteRunner(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  options: RemoteSetupOptions;
+}): Promise<void> {
+  const { provider, config, options } = arguments_;
+  if (await provider.runnerExists(config)) {
+    log(`Reusing existing remote runner ${config.runnerName}`);
     return;
   }
   if (!options.shouldCreate) {
-    throw new Error(`Sprite ${options.spriteName} does not exist and --no-create was set.`);
+    throw new Error(`Remote runner ${config.runnerName} does not exist and --no-create was set.`);
   }
-  log(`Creating sprite ${options.spriteName}`);
-  await runCommandAsync("sprite", ["create", "--skip-console", options.spriteName], {
-    stdio: "inherit",
-    timeoutMs: 0,
-  });
+  log(`Creating remote runner ${config.runnerName}`);
+  await provider.createRunner(config);
 }
 
-async function prepareHome(spriteName: string): Promise<void> {
-  await runCommandAsync(
-    "sprite",
-    spriteExecArguments(spriteName, [
+async function prepareHome(
+  provider: RemoteRunnerProvider,
+  config: RemoteRunnerConfig,
+): Promise<void> {
+  await provider.runCommand({
+    config,
+    remoteArguments: [
       "bash",
       "-lc",
       "mkdir -p ~/dev ~/.config/groundcrew ~/.local/state/groundcrew",
-    ]),
-  );
+    ],
+  });
 }
 
-async function configureGit(options: SpriteSetupOptions): Promise<void> {
+async function configureGit(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  options: RemoteSetupOptions;
+}): Promise<void> {
+  const { provider, config, options } = arguments_;
   if (options.gitName !== undefined) {
-    await runCommandAsync(
-      "sprite",
-      spriteExecArguments(options.spriteName, [
-        "git",
-        "config",
-        "--global",
-        "user.name",
-        options.gitName,
-      ]),
-    );
+    await provider.runCommand({
+      config,
+      remoteArguments: ["git", "config", "--global", "user.name", options.gitName],
+    });
   }
   if (options.gitEmail !== undefined) {
-    await runCommandAsync(
-      "sprite",
-      spriteExecArguments(options.spriteName, [
-        "git",
-        "config",
-        "--global",
-        "user.email",
-        options.gitEmail,
-      ]),
-    );
+    await provider.runCommand({
+      config,
+      remoteArguments: ["git", "config", "--global", "user.email", options.gitEmail],
+    });
   }
 }
 
-async function authenticateGithub(spriteName: string): Promise<void> {
-  const isAuthenticated = await commandSucceeds(
-    "sprite",
-    spriteExecArguments(spriteName, ["gh", "auth", "status"]),
-  );
+async function authenticateGithub(
+  provider: RemoteRunnerProvider,
+  config: RemoteRunnerConfig,
+): Promise<void> {
+  const isAuthenticated = await commandSucceeds({
+    provider,
+    config,
+    remoteArguments: ["gh", "auth", "status"],
+  });
   if (!isAuthenticated) {
-    log("Starting GitHub device auth inside the sprite");
-    await runCommandAsync(
-      "sprite",
-      spriteExecArguments(spriteName, [
-        "gh",
-        "auth",
-        "login",
-        "-h",
-        "github.com",
-        "-p",
-        "https",
-        "-w",
-      ]),
-      { stdio: "inherit", timeoutMs: 0 },
-    );
+    log("Starting GitHub device auth inside the remote runner");
+    await provider.runCommand({
+      config,
+      remoteArguments: ["gh", "auth", "login", "-h", "github.com", "-p", "https", "-w"],
+      options: { stdio: "inherit", timeoutMs: 0 },
+    });
   }
-  await runCommandAsync("sprite", spriteExecArguments(spriteName, ["gh", "auth", "setup-git"]));
+  await provider.runCommand({ config, remoteArguments: ["gh", "auth", "setup-git"] });
 }
 
-async function authenticateClaude(spriteName: string): Promise<void> {
-  const isAuthenticated = await commandSucceeds(
-    "sprite",
-    spriteExecArguments(spriteName, ["claude", "auth", "status"]),
-  );
+async function authenticateClaude(
+  provider: RemoteRunnerProvider,
+  config: RemoteRunnerConfig,
+): Promise<void> {
+  const isAuthenticated = await commandSucceeds({
+    provider,
+    config,
+    remoteArguments: ["claude", "auth", "status"],
+  });
   if (isAuthenticated) {
     return;
   }
-  log("Starting Claude subscription auth inside the sprite");
-  await runCommandAsync(
-    "sprite",
-    spriteTtyExecArguments(spriteName, ["claude", "auth", "login", CLAUDE_SUBSCRIPTION_LOGIN_FLAG]),
-    { stdio: "inherit", timeoutMs: 0 },
-  );
+  log("Starting Claude subscription auth inside the remote runner");
+  await provider.runTtyCommand({
+    config,
+    remoteArguments: ["claude", "auth", "login", CLAUDE_SUBSCRIPTION_LOGIN_FLAG],
+  });
 }
 
 function localCodexAuthFile(): string {
@@ -540,75 +539,88 @@ function localCodexAuthFile(): string {
   return resolve(baseDir, "auth.json");
 }
 
-async function validateCodexLogin(spriteName: string): Promise<boolean> {
-  return await commandSucceeds(
-    "sprite",
-    spriteExecArguments(spriteName, ["codex", "login", "status"]),
-  );
+async function validateCodexLogin(
+  provider: RemoteRunnerProvider,
+  config: RemoteRunnerConfig,
+): Promise<boolean> {
+  return await commandSucceeds({
+    provider,
+    config,
+    remoteArguments: ["codex", "login", "status"],
+  });
 }
 
-async function copyLocalCodexAuth(spriteName: string): Promise<void> {
+async function copyLocalCodexAuth(
+  provider: RemoteRunnerProvider,
+  config: RemoteRunnerConfig,
+): Promise<void> {
   const authFile = localCodexAuthFile();
   if (!existsSync(authFile)) {
     throw new Error(`Local Codex auth file not found: ${authFile}`);
   }
-  log("Copying local Codex auth into the sprite");
-  await runCommandAsync("sprite", [
-    "exec",
-    "-s",
-    spriteName,
-    "--file",
-    `${authFile}:${REMOTE_CODEX_AUTH_UPLOAD_FILE}`,
-    "--",
-    "bash",
-    "-lc",
-    [
-      "mkdir -p /home/sprite/.codex",
-      `install -m 600 ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)} ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
-      `rm -f ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)}`,
-    ].join(" && "),
-  ]);
+  log("Copying local Codex auth into the remote runner");
+  await provider.runCommand({
+    config,
+    files: [{ localPath: authFile, remotePath: REMOTE_CODEX_AUTH_UPLOAD_FILE }],
+    remoteArguments: [
+      "bash",
+      "-lc",
+      [
+        "mkdir -p /home/sprite/.codex",
+        `install -m 600 ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)} ${shellSingleQuote(REMOTE_CODEX_AUTH_FILE)}`,
+        `rm -f ${shellSingleQuote(REMOTE_CODEX_AUTH_UPLOAD_FILE)}`,
+      ].join(" && "),
+    ],
+  });
 }
 
-async function authenticateCodex(spriteName: string, shouldCopyLocalAuth: boolean): Promise<void> {
-  if (await validateCodexLogin(spriteName)) {
+async function authenticateCodex(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  shouldCopyLocalAuth: boolean;
+}): Promise<void> {
+  const { provider, config, shouldCopyLocalAuth } = arguments_;
+  if (await validateCodexLogin(provider, config)) {
     return;
   }
   if (shouldCopyLocalAuth) {
-    await copyLocalCodexAuth(spriteName);
-    if (await validateCodexLogin(spriteName)) {
+    await copyLocalCodexAuth(provider, config);
+    if (await validateCodexLogin(provider, config)) {
       return;
     }
     throw new Error(
-      "Codex auth copy completed, but `codex login status` still reports not logged in inside the Sprite. Re-run `crew sprite setup <sprite-name> --codex --copy-local-codex-auth` after refreshing local Codex auth.",
+      "Codex auth copy completed, but `codex login status` still reports not logged in inside the remote runner. Re-run `crew remote setup <runner-name> --codex --copy-local-codex-auth` after refreshing local Codex auth.",
     );
   }
-  log("Starting Codex auth inside the sprite");
-  await runCommandAsync("sprite", spriteTtyExecArguments(spriteName, ["codex", "login"]), {
-    stdio: "inherit",
-    timeoutMs: 0,
-  });
-  if (await validateCodexLogin(spriteName)) {
+  log("Starting Codex auth inside the remote runner");
+  await provider.runTtyCommand({ config, remoteArguments: ["codex", "login"] });
+  if (await validateCodexLogin(provider, config)) {
     return;
   }
   throw new Error(
-    "Codex login finished, but `codex login status` still reports not logged in inside the Sprite. Try `crew sprite setup <sprite-name> --codex --copy-local-codex-auth`.",
+    "Codex login finished, but `codex login status` still reports not logged in inside the remote runner. Try `crew remote setup <runner-name> --codex --copy-local-codex-auth`.",
   );
 }
 
-async function addMcpServer(spriteName: string, server: McpServer): Promise<void> {
-  const exists = await commandSucceeds(
-    "sprite",
-    spriteExecArguments(spriteName, ["claude", "mcp", "get", server.name]),
-  );
+async function addMcpServer(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  server: McpServer;
+}): Promise<void> {
+  const { provider, config, server } = arguments_;
+  const exists = await commandSucceeds({
+    provider,
+    config,
+    remoteArguments: ["claude", "mcp", "get", server.name],
+  });
   if (exists) {
     log(`MCP server ${server.name} already exists`);
     return;
   }
   log(`Adding MCP server ${server.name} (${server.url})`);
-  await runCommandAsync(
-    "sprite",
-    spriteExecArguments(spriteName, [
+  await provider.runCommand({
+    config,
+    remoteArguments: [
       "claude",
       "mcp",
       "add",
@@ -618,17 +630,24 @@ async function addMcpServer(spriteName: string, server: McpServer): Promise<void
       "user",
       server.name,
       server.url,
-    ]),
-  );
+    ],
+  });
 }
 
-async function authenticateMcpServers(options: SpriteSetupOptions): Promise<void> {
+async function authenticateMcpServers(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  options: RemoteSetupOptions;
+}): Promise<void> {
+  const { provider, config, options } = arguments_;
   if (options.mcpServers.length === 0 || !options.shouldAuthenticateMcp) {
     return;
   }
 
   writeOutput();
-  writeOutput("Claude will open inside the sprite so you can authenticate only these MCP servers:");
+  writeOutput(
+    "Claude will open inside the remote runner so you can authenticate only these MCP servers:",
+  );
   for (const server of options.mcpServers) {
     writeOutput(`  - ${server.name}`);
   }
@@ -640,25 +659,25 @@ async function authenticateMcpServers(options: SpriteSetupOptions): Promise<void
   );
   writeOutput();
 
-  await runCommandAsync(
-    "sprite",
-    spriteTtyExecArguments(options.spriteName, ["claude", "--permission-mode", "auto"]),
-    { stdio: "inherit", timeoutMs: 0 },
-  );
+  await provider.runTtyCommand({
+    config,
+    remoteArguments: ["claude", "--permission-mode", "auto"],
+  });
 }
 
-async function checkpoint(options: SpriteSetupOptions): Promise<void> {
+async function checkpoint(arguments_: {
+  provider: RemoteRunnerProvider;
+  config: RemoteRunnerConfig;
+  options: RemoteSetupOptions;
+}): Promise<void> {
+  const { provider, config, options } = arguments_;
   if (!options.shouldCheckpoint) {
     return;
   }
-  await runCommandAsync(
-    "sprite",
-    ["checkpoint", "create", "-s", options.spriteName, "--comment", options.checkpointComment],
-    { stdio: "inherit", timeoutMs: 0 },
-  );
+  await provider.checkpoint(config, options.checkpointComment);
 }
 
-function repositorySlug(options: SpriteBootstrapOptions): string {
+function repositorySlug(options: RemoteBootstrapOptions): string {
   return options.repository.includes("/")
     ? options.repository
     : `${options.owner}/${options.repository}`;
@@ -671,7 +690,7 @@ function repositoryDirectoryName(repository: string): string {
   return name.endsWith(".git") ? name.slice(0, -4) : name;
 }
 
-function remoteBootstrapCommand(options: SpriteBootstrapOptions): string {
+function remoteBootstrapCommand(options: RemoteBootstrapOptions): string {
   const slug = repositorySlug(options);
   const directoryName = repositoryDirectoryName(options.repository);
   const unsetSecretsLine =
@@ -716,7 +735,7 @@ function noSecretCleanup(): void {
   // No staged secrets file was created.
 }
 
-function stageBuildSecrets(options: SpriteBootstrapOptions): StagedSecrets {
+function stageBuildSecrets(options: RemoteBootstrapOptions): StagedSecrets {
   if (!options.shouldUseSecrets || options.secretNames.length === 0) {
     return { filePath: undefined, names: [], cleanup: noSecretCleanup };
   }
@@ -738,7 +757,7 @@ function stageBuildSecrets(options: SpriteBootstrapOptions): StagedSecrets {
     return { filePath: undefined, names, cleanup: noSecretCleanup };
   }
 
-  const directory = mkdtempSync(join(tmpdir(), "groundcrew-sprite-secrets-"));
+  const directory = mkdtempSync(join(tmpdir(), "groundcrew-remote-secrets-"));
   const filePath = join(directory, "secrets.env");
   writeFileSync(filePath, `${lines.join("\n")}\n`, { mode: 0o600 });
   return {
@@ -750,9 +769,13 @@ function stageBuildSecrets(options: SpriteBootstrapOptions): StagedSecrets {
   };
 }
 
-export async function bootstrapSpriteRepository(options: SpriteBootstrapOptions): Promise<void> {
-  if (!(await spriteExists(options.spriteName))) {
-    throw new Error(`Sprite ${options.spriteName} does not exist. Run crew sprite setup first.`);
+export async function bootstrapRemoteRepository(options: RemoteBootstrapOptions): Promise<void> {
+  const config = remoteConfigWithRunnerName(options.runnerName);
+  const provider = providerFor(config);
+  if (!(await provider.runnerExists(config))) {
+    throw new Error(
+      `Remote runner ${options.runnerName} does not exist. Run crew remote setup first.`,
+    );
   }
 
   const stagedSecrets = stageBuildSecrets(options);
@@ -760,121 +783,118 @@ export async function bootstrapSpriteRepository(options: SpriteBootstrapOptions)
     if (stagedSecrets.names.length > 0) {
       log(`Forwarding build secret names for setup only: ${stagedSecrets.names.join(", ")}`);
     }
-    const spriteArguments = ["exec", "-s", options.spriteName];
-    if (stagedSecrets.filePath !== undefined) {
-      spriteArguments.push("--file", `${stagedSecrets.filePath}:${REMOTE_SECRETS_FILE}`);
-    }
-    spriteArguments.push("--", "bash", "-lc", remoteBootstrapCommand(options));
+    const files =
+      stagedSecrets.filePath === undefined
+        ? []
+        : [{ localPath: stagedSecrets.filePath, remotePath: REMOTE_SECRETS_FILE }];
 
-    log(`Bootstrapping ${repositorySlug(options)} in ${options.spriteName}`);
-    await runCommandAsync("sprite", spriteArguments, { stdio: "inherit", timeoutMs: 0 });
+    log(`Bootstrapping ${repositorySlug(options)} in ${options.runnerName}`);
+    await provider.runCommand({
+      config,
+      files,
+      remoteArguments: ["bash", "-lc", remoteBootstrapCommand(options)],
+      options: { stdio: "inherit", timeoutMs: 0 },
+    });
   } finally {
     stagedSecrets.cleanup();
   }
 }
 
-async function resolveSpriteName(spriteName: string | undefined): Promise<string> {
-  if (spriteName !== undefined) {
-    return spriteName;
+async function resolveRemoteConfig(runnerName: string | undefined): Promise<RemoteRunnerConfig> {
+  if (runnerName !== undefined) {
+    return remoteConfigWithRunnerName(runnerName);
   }
   const config = await loadConfig();
-  return config.remote.sprite.spriteName;
+  return config.remote;
 }
 
-export async function listSpriteSessions(options: SpriteSessionsOptions): Promise<void> {
-  const spriteName = await resolveSpriteName(options.spriteName);
-  const output = await runCommandAsync("sprite", ["sessions", "list", "-s", spriteName], {
-    trim: false,
-  });
-  writeOutput(rewriteSessionsFooter(output, spriteName).trimEnd());
+export async function listRemoteSessions(options: RemoteSessionsOptions): Promise<void> {
+  const config = await resolveRemoteConfig(options.runnerName);
+  const output = await providerFor(config).listSessions(config);
+  writeOutput(rewriteSessionsFooter(output, config).trimEnd());
 }
 
-export async function attachSpriteSession(options: SpriteAttachOptions): Promise<void> {
-  const spriteName = await resolveSpriteName(options.spriteName);
-  await runCommandAsync("sprite", ["attach", "-s", spriteName, options.target], {
-    stdio: "inherit",
-    timeoutMs: 0,
-  });
+export async function attachRemoteSession(options: RemoteAttachOptions): Promise<void> {
+  const config = await resolveRemoteConfig(options.runnerName);
+  await providerFor(config).attachSession(config, options.target);
 }
 
-export async function listSpriteProcesses(options: SpriteProcessOptions): Promise<void> {
-  const spriteName = await resolveSpriteName(options.spriteName);
-  const output = await runCommandAsync(
-    "sprite",
-    ["exec", "-s", spriteName, "--", "ps", "-eo", "pid,ppid,pgid,sid,stat,etime,pcpu,pmem,cmd"],
-    { trim: false },
-  );
+export async function listRemoteProcesses(options: RemoteProcessOptions): Promise<void> {
+  const config = await resolveRemoteConfig(options.runnerName);
+  const output = await providerFor(config).listProcesses(config);
   writeOutput(output.trimEnd());
 }
 
-export async function interruptSpriteProcessGroup(options: SpriteInterruptOptions): Promise<void> {
-  const spriteName = await resolveSpriteName(options.spriteName);
-  await runCommandAsync(
-    "sprite",
-    ["exec", "-s", spriteName, "--", "kill", "-INT", "--", `-${options.processGroupId}`],
-    { stdio: "inherit" },
-  );
+export async function interruptRemoteProcessGroup(options: RemoteInterruptOptions): Promise<void> {
+  const config = await resolveRemoteConfig(options.runnerName);
+  await providerFor(config).interruptProcessGroup(config, options.processGroupId);
 }
 
-function rewriteSessionsFooter(output: string, spriteName: string): string {
+function rewriteSessionsFooter(output: string, config: RemoteRunnerConfig): string {
   return output.replace(
     "  sprite exec -id <session_id>",
     [
-      `  crew sprite attach <session_id> --sprite ${spriteName}`,
-      `  sprite sessions attach <session_id> -s ${spriteName}`,
+      `  crew remote attach <session_id> --runner ${config.runnerName}`,
+      `  sprite sessions attach <session_id> -s ${config.runnerName}`,
     ].join("\n"),
   );
 }
 
-export async function setupSprite(options: SpriteSetupOptions): Promise<void> {
-  await ensureSprite(options);
-  await prepareHome(options.spriteName);
-  await configureGit(options);
+export async function setupRemoteRunner(options: RemoteSetupOptions): Promise<void> {
+  const config = remoteConfigWithRunnerName(options.runnerName);
+  const provider = providerFor(config);
+  await ensureRemoteRunner({ provider, config, options });
+  await prepareHome(provider, config);
+  await configureGit({ provider, config, options });
 
   if (options.shouldAuthenticateGithub) {
-    await authenticateGithub(options.spriteName);
+    await authenticateGithub(provider, config);
   }
   if (options.shouldAuthenticateClaude) {
-    await authenticateClaude(options.spriteName);
+    await authenticateClaude(provider, config);
   }
   if (options.shouldAuthenticateCodex) {
-    await authenticateCodex(options.spriteName, options.shouldCopyLocalCodexAuth === true);
+    await authenticateCodex({
+      provider,
+      config,
+      shouldCopyLocalAuth: options.shouldCopyLocalCodexAuth === true,
+    });
   }
 
   for (const server of options.mcpServers) {
     // oxlint-disable-next-line no-await-in-loop -- MCP additions are sequential so auth instructions stay ordered.
-    await addMcpServer(options.spriteName, server);
+    await addMcpServer({ provider, config, server });
   }
-  await authenticateMcpServers(options);
-  await checkpoint(options);
+  await authenticateMcpServers({ provider, config, options });
+  await checkpoint({ provider, config, options });
 
-  log(`Sprite ${options.spriteName} setup complete`);
+  log(`Remote runner ${options.runnerName} setup complete`);
 }
 
-export async function spriteCli(argv: string[]): Promise<void> {
+export async function remoteCli(argv: string[]): Promise<void> {
   const [action, ...rest] = argv;
   if (action === "setup") {
-    await setupSprite(parseArguments(rest));
+    await setupRemoteRunner(parseArguments(rest));
     return;
   }
   if (action === "bootstrap") {
-    await bootstrapSpriteRepository(parseBootstrapArguments(rest));
+    await bootstrapRemoteRepository(parseBootstrapArguments(rest));
     return;
   }
   if (action === "sessions") {
-    await listSpriteSessions(parseSessionsArguments(rest));
+    await listRemoteSessions(parseSessionsArguments(rest));
     return;
   }
   if (action === "attach") {
-    await attachSpriteSession(parseAttachArguments(rest));
+    await attachRemoteSession(parseAttachArguments(rest));
     return;
   }
   if (action === "ps") {
-    await listSpriteProcesses(parseSessionsArguments(rest));
+    await listRemoteProcesses(parseSessionsArguments(rest));
     return;
   }
   if (action === "interrupt") {
-    await interruptSpriteProcessGroup(parseInterruptArguments(rest));
+    await interruptRemoteProcessGroup(parseInterruptArguments(rest));
     return;
   }
   throw new Error(usage());

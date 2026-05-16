@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import type { RunCommandOptions } from "../lib/commandRunner.ts";
 import type { ResolvedConfig } from "../lib/config.ts";
-import { bootstrapSpriteRepository, setupSprite, spriteCli } from "./spriteSetup.ts";
+import { bootstrapRemoteRepository, remoteCli, setupRemoteRunner } from "./remoteSetup.ts";
 
 type RunCommandAsyncMock = (
   command: string,
@@ -33,7 +33,7 @@ vi.mock(import("../lib/config.ts"), async (importOriginal) => {
   };
 });
 
-function makeConfig(spriteName = "crew-default"): ResolvedConfig {
+function makeConfig(runnerName = "crew-default"): ResolvedConfig {
   return {
     linear: {
       projectSlug: "ai-strategy-5152195762f3",
@@ -64,13 +64,12 @@ function makeConfig(spriteName = "crew-default"): ResolvedConfig {
     prompts: { initial: "{{ticket}} {{worktree}} {{title}} {{description}}" },
     workspaceKind: "tmux",
     remote: {
-      sprite: {
-        spriteName,
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName,
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
     },
     logging: { file: "/tmp/groundcrew.log" },
   };
@@ -82,6 +81,12 @@ function hasRemoteCommand(call: readonly unknown[], remoteCommand: readonly stri
     return false;
   }
   return remoteCommand.every((part) => arguments_.includes(part));
+}
+
+function expectRemoteCommand(remoteCommand: readonly string[]): void {
+  expect(runCommandMock.mock.calls.some((call) => hasRemoteCommand(call, remoteCommand))).toBe(
+    true,
+  );
 }
 
 function mockSpriteList(output: string): void {
@@ -158,7 +163,7 @@ function isInteractiveCodexLoginCall(call: readonly unknown[]): boolean {
   );
 }
 
-describe(spriteCli, () => {
+describe(remoteCli, () => {
   beforeEach(() => {
     loadConfigMock.mockResolvedValue(makeConfig());
     mockSpriteList("NAME STATUS\ncrew-claude-1 running");
@@ -171,7 +176,7 @@ describe(spriteCli, () => {
   });
 
   it("adds only the selected MCP servers and opens Claude for their auth", async () => {
-    await spriteCli([
+    await remoteCli([
       "setup",
       "crew-claude-1",
       "--mcp",
@@ -180,14 +185,8 @@ describe(spriteCli, () => {
       "custom=https://example.com/mcp",
     ]);
 
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining(["claude", "mcp", "add", "linear", "https://mcp.linear.app/mcp"]),
-    );
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining(["claude", "mcp", "add", "custom", "https://example.com/mcp"]),
-    );
+    expectRemoteCommand(["claude", "mcp", "add", "linear", "https://mcp.linear.app/mcp"]);
+    expectRemoteCommand(["claude", "mcp", "add", "custom", "https://example.com/mcp"]);
     expect(
       runCommandMock.mock.calls.some((call) =>
         hasRemoteCommand(call, ["slack", "https://mcp.slack.com/mcp"]),
@@ -201,12 +200,9 @@ describe(spriteCli, () => {
   });
 
   it("can add MCP servers without launching interactive MCP auth", async () => {
-    await spriteCli(["setup", "crew-claude-1", "--mcp", "linear", "--skip-mcp-auth"]);
+    await remoteCli(["setup", "crew-claude-1", "--mcp", "linear", "--skip-mcp-auth"]);
 
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining(["claude", "mcp", "add", "linear", "https://mcp.linear.app/mcp"]),
-    );
+    expectRemoteCommand(["claude", "mcp", "add", "linear", "https://mcp.linear.app/mcp"]);
     expect(
       runCommandMock.mock.calls.some((call) =>
         hasRemoteCommand(call, ["claude", "--permission-mode", "auto"]),
@@ -215,38 +211,38 @@ describe(spriteCli, () => {
   });
 
   it("rejects unknown MCP aliases", async () => {
-    await expect(spriteCli(["setup", "crew-claude-1", "--mcp", "unknown"])).rejects.toThrow(
+    await expect(remoteCli(["setup", "crew-claude-1", "--mcp", "unknown"])).rejects.toThrow(
       /Unknown MCP alias/,
     );
   });
 
   it("rejects missing setup values and invalid custom MCP names", async () => {
-    await expect(spriteCli(["setup"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["setup", "crew-claude-1", "--mcp"])).rejects.toThrow(
+    await expect(remoteCli(["setup"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["setup", "crew-claude-1", "--mcp"])).rejects.toThrow(
       /--mcp requires a value/,
     );
     await expect(
-      spriteCli(["setup", "crew-claude-1", "--mcp", "bad$name=https://example.com/mcp"]),
+      remoteCli(["setup", "crew-claude-1", "--mcp", "bad$name=https://example.com/mcp"]),
     ).rejects.toThrow(/Invalid MCP server name/);
-    await expect(spriteCli(["setup", "crew-claude-1", "--bogus"])).rejects.toThrow(
-      /Unknown sprite setup argument/,
+    await expect(remoteCli(["setup", "crew-claude-1", "--bogus"])).rejects.toThrow(
+      /Unknown remote setup argument/,
     );
   });
 
   it("rejects malformed or non-HTTPS MCP URLs", async () => {
     await expect(
-      spriteCli(["setup", "crew-claude-1", "--mcp", "custom=http://example.com/mcp"]),
+      remoteCli(["setup", "crew-claude-1", "--mcp", "custom=http://example.com/mcp"]),
     ).rejects.toThrow(/Invalid MCP server URL/);
     await expect(
-      spriteCli(["setup", "crew-claude-1", "--mcp", "custom=https:// invalid"]),
+      remoteCli(["setup", "crew-claude-1", "--mcp", "custom=https:// invalid"]),
     ).rejects.toThrow(/Invalid MCP server URL/);
   });
 
-  it("rejects unknown sprite actions", async () => {
-    await expect(spriteCli(["unknown"])).rejects.toThrow(/crew sprite setup/);
+  it("rejects unknown remote actions", async () => {
+    await expect(remoteCli(["unknown"])).rejects.toThrow(/crew remote setup/);
   });
 
-  it("lists sessions using the configured default sprite", async () => {
+  it("lists sessions using the configured default remote runner", async () => {
     const consoleLog = vi.spyOn(console, "log").mockReturnValue();
     runCommandMock.mockResolvedValue(
       [
@@ -259,7 +255,7 @@ describe(spriteCli, () => {
       ].join("\n"),
     );
 
-    await spriteCli(["sessions"]);
+    await remoteCli(["sessions"]);
 
     expect(loadConfigMock).toHaveBeenCalledWith();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -268,7 +264,7 @@ describe(spriteCli, () => {
       { trim: false },
     );
     expect(consoleLog.mock.calls.join("\n")).toContain(
-      "crew sprite attach <session_id> --sprite crew-default",
+      "crew remote attach <session_id> --runner crew-default",
     );
     expect(consoleLog.mock.calls.join("\n")).toContain(
       "sprite sessions attach <session_id> -s crew-default",
@@ -276,11 +272,11 @@ describe(spriteCli, () => {
     expect(consoleLog.mock.calls.join("\n")).not.toContain("sprite exec -id");
   });
 
-  it("lists sessions using an explicit sprite without loading config", async () => {
+  it("lists sessions using an explicit remote runner without loading config", async () => {
     const consoleLog = vi.spyOn(console, "log").mockReturnValue();
     runCommandMock.mockResolvedValue("No active sessions found.\n");
 
-    await spriteCli(["sessions", "crew-claude-1"]);
+    await remoteCli(["sessions", "crew-claude-1"]);
 
     expect(loadConfigMock).not.toHaveBeenCalled();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -291,8 +287,8 @@ describe(spriteCli, () => {
     expect(consoleLog).toHaveBeenCalledWith("No active sessions found.");
   });
 
-  it("attaches to a session using the configured default sprite", async () => {
-    await spriteCli(["attach", "12345"]);
+  it("attaches to a session using the configured default remote runner", async () => {
+    await remoteCli(["attach", "12345"]);
 
     expect(loadConfigMock).toHaveBeenCalledWith();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -302,8 +298,8 @@ describe(spriteCli, () => {
     );
   });
 
-  it("attaches to a command selector using an explicit sprite", async () => {
-    await spriteCli(["attach", "bash", "--sprite", "crew-claude-1"]);
+  it("attaches to a command selector using an explicit remote runner", async () => {
+    await remoteCli(["attach", "bash", "--runner", "crew-claude-1"]);
 
     expect(loadConfigMock).not.toHaveBeenCalled();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -313,11 +309,11 @@ describe(spriteCli, () => {
     );
   });
 
-  it("lists remote processes using an explicit sprite", async () => {
+  it("lists remote processes using an explicit remote runner", async () => {
     const consoleLog = vi.spyOn(console, "log").mockReturnValue();
     runCommandMock.mockResolvedValue("PID PPID PGID CMD\n23001 0 23001 claude\n");
 
-    await spriteCli(["ps", "crew-claude-1"]);
+    await remoteCli(["ps", "crew-claude-1"]);
 
     expect(loadConfigMock).not.toHaveBeenCalled();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -336,8 +332,8 @@ describe(spriteCli, () => {
     expect(consoleLog).toHaveBeenCalledWith("PID PPID PGID CMD\n23001 0 23001 claude");
   });
 
-  it("interrupts a selected remote process group using the configured default sprite", async () => {
-    await spriteCli(["interrupt", "27673"]);
+  it("interrupts a selected remote process group using the configured default remote runner", async () => {
+    await remoteCli(["interrupt", "27673"]);
 
     expect(loadConfigMock).toHaveBeenCalledWith();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -347,8 +343,8 @@ describe(spriteCli, () => {
     );
   });
 
-  it("interrupts a selected remote process group using an explicit sprite", async () => {
-    await spriteCli(["interrupt", "27673", "--sprite", "crew-claude-1"]);
+  it("interrupts a selected remote process group using an explicit remote runner", async () => {
+    await remoteCli(["interrupt", "27673", "--runner", "crew-claude-1"]);
 
     expect(loadConfigMock).not.toHaveBeenCalled();
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -358,15 +354,15 @@ describe(spriteCli, () => {
     );
   });
 
-  it("rejects missing targets and unknown session wrapper flags before running sprite", async () => {
-    await expect(spriteCli(["attach"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["attach", "12345", "--bogus"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["sessions", "--bogus"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["ps", "--bogus"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["interrupt"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["interrupt", "0"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["interrupt", "abc"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["interrupt", "27673", "--bogus"])).rejects.toThrow(/Usage:/);
+  it("rejects missing targets and unknown session wrapper flags before running the provider", async () => {
+    await expect(remoteCli(["attach"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["attach", "12345", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["sessions", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["ps", "--bogus"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["interrupt"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["interrupt", "0"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["interrupt", "abc"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["interrupt", "27673", "--bogus"])).rejects.toThrow(/Usage:/);
 
     expect(runCommandMock).not.toHaveBeenCalled();
   });
@@ -374,7 +370,7 @@ describe(spriteCli, () => {
   it("parses setup options for selected agent auth, git identity, and checkpoint", async () => {
     const codexStatusCalls = mockSpriteListWithCodexStatus({ failuresBeforeSuccess: 1 });
 
-    await spriteCli([
+    await remoteCli([
       "setup",
       "crew-claude-1",
       "--claude",
@@ -390,24 +386,15 @@ describe(spriteCli, () => {
       "--no-create",
     ]);
 
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining(["git", "config", "--global", "user.name", "Rocky Warren"]),
-    );
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining([
-        "git",
-        "config",
-        "--global",
-        "user.email",
-        "1085683+therockstorm@users.noreply.github.com",
-      ]),
-    );
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining(["gh", "auth", "setup-git"]),
-    );
+    expectRemoteCommand(["git", "config", "--global", "user.name", "Rocky Warren"]);
+    expectRemoteCommand([
+      "git",
+      "config",
+      "--global",
+      "user.email",
+      "1085683+therockstorm@users.noreply.github.com",
+    ]);
+    expectRemoteCommand(["gh", "auth", "setup-git"]);
     expect(runCommandMock).toHaveBeenCalledWith(
       "sprite",
       expect.arrayContaining(["codex", "login"]),
@@ -424,7 +411,7 @@ describe(spriteCli, () => {
   it("skips adding MCP servers that already exist", async () => {
     mockSpriteListWithExistingMcp("NAME STATUS\ncrew-claude-1 running");
 
-    await spriteCli(["setup", "crew-claude-1", "--mcp", "linear", "--skip-mcp-auth"]);
+    await remoteCli(["setup", "crew-claude-1", "--mcp", "linear", "--skip-mcp-auth"]);
 
     expect(
       runCommandMock.mock.calls.some((call) =>
@@ -438,7 +425,7 @@ describe(spriteCli, () => {
     vi.stubEnv("NPM_TOKEN", "npm-token");
     vi.stubEnv("BUF_TOKEN", "buf-token");
 
-    await spriteCli([
+    await remoteCli([
       "bootstrap",
       "crew-claude-1",
       "core-utils",
@@ -478,16 +465,16 @@ describe(spriteCli, () => {
   });
 });
 
-describe(setupSprite, () => {
+describe(setupRemoteRunner, () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it("creates a missing sprite, authenticates requested tools, configures git, and checkpoints", async () => {
+  it("creates a missing remote runner, authenticates requested tools, configures git, and checkpoints", async () => {
     mockMissingSpriteWithMissingAgentAuth();
 
-    await setupSprite({
-      spriteName: "crew-claude-1",
+    await setupRemoteRunner({
+      runnerName: "crew-claude-1",
       shouldCreate: true,
       shouldAuthenticateClaude: true,
       shouldAuthenticateCodex: false,
@@ -505,20 +492,14 @@ describe(setupSprite, () => {
       ["create", "--skip-console", "crew-claude-1"],
       { stdio: "inherit", timeoutMs: 0 },
     );
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining(["git", "config", "--global", "user.name", "Rocky Warren"]),
-    );
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sprite",
-      expect.arrayContaining([
-        "git",
-        "config",
-        "--global",
-        "user.email",
-        "1085683+therockstorm@users.noreply.github.com",
-      ]),
-    );
+    expectRemoteCommand(["git", "config", "--global", "user.name", "Rocky Warren"]);
+    expectRemoteCommand([
+      "git",
+      "config",
+      "--global",
+      "user.email",
+      "1085683+therockstorm@users.noreply.github.com",
+    ]);
     expect(runCommandMock).toHaveBeenCalledWith(
       "sprite",
       expect.arrayContaining(["gh", "auth", "login", "-h", "github.com", "-p", "https", "-w"]),
@@ -546,12 +527,12 @@ describe(setupSprite, () => {
     );
   });
 
-  it("rejects missing sprites when creation is disabled", async () => {
+  it("rejects missing remote runners when creation is disabled", async () => {
     mockSpriteList("");
 
     await expect(
-      setupSprite({
-        spriteName: "missing",
+      setupRemoteRunner({
+        runnerName: "missing",
         shouldCreate: false,
         shouldAuthenticateClaude: false,
         shouldAuthenticateCodex: false,
@@ -567,8 +548,8 @@ describe(setupSprite, () => {
   it("authenticates codex when requested", async () => {
     const codexStatusCalls = mockSpriteListWithCodexStatus({ failuresBeforeSuccess: 1 });
 
-    await setupSprite({
-      spriteName: "crew-claude-1",
+    await setupRemoteRunner({
+      runnerName: "crew-claude-1",
       shouldCreate: false,
       shouldAuthenticateClaude: false,
       shouldAuthenticateCodex: true,
@@ -590,8 +571,8 @@ describe(setupSprite, () => {
   it("skips codex auth when status is already valid", async () => {
     mockSpriteList("NAME STATUS\ncrew-claude-1 running");
 
-    await setupSprite({
-      spriteName: "crew-claude-1",
+    await setupRemoteRunner({
+      runnerName: "crew-claude-1",
       shouldCreate: false,
       shouldAuthenticateClaude: false,
       shouldAuthenticateCodex: true,
@@ -613,7 +594,7 @@ describe(setupSprite, () => {
     const codexStatusCalls = mockSpriteListWithCodexStatus({ failuresBeforeSuccess: 1 });
 
     try {
-      await spriteCli([
+      await remoteCli([
         "setup",
         "crew-claude-1",
         "--codex",
@@ -624,13 +605,14 @@ describe(setupSprite, () => {
       rmSync(temporaryCodexHome, { recursive: true, force: true });
     }
 
+    const uploadedAuthFile = `${localAuthFile}:/tmp/groundcrew-codex-auth.json`;
     expect(runCommandMock).toHaveBeenCalledWith(
       "sprite",
-      expect.arrayContaining(["--file", `${localAuthFile}:/tmp/groundcrew-codex-auth.json`]),
+      expect.arrayContaining(["--file", uploadedAuthFile]),
+      undefined,
     );
-    const copyCall = runCommandMock.mock.calls.find((call) =>
-      call[1].includes(`${localAuthFile}:/tmp/groundcrew-codex-auth.json`),
-    );
+    const copyCall = runCommandMock.mock.calls.find((call) => call[1].includes(uploadedAuthFile));
+    expect(copyCall).toBeDefined();
     const command = copyCall?.[1].at(-1);
     expect(command).toStrictEqual(expect.stringContaining("/home/sprite/.codex/auth.json"));
     expect(command).toStrictEqual(expect.stringContaining("install -m 600"));
@@ -647,7 +629,7 @@ describe(setupSprite, () => {
 
     try {
       await expect(
-        spriteCli(["setup", "crew-claude-1", "--codex", "--copy-local-codex-auth", "--no-create"]),
+        remoteCli(["setup", "crew-claude-1", "--codex", "--copy-local-codex-auth", "--no-create"]),
       ).rejects.toThrow(/Local Codex auth file not found/);
     } finally {
       rmSync(temporaryCodexHome, { recursive: true, force: true });
@@ -662,7 +644,7 @@ describe(setupSprite, () => {
 
     try {
       await expect(
-        spriteCli(["setup", "crew-claude-1", "--codex", "--copy-local-codex-auth", "--no-create"]),
+        remoteCli(["setup", "crew-claude-1", "--codex", "--copy-local-codex-auth", "--no-create"]),
       ).rejects.toThrow(/Codex auth copy completed/);
     } finally {
       rmSync(temporaryCodexHome, { recursive: true, force: true });
@@ -673,8 +655,8 @@ describe(setupSprite, () => {
     mockSpriteListWithCodexStatus({ alwaysFail: true });
 
     await expect(
-      setupSprite({
-        spriteName: "crew-claude-1",
+      setupRemoteRunner({
+        runnerName: "crew-claude-1",
         shouldCreate: false,
         shouldAuthenticateClaude: false,
         shouldAuthenticateCodex: true,
@@ -689,7 +671,7 @@ describe(setupSprite, () => {
   });
 });
 
-describe(bootstrapSpriteRepository, () => {
+describe(bootstrapRemoteRepository, () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.clearAllMocks();
@@ -698,8 +680,8 @@ describe(bootstrapSpriteRepository, () => {
   it("does not upload a secrets file when secrets are disabled", async () => {
     mockExistingSpriteForBootstrap();
 
-    await bootstrapSpriteRepository({
-      spriteName: "crew-claude-1",
+    await bootstrapRemoteRepository({
+      runnerName: "crew-claude-1",
       repository: "ClipboardHealth/core-utils",
       owner: "ClipboardHealth",
       baseBranch: "main",
@@ -719,8 +701,8 @@ describe(bootstrapSpriteRepository, () => {
     vi.stubEnv("NPM_TOKEN", "");
     vi.stubEnv("BUF_TOKEN", "");
 
-    await bootstrapSpriteRepository({
-      spriteName: "crew-claude-1",
+    await bootstrapRemoteRepository({
+      runnerName: "crew-claude-1",
       repository: "core-utils",
       owner: "ClipboardHealth",
       baseBranch: "main",
@@ -740,8 +722,8 @@ describe(bootstrapSpriteRepository, () => {
     vi.stubEnv("NPM_TOKEN", "npm-token");
     vi.stubEnv("BUF_TOKEN", "");
 
-    await bootstrapSpriteRepository({
-      spriteName: "crew-claude-1",
+    await bootstrapRemoteRepository({
+      runnerName: "crew-claude-1",
       repository: "core-utils",
       owner: "ClipboardHealth",
       baseBranch: "main",
@@ -761,7 +743,7 @@ describe(bootstrapSpriteRepository, () => {
   it("parses bootstrap base, owner, and no-secrets options", async () => {
     mockExistingSpriteForBootstrap();
 
-    await spriteCli([
+    await remoteCli([
       "bootstrap",
       "crew-claude-1",
       "core-utils",
@@ -784,8 +766,8 @@ describe(bootstrapSpriteRepository, () => {
   it("strips .git suffixes when choosing the remote repository directory", async () => {
     mockExistingSpriteForBootstrap();
 
-    await bootstrapSpriteRepository({
-      spriteName: "crew-claude-1",
+    await bootstrapRemoteRepository({
+      runnerName: "crew-claude-1",
       repository: "core-utils.git",
       owner: "ClipboardHealth",
       baseBranch: "main",
@@ -803,30 +785,30 @@ describe(bootstrapSpriteRepository, () => {
   });
 
   it("rejects invalid bootstrap arguments before running remote setup", async () => {
-    await expect(spriteCli(["bootstrap"])).rejects.toThrow(/Usage:/);
-    await expect(spriteCli(["bootstrap", "crew-claude-1", "a/b/c"])).rejects.toThrow(
+    await expect(remoteCli(["bootstrap"])).rejects.toThrow(/Usage:/);
+    await expect(remoteCli(["bootstrap", "crew-claude-1", "a/b/c"])).rejects.toThrow(
       /Invalid repository/,
     );
     await expect(
-      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--branch", "..bad"]),
+      remoteCli(["bootstrap", "crew-claude-1", "core-utils", "--branch", "..bad"]),
     ).rejects.toThrow(/Invalid branch/);
     await expect(
-      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--owner", "bad owner"]),
+      remoteCli(["bootstrap", "crew-claude-1", "core-utils", "--owner", "bad owner"]),
     ).rejects.toThrow(/Invalid repository owner/);
     await expect(
-      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--secret", "bad-secret"]),
+      remoteCli(["bootstrap", "crew-claude-1", "core-utils", "--secret", "bad-secret"]),
     ).rejects.toThrow(/Invalid secret name/);
     await expect(
-      spriteCli(["bootstrap", "crew-claude-1", "core-utils", "--bogus"]),
-    ).rejects.toThrow(/Unknown sprite bootstrap argument/);
+      remoteCli(["bootstrap", "crew-claude-1", "core-utils", "--bogus"]),
+    ).rejects.toThrow(/Unknown remote bootstrap argument/);
   });
 
   it("requires explicitly selected secrets to exist locally", async () => {
     mockExistingSpriteForBootstrap();
 
     await expect(
-      bootstrapSpriteRepository({
-        spriteName: "crew-claude-1",
+      bootstrapRemoteRepository({
+        runnerName: "crew-claude-1",
         repository: "core-utils",
         owner: "ClipboardHealth",
         baseBranch: "main",
@@ -837,12 +819,12 @@ describe(bootstrapSpriteRepository, () => {
     ).rejects.toThrow(/NPM_TOKEN is not set/);
   });
 
-  it("rejects missing sprites before staging or bootstrapping", async () => {
+  it("rejects missing remote runners before staging or bootstrapping", async () => {
     runCommandMock.mockResolvedValue("");
 
     await expect(
-      bootstrapSpriteRepository({
-        spriteName: "missing",
+      bootstrapRemoteRepository({
+        runnerName: "missing",
         repository: "core-utils",
         owner: "ClipboardHealth",
         baseBranch: "main",
@@ -850,6 +832,6 @@ describe(bootstrapSpriteRepository, () => {
         shouldRequireSelectedSecrets: false,
         shouldUseSecrets: true,
       }),
-    ).rejects.toThrow(/Sprite missing does not exist/);
+    ).rejects.toThrow(/Remote runner missing does not exist/);
   });
 });

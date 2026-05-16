@@ -1,8 +1,8 @@
 import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
 import { doctor } from "./commands/doctor.ts";
 import { orchestrate } from "./commands/orchestrator.ts";
+import { remoteCli } from "./commands/remoteSetup.ts";
 import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
-import { spriteCli } from "./commands/spriteSetup.ts";
 import { errorMessage, writeError, writeOutput } from "./lib/util.ts";
 
 interface Subcommand {
@@ -69,16 +69,16 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     usage: "[--force] <ticket>",
     invoke: cleanupWorkspaceCli,
   },
-  sprite: {
-    summary: "Create, authenticate, bootstrap, and inspect a remote Sprite runner",
+  remote: {
+    summary: "Create, authenticate, bootstrap, and inspect a remote runner",
     usage:
-      "setup <sprite-name> [--claude] [--github] [--mcp <alias|name=url>] [--checkpoint]\n" +
-      "           → crew sprite bootstrap <sprite-name> <repo> [--branch <branch>]\n" +
-      "           → crew sprite sessions [<sprite-name>]\n" +
-      "           → crew sprite attach <session-id-or-command> [--sprite <sprite-name>]\n" +
-      "           → crew sprite ps [<sprite-name>]\n" +
-      "           → crew sprite interrupt <process-group-id> [--sprite <sprite-name>]",
-    invoke: spriteCli,
+      "setup <runner-name> [--claude] [--github] [--mcp <alias|name=url>] [--checkpoint]\n" +
+      "           → crew remote bootstrap <runner-name> <repo> [--branch <branch>]\n" +
+      "           → crew remote sessions [<runner-name>]\n" +
+      "           → crew remote attach <session-id-or-command> [--runner <runner-name>]\n" +
+      "           → crew remote ps [<runner-name>]\n" +
+      "           → crew remote interrupt <process-group-id> [--runner <runner-name>]",
+    invoke: remoteCli,
   },
 };
 
