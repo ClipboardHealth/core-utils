@@ -23,7 +23,7 @@ import { homedir, userInfo } from "node:os";
 import { dirname, resolve } from "node:path";
 
 import { runCommandAsync, type RunCommandOptions } from "./commandRunner.ts";
-import type { ResolvedConfig, WorkspaceRunner } from "./config.ts";
+import { isRemoteRunnerProviderName, type ResolvedConfig, type WorkspaceRunner } from "./config.ts";
 import {
   getRemoteRunnerProvider,
   type RemoteRunnerProvider,
@@ -278,7 +278,7 @@ function isRemoteEntry(value: unknown): value is WorktreeEntry {
     typeof entry.branchName === "string" &&
     typeof entry.dir === "string" &&
     entry.kind === "remote" &&
-    entry.remoteProvider === "sprite" &&
+    isRemoteRunnerProviderName(entry.remoteProvider) &&
     typeof entry.remoteRunnerName === "string" &&
     typeof entry.remoteRepoDir === "string"
   );
@@ -357,8 +357,13 @@ const remoteWorktreeAdapter: WorktreeAdapter = {
   },
   async remove(config, entry, options) {
     log(`Removing remote worktree ${entry.dir}${options.force ? " (--force)" : ""}...`);
+    const remoteConfig = {
+      ...config.remote,
+      provider: entry.remoteProvider ?? config.remote.provider,
+      runnerName: entry.remoteRunnerName ?? config.remote.runnerName,
+    };
     await remoteProviderFor(config, entry).removeWorktree({
-      config: config.remote,
+      config: remoteConfig,
       entry,
       force: options.force,
       ...signalProperty(options.signal),

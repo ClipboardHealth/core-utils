@@ -153,6 +153,17 @@ describe("Sprite remote runner provider", () => {
     );
   });
 
+  it("builds TTY commands without optional file uploads or working directory", () => {
+    const config = remoteConfig();
+
+    const actual = spriteRemoteRunnerProvider.buildTtyCommand({
+      config,
+      remoteArguments: ["pwd"],
+    });
+
+    expect(actual).toBe("sprite exec --tty -s 'crew-special' -- 'pwd'");
+  });
+
   it("creates remote worktrees under provider-owned repository and worktree roots", async () => {
     const config = remoteConfig();
     const controller = new AbortController();

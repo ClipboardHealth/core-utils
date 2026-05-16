@@ -2,6 +2,8 @@ import { DEFAULT_REMOTE_SETUP_COMMAND, type ModelDefinition } from "./config.ts"
 import { buildLaunchCommand, buildRemoteLaunchCommand } from "./launchCommand.ts";
 import { spriteRemoteRunnerProvider } from "./spriteRemoteRunnerProvider.ts";
 
+const REMOTE_SECRET_NAMES = ["NPM_TOKEN", "BUF_TOKEN"] as const;
+
 function arguments_(
   overrides: Partial<Parameters<typeof buildLaunchCommand>[0]> = {},
 ): Parameters<typeof buildLaunchCommand>[0] {
@@ -25,12 +27,12 @@ function remoteArguments(
       owner: "ClipboardHealth",
       repoRoot: "/home/sprite/dev",
       worktreeRoot: "/home/sprite/groundcrew/worktrees",
-      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+      secretNames: [...REMOTE_SECRET_NAMES],
     },
     promptFile: "/tmp/prompt-team-1/prompt.txt",
     remotePromptFile: "/tmp/groundcrew-team-1-prompt.txt",
     worktreeDir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-    secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+    secretNames: [...REMOTE_SECRET_NAMES],
     ...overrides,
   };
 }
@@ -47,6 +49,10 @@ describe(buildLaunchCommand, () => {
     expect(DEFAULT_REMOTE_SETUP_COMMAND).not.toContain("then ;");
     expect(DEFAULT_REMOTE_SETUP_COMMAND).toContain('nvm install "$required_node"');
     expect(DEFAULT_REMOTE_SETUP_COMMAND).toContain('n_path="$(command -v n || true)"');
+    expect(DEFAULT_REMOTE_SETUP_COMMAND).toContain(
+      'if "$n_path" "$required_node"; then :; elif command -v sudo >/dev/null 2>&1; then sudo "$n_path" "$required_node"; else exit 1; fi',
+    );
+    expect(DEFAULT_REMOTE_SETUP_COMMAND).not.toContain('sudo "$n_path" "$required_node" &&');
   });
 
   it("cd's into the worktree, runs setup, then execs the Safehouse-wrapped agent with the prompt", () => {

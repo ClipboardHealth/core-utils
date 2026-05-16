@@ -19,7 +19,7 @@ export const DEFAULT_REMOTE_SETUP_COMMAND = [
     "npm install --global n --no-audit --no-fund",
     'n_path="$(command -v n || true)"',
     'if [ -z "$n_path" ]; then n_path="$(npm prefix -g)/bin/n"; fi',
-    'sudo "$n_path" "$required_node"',
+    'if "$n_path" "$required_node"; then :; elif command -v sudo >/dev/null 2>&1; then sudo "$n_path" "$required_node"; else exit 1; fi',
     "fi",
     "hash -r",
     "fi",

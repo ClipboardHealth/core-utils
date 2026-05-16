@@ -35,7 +35,7 @@ The environment that executes the agent command for a ticket.
 - **Local runner** — macOS only. Groundcrew requires `safehouse` on `PATH`, starts `clearance`, and launches the model command through `safehouse-clearance` inside the host worktree.
 - **Remote runner** — remote Linux, currently backed by the Sprite provider. Tickets labeled `agent-remote` keep the workspace local but run repository setup and the agent command inside the configured remote runner.
 
-There is no `models.isolation` strategy, Docker Sandboxes runner, or direct local runner. Linux/WSL users run tickets through the configured remote runner. Legacy `.sbx` worktrees and persistent Docker Sandboxes state are no longer discovered or cleaned up by groundcrew; users remove old state manually with `sbx` if needed.
+There is no `models.isolation` strategy, Docker Sandboxes runner, or Linux/WSL direct local runner. macOS local runs use the local runner; Linux/WSL users run tickets through the configured remote runner. Legacy `.sbx` worktrees and persistent Docker Sandboxes state are no longer discovered or cleaned up by groundcrew; users remove old state manually with `sbx` if needed.
 
 ## Dispatcher
 

@@ -22,7 +22,15 @@ export type WorkspaceRunner = "local" | "remote";
 
 export const WORKSPACE_RUNNERS: readonly WorkspaceRunner[] = ["local", "remote"] as const;
 
-export type RemoteRunnerProviderName = "sprite";
+export const REMOTE_RUNNER_PROVIDER_NAMES = ["sprite"] as const;
+
+export type RemoteRunnerProviderName = (typeof REMOTE_RUNNER_PROVIDER_NAMES)[number];
+
+export function isRemoteRunnerProviderName(value: unknown): value is RemoteRunnerProviderName {
+  return (
+    typeof value === "string" && (REMOTE_RUNNER_PROVIDER_NAMES as readonly string[]).includes(value)
+  );
+}
 
 /**
  * Which terminal session manager hosts the agent process:
@@ -406,7 +414,7 @@ function normalizeRemoteProvider(value: unknown): RemoteRunnerProviderName | und
   if (value === undefined) {
     return undefined;
   }
-  if (value !== "sprite") {
+  if (!isRemoteRunnerProviderName(value)) {
     fail(`remote.provider must be "sprite" (got ${JSON.stringify(value)})`);
   }
   return value;
