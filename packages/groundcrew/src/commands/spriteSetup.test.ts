@@ -54,7 +54,6 @@ function makeConfig(spriteName = "crew-default"): ResolvedConfig {
     },
     models: {
       default: "claude",
-      isolation: "none",
       definitions: {
         claude: {
           cmd: "claude --permission-mode auto",

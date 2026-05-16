@@ -61,6 +61,7 @@ describe(run, () => {
     const helpOutput = consoleLog.output();
     expect(helpOutput).toContain("Usage: crew <command>");
     expect(helpOutput).toContain("run");
+    expect(helpOutput).not.toContain("sandbox");
     expect(process.exitCode).toBe(1);
   });
 
@@ -82,6 +83,13 @@ describe(run, () => {
     await run(["bogus"]);
 
     expect(consoleError.output()).toContain("Unknown command: bogus");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("reports sandbox as an unknown subcommand", async () => {
+    await run(["sandbox", "auth", "repo-a"]);
+
+    expect(consoleError.output()).toContain("Unknown command: sandbox");
     expect(process.exitCode).toBe(1);
   });
 

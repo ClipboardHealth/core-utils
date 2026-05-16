@@ -7,7 +7,7 @@ import { loadConfig, type ResolvedConfig } from "../lib/config.ts";
 import { detectHostCapabilities } from "../lib/host.ts";
 import type * as utilModule from "../lib/util.ts";
 import { getLinearClient, log } from "../lib/util.ts";
-import { type WorktreeEntry, worktrees, type WorktreeSpec } from "../lib/worktrees.ts";
+import { type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
 import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.ts";
 import { emptyTeardownResult } from "../testHelpers/teardownResult.ts";
 import { setupWorkspace, setupWorkspaceCli } from "./setupWorkspace.ts";
@@ -130,17 +130,6 @@ function hostEntry(): WorktreeEntry {
   };
 }
 
-function sandboxEntry(): WorktreeEntry {
-  return {
-    repository: "repo-a",
-    ticket: "team-1",
-    branchName: "rocky-team-1",
-    dir: "/work/repo-a/.sbx/groundcrew-repo-a-claude-worktrees/rocky-team-1",
-    kind: "sandbox",
-    sandboxName: "groundcrew-repo-a-claude",
-  };
-}
-
 function spriteEntry(): WorktreeEntry {
   return {
     repository: "repo-a",
@@ -172,7 +161,6 @@ function makeConfig(overrides: Partial<ResolvedConfig["models"]> = {}): Resolved
     },
     models: {
       default: "claude",
-      isolation: "none",
       definitions: {
         claude: { cmd: "claude --auto", color: "#fff" },
         codex: { cmd: "codex", color: "#000" },
@@ -222,17 +210,6 @@ function mockCmuxFailure(): void {
   });
 }
 
-function mockDockerHost(): void {
-  detectHostMock.mockResolvedValue({
-    hasSafehouse: false,
-    hasSbx: true,
-    hasCmux: true,
-    hasTmux: false,
-    isMacOS: true,
-    isSafehouseSupported: true,
-  });
-}
-
 function lastRunArgumentFromCallWithArgument(argument: string): string {
   const call = runCommandMock.mock.calls.find((candidate) => candidate[1].includes(argument));
   const lastArgument = call?.[1].at(-1);
@@ -249,15 +226,6 @@ function writtenFileContent(path: string): string {
   const call = writeFileMock.mock.calls.find(([candidate]) => String(candidate) === path);
   const content = call?.[1];
   return typeof content === "string" ? content : "";
-}
-
-function runArgumentsFromCallWithArgument(argument: string): readonly string[] {
-  const call = runCommandMock.mock.calls.find((candidate) => candidate[1].includes(argument));
-  return call?.[1] ?? [];
-}
-
-function lastCreateSpec(): WorktreeSpec | undefined {
-  return createMock.mock.calls.at(-1)?.[1];
 }
 
 interface InvocationOrderRecorder {
@@ -278,8 +246,7 @@ describe(setupWorkspace, () => {
     mockLinearClient();
     issueResolver.mockResolvedValue(buildMockedIssue({ title: "Test Title", description: "Body" }));
     detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
+      hasSafehouse: true,
       hasCmux: true,
       hasTmux: false,
       isMacOS: true,
@@ -289,7 +256,7 @@ describe(setupWorkspace, () => {
       if (spec.runner === "sprite") {
         return spriteEntry();
       }
-      return spec.strategy === "docker" ? sandboxEntry() : hostEntry();
+      return hostEntry();
     });
     ensureClearanceMock.mockResolvedValue({
       logPath: "/tmp/clearance/clearance.log",
@@ -332,8 +299,15 @@ describe(setupWorkspace, () => {
     );
   });
 
-  it("launches the Sprite runner from a local cwd and skips isolation setup", async () => {
-    const config = makeConfig({ isolation: "safehouse" });
+  it("launches the Sprite runner from a local cwd and skips local Safehouse setup", async () => {
+    detectHostMock.mockResolvedValue({
+      hasSafehouse: false,
+      hasCmux: true,
+      hasTmux: false,
+      isMacOS: true,
+      isSafehouseSupported: true,
+    });
+    const config = makeConfig();
     mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
 
     await setupWorkspace(config, {
@@ -351,7 +325,6 @@ describe(setupWorkspace, () => {
         ticket: "team-1",
         model: "claude",
         runner: "sprite",
-        strategy: "none",
       }),
     );
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -502,17 +475,15 @@ describe(setupWorkspace, () => {
     );
   });
 
-  it("wraps the agent command with safehouse and runs the host setup script when the safehouse strategy is selected", async () => {
+  it("wraps the agent command with Safehouse and runs the host setup script for local runs", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: true,
-      hasSbx: false,
       hasCmux: true,
       hasTmux: false,
       isMacOS: true,
       isSafehouseSupported: true,
     });
     const config = makeConfig({
-      isolation: "safehouse",
       definitions: {
         claude: {
           cmd: "claude --permission-mode auto",
@@ -534,7 +505,6 @@ describe(setupWorkspace, () => {
     expect(command).toContain("exec '/");
     expect(command).toContain("/packages/clearance/safehouse/safehouse-clearance' claude");
     expect(command).toContain('claude --permission-mode auto "$_p"');
-    expect(command).not.toContain("sbx exec");
     // setup-status guard so a failed install still launches the agent
     expect(command).toContain('"$setup_status" -ne 0');
   });
@@ -542,14 +512,13 @@ describe(setupWorkspace, () => {
   it("does not create a worktree when the safehouse clearance cannot start", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: true,
-      hasSbx: false,
       hasCmux: true,
       hasTmux: false,
       isMacOS: true,
       isSafehouseSupported: true,
     });
     ensureClearanceMock.mockRejectedValue(new Error("proxy unavailable"));
-    const config = makeConfig({ isolation: "safehouse" });
+    const config = makeConfig();
 
     await expect(
       setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" }),
@@ -561,18 +530,16 @@ describe(setupWorkspace, () => {
   it("does not double-wrap when the cmd already starts with safehouse", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: true,
-      hasSbx: false,
       hasCmux: true,
       hasTmux: false,
       isMacOS: true,
       isSafehouseSupported: true,
     });
     const config = makeConfig({
-      isolation: "safehouse",
       definitions: {
         claude: {
           // A user upgrading from main has `safehouse` baked into their cmd;
-          // the strategy must not produce `safehouse safehouse claude ...`.
+          // local wrapping must not produce `safehouse safehouse claude ...`.
           cmd: "safehouse claude --permission-mode auto",
           color: "#fff",
         },
@@ -585,23 +552,6 @@ describe(setupWorkspace, () => {
     const command = lastRunArgumentFromCallWithArgument("new-workspace");
     expect(command).toContain('exec safehouse claude --permission-mode auto "$_p"');
     expect(command).not.toContain("safehouse safehouse");
-  });
-
-  it("falls through to direct execution under the none strategy", async () => {
-    const config = makeConfig({
-      isolation: "none",
-      definitions: {
-        claude: { cmd: "claude --permission-mode auto", color: "#fff" },
-      },
-    });
-    mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
-
-    await setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" });
-
-    const command = lastRunArgumentFromCallWithArgument("new-workspace");
-    expect(command).toContain('exec claude --permission-mode auto "$_p"');
-    expect(command).not.toContain("safehouse");
-    expect(command).not.toContain("sbx exec");
   });
 
   describe("build-time secret shuttling", () => {
@@ -689,95 +639,40 @@ describe(setupWorkspace, () => {
     });
   });
 
-  it("fails before creating a worktree when auto cannot find isolation tooling", async () => {
-    const config = makeConfig({ isolation: "auto" });
+  it("fails before creating a worktree when local runs are requested off macOS", async () => {
+    detectHostMock.mockResolvedValue({
+      hasSafehouse: false,
+      hasCmux: false,
+      hasTmux: true,
+      isMacOS: false,
+      isSafehouseSupported: false,
+    });
+    const config = makeConfig();
 
     await expect(
       setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" }),
-    ).rejects.toThrow(/could not find an isolated runner/);
+    ).rejects.toThrow(/Local groundcrew runs require macOS with Safehouse/);
 
     expect(createMock).not.toHaveBeenCalled();
     expect(ensureClearanceMock).not.toHaveBeenCalled();
   });
 
-  it("creates an sbx branch worktree and launches the agent through sbx exec", async () => {
-    mockDockerHost();
-    const config = makeConfig({
-      definitions: {
-        claude: {
-          cmd: "claude --permission-mode auto",
-          color: "#fff",
-          isolation: "docker",
-          sandbox: { agent: "claude", setupCommand: "custom setup" },
-        },
-      },
+  it("fails before creating a worktree when safehouse is missing on macOS", async () => {
+    detectHostMock.mockResolvedValue({
+      hasSafehouse: false,
+      hasCmux: true,
+      hasTmux: false,
+      isMacOS: true,
+      isSafehouseSupported: true,
     });
-    mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
+    const config = makeConfig();
 
-    await setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" });
+    await expect(
+      setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" }),
+    ).rejects.toThrow(/require `safehouse` on PATH/);
 
-    expect(lastCreateSpec()).toMatchObject({
-      repository: "repo-a",
-      ticket: "team-1",
-      model: "claude",
-      strategy: "docker",
-    });
-    const arguments_ = runArgumentsFromCallWithArgument("new-workspace");
-    const command = lastRunArgumentFromCallWithArgument("new-workspace");
-    expect(arguments_).toStrictEqual(
-      expect.arrayContaining([
-        "--cwd",
-        "/work/repo-a/.sbx/groundcrew-repo-a-claude-worktrees/rocky-team-1",
-      ]),
-    );
-    expect(command).toContain(
-      'exec sbx exec -it -w \'/work/repo-a/.sbx/groundcrew-repo-a-claude-worktrees/rocky-team-1\' \'groundcrew-repo-a-claude\' sh -lc \'custom setup; setup_status=$?; if [ "$setup_status" -ne 0 ]; then echo "groundcrew setup command exited with status $setup_status; continuing to agent." >&2; fi; exec claude --permission-mode auto "$@"\' sh "$_p"',
-    );
-  });
-
-  it("continues to the sandbox agent when dependency setup fails", async () => {
-    mockDockerHost();
-    const config = makeConfig({
-      definitions: {
-        claude: {
-          cmd: "claude --permission-mode auto",
-          color: "#fff",
-          isolation: "docker",
-          sandbox: { agent: "claude", setupCommand: "false" },
-        },
-      },
-    });
-    mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
-
-    await setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" });
-
-    const command = lastRunArgumentFromCallWithArgument("new-workspace");
-    expect(command).toContain("false; setup_status=$?");
-    expect(command).toContain("continuing to agent");
-    expect(command).toContain('exec claude --permission-mode auto "$@"');
-  });
-
-  it("uses the default sandbox setup command when a sandbox does not override it", async () => {
-    mockDockerHost();
-    const config = makeConfig({
-      definitions: {
-        claude: {
-          cmd: "claude --permission-mode auto",
-          color: "#fff",
-          isolation: "docker",
-          sandbox: { agent: "claude" },
-        },
-      },
-    });
-    mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
-
-    await setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" });
-
-    const command = lastRunArgumentFromCallWithArgument("new-workspace");
-    expect(command).toContain("npm install --global n");
-    expect(command).toContain('sudo "$n_path" "$required_node"');
-    expect(command).toContain("./.claude/setup.sh --deps-only");
-    expect(command).toContain("npm clean-install");
+    expect(createMock).not.toHaveBeenCalled();
+    expect(ensureClearanceMock).not.toHaveBeenCalled();
   });
 
   it("propagates worktree-creation errors without launching cmux", async () => {
@@ -826,42 +721,6 @@ describe(setupWorkspace, () => {
       { force: true },
     );
     expect(rmMock).toHaveBeenCalledWith("/tmp/groundcrew-team-1-x", expect.anything());
-  });
-
-  it("rolls back the sbx branch worktree without removing the persistent sandbox", async () => {
-    mockDockerHost();
-    const config = makeConfig({
-      definitions: {
-        claude: {
-          cmd: "claude --permission-mode auto",
-          color: "#fff",
-          isolation: "docker",
-          sandbox: { agent: "claude" },
-        },
-      },
-    });
-    mockCmuxFailure();
-
-    await expect(
-      setupWorkspace(config, { ticket: "team-1", repository: "repo-a", model: "claude" }),
-    ).rejects.toThrow(/cmux down/);
-
-    expect(teardownMock).toHaveBeenCalledWith(
-      config,
-      [
-        expect.objectContaining({
-          kind: "sandbox",
-          sandboxName: "groundcrew-repo-a-claude",
-          dir: "/work/repo-a/.sbx/groundcrew-repo-a-claude-worktrees/rocky-team-1",
-        }),
-      ],
-      { force: true },
-    );
-    expect(runCommandMock).not.toHaveBeenCalledWith(
-      "sbx",
-      expect.arrayContaining(["rm"]),
-      expect.anything(),
-    );
   });
 
   it("rolls back the Sprite worktree when workspace launch fails", async () => {
@@ -1087,8 +946,7 @@ describe(setupWorkspaceCli, () => {
     mockLinearClient();
     rawRequestMock.mockResolvedValue(buildResolveIssueResponse({}));
     detectHostMock.mockResolvedValue({
-      hasSafehouse: false,
-      hasSbx: false,
+      hasSafehouse: true,
       hasCmux: true,
       hasTmux: false,
       isMacOS: true,

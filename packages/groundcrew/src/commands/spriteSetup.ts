@@ -3,7 +3,7 @@ import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { runCommandAsync } from "../lib/commandRunner.ts";
-import { BUILD_SECRET_NAMES, DEFAULT_SANDBOX_SETUP_COMMAND, loadConfig } from "../lib/config.ts";
+import { BUILD_SECRET_NAMES, DEFAULT_REMOTE_SETUP_COMMAND, loadConfig } from "../lib/config.ts";
 import { shellSingleQuote } from "../lib/launchCommand.ts";
 import { log, readEnvironmentVariable, writeOutput } from "../lib/util.ts";
 
@@ -702,7 +702,7 @@ function remoteBootstrapCommand(options: SpriteBootstrapOptions): string {
     "git fetch origin --prune",
     ...checkoutLines,
     `if [ -f ${shellSingleQuote(REMOTE_SECRETS_FILE)} ]; then set -a && . ${shellSingleQuote(REMOTE_SECRETS_FILE)} && set +a; fi`,
-    DEFAULT_SANDBOX_SETUP_COMMAND,
+    DEFAULT_REMOTE_SETUP_COMMAND,
   ].join("\n");
 }
 

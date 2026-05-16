@@ -43,7 +43,6 @@ const detectHostMock = vi.mocked(detectHostCapabilities);
 function makeHost(overrides: Partial<HostCapabilities> = {}): HostCapabilities {
   return {
     hasSafehouse: false,
-    hasSbx: false,
     hasCmux: true,
     hasTmux: false,
     isMacOS: true,
@@ -71,7 +70,6 @@ function makeConfig(workspaceKind: WorkspaceKindSetting = "auto"): ResolvedConfi
     },
     models: {
       default: "claude",
-      isolation: "auto",
       definitions: {
         claude: { cmd: "claude", color: "#fff" },
       },

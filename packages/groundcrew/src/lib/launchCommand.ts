@@ -4,10 +4,9 @@ import { dirname, resolve } from "node:path";
 import {
   BUILD_SECRET_NAMES,
   DEFAULT_HOST_SETUP_COMMAND,
-  DEFAULT_SANDBOX_SETUP_COMMAND,
+  DEFAULT_REMOTE_SETUP_COMMAND,
   type ModelDefinition,
 } from "./config.ts";
-import type { ResolvedIsolationStrategy } from "./isolation.ts";
 
 /**
  * Single-quote `value` for safe shell embedding. Embedded single quotes
@@ -28,14 +27,10 @@ const SAFEHOUSE_CLEARANCE_WRAPPER_PATH = resolve(
   "safehouse-clearance",
 );
 
-function renderAgentCommand(arguments_: {
-  agentCmd: string;
-  worktreeDir: string;
-  sandboxName: string;
-}): string {
+function renderAgentCommand(arguments_: { agentCmd: string; worktreeDir: string }): string {
   return arguments_.agentCmd
     .replaceAll("{{worktree}}", shellSingleQuote(arguments_.worktreeDir))
-    .replaceAll("{{sandbox}}", shellSingleQuote(arguments_.sandboxName));
+    .replaceAll("{{sandbox}}", shellSingleQuote(""));
 }
 
 function setupWithStatusReporting(setupCommand: string): string {
@@ -63,14 +58,11 @@ interface LaunchCommandArguments {
   definition: ModelDefinition;
   promptFile: string;
   worktreeDir: string;
-  sandboxName: string | undefined;
-  strategy: ResolvedIsolationStrategy;
   /**
    * Optional path to a `KEY='value'` env file containing build-time
    * secrets (see `BUILD_SECRET_NAMES`). Sourced on the host shell before
-   * setup; the values are propagated into the docker sandbox via
-   * `sbx exec -e KEY=...`. Always unset before exec'ing the agent so the
-   * agent process never inherits them.
+   * setup and always unset before exec'ing the agent so the agent process
+   * never inherits them.
    */
   secretsFile?: string | undefined;
 }
@@ -99,49 +91,14 @@ export function buildLaunchCommand(arguments_: LaunchCommandArguments): string {
   const agentCmd = renderAgentCommand({
     agentCmd: arguments_.definition.cmd,
     worktreeDir: arguments_.worktreeDir,
-    sandboxName: arguments_.sandboxName ?? "",
   });
 
-  if (arguments_.strategy === "docker") {
-    /* v8 ignore next 5 @preserve -- the resolver rejects docker without a sandbox config and setupWorkspace mirrors that, so sandboxName is always defined here */
-    if (arguments_.sandboxName === undefined || arguments_.definition.sandbox === undefined) {
-      throw new Error("sandboxName is required for the docker strategy");
-    }
-    const setupCommand =
-      arguments_.definition.sandbox.setupCommand ?? DEFAULT_SANDBOX_SETUP_COMMAND;
-    const innerParts = [setupWithStatusReporting(setupCommand)];
-    if (arguments_.secretsFile !== undefined) {
-      innerParts.push(unsetSecretsLine());
-    }
-    innerParts.push(`exec ${agentCmd} "$@"`);
-    const innerCommand = innerParts.join("; ");
-    // Passthrough form (`-e KEY` without `=VALUE`): sbx reads the value from
-    // its own env at invocation time, which is populated by sourceSecretsLine
-    // a few lines up. Avoids `-e KEY="$KEY"`, which embeds the value in argv
-    // and breaks if the token contains `"`, `$`, or `` ` ``.
-    const sbxEnvironmentFlags =
-      arguments_.secretsFile === undefined
-        ? ""
-        : `${BUILD_SECRET_NAMES.map((name) => `-e ${name}`).join(" ")} `;
-    const lines: string[] = [];
-    if (arguments_.secretsFile !== undefined) {
-      lines.push(sourceSecretsLine(arguments_.secretsFile));
-    }
-    lines.push(
-      `_p=$(cat ${shellSingleQuote(arguments_.promptFile)})`,
-      `rm -rf ${shellSingleQuote(promptDir)}`,
-      `exec sbx exec -it ${sbxEnvironmentFlags}-w ${shellSingleQuote(arguments_.worktreeDir)} ${shellSingleQuote(arguments_.sandboxName)} sh -lc ${shellSingleQuote(innerCommand)} sh "$_p"`,
-    );
-    return lines.join(" && ");
-  }
-
-  // Skip the wrap if `cmd` already starts with `safehouse` so configs
-  // that predate the isolation strategy don't double-wrap.
+  // Skip the wrap if `cmd` already starts with `safehouse` so legacy
+  // configs don't double-wrap.
   const cmdStartsWithSafehouse = /^safehouse(\s|$)/.test(arguments_.definition.cmd);
-  const wrapped =
-    arguments_.strategy === "safehouse" && !cmdStartsWithSafehouse
-      ? [shellSingleQuote(SAFEHOUSE_CLEARANCE_WRAPPER_PATH), agentCmd].join(" ")
-      : agentCmd;
+  const wrapped = cmdStartsWithSafehouse
+    ? agentCmd
+    : [shellSingleQuote(SAFEHOUSE_CLEARANCE_WRAPPER_PATH), agentCmd].join(" ");
   const lines: string[] = [`cd ${shellSingleQuote(arguments_.worktreeDir)}`];
   if (arguments_.secretsFile !== undefined) {
     lines.push(sourceSecretsLine(arguments_.secretsFile));
@@ -163,7 +120,6 @@ export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArgument
   const agentCmd = renderAgentCommand({
     agentCmd: arguments_.definition.cmd,
     worktreeDir: arguments_.worktreeDir,
-    sandboxName: "",
   });
   const uploadedFiles = [
     `--file ${shellSingleQuote(`${arguments_.promptFile}:${arguments_.remotePromptFile}`)}`,
@@ -183,7 +139,7 @@ export function buildSpriteLaunchCommand(arguments_: SpriteLaunchCommandArgument
   if (arguments_.remoteSecretsFile !== undefined) {
     remoteLines.push(sourceSecretsLine(arguments_.remoteSecretsFile));
   }
-  remoteLines.push(setupWithStatusReporting(DEFAULT_SANDBOX_SETUP_COMMAND));
+  remoteLines.push(setupWithStatusReporting(DEFAULT_REMOTE_SETUP_COMMAND));
   if (arguments_.remoteSecretsFile !== undefined) {
     remoteLines.push(unsetSecretsLine(arguments_.secretNames));
   }

@@ -35,28 +35,15 @@ export const config: Config = {
   //
   // models: {
   //   default: "claude",
-  //   // How model launch commands are wrapped. "auto" picks safehouse on a
-  //   // supported host (currently macOS) when the binary is installed, then
-  //   // Docker Sandboxes when configured. If neither isolated runner is
-  //   // available, setup fails; set "none" explicitly to run directly.
-  //   // Override to "safehouse", "docker", or "none" to pin a strategy.
-  //   isolation: "auto",
   //   // Additive: defaults for `claude` and `codex` are merged in unless you
   //   // re-declare those keys here. Add a third agent (e.g. `cursor`) by
   //   // dropping it in this map and tagging tickets with `agent-cursor`.
+  //   // Local runs on macOS are always wrapped with Safehouse/clearance.
+  //   // Linux/WSL users should label tickets `agent-remote` to use Sprite.
   //   definitions: {
   //     cursor: {
   //       cmd: "cursor-agent",
   //       color: "#929292",
-  //       // Optional per-model override of `models.isolation`:
-  //       // isolation: "docker",
-  //       // Optional for Docker Sandboxes-backed agents:
-  //       // sandbox: {
-  //       //   agent: "cursor",
-  //       //   template: "groundcrew-node24:latest",
-  //       //   kits: ["./.sbx/kit"],
-  //       //   setupCommand: "npm clean-install",
-  //       // },
   //     },
   //   },
   // },

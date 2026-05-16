@@ -58,9 +58,9 @@ describe(runCommand, () => {
   it("inherits stdio for interactive commands and returns nothing", () => {
     execFileMock.mockReturnValue("");
 
-    runCommand("sbx", ["run", "groundcrew"], { stdio: "inherit" });
+    runCommand("bash", ["-lc", "echo ready"], { stdio: "inherit" });
 
-    expect(execFileMock).toHaveBeenCalledWith("sbx", ["run", "groundcrew"], {
+    expect(execFileMock).toHaveBeenCalledWith("bash", ["-lc", "echo ready"], {
       cwd: undefined,
       maxBuffer: 10 * 1024 * 1024,
       stdio: "inherit",
@@ -225,11 +225,11 @@ describe(runCommandAsync, () => {
     const child = makeChildProcess();
     spawnMock.mockReturnValue(child);
 
-    const promise = runCommandAsync("sbx", ["run", "groundcrew"], { stdio: "inherit" });
+    const promise = runCommandAsync("bash", ["-lc", "echo ready"], { stdio: "inherit" });
     child.emit("close", 0, null);
 
     await expect(promise).resolves.toBeUndefined();
-    expect(spawnMock).toHaveBeenCalledWith("sbx", ["run", "groundcrew"], {
+    expect(spawnMock).toHaveBeenCalledWith("bash", ["-lc", "echo ready"], {
       cwd: undefined,
       detached: false,
       stdio: "inherit",

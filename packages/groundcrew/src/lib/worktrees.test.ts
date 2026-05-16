@@ -70,7 +70,7 @@ function makeConfig(overrides: {
       pollIntervalMilliseconds: 1000,
       sessionLimitPercentage: 85,
     },
-    models: { default: "claude", isolation: "auto", definitions: models },
+    models: { default: "claude", definitions: models },
     prompts: { initial: "x" },
     workspaceKind: "auto",
     logging: { file: "/tmp/groundcrew-test.log" },
@@ -168,61 +168,14 @@ describe(list, () => {
     expect(list(config)).toStrictEqual([]);
   });
 
-  it("finds sandbox worktrees under each repo's .sbx/-worktrees/", () => {
+  it("ignores legacy .sbx worktree directories", () => {
     const repoDir = join(projectDir, "repo-a");
     const sandboxRoot = join(repoDir, ".sbx", "groundcrew-repo-a-claude-worktrees");
     mkdirSync(sandboxRoot, { recursive: true });
     mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
+    const config = makeConfig({ projectDir });
 
-    expect(list(config)).toStrictEqual([
-      {
-        repository: "repo-a",
-        ticket: "team-1",
-        branchName: "rocky-team-1",
-        dir: join(sandboxRoot, "rocky-team-1"),
-        kind: "sandbox",
-        sandboxName: "groundcrew-repo-a-claude",
-      },
-    ]);
-  });
-
-  it("ignores non-directory entries and non-matching names inside sandbox roots", () => {
-    const sandboxRoot = join(projectDir, "repo-a", ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    mkdirSync(join(sandboxRoot, "not-a-ticket"));
-    writeFileSync(join(sandboxRoot, "stray-file"), "");
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-
-    const actual = list(config);
-
-    expect(actual.map((entry) => entry.dir)).toStrictEqual([join(sandboxRoot, "rocky-team-1")]);
-  });
-
-  it("returns BOTH kinds when the same ticket has a host and a sandbox worktree", () => {
-    const repoDir = join(projectDir, "repo-a");
-    mkdirSync(repoDir);
-    mkdirSync(join(projectDir, "repo-a-team-1"));
-    const sandboxRoot = join(repoDir, ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-
-    const actual = list(config);
-
-    expect(actual).toHaveLength(2);
-    expect(actual.map((entry) => entry.kind).toSorted()).toStrictEqual(["host", "sandbox"]);
-    expect(actual.every((entry) => entry.ticket === "team-1")).toBe(true);
+    expect(list(config)).toStrictEqual([]);
   });
 
   it("includes locally tracked Sprite worktrees", () => {
@@ -283,20 +236,24 @@ describe(findByTicket, () => {
   setupTempProjectDir();
 
   it("returns every entry matching the ticket regardless of repo or kind", () => {
-    const repoDir = join(projectDir, "repo-a");
-    mkdirSync(repoDir);
     mkdirSync(join(projectDir, "repo-a-team-1"));
-    const sandboxRoot = join(repoDir, ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
+    mkdirSync(join(projectDir, "repo-b-team-1"));
+    const config = makeConfig({ projectDir, knownRepositories: ["repo-a", "repo-b"] });
+    writeSpriteState([
+      {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+        kind: "sprite",
+        spriteName: "crew-claude-1",
+        remoteRepoDir: "/home/sprite/dev/repo-a",
+      },
+    ]);
 
     const actual = findByTicket(config, "team-1");
 
-    expect(actual).toHaveLength(2);
+    expect(actual).toHaveLength(3);
   });
 
   it("returns an empty array when the ticket has no worktree", () => {
@@ -319,21 +276,6 @@ describe(findByBranch, () => {
     expect(actual?.dir).toBe(join(projectDir, "repo-a-team-1"));
   });
 
-  it("matches a sandbox worktree by branch name", () => {
-    const sandboxRoot = join(projectDir, "repo-a", ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-
-    const actual = findByBranch(config, "repo-a", "rocky-team-1");
-
-    expect(actual?.kind).toBe("sandbox");
-    expect(actual?.sandboxName).toBe("groundcrew-repo-a-claude");
-  });
-
   it("returns undefined when no branch matches", () => {
     const config = makeConfig({ projectDir });
 
@@ -344,15 +286,6 @@ describe(findByBranch, () => {
 describe(create, () => {
   setupTempProjectDir();
 
-  function mockSandboxLs(sandboxName: string): void {
-    runCommandMock.mockImplementation((cmd, arguments_) => {
-      if (cmd === "sbx" && arguments_[0] === "ls") {
-        return `SANDBOX AGENT STATUS\n${sandboxName} claude stopped\n`;
-      }
-      return "";
-    });
-  }
-
   it("fetches origin/main then runs git worktree add for the host strategy", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const config = makeConfig({ projectDir });
@@ -361,7 +294,6 @@ describe(create, () => {
       repository: "repo-a",
       ticket: "team-1",
       model: "claude",
-      strategy: "none",
     });
 
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -387,35 +319,6 @@ describe(create, () => {
     expect(actual.dir).toBe(join(projectDir, "repo-a-team-1"));
   });
 
-  it("runs sbx run --branch for the docker strategy and skips the host fetch", async () => {
-    mkdirSync(join(projectDir, "repo-a"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-    mockSandboxLs("groundcrew-repo-a-claude");
-
-    const actual = await create(config, {
-      repository: "repo-a",
-      ticket: "team-1",
-      model: "claude",
-      strategy: "docker",
-    });
-
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sbx",
-      ["run", "--branch", "rocky-team-1", "groundcrew-repo-a-claude", "--", "--version"],
-      { stdio: "inherit", timeoutMs: 0 },
-    );
-    expect(runCommandMock).not.toHaveBeenCalledWith(
-      "git",
-      expect.arrayContaining(["fetch"]),
-      expect.anything(),
-    );
-    expect(actual.kind).toBe("sandbox");
-    expect(actual.sandboxName).toBe("groundcrew-repo-a-claude");
-  });
-
   it("creates a Sprite worktree using the host-computed branch name", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const config = makeConfig({ projectDir });
@@ -424,7 +327,6 @@ describe(create, () => {
       repository: "repo-a",
       ticket: "team-1",
       model: "claude",
-      strategy: "none",
       runner: "sprite",
     });
 
@@ -461,7 +363,6 @@ describe(create, () => {
       repository: "ClipboardHealth/repo-a",
       ticket: "team-1",
       model: "claude",
-      strategy: "none",
       runner: "sprite",
     });
 
@@ -482,6 +383,20 @@ describe(create, () => {
     });
   });
 
+  it("rejects unknown workspace runners instead of falling back to host worktrees", async () => {
+    mkdirSync(join(projectDir, "repo-a"));
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      create(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        model: "claude",
+        runner: "docker",
+      } as unknown as Parameters<typeof create>[1]),
+    ).rejects.toThrow(/Unknown workspace runner: "docker"/);
+  });
+
   it("strips .git suffixes from Sprite remote directory names", async () => {
     mkdirSync(join(projectDir, "repo-a.git"));
     const config = makeConfig({ projectDir, knownRepositories: ["repo-a.git"] });
@@ -490,7 +405,6 @@ describe(create, () => {
       repository: "repo-a.git",
       ticket: "team-1",
       model: "claude",
-      strategy: "none",
       runner: "sprite",
     });
 
@@ -508,58 +422,11 @@ describe(create, () => {
       repository: "repo-a",
       ticket: "team-1",
       model: "claude",
-      strategy: "none",
       runner: "sprite",
     });
 
     expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
     expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
-  });
-
-  it("passes AbortSignal through sandbox existence and creation commands", async () => {
-    mkdirSync(join(projectDir, "repo-a"));
-    const { signal } = new AbortController();
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-    mockSandboxLs("groundcrew-repo-a-claude");
-
-    await create(
-      config,
-      { repository: "repo-a", ticket: "team-1", model: "claude", strategy: "docker" },
-      signal,
-    );
-
-    expect(runCommandMock).toHaveBeenCalledWith("sbx", ["ls"], { signal });
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sbx",
-      ["run", "--branch", "rocky-team-1", "groundcrew-repo-a-claude", "--", "--version"],
-      { stdio: "inherit", timeoutMs: 0, signal },
-    );
-  });
-
-  it("rejects the docker strategy when the persistent sandbox is missing", async () => {
-    mkdirSync(join(projectDir, "repo-a"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-    // Default mock returns "" for `sbx ls`, so sandboxExists returns false.
-
-    await expect(
-      create(config, {
-        repository: "repo-a",
-        ticket: "team-1",
-        model: "claude",
-        strategy: "docker",
-      }),
-    ).rejects.toThrow(/crew sandbox auth repo-a --model claude/);
-    expect(runCommandMock).not.toHaveBeenCalledWith(
-      "sbx",
-      expect.arrayContaining(["run", "--branch"]),
-      expect.anything(),
-    );
   });
 
   it("rejects when a host worktree already exists for the same ticket", async () => {
@@ -572,28 +439,6 @@ describe(create, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        strategy: "none",
-      }),
-    ).rejects.toThrow(/already exists/);
-  });
-
-  it("rejects when a sandbox worktree already exists for the same ticket (cross-strategy)", async () => {
-    const sandboxRoot = join(projectDir, "repo-a", ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-
-    // A user switching strategy mid-flight: now "none" but a sandbox dir
-    // is left over. create() must refuse so we don't shadow the leftover.
-    await expect(
-      create(config, {
-        repository: "repo-a",
-        ticket: "team-1",
-        model: "claude",
-        strategy: "none",
       }),
     ).rejects.toThrow(/already exists/);
   });
@@ -618,24 +463,9 @@ describe(create, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        strategy: "none",
         runner: "sprite",
       }),
     ).rejects.toThrow(/already exists/);
-  });
-
-  it("rejects the docker strategy when the model has no sandbox config", async () => {
-    mkdirSync(join(projectDir, "repo-a"));
-    const config = makeConfig({ projectDir });
-
-    await expect(
-      create(config, {
-        repository: "repo-a",
-        ticket: "team-1",
-        model: "claude",
-        strategy: "docker",
-      }),
-    ).rejects.toThrow(/no sandbox config/);
   });
 
   it("rejects unknown repositories", async () => {
@@ -646,7 +476,6 @@ describe(create, () => {
         repository: "ghost",
         ticket: "team-1",
         model: "claude",
-        strategy: "none",
       }),
     ).rejects.toThrow(/not in workspace.knownRepositories/);
   });
@@ -659,7 +488,6 @@ describe(create, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        strategy: "none",
       }),
     ).rejects.toThrow(/Repository not found/);
   });
@@ -685,7 +513,6 @@ describe(create, () => {
         repository: "repo-a",
         ticket,
         model: "claude",
-        strategy: "none",
       }),
     ).rejects.toThrow(/must be a plain ticket id/);
   });
@@ -700,7 +527,6 @@ describe(create, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        strategy: "none",
       }),
     ).rejects.toThrow(/Could not determine OS username/);
   });
@@ -791,87 +617,6 @@ describe(remove, () => {
     );
   });
 
-  it("dispatches `sbx exec git worktree remove` for a sandbox entry", async () => {
-    const sandboxRoot = join(projectDir, "repo-a", ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-
-    await remove(
-      config,
-      {
-        repository: "repo-a",
-        ticket: "team-1",
-        branchName: "rocky-team-1",
-        dir: join(sandboxRoot, "rocky-team-1"),
-        kind: "sandbox",
-        sandboxName: "groundcrew-repo-a-claude",
-      },
-      { force: true },
-    );
-
-    expect(runCommandMock).toHaveBeenCalledWith(
-      "sbx",
-      [
-        "exec",
-        "groundcrew-repo-a-claude",
-        "git",
-        "-C",
-        join(projectDir, "repo-a"),
-        "worktree",
-        "remove",
-        "--force",
-        join(sandboxRoot, "rocky-team-1"),
-      ],
-      { stdio: "inherit", timeoutMs: 0 },
-    );
-    expect(runCommandMock).toHaveBeenCalledWith("sbx", [
-      "exec",
-      "groundcrew-repo-a-claude",
-      "git",
-      "-C",
-      join(projectDir, "repo-a"),
-      "branch",
-      "-D",
-      "rocky-team-1",
-    ]);
-  });
-
-  it("does not throw when sandbox branch deletion fails", async () => {
-    const sandboxRoot = join(projectDir, "repo-a", ".sbx", "groundcrew-repo-a-claude-worktrees");
-    mkdirSync(sandboxRoot, { recursive: true });
-    mkdirSync(join(sandboxRoot, "rocky-team-1"));
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-    runCommandMock.mockImplementation((_cmd, arguments_) => {
-      // oxlint-disable-next-line jest/no-conditional-in-test -- discriminator selects the branch-D call to fail; mirrors the real failure shape
-      const includesBranchDelete = Array.isArray(arguments_) && arguments_.includes("-D");
-      // oxlint-disable-next-line jest/no-conditional-in-test -- as above
-      if (includesBranchDelete) {
-        throw new Error("sbx exec failed");
-      }
-      return "";
-    });
-
-    const callRemove = async (): Promise<void> => {
-      await remove(config, {
-        repository: "repo-a",
-        ticket: "team-1",
-        branchName: "rocky-team-1",
-        dir: join(sandboxRoot, "rocky-team-1"),
-        kind: "sandbox",
-        sandboxName: "groundcrew-repo-a-claude",
-      });
-    };
-
-    await expect(callRemove()).resolves.toBeUndefined();
-  });
-
   it("does not throw when host branch deletion fails", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     mkdirSync(join(projectDir, "repo-a-team-1"));
@@ -943,6 +688,20 @@ describe(remove, () => {
     ).rejects.toThrow(/missing spriteName/);
   });
 
+  it("rejects unknown worktree kinds instead of falling back to host removal", async () => {
+    const config = makeConfig({ projectDir });
+
+    await expect(
+      remove(config, {
+        repository: "repo-a",
+        ticket: "team-1",
+        branchName: "rocky-team-1",
+        dir: "/work/repo-a-team-1",
+        kind: "sandbox",
+      } as unknown as WorktreeEntry),
+    ).rejects.toThrow(/Unknown worktree kind: "sandbox"/);
+  });
+
   it("rejects malformed Sprite entries without remoteRepoDir", async () => {
     const config = makeConfig({ projectDir });
 
@@ -959,6 +718,18 @@ describe(remove, () => {
   });
 });
 
+function spriteEntry(ticket: string): WorktreeEntry {
+  return {
+    repository: "repo-a",
+    ticket,
+    branchName: `rocky-${ticket}`,
+    dir: `/home/sprite/groundcrew/worktrees/repo-a-${ticket}`,
+    kind: "sprite",
+    spriteName: "crew-claude-1",
+    remoteRepoDir: "/home/sprite/dev/repo-a",
+  };
+}
+
 describe(teardown, () => {
   setupTempProjectDir();
   const workspacesProbeMock = vi.mocked(workspaces.probe);
@@ -974,23 +745,6 @@ describe(teardown, () => {
       branchName: `rocky-${ticket}`,
       dir: join(projectDir, `repo-a-${ticket}`),
       kind: "host",
-    };
-  }
-
-  function sandboxEntry(ticket: string): WorktreeEntry {
-    return {
-      repository: "repo-a",
-      ticket,
-      branchName: `rocky-${ticket}`,
-      dir: join(
-        projectDir,
-        "repo-a",
-        ".sbx",
-        "groundcrew-repo-a-claude-worktrees",
-        `rocky-${ticket}`,
-      ),
-      kind: "sandbox",
-      sandboxName: "groundcrew-repo-a-claude",
     };
   }
 
@@ -1074,10 +828,10 @@ describe(teardown, () => {
     expect(readSpriteStateEntries()).toStrictEqual([entry]);
   });
 
-  it("dedupes the workspace close across host+sandbox kinds for one ticket", async () => {
+  it("dedupes the workspace close across host and Sprite entries for one ticket", async () => {
     workspacesProbeMock.mockResolvedValue({ kind: "ok", names: new Set(["team-1"]) });
     const config = makeConfig({ projectDir });
-    const entries = [hostEntry("team-1"), sandboxEntry("team-1")];
+    const entries = [hostEntry("team-1"), spriteEntry("team-1")];
 
     const result = await teardown(config, entries);
 
@@ -1133,11 +887,8 @@ describe(teardown, () => {
 
   it("only best-effort closes a ticket once when duplicate entries exist and probe is unavailable", async () => {
     workspacesProbeMock.mockResolvedValue({ kind: "unavailable" });
-    const config = makeConfig({
-      projectDir,
-      models: { claude: { cmd: "claude", color: "#fff", sandbox: { agent: "claude" } } },
-    });
-    const entries = [hostEntry("team-1"), sandboxEntry("team-1")];
+    const config = makeConfig({ projectDir });
+    const entries = [hostEntry("team-1"), spriteEntry("team-1")];
 
     const result = await teardown(config, entries);
 
