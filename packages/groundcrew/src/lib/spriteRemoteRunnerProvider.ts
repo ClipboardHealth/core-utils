@@ -186,6 +186,13 @@ function repositoryDirectoryName(owner: string, repository: string): string {
   return normalizedSlug.replaceAll("/", "--");
 }
 
+function worktreeTicketComponent(ticket: string): string {
+  if (ticket.includes("/") || ticket.includes("\\") || ticket.includes("..")) {
+    throw new Error(`Invalid ticket for remote worktree path: ${JSON.stringify(ticket)}`);
+  }
+  return ticket;
+}
+
 function spriteCreateWorktreeCommand(arguments_: {
   owner: string;
   repository: string;
@@ -329,7 +336,7 @@ export const spriteRemoteRunnerProvider: RemoteRunnerProvider = {
     const remoteRepoDir = remotePathJoin(config.repoRoot, remoteRepositoryName);
     const remoteWorktreeDir = remotePathJoin(
       config.worktreeRoot,
-      `${remoteRepositoryName}-${ticket}`,
+      `${remoteRepositoryName}-${worktreeTicketComponent(ticket)}`,
     );
 
     await runCommandAsync(

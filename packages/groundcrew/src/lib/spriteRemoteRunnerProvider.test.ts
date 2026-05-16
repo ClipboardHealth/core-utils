@@ -222,6 +222,30 @@ describe("Sprite remote runner provider", () => {
     expect(script).toContain("repo_dir='/srv/repos/TeamB--tools'");
   });
 
+  it("rejects unsafe ticket path components before creating remote worktrees", async () => {
+    const config = remoteConfig();
+
+    await expect(
+      spriteRemoteRunnerProvider.createWorktree({
+        config,
+        repository: "tools.git",
+        ticket: "GC/../../other",
+        branchName: "feature/remote-runner",
+        baseBranch: "main",
+      }),
+    ).rejects.toThrow(/Invalid ticket for remote worktree path/);
+    await expect(
+      spriteRemoteRunnerProvider.createWorktree({
+        config,
+        repository: "tools.git",
+        ticket: String.raw`GC\12`,
+        branchName: "feature/remote-runner",
+        baseBranch: "main",
+      }),
+    ).rejects.toThrow(/Invalid ticket for remote worktree path/);
+    expect(runCommandMock).not.toHaveBeenCalled();
+  });
+
   it("removes remote worktrees through the entry runner and repository", async () => {
     const config = remoteConfig();
     runCommandMock.mockResolvedValue("");
