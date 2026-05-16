@@ -19,8 +19,9 @@ function spriteEntry(ticket: string): WorktreeEntry {
     ticket,
     branchName: `rocky-${ticket}`,
     dir: `/home/sprite/groundcrew/worktrees/repo-a-${ticket}`,
-    kind: "sprite",
-    spriteName: "crew-claude-1",
+    kind: "remote",
+    remoteProvider: "sprite",
+    remoteRunnerName: "crew-claude-1",
     remoteRepoDir: "/home/sprite/dev/repo-a",
   };
 }
@@ -72,7 +73,7 @@ describe(logTeardown, () => {
     const out = consoleLog.output();
     expect(out).toContain("Cleanup complete for team-1 (host)");
     expect(out).toContain("/work/repo-a-team-1 (removed)");
-    expect(out).toContain("Cleanup complete for team-2 (sprite)");
+    expect(out).toContain("Cleanup complete for team-2 (remote)");
     expect(out).toContain("/home/sprite/groundcrew/worktrees/repo-a-team-2 (removed)");
   });
 
@@ -156,7 +157,7 @@ describe(recordTeardownEvents, () => {
       "event=cleanup outcome=cleaned ticket=team-1 repository=repo-a kind=host",
     );
     expect(out).toContain(
-      "event=cleanup outcome=cleaned ticket=team-2 repository=repo-a kind=sprite",
+      "event=cleanup outcome=cleaned ticket=team-2 repository=repo-a kind=remote",
     );
   });
 

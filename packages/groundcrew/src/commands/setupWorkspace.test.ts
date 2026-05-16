@@ -136,8 +136,9 @@ function spriteEntry(): WorktreeEntry {
     ticket: "team-1",
     branchName: "rocky-team-1",
     dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-    kind: "sprite",
-    spriteName: "crew-claude-1",
+    kind: "remote",
+    remoteProvider: "sprite",
+    remoteRunnerName: "crew-claude-1",
     remoteRepoDir: "/home/sprite/dev/repo-a",
   };
 }
@@ -173,13 +174,12 @@ function makeConfig(overrides: Partial<ResolvedConfig["models"]> = {}): Resolved
     workspaceKind: "auto",
     logging: { file: "/tmp/groundcrew-test.log" },
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
     },
   };
 }
@@ -253,7 +253,7 @@ describe(setupWorkspace, () => {
       isSafehouseSupported: true,
     });
     createMock.mockImplementation(async (_config, spec) => {
-      if (spec.runner === "sprite") {
+      if (spec.runner === "remote") {
         return spriteEntry();
       }
       return hostEntry();
@@ -299,7 +299,7 @@ describe(setupWorkspace, () => {
     );
   });
 
-  it("launches the Sprite runner from a local cwd and skips local Safehouse setup", async () => {
+  it("launches the remote runner from a local cwd and skips local Safehouse setup", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: false,
       hasCmux: true,
@@ -314,7 +314,7 @@ describe(setupWorkspace, () => {
       ticket: "team-1",
       repository: "repo-a",
       model: "claude",
-      runner: "sprite",
+      runner: "remote",
     });
 
     expect(ensureClearanceMock).not.toHaveBeenCalled();
@@ -324,7 +324,7 @@ describe(setupWorkspace, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        runner: "sprite",
+        runner: "remote",
       }),
     );
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -345,7 +345,7 @@ describe(setupWorkspace, () => {
     expect(remoteCommand).toContain('exec claude --auto "$_p"');
   });
 
-  it("keeps the Sprite cmux command short by staging the full launcher in a local script", async () => {
+  it("keeps the remote cmux command short by staging the full launcher in a local script", async () => {
     const config = makeConfig();
     mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
 
@@ -353,7 +353,7 @@ describe(setupWorkspace, () => {
       ticket: "team-1",
       repository: "repo-a",
       model: "claude",
-      runner: "sprite",
+      runner: "remote",
     });
 
     const command = lastRunArgumentFromCallWithArgument("new-workspace");
@@ -366,7 +366,7 @@ describe(setupWorkspace, () => {
     expect(launchScript).toContain("sprite exec --tty");
   });
 
-  it("uses configured Sprite build-secret names without exposing values in the final command", async () => {
+  it("uses configured remote build-secret names without exposing values in the final command", async () => {
     setEnvironmentVariable("NPM_TOKEN", "npm_test_token");
     setEnvironmentVariable("BUF_TOKEN", "buf_test_token");
     const config = makeConfig();
@@ -377,7 +377,7 @@ describe(setupWorkspace, () => {
         ticket: "team-1",
         repository: "repo-a",
         model: "claude",
-        runner: "sprite",
+        runner: "remote",
       });
 
       expect(writeFileMock).toHaveBeenCalledWith(
@@ -401,7 +401,7 @@ describe(setupWorkspace, () => {
     }
   });
 
-  it("passes an AbortSignal into Sprite worktree creation and workspace launch", async () => {
+  it("passes an AbortSignal into remote worktree creation and workspace launch", async () => {
     const config = makeConfig();
     const { signal } = new AbortController();
     mockCmuxNewWorkspaceOutput(JSON.stringify({ ref: "workspace:42" }));
@@ -412,7 +412,7 @@ describe(setupWorkspace, () => {
         ticket: "team-1",
         repository: "repo-a",
         model: "claude",
-        runner: "sprite",
+        runner: "remote",
       },
       { signal },
     );
@@ -423,7 +423,7 @@ describe(setupWorkspace, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        runner: "sprite",
+        runner: "remote",
       }),
       signal,
     );
@@ -723,7 +723,7 @@ describe(setupWorkspace, () => {
     expect(rmMock).toHaveBeenCalledWith("/tmp/groundcrew-team-1-x", expect.anything());
   });
 
-  it("rolls back the Sprite worktree when workspace launch fails", async () => {
+  it("rolls back the remote worktree when workspace launch fails", async () => {
     const config = makeConfig();
     mockCmuxFailure();
 
@@ -732,7 +732,7 @@ describe(setupWorkspace, () => {
         ticket: "team-1",
         repository: "repo-a",
         model: "claude",
-        runner: "sprite",
+        runner: "remote",
       }),
     ).rejects.toThrow(/cmux down/);
 
@@ -740,7 +740,7 @@ describe(setupWorkspace, () => {
       config,
       [
         expect.objectContaining({
-          kind: "sprite",
+          kind: "remote",
           dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
         }),
       ],
@@ -953,7 +953,7 @@ describe(setupWorkspaceCli, () => {
       isSafehouseSupported: true,
     });
     createMock.mockImplementation(async (_config, spec) =>
-      spec.runner === "sprite" ? spriteEntry() : hostEntry(),
+      spec.runner === "remote" ? spriteEntry() : hostEntry(),
     );
     mkdtempMock.mockReturnValue("/tmp/groundcrew-team-1-x");
     runCommandMock.mockReturnValue(JSON.stringify({ ref: "workspace:1" }));
@@ -1026,7 +1026,7 @@ describe(setupWorkspaceCli, () => {
 
     expect(createMock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ model: "codex", runner: "sprite" }),
+      expect.objectContaining({ model: "codex", runner: "remote" }),
     );
   });
 

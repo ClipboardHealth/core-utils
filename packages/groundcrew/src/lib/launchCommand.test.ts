@@ -1,5 +1,8 @@
 import { DEFAULT_REMOTE_SETUP_COMMAND, type ModelDefinition } from "./config.ts";
-import { buildLaunchCommand, buildSpriteLaunchCommand } from "./launchCommand.ts";
+import { buildLaunchCommand, buildRemoteLaunchCommand } from "./launchCommand.ts";
+import { spriteRemoteRunnerProvider } from "./spriteRemoteRunnerProvider.ts";
+
+const REMOTE_SECRET_NAMES = ["NPM_TOKEN", "BUF_TOKEN"] as const;
 
 function arguments_(
   overrides: Partial<Parameters<typeof buildLaunchCommand>[0]> = {},
@@ -12,16 +15,24 @@ function arguments_(
   };
 }
 
-function spriteArguments(
-  overrides: Partial<Parameters<typeof buildSpriteLaunchCommand>[0]> = {},
-): Parameters<typeof buildSpriteLaunchCommand>[0] {
+function remoteArguments(
+  overrides: Partial<Parameters<typeof buildRemoteLaunchCommand>[0]> = {},
+): Parameters<typeof buildRemoteLaunchCommand>[0] {
   return {
     definition: { cmd: "claude --worktree {{worktree}}", color: "#fff" } satisfies ModelDefinition,
-    spriteName: "crew-claude-1",
+    provider: spriteRemoteRunnerProvider,
+    remoteConfig: {
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: [...REMOTE_SECRET_NAMES],
+    },
     promptFile: "/tmp/prompt-team-1/prompt.txt",
     remotePromptFile: "/tmp/groundcrew-team-1-prompt.txt",
     worktreeDir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-    secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
+    secretNames: [...REMOTE_SECRET_NAMES],
     ...overrides,
   };
 }
@@ -38,6 +49,10 @@ describe(buildLaunchCommand, () => {
     expect(DEFAULT_REMOTE_SETUP_COMMAND).not.toContain("then ;");
     expect(DEFAULT_REMOTE_SETUP_COMMAND).toContain('nvm install "$required_node"');
     expect(DEFAULT_REMOTE_SETUP_COMMAND).toContain('n_path="$(command -v n || true)"');
+    expect(DEFAULT_REMOTE_SETUP_COMMAND).toContain(
+      'if "$n_path" "$required_node"; then :; elif command -v sudo >/dev/null 2>&1; then sudo "$n_path" "$required_node"; else exit 1; fi',
+    );
+    expect(DEFAULT_REMOTE_SETUP_COMMAND).not.toContain('sudo "$n_path" "$required_node" &&');
   });
 
   it("cd's into the worktree, runs setup, then execs the Safehouse-wrapped agent with the prompt", () => {
@@ -133,15 +148,15 @@ describe(buildLaunchCommand, () => {
   });
 });
 
-describe(buildSpriteLaunchCommand, () => {
+describe(buildRemoteLaunchCommand, () => {
   it("keeps the host command on one physical line for cmux", () => {
-    const out = buildSpriteLaunchCommand(spriteArguments());
+    const out = buildRemoteLaunchCommand(remoteArguments());
 
     expect(out).not.toContain("\n");
   });
 
   it("uploads the prompt, runs in the remote worktree, and execs the agent with the prompt", () => {
-    const out = buildSpriteLaunchCommand(spriteArguments());
+    const out = buildRemoteLaunchCommand(remoteArguments());
     const remoteCommand = decodedSpriteRemoteCommand(out);
 
     expect(out).toContain("cleanup() { rm -rf '/tmp/prompt-team-1'; }");
@@ -158,8 +173,8 @@ describe(buildSpriteLaunchCommand, () => {
   });
 
   it("uploads build secrets for setup only and clears configured names before agent exec", () => {
-    const out = buildSpriteLaunchCommand(
-      spriteArguments({
+    const out = buildRemoteLaunchCommand(
+      remoteArguments({
         secretsFile: "/tmp/prompt-team-1/secrets.env",
         remoteSecretsFile: "/tmp/groundcrew-team-1-secrets.env",
       }),
@@ -182,9 +197,9 @@ describe(buildSpriteLaunchCommand, () => {
     );
   });
 
-  it("substitutes {{sandbox}} with an empty value for the Sprite runner", () => {
-    const out = buildSpriteLaunchCommand(
-      spriteArguments({
+  it("substitutes {{sandbox}} with an empty value for the remote runner", () => {
+    const out = buildRemoteLaunchCommand(
+      remoteArguments({
         definition: {
           cmd: "claude --sandbox {{sandbox}} --worktree {{worktree}}",
           color: "#fff",

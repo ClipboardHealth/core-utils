@@ -121,8 +121,9 @@ describe("loadConfig", () => {
       "codex --dangerously-bypass-approvals-and-sandbox",
     );
     expect(actual.prompts.initial).toContain("{{ticket}}");
-    expect(actual.remote.sprite).toStrictEqual({
-      spriteName: "crew-claude-1",
+    expect(actual.remote).toStrictEqual({
+      provider: "sprite",
+      runnerName: "crew-claude-1",
       owner: "ClipboardHealth",
       repoRoot: "/home/sprite/dev",
       worktreeRoot: "/home/sprite/groundcrew/worktrees",
@@ -130,20 +131,19 @@ describe("loadConfig", () => {
     });
   });
 
-  it("accepts remote Sprite config overrides", async () => {
+  it("accepts remote runner config overrides", async () => {
     const path = writeConfigFile(
       temporary,
       configSource({
         linear: { ...VALID_LINEAR },
         workspace: VALID_WORKSPACE(temporary),
         remote: {
-          sprite: {
-            spriteName: "crew-codex-1",
-            owner: "ClipboardHealth",
-            repoRoot: "/srv/repos",
-            worktreeRoot: "/srv/worktrees",
-            secretNames: ["NPM_TOKEN", "CUSTOM_BUILD_TOKEN"],
-          },
+          provider: "sprite",
+          runnerName: "crew-codex-1",
+          owner: "ClipboardHealth",
+          repoRoot: "/srv/repos",
+          worktreeRoot: "/srv/worktrees",
+          secretNames: ["NPM_TOKEN", "CUSTOM_BUILD_TOKEN"],
         },
       }),
     );
@@ -152,8 +152,9 @@ describe("loadConfig", () => {
     const { loadConfig } = await loadFreshConfig();
     const actual = await loadConfig();
 
-    expect(actual.remote.sprite).toStrictEqual({
-      spriteName: "crew-codex-1",
+    expect(actual.remote).toStrictEqual({
+      provider: "sprite",
+      runnerName: "crew-codex-1",
       owner: "ClipboardHealth",
       repoRoot: "/srv/repos",
       worktreeRoot: "/srv/worktrees",
@@ -161,36 +162,72 @@ describe("loadConfig", () => {
     });
   });
 
-  it("rejects empty remote Sprite names", async () => {
+  it("rejects empty remote runner names", async () => {
     const path = writeConfigFile(
       temporary,
       configSource({
         linear: { ...VALID_LINEAR },
         workspace: VALID_WORKSPACE(temporary),
-        remote: { sprite: { spriteName: "" } },
+        remote: { runnerName: "" },
       }),
     );
     setEnvironmentVariable("GROUNDCREW_CONFIG", path);
 
     const { loadConfig } = await loadFreshConfig();
 
-    await expect(loadConfig()).rejects.toThrow(/remote\.sprite\.spriteName/);
+    await expect(loadConfig()).rejects.toThrow(/remote\.runnerName/);
   });
 
-  it("rejects invalid remote Sprite secret names", async () => {
+  it("rejects unsupported remote provider names", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  remote: { provider: 'other' },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/remote\.provider must be "sprite"/);
+  });
+
+  it("rejects invalid remote secret names", async () => {
     const path = writeConfigFile(
       temporary,
       configSource({
         linear: { ...VALID_LINEAR },
         workspace: VALID_WORKSPACE(temporary),
-        remote: { sprite: { secretNames: ["bad-name"] } },
+        remote: { secretNames: ["bad-name"] },
       }),
     );
     setEnvironmentVariable("GROUNDCREW_CONFIG", path);
 
     const { loadConfig } = await loadFreshConfig();
 
-    await expect(loadConfig()).rejects.toThrow(/remote\.sprite\.secretNames\[0\]/);
+    await expect(loadConfig()).rejects.toThrow(/remote\.secretNames\[0\]/);
+  });
+
+  it("rejects the legacy remote.sprite config shape", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  remote: { sprite: { runnerName: 'crew-claude-1' } },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(/remote\.sprite is no longer supported/);
   });
 
   it("accepts custom terminal statuses and dedupes them with done", async () => {

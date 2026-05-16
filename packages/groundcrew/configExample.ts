@@ -39,7 +39,7 @@ export const config: Config = {
   //   // re-declare those keys here. Add a third agent (e.g. `cursor`) by
   //   // dropping it in this map and tagging tickets with `agent-cursor`.
   //   // Local runs on macOS are always wrapped with Safehouse/clearance.
-  //   // Linux/WSL users should label tickets `agent-remote` to use Sprite.
+  //   // Linux/WSL users should label tickets `agent-remote` to use the remote runner.
   //   definitions: {
   //     cursor: {
   //       cmd: "cursor-agent",
@@ -65,19 +65,19 @@ export const config: Config = {
   // workspaceKind: "auto",
   //
   // remote: {
-  //   sprite: {
-  //     // Tickets labeled `agent-remote` run through this shared Sprite.
-  //     spriteName: "crew-claude-1",
-  //     // Bare repository names are cloned as `${owner}/${repo}` inside the Sprite.
-  //     owner: "ClipboardHealth",
-  //     // Absolute paths inside the Sprite. Groundcrew creates one shared clone
-  //     // per repo and one remote git worktree per ticket.
-  //     repoRoot: "/home/sprite/dev",
-  //     worktreeRoot: "/home/sprite/groundcrew/worktrees",
-  //     // Build-only env vars forwarded for remote dependency setup, then
-  //     // unset before the agent process starts.
-  //     secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-  //   },
+  //   // Provider implementation. Sprite is currently the only provider.
+  //   provider: "sprite",
+  //   // Tickets labeled `agent-remote` run through this shared remote runner.
+  //   runnerName: "crew-claude-1",
+  //   // Bare repository names are cloned as `${owner}/${repo}` inside the remote runner.
+  //   owner: "ClipboardHealth",
+  //   // Absolute paths inside the remote runner. Groundcrew creates one shared
+  //   // clone per repo and one remote git worktree per ticket.
+  //   repoRoot: "/home/sprite/dev",
+  //   worktreeRoot: "/home/sprite/groundcrew/worktrees",
+  //   // Build-only env vars forwarded for remote dependency setup, then
+  //   // unset before the agent process starts.
+  //   secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
   // },
   //
   // logging: {

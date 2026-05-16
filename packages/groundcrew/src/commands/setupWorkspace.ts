@@ -14,10 +14,11 @@ import {
 import { detectHostCapabilities } from "../lib/host.ts";
 import {
   buildLaunchCommand,
-  buildSpriteLaunchCommand,
+  buildRemoteLaunchCommand,
   shellSingleQuote,
 } from "../lib/launchCommand.ts";
 import { assertLocalRunnerRequirements } from "../lib/localRunner.ts";
+import { getRemoteRunnerProvider } from "../lib/spriteRemoteRunnerProvider.ts";
 import { errorMessage, getLinearClient, log, readEnvironmentVariable } from "../lib/util.ts";
 import { workspaces } from "../lib/workspaces.ts";
 import { repoDirFor, type WorktreeEntry, worktrees } from "../lib/worktrees.ts";
@@ -106,8 +107,8 @@ export async function setupWorkspace(
     throw new Error(`Unknown model: ${model}`);
   }
 
-  if (runner === "sprite") {
-    await setupSpriteWorkspace({
+  if (runner === "remote") {
+    await setupRemoteWorkspace({
       config,
       options: { ...options, runner },
       ...(signal === undefined ? {} : { signal }),
@@ -193,9 +194,9 @@ async function resolveTicketDetails(options: SetupWorkspaceOptions): Promise<Tic
   return await fetchTicket(options.ticket);
 }
 
-async function setupSpriteWorkspace(arguments_: {
+async function setupRemoteWorkspace(arguments_: {
   config: ResolvedConfig;
-  options: SetupWorkspaceOptions & { runner: "sprite" };
+  options: SetupWorkspaceOptions & { runner: "remote" };
   signal?: AbortSignal;
 }): Promise<void> {
   const { config, options, signal } = arguments_;
@@ -206,8 +207,8 @@ async function setupSpriteWorkspace(arguments_: {
     throw new Error(`Unknown model: ${model}`);
   }
 
-  log(`Workspace runner: sprite (${config.remote.sprite.spriteName})`);
-  const spec = { repository, ticket, model, runner: "sprite" as const };
+  log(`Workspace runner: remote (${config.remote.provider}:${config.remote.runnerName})`);
+  const spec = { repository, ticket, model, runner: "remote" as const };
   const created =
     signal === undefined
       ? await worktrees.create(config, spec)
@@ -230,20 +231,21 @@ async function setupSpriteWorkspace(arguments_: {
       }),
     );
 
-    const secretsFile = stageBuildSecrets(promptDir, config.remote.sprite.secretNames);
+    const secretsFile = stageBuildSecrets(promptDir, config.remote.secretNames);
     const remotePromptFile = `/tmp/groundcrew-${ticket}-prompt.txt`;
     const remoteSecretsFile =
       secretsFile === undefined ? undefined : `/tmp/groundcrew-${ticket}-secrets.env`;
-    const spriteLaunchCommand = buildSpriteLaunchCommand({
+    const remoteLaunchCommand = buildRemoteLaunchCommand({
       definition,
-      spriteName: config.remote.sprite.spriteName,
+      provider: getRemoteRunnerProvider(config.remote.provider),
+      remoteConfig: config.remote,
       promptFile,
       remotePromptFile,
       worktreeDir: remoteWorktreeDir,
-      secretNames: config.remote.sprite.secretNames,
+      secretNames: config.remote.secretNames,
       ...(secretsFile === undefined ? {} : { secretsFile, remoteSecretsFile }),
     });
-    const launchCmd = `bash ${shellSingleQuote(stageLaunchScript(promptDir, spriteLaunchCommand))}`;
+    const launchCmd = `bash ${shellSingleQuote(stageLaunchScript(promptDir, remoteLaunchCommand))}`;
 
     log("Opening workspace...");
     await workspaces.open(
@@ -257,10 +259,10 @@ async function setupSpriteWorkspace(arguments_: {
       signal,
     );
 
-    log(`Workspace "${ticket}" launched (${model}, sprite)`);
+    log(`Workspace "${ticket}" launched (${model}, remote)`);
     log(`  Worktree: ${remoteWorktreeDir}`);
     log(`  Branch:   ${branchName}`);
-    log(`  Sprite:   ${config.remote.sprite.spriteName}`);
+    log(`  Remote:   ${config.remote.provider}:${config.remote.runnerName}`);
   } catch (error) {
     await rollbackWorktree({ config, entry: created, promptDir });
     throw error;

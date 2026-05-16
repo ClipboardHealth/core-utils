@@ -110,13 +110,12 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     workspaceKind: overrides.workspaceKind ?? "auto",
     logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
       ...overrides.remote,
     },
   };
@@ -264,8 +263,9 @@ function spriteEntryFor(repository: string, ticket: string): WorktreeEntry {
     ticket,
     branchName: `rocky-${ticket.toLowerCase()}`,
     dir: `/home/sprite/groundcrew/worktrees/${repository}-${ticket}`,
-    kind: "sprite",
-    spriteName: "crew-claude-1",
+    kind: "remote",
+    remoteProvider: "sprite",
+    remoteRunnerName: "crew-claude-1",
     remoteRepoDir: `/home/sprite/dev/${repository}`,
   };
 }
@@ -1151,7 +1151,7 @@ describe(orchestrate, () => {
     expect(out).toContain("Run `crew cleanup");
   });
 
-  it("treats a Sprite-kind worktree as existing for eligibility", async () => {
+  it("treats a remote-kind worktree as existing for eligibility", async () => {
     listMock.mockReturnValue([spriteEntryFor("repo-a", "team-1")]);
     workspacesProbeMock.mockResolvedValue({ kind: "ok", names: new Set<string>() });
     const client = makeClient({
@@ -1359,7 +1359,7 @@ describe(orchestrate, () => {
     expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [entry]);
   });
 
-  it("hands a Sprite-kind worktree to teardown", async () => {
+  it("hands a remote-kind worktree to teardown", async () => {
     const sprite = spriteEntryFor("repo-a", "team-1");
     listMock.mockReturnValue([sprite]);
     teardownMock.mockResolvedValue(emptyTeardownResult({ removed: [sprite] }));
@@ -1381,7 +1381,7 @@ describe(orchestrate, () => {
     expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [sprite]);
   });
 
-  it("hands BOTH host and Sprite worktrees to teardown for one terminal ticket", async () => {
+  it("hands both host and remote worktrees to teardown for one terminal ticket", async () => {
     const host = hostEntryFor("repo-a", "team-1");
     const sprite = spriteEntryFor("repo-a", "team-1");
     listMock.mockReturnValue([host, sprite]);

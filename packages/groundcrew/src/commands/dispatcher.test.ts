@@ -60,13 +60,12 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     workspaceKind: overrides.workspaceKind ?? "auto",
     logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
       ...overrides.remote,
     },
   };
@@ -469,12 +468,12 @@ describe(createDispatcher, () => {
       expect(consoleLog.output()).toContain("(claude, local)");
     });
 
-    it("passes the Sprite runner through to setupWorkspace and event logs", async () => {
+    it("passes the remote runner through to setupWorkspace and event logs", async () => {
       const client = makeClient();
       const dispatcher = createDispatcher({ config: makeConfig(), client: asLinearClient(client) });
 
       await dispatcher.runOnce({
-        state: boardOf([todoIssue({ runner: "sprite" })]),
+        state: boardOf([todoIssue({ runner: "remote" })]),
         worktreeEntries: [],
         usage: async () => ({}),
         dryRun: false,
@@ -482,10 +481,10 @@ describe(createDispatcher, () => {
 
       expect(setupMock).toHaveBeenCalledWith(
         expect.anything(),
-        expect.objectContaining({ ticket: "team-1", runner: "sprite" }),
+        expect.objectContaining({ ticket: "team-1", runner: "remote" }),
       );
       expect(consoleLog.output()).toContain(
-        "event=dispatch outcome=started ticket=team-1 model=claude repository=repo-a runner=sprite",
+        "event=dispatch outcome=started ticket=team-1 model=claude repository=repo-a runner=remote",
       );
     });
 

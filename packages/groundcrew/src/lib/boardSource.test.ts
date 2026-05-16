@@ -60,13 +60,12 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     workspaceKind: overrides.workspaceKind ?? "auto",
     logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
       ...overrides.remote,
     },
   };
@@ -418,7 +417,7 @@ describe(createBoardSource, () => {
       expect(first?.model).toBe("any");
     });
 
-    it("treats agent-remote alone as a Sprite runner with the default model", async () => {
+    it("treats agent-remote alone as a remote runner with the default model", async () => {
       const { source } = makeBoardSource(
         makeClient({
           pages: [[issueNode({ labels: { nodes: [{ name: "agent-remote" }] } })]],
@@ -428,7 +427,7 @@ describe(createBoardSource, () => {
       const state = await source.fetch();
 
       expect(state.issues[0]?.model).toBe("claude");
-      expect(state.issues[0]?.runner).toBe("sprite");
+      expect(state.issues[0]?.runner).toBe("remote");
     });
 
     it("treats agent-remote as a modifier alongside a concrete model", async () => {
@@ -447,7 +446,7 @@ describe(createBoardSource, () => {
       const state = await source.fetch();
 
       expect(state.issues[0]?.model).toBe("codex");
-      expect(state.issues[0]?.runner).toBe("sprite");
+      expect(state.issues[0]?.runner).toBe("remote");
     });
 
     it("preserves agent-any when combined with agent-remote", async () => {
@@ -466,7 +465,7 @@ describe(createBoardSource, () => {
       const state = await source.fetch();
 
       expect(state.issues[0]?.model).toBe("any");
-      expect(state.issues[0]?.runner).toBe("sprite");
+      expect(state.issues[0]?.runner).toBe("remote");
     });
 
     it("falls back to the default model when an agent-* label names a prototype property", async () => {
@@ -624,7 +623,7 @@ describe(createBoardSource, () => {
 });
 
 describe(fetchResolvedIssue, () => {
-  it("preserves the Sprite runner for crew run --ticket", async () => {
+  it("preserves the remote runner for crew run --ticket", async () => {
     const client = makeClient({ pages: [[]] });
     client.client.rawRequest.mockResolvedValueOnce({
       data: {
@@ -643,7 +642,7 @@ describe(fetchResolvedIssue, () => {
       ticket: "team-1",
     });
 
-    expect(actual).toMatchObject({ repository: "repo-a", model: "codex", runner: "sprite" });
+    expect(actual).toMatchObject({ repository: "repo-a", model: "codex", runner: "remote" });
   });
 });
 

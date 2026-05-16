@@ -75,13 +75,12 @@ function makeConfig(overrides: {
     workspaceKind: "auto",
     logging: { file: "/tmp/groundcrew-test.log" },
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
     },
   };
 }
@@ -107,17 +106,17 @@ function setupTempProjectDir(): void {
   });
 }
 
-function spriteStatePath(): string {
-  return join(projectDir, "state", "groundcrew", "sprite-worktrees.json");
+function remoteStatePath(): string {
+  return join(projectDir, "state", "groundcrew", "remote-worktrees.json");
 }
 
-function writeSpriteState(entries: WorktreeEntry[]): void {
+function writeRemoteState(entries: WorktreeEntry[]): void {
   mkdirSync(join(projectDir, "state", "groundcrew"), { recursive: true });
-  writeFileSync(spriteStatePath(), `${JSON.stringify({ entries }, undefined, 2)}\n`);
+  writeFileSync(remoteStatePath(), `${JSON.stringify({ entries }, undefined, 2)}\n`);
 }
 
-function readSpriteStateEntries(): WorktreeEntry[] {
-  return JSON.parse(readFileSync(spriteStatePath(), "utf8")).entries as WorktreeEntry[];
+function readRemoteStateEntries(): WorktreeEntry[] {
+  return JSON.parse(readFileSync(remoteStatePath(), "utf8")).entries as WorktreeEntry[];
 }
 
 describe(list, () => {
@@ -178,16 +177,17 @@ describe(list, () => {
     expect(list(config)).toStrictEqual([]);
   });
 
-  it("includes locally tracked Sprite worktrees", () => {
+  it("includes locally tracked remote worktrees", () => {
     const config = makeConfig({ projectDir });
-    writeSpriteState([
+    writeRemoteState([
       {
         repository: "repo-a",
         ticket: "team-1",
         branchName: "rocky-team-1",
         dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-        kind: "sprite",
-        spriteName: "crew-claude-1",
+        kind: "remote",
+        remoteProvider: "sprite",
+        remoteRunnerName: "crew-claude-1",
         remoteRepoDir: "/home/sprite/dev/repo-a",
       },
     ]);
@@ -197,13 +197,14 @@ describe(list, () => {
       ticket: "team-1",
       branchName: "rocky-team-1",
       dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      kind: "sprite",
-      spriteName: "crew-claude-1",
+      kind: "remote",
+      remoteProvider: "sprite",
+      remoteRunnerName: "crew-claude-1",
       remoteRepoDir: "/home/sprite/dev/repo-a",
     });
   });
 
-  it("ignores malformed locally tracked Sprite entries", () => {
+  it("ignores malformed locally tracked remote entries", () => {
     const config = makeConfig({ projectDir });
     mkdirSync(join(projectDir, "state", "groundcrew"), { recursive: true });
     const validEntry: WorktreeEntry = {
@@ -211,22 +212,23 @@ describe(list, () => {
       ticket: "team-1",
       branchName: "rocky-team-1",
       dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      kind: "sprite",
-      spriteName: "crew-claude-1",
+      kind: "remote",
+      remoteProvider: "sprite",
+      remoteRunnerName: "crew-claude-1",
       remoteRepoDir: "/home/sprite/dev/repo-a",
     };
     writeFileSync(
-      spriteStatePath(),
-      `${JSON.stringify({ entries: [null, "bad", { kind: "sprite" }, validEntry] })}\n`,
+      remoteStatePath(),
+      `${JSON.stringify({ entries: [null, "bad", { kind: "remote" }, validEntry] })}\n`,
     );
 
     expect(list(config)).toStrictEqual([validEntry]);
   });
 
-  it("ignores Sprite state files whose entries field is not an array", () => {
+  it("ignores remote state files whose entries field is not an array", () => {
     const config = makeConfig({ projectDir });
     mkdirSync(join(projectDir, "state", "groundcrew"), { recursive: true });
-    writeFileSync(spriteStatePath(), `${JSON.stringify({ entries: null })}\n`);
+    writeFileSync(remoteStatePath(), `${JSON.stringify({ entries: null })}\n`);
 
     expect(list(config)).toStrictEqual([]);
   });
@@ -239,14 +241,15 @@ describe(findByTicket, () => {
     mkdirSync(join(projectDir, "repo-a-team-1"));
     mkdirSync(join(projectDir, "repo-b-team-1"));
     const config = makeConfig({ projectDir, knownRepositories: ["repo-a", "repo-b"] });
-    writeSpriteState([
+    writeRemoteState([
       {
         repository: "repo-a",
         ticket: "team-1",
         branchName: "rocky-team-1",
         dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-        kind: "sprite",
-        spriteName: "crew-claude-1",
+        kind: "remote",
+        remoteProvider: "sprite",
+        remoteRunnerName: "crew-claude-1",
         remoteRepoDir: "/home/sprite/dev/repo-a",
       },
     ]);
@@ -319,7 +322,7 @@ describe(create, () => {
     expect(actual.dir).toBe(join(projectDir, "repo-a-team-1"));
   });
 
-  it("creates a Sprite worktree using the host-computed branch name", async () => {
+  it("creates a remote worktree using the host-computed branch name", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const config = makeConfig({ projectDir });
 
@@ -327,7 +330,7 @@ describe(create, () => {
       repository: "repo-a",
       ticket: "team-1",
       model: "claude",
-      runner: "sprite",
+      runner: "remote",
     });
 
     expect(runCommandMock).toHaveBeenCalledWith(
@@ -338,24 +341,27 @@ describe(create, () => {
     const spriteCommand = runCommandMock.mock.calls.find(([cmd]) => cmd === "sprite")?.[1].at(-1);
     expect(spriteCommand).toStrictEqual(expect.stringContaining("branch='rocky-team-1'"));
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("repo_dir='/home/sprite/dev/repo-a'"),
+      expect.stringContaining("repo_dir='/home/sprite/dev/ClipboardHealth--repo-a'"),
     );
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("worktree_dir='/home/sprite/groundcrew/worktrees/repo-a-team-1'"),
+      expect.stringContaining(
+        "worktree_dir='/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1'",
+      ),
     );
     expect(actual).toStrictEqual({
       repository: "repo-a",
       ticket: "team-1",
       branchName: "rocky-team-1",
-      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      kind: "sprite",
-      spriteName: "crew-claude-1",
-      remoteRepoDir: "/home/sprite/dev/repo-a",
+      dir: "/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1",
+      kind: "remote",
+      remoteProvider: "sprite",
+      remoteRunnerName: "crew-claude-1",
+      remoteRepoDir: "/home/sprite/dev/ClipboardHealth--repo-a",
     });
-    expect(readSpriteStateEntries()).toStrictEqual([actual]);
+    expect(readRemoteStateEntries()).toStrictEqual([actual]);
   });
 
-  it("creates Sprite worktrees for owner-qualified repositories without double-prefixing the owner", async () => {
+  it("creates remote worktrees for owner-qualified repositories without double-prefixing the owner", async () => {
     mkdirSync(join(projectDir, "ClipboardHealth", "repo-a"), { recursive: true });
     const config = makeConfig({ projectDir, knownRepositories: ["ClipboardHealth/repo-a"] });
 
@@ -363,7 +369,7 @@ describe(create, () => {
       repository: "ClipboardHealth/repo-a",
       ticket: "team-1",
       model: "claude",
-      runner: "sprite",
+      runner: "remote",
     });
 
     const spriteCommand = runCommandMock.mock.calls.find(([cmd]) => cmd === "sprite")?.[1].at(-1);
@@ -371,15 +377,17 @@ describe(create, () => {
       expect.stringContaining("gh repo clone 'ClipboardHealth/repo-a'"),
     );
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("repo_dir='/home/sprite/dev/repo-a'"),
+      expect.stringContaining("repo_dir='/home/sprite/dev/ClipboardHealth--repo-a'"),
     );
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("worktree_dir='/home/sprite/groundcrew/worktrees/repo-a-team-1'"),
+      expect.stringContaining(
+        "worktree_dir='/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1'",
+      ),
     );
     expect(actual).toMatchObject({
       repository: "ClipboardHealth/repo-a",
-      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      remoteRepoDir: "/home/sprite/dev/repo-a",
+      dir: "/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1",
+      remoteRepoDir: "/home/sprite/dev/ClipboardHealth--repo-a",
     });
   });
 
@@ -397,7 +405,7 @@ describe(create, () => {
     ).rejects.toThrow(/Unknown workspace runner: "docker"/);
   });
 
-  it("strips .git suffixes from Sprite remote directory names", async () => {
+  it("strips .git suffixes from remote directory names", async () => {
     mkdirSync(join(projectDir, "repo-a.git"));
     const config = makeConfig({ projectDir, knownRepositories: ["repo-a.git"] });
 
@@ -405,28 +413,28 @@ describe(create, () => {
       repository: "repo-a.git",
       ticket: "team-1",
       model: "claude",
-      runner: "sprite",
+      runner: "remote",
     });
 
-    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
-    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/ClipboardHealth--repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1");
   });
 
-  it("normalizes trailing slashes in configured Sprite remote roots", async () => {
+  it("normalizes trailing slashes in configured remote roots", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const config = makeConfig({ projectDir });
-    config.remote.sprite.repoRoot = "/home/sprite/dev///";
-    config.remote.sprite.worktreeRoot = "/home/sprite/groundcrew/worktrees///";
+    config.remote.repoRoot = "/home/sprite/dev///";
+    config.remote.worktreeRoot = "/home/sprite/groundcrew/worktrees///";
 
     const actual = await create(config, {
       repository: "repo-a",
       ticket: "team-1",
       model: "claude",
-      runner: "sprite",
+      runner: "remote",
     });
 
-    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
-    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/ClipboardHealth--repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1");
   });
 
   it("rejects when a host worktree already exists for the same ticket", async () => {
@@ -443,17 +451,18 @@ describe(create, () => {
     ).rejects.toThrow(/already exists/);
   });
 
-  it("rejects when a Sprite worktree is already tracked for the same ticket", async () => {
+  it("rejects when a remote worktree is already tracked for the same ticket", async () => {
     mkdirSync(join(projectDir, "repo-a"));
     const config = makeConfig({ projectDir });
-    writeSpriteState([
+    writeRemoteState([
       {
         repository: "repo-a",
         ticket: "team-1",
         branchName: "rocky-team-1",
         dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-        kind: "sprite",
-        spriteName: "crew-claude-1",
+        kind: "remote",
+        remoteProvider: "sprite",
+        remoteRunnerName: "crew-claude-1",
         remoteRepoDir: "/home/sprite/dev/repo-a",
       },
     ]);
@@ -463,7 +472,7 @@ describe(create, () => {
         repository: "repo-a",
         ticket: "team-1",
         model: "claude",
-        runner: "sprite",
+        runner: "remote",
       }),
     ).rejects.toThrow(/already exists/);
   });
@@ -673,7 +682,7 @@ describe(remove, () => {
     ).rejects.toThrow("interrupted branch delete");
   });
 
-  it("rejects malformed Sprite entries without spriteName", async () => {
+  it("rejects malformed remote entries without runnerName", async () => {
     const config = makeConfig({ projectDir });
 
     await expect(
@@ -682,10 +691,10 @@ describe(remove, () => {
         ticket: "team-1",
         branchName: "rocky-team-1",
         dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-        kind: "sprite",
+        kind: "remote",
         remoteRepoDir: "/home/sprite/dev/repo-a",
       }),
-    ).rejects.toThrow(/missing spriteName/);
+    ).rejects.toThrow(/missing remoteRunnerName/);
   });
 
   it("rejects unknown worktree kinds instead of falling back to host removal", async () => {
@@ -702,7 +711,7 @@ describe(remove, () => {
     ).rejects.toThrow(/Unknown worktree kind: "sandbox"/);
   });
 
-  it("rejects malformed Sprite entries without remoteRepoDir", async () => {
+  it("rejects malformed remote entries without remoteRepoDir", async () => {
     const config = makeConfig({ projectDir });
 
     await expect(
@@ -711,8 +720,9 @@ describe(remove, () => {
         ticket: "team-1",
         branchName: "rocky-team-1",
         dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-        kind: "sprite",
-        spriteName: "crew-claude-1",
+        kind: "remote",
+        remoteProvider: "sprite",
+        remoteRunnerName: "crew-claude-1",
       }),
     ).rejects.toThrow(/missing remoteRepoDir/);
   });
@@ -724,8 +734,9 @@ function spriteEntry(ticket: string): WorktreeEntry {
     ticket,
     branchName: `rocky-${ticket}`,
     dir: `/home/sprite/groundcrew/worktrees/repo-a-${ticket}`,
-    kind: "sprite",
-    spriteName: "crew-claude-1",
+    kind: "remote",
+    remoteProvider: "sprite",
+    remoteRunnerName: "crew-claude-1",
     remoteRepoDir: "/home/sprite/dev/repo-a",
   };
 }
@@ -775,18 +786,19 @@ describe(teardown, () => {
     );
   });
 
-  it("removes a Sprite worktree remotely and deletes the local state entry after success", async () => {
+  it("removes a remote worktree remotely and deletes the local state entry after success", async () => {
     const config = makeConfig({ projectDir });
     const entry: WorktreeEntry = {
       repository: "repo-a",
       ticket: "team-1",
       branchName: "rocky-team-1",
       dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      kind: "sprite",
-      spriteName: "crew-claude-1",
+      kind: "remote",
+      remoteProvider: "sprite",
+      remoteRunnerName: "crew-claude-1",
       remoteRepoDir: "/home/sprite/dev/repo-a",
     };
-    writeSpriteState([entry]);
+    writeRemoteState([entry]);
 
     await remove(config, entry, { force: true });
 
@@ -804,31 +816,32 @@ describe(teardown, () => {
     expect(command).toStrictEqual(
       expect.stringContaining("git -C '/home/sprite/dev/repo-a' branch -D 'rocky-team-1' || true"),
     );
-    expect(readSpriteStateEntries()).toStrictEqual([]);
+    expect(readRemoteStateEntries()).toStrictEqual([]);
   });
 
-  it("keeps the Sprite state entry when remote removal fails", async () => {
+  it("keeps the remote state entry when remote removal fails", async () => {
     const config = makeConfig({ projectDir });
     const entry: WorktreeEntry = {
       repository: "repo-a",
       ticket: "team-1",
       branchName: "rocky-team-1",
       dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      kind: "sprite",
-      spriteName: "crew-claude-1",
+      kind: "remote",
+      remoteProvider: "sprite",
+      remoteRunnerName: "crew-claude-1",
       remoteRepoDir: "/home/sprite/dev/repo-a",
     };
-    writeSpriteState([entry]);
+    writeRemoteState([entry]);
     runCommandMock.mockImplementation(() => {
       throw new Error("worktree busy");
     });
 
     await expect(remove(config, entry)).rejects.toThrow(/worktree busy/);
 
-    expect(readSpriteStateEntries()).toStrictEqual([entry]);
+    expect(readRemoteStateEntries()).toStrictEqual([entry]);
   });
 
-  it("dedupes the workspace close across host and Sprite entries for one ticket", async () => {
+  it("dedupes the workspace close across host and remote entries for one ticket", async () => {
     workspacesProbeMock.mockResolvedValue({ kind: "ok", names: new Set(["team-1"]) });
     const config = makeConfig({ projectDir });
     const entries = [hostEntry("team-1"), spriteEntry("team-1")];

@@ -46,13 +46,12 @@ function makeConfig(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     prompts: { initial: "x", ...overrides.prompts },
     workspaceKind: overrides.workspaceKind ?? "auto",
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
       ...overrides.remote,
     },
     logging: { file: "/tmp/groundcrew-test.log", ...overrides.logging },
@@ -102,8 +101,9 @@ function spriteEntryFor(repository: string, ticket: string): WorktreeEntry {
     ticket,
     branchName: `rocky-${ticket.toLowerCase()}`,
     dir: `/home/sprite/groundcrew/worktrees/${repository}-${ticket}`,
-    kind: "sprite",
-    spriteName: "crew-claude-1",
+    kind: "remote",
+    remoteProvider: "sprite",
+    remoteRunnerName: "crew-claude-1",
     remoteRepoDir: `/home/sprite/dev/${repository}`,
   };
 }
@@ -290,7 +290,7 @@ describe(createCleaner, () => {
     expect(out).toContain("event=cleanup outcome=skipped reason=dry_run");
   });
 
-  it("passes both local and Sprite worktrees to teardown when both exist for one terminal ticket", async () => {
+  it("passes both local and remote worktrees to teardown when both exist for one terminal ticket", async () => {
     const host = hostEntryFor("repo-a", "team-1");
     const sprite = spriteEntryFor("repo-a", "team-1");
     const cleaner = createCleaner({ config: makeConfig() });
@@ -304,7 +304,7 @@ describe(createCleaner, () => {
     expect(teardownMock).toHaveBeenCalledWith(expect.anything(), [host, sprite]);
   });
 
-  it("passes a Sprite-kind worktree directly to teardown", async () => {
+  it("passes a remote-kind worktree directly to teardown", async () => {
     const sprite = spriteEntryFor("repo-a", "team-1");
     const cleaner = createCleaner({ config: makeConfig() });
 

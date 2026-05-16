@@ -2,8 +2,8 @@ import { run } from "./cli.ts";
 import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
 import { doctor } from "./commands/doctor.ts";
 import { orchestrate } from "./commands/orchestrator.ts";
+import { remoteCli } from "./commands/remoteSetup.ts";
 import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
-import { spriteCli } from "./commands/spriteSetup.ts";
 import {
   captureConsoleError,
   captureConsoleLog,
@@ -22,15 +22,15 @@ vi.mock(import("./commands/orchestrator.ts"), () => ({
 vi.mock(import("./commands/setupWorkspace.ts"), () => ({
   setupWorkspaceCli: vi.fn<typeof setupWorkspaceCli>(),
 }));
-vi.mock(import("./commands/spriteSetup.ts"), () => ({
-  spriteCli: vi.fn<typeof spriteCli>(),
+vi.mock(import("./commands/remoteSetup.ts"), () => ({
+  remoteCli: vi.fn<typeof remoteCli>(),
 }));
 
 const orchestrateMock = vi.mocked(orchestrate);
 const doctorMock = vi.mocked(doctor);
 const setupMock = vi.mocked(setupWorkspaceCli);
 const cleanupMock = vi.mocked(cleanupWorkspaceCli);
-const spriteMock = vi.mocked(spriteCli);
+const remoteMock = vi.mocked(remoteCli);
 
 describe(run, () => {
   let consoleLog: ConsoleCapture;
@@ -44,7 +44,7 @@ describe(run, () => {
     doctorMock.mockResolvedValue(true);
     setupMock.mockResolvedValue();
     cleanupMock.mockResolvedValue();
-    spriteMock.mockResolvedValue();
+    remoteMock.mockResolvedValue();
   });
 
   afterEach(() => {
@@ -205,10 +205,10 @@ describe(run, () => {
     expect(cleanupMock).toHaveBeenCalledWith(["--force", "TEAM-1"]);
   });
 
-  it("dispatches sprite to spriteCli with the remaining argv", async () => {
-    await run(["sprite", "setup", "crew-claude-1", "--mcp", "linear"]);
+  it("dispatches remote to remoteCli with the remaining argv", async () => {
+    await run(["remote", "setup", "crew-claude-1", "--mcp", "linear"]);
 
-    expect(spriteMock).toHaveBeenCalledWith(["setup", "crew-claude-1", "--mcp", "linear"]);
+    expect(remoteMock).toHaveBeenCalledWith(["setup", "crew-claude-1", "--mcp", "linear"]);
   });
 
   it("prints the error message and sets exit code 1 when a subcommand throws", async () => {

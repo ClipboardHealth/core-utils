@@ -72,13 +72,12 @@ function makeConfig(overrides: Partial<ResolvedConfig["models"]> = {}): Resolved
     workspaceKind: "auto",
     logging: { file: "/tmp/groundcrew-test.log" },
     remote: {
-      sprite: {
-        spriteName: "crew-claude-1",
-        owner: "ClipboardHealth",
-        repoRoot: "/home/sprite/dev",
-        worktreeRoot: "/home/sprite/groundcrew/worktrees",
-        secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
-      },
+      provider: "sprite",
+      runnerName: "crew-claude-1",
+      owner: "ClipboardHealth",
+      repoRoot: "/home/sprite/dev",
+      worktreeRoot: "/home/sprite/groundcrew/worktrees",
+      secretNames: ["NPM_TOKEN", "BUF_TOKEN"],
     },
   };
 }
@@ -287,7 +286,7 @@ describe(doctor, () => {
     expect(consoleLog.output().match(/local runner \(macOS \+ Safehouse\)/g)).toHaveLength(1);
   });
 
-  it("downgrades local model command checks when only Sprite can run on the host", async () => {
+  it("downgrades local model command checks when only the remote runner can run on the host", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: false,
       hasCmux: false,
@@ -308,7 +307,7 @@ describe(doctor, () => {
 
     expect(actual).toBe(true);
     expect(consoleLog.output()).toContain("[? ] missing-cli");
-    expect(consoleLog.output()).toContain("Sprite runs need this inside the Sprite");
+    expect(consoleLog.output()).toContain("remote runs need this inside the remote runner");
   });
 
   it("adds an optional codexbar check when any model has usage configured", async () => {
@@ -399,7 +398,7 @@ describe(doctor, () => {
     expect(actual).toBe(false);
     const lines = consoleLog.output();
     expect(lines).toContain("Local runner");
-    expect(lines).toContain("use agent-remote with Sprite");
+    expect(lines).toContain("use agent-remote with the remote runner");
     expect(lines).not.toContain("sbx diagnose");
   });
 
