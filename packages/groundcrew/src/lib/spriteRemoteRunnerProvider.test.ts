@@ -36,7 +36,7 @@ function remoteConfig(overrides: Partial<RemoteRunnerConfig> = {}): RemoteRunner
 
 describe("Sprite remote runner provider", () => {
   afterEach(() => {
-    vi.clearAllMocks();
+    runCommandMock.mockReset();
   });
 
   it("detects existing runners by exact escaped runner name", async () => {
@@ -179,8 +179,8 @@ describe("Sprite remote runner provider", () => {
     });
 
     expect(actual).toStrictEqual({
-      remoteRepoDir: "/srv/repos/tools",
-      remoteWorktreeDir: "/srv/worktrees/tools-GC-12",
+      remoteRepoDir: "/srv/repos/Acme--tools",
+      remoteWorktreeDir: "/srv/worktrees/Acme--tools-GC-12",
     });
     expect(runCommandMock).toHaveBeenCalledWith(
       "sprite",
@@ -196,9 +196,30 @@ describe("Sprite remote runner provider", () => {
       { signal: controller.signal, stdio: "inherit", timeoutMs: 0 },
     );
     const script = runCommandMock.mock.calls[0]?.[1].at(-1);
-    expect(script).toContain("repo_dir='/srv/repos/tools'");
-    expect(script).toContain("worktree_dir='/srv/worktrees/tools-GC-12'");
+    expect(script).toContain("repo_dir='/srv/repos/Acme--tools'");
+    expect(script).toContain("worktree_dir='/srv/worktrees/Acme--tools-GC-12'");
     expect(script).toContain('git -C "$repo_dir" worktree add -b "$branch"');
+  });
+
+  it("keeps owner-qualified repositories distinct in remote directory names", async () => {
+    const config = remoteConfig();
+    runCommandMock.mockResolvedValue("");
+
+    const actual = await spriteRemoteRunnerProvider.createWorktree({
+      config,
+      repository: "TeamB/tools.git",
+      ticket: "GC-12",
+      branchName: "feature/remote-runner",
+      baseBranch: "main",
+    });
+
+    expect(actual).toStrictEqual({
+      remoteRepoDir: "/srv/repos/TeamB--tools",
+      remoteWorktreeDir: "/srv/worktrees/TeamB--tools-GC-12",
+    });
+    const script = runCommandMock.mock.calls[0]?.[1].at(-1);
+    expect(script).toContain("gh repo clone 'TeamB/tools.git'");
+    expect(script).toContain("repo_dir='/srv/repos/TeamB--tools'");
   });
 
   it("removes remote worktrees through the entry runner and repository", async () => {

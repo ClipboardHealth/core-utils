@@ -180,11 +180,10 @@ function repositorySlug(owner: string, repository: string): string {
   return repository.includes("/") ? repository : `${owner}/${repository}`;
 }
 
-function repositoryDirectoryName(repository: string): string {
-  const name = repository.includes("/")
-    ? repository.slice(repository.lastIndexOf("/") + 1)
-    : repository;
-  return name.endsWith(".git") ? name.slice(0, -4) : name;
+function repositoryDirectoryName(owner: string, repository: string): string {
+  const slug = repositorySlug(owner, repository);
+  const normalizedSlug = slug.endsWith(".git") ? slug.slice(0, -4) : slug;
+  return normalizedSlug.replaceAll("/", "--");
 }
 
 function spriteCreateWorktreeCommand(arguments_: {
@@ -326,7 +325,7 @@ export const spriteRemoteRunnerProvider: RemoteRunnerProvider = {
   },
   async createWorktree(arguments_) {
     const { config, repository, ticket, branchName, baseBranch, signal } = arguments_;
-    const remoteRepositoryName = repositoryDirectoryName(repository);
+    const remoteRepositoryName = repositoryDirectoryName(config.owner, repository);
     const remoteRepoDir = remotePathJoin(config.repoRoot, remoteRepositoryName);
     const remoteWorktreeDir = remotePathJoin(
       config.worktreeRoot,

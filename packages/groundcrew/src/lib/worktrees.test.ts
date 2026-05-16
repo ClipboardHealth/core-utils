@@ -341,20 +341,22 @@ describe(create, () => {
     const spriteCommand = runCommandMock.mock.calls.find(([cmd]) => cmd === "sprite")?.[1].at(-1);
     expect(spriteCommand).toStrictEqual(expect.stringContaining("branch='rocky-team-1'"));
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("repo_dir='/home/sprite/dev/repo-a'"),
+      expect.stringContaining("repo_dir='/home/sprite/dev/ClipboardHealth--repo-a'"),
     );
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("worktree_dir='/home/sprite/groundcrew/worktrees/repo-a-team-1'"),
+      expect.stringContaining(
+        "worktree_dir='/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1'",
+      ),
     );
     expect(actual).toStrictEqual({
       repository: "repo-a",
       ticket: "team-1",
       branchName: "rocky-team-1",
-      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
+      dir: "/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1",
       kind: "remote",
       remoteProvider: "sprite",
       remoteRunnerName: "crew-claude-1",
-      remoteRepoDir: "/home/sprite/dev/repo-a",
+      remoteRepoDir: "/home/sprite/dev/ClipboardHealth--repo-a",
     });
     expect(readRemoteStateEntries()).toStrictEqual([actual]);
   });
@@ -375,15 +377,17 @@ describe(create, () => {
       expect.stringContaining("gh repo clone 'ClipboardHealth/repo-a'"),
     );
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("repo_dir='/home/sprite/dev/repo-a'"),
+      expect.stringContaining("repo_dir='/home/sprite/dev/ClipboardHealth--repo-a'"),
     );
     expect(spriteCommand).toStrictEqual(
-      expect.stringContaining("worktree_dir='/home/sprite/groundcrew/worktrees/repo-a-team-1'"),
+      expect.stringContaining(
+        "worktree_dir='/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1'",
+      ),
     );
     expect(actual).toMatchObject({
       repository: "ClipboardHealth/repo-a",
-      dir: "/home/sprite/groundcrew/worktrees/repo-a-team-1",
-      remoteRepoDir: "/home/sprite/dev/repo-a",
+      dir: "/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1",
+      remoteRepoDir: "/home/sprite/dev/ClipboardHealth--repo-a",
     });
   });
 
@@ -412,8 +416,8 @@ describe(create, () => {
       runner: "remote",
     });
 
-    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
-    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/ClipboardHealth--repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1");
   });
 
   it("normalizes trailing slashes in configured remote roots", async () => {
@@ -429,8 +433,8 @@ describe(create, () => {
       runner: "remote",
     });
 
-    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/repo-a");
-    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/repo-a-team-1");
+    expect(actual.remoteRepoDir).toBe("/home/sprite/dev/ClipboardHealth--repo-a");
+    expect(actual.dir).toBe("/home/sprite/groundcrew/worktrees/ClipboardHealth--repo-a-team-1");
   });
 
   it("rejects when a host worktree already exists for the same ticket", async () => {
