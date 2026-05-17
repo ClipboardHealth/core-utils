@@ -28,7 +28,6 @@
 - [eslint-plugin](./packages/eslint-plugin/README.md): Clipboard's ESLint Plugin
 - [example-nestjs](./packages/example-nestjs/README.md): A NestJS application using our libraries, primarily for end-to-end testing.
 - [execution-context](./packages/execution-context/README.md): A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
-- [groundcrew](./packages/groundcrew/README.md): Linear-driven orchestrator that launches AI coding agents in git worktrees, with workspace lifecycle, remote runners, and usage tracking.
 - [json-api](./packages/json-api/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification.
 - [json-api-nestjs](./packages/json-api-nestjs/README.md): TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.
 - [mongo-jobs](./packages/mongo-jobs/README.md): MongoDB-powered background jobs.

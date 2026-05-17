@@ -26,15 +26,6 @@ const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
     },
   ],
   "packages/embedex": ["packages/embedex/static/**/*"],
-  "packages/groundcrew": [
-    "packages/groundcrew/configExample.ts",
-    "packages/groundcrew/clearance-allow-hosts",
-    {
-      input: "./packages/groundcrew/bin",
-      glob: "**/*",
-      output: "./bin",
-    },
-  ],
   "packages/nx-plugin": [
     {
       input: "./packages/nx-plugin/src",

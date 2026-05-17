@@ -24,7 +24,6 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **eslint-plugin**: Clipboard's ESLint Plugin
 - **example-nestjs**: A NestJS application using our libraries, primarily for end-to-end testing.
 - **execution-context**: A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
-- **groundcrew**: Linear-driven orchestrator that launches AI coding agents in git worktrees, with workspace lifecycle, remote runners, and usage tracking.
 - **json-api**: TypeScript-friendly utilities for adhering to the JSON:API specification.
 - **json-api-nestjs**: TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.
 - **mongo-jobs**: MongoDB-powered background jobs.

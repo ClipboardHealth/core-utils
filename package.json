@@ -9,8 +9,6 @@
     "affected": "nx affected --configuration ci --parallel 8 --targets build,lint,test",
     "architecture:check": "depcruise packages/*/src",
     "cpd": "jscpd .",
-    "crew": "node ./packages/groundcrew/bin/run.js",
-    "crew:op": "node ./scripts/crewOp.mjs",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
     "embed:check": "node --run embed -- --check",
