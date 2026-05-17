@@ -206,6 +206,7 @@ describe(setupRepos, () => {
 
   it("fails fast with an install hint when gh is not on PATH", async () => {
     // oxlint-disable-next-line unicorn/no-useless-undefined -- `which` returns Promise<string | undefined>; passing nothing is a TS error
+    // eslint-disable-next-line unicorn/no-useless-undefined -- ditto for ESLint (CI runs both linters)
     whichMock.mockResolvedValue(undefined);
     const config = makeConfig({ projectDir, knownRepositories: ["owner/repo"] });
 
@@ -244,6 +245,20 @@ describe(setupRepos, () => {
     expect(result.failed).toHaveLength(1);
     expect(result.failed[0]?.repo).toBe("owner/broken");
     expect(result.failed[0]?.error.message).toMatch(/auth failed/);
+  });
+
+  it("wraps a non-Error throw from gh into an Error carrying the message", async () => {
+    runCommandMock.mockImplementationOnce(() => {
+      // oxlint-disable-next-line typescript/only-throw-error -- intentionally throws a non-Error to exercise the catch branch
+      throw "gh died spectacularly";
+    });
+    const config = makeConfig({ projectDir, knownRepositories: ["owner/repo"] });
+
+    const result = await setupRepos(config, {});
+
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.error).toBeInstanceOf(Error);
+    expect(result.failed[0]?.error.message).toBe("gh died spectacularly");
   });
 });
 
@@ -305,6 +320,7 @@ describe(setupReposCli, () => {
 
   it("sets process.exitCode = 1 when gh is missing", async () => {
     // oxlint-disable-next-line unicorn/no-useless-undefined -- `which` returns Promise<string | undefined>; passing nothing is a TS error
+    // eslint-disable-next-line unicorn/no-useless-undefined -- ditto for ESLint (CI runs both linters)
     whichMock.mockResolvedValue(undefined);
 
     await setupReposCli([]);
