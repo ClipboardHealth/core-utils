@@ -3,6 +3,7 @@ import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
 import { doctor } from "./commands/doctor.ts";
 import { orchestrate } from "./commands/orchestrator.ts";
 import { remoteCli } from "./commands/remoteSetup.ts";
+import { setupReposCli } from "./commands/setupRepos.ts";
 import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
 import {
   captureConsoleError,
@@ -22,6 +23,9 @@ vi.mock(import("./commands/orchestrator.ts"), () => ({
 vi.mock(import("./commands/setupWorkspace.ts"), () => ({
   setupWorkspaceCli: vi.fn<typeof setupWorkspaceCli>(),
 }));
+vi.mock(import("./commands/setupRepos.ts"), () => ({
+  setupReposCli: vi.fn<typeof setupReposCli>(),
+}));
 vi.mock(import("./commands/remoteSetup.ts"), () => ({
   remoteCli: vi.fn<typeof remoteCli>(),
 }));
@@ -29,6 +33,7 @@ vi.mock(import("./commands/remoteSetup.ts"), () => ({
 const orchestrateMock = vi.mocked(orchestrate);
 const doctorMock = vi.mocked(doctor);
 const setupMock = vi.mocked(setupWorkspaceCli);
+const setupReposMock = vi.mocked(setupReposCli);
 const cleanupMock = vi.mocked(cleanupWorkspaceCli);
 const remoteMock = vi.mocked(remoteCli);
 
@@ -43,6 +48,7 @@ describe(run, () => {
     orchestrateMock.mockResolvedValue();
     doctorMock.mockResolvedValue(true);
     setupMock.mockResolvedValue();
+    setupReposMock.mockResolvedValue();
     cleanupMock.mockResolvedValue();
     remoteMock.mockResolvedValue();
   });
@@ -203,6 +209,34 @@ describe(run, () => {
     await run(["cleanup", "--force", "TEAM-1"]);
 
     expect(cleanupMock).toHaveBeenCalledWith(["--force", "TEAM-1"]);
+  });
+
+  it("dispatches `setup repos` to setupReposCli with the remaining argv", async () => {
+    await run(["setup", "repos", "--dry-run", "owner/repo"]);
+
+    expect(setupReposMock).toHaveBeenCalledWith(["--dry-run", "owner/repo"]);
+  });
+
+  it("dispatches bare `setup repos` (no args) to setupReposCli", async () => {
+    await run(["setup", "repos"]);
+
+    expect(setupReposMock).toHaveBeenCalledWith([]);
+  });
+
+  it("reports an unknown `setup` verb instead of routing it", async () => {
+    await run(["setup", "bogus"]);
+
+    expect(setupReposMock).not.toHaveBeenCalled();
+    expect(consoleError.output()).toContain("Usage: crew setup repos");
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("prints the setup usage when no verb is given", async () => {
+    await run(["setup"]);
+
+    expect(setupReposMock).not.toHaveBeenCalled();
+    expect(consoleError.output()).toContain("Usage: crew setup repos");
+    expect(process.exitCode).toBe(1);
   });
 
   it("dispatches remote to remoteCli with the remaining argv", async () => {

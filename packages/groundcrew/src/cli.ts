@@ -2,6 +2,7 @@ import { cleanupWorkspaceCli } from "./commands/cleanupWorkspace.ts";
 import { doctor } from "./commands/doctor.ts";
 import { orchestrate } from "./commands/orchestrator.ts";
 import { remoteCli } from "./commands/remoteSetup.ts";
+import { setupReposCli } from "./commands/setupRepos.ts";
 import { setupWorkspaceCli } from "./commands/setupWorkspace.ts";
 import { errorMessage, writeError, writeOutput } from "./lib/util.ts";
 
@@ -9,6 +10,19 @@ interface Subcommand {
   summary: string;
   usage?: string;
   invoke: (argv: string[]) => Promise<void>;
+}
+
+function setupUsage(): string {
+  return "Usage: crew setup repos [--dry-run] [<repo>...]";
+}
+
+async function setupCli(argv: string[]): Promise<void> {
+  const [verb, ...rest] = argv;
+  if (verb === "repos") {
+    await setupReposCli(rest);
+    return;
+  }
+  throw new Error(setupUsage());
 }
 
 async function runCli(argv: string[]): Promise<void> {
@@ -68,6 +82,11 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     summary: "Tear down a worktree",
     usage: "[--force] <ticket>",
     invoke: cleanupWorkspaceCli,
+  },
+  setup: {
+    summary: "Project-level setup commands (currently: repos)",
+    usage: "repos [--dry-run] [<repo>...]",
+    invoke: setupCli,
   },
   remote: {
     summary: "Create, authenticate, bootstrap, and inspect a remote runner",
