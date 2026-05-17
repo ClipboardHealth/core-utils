@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 
 import {
@@ -13,15 +14,33 @@ import type { RemoteRunnerProvider } from "./spriteRemoteRunnerProvider.ts";
 
 export { shellSingleQuote } from "./shell.ts";
 
-// import.meta.dirname is `<groundcrew>/{src,dist}/lib`; the shipped Safehouse
-// proxy wrapper lives in the sibling clearance package.
-const PACKAGES_ROOT = resolve(import.meta.dirname, "..", "..", "..");
-const SAFEHOUSE_CLEARANCE_WRAPPER_PATH = resolve(
-  PACKAGES_ROOT,
-  "clearance",
-  "safehouse",
-  "safehouse-clearance",
-);
+/**
+ * Resolve the shipped Safehouse proxy wrapper inside `@clipboard-health/clearance`
+ * via Node's module-resolution algorithm so the path works whether npm hoists
+ * clearance as a sibling of groundcrew or nests it under
+ * `groundcrew/node_modules/@clipboard-health/clearance`.
+ *
+ * @param baseUrl - **Test-only seam.** Production callers must omit this so the
+ *   helper resolves from this module's URL. Tests pass an invalid value to
+ *   exercise the catch branch.
+ */
+export function resolveSafehouseClearancePath(baseUrl: string = import.meta.url): string {
+  let clearancePackageJson: string;
+  try {
+    clearancePackageJson = createRequire(baseUrl).resolve(
+      "@clipboard-health/clearance/package.json",
+    );
+  } catch (error) {
+    throw new Error(
+      "@clipboard-health/clearance is required by @clipboard-health/groundcrew but could not be resolved. " +
+        "Install it alongside groundcrew (for example: `npm install -g @clipboard-health/clearance`).",
+      { cause: error },
+    );
+  }
+  return resolve(dirname(clearancePackageJson), "safehouse", "safehouse-clearance");
+}
+
+const SAFEHOUSE_CLEARANCE_WRAPPER_PATH = resolveSafehouseClearancePath();
 
 function renderAgentCommand(arguments_: { agentCmd: string; worktreeDir: string }): string {
   return arguments_.agentCmd
