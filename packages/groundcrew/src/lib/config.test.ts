@@ -1133,4 +1133,30 @@ config.orchestrator = { sessionLimitPercentage: Number.NaN };\n`,
 
     await expect(loadConfig()).rejects.toThrow(/codexbar must be an object/);
   });
+
+  it("rejects disabling the model used as `models.default`", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        models: {
+          default: "codex",
+          definitions: {
+            codex: { disabled: true },
+          },
+        },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    // Asserts on the specific "is disabled" wording, not the generic
+    // "is not a key in models.definitions" wording — proves the
+    // disabled-specific check runs before the existing default-validity check.
+    await expect(loadConfig()).rejects.toThrow(
+      /models\.default \("codex"\) is disabled\. Either re-enable it or set models\.default to an enabled model\./,
+    );
+  });
 });

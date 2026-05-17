@@ -587,6 +587,16 @@ function applyDefaults(user: Config): ResolvedConfig {
       `linear.projectSlug must end with a 12-character hex slugId (got ${JSON.stringify(user.linear.projectSlug)}). Copy the trailing segment from your Linear project URL, e.g. "ai-strategy-5152195762f3" from "https://linear.app/<workspace>/project/ai-strategy-5152195762f3".`,
     );
   }
+  const mergedDefinitions = mergeDefinitions(user.models?.definitions);
+  const effectiveDefault = user.models?.default ?? "claude";
+  if (
+    Object.hasOwn(DEFAULT_MODEL_DEFINITIONS, effectiveDefault) &&
+    !Object.hasOwn(mergedDefinitions, effectiveDefault)
+  ) {
+    fail(
+      `models.default ("${effectiveDefault}") is disabled. Either re-enable it or set models.default to an enabled model.`,
+    );
+  }
   return {
     linear: {
       projectSlug: user.linear.projectSlug,
@@ -600,8 +610,8 @@ function applyDefaults(user: Config): ResolvedConfig {
     },
     orchestrator: { ...DEFAULT_ORCHESTRATOR, ...user.orchestrator },
     models: {
-      default: user.models?.default ?? "claude",
-      definitions: mergeDefinitions(user.models?.definitions),
+      default: effectiveDefault,
+      definitions: mergedDefinitions,
     },
     prompts: {
       initial: user.prompts?.initial ?? DEFAULT_PROMPT_INITIAL,
