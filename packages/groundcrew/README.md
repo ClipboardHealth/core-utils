@@ -30,6 +30,13 @@ This installs the `crew` binary. `@clipboard-health/clearance` is pulled in tran
 
    At minimum set `linear.projectSlug` (paste the trailing segment of your Linear project URL, e.g. `ai-strategy-5152195762f3`), `workspace.projectDir`, and `workspace.knownRepositories`. Everything else has a default.
 
+   Create `workspace.projectDir` if it does not exist, and clone each repo in `workspace.knownRepositories` into `<projectDir>/<repo>` before the first `crew run`. Groundcrew creates per-ticket worktrees from these clones; it does not auto-clone. Use the literal `knownRepositories` string as the path under `projectDir` — `"owner/repo"` lives at `<projectDir>/owner/repo`, bare `"repo"` lives at `<projectDir>/repo`.
+
+   ```bash
+   mkdir -p ~/dev/groundcrew-workspaces
+   gh repo clone owner/repo ~/dev/groundcrew-workspaces/owner/repo
+   ```
+
    `crew` resolves the config path as: `GROUNDCREW_CONFIG` if set → `${XDG_CONFIG_HOME:-$HOME/.config}/groundcrew/config.ts` if it exists → a `config.ts` sitting next to `crew`'s own source files (only useful from a local checkout; see [Hacking on groundcrew](#hacking-on-groundcrew)). Set `GROUNDCREW_CONFIG` only when you want to override the XDG location.
 
 4. **Provide a Linear API key.** `crew` expects `LINEAR_API_KEY` in its environment. Any mechanism works — shell export, [direnv](https://direnv.net/), a `.env` file you `source`, or piping through `op run` if you store the credential in 1Password:
@@ -169,6 +176,8 @@ crew cleanup <TICKET>
 - **Project must be on a single Linear team in practice.** Cross-team projects work — the orchestrator caches the in-progress state ID per team — but every team in the project must use the same status name for `linear.statuses.inProgress`.
 - **Claude launches in bypass-permissions mode by default.** Groundcrew creates isolated per-ticket worktrees and unattended remote sessions, so the shipped `claude` command is `claude --permission-mode bypassPermissions` to avoid workspace-trust and tool-permission prompts blocking automation. Override `models.definitions.claude.cmd` if you want a stricter mode.
 - **Doctor's command introspection is shallow.** Doctor reports whether the host can run local tickets with macOS plus Safehouse, then tokenizes model `cmd` and checks the first two non-flag tokens against PATH (so `safehouse claude --foo` checks both `safehouse` and `claude`). Boolean flags without values, env-var assignments (`FOO=1`), shell pipelines, and subshells are not parsed — verify those manually. In particular, `npx -y claude` and `env FOO=1 claude` only check the wrapper, not the wrapped CLI.
+- **Doctor checks every configured model, including shipped defaults you don't use.** `models.definitions` always contains `claude` and `codex` (additive merge with the shipped defaults). If you only intend to label tickets `agent-claude`, doctor will still fail on a missing `codex` binary and exit non-zero. `crew run` itself only routes to the model named in a ticket's `agent-*` label, so a doctor failure for an unused model does not block actual ticket dispatch.
+- **Switch to tmux if cmux is misbehaving.** Set `workspaceKind: "tmux"` to force the tmux backend when cmux's CLI/socket bridge is flaky (symptoms: `cmux --json list-workspaces` returning `Failed to write to socket (Broken pipe)` or `Socket not found at ...cmux.sock` on every tick). tmux is more reliable — just a unix socket, no GUI app — at the cost of losing cmux's status pills, notifications, and vertical-tab sidebar.
 - **Agent CLI must accept a positional prompt.** The handoff is `<your cmd> "<prompt>"`. `claude`, `codex`, and `cursor-agent` all support this.
 
 ## Hacking on groundcrew
