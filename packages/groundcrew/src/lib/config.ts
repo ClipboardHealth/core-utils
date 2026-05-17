@@ -479,9 +479,9 @@ function failIfLegacyModelKeys(
     );
   }
   if (Object.hasOwn(override, "disabled")) {
-    if (override.disabled !== true) {
+    if (override["disabled"] !== true) {
       fail(
-        `models.definitions.${name}.disabled must be exactly \`true\` when set (got ${JSON.stringify(override.disabled)})`,
+        `models.definitions.${name}.disabled must be exactly \`true\` when set (got ${JSON.stringify(override["disabled"])})`,
       );
     }
     const conflicting = (["cmd", "color", "usage"] as const).filter((key) =>
@@ -509,6 +509,18 @@ function mergeDefinitions(
   );
   for (const [name, override] of Object.entries(user ?? {})) {
     failIfLegacyModelKeys(name, override);
+
+    if (override.disabled === true) {
+      if (!Object.hasOwn(DEFAULT_MODEL_DEFINITIONS, name)) {
+        fail(
+          `models.definitions.${name}: \`disabled: true\` is only valid for shipped defaults (${Object.keys(DEFAULT_MODEL_DEFINITIONS).join(", ")}). Remove the entry instead.`,
+        );
+      }
+      // oxlint-disable-next-line typescript/no-dynamic-delete -- `merged` is a fresh, function-local clone of DEFAULT_MODEL_DEFINITIONS, so V8 dictionary-mode concerns don't apply.
+      delete merged[name];
+      continue;
+    }
+
     const base: Partial<ModelDefinition> =
       merged[name] === undefined ? {} : cloneModelDefinition(merged[name]);
     // Per-key spread so overriding `cmd` alone preserves the default

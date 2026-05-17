@@ -520,6 +520,55 @@ describe("loadConfig", () => {
     );
   });
 
+  it("drops a shipped default when `disabled: true` is set", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        models: {
+          definitions: {
+            codex: { disabled: true },
+          },
+        },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+    const actual = await loadConfig();
+
+    expect(Object.keys(actual.models.definitions).toSorted()).toStrictEqual(["claude"]);
+    expect(actual.models.definitions["codex"]).toBeUndefined();
+    expect(actual.models.default).toBe("claude");
+  });
+
+  it("rejects `disabled: true` on a key that isn't a shipped default", async () => {
+    const path = writeConfigFile(
+      temporary,
+      configSource({
+        linear: { ...VALID_LINEAR },
+        workspace: VALID_WORKSPACE(temporary),
+        models: {
+          // Typo of "codex" — guard catches this before the user is left wondering
+          // why doctor still probes for the codex binary.
+          definitions: {
+            // cspell:disable-next-line
+            codexx: { disabled: true },
+          },
+        },
+      }),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(
+      // cspell:disable-next-line
+      /models\.definitions\.codexx: `disabled: true` is only valid for shipped defaults \(claude, codex\)\. Remove the entry instead\./,
+    );
+  });
+
   it("defaults workspaceKind to auto when omitted", async () => {
     const path = writeConfigFile(
       temporary,
