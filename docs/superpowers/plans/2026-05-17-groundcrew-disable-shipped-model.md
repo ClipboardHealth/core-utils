@@ -636,7 +636,7 @@ Rules:
 
 Find the existing Gotcha that discusses `crew doctor` checking both `claude` and `codex` (added in PR #663). Replace its "workaround" or "until-fixed" wording with a pointer to the new knob:
 
-> **`crew doctor` checks every model in `models.definitions`.** If you only use one shipped model, disable the other with `models.definitions.<name>: { disabled: true }` — see [Config reference → Disabling a shipped default](#disabling-a-shipped-default).
+> **`crew doctor` checks every model in `models.definitions`.** If you only use one shipped model, disable the other with `models.definitions.<name>: { disabled: true }` — see the "Disabling a shipped default" subsection under "Config reference" above.
 
 If the existing Gotcha is phrased differently, edit only the parts about the workaround / future fix. Don't move the entry.
 

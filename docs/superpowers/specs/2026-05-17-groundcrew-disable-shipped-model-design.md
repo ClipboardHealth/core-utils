@@ -74,7 +74,7 @@ Rationale: ambiguous intent. Forces the user to express one operation per entry.
 
 ### 2. `disabled` on a key that isn't a shipped default
 
-```
+```text
 { codexx: { disabled: true } }   // typo of "codex"
 ```
 
