@@ -516,7 +516,14 @@ function mergeDefinitions(
           `models.definitions.${name}: \`disabled: true\` is only valid for shipped defaults (${Object.keys(DEFAULT_MODEL_DEFINITIONS).join(", ")}). Remove the entry instead.`,
         );
       }
-      // oxlint-disable-next-line typescript/no-dynamic-delete -- `merged` is a fresh, function-local clone of DEFAULT_MODEL_DEFINITIONS, so V8 dictionary-mode concerns don't apply.
+      /**
+       * Filter-don't-flag is the intended design: removing the key (rather than tagging it as
+       * disabled) means downstream consumers (doctor, eligibility, boardSource, setupWorkspace,
+       * usage) see disabled models as if they were never declared, with no special-case logic.
+       * Lint-wise, `merged` is a fresh, function-local clone of DEFAULT_MODEL_DEFINITIONS, so
+       * V8 dictionary-mode / prototype-pollution concerns don't apply here.
+       */
+      // oxlint-disable-next-line typescript/no-dynamic-delete -- see comment above
       delete merged[name];
       continue;
     }
@@ -589,6 +596,11 @@ function applyDefaults(user: Config): ResolvedConfig {
   }
   const mergedDefinitions = mergeDefinitions(user.models?.definitions);
   const effectiveDefault = user.models?.default ?? "claude";
+  // Invariant: we infer "disabled" from absence — a shipped-default name missing from
+  // `mergedDefinitions` must have been removed via the `disabled: true` path in
+  // `mergeDefinitions`, which is the only removal path today. If a future change adds
+  // another removal path (e.g., a "remove this entry" sentinel), teach this check about
+  // it or plumb an explicit `disabledNames` set through to `validate()`.
   if (
     Object.hasOwn(DEFAULT_MODEL_DEFINITIONS, effectiveDefault) &&
     !Object.hasOwn(mergedDefinitions, effectiveDefault)
