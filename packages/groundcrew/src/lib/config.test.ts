@@ -460,6 +460,66 @@ describe("loadConfig", () => {
     );
   });
 
+  it("rejects `disabled: false` on a model definition", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  models: { definitions: { codex: { disabled: false } } },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(
+      /models\.definitions\.codex\.disabled must be exactly `true` when set/,
+    );
+  });
+
+  it('rejects a non-boolean `disabled` value (e.g. the string "true")', async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        '  models: { definitions: { codex: { disabled: "true" } } },',
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(
+      /models\.definitions\.codex\.disabled must be exactly `true` when set/,
+    );
+  });
+
+  it("rejects `disabled: true` combined with other fields (cmd / color / usage)", async () => {
+    const path = writeConfigFile(
+      temporary,
+      [
+        "export const config = {",
+        `  linear: ${JSON.stringify(VALID_LINEAR)},`,
+        `  workspace: ${JSON.stringify(VALID_WORKSPACE(temporary))},`,
+        "  models: { definitions: { codex: { disabled: true, cmd: 'override' } } },",
+        "};",
+      ].join("\n"),
+    );
+    setEnvironmentVariable("GROUNDCREW_CONFIG", path);
+
+    const { loadConfig } = await loadFreshConfig();
+
+    await expect(loadConfig()).rejects.toThrow(
+      /models\.definitions\.codex: cannot combine `disabled: true` with other fields \(cmd\)/,
+    );
+  });
+
   it("defaults workspaceKind to auto when omitted", async () => {
     const path = writeConfigFile(
       temporary,

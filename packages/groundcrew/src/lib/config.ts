@@ -74,7 +74,7 @@ export interface RemoteRunnerConfig {
   secretNames: string[];
 }
 
-type UserModelDefinition = Partial<ModelDefinition>;
+type UserModelDefinition = Partial<ModelDefinition> & { disabled?: boolean };
 
 /**
  * Setup command run inside sibling worktrees on the host. The host is
@@ -477,6 +477,21 @@ function failIfLegacyModelKeys(
     fail(
       `models.definitions.${name}.sandbox is no longer supported: Docker Sandboxes are no longer supported`,
     );
+  }
+  if (Object.hasOwn(override, "disabled")) {
+    if (override.disabled !== true) {
+      fail(
+        `models.definitions.${name}.disabled must be exactly \`true\` when set (got ${JSON.stringify(override.disabled)})`,
+      );
+    }
+    const conflicting = (["cmd", "color", "usage"] as const).filter((key) =>
+      Object.hasOwn(override, key),
+    );
+    if (conflicting.length > 0) {
+      fail(
+        `models.definitions.${name}: cannot combine \`disabled: true\` with other fields (${conflicting.join(", ")}). Either disable the model or override its fields, not both.`,
+      );
+    }
   }
 }
 
