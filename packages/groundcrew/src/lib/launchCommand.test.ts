@@ -1,5 +1,11 @@
+import { statSync } from "node:fs";
+
 import { DEFAULT_REMOTE_SETUP_COMMAND, type ModelDefinition } from "./config.ts";
-import { buildLaunchCommand, buildRemoteLaunchCommand } from "./launchCommand.ts";
+import {
+  buildLaunchCommand,
+  buildRemoteLaunchCommand,
+  resolveSafehouseClearancePath,
+} from "./launchCommand.ts";
 import { spriteRemoteRunnerProvider } from "./spriteRemoteRunnerProvider.ts";
 
 const REMOTE_SECRET_NAMES = ["NPM_TOKEN", "BUF_TOKEN"] as const;
@@ -42,6 +48,24 @@ function decodedSpriteRemoteCommand(command: string): string {
   expect(matches).toHaveLength(1);
   return Buffer.from(matches[0]?.[0] ?? "", "base64").toString("utf8");
 }
+
+describe(resolveSafehouseClearancePath, () => {
+  it("resolves through Node module resolution to the real safehouse-clearance file", () => {
+    const wrapperPath = resolveSafehouseClearancePath();
+
+    expect(wrapperPath).toMatch(/clearance\/safehouse\/safehouse-clearance$/);
+    expect(statSync(wrapperPath).isFile()).toBe(true);
+  });
+
+  it("wraps resolution failure in a guidance error naming clearance and groundcrew", () => {
+    // A non-absolute, non-file-URL baseUrl makes `createRequire` itself throw
+    // ERR_INVALID_ARG_VALUE before any node_modules walk, so this assertion is
+    // deterministic regardless of globalPaths, NODE_PATH, or $HOME/.node_modules.
+    expect(() => resolveSafehouseClearancePath("relative/path/that/createRequire/rejects")).toThrow(
+      /@clipboard-health\/clearance.*groundcrew/,
+    );
+  });
+});
 
 describe(buildLaunchCommand, () => {
   it("keeps the default remote setup command valid for shell control flow", () => {
