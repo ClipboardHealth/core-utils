@@ -167,6 +167,16 @@ describe(setupRepos, () => {
     expect(result.cloned).toStrictEqual(["owner/b"]);
   });
 
+  it("deduplicates entries so a single repo is cloned at most once", async () => {
+    const config = makeConfig({ projectDir, knownRepositories: ["owner/repo"] });
+
+    const result = await setupRepos(config, { only: ["owner/repo", "owner/repo"] });
+
+    expect(runCommandMock).toHaveBeenCalledTimes(1);
+    expect(result.cloned).toStrictEqual(["owner/repo"]);
+    expect(result.failed).toStrictEqual([]);
+  });
+
   it("throws when `only` contains an entry not in knownRepositories", async () => {
     const config = makeConfig({ projectDir, knownRepositories: ["owner/a"] });
 

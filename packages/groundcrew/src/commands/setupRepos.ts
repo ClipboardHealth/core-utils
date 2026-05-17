@@ -79,8 +79,13 @@ function planClones(config: ResolvedConfig, repositories: readonly string[]): Cl
   const toClone: string[] = [];
   const existing: string[] = [];
   const skipped: { repo: string; reason: string }[] = [];
+  const seen = new Set<string>();
 
   for (const entry of repositories) {
+    if (seen.has(entry)) {
+      continue;
+    }
+    seen.add(entry);
     const target = resolve(projectDir, entry);
     if (existsSync(target)) {
       existing.push(entry);
