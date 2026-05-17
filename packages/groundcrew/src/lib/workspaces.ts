@@ -8,7 +8,7 @@
 import { runCommandAsync } from "./commandRunner.ts";
 import type { ResolvedConfig, WorkspaceKindSetting } from "./config.ts";
 import { detectHostCapabilities, type HostCapabilities } from "./host.ts";
-import { errorMessage, log } from "./util.ts";
+import { errorMessage, log, readEnvironmentVariable } from "./util.ts";
 
 export type WorkspaceKind = "cmux" | "tmux";
 
@@ -389,6 +389,9 @@ const tmuxAdapter: Adapter = {
   async open(spec, signal) {
     await ensureTmuxSession(signal);
     const target = `${TMUX_SESSION}:${spec.name}`;
+    // Any non-empty value enables; see README's Gotchas for why.
+    const keepDeadWindowsEnv = readEnvironmentVariable("GROUNDCREW_KEEP_DEAD_WINDOWS");
+    const keepDeadWindows = keepDeadWindowsEnv !== undefined && keepDeadWindowsEnv.length > 0;
     await runWorkspaceCommand(
       "tmux",
       [
@@ -406,7 +409,7 @@ const tmuxAdapter: Adapter = {
         "-t",
         target,
         "remain-on-exit",
-        "off",
+        keepDeadWindows ? "on" : "off",
         ";",
         "set-window-option",
         "-t",

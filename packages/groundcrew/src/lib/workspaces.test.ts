@@ -1,3 +1,4 @@
+import { deleteEnvironmentVariable, setEnvironmentVariable } from "../testHelpers/env.ts";
 import { probeError } from "../testHelpers/workspaceProbe.ts";
 import type { RunCommandOptions } from "./commandRunner.ts";
 import type { ResolvedConfig, WorkspaceKindSetting } from "./config.ts";
@@ -450,6 +451,7 @@ describe("workspaces.open (tmux)", () => {
   beforeEach(() => {
     commonBeforeEach();
     detectHostMock.mockResolvedValue(makeHost({ hasCmux: false, hasTmux: true }));
+    deleteEnvironmentVariable("GROUNDCREW_KEEP_DEAD_WINDOWS");
   });
   afterEach(commonAfterEach);
 
@@ -477,6 +479,40 @@ describe("workspaces.open (tmux)", () => {
       "groundcrew:TEAM-1",
       "remain-on-exit",
       "off",
+      ";",
+      "set-window-option",
+      "-t",
+      "groundcrew:TEAM-1",
+      "allow-rename",
+      "off",
+    ]);
+  });
+
+  it("sets remain-on-exit on instead of off when GROUNDCREW_KEEP_DEAD_WINDOWS is set", async () => {
+    setEnvironmentVariable("GROUNDCREW_KEEP_DEAD_WINDOWS", "1");
+
+    await workspaces.open(makeConfig("tmux"), {
+      name: "TEAM-1",
+      cwd: "/work/repo-a-TEAM-1",
+      command: "exec claude",
+    });
+
+    expect(runMock).toHaveBeenCalledWith("tmux", [
+      "new-window",
+      "-d",
+      "-t",
+      "groundcrew",
+      "-n",
+      "TEAM-1",
+      "-c",
+      "/work/repo-a-TEAM-1",
+      "exec claude",
+      ";",
+      "set-window-option",
+      "-t",
+      "groundcrew:TEAM-1",
+      "remain-on-exit",
+      "on",
       ";",
       "set-window-option",
       "-t",
