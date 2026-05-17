@@ -394,6 +394,31 @@ describe(createBoardSource, () => {
       expect(first?.runner).toBe("local");
     });
 
+    it("falls back to models.default when an agent-<model> label refers to a disabled model", async () => {
+      // Simulate the post-filter state of a config with codex disabled —
+      // codex is absent from definitions. An agent-codex label should fall
+      // back to models.default (claude), the same way unknown labels do.
+      const configWithoutCodex = makeConfig({
+        models: {
+          default: "claude",
+          definitions: {
+            claude: { cmd: "claude", color: "#fff" },
+          },
+        },
+      });
+
+      const { source } = makeBoardSource(
+        makeClient({
+          pages: [[issueNode({ labels: { nodes: [{ name: "agent-codex" }] } })]],
+        }),
+        configWithoutCodex,
+      );
+      const state = await source.fetch();
+      const [first] = state.issues;
+      expect(first?.model).toBe("claude");
+      expect(first?.runner).toBe("local");
+    });
+
     it("defaults the local runner for labeled tickets without agent-remote", async () => {
       const { source } = makeBoardSource(
         makeClient({

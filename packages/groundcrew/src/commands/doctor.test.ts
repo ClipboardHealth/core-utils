@@ -268,6 +268,17 @@ describe(doctor, () => {
     expect(checked).not.toContain("script.ts");
   });
 
+  it("does not probe a disabled model's CLI binary", async () => {
+    // makeConfig's default fixture has only `claude` in definitions —
+    // simulating the post-filter state of a config with codex disabled.
+    loadConfigMock.mockResolvedValue(makeConfig());
+
+    await doctor();
+
+    expect(checkedCommands()).not.toContain("codex");
+    expect(checkedCommands()).toContain("claude");
+  });
+
   it("reports missing Safehouse as a local runner warning", async () => {
     detectHostMock.mockResolvedValue({
       hasSafehouse: false,
