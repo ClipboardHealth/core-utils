@@ -37,11 +37,13 @@ Optional: ticket links, rollout plan, residual risk, or areas for reviewers to f
 - Omit `## Notes` when there are no useful notes.
 - Do not invent ticket links, validation evidence, rollout plans, or risks. Use `Not run: <reason>` when validation was not run.
 
+Script paths in this procedure are written as `scripts/...`, relative to this SKILL.md. When executing a bundled script, run it from this skill directory or resolve it to this skill's installed directory; do not look for it at the repository root.
+
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
 2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. When it returns, your very next action is to restate the remaining steps (3–7) and continue with step 3 in the same turn. Do not stop, do not end the turn with a simplify summary.
 3. If `git status --short` shows changes, create a single conventional commit with `git commit --no-gpg-sign`.
 4. Push the branch to origin.
-5. Look up the current agent session ID with `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. If the script prints `codex <id>`, use `Agent session: codex resume <id>`. If it prints `claude-code <id>`, use `Agent session: claude --resume <id>`. If empty, there is no session footer line.
+5. Look up the current agent session ID by running this skill's bundled script: `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. If the script prints `codex <id>`, use `Agent session: codex resume <id>`. If it prints `claude-code <id>`, use `Agent session: claude --resume <id>`. If empty, there is no session footer line.
 6. Check for an existing PR with `gh pr view`.
    - No PR: create with `gh pr create`. Title = commit subject. Description = the PR body shape above, followed by the session footer line if known and `<!-- commit-push-pr:created v1 core@3.4.0 -->`.
    - PR exists: refresh the body via `gh pr edit --body` so (a) the new commit's changes are reflected in the prose while existing `## Summary`, `## Validation`, and `## Notes` sections are preserved unless clearly stale, (b) any known session footer line is appended if missing, never removing or rewriting existing `Agent session: ...` or `Agent session ID: ...` lines, and (c) any existing `<!-- commit-push-pr:created v1 ... -->` line is preserved verbatim, appending `<!-- commit-push-pr:created v1 core@3.4.0 -->` if absent. Then report the URL.
