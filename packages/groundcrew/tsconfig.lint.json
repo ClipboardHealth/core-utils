@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.lint.json",
-  "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "allowJs": true,
-    "noEmit": true
-  },
-  "include": ["."]
-}
