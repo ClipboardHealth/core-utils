@@ -8,7 +8,7 @@
 # replies; the `core@X.Y.Z` suffix records which plugin version produced it.
 
 SENTINEL_PREFIX='<!-- babysit-pr:addressed v1 '
-SENTINEL='<!-- babysit-pr:addressed v1 core@3.4.0 -->'
+SENTINEL='<!-- babysit-pr:addressed v1 core@3.4.1 -->'
 
 # Echo $1 with SENTINEL appended on its own trailing paragraph, unless the
 # body already contains any version of the sentinel (matched via SENTINEL_PREFIX).
