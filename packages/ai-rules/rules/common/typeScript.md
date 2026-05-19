@@ -26,7 +26,7 @@
 
 When removing a usage of a function, constant, type, or other symbol, check whether it has any remaining usages (e.g., search the codebase). If it has no other usages, delete the now-unused code. Apply this recursively: if deleting that code removes the last usage of another symbol, delete that symbol too. This includes removing any imports that become unused as a result.
 
-# Nil / defined checks
+## Null/Undefined Checks
 
 In TypeScript code that has access to `@clipboard-health/util-ts`, prefer the named helpers over raw null/undefined comparisons:
 
