@@ -61,6 +61,40 @@ describe(dollarOrMoneySchema, () => {
     });
   });
 
+  describe("invalid money object", () => {
+    it("propagates money schema errors for non-integer minor units", () => {
+      const actual = schema.safeParse({
+        amountInMinorUnits: 45.5,
+        currencyCode: "USD",
+      });
+
+      expectToBeSafeParseError(actual);
+      expect(actual.error.issues).toMatchObject([
+        {
+          path: ["amountInMinorUnits"],
+          code: "invalid_type",
+          message: "Expected integer, received float",
+        },
+      ]);
+    });
+
+    it("propagates money schema errors for unsupported currency", () => {
+      const actual = schema.safeParse({
+        amountInMinorUnits: 4500,
+        currencyCode: "EUR",
+      });
+
+      expectToBeSafeParseError(actual);
+      expect(actual.error.issues).toMatchObject([
+        {
+          path: ["currencyCode"],
+          code: "invalid_enum_value",
+          message: "Invalid enum value. Expected 'USD', received 'EUR'",
+        },
+      ]);
+    });
+  });
+
   describe("error cases", () => {
     it.each<{ input: unknown; message: string; name: string }>([
       {
