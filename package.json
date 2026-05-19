@@ -47,7 +47,7 @@
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "24.12.4",
-    "@typescript/native-preview": "7.0.0-dev.20260514.1",
+    "@typescript/native-preview": "7.0.0-dev.20260515.1",
     "@vitest/coverage-v8": "4.1.6",
     "cspell": "10.0.0",
     "dependency-cruiser": "17.4.0",
