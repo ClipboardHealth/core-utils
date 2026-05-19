@@ -22,7 +22,7 @@ export function resolveAllowlist(input: ResolveAllowlistInput): readonly string[
 
   if (normalized.length === 0) {
     throw new Error(
-      "Set CLEARANCE_ALLOW_HOSTS or CLEARANCE_ALLOW_HOSTS_FILES, e.g. CLEARANCE_ALLOW_HOSTS=api.example.com",
+      "Set CLEARANCE_ALLOW_HOSTS or CLEARANCE_ALLOW_HOSTS_FILES, e.g. CLEARANCE_ALLOW_HOSTS=api.example.com.",
     );
   }
 

@@ -26,15 +26,6 @@ const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
     },
   ],
   "packages/embedex": ["packages/embedex/static/**/*"],
-  "packages/groundcrew": [
-    "packages/groundcrew/configExample.ts",
-    "packages/groundcrew/clearance-allow-hosts",
-    {
-      input: "./packages/groundcrew/bin",
-      glob: "**/*",
-      output: "./bin",
-    },
-  ],
   "packages/nx-plugin": [
     {
       input: "./packages/nx-plugin/src",
@@ -183,9 +174,30 @@ async function writePackageJson({
   });
 
   packageJson.types ??= packageJson.typings;
+  removeSourceExportCondition(packageJson);
 
   const packageJsonPath = joinPathFragments(workspaceRoot, outputPath, "package.json");
   writeJsonFile(packageJsonPath, packageJson);
+}
+
+function removeSourceExportCondition(packageJson: PackageJson): void {
+  stripSourceExportCondition(packageJson.exports);
+}
+
+function stripSourceExportCondition(value: unknown): void {
+  if (!isRecord(value)) {
+    return;
+  }
+
+  delete value["@clipboard-health/source"];
+
+  for (const child of Object.values(value)) {
+    stripSourceExportCondition(child);
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 main().catch((error: unknown) => {
