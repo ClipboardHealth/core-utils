@@ -430,7 +430,7 @@ Up to 6 items that survived scrutiny and the moderator filter. Format each:
 
 Render template:
 
-````
+````markdown
 **Suggested fix (before → after):**
 
 ```ts
@@ -500,7 +500,6 @@ Build the payload as JSON and pipe it through `gh api --input`:
 
 ```bash
 # /tmp/in-depth-review-payload.json contains: {event, commit_id, body, comments: [...]}
-
 gh api -X POST "repos/<owner>/<repo>/pulls/<N>/reviews" --input /tmp/in-depth-review-payload.json
 ```
 
@@ -548,7 +547,7 @@ Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line s
 
 **3. "Apply all comments at once" prompt.** A fenced block containing a self-contained Claude Code prompt the PR author (or any agent operator) can copy-paste into a Claude Code session on a checkout of this branch to address every inline comment in one shot. Template (substitute the `<…>` placeholders before posting):
 
-````
+````markdown
 **Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
 
 ```
@@ -560,7 +559,7 @@ Build the body in `/tmp/in-depth-review-payload.json` with literal newlines (use
 
 Each comment body:
 
-````
+````markdown
 **[SEVERITY] Title**
 
 <Point — one or two sentences. Any reference to a specific file/line elsewhere in the codebase must be a GitHub permalink pinned to head_sha, not a bare `file:lines` string. The line(s) the comment is already anchored to do not need to be relinked.>
@@ -568,6 +567,7 @@ Each comment body:
 **Why it matters:** <failure_mode>
 
 **Example / context (when it clarifies the issue):**
+
 ```ts
 // e.g. the established pattern being violated, the two diverging imports
 // inside the diff, the buggy snippet annotated, the existing usage to

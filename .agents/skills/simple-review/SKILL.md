@@ -106,22 +106,66 @@ When `context_ref = worktree (stale, user accepted risk)`:
 
 ## Cross-repo evidence policy
 
-A finding's evidence is "cross-repo" when it depends on code in any repo other than the one containing the diff. **Never silently read external repos** — they may be stale or you may have no checkout at all.
+A finding's evidence is "cross-repo" when its load-bearing claim depends on code in any repo other than the one containing the diff — most commonly a producer, consumer, or downstream parser of something the diff changes. **Never silently read external repos** — they may be stale or you may have no checkout at all. Equally, **never claim a downstream impact you have not verified.** Speculating that "the FE will break" or "a consumer will choke on this" without reading the consumer is a top source of false-positive findings.
 
-When a finding's load-bearing evidence is in another repo:
+### When this policy fires
 
-- Tag the finding with `evidence_required: { repos, what_to_verify }` in your notes.
-- Cap severity at MAJOR until verified.
-- Ask the user before treating it as load-bearing:
+Treat a finding as cross-repo _before_ raising it whenever any of these apply:
 
-  > Some findings depend on code outside `<primary-repo>`. To verify, I need access to:
-  >
-  > - `<repo-1>` — to check `<what_to_verify>`
-  >
-  > For each: a local path (I'll run freshness preflight), `gh:<owner>/<repo>` (I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=main`), or `skip` (downgrade to MINOR with "speculative" prefix).
-  > Or `skip all` to downgrade every cross-repo finding.
+1. The diff touches a **contract/schema package** (anything in `packages/contract-*`, `packages/*-contract*`, ts-rest contracts, JSON Schema files, OpenAPI specs, Protobuf, Avro, etc.) — consumers of these packages live in other repos by design.
+2. The diff alters a **deployed-artifact boundary**: HTTP response shape, queue message shape, public SDK signature, exported library type, env-var contract, DB-record shape read by other services.
+3. The failure mode you wrote references a downstream actor by role rather than name: _"the FE will…", "the mobile app will…", "consumers will…", "a rolling deploy will break for…"_ — you cannot verify any of those claims from inside the diff's repo alone.
+4. The finding is a "backward-compatibility" or "rolling-deploy" concern about a producer change.
+5. The finding's argument is "this diverges from how other consumers do X" — and "other consumers" are not in this repo.
 
-For each user-provided local path, run the **same freshness preflight**. Read external code via `git show "${external_context_ref}:<path>"`, never via worktree filesystem. `skip` → cap at MINOR with "speculative" prefix.
+If any of (1)–(5) is true, the finding is cross-repo. Move on to **Verify or downgrade** below before keeping it in your candidate list.
+
+### Verify or downgrade (binding)
+
+For each cross-repo finding:
+
+1. **Identify the specific consumer/producer file(s)** you would need to read to confirm the claim. Be concrete: _"facility app's `useGetInvoiceBalances` hook to see whether it imports the contract schema and whether `.parse()` is strict."_ If you cannot name a specific artifact, the finding is speculative — drop it.
+2. **Search likely locations you already have access to** before asking the user. Sibling repos under the same parent directory, monorepo workspaces, vendored copies. Use targeted `grep`/`git grep` — do not recursively scan the whole filesystem.
+3. **If found locally**, run the **same freshness preflight** on that external repo (branch, dirty state, behind/ahead). Read context via `git show "${external_context_ref}:<path>"`, never via worktree filesystem. Note "verified against: `<repo>@<short-sha>`" in the finding.
+4. **If not found locally**, ask the user for access using the template below. Do not raise the finding until the user has responded.
+5. **If the user picks `skip`**, you have two choices:
+   - **Drop the finding entirely** if the speculative version doesn't pass the litmus test ("concrete, current, product-visible cost").
+   - **Keep as MINOR with explicit "speculative" prefix in the title** — only when the worst-case is genuinely concerning AND you can name the _assumption_ the finding rests on (e.g., _"assuming the FE imports this schema and parses strictly, then…"_). Make the assumption visible so the PR author can confirm or refute it.
+
+Severity cap on any cross-repo finding is **MAJOR** until verified. Anything verified as actual breakage can be raised to its true severity.
+
+### Access-request template
+
+When asking the user for access to external repos, name the specific file and the specific question. Do not ask vaguely for "access to repo X" — ask for the evidence that would change your mind.
+
+> One finding depends on code outside `<primary-repo>`. Before I raise it, I need to verify:
+>
+> **Finding:** `<short title>`
+> **Claim:** `<what the finding asserts about the consumer/producer>`
+> **What I need to read:** `<repo>/<path>` — to check `<specific question, e.g. "whether it imports GetFooResponseSchema and calls .strict() on it">`.
+>
+> Options:
+>
+> - **Local path** — give me an absolute path to a checkout (I'll run freshness preflight and read via `git show`).
+> - **`gh:<owner>/<repo>`** — I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=main`.
+> - **`skip`** — I'll either drop the finding or keep it as MINOR with a "speculative — assumes `<assumption>`" prefix; you can confirm/refute.
+> - **`skip all`** — apply `skip` to every remaining cross-repo finding.
+
+### What "verify" means in practice
+
+For a contract/schema change, the questions you must answer before claiming consumer impact are concrete:
+
+- Does the consumer **import the contract schema directly**, or define its own local schema? (Local schema = your contract change has zero direct effect on the consumer's parser.)
+- If it imports, does it call `.strict()`, `.passthrough()`, or rely on the default (strip unknowns)? Required fields missing → parse failure; extra fields → silently stripped under default.
+- Is the consumer pinned to a published version of the package, or symlinked/workspace-resolved? Pinned → upgrade is explicit and the consumer team controls timing.
+- Is the field actually read at runtime, or just typed? Type-only references don't fail at runtime even when the schema diverges.
+
+For an API response change (without consumer-side schema):
+
+- Does the consumer JSON-parse and read specific keys, or pass the body through opaquely (e.g. to a logger, to storage)?
+- Does any layer in between (BFF, gateway) apply its own validation?
+
+Answer these from real code, not from priors about "how FEs usually work." When you can't answer, you do not have a finding — you have a hypothesis.
 
 ## Diff classification (pick which lenses apply)
 
@@ -173,7 +217,7 @@ For each change name a realistic input or condition that would expose a bug. If 
 - Migration → rollback, rolling-deploy compat, ETL/downstream impact (deep dive under Database).
 - Schema/query changed → indexes for new patterns, N+1, cascade semantics, type fit (deep dive under Database).
 - Telemetry covers business/product value, not only engineering surface metrics.
-- Contract/backward-compat for any consumer-visible response shape change.
+- Contract/backward-compat for any consumer-visible response shape change. **If you suspect a consumer break, the finding is cross-repo — follow the Cross-repo evidence policy before raising it. Do not raise speculative "the FE will fail to parse" findings without reading the FE.**
 
 ### Minimalism (always)
 
@@ -296,10 +340,11 @@ After walking the checklist, apply these filters to your candidate findings:
 
 1. **Drop findings with empty or hypothetical `failure_mode`.** "A future caller might…", "in case someone…" → drop.
 2. **Self-audit for slop.** For every finding you wrote, ask: does it match a slop pattern (asks-for-defensive-guard on already-narrowed value; hypothetical future caller; restating-obvious comment request; abstract refactor with no concrete cost-of-keeping; observability without named failure mode; test for trivially-verifiable code; defends against a state the product cannot produce)? If yes and you can't write a concrete, product-specific cost in one sentence — drop it. Being your own AntiSlop reviewer is the main lever for keeping this skill honest.
-3. **Drop do-not-raise items** that slipped through.
-4. **Apply the NIT gate.** NITs that don't meet (a)/(b)/(c) → drop. Kept internally but hidden by default in synthesis.
-5. **Merge near-duplicates** under one finding (note which lens(es) surfaced it).
-6. **Apply hard caps.** 6 actionable, 8 NITs retained, rest summarized as "N additional items omitted".
+3. **Cross-repo audit.** For every finding, ask: does the failure_mode reference a downstream actor (FE, mobile, consumer service, rolling deploy, external library user) or a contract/schema/public-artifact boundary? If yes, did you actually read the relevant external file(s) to confirm the claim, or are you reasoning from priors about "how FEs usually work"? If you didn't read it, the finding is cross-repo — route to the Cross-repo evidence policy (verify, ask for access, or downgrade to a clearly-labeled "speculative" MINOR). Do not ship a "consumer will break" finding sourced from imagination.
+4. **Drop do-not-raise items** that slipped through.
+5. **Apply the NIT gate.** NITs that don't meet (a)/(b)/(c) → drop. Kept internally but hidden by default in synthesis.
+6. **Merge near-duplicates** under one finding (note which lens(es) surfaced it).
+7. **Apply hard caps.** 6 actionable, 8 NITs retained, rest summarized as "N additional items omitted".
 
 Track dropped items in a Withdrawn section (one-liner each) so the user can see what was filtered.
 
@@ -335,7 +380,7 @@ Up to 6 items. Format each:
 
 Render template:
 
-````
+````markdown
 **Suggested fix (before → after):**
 
 ```ts
@@ -357,7 +402,7 @@ Order by severity (CRITICAL → MAJOR → MINOR), then by file.
 
 ### Nits
 
-Do **not** print by default. Print only: _"N nits available (M from convention audit). Reply `show nits` to see them."_ If N is 0, omit. When user replies `show nits`, print one-liners with `file:lines` and `[CONVENTION]` tag where applicable, then re-prompt user gate 1.
+Do **not** print by default. Print only: _"N nit(s) available (M from convention audit). Pick `Show the N NIT(s) first` in the picker below to see them."_ If N is 0, omit this entire section. Surface the "show nits" affordance as an option in the User gate 1 `AskUserQuestion` call (not as typed text). When selected, print one-liners with `file:lines` and `[CONVENTION]` tag where applicable, then re-call User gate 1.
 
 ### Withdrawn
 
@@ -365,7 +410,35 @@ Terse one-liners of items you dropped (do-not-raise, NIT gate, self-slop audit).
 
 ## User gate 1 — select items
 
-Ask exactly: _"Which items do you want to act on? Reply with ids (e.g. `1, 3`), `all actionable`, `show nits`, or `none`."_ Do not proceed until the user answers. `none` ends the skill. `show nits` prints the hidden list, then re-asks.
+Ask via **`AskUserQuestion`**, not as a text prompt. Render each actionable finding as an option, with a trailing "show the N NIT(s) first" option when `N > 0`. Set `multiSelect: true` so the user can pick any combination (including none). Do not proceed until the user answers.
+
+**Template:**
+
+```ts
+AskUserQuestion({
+  questions: [
+    {
+      question: "Which findings should I <verb>?", // "post as inline comments on PR <N>" / "implement locally" / "act on"
+      header: "Findings",
+      multiSelect: true,
+      options: [
+        { label: "1 - <short title> (<SEVERITY>)", description: "<one-sentence failure_mode>" },
+        { label: "2 - …", description: "…" },
+        // …one entry per actionable finding (cap 6)
+        { label: "Show the <N> NIT(s) first", description: "Print the NIT list before deciding." }, // omit when N == 0
+      ],
+    },
+  ],
+});
+```
+
+Option-label format: `<id> - <short title> (<SEVERITY>)`. The id matches the in-chat numbering in the Actionable section above. The `description` is one short sentence — the failure_mode, not the fix. Do not pad with file paths; the user already has the full Actionable section in the chat.
+
+Branching on the answer:
+
+- **Zero findings selected** (user submitted no boxes / picked Skip) → end the skill with a one-line "no findings selected — nothing to do" reply.
+- **Only "Show the N NIT(s) first"** selected → print the NITs (one-liners with `file:lines` and `[CONVENTION]` tag where applicable), then re-call `AskUserQuestion` for this same gate.
+- **Findings selected (with or without the NIT toggle)** → proceed to gate 2. If the NIT toggle was also checked, print NITs once before gate 2.
 
 ## Branch on mode
 
@@ -373,13 +446,35 @@ Ask exactly: _"Which items do you want to act on? Reply with ids (e.g. `1, 3`), 
 
 **Plan.** For the selected ids only, produce an ordered implementation plan: steps, files touched per step, tests to add/update, verification commands. Do **not** edit files yet.
 
-**User gate 2 (author):** _"What do you want to do? (`implement-locally` / `post-as-review` / `both` / `edit-plan` / `cancel`)"_
+**User gate 2 (author)** — ask via **`AskUserQuestion`** (`multiSelect: false`):
 
-- `implement-locally` → execute the plan.
-- `post-as-review` → post anchored review (below); skill ends.
-- `both` → post review first, then execute.
-- `edit-plan` → revise, re-prompt.
-- `cancel` → stop.
+```ts
+AskUserQuestion({
+  questions: [
+    {
+      question: "What do you want to do with the selected findings?",
+      header: "Next step",
+      multiSelect: false,
+      options: [
+        { label: "Implement locally", description: "Apply the plan against your checkout." },
+        {
+          label: "Post as review",
+          description: "Post anchored comments on your own PR for the team to see, then stop.",
+        },
+        { label: "Both", description: "Post the review first, then execute the plan locally." },
+        { label: "Edit the plan", description: "Revise the plan; I'll re-prompt this gate." },
+        { label: "Cancel", description: "Stop." },
+      ],
+    },
+  ],
+});
+```
+
+- `Implement locally` → execute the plan.
+- `Post as review` → post anchored review (below); skill ends.
+- `Both` → post review first, then execute.
+- `Edit the plan` → revise, re-prompt this gate.
+- `Cancel` → stop.
 
 **Execute.** Use TodoWrite to track each step. Apply the plan, run verification, report results. If a step surfaces a new substantive issue not in the selected items, stop and ask before expanding scope.
 
@@ -387,11 +482,31 @@ Ask exactly: _"Which items do you want to act on? Reply with ids (e.g. `1, 3`), 
 
 Skip the plan step — you are not implementing someone else's code.
 
-**User gate 2 (reviewer):** _"Post these on the PR? (`post` / `edit` / `cancel`)"_
+**User gate 2 (reviewer)** — ask via **`AskUserQuestion`** (`multiSelect: false`):
 
-- `post` → post anchored review.
-- `edit` → ask which to drop or refine, then re-prompt.
-- `cancel` → stop.
+```ts
+AskUserQuestion({
+  questions: [
+    {
+      question: "Post these on the PR?",
+      header: "Post review",
+      multiSelect: false,
+      options: [
+        {
+          label: "Post",
+          description: "Submit a single COMMENT review with the selected anchored comments.",
+        },
+        { label: "Edit", description: "Ask which to drop or refine, then re-prompt." },
+        { label: "Cancel", description: "Stop." },
+      ],
+    },
+  ],
+});
+```
+
+- `Post` → post anchored review.
+- `Edit` → ask which to drop or refine, then re-prompt.
+- `Cancel` → stop.
 
 ## Posting an anchored PR review (both modes)
 
@@ -399,7 +514,6 @@ Post via the GitHub Reviews API as a **single** review with all selected actiona
 
 ```bash
 # /tmp/simple-review-payload.json contains: {event, commit_id, body, comments: [...]}
-
 gh api -X POST "repos/<owner>/<repo>/pulls/<N>/reviews" --input /tmp/simple-review-payload.json
 ```
 
@@ -446,7 +560,7 @@ Italicized. Substitute `<viewer-login>` from `gh api user --jq .login`. Non-nego
 
 **3. "Apply all comments at once" prompt.** A fenced block with a self-contained Claude Code prompt the PR author can paste into a Claude Code session on a checkout of this branch:
 
-````
+````markdown
 **Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
 
 ```
@@ -456,18 +570,14 @@ Fetch the most recent review by @<viewer-login> on PR <PR_URL>. For every inline
 
 ### Each comment body
 
-````
-**[SEVERITY] Title**
+**Budget:** ≤60 words of prose total + the code block. Hard caps below are binding — if a section won't fit, the finding is probably two findings; split or drop one.
 
-<Point — one or two sentences. References to other code use GitHub permalinks pinned to head_sha, not bare `file:lines`. The line(s) the comment is anchored to do not need to be relinked.>
+````markdown
+**[SEVERITY] Title** <!-- ≤8 words -->
 
-**Why it matters:** <failure_mode>
+<Point — 1 sentence, ≤25 words. References to other code use GitHub permalinks pinned to head_sha, not bare `file:lines`. The line(s) the comment is anchored to do not need to be relinked.>
 
-**Example / context (when it clarifies the issue):**
-```ts
-// e.g. the established pattern being violated, the buggy snippet annotated,
-// or the existing usage to compare against (permalink in the prose above).
-```
+**Why it matters:** <failure_mode — 1 sentence, ≤20 words. **Drop this line entirely** when it would only rephrase the Point.>
 
 **Suggested fix:**
 
@@ -478,7 +588,11 @@ Fetch the most recent review by @<viewer-login> on PR <PR_URL>. For every inline
 
 Rules:
 
-- **Include a code snippet whenever it makes the bug or fix clearer than prose alone.** Skip the snippet when the issue is purely structural or when the `suggestion` block alone says everything.
+- **No bulleted lists in the comment body.** Bullets fragment reasoning; either the prose fits in one sentence or it doesn't belong on the PR.
+- **No prose preamble on the suggested fix.** The code block speaks for itself. Don't write "Suggested fix — route Rate the same way as Pay" before the block; just show the block.
+- **No trailing addenda.** "If feature X isn't shipped yet…", "Note that this also affects…", "While you're here…" — these belong in the in-chat synthesis, not on the posted comment. The reviewee can ask follow-ups on the thread.
+- **Optional Example/context fenced block is opt-out by default.** Include a non-suggestion code block only when prose-plus-`suggestion` is genuinely ambiguous (e.g. you're flagging a pattern violation and the offending pattern is not in the anchored lines). Default: skip.
+- **Include a `suggestion` block whenever it makes the fix concrete.** Skip when the issue is purely structural or when prose alone says everything.
 - **`suggestion` block stands alone on the PR.** GitHub already renders the diff vs. anchored line(s). Do **NOT** include a `// Before` fenced block in PR comments — it duplicates what GitHub shows. This is different from the in-chat **Actionable** section, which DOES render `// Before` + `// After` pairs so the user can review before approving the post.
 - **When to skip the `suggestion` block:** structural fix with no drop-in (use prose + a target-shape fenced block), OR `suggested_fix.after` is empty (pure deletion — write "_Delete the anchored line(s)._" instead), OR `suggested_fix.before` is empty (pure addition — `suggestion` block still works; prefix `after` with `// Add after line <N>`).
 - **Permalinks for in-prose line references.** Build as `https://github.com/<owner>/<repo>/blob/<head_sha>/<path>#L<start>-L<end>` (single line: `#L<n>`). Always pin to `head_sha`. Use Markdown link syntax with a meaningful label.
@@ -490,11 +604,11 @@ After posting, print the review `html_url` and a one-line summary of how many co
 - **No subagents.** This skill runs entirely in the main context. If a finding needs deeper independent investigation that you can't do confidently in-line, surface it as a flagged finding rather than guess.
 - Issue parallel `gh`/`git` commands in a single message when independent (PR view, diff, files, viewer).
 - If a finding has empty `failure_mode` → drop. NIT not meeting the gate → drop. Do-not-raise items → drop. Caps applied (6 actionable, 8 nits).
-- Hide nits by default. Print only on `show nits`.
+- Hide nits by default. Print only when the user selects `Show the N NIT(s) first` in the User gate 1 picker.
 - Reviews are always `event: COMMENT`. Never approve or request changes on the user's behalf.
 - Conditional lenses (Security/Database/Frontend) run only when classification matches.
 - Freshness preflight is mandatory before reading code. Read repo context via `git show "<context_ref>:<path>"`, not the worktree filesystem, unless `context_ref = worktree (stale, user accepted risk)`.
 - Never run state-modifying git commands on the user's behalf (`checkout`, `stash`, `reset`, `clean`, `pull` with merge). Warn and ask. `git fetch` is allowed.
-- Cross-repo evidence is opt-in by the user. Tag findings `evidence_required`, cap at MAJOR, ask before treating as load-bearing. `skip` → MINOR with "speculative" prefix.
+- Cross-repo evidence is opt-in by the user. The policy fires whenever the diff touches a contract/schema/published-artifact boundary OR the finding's failure_mode references a downstream actor (FE, mobile, consumer service, rolling deploy). Identify the specific external file you'd need to read, search locally first, then ask the user using the access-request template. Cap at MAJOR until verified; `skip` → either drop or keep as MINOR with a visible "speculative — assumes `<X>`" prefix. **Never raise a "consumer will break" finding without reading the consumer.**
 - `suggested_fix` is always a `{ before, after }` object of code (not prose). **In-chat Actionable:** render both halves as separate `// Before` then `// After` fenced blocks. **PR-review inline comments:** render only the `suggestion` block (GitHub already renders the diff). Empty `before` = pure addition; empty `after` = pure deletion (omit `suggestion`, write "_Delete the anchored line(s)._"); omit entirely for structural changes.
-- Both user gates are mandatory. Do not auto-apply recommendations and do not auto-post reviews.
+- Both user gates are mandatory and **must** be presented via `AskUserQuestion` (the structured picker), not as inline text questions. Do not auto-apply recommendations and do not auto-post reviews.
