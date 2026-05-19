@@ -26,24 +26,14 @@
 
 When removing a usage of a function, constant, type, or other symbol, check whether it has any remaining usages (e.g., search the codebase). If it has no other usages, delete the now-unused code. Apply this recursively: if deleting that code removes the last usage of another symbol, delete that symbol too. This includes removing any imports that become unused as a result.
 
-## Null/Undefined Checks
+# Nil / defined checks
 
-Use `isDefined` helper from `@clipboard-health/util-ts` for `null` and `undefined` checks:
+In TypeScript code that has access to `@clipboard-health/util-ts`, prefer the named helpers over raw null/undefined comparisons:
 
-```typescript
-// Bad: truthy check fails for 0, "", false
-if (shiftId && workplaceId) {
-}
-// Bad: use utility instead
-if (shift === null) {
-}
-if (workplace === undefined) {
-}
+- Replace `x === undefined`, `x === null`, or `!x` (when used as a presence check) with `isNil(x)`.
+- Replace `x !== undefined`, `x !== null`, or `x` (as a truthy presence check) with `isDefined(x)`.
 
-// Good: explicit defined check
-if (isDefined(shiftId) && isDefined(workplaceId)) {
-}
-```
+Import from `@clipboard-health/util-ts`.
 
 ## Types
 
