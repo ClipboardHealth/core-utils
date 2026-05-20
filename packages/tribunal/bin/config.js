@@ -1,21 +1,12 @@
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { cosmiconfig } from "cosmiconfig";
 
-const SEARCH_PLACES = [
-  "package.json",
-  ".tribunalrc",
-  ".tribunalrc.json",
-  ".tribunalrc.yaml",
-  ".tribunalrc.yml",
-  ".tribunalrc.js",
-  ".tribunalrc.cjs",
-  ".tribunalrc.mjs",
-  "tribunal.config.json",
-  "tribunal.config.js",
-  "tribunal.config.cjs",
-  "tribunal.config.mjs",
-];
-
+/** @typedef {{ TRIBUNAL_CONFIG_SEARCH_PLACES: string[] }} ConfigSearchPlacesModule */
 /** @typedef {"anthropic" | "googleGenerativeAi" | "openai"} ApiKeyName */
+
+const { TRIBUNAL_CONFIG_SEARCH_PLACES } = await importConfigSearchPlaces();
 
 /** @type {Record<ApiKeyName, string>} */
 const API_KEY_ENVIRONMENT_VARIABLES = {
@@ -30,7 +21,7 @@ const API_KEY_ENVIRONMENT_VARIABLES = {
  */
 export async function loadConfiguredApiKeyEnvironment(input = {}) {
   const cwd = input.cwd ?? process.cwd();
-  const explorer = cosmiconfig("tribunal", { searchPlaces: SEARCH_PLACES });
+  const explorer = cosmiconfig("tribunal", { searchPlaces: [...TRIBUNAL_CONFIG_SEARCH_PLACES] });
   const result = await explorer.search(cwd);
 
   if (result === null || result.isEmpty === true) {
@@ -92,4 +83,48 @@ function createEnvironmentValue(apiKeys, key) {
  */
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * @returns {Promise<ConfigSearchPlacesModule>}
+ */
+async function importConfigSearchPlaces() {
+  const compiledModuleUrl = new URL("../src/configSearchPlaces.js", import.meta.url);
+
+  if (existsSync(fileURLToPath(compiledModuleUrl))) {
+    return parseConfigSearchPlacesModule(await import(compiledModuleUrl.href));
+  }
+
+  return parseConfigSearchPlacesModule(
+    await import(new URL("../src/configSearchPlaces.ts", import.meta.url).href),
+  );
+}
+
+/**
+ * @param {unknown} value
+ * @returns {ConfigSearchPlacesModule}
+ */
+function parseConfigSearchPlacesModule(value) {
+  if (!isRecord(value)) {
+    throw new TypeError("Tribunal config search places module must be an object.");
+  }
+
+  const searchPlaces = value.TRIBUNAL_CONFIG_SEARCH_PLACES;
+
+  if (!Array.isArray(searchPlaces)) {
+    throw new TypeError("Tribunal config search places must be an array.");
+  }
+
+  /** @type {string[]} */
+  const parsedSearchPlaces = [];
+
+  for (const searchPlace of searchPlaces) {
+    if (typeof searchPlace !== "string") {
+      throw new TypeError("Tribunal config search places must be strings.");
+    }
+
+    parsedSearchPlaces.push(searchPlace);
+  }
+
+  return { TRIBUNAL_CONFIG_SEARCH_PLACES: parsedSearchPlaces };
 }

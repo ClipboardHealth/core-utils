@@ -1,6 +1,7 @@
 import { cosmiconfig } from "cosmiconfig";
 import { z } from "zod";
 
+import { TRIBUNAL_CONFIG_SEARCH_PLACES } from "./configSearchPlaces.ts";
 import { type ModelRole, type ModelSpec, parseModelSpec } from "./models.ts";
 import { parseReasoningLevel, type ReasoningOverrides } from "./reasoning.ts";
 import type { OutputFormat } from "./tribunal.ts";
@@ -26,21 +27,6 @@ export interface LoadTribunalConfigInput {
   cwd: string;
   search?: (cwd: string) => Promise<TribunalConfigSearchResult | null>;
 }
-
-const TRIBUNAL_CONFIG_SEARCH_PLACES = [
-  "package.json",
-  ".tribunalrc",
-  ".tribunalrc.json",
-  ".tribunalrc.yaml",
-  ".tribunalrc.yml",
-  ".tribunalrc.js",
-  ".tribunalrc.cjs",
-  ".tribunalrc.mjs",
-  "tribunal.config.json",
-  "tribunal.config.js",
-  "tribunal.config.cjs",
-  "tribunal.config.mjs",
-] as const;
 
 const API_KEY_ENVIRONMENT_VARIABLES: Record<TribunalApiKeyName, string> = {
   anthropic: "ANTHROPIC_API_KEY",
