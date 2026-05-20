@@ -1,0 +1,22 @@
+{
+  "apiKeys": {
+    "anthropic": "op://Private/ANTHROPIC_API_KEY/credential",
+    "googleGenerativeAi": "op://Private/GOOGLE_GENERATIVE_AI_API_KEY/credential",
+    "openai": "op://Private/OPENAI_API_KEY/credential"
+  },
+  "models": {
+    "advocate": "anthropic:claude-opus-4-7",
+    "skeptic": "openai:gpt-5.5",
+    "analyst": "google:gemini-3.1-pro-preview",
+    "deliberator": "openai:gpt-5.5"
+  },
+  "reasoning": {
+    "advocate": "max",
+    "skeptic": "xhigh",
+    "analyst": "high",
+    "deliberator": "xhigh"
+  },
+  "outputFormat": "text",
+  "showPerspectives": false,
+  "saveIntermediates": true
+}

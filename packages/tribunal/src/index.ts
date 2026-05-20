@@ -2,6 +2,12 @@ import { readFile as readFileFromDisk } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
+import {
+  applyTribunalConfigToProcessEnvironment,
+  createEnvironmentWithTribunalConfig,
+  loadTribunalConfig,
+  type TribunalConfig,
+} from "./config.ts";
 import { formatOutput } from "./format.ts";
 import {
   createDefaultIntermediateOutputPath,
@@ -127,6 +133,7 @@ export interface RunCliInput {
   argv?: readonly string[];
   cwd?: string;
   environment?: Record<string, string | undefined>;
+  loadConfig?: (cwd: string) => Promise<TribunalConfig>;
   stdout?: TextWritable;
   stderr?: TextWritable;
   readFile?: (path: string, encoding: BufferEncoding) => Promise<string>;
@@ -328,7 +335,7 @@ export async function runCli(input: RunCliInput = {}): Promise<number> {
   const argv = input.argv ?? process.argv.slice(2);
   const cwd = input.cwd ?? process.cwd();
   // oxlint-disable-next-line node/no-process-env -- CLI defaults to inherited environment so op run can inject API keys and model override vars at runtime.
-  const environment = input.environment ?? process.env;
+  const baseEnvironment = input.environment ?? process.env;
   const stdout = input.stdout ?? process.stdout;
   const stderr = input.stderr ?? process.stderr;
   const runTribunal = input.runTribunal ?? runTribunalDefault;
@@ -343,7 +350,20 @@ export async function runCli(input: RunCliInput = {}): Promise<number> {
       return 0;
     }
 
-    if (parsedArguments.verbose) {
+    const config = await loadCliConfig({ cwd, loadConfig: input.loadConfig });
+    const configuredArguments = mergeParsedArgumentsWithConfig({
+      argv,
+      config,
+      parsedArguments,
+    });
+    const environment = createEnvironmentWithTribunalConfig({
+      config,
+      environment: baseEnvironment,
+    });
+
+    applyTribunalConfigToProcessEnvironment(config);
+
+    if (configuredArguments.verbose) {
       stderr.write("Running tribunal...\n");
       progressReporter = createCliProgressReporter({
         intervalMs: DEFAULT_PROGRESS_INTERVAL_MS,
@@ -353,16 +373,16 @@ export async function runCli(input: RunCliInput = {}): Promise<number> {
 
     const loadContextInput = createLoadContextInput({
       cwd,
-      parsedArguments,
+      parsedArguments: configuredArguments,
       readFile: input.readFile,
     });
     const loadedContext = await loadContext(loadContextInput);
-    const tribunalRequest = createTribunalRequest(parsedArguments, loadedContext);
+    const tribunalRequest = createTribunalRequest(configuredArguments, loadedContext);
     intermediateOutputRecorder = await createCliIntermediateOutputRecorder({
       cwd,
       makeDirectory: input.makeDirectory,
       now: input.now,
-      parsedArguments,
+      parsedArguments: configuredArguments,
       request: tribunalRequest,
       stderr,
       writeFile: input.writeFile,
@@ -386,12 +406,12 @@ export async function runCli(input: RunCliInput = {}): Promise<number> {
 
     stdout.write(
       `${formatOutput(responseWithContextWarnings, {
-        outputFormat: parsedArguments.outputFormat,
-        showPerspectives: parsedArguments.showPerspectives,
+        outputFormat: configuredArguments.outputFormat,
+        showPerspectives: configuredArguments.showPerspectives,
       })}\n`,
     );
 
-    if (parsedArguments.verbose) {
+    if (configuredArguments.verbose) {
       writeWarnings(stderr, responseWithContextWarnings.metadata.warnings);
     }
 
@@ -437,6 +457,77 @@ function parseOutputFormat(input: string): OutputFormat {
       throw new Error(`Unknown output format: ${input}`);
     }
   }
+}
+
+async function loadCliConfig(input: {
+  cwd: string;
+  loadConfig: RunCliInput["loadConfig"] | undefined;
+}): Promise<TribunalConfig> {
+  const { cwd, loadConfig } = input;
+
+  if (loadConfig !== undefined) {
+    return await loadConfig(cwd);
+  }
+
+  return await loadTribunalConfig({ cwd });
+}
+
+function mergeParsedArgumentsWithConfig(input: {
+  argv: readonly string[];
+  config: TribunalConfig;
+  parsedArguments: ParsedCliArguments;
+}): ParsedCliArguments {
+  const { argv, config, parsedArguments } = input;
+  const cliFlags = collectCliConfigFlags(argv);
+  const configuredArguments: ParsedCliArguments = {
+    ...parsedArguments,
+    models: { ...config.models, ...parsedArguments.models },
+    reasoning: { ...config.reasoning, ...parsedArguments.reasoning },
+  };
+
+  if (!cliFlags.hasOutputFormat && config.outputFormat !== undefined) {
+    configuredArguments.outputFormat = config.outputFormat;
+  }
+
+  if (!cliFlags.hasShowPerspectives && config.showPerspectives !== undefined) {
+    configuredArguments.showPerspectives = config.showPerspectives;
+  }
+
+  if (!cliFlags.hasSaveIntermediates && config.saveIntermediates !== undefined) {
+    configuredArguments.shouldSaveIntermediates = config.saveIntermediates;
+  }
+
+  return configuredArguments;
+}
+
+function collectCliConfigFlags(argv: readonly string[]): {
+  hasOutputFormat: boolean;
+  hasSaveIntermediates: boolean;
+  hasShowPerspectives: boolean;
+} {
+  const flags = {
+    hasOutputFormat: false,
+    hasSaveIntermediates: false,
+    hasShowPerspectives: false,
+  };
+
+  for (const argument of argv) {
+    if (argument === "--output") {
+      flags.hasOutputFormat = true;
+      continue;
+    }
+
+    if (argument === "--save-intermediates" || argument === "--no-save-intermediates") {
+      flags.hasSaveIntermediates = true;
+      continue;
+    }
+
+    if (argument === "--show-perspectives") {
+      flags.hasShowPerspectives = true;
+    }
+  }
+
+  return flags;
 }
 
 function assignParsedContext(arguments_: ParsedCliArguments, context: string | undefined): void {

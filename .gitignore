@@ -29,6 +29,8 @@ tmp/
 *.bak
 CLAUDE.local.md
 npm-debug.log
+/tribunal.config.*
+!/tribunal.config.example.json
 
 .claude/worktrees
 

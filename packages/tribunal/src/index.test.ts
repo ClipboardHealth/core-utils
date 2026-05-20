@@ -1,3 +1,4 @@
+import { createEmptyTribunalConfig, parseTribunalConfig, type TribunalConfig } from "./config.ts";
 import {
   loadContext,
   type LoadContextInput,
@@ -148,6 +149,7 @@ describe("CLI runner", () => {
         argv: ["Should we launch?", "--verbose", "--no-save-intermediates"],
         cwd: "/repo",
         environment: {},
+        loadConfig: loadEmptyConfig,
         runTribunal: async (_request, options) => {
           await options.onProgress?.({ model, role: "advocate", status: "started" });
 
@@ -205,6 +207,7 @@ describe("CLI runner", () => {
       ],
       cwd: "/repo",
       environment: {},
+      loadConfig: loadEmptyConfig,
       runTribunal: async (request) => {
         capturedRequest = request;
 
@@ -263,6 +266,7 @@ describe("CLI runner", () => {
       argv: ["Should we launch?", "--save-intermediates", "./run.json"],
       cwd: "/repo",
       environment: {},
+      loadConfig: loadEmptyConfig,
       makeDirectory: async (path) => {
         createdDirectories.push(path);
       },
@@ -326,6 +330,7 @@ describe("CLI runner", () => {
       argv: ["Should we launch?", "--save-intermediates", "./run.json"],
       cwd: "/repo",
       environment: {},
+      loadConfig: loadEmptyConfig,
       makeDirectory: async (path) => {
         createdDirectories.push(path);
       },
@@ -352,7 +357,162 @@ describe("CLI runner", () => {
     expect(stderr).toContain("Warning: Failed to persist failure snapshot: disk full\n");
     expect(stderr).toContain("Error: provider failed\n");
   });
+
+  it("uses config values when matching CLI flags are omitted", async () => {
+    let stdout = "";
+    let stderr = "";
+    let capturedRequest: TribunalRequest | undefined;
+    let capturedEnvironment: Record<string, string | undefined> | undefined;
+    const oldOpenAiApiKey = readOpenAiApiKey();
+
+    try {
+      const actual = await runCli({
+        argv: ["Should we launch?"],
+        cwd: "/repo",
+        environment: {},
+        loadConfig: async () =>
+          parseTribunalConfig({
+            apiKeys: {
+              openai: "op://Private/OPENAI_API_KEY/credential",
+            },
+            models: {
+              deliberator: "openai:gpt-5.5",
+              skeptic: "google:gemini-3.1-pro-preview",
+            },
+            outputFormat: "json",
+            reasoning: {
+              deliberator: "xhigh",
+            },
+            saveIntermediates: false,
+            showPerspectives: true,
+          }),
+        runTribunal: async (request, options) => {
+          capturedRequest = request;
+          capturedEnvironment = options.environment;
+
+          return createCliResponse();
+        },
+        stderr: {
+          write: (chunk: string) => {
+            stderr += chunk;
+          },
+        },
+        stdout: {
+          write: (chunk: string) => {
+            stdout += chunk;
+          },
+        },
+      });
+
+      expect(actual).toBe(0);
+      expect(capturedRequest).toMatchObject({
+        models: {
+          deliberator: { modelId: "gpt-5.5", provider: "openai" },
+          skeptic: { modelId: "gemini-3.1-pro-preview", provider: "google" },
+        },
+        reasoning: { deliberator: "xhigh" },
+        showPerspectives: true,
+      });
+      expect(capturedEnvironment).toMatchObject({
+        OPENAI_API_KEY: "op://Private/OPENAI_API_KEY/credential",
+      });
+      expect(readOpenAiApiKey()).toBe("op://Private/OPENAI_API_KEY/credential");
+      expect(JSON.parse(stdout)).toMatchObject({ result: { answer: "Launch carefully." } });
+      expect(stderr).not.toContain("Saving intermediate outputs");
+    } finally {
+      restoreOpenAiApiKey(oldOpenAiApiKey);
+    }
+  });
+
+  it("lets CLI flags override config defaults", async () => {
+    let stdout = "";
+    let stderr = "";
+    let capturedRequest: TribunalRequest | undefined;
+    const writes: string[] = [];
+
+    const actual = await runCli({
+      argv: [
+        "Should we launch?",
+        "--model",
+        "skeptic=anthropic:claude-opus-4-7",
+        "--deliberator",
+        "openai:gpt-5.4",
+        "--reasoning",
+        "skeptic=xhigh",
+        "--output",
+        "json",
+        "--show-perspectives",
+        "--no-save-intermediates",
+      ],
+      cwd: "/repo",
+      environment: {},
+      loadConfig: async () =>
+        parseTribunalConfig({
+          models: {
+            deliberator: "anthropic:claude-opus-4-7",
+            skeptic: "google:gemini-3.1-pro-preview",
+          },
+          outputFormat: "markdown",
+          reasoning: {
+            skeptic: "low",
+          },
+          saveIntermediates: true,
+          showPerspectives: false,
+        }),
+      runTribunal: async (request) => {
+        capturedRequest = request;
+
+        return createCliResponse();
+      },
+      stderr: {
+        write: (chunk: string) => {
+          stderr += chunk;
+        },
+      },
+      stdout: {
+        write: (chunk: string) => {
+          stdout += chunk;
+        },
+      },
+      writeFile: async (_path, contents) => {
+        writes.push(contents);
+      },
+    });
+
+    expect(actual).toBe(0);
+    expect(capturedRequest).toMatchObject({
+      models: {
+        deliberator: { modelId: "gpt-5.4", provider: "openai" },
+        skeptic: { modelId: "claude-opus-4-7", provider: "anthropic" },
+      },
+      reasoning: { skeptic: "xhigh" },
+      showPerspectives: true,
+    });
+    expect(JSON.parse(stdout)).toMatchObject({ result: { answer: "Launch carefully." } });
+    expect(stderr).not.toContain("Saving intermediate outputs");
+    expect(writes).toStrictEqual([]);
+  });
 });
+
+async function loadEmptyConfig(): Promise<TribunalConfig> {
+  return createEmptyTribunalConfig();
+}
+
+function readOpenAiApiKey(): string | undefined {
+  // oxlint-disable-next-line node/no-process-env -- Test captures and verifies the CLI process environment mutation for provider SDK API keys.
+  return process.env["OPENAI_API_KEY"];
+}
+
+function restoreOpenAiApiKey(value: string | undefined): void {
+  if (value === undefined) {
+    // oxlint-disable-next-line node/no-process-env -- Restore test process environment to its prior state.
+    delete process.env["OPENAI_API_KEY"];
+    return;
+  }
+
+  // oxlint-disable-next-line node/no-process-env -- Restore test process environment to its prior state.
+  process.env["OPENAI_API_KEY"] = value;
+}
 
 function createClock(values: string[]): () => Date {
   let index = 0;

@@ -42,14 +42,11 @@ describe("model parsing", () => {
     expect(parseModelRole("deliberator")).toBe("deliberator");
   });
 
-  it("resolves defaults, environment overrides, and CLI overrides", () => {
+  it("resolves defaults and CLI overrides", () => {
     const actual = resolveModelSet({
-      environment: {
-        TRIBUNAL_ADVOCATE_MODEL: "openai:gpt-5.4",
-        TRIBUNAL_DELIBERATOR_MODEL: "google:gemini-3.1-pro-preview",
-      },
       overrides: {
         advocate: { modelId: "claude-opus-4-7", provider: "anthropic" },
+        deliberator: { modelId: "gemini-3.1-pro-preview", provider: "google" },
       },
     });
 

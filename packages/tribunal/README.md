@@ -3,10 +3,45 @@
 `tribunal` gets a structured second opinion from advocate, skeptic, and analyst
 LLM perspectives, then synthesizes the result with a deliberator model.
 
-Run with environment variables already present:
+Run with API key environment variables already present:
 
 ```bash
 npm --workspace @clipboard-health/tribunal run dev -- "Should we migrate?" --verbose
+```
+
+For local defaults, copy the checked-in example to a gitignored root config:
+
+```bash
+cp tribunal.config.example.json tribunal.config.json
+```
+
+The CLI searches for `tribunal.config.json` from the current working directory
+upward. Config values are defaults only; explicit CLI flags still take
+precedence.
+
+```json
+{
+  "apiKeys": {
+    "anthropic": "op://Private/ANTHROPIC_API_KEY/credential",
+    "googleGenerativeAi": "op://Private/GOOGLE_GENERATIVE_AI_API_KEY/credential",
+    "openai": "op://Private/OPENAI_API_KEY/credential"
+  },
+  "models": {
+    "advocate": "anthropic:claude-opus-4-7",
+    "skeptic": "openai:gpt-5.5",
+    "analyst": "google:gemini-3.1-pro-preview",
+    "deliberator": "openai:gpt-5.5"
+  },
+  "reasoning": {
+    "advocate": "max",
+    "skeptic": "xhigh",
+    "analyst": "high",
+    "deliberator": "xhigh"
+  },
+  "outputFormat": "text",
+  "showPerspectives": false,
+  "saveIntermediates": true
+}
 ```
 
 `--verbose` writes progress to stderr, including per-role start, finish, and
@@ -40,11 +75,9 @@ Reasoning levels are mapped to each provider's AI SDK options. OpenAI supports
 Run through 1Password without writing secret values to disk:
 
 ```bash
-ANTHROPIC_API_KEY="op://<vault>/ANTHROPIC_API_KEY/<field>" \
-OPENAI_API_KEY="op://<vault>/OPENAI_API_KEY/<field>" \
-GOOGLE_GENERATIVE_AI_API_KEY="op://<vault>/GOOGLE_GENERATIVE_AI_API_KEY/<field>" \
 npm --workspace @clipboard-health/tribunal run dev:op -- "Should we migrate?"
 ```
 
-The committed values are only 1Password secret references. `op run` resolves
-them in the child process environment at runtime.
+When `apiKeys` are present in `tribunal.config.json`, `tribunal-op` passes those
+1Password references to `op run`, which resolves them in the child process
+environment at runtime.
