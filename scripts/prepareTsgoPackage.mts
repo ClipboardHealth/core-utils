@@ -48,6 +48,13 @@ const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
     "packages/oxlint-config/src/vitest.json",
   ],
   "packages/playwright-reporter-llm": ["packages/playwright-reporter-llm/docs/*.json"],
+  "packages/tribunal": [
+    {
+      input: "./packages/tribunal/bin",
+      glob: "**/*",
+      output: "./bin",
+    },
+  ],
 };
 
 async function main(): Promise<void> {

@@ -42,6 +42,9 @@
       "path": "./packages/testing-core"
     },
     {
+      "path": "./packages/tribunal"
+    },
+    {
       "path": "./packages/mongo-jobs"
     },
     {
