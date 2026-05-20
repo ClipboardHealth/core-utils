@@ -15,7 +15,7 @@ try {
 }
 
 const child = spawn("op", ["run", "--", process.execPath, runBinPath, ...process.argv.slice(2)], {
-  // oxlint-disable-next-line node/no-process-env -- op run needs caller env plus config-provided 1Password refs so secrets are resolved without writing values to disk.
+  // oxlint-disable-next-line node/no-process-env -- op run needs caller env plus config-provided 1Password refs, with caller env taking precedence.
   env: { ...configuredEnvironment, ...process.env },
   stdio: "inherit",
 });
