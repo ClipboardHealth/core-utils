@@ -81,12 +81,14 @@ describe("Tribunal config loading", () => {
     const actual = createEnvironmentWithTribunalConfig({
       config: parseTribunalConfig({
         apiKeys: {
+          anthropic: "op://Private/ANTHROPIC_API_KEY/credential",
           googleGenerativeAi: "op://Private/GOOGLE_GENERATIVE_AI_API_KEY/credential",
           openai: "op://Private/OPENAI_API_KEY/credential",
         },
       }),
       environment: {
         ANTHROPIC_API_KEY: "existing-anthropic-key",
+        OPENAI_API_KEY: "",
       },
     });
 

@@ -98,7 +98,6 @@ export type StructuredOutputRunner = (
 ) => Promise<StructuredOutputRunnerResult>;
 
 interface RunTribunalOptions {
-  environment?: Record<string, string | undefined>;
   structuredOutputRunner?: StructuredOutputRunner;
   onProgress?: TribunalProgressHandler;
   now?: () => number;

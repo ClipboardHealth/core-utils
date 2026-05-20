@@ -94,7 +94,6 @@ describe("tribunal orchestration", () => {
     const actual = await runTribunal(
       { query: "Should we launch?" },
       {
-        environment: {},
         now: createClock([0, 100]),
         structuredOutputRunner: observingRunner,
       },
@@ -125,7 +124,7 @@ describe("tribunal orchestration", () => {
           skeptic: "medium",
         },
       },
-      { environment: {}, structuredOutputRunner },
+      { structuredOutputRunner },
     );
 
     expect(calls).toStrictEqual({
@@ -164,7 +163,6 @@ describe("tribunal orchestration", () => {
     await runTribunal(
       { query: "Should we launch?" },
       {
-        environment: {},
         onProgress: (event) => {
           events.push({
             latencyMs: event.latencyMs,
@@ -212,7 +210,6 @@ describe("tribunal orchestration", () => {
     await runTribunal(
       { query: "Should we launch?" },
       {
-        environment: {},
         onProgress: (event) => {
           events.push({
             errorMessage: event.errorMessage,
@@ -248,7 +245,6 @@ describe("tribunal orchestration", () => {
     const actual = await runTribunal(
       { query: "Should we launch?" },
       {
-        environment: {},
         onProgress: () => {
           throw new Error("recorder failed");
         },
@@ -275,10 +271,7 @@ describe("tribunal orchestration", () => {
       },
     });
 
-    const actual = await runTribunal(
-      { query: "Should we launch?" },
-      { environment: {}, structuredOutputRunner },
-    );
+    const actual = await runTribunal({ query: "Should we launch?" }, { structuredOutputRunner });
 
     expect(actual.perspectives.map((perspective) => perspective.role).toSorted()).toStrictEqual([
       "advocate",
@@ -302,7 +295,7 @@ describe("tribunal orchestration", () => {
     });
 
     await expect(
-      runTribunal({ query: "Should we launch?" }, { environment: {}, structuredOutputRunner }),
+      runTribunal({ query: "Should we launch?" }, { structuredOutputRunner }),
     ).rejects.toThrow("At least two perspectives must succeed");
   });
 
@@ -317,7 +310,7 @@ describe("tribunal orchestration", () => {
     });
 
     await expect(
-      runTribunal({ query: "Should we launch?" }, { environment: {}, structuredOutputRunner }),
+      runTribunal({ query: "Should we launch?" }, { structuredOutputRunner }),
     ).rejects.toThrow("deliberator failed");
   });
 });

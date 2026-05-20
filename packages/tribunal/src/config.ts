@@ -258,12 +258,19 @@ function assignConfiguredApiKey(
   key: TribunalApiKeyName,
 ): void {
   const value = config.apiKeys[key];
+  const environmentVariable = API_KEY_ENVIRONMENT_VARIABLES[key];
 
   if (value === undefined) {
     return;
   }
 
-  environment[API_KEY_ENVIRONMENT_VARIABLES[key]] = value;
+  const currentValue = environment[environmentVariable];
+
+  if (currentValue !== undefined && currentValue.trim().length > 0) {
+    return;
+  }
+
+  environment[environmentVariable] = value;
 }
 
 function formatConfigError(error: unknown): string {
