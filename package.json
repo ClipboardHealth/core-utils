@@ -61,7 +61,7 @@
     "markdownlint-cli2": "0.22.1",
     "nx": "22.7.1",
     "oxfmt": "0.48.0",
-    "oxlint": "1.63.0",
+    "oxlint": "1.65.0",
     "oxlint-tsgolint": "0.22.1",
     "promptfoo": "0.121.11",
     "syncpack": "15.1.2",
