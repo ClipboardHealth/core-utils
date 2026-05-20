@@ -69,6 +69,29 @@ describe("CLI argument parsing", () => {
 
     expect(actual.shouldSaveIntermediates).toBe(false);
   });
+
+  it("defaults to writing and opening the HTML report", () => {
+    const actual = parseCliArguments(["Should we launch?"]);
+
+    expect(actual.shouldWriteHtmlReport).toBe(true);
+    expect(actual.shouldOpenHtmlReport).toBe(true);
+    expect(actual.htmlReportFilePath).toBeUndefined();
+  });
+
+  it("parses --html and --no-open flags", () => {
+    const actual = parseCliArguments(["Should we launch?", "--html", "./report.html", "--no-open"]);
+
+    expect(actual.shouldWriteHtmlReport).toBe(true);
+    expect(actual.shouldOpenHtmlReport).toBe(false);
+    expect(actual.htmlReportFilePath).toBe("./report.html");
+  });
+
+  it("parses --no-html opt-out", () => {
+    const actual = parseCliArguments(["Should we launch?", "--no-html"]);
+
+    expect(actual.shouldWriteHtmlReport).toBe(false);
+    expect(actual.htmlReportFilePath).toBeUndefined();
+  });
 });
 
 describe("context loading", () => {
@@ -146,7 +169,7 @@ describe("CLI runner", () => {
       const model = { modelId: "gpt-5.4", provider: "openai" } as const;
 
       const runPromise = runCli({
-        argv: ["Should we launch?", "--verbose", "--no-save-intermediates"],
+        argv: ["Should we launch?", "--verbose", "--no-save-intermediates", "--no-html"],
         cwd: "/repo",
         environment: {},
         loadConfig: loadEmptyConfig,
@@ -204,6 +227,7 @@ describe("CLI runner", () => {
         "deliberator=high",
         "--verbose",
         "--no-save-intermediates",
+        "--no-html",
       ],
       cwd: "/repo",
       environment: {},
@@ -263,7 +287,7 @@ describe("CLI runner", () => {
     const model = { modelId: "gpt-5.4", provider: "openai" } as const;
 
     const actual = await runCli({
-      argv: ["Should we launch?", "--save-intermediates", "./run.json"],
+      argv: ["Should we launch?", "--save-intermediates", "./run.json", "--no-html"],
       cwd: "/repo",
       environment: {},
       loadConfig: loadEmptyConfig,
@@ -317,6 +341,106 @@ describe("CLI runner", () => {
     });
   });
 
+  it("writes an HTML report and invokes the opener once", async () => {
+    let stdout = "";
+    let stderr = "";
+    const htmlWrites: { filePath: string; html: string }[] = [];
+    const opens: string[] = [];
+
+    const actual = await runCli({
+      argv: ["Should we launch?", "--no-save-intermediates"],
+      cwd: "/repo",
+      environment: {},
+      loadConfig: loadEmptyConfig,
+      now: createClock(["2026-05-20T12:34:56.000Z"]),
+      openHtmlReport: async (filePath) => {
+        opens.push(filePath);
+      },
+      runTribunal: async () => createCliResponse(),
+      stderr: {
+        write: (chunk: string) => {
+          stderr += chunk;
+        },
+      },
+      stdout: {
+        write: (chunk: string) => {
+          stdout += chunk;
+        },
+      },
+      writeHtmlReport: async (filePath, html) => {
+        htmlWrites.push({ filePath, html });
+      },
+    });
+
+    expect(actual).toBe(0);
+    expect(stdout).toContain("Launch carefully.");
+    expect(htmlWrites).toHaveLength(1);
+    const [write] = htmlWrites;
+    expect(write?.filePath).toBe("/repo/.tribunal/reports/2026-05-20T12-34-56-000Z.html");
+    expect(write?.html.startsWith("<!DOCTYPE html>")).toBe(true);
+    expect(opens).toStrictEqual(["/repo/.tribunal/reports/2026-05-20T12-34-56-000Z.html"]);
+    expect(stderr).toContain(
+      "Wrote HTML report to /repo/.tribunal/reports/2026-05-20T12-34-56-000Z.html\n",
+    );
+  });
+
+  it("honors --html path and --no-open", async () => {
+    const htmlWrites: { filePath: string; html: string }[] = [];
+    const opens: string[] = [];
+
+    const actual = await runCli({
+      argv: [
+        "Should we launch?",
+        "--no-save-intermediates",
+        "--html",
+        "./report.html",
+        "--no-open",
+      ],
+      cwd: "/repo",
+      environment: {},
+      loadConfig: loadEmptyConfig,
+      openHtmlReport: async (filePath) => {
+        opens.push(filePath);
+      },
+      runTribunal: async () => createCliResponse(),
+      stderr: { write: noopWrite },
+      stdout: { write: noopWrite },
+      writeHtmlReport: async (filePath, html) => {
+        htmlWrites.push({ filePath, html });
+      },
+    });
+
+    expect(actual).toBe(0);
+    expect(htmlWrites).toHaveLength(1);
+    expect(htmlWrites[0]?.filePath).toBe("/repo/report.html");
+    expect(opens).toStrictEqual([]);
+  });
+
+  it("skips HTML when --no-html is set", async () => {
+    const htmlWrites: { filePath: string; html: string }[] = [];
+    const opens: string[] = [];
+
+    const actual = await runCli({
+      argv: ["Should we launch?", "--no-save-intermediates", "--no-html"],
+      cwd: "/repo",
+      environment: {},
+      loadConfig: loadEmptyConfig,
+      openHtmlReport: async (filePath) => {
+        opens.push(filePath);
+      },
+      runTribunal: async () => createCliResponse(),
+      stderr: { write: noopWrite },
+      stdout: { write: noopWrite },
+      writeHtmlReport: async (filePath, html) => {
+        htmlWrites.push({ filePath, html });
+      },
+    });
+
+    expect(actual).toBe(0);
+    expect(htmlWrites).toHaveLength(0);
+    expect(opens).toHaveLength(0);
+  });
+
   it("preserves the original CLI error when failure snapshot persistence fails", async () => {
     let stdout = "";
     let stderr = "";
@@ -327,7 +451,7 @@ describe("CLI runner", () => {
     writeFile.mockRejectedValueOnce(new Error("disk full"));
 
     const actual = await runCli({
-      argv: ["Should we launch?", "--save-intermediates", "./run.json"],
+      argv: ["Should we launch?", "--save-intermediates", "./run.json", "--no-html"],
       cwd: "/repo",
       environment: {},
       loadConfig: loadEmptyConfig,
@@ -367,7 +491,7 @@ describe("CLI runner", () => {
 
     try {
       const actual = await runCli({
-        argv: ["Should we launch?"],
+        argv: ["Should we launch?", "--no-html"],
         cwd: "/repo",
         environment: {},
         loadConfig: async () =>
@@ -443,6 +567,7 @@ describe("CLI runner", () => {
         "json",
         "--show-perspectives",
         "--no-save-intermediates",
+        "--no-html",
       ],
       cwd: "/repo",
       environment: {},
@@ -512,6 +637,10 @@ function restoreOpenAiApiKey(value: string | undefined): void {
 
   // oxlint-disable-next-line node/no-process-env -- Restore test process environment to its prior state.
   process.env["OPENAI_API_KEY"] = value;
+}
+
+function noopWrite(_chunk: string): void {
+  // Silence stdout/stderr in tests that do not inspect them.
 }
 
 function createClock(values: string[]): () => Date {

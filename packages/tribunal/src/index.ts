@@ -1,5 +1,10 @@
-import { readFile as readFileFromDisk } from "node:fs/promises";
-import { resolve } from "node:path";
+import { spawn } from "node:child_process";
+import {
+  mkdir,
+  readFile as readFileFromDisk,
+  writeFile as writeFileToDisk,
+} from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -9,6 +14,7 @@ import {
   type TribunalConfig,
 } from "./config.ts";
 import { formatOutput } from "./format.ts";
+import { renderHtmlReport } from "./html.ts";
 import {
   createDefaultIntermediateOutputPath,
   createIntermediateOutputRecorder,
@@ -93,6 +99,12 @@ export {
   type TribunalResponse,
 } from "./tribunal.ts";
 
+interface HtmlFlagState {
+  htmlReportFilePath: string | undefined;
+  shouldOpenHtmlReport: boolean;
+  shouldWriteHtmlReport: boolean;
+}
+
 export interface ParsedCliArguments {
   query: string;
   context?: string;
@@ -100,9 +112,12 @@ export interface ParsedCliArguments {
   models: Partial<Record<ModelRole, ModelSpec>>;
   reasoning: ReasoningOverrides;
   intermediateOutputFilePath?: string;
+  htmlReportFilePath?: string;
   outputFormat: OutputFormat;
   showPerspectives: boolean;
   shouldSaveIntermediates: boolean;
+  shouldWriteHtmlReport: boolean;
+  shouldOpenHtmlReport: boolean;
   verbose: boolean;
   shouldShowHelp: boolean;
 }
@@ -139,6 +154,8 @@ export interface RunCliInput {
   readFile?: (path: string, encoding: BufferEncoding) => Promise<string>;
   writeFile?: CreateIntermediateOutputRecorderInput["writeFile"];
   makeDirectory?: CreateIntermediateOutputRecorderInput["makeDirectory"];
+  writeHtmlReport?: (filePath: string, html: string) => Promise<void>;
+  openHtmlReport?: (filePath: string) => Promise<void>;
   now?: () => Date;
   runTribunal?: (
     request: TribunalRequest,
@@ -165,6 +182,9 @@ Flags:
   --show-perspectives              Include specialist outputs in text/markdown
   --save-intermediates <path>      Write intermediate run snapshots; default .tribunal/runs/<timestamp>.json
   --no-save-intermediates          Disable intermediate run snapshots
+  --html <path>                    Write HTML report; default .tribunal/reports/<timestamp>.html
+  --no-html                        Disable HTML report
+  --no-open                        Write the HTML report but skip opening it
   --verbose                        Print progress, wait dots, and warnings to stderr
   -h, --help                       Show usage`;
 
@@ -173,11 +193,14 @@ export function parseCliArguments(argv: readonly string[]): ParsedCliArguments {
   const models: Partial<Record<ModelRole, ModelSpec>> = {};
   const reasoning: ReasoningOverrides = {};
   let intermediateOutputFilePath: string | undefined;
+  let htmlReportFilePath: string | undefined;
   let context: string | undefined;
   let contextFilePath: string | undefined;
   let outputFormat: OutputFormat = "text";
   let showPerspectives = false;
   let shouldSaveIntermediates = true;
+  let shouldWriteHtmlReport = true;
+  let shouldOpenHtmlReport = true;
   let verbose = false;
   let shouldShowHelp = false;
 
@@ -246,9 +269,23 @@ export function parseCliArguments(argv: readonly string[]): ParsedCliArguments {
         break;
       }
       default: {
+        const htmlState: HtmlFlagState = {
+          htmlReportFilePath,
+          shouldOpenHtmlReport,
+          shouldWriteHtmlReport,
+        };
+        const htmlAdvance = tryApplyHtmlFlag({ argv, argument, index, state: htmlState });
+
+        if (htmlAdvance >= 0) {
+          ({ htmlReportFilePath, shouldOpenHtmlReport, shouldWriteHtmlReport } = htmlState);
+          index += htmlAdvance;
+          break;
+        }
+
         if (argument.startsWith("-")) {
           throw new Error(`Unknown flag: ${argument}`);
         }
+
         positionalArguments.push(argument);
         break;
       }
@@ -266,7 +303,9 @@ export function parseCliArguments(argv: readonly string[]): ParsedCliArguments {
     models,
     outputFormat,
     reasoning,
+    shouldOpenHtmlReport,
     shouldSaveIntermediates,
+    shouldWriteHtmlReport,
     showPerspectives,
     verbose,
     shouldShowHelp,
@@ -275,6 +314,7 @@ export function parseCliArguments(argv: readonly string[]): ParsedCliArguments {
   assignParsedContext(parsedArguments, context);
   assignParsedContextFilePath(parsedArguments, contextFilePath);
   assignParsedIntermediateOutputFilePath(parsedArguments, intermediateOutputFilePath);
+  assignParsedHtmlReportFilePath(parsedArguments, htmlReportFilePath);
 
   return parsedArguments;
 }
@@ -411,6 +451,17 @@ export async function runCli(input: RunCliInput = {}): Promise<number> {
       })}\n`,
     );
 
+    await writeAndOpenHtmlReport({
+      cwd,
+      now: input.now,
+      openHtmlReport: input.openHtmlReport,
+      parsedArguments: configuredArguments,
+      request: tribunalRequest,
+      response: responseWithContextWarnings,
+      stderr,
+      writeHtmlReport: input.writeHtmlReport,
+    });
+
     if (configuredArguments.verbose) {
       writeWarnings(stderr, responseWithContextWarnings.metadata.warnings);
     }
@@ -430,6 +481,34 @@ export async function runCli(input: RunCliInput = {}): Promise<number> {
   } finally {
     progressReporter?.stop();
   }
+}
+
+function tryApplyHtmlFlag(input: {
+  argv: readonly string[];
+  argument: string;
+  index: number;
+  state: HtmlFlagState;
+}): number {
+  const { argument, argv, index, state } = input;
+
+  if (argument === "--html") {
+    state.htmlReportFilePath = readFlagValue({ argv, flag: argument, index });
+    state.shouldWriteHtmlReport = true;
+    return 1;
+  }
+
+  if (argument === "--no-html") {
+    state.shouldWriteHtmlReport = false;
+    state.htmlReportFilePath = undefined;
+    return 0;
+  }
+
+  if (argument === "--no-open") {
+    state.shouldOpenHtmlReport = false;
+    return 0;
+  }
+
+  return -1;
 }
 
 function readFlagValue(input: { argv: readonly string[]; index: number; flag: string }): string {
@@ -560,6 +639,17 @@ function assignParsedIntermediateOutputFilePath(
   arguments_.intermediateOutputFilePath = intermediateOutputFilePath;
 }
 
+function assignParsedHtmlReportFilePath(
+  arguments_: ParsedCliArguments,
+  htmlReportFilePath: string | undefined,
+): void {
+  if (htmlReportFilePath === undefined) {
+    return;
+  }
+
+  arguments_.htmlReportFilePath = htmlReportFilePath;
+}
+
 function createLoadContextInput(input: {
   cwd: string;
   parsedArguments: ParsedCliArguments;
@@ -674,6 +764,97 @@ function resolveIntermediateOutputFilePath(input: {
   }
 
   return createDefaultIntermediateOutputPath({ cwd, now });
+}
+
+const HTML_REPORT_DIRECTORY = ".tribunal/reports";
+
+async function writeAndOpenHtmlReport(input: {
+  cwd: string;
+  now: (() => Date) | undefined;
+  openHtmlReport: ((filePath: string) => Promise<void>) | undefined;
+  parsedArguments: ParsedCliArguments;
+  request: TribunalRequest;
+  response: TribunalResponse;
+  stderr: TextWritable;
+  writeHtmlReport: ((filePath: string, html: string) => Promise<void>) | undefined;
+}): Promise<void> {
+  const { cwd, now, openHtmlReport, parsedArguments, request, response, stderr, writeHtmlReport } =
+    input;
+
+  if (!parsedArguments.shouldWriteHtmlReport) {
+    return;
+  }
+
+  const generatedAt = now === undefined ? new Date() : now();
+  const filePath = resolveHtmlReportFilePath({ cwd, generatedAt, parsedArguments });
+  const html = renderHtmlReport({
+    generatedAt,
+    query: request.query,
+    response,
+    ...(request.context === undefined ? {} : { context: request.context }),
+  });
+  const writer = writeHtmlReport ?? defaultWriteHtmlReport;
+
+  try {
+    await writer(filePath, html);
+    stderr.write(`Wrote HTML report to ${filePath}\n`);
+  } catch (error) {
+    stderr.write(`Warning: Failed to write HTML report: ${formatErrorMessage(error)}\n`);
+    return;
+  }
+
+  if (!parsedArguments.shouldOpenHtmlReport) {
+    return;
+  }
+
+  const opener = openHtmlReport ?? defaultOpenHtmlReport;
+
+  try {
+    await opener(filePath);
+  } catch (error) {
+    stderr.write(`Warning: Failed to open HTML report: ${formatErrorMessage(error)}\n`);
+  }
+}
+
+function resolveHtmlReportFilePath(input: {
+  cwd: string;
+  generatedAt: Date;
+  parsedArguments: ParsedCliArguments;
+}): string {
+  const { cwd, generatedAt, parsedArguments } = input;
+
+  if (parsedArguments.htmlReportFilePath !== undefined) {
+    return resolve(cwd, parsedArguments.htmlReportFilePath);
+  }
+
+  const timestamp = generatedAt.toISOString().replaceAll(":", "-").replaceAll(".", "-");
+  return resolve(cwd, HTML_REPORT_DIRECTORY, `${timestamp}.html`);
+}
+
+async function defaultWriteHtmlReport(filePath: string, html: string): Promise<void> {
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFileToDisk(filePath, html, "utf8");
+}
+
+async function defaultOpenHtmlReport(filePath: string): Promise<void> {
+  const { command, args } = getOpenCommand(filePath);
+  const child = spawn(command, args, { detached: true, stdio: "ignore" });
+  child.on("error", () => {
+    // Swallow spawn errors (e.g., open/xdg-open not installed); the file was still written.
+  });
+  child.unref();
+}
+
+function getOpenCommand(filePath: string): { command: string; args: string[] } {
+  if (process.platform === "darwin") {
+    return { command: "open", args: [filePath] };
+  }
+
+  if (process.platform === "win32") {
+    return { command: "cmd", args: ["/c", "start", "", filePath] };
+  }
+
+  return { command: "xdg-open", args: [filePath] };
 }
 
 function createProgressHandler(input: {

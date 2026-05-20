@@ -6,6 +6,7 @@
 .nx/workspace-data
 .sbx/
 .tmp-plugin-sync-*/
+.tribunal/
 .vscode/*
 coverage/
 dist/

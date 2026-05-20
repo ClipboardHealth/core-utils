@@ -53,6 +53,13 @@ starts, finishes, or fails, so completed perspective outputs are preserved even
 when a later model call fails. Use `--save-intermediates <path>` to choose a
 specific file, or `--no-save-intermediates` to disable snapshots.
 
+After a successful run, an HTML report is written to
+`.tribunal/reports/<timestamp>.html` and opened in your default browser. The
+report shows the deliberator's verdict, recommendation, and confidence at the
+top, with each perspective (advocate, skeptic, analyst) as a collapsible
+accordion below. Override the path with `--html <path>`, skip opening with
+`--no-open`, or disable the report entirely with `--no-html`.
+
 Override model reasoning or thinking levels per role:
 
 ```bash
