@@ -1,0 +1,28 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "max-params": "off",
+        "security/detect-non-literal-fs-filename": "off",
+        "unicorn/import-style": "off",
+        "unicorn/prevent-abbreviations": "off"
+      }
+    },
+    {
+      "files": ["./bin/**/*.js", "./src/index.ts"],
+      "rules": {
+        "n/no-process-exit": "off",
+        "n/shebang": "off",
+        "no-console": "off",
+        "unicorn/no-process-exit": "off",
+        "unicorn/prefer-top-level-await": "off"
+      }
+    }
+  ],
+  "parserOptions": {
+    "project": "packages/tribunal/tsconfig.lint.json"
+  }
+}
