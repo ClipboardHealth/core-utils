@@ -748,6 +748,9 @@ async function defaultWriteHtmlReport(filePath: string, html: string): Promise<v
 async function defaultOpenHtmlReport(filePath: string): Promise<void> {
   const { command, args } = getOpenCommand(filePath);
   const child = spawn(command, args, { detached: true, stdio: "ignore" });
+  child.on("error", () => {
+    // Swallow spawn errors (e.g., open/xdg-open not installed); the file was still written.
+  });
   child.unref();
 }
 
