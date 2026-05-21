@@ -18,7 +18,7 @@
     "format:check": "oxfmt --check",
     "hook:pre-commit": "lint-staged",
     "hook:pre-push": "node --run verify",
-    "knip": "NX_DAEMON=false knip",
+    "knip": "NX_DAEMON=false knip --no-config-hints",
     "lint": "oxlint",
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
     "postinstall": "node --run sync-ai-rules",
