@@ -20,7 +20,6 @@ interface ModelOverride {
 
 export interface ResolveModelSetInput {
   overrides?: Partial<Record<ModelRole, ModelSpec>>;
-  environment?: Record<string, string | undefined>;
 }
 
 export const DEFAULT_MODELS: Record<ModelRole, ModelSpec> = {
@@ -28,13 +27,6 @@ export const DEFAULT_MODELS: Record<ModelRole, ModelSpec> = {
   skeptic: { provider: "openai", modelId: "gpt-5.4" },
   analyst: { provider: "google", modelId: "gemini-3.1-pro-preview" },
   deliberator: { provider: "anthropic", modelId: "claude-opus-4-7" },
-};
-
-const MODEL_ENVIRONMENT_VARIABLES: Record<ModelRole, string> = {
-  advocate: "TRIBUNAL_ADVOCATE_MODEL",
-  skeptic: "TRIBUNAL_SKEPTIC_MODEL",
-  analyst: "TRIBUNAL_ANALYST_MODEL",
-  deliberator: "TRIBUNAL_DELIBERATOR_MODEL",
 };
 
 export function parseModelSpec(input: string): ModelSpec {
@@ -97,13 +89,13 @@ export function parseModelRole(input: string): ModelRole {
 }
 
 export function resolveModelSet(input: ResolveModelSetInput = {}): Record<ModelRole, ModelSpec> {
-  const { environment = {}, overrides = {} } = input;
+  const { overrides = {} } = input;
 
   return {
-    advocate: resolveModelForRole({ environment, overrides, role: "advocate" }),
-    skeptic: resolveModelForRole({ environment, overrides, role: "skeptic" }),
-    analyst: resolveModelForRole({ environment, overrides, role: "analyst" }),
-    deliberator: resolveModelForRole({ environment, overrides, role: "deliberator" }),
+    advocate: resolveModelForRole({ overrides, role: "advocate" }),
+    skeptic: resolveModelForRole({ overrides, role: "skeptic" }),
+    analyst: resolveModelForRole({ overrides, role: "analyst" }),
+    deliberator: resolveModelForRole({ overrides, role: "deliberator" }),
   };
 }
 
@@ -130,20 +122,13 @@ export function formatModelSpec(spec: ModelSpec): string {
 
 function resolveModelForRole(input: {
   role: ModelRole;
-  environment: Record<string, string | undefined>;
   overrides: Partial<Record<ModelRole, ModelSpec>>;
 }): ModelSpec {
-  const { environment, overrides, role } = input;
+  const { overrides, role } = input;
   const override = overrides[role];
 
   if (override !== undefined) {
     return override;
-  }
-
-  const environmentValue = environment[MODEL_ENVIRONMENT_VARIABLES[role]];
-
-  if (environmentValue !== undefined && environmentValue.trim().length > 0) {
-    return parseModelSpec(environmentValue);
   }
 
   return DEFAULT_MODELS[role];

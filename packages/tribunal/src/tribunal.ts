@@ -98,7 +98,6 @@ export type StructuredOutputRunner = (
 ) => Promise<StructuredOutputRunnerResult>;
 
 interface RunTribunalOptions {
-  environment?: Record<string, string | undefined>;
   structuredOutputRunner?: StructuredOutputRunner;
   onProgress?: TribunalProgressHandler;
   now?: () => number;
@@ -167,7 +166,7 @@ export async function runTribunal(
   const now = options.now ?? performance.now.bind(performance);
   const start = now();
   const structuredOutputRunner = options.structuredOutputRunner ?? defaultStructuredOutputRunner;
-  const models = resolveModelSet(createResolveModelSetInput(options.environment, request.models));
+  const models = resolveModelSet(createResolveModelSetInput(request.models));
   const reasoning = copyReasoningOverrides(request.reasoning);
   const warnings: string[] = [];
   const prompt = buildQuestionPrompt(createPromptInput(request.query, request.context));
@@ -328,12 +327,9 @@ function assignTokenUsage(
 }
 
 function createResolveModelSetInput(
-  environment: Record<string, string | undefined> | undefined,
   overrides: Partial<Record<ModelRole, ModelSpec>> | undefined,
 ): ResolveModelSetInput {
-  const input: ResolveModelSetInput = {
-    environment: environment ?? getProcessEnvironment(),
-  };
+  const input: ResolveModelSetInput = {};
 
   if (overrides === undefined) {
     return input;
@@ -341,11 +337,6 @@ function createResolveModelSetInput(
 
   input.overrides = overrides;
   return input;
-}
-
-function getProcessEnvironment(): Record<string, string | undefined> {
-  // oxlint-disable-next-line node/no-process-env -- Centralized fallback so direct runTribunal calls can read op-run-injected model override vars.
-  return process.env;
 }
 
 function createPromptInput(
