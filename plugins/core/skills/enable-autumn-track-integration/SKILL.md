@@ -32,9 +32,62 @@ Ask the user:
 
 ## Steps
 
-### Step 1: Create Migration PR
+### Step 1: Create External Integration via API
 
-Create a migration file at `src/migrations/<date>-add-external-integration-config-autumn-track.ts` following the pattern from [PR #15144](https://github.com/ClipboardHealth/clipboard-health/pull/15144).
+Use the `POST /api/workplaces/:workplaceId/external-integrations` endpoint to create the integration config. This requires a CBH employee auth token.
+
+**curl template:**
+
+```bash
+curl -X POST "https://api.clipboardhealth.com/api/workplaces/<WORKPLACE_ID>/external-integrations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: <CBH_EMPLOYEE_AUTH_TOKEN>" \
+  -d '{
+    "data": {
+      "type": "workplace-external-integration",
+      "attributes": {
+        "type": "AUTUMN_TRACK",
+        "isEnabled": true,
+        "events": ["SHIFT_ASSIGNED", "SHIFT_UNASSIGNED", "SHIFT_DELETED", "SHIFT_TIME_UPDATED"],
+        "autumnTrack": {}
+      }
+    }
+  }'
+```
+
+Run this for each workplace ID provided by the user. The endpoint is idempotent — it returns 409 if the integration already exists.
+
+**Handling child workplaces (422 "Parent workplace doesn't have a AUTUMN_TRACK integration"):**
+
+If the API returns a 422 with this message, the workplace is a child facility and its parent needs the integration enabled first.
+
+1. **Find the parent workplace ID:**
+   - If Hex MCP is available, query `dim_workplaces` for the `parent_facility_id` of the child workplace.
+   - Otherwise, ask the user for the parent workplace ID.
+
+2. **Create the integration on the parent first:**
+
+```bash
+curl -X POST "https://api.clipboardhealth.com/api/workplaces/<PARENT_WORKPLACE_ID>/external-integrations" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: <CBH_EMPLOYEE_AUTH_TOKEN>" \
+  -d '{
+    "data": {
+      "type": "workplace-external-integration",
+      "attributes": {
+        "type": "AUTUMN_TRACK",
+        "isEnabled": true,
+        "autumnTrack": {}
+      }
+    }
+  }'
+```
+
+3. **Then retry creating the integration on the child workplace** — the child will inherit events and settings from the parent.
+
+#### Alternative: Migration PR
+
+If the API is not accessible (e.g., no auth token available), fall back to creating a migration file at `src/migrations/<date>-add-external-integration-config-autumn-track.ts` following the pattern from [PR #15144](https://github.com/ClipboardHealth/clipboard-health/pull/15144).
 
 The migration should:
 
@@ -57,8 +110,6 @@ Commit, push, and create a PR. Use the `commit-push-pr` skill if available.
 The main external integrations flag `2024-11-21-enable-external-integrations` is enabled by default for all workplaces. No action required here.
 
 ### Step 3: Enable Autumn Track Adapter Feature Flag
-
-> ⚠️ **Wait for the migration PR from Step 1 to be merged and deployed before proceeding.**
 
 Enable the Autumn Track-specific adapter flag:
 
@@ -85,12 +136,12 @@ Tell the user:
 
 If the user chose 2-way integration, also enable the StaffLion two-way integration flag:
 
-- **Flag**: `2025-05-forge-staff-lion-integration-config`
+- **Flag**: [`2025-05-forge-staff-lion-integration-config`](https://app.launchdarkly.com/projects/default/flags/2025-05-forge-staff-lion-integration-config?env=development&env=prod-shadow&env=production&env=staging&selected-env=production)
 - **Project**: `default`
 - **Environment**: `production`
-- Add each workplace ID to the `production` variable of this flag.
+- **Important**: This flag is NOT target-based like the other flags. Add each workplace ID directly to the `production` **variation value** (the list/array in the variation itself). Do not add it as an individual target or targeting rule.
 
-Use the LaunchDarkly MCP to update the flag.
+Use the LaunchDarkly MCP to update the flag's production variation to include the new workplace IDs.
 
 ### Step 6: Verify
 
@@ -102,11 +153,11 @@ Tell the user:
 
 ## Summary Checklist
 
-| Step                                                          | 1-way                 | 2-way                 |
-| ------------------------------------------------------------- | --------------------- | --------------------- |
-| Migration PR                                                  | ✅                    | ✅                    |
-| Flag: `2024-11-21-enable-external-integrations`               | ℹ️ enabled by default | ℹ️ enabled by default |
-| Flag: `2024-11-27-enable-autumn-track-scheduling-integration` | ✅                    | ✅                    |
-| Hex data export + share CSV                                   | ✅                    | ✅                    |
-| Flag: `2025-05-forge-staff-lion-integration-config`           | ❌                    | ✅                    |
-| Verify Datadog dashboard                                      | ✅                    | ✅                    |
+| Step                                               | 1-way                 | 2-way                 |
+| -------------------------------------------------- | --------------------- | --------------------- |
+| Create integration via API (or migration PR)       | ✅                    | ✅                    |
+| Flag: `enable-external-integrations`               | ℹ️ enabled by default | ℹ️ enabled by default |
+| Flag: `enable-autumn-track-scheduling-integration` | ✅                    | ✅                    |
+| Hex data export + share CSV                        | ✅                    | ✅                    |
+| Flag: `forge-staff-lion-integration-config`        | ❌                    | ✅                    |
+| Verify Datadog dashboard                           | ✅                    | ✅                    |
