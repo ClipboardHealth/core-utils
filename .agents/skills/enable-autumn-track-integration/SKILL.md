@@ -58,6 +58,8 @@ The main external integrations flag `2024-11-21-enable-external-integrations` is
 
 ### Step 3: Enable Autumn Track Adapter Feature Flag
 
+> ⚠️ **Wait for the migration PR from Step 1 to be merged and deployed before proceeding.**
+
 Enable the Autumn Track-specific adapter flag:
 
 - **Flag**: `2024-11-27-enable-autumn-track-scheduling-integration`
@@ -100,11 +102,11 @@ Tell the user:
 
 ## Summary Checklist
 
-| Step                                               | 1-way                 | 2-way                 |
-| -------------------------------------------------- | --------------------- | --------------------- |
-| Migration PR                                       | ✅                    | ✅                    |
-| Flag: `enable-external-integrations`               | ℹ️ enabled by default | ℹ️ enabled by default |
-| Flag: `enable-autumn-track-scheduling-integration` | ✅                    | ✅                    |
-| Hex data export + share CSV                        | ✅                    | ✅                    |
-| Flag: `forge-staff-lion-integration-config`        | ❌                    | ✅                    |
-| Verify Datadog dashboard                           | ✅                    | ✅                    |
+| Step                                                          | 1-way                 | 2-way                 |
+| ------------------------------------------------------------- | --------------------- | --------------------- |
+| Migration PR                                                  | ✅                    | ✅                    |
+| Flag: `2024-11-21-enable-external-integrations`               | ℹ️ enabled by default | ℹ️ enabled by default |
+| Flag: `2024-11-27-enable-autumn-track-scheduling-integration` | ✅                    | ✅                    |
+| Hex data export + share CSV                                   | ✅                    | ✅                    |
+| Flag: `2025-05-forge-staff-lion-integration-config`           | ❌                    | ✅                    |
+| Verify Datadog dashboard                                      | ✅                    | ✅                    |
