@@ -20,6 +20,7 @@
     // in ./packages/oxlint-config/src/base.json
     // See https://github.com/oxc-project/oxc/issues/21284
     "no-shadow": "off",
+    "require-unicode-regexp": "off",
     "typescript/no-deprecated": "off",
     "typescript/no-non-null-assertion": "off",
     "typescript/no-unsafe-assignment": "off",

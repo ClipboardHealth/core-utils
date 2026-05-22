@@ -73,7 +73,6 @@
     "promise/prefer-await-to-callbacks": "off",
     "promise/prefer-await-to-then": "off",
     "require-await": "off",
-    "require-unicode-regexp": "off",
     "return-await": "off",
     "sort-imports": "off",
     "sort-keys": "off",
