@@ -120,6 +120,8 @@ Enable the Autumn Track-specific adapter flag:
 
 Use the LaunchDarkly MCP to update the flag.
 
+> ⚠️ **If you used the Migration PR path in Step 1**: Wait for the PR to be merged and fully deployed before enabling this flag. Enabling the flag before the migration runs means no `ExternalIntegration` document exists yet in production.
+
 ### Step 4: Data Export/Sync (1-way and 2-way)
 
 For the initial data sync, existing shifts need to be exported and shared with Autumn Track (StaffLion) so their system is in sync before the integration goes live.
