@@ -366,7 +366,7 @@ User: `babysit my PR`
   - First nitpick is in-scope → **Agree**, apply backtick fix.
   - Second nitpick is out-of-scope, not a correctness bug, not a one-liner → **Defer** (goes under the Deferred (out of scope) heading in the summary).
 - Commit `f00dbabe` for the in-scope review-body fix. Post Defer reply on the thread with the `babysit-pr:followup v1` sentinel above the `addressed` sentinel. Post the review-body summary with Agree (1) and Deferred (out of scope) (1) headings; both fingerprints listed in the fenced block.
-- Summary reports: "1 thread deferred as follow-up, 1 nitpick deferred as follow-up" plus the `gh api graphql ... | grep babysit-pr:followup` one-liner.
+- Summary reports: "1 thread deferred as follow-up, 1 review-body comment deferred as follow-up" plus the `gh api graphql ... | grep babysit-pr:followup` one-liner.
 - **Exit clean** — Defer replies count as fresh sentinel replies; all fingerprints are covered.
 
 ## Input
