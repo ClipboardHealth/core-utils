@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# unresolvedPrComments.sh — Fetch review threads + nitpicks for babysit-pr.
+# unresolvedPrComments.sh — Fetch review threads + review-body comments for babysit-pr.
 # Extended from plugins/core/skills/unresolved-pr-comments/scripts/unresolvedPrComments.sh.
-# Adds: thread IDs, per-thread sentinel recency state, stable nitpick fingerprints.
+# Adds: thread IDs, per-thread sentinel recency state, stable review-body fingerprints.
 #
 # Usage: bash unresolvedPrComments.sh [pr-number]
 # Compatible with macOS bash 3.2. Requires: gh, jq (>= 1.5), perl with Digest::SHA.
@@ -190,7 +190,7 @@ main() {
   #                      entry in postSentinelBotComments and treat as active unless EVERY one
   #                      is confidently a non-actionable acknowledgement
   #       "addressed"  — our sentinel is the newest relevant activity on this thread
-  local bots_json='["coderabbitai","coderabbitai[bot]","dependabot","dependabot[bot]","github-actions","github-actions[bot]","github-advanced-security","github-advanced-security[bot]","renovate","renovate[bot]","renovate-bot","pre-commit-ci","pre-commit-ci[bot]","codecov","codecov[bot]","sonarcloud","sonarcloud[bot]"]'
+  local bots_json='["coderabbitai","coderabbitai[bot]","mendral-app","mendral-app[bot]","dependabot","dependabot[bot]","github-actions","github-actions[bot]","github-advanced-security","github-advanced-security[bot]","renovate","renovate[bot]","renovate-bot","pre-commit-ci","pre-commit-ci[bot]","codecov","codecov[bot]","sonarcloud","sonarcloud[bot]"]'
   local threads_json
   threads_json="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --argjson bots "$bots_json" '
     # Exact login equality via IN($bots[]) — do NOT use `inside($bots)`, which
@@ -342,7 +342,8 @@ main() {
     ')"
   fi
 
-  # Nitpicks from coderabbit review bodies
+  # Automated review-body comments. The legacy function/field names stay for
+  # compatibility with callers that already consume nitpickComments.
   local reviews_json
   reviews_json="$(printf '%s' "$response" | jq '[.data.repository.pullRequest.reviews.nodes[]]')"
   local nitpick_comments
