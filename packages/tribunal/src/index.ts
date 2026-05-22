@@ -37,6 +37,7 @@ import {
   type TribunalRequest,
   type TribunalResponse,
 } from "./tribunal.ts";
+
 export { formatOutput, type FormatOutputInput } from "./format.ts";
 export {
   createDefaultIntermediateOutputPath,
