@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/tribunal",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Structured second opinions from advocate, skeptic, analyst, and deliberator LLM perspectives.",
   "keywords": [
     "agent",

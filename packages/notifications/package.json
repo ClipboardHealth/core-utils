@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/notifications",
-  "version": "3.8.5",
+  "version": "3.8.6",
   "description": "Send notifications through third-party providers.",
   "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
@@ -17,14 +17,14 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/background-jobs-adapter": "2.5.4",
-    "@clipboard-health/phone-number": "2.6.5",
-    "@clipboard-health/util-ts": "5.8.0",
+    "@clipboard-health/background-jobs-adapter": "2.5.5",
+    "@clipboard-health/phone-number": "2.6.6",
+    "@clipboard-health/util-ts": "5.8.1",
     "@knocklabs/node": "1.32.0",
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@clipboard-health/testing-core": "2.6.5",
+    "@clipboard-health/testing-core": "2.6.6",
     "type-fest": "5.6.0",
     "vitest": "4.1.6"
   }
