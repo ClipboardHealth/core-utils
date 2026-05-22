@@ -1,12 +1,12 @@
 ---
 name: babysit-pr
-description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed CodeRabbit review-body comments with sentinel-tagged comments. Runs one pass against the current branch's PR; pass a PR number or URL to `gh pr checkout` that PR first. Use when the user says 'babysit my PR', 'babysit PR 482', 'watch my PR', 'keep my PR moving', or 'respond to comments'."
+description: "Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize parsed automated review-body comments with sentinel-tagged comments. Runs one pass against the current branch's PR; pass a PR number or URL to `gh pr checkout` that PR first. Use when the user says 'babysit my PR', 'babysit PR 482', 'watch my PR', 'keep my PR moving', or 'respond to comments'."
 argument-hint: "[pr-number-or-url]"
 ---
 
 # Babysit PR
 
-Watch one PR through CI, auto-fix high-confidence failures, and leave a paper-trail reply on every active review thread and CodeRabbit review-body comment. Threads stay open for human resolution — this skill only posts replies, it never resolves.
+Watch one PR through CI, auto-fix high-confidence failures, and leave a paper-trail reply on every active review thread and automated review-body comment. Threads stay open for human resolution — this skill only posts replies, it never resolves.
 
 This skill is self-contained: it does not invoke other skills. It works in Claude Code and Codex — no subagents, no `Skill` tool calls, no `!` command interpolation, no `$CLAUDE_PLUGIN_ROOT`.
 
@@ -27,7 +27,7 @@ This skill always runs exactly one pass. It never waits or repeats internally. F
 
 The skill uses two HTML-comment sentinels.
 
-**Addressed sentinel**: `<!-- babysit-pr:addressed v1 core@3.4.1 -->`. The `core@<X.Y.Z>` suffix records which plugin version produced the reply. Appended on its own line at the end of every reply the skill posts (both thread replies and the CodeRabbit summary). This is how the skill knows, on re-runs, which threads and CodeRabbit review-body comments it already handled. Dedupe matches by the version-agnostic prefix `<!-- babysit-pr:addressed v1` followed by a single space, so pre-versioning sentinels left by earlier plugin versions are still recognized. Grep `babysit-pr:addressed v1` (without `-->`) to find sentinels regardless of version; grep `babysit-pr:addressed v1 core@3.4.1` to find ones from a specific version.
+**Addressed sentinel**: `<!-- babysit-pr:addressed v1 core@3.4.1 -->`. The `core@<X.Y.Z>` suffix records which plugin version produced the reply. Appended on its own line at the end of every reply the skill posts (both thread replies and the review-body summary). This is how the skill knows, on re-runs, which threads and automated review-body comments it already handled. Dedupe matches by the version-agnostic prefix `<!-- babysit-pr:addressed v1` followed by a single space, so pre-versioning sentinels left by earlier plugin versions are still recognized. Grep `babysit-pr:addressed v1` (without `-->`) to find sentinels regardless of version; grep `babysit-pr:addressed v1 core@3.4.1` to find ones from a specific version.
 
 **Follow-up sentinel**: `<!-- babysit-pr:followup v1 core@3.4.1 -->`. Attached to replies that defer an out-of-scope comment as a tracked follow-up (see the Scope subsection and the Defer verdict in step 6). Grep `babysit-pr:followup` across PR conversation JSON to enumerate deferred items. This sentinel is additive — the post-reply scripts still append the `addressed` sentinel at the end, so a deferred thread is correctly machine-classified as addressed (the skill _has_ handled it — by deferring). Human reviewers and future sweeps distinguish deferred from resolved by looking for the follow-up sentinel.
 
@@ -42,9 +42,9 @@ The skill uses two HTML-comment sentinels.
 
 **Bot detection** uses two signals (union): GraphQL `author.__typename == "Bot"` (primary — catches every GitHub-tagged bot, including ones not on our allowlist), plus a name allowlist (for bots that post via a User-type service account). An unknown bot never falls through to human classification, so a new review bot won't cause an infinite re-reply loop.
 
-The bot detection exists ONLY to downgrade the default for post-sentinel bot activity from `"active"` to `"uncertain"`. It NEVER suppresses bot comments or marks a thread `"addressed"` on its own — CodeRabbit's review content would be lost if it did.
+The bot detection exists ONLY to downgrade the default for post-sentinel bot activity from `"active"` to `"uncertain"`. It NEVER suppresses bot comments or marks a thread `"addressed"` on its own — review-bot content would be lost if it did.
 
-For CodeRabbit review-body comments, the script emits a stable `fingerprint` per comment (sha256 of file + line + title + body, no timestamp). This includes CodeRabbit's Nitpick comments, Minor comments, and Outside diff range comments sections. Before posting a summary, search existing PR issue-comments for a prior babysit-pr sentinel comment that already contains those fingerprints; if every current fingerprint is already present in a prior sentinel comment, skip posting.
+For automated review-body comments, the script emits a stable `fingerprint` per comment (sha256 of file + line + title + body, no timestamp). This includes CodeRabbit's Nitpick comments, Minor comments, and Outside diff range comments sections, plus Mendral `Needs attention` review bodies that include a file/line anchor. Before posting a summary, search existing PR issue-comments for a prior babysit-pr sentinel comment that already contains those fingerprints; if every current fingerprint is already present in a prior sentinel comment, skip posting.
 
 ## One iteration
 
@@ -135,14 +135,14 @@ The output JSON has:
 - `threads`: every unresolved review thread, with `threadId`, `replyToCommentDatabaseId`, `comments[]`, `lastBabysitSentinelAt`, `lastHumanCommentAt`, `lastBotCommentAt`, `postSentinelBotComments[]`, `postSentinelHumanComments[]`, and `activityState` (`"active"` / `"uncertain"` / `"addressed"`).
 - `activeThreads`: threads where `activityState != "addressed"` — these need attention this iteration (active AND uncertain).
 - `uncertainThreads`: just the uncertain subset. For each, read EVERY entry in `postSentinelBotComments` before deciding.
-- `nitpickComments`: parsed CodeRabbit review-body comments, each with a stable `fingerprint`. The field name is retained for compatibility, but it includes Nitpick comments, Minor comments, and Outside diff range comments.
+- `nitpickComments`: parsed automated review-body comments, each with a stable `fingerprint`. The field name is retained for compatibility; it includes CodeRabbit Nitpick, Minor, and Outside diff range comments, plus Mendral `Needs attention` review bodies that include a file/line anchor.
 - `totalActiveThreads`, `totalUncertainThreads`, `totalNitpicks`, `totalUnresolvedComments` for quick checks.
 
 ### Scope
 
-This PR's review-feedback scope is strict by default. Steps 6 (threads) and 7 (CodeRabbit review-body comments) classify each comment as in-scope or out-of-scope using this rule before choosing a verdict. Step 5 (CI) uses the broader CI-scope rule in that step, not this one — CI can legitimately fail on unchanged lines because the PR changed a contract or dependency path.
+This PR's review-feedback scope is strict by default. Steps 6 (threads) and 7 (automated review-body comments) classify each comment as in-scope or out-of-scope using this rule before choosing a verdict. Step 5 (CI) uses the broader CI-scope rule in that step, not this one — CI can legitimately fail on unchanged lines because the PR changed a contract or dependency path.
 
-Build the changed-line set from `gh pr diff` once per iteration. Count changed diff lines on both sides: added lines in the new version, removed lines in the old version, and modified code represented by adjacent remove/add pairs. Do not count diff context lines. A reviewer comment or CodeRabbit review-body comment is **in scope** when its anchor falls on a changed diff line on either side of the hunk. Deleted-line comments like "why remove this?" or "please add this back" are in scope by definition. For a range like `12-14`, any overlap with a changed diff line is in scope.
+Build the changed-line set from `gh pr diff` once per iteration. Count changed diff lines on both sides: added lines in the new version, removed lines in the old version, and modified code represented by adjacent remove/add pairs. Do not count diff context lines. A reviewer comment or automated review-body comment is **in scope** when its anchor falls on a changed diff line on either side of the hunk. Deleted-line comments like "why remove this?" or "please add this back" are in scope by definition. For a range like `12-14`, any overlap with a changed diff line is in scope.
 
 When matching review comments to hunks, use the anchor line provided by `unresolvedPrComments.sh`; it may be the current `line` or the script's fallback to `originalLine`. Compare that anchor against both new-side added ranges and old-side removed ranges.
 
@@ -215,19 +215,19 @@ For every thread in `activeThreads` (this includes both `"active"` and `"uncerta
     - Does not meet the bar → **Defer** (new verdict). Record a one-line rationale and, if relevant, a pointer to where the concern lives.
     - Disagree and Already-fixed can still apply to out-of-scope comments (e.g., reviewer asks for a refactor that's already landed on main, or misreads the code).
 
-### 7. Assess CodeRabbit review-body comments
+### 7. Assess automated review-body comments
 
-For every parsed CodeRabbit review-body comment in `nitpickComments`:
+For every parsed automated review-body comment in `nitpickComments`:
 
 - Check whether its `fingerprint` already appears in a prior babysit-pr sentinel comment on the PR. If yes, skip.
-- **Classify scope** (in / out) using the Scope subsection. For CodeRabbit ranges like `12-14`, any overlap with changed diff lines on either side of the hunk is in scope; no overlap is out of scope unless one of the explicit escape-hatch signals applies.
+- **Classify scope** (in / out) using the Scope subsection. For ranges like `12-14`, any overlap with changed diff lines on either side of the hunk is in scope; no overlap is out of scope unless one of the explicit escape-hatch signals applies.
 - Pick a verdict:
   - In-scope → Agree / Disagree / Already fixed (as with threads). If Agree, apply the fix.
-  - Out-of-scope → apply the out-of-scope fix bar. Meets the bar → Agree and apply the fix, noting in the summary that it was fixed despite being out of scope. Does not meet the bar → **Defer**. A Deferred CodeRabbit review-body comment does not get its own top-level comment; it goes into the summary under the **Deferred (out of scope)** heading (see step 9).
+  - Out-of-scope → apply the out-of-scope fix bar. Meets the bar → Agree and apply the fix, noting in the summary that it was fixed despite being out of scope. Does not meet the bar → **Defer**. A Deferred automated review-body comment does not get its own top-level comment; it goes into the summary under the **Deferred (out of scope)** heading (see step 9).
 
-Deferred CodeRabbit fingerprints still go into the fenced fingerprint block at the end of the summary alongside addressed ones, so future runs dedupe correctly — the comment is handled, just handled by deferring.
+Deferred review-body fingerprints still go into the fenced fingerprint block at the end of the summary alongside addressed ones, so future runs dedupe correctly — the comment is handled, just handled by deferring.
 
-If no CodeRabbit review-body comments remain after filtering, skip ONLY the top-level CodeRabbit summary comment in step 9. Still post thread replies for every non-Skip-reply thread from step 6.
+If no automated review-body comments remain after filtering, skip ONLY the top-level review-body summary comment in step 9. Still post thread replies for every non-Skip-reply thread from step 6.
 
 ### 8. Commit and push (if any edits)
 
@@ -272,18 +272,18 @@ For Defer replies, include the follow-up sentinel on its own line as shown. The 
 
 The script uses the `addPullRequestReviewThreadReply` GraphQL mutation. It does NOT resolve the thread.
 
-If any CodeRabbit review-body comments were assessed in step 7, post ONE top-level PR comment summarizing all of them:
+If any automated review-body comments were assessed in step 7, post ONE top-level PR comment summarizing all of them:
 
 ```bash
 bash scripts/postSentinelPrComment.sh "$PR_NUMBER" "$BODY"
 ```
 
-The CodeRabbit summary body should:
+The review-body summary should:
 
 - Group verdicts under **Agree / Disagree / Already fixed / Deferred (out of scope)** headings. Omit a heading if its list is empty.
-- Under **Deferred (out of scope)**, list each deferred CodeRabbit review-body comment as a bullet, followed on its own line by `<!-- babysit-pr:followup v1 core@3.4.1 -->` so grep catches them individually.
+- Under **Deferred (out of scope)**, list each deferred review-body comment as a bullet, followed on its own line by `<!-- babysit-pr:followup v1 core@3.4.1 -->` so grep catches them individually.
 - Include the commit URL for fixes.
-- Include every current CodeRabbit review-body comment's `fingerprint` — addressed and deferred — in a fenced block at the end (one per line, before the sentinel) so future runs can dedupe. Deferred comments count as handled for dedupe purposes.
+- Include every current review-body comment's `fingerprint` — addressed and deferred — in a fenced block at the end (one per line, before the sentinel) so future runs can dedupe. Deferred comments count as handled for dedupe purposes.
 
 ### 10. Summarize
 
@@ -293,7 +293,7 @@ Report:
 - Merge conflict status if relevant (resolved or aborted with reason).
 - CI checks fixed / still failing / skipped-with-diagnosis.
 - Review threads replied to, grouped by verdict (including any Defer count: "X threads deferred as follow-ups").
-- Nitpicks summarized (or skipped because already covered), including the Deferred count: "Y nitpicks deferred as follow-ups".
+- Review-body comments summarized (or skipped because already covered), including the Deferred count: "Y review-body comments deferred as follow-ups".
 - Threads left active because of bot-acknowledgement uncertainty (flag by thread URL).
 - The stop condition triggered for this pass (clean / progressing / stuck).
 
@@ -309,7 +309,7 @@ Do not rely only on `gh pr view --json comments,reviews` — that view can miss 
 
 After the single pass completes, pick exactly one outcome:
 
-- **Exit clean** — all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6's inspection or has already received a fresh sentinel reply in this pass (Agree / Disagree / Already-fixed / **Defer** all count — a Defer reply is a sentinel reply), AND every current nitpick fingerprint is covered by an existing sentinel comment (deferred nitpicks count; they're in the summary's fingerprint block). Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. A PR with Deferred threads is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
+- **Exit clean** — all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6's inspection or has already received a fresh sentinel reply in this pass (Agree / Disagree / Already-fixed / **Defer** all count — a Defer reply is a sentinel reply), AND every current review-body fingerprint is covered by an existing sentinel comment (deferred review-body comments count; they're in the summary's fingerprint block). Do not use raw `totalActiveThreads` from the script output — it is pre-inspection and will stay non-zero for Skip-reply cases. A PR with Deferred threads is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
 - **Exit progressing** — pass made commits, posted new replies, or both, and the PR is not yet clean (CI is still pending, a new CI run was triggered by this pass's commits, or more work remains). There is real work still in flight that another run would pick up. Report what was done and what is pending, and tell the user to re-run `/babysit-pr` once CI settles, or to wrap the call with `/loop <cadence> /babysit-pr` (or a shell `while true; do ...; done`) for automatic re-runs.
 - **Exit stuck** — pass made no commits and posted no new replies, and the PR is still not clean. Nothing actionable happened this pass. Use this whenever progress is blocked on something outside the skill's scope, including:
   - Merge conflict in step 2 that exceeded the high-confidence resolution bar.
@@ -338,7 +338,7 @@ User: `babysit my PR`
 - No PR arg → operate on the current branch.
 - Preflight OK, PR #482 found.
 - `gh pr checks --watch` times out at 600s — two checks still pending.
-- `unresolvedPrComments.sh` returns 0 active threads, 0 nitpicks.
+- `unresolvedPrComments.sh` returns 0 active threads, 0 review-body comments.
 - No commits, no replies posted, CI state unchanged vs. start.
 - Outcome: **stuck**. Report: "CI still running after 10 min; no comments to address. Re-run `/babysit-pr` once CI settles, or wrap with `/loop 2m /babysit-pr`."
 
@@ -357,7 +357,7 @@ User: `babysit PR 482`
 User: `babysit my PR`
 
 - Preflight OK, PR #612 found, CI green.
-- `unresolvedPrComments.sh` returns 1 active thread and 2 nitpicks:
+- `unresolvedPrComments.sh` returns 1 active thread and 2 review-body comments:
   - Thread on `src/users.ts:82` (unchanged, not touched by diff) — reviewer: "while you're here, this helper could be memoized".
   - Nitpick on `src/orders.ts:45-47` — anchor overlaps a changed line; CodeRabbit says the error message should use backticks. In scope.
   - Nitpick on `src/unrelated.ts:10` — file not touched by the PR. Out of scope, no escape-hatch signal.
@@ -365,8 +365,8 @@ User: `babysit my PR`
   - Thread is on an unchanged line; reviewer doesn't tie it to this PR's changes; doesn't meet the fix bar (not a crash, not a bug, not trivial). → **Defer**.
   - First nitpick is in-scope → **Agree**, apply backtick fix.
   - Second nitpick is out-of-scope, not a correctness bug, not a one-liner → **Defer** (goes under the Deferred (out of scope) heading in the summary).
-- Commit `f00dbabe` for the in-scope nitpick fix. Post Defer reply on the thread with the `babysit-pr:followup v1` sentinel above the `addressed` sentinel. Post the nitpick summary with Agree (1) and Deferred (out of scope) (1) headings; both fingerprints listed in the fenced block.
-- Summary reports: "1 thread deferred as follow-up, 1 nitpick deferred as follow-up" plus the `gh api graphql ... | grep babysit-pr:followup` one-liner.
+- Commit `f00dbabe` for the in-scope review-body fix. Post Defer reply on the thread with the `babysit-pr:followup v1` sentinel above the `addressed` sentinel. Post the review-body summary with Agree (1) and Deferred (out of scope) (1) headings; both fingerprints listed in the fenced block.
+- Summary reports: "1 thread deferred as follow-up, 1 review-body comment deferred as follow-up" plus the `gh api graphql ... | grep babysit-pr:followup` one-liner.
 - **Exit clean** — Defer replies count as fresh sentinel replies; all fingerprints are covered.
 
 ## Input
