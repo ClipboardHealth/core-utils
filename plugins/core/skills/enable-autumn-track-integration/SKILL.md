@@ -58,6 +58,8 @@ The main external integrations flag `2024-11-21-enable-external-integrations` is
 
 ### Step 3: Enable Autumn Track Adapter Feature Flag
 
+> ⚠️ **Wait for the migration PR from Step 1 to be merged and deployed before proceeding.**
+
 Enable the Autumn Track-specific adapter flag:
 
 - **Flag**: `2024-11-27-enable-autumn-track-scheduling-integration`
