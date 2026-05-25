@@ -50,6 +50,8 @@ Before proposing a fix, gather:
 - A brief **explanation** of why the flake is intermittent (what timing or state condition triggers it)
 - A **confidence score** (1-5, see [Confidence Score](#confidence-score))
 
+If confidence is less than 5/5, the plan must include the frontend and/or backend observability changes that would provide enough evidence for 5/5 confidence next time. Do not limit that recommendation to the current repository -- the plan may request changes in multiple repositories because we have access to all code.
+
 If confidence is 2 or below, the plan is to gather more data: recommend specific reproduction steps or instrumentation rather than a code fix.
 
 If >2, continue to [Decide Fix Approach](#decide-fix-approach).
@@ -169,6 +171,8 @@ Do not propose a fix without concrete artifacts. At minimum, include:
 - When available: **Datadog trace** via `attempts[].network.instances[].traceId` showing backend behavior for the failing request
 - A **confidence score** from 1 to 5 rating how certain you are in the root cause diagnosis
 
+If confidence is less than 5/5, identify the missing evidence and propose concrete frontend and/or backend observability changes that would make the next occurrence diagnosable at 5/5 confidence. These changes may span multiple repositories.
+
 If confidence is 2 or below, do not propose a code fix. Instead, recommend specific instrumentation or reproduction steps to raise confidence.
 
 If >2, continue to [Decide Fix Approach](#decide-fix-approach).
@@ -220,6 +224,7 @@ Produce the plan with these fields:
 - **Root cause:** concise technical explanation
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)
 - **Proposed fix:** test harness, product, or both — with the specific file(s) and the change you would make
+- **Observability to reach 5/5:** required when confidence is less than 5/5. List the frontend and/or backend telemetry, logging, tracing, reporter, or metric changes that would make this flake diagnosable with 5/5 confidence next time, including any repositories that should change. Use "N/A -- confidence is 5/5" only for a 5/5 plan.
 - **Sibling candidates:** files that appear to share the same anti-pattern, for the reviewer (or fix.md) to confirm. Or "N/A -- fix is test-specific" if the issue is one-off (see [`fix.md`](./fix.md) for what counts as a structural anti-pattern worth searching for).
 - **Validation plan:** lint/typecheck commands and test commands to run after applying the fix
 - **Open questions:** anything that needs human input before fixing

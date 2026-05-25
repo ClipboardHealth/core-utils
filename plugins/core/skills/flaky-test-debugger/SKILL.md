@@ -51,6 +51,8 @@ If no existing fix is found, proceed to Phase 2.
 
 Follow [`references/plan.md`](./references/plan.md). It walks investigation, diagnosis, evidence gathering, and the fix decision tree, and produces a structured plan with confidence score.
 
+If the plan's confidence is less than 5/5, it must include the frontend and/or backend observability changes needed to reach 5/5 confidence next time. The plan may request changes across multiple repositories; assume we have access to all code.
+
 If you are in plan mode, present the plan and stop here.
 
 ## Phase 3: Apply the plan (fix mode only)
