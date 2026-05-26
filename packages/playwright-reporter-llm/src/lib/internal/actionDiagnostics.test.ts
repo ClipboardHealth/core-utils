@@ -1,5 +1,5 @@
-import { ACTION_LOG_MESSAGE_CAP, ACTION_LOG_MESSAGES_CAP, TRUNCATION_MARKER } from "./constants";
 import { ActionBuilder } from "./actionDiagnostics";
+import { ACTION_LOG_MESSAGE_CAP, ACTION_LOG_MESSAGES_CAP, TRUNCATION_MARKER } from "./constants";
 
 describe(ActionBuilder, () => {
   it("builds a failing action from before, log, and after events", () => {
@@ -50,6 +50,44 @@ describe(ActionBuilder, () => {
 
     expect(actual?.callId).toBe("call@1");
     expect(actual?.error).toBe("click failed");
+  });
+
+  it("picks the last failing action when multiple actions fail", () => {
+    const builder = new ActionBuilder();
+
+    builder.admit({ type: "before", callId: "call@1", class: "Frame", method: "click" });
+    builder.admit({ type: "after", callId: "call@1", endTime: 10, error: "click failed" });
+    builder.admit({ type: "before", callId: "call@2", class: "Frame", method: "fill" });
+    builder.admit({ type: "after", callId: "call@2", endTime: 20, error: "fill failed" });
+
+    const actual = builder.findFailingAction();
+
+    expect(actual?.callId).toBe("call@2");
+    expect(actual?.error).toBe("fill failed");
+  });
+
+  it("keeps the earliest start time for duplicate start events", () => {
+    const builder = new ActionBuilder();
+
+    builder.admit({
+      type: "before",
+      callId: "call@1",
+      class: "Frame",
+      method: "click",
+      startTime: 10,
+    });
+    builder.admit({
+      type: "action",
+      callId: "call@1",
+      class: "Frame",
+      method: "click",
+      startTime: 20,
+    });
+    builder.admit({ type: "after", callId: "call@1", endTime: 30, error: "click failed" });
+
+    const actual = builder.findFailingAction();
+
+    expect(actual?.startTime).toBe(10);
   });
 
   it("returns the last completed action when no action has an error", () => {

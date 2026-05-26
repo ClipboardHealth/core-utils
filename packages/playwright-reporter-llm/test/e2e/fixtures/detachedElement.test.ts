@@ -5,8 +5,10 @@ import { test } from "@playwright/test";
 
 import { writeTraceZipFixture } from "../../../src/lib/internal/testHelpers";
 
-test("captures action log when element detaches before click", async (_fixtures, testInfo) => {
+// eslint-disable-next-line no-empty-pattern
+test("captures action log when element detaches before click", async ({}, testInfo) => {
   const tracePath = testInfo.outputPath("trace.zip");
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
   mkdirSync(path.dirname(tracePath), { recursive: true });
   writeTraceZipFixture(path.dirname(tracePath), path.basename(tracePath), {
     requestBody: JSON.stringify({ request: "unused" }),

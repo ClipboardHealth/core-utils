@@ -32,6 +32,12 @@ interface TraceParseContext {
   consoleMessages: ConsoleEntry[];
 }
 
+interface TraceCollectors {
+  actionBuilder: ActionBuilder;
+  builder: NetworkBuilder;
+  consoleMessages: ConsoleEntry[];
+}
+
 function parseTraceLine(line: string, context: TraceParseContext): void {
   let parsedLine: unknown;
   try {
@@ -70,9 +76,7 @@ function parseTraceLine(line: string, context: TraceParseContext): void {
 function parseTraceIntoBuilder(
   tracePath: string,
   attemptStartTimeMs: number,
-  actionBuilder: ActionBuilder,
-  builder: NetworkBuilder,
-  consoleMessages: ConsoleEntry[],
+  collectors: TraceCollectors,
 ): void {
   let archiveEntries: Record<string, Uint8Array>;
 
@@ -102,9 +106,7 @@ function parseTraceIntoBuilder(
     archiveEntries,
     anchor,
     attemptStartTimeMs,
-    actionBuilder,
-    builder,
-    consoleMessages,
+    ...collectors,
   };
 
   for (const [entryName, entryContent] of Object.entries(archiveEntries)) {
@@ -169,7 +171,11 @@ export function collectTraceDiagnosticsFromAttachments(
   const consoleMessages: ConsoleEntry[] = [];
 
   for (const tracePath of tracePaths) {
-    parseTraceIntoBuilder(tracePath, attemptStartTimeMs, actionBuilder, builder, consoleMessages);
+    parseTraceIntoBuilder(tracePath, attemptStartTimeMs, {
+      actionBuilder,
+      builder,
+      consoleMessages,
+    });
   }
 
   const failingAction = actionBuilder.findFailingAction();

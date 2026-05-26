@@ -67,7 +67,8 @@ export class ActionBuilder {
 
     const startTime = asNumber(eventRecord["startTime"]);
     if (startTime !== undefined) {
-      record.startTime = startTime;
+      record.startTime =
+        record.startTime === undefined ? startTime : Math.min(record.startTime, startTime);
     }
 
     for (const logMessage of extractLogMessages(eventRecord["log"])) {
