@@ -5,6 +5,7 @@ import path from "node:path";
 import type { TestResult } from "@playwright/test/reporter";
 
 import type { NetworkReport } from "../types";
+import type { ActionRecord } from "./actionDiagnostics";
 import { buildAttemptResult } from "./attemptBuilder";
 
 function createMockResult(overrides: Partial<TestResult> = {}): TestResult {
@@ -77,6 +78,19 @@ function networkWithInstance(offsetMs?: number): NetworkReport {
   return report;
 }
 
+function failingAction(): ActionRecord {
+  return {
+    callId: "call@1",
+    apiName: "Frame.click",
+    selector: "internal:role=button[name='Submit']",
+    log: [
+      "  locator resolved to visible <button>Submit</button>",
+      "element was detached from the DOM, retrying",
+    ],
+    error: "Element is not attached to the DOM",
+  };
+}
+
 describe(buildAttemptResult, () => {
   it("builds sorted timeline emitting networkId for network entries", () => {
     const result = buildAttemptResult({
@@ -137,6 +151,43 @@ describe(buildAttemptResult, () => {
     });
 
     expect(result.error?.message).toBe("first error");
+  });
+
+  it("enriches failed attempt errors with failing action diagnostics", () => {
+    const errors = [{ message: "first error" }];
+
+    const result = buildAttemptResult({
+      result: createMockResult({ status: "failed" }),
+      errors,
+      attachments: [],
+      network: emptyNetwork(),
+      consoleMessages: [],
+      failingAction: failingAction(),
+    });
+
+    expect(result.error).toMatchObject({
+      message: "first error",
+      apiName: "Frame.click",
+      selector: "internal:role=button[name='Submit']",
+      actionLog: [
+        "  locator resolved to visible <button>Submit</button>",
+        "element was detached from the DOM, retrying",
+      ],
+    });
+    expect(errors[0]).toStrictEqual(result.error);
+  });
+
+  it("does not enrich passed attempt errors with failing action diagnostics", () => {
+    const result = buildAttemptResult({
+      result: createMockResult({ status: "passed" }),
+      errors: [{ message: "non-failing error" }],
+      attachments: [],
+      network: emptyNetwork(),
+      consoleMessages: [],
+      failingAction: failingAction(),
+    });
+
+    expect(result.error).toStrictEqual({ message: "non-failing error" });
   });
 
   it("embeds screenshot for failed attempts", () => {

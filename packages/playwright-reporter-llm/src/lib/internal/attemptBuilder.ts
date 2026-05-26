@@ -12,6 +12,7 @@ import type {
   TimelineNetworkEntry,
   TimelineStepEntry,
 } from "../types";
+import type { ActionRecord } from "./actionDiagnostics";
 import { embedScreenshot, extractFailureArtifacts, findScreenshotAttachment } from "./artifacts";
 import { collectStdio, flattenSteps } from "./testResults";
 
@@ -21,6 +22,7 @@ interface BuildAttemptResultInput {
   attachments: TestAttachment[];
   network: NetworkReport;
   consoleMessages: ConsoleEntry[];
+  failingAction?: ActionRecord;
 }
 
 function buildTimeline(
@@ -75,7 +77,7 @@ function buildTimeline(
 }
 
 export function buildAttemptResult(input: BuildAttemptResultInput): AttemptResult {
-  const { result, errors, attachments, network, consoleMessages } = input;
+  const { result, errors, attachments, network, consoleMessages, failingAction } = input;
   const failureArtifacts = extractFailureArtifacts(result.status, attachments);
 
   if (failureArtifacts) {
@@ -112,8 +114,27 @@ export function buildAttemptResult(input: BuildAttemptResultInput): AttemptResul
 
   const [firstError] = errors;
   if (firstError) {
+    if (failingAction && shouldEnrichError(result.status)) {
+      enrichErrorWithAction(firstError, failingAction);
+    }
     attemptResult.error = firstError;
   }
 
   return attemptResult;
+}
+
+function shouldEnrichError(status: TestResult["status"]): boolean {
+  return status === "failed" || status === "timedOut" || status === "interrupted";
+}
+
+function enrichErrorWithAction(error: TestError, action: ActionRecord): void {
+  if (error.apiName === undefined && action.apiName !== undefined) {
+    error.apiName = action.apiName;
+  }
+  if (error.selector === undefined && action.selector !== undefined) {
+    error.selector = action.selector;
+  }
+  if (error.actionLog === undefined && action.log.length > 0) {
+    error.actionLog = action.log;
+  }
 }

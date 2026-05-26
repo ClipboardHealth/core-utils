@@ -45,9 +45,9 @@ describe("LLM Reporter E2E", () => {
   });
 
   it("has correct summary counts", () => {
-    expect(report.summary.total).toBe(5);
+    expect(report.summary.total).toBe(6);
     expect(report.summary.passed).toBe(2);
-    expect(report.summary.failed).toBe(1);
+    expect(report.summary.failed).toBe(2);
     expect(report.summary.timedOut).toBe(1);
     expect(report.summary.flaky).toBe(1);
   });
@@ -68,7 +68,7 @@ describe("LLM Reporter E2E", () => {
   });
 
   it("contains all test entries with required fields", () => {
-    expect(report.tests).toHaveLength(5);
+    expect(report.tests).toHaveLength(6);
 
     const validStatuses = ["passed", "failed", "timedOut", "skipped", "interrupted"];
 
@@ -109,6 +109,22 @@ describe("LLM Reporter E2E", () => {
       expect(test.errors.length).toBeGreaterThanOrEqual(1);
       expect(test.errors[0]?.message).not.toContain("\u001B[");
     }
+  });
+
+  it("includes locator action logs for detached-DOM failures", () => {
+    const detachedTest = report.tests.find((t) =>
+      t.title.includes("captures action log when element detaches before click"),
+    );
+    expect(detachedTest).toBeDefined();
+
+    const error = detachedTest!.errors[0]!;
+    expect(error.apiName).toBeDefined();
+    expect(error.selector).toContain("internal:role=button");
+
+    expect(error.actionLog).toBeDefined();
+    const actionLog = error.actionLog!.join("\n");
+    expect(actionLog).toContain("locator resolved to");
+    expect(actionLog).toContain("element was detached from the DOM");
   });
 
   it("detects flaky tests correctly", () => {

@@ -65,7 +65,14 @@
           "workerIndex": 0,
           "parallelIndex": 0,
           "error": {
-            "message": "Expected: 1, Received: 2"
+            "message": "Expected: 1, Received: 2",
+            "apiName": "Frame.click",
+            "selector": "internal:role=button[name='Apply']",
+            "actionLog": [
+              "waiting for getByRole('button', { name: 'Apply' })",
+              "  locator resolved to visible <button class=\"primary\">Apply</button>",
+              "element was detached from the DOM, retrying"
+            ]
           },
           "steps": [
             {

@@ -62,6 +62,44 @@ describe(collectTraceDiagnosticsFromAttachments, () => {
     expect(result.consoleMessages).toContainEqual({ type: "error", text: "trace error" });
   });
 
+  it("extracts failing action diagnostics from trace zip", () => {
+    const tracePath = writeTraceZipFixture(temporaryDirectory, "trace-action.zip", {
+      requestBody: JSON.stringify({ request: "hello" }),
+      responseBody: JSON.stringify({ response: "world" }),
+      traceEvents: [
+        {
+          type: "before",
+          callId: "call@1",
+          class: "Frame",
+          method: "click",
+          params: { selector: "internal:role=button[name='Submit']" },
+        },
+        {
+          type: "log",
+          callId: "call@1",
+          message: "  locator resolved to visible <button>Submit</button>",
+        },
+        {
+          type: "after",
+          callId: "call@1",
+          endTime: 37,
+          error: { message: "Element is not attached to the DOM" },
+        },
+      ],
+    });
+
+    const result = collectTraceDiagnosticsFromAttachments([tracePath], 0);
+
+    expect(result.failingAction).toMatchObject({
+      callId: "call@1",
+      apiName: "Frame.click",
+      selector: "internal:role=button[name='Submit']",
+      log: ["  locator resolved to visible <button>Submit</button>"],
+      error: "Element is not attached to the DOM",
+      endTime: 37,
+    });
+  });
+
   it("handles deflate-compressed archives", () => {
     const tracePath = writeTraceZipFixture(temporaryDirectory, "trace-deflate.zip", {
       requestBody: JSON.stringify({ request: "compressed" }),
