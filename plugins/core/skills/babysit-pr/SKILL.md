@@ -239,7 +239,7 @@ For every entry in `reviewBodyComments`:
   - In-scope → Agree / Disagree / Already fixed (as with threads). If Agree, apply the fix.
   - Out-of-scope → apply the out-of-scope fix bar. Meets the bar → Agree and apply the fix, noting in the summary that it was fixed despite being out of scope. Does not meet the bar → **Defer**. A Deferred finding does not get its own top-level comment; it goes into the summary under the **Deferred (out of scope)** heading (see step 9).
 
-The whole-body `fingerprint` (not per-finding) goes in the fenced fingerprint block at the end of the summary. If the review body later changes (new findings, edits), the fingerprint changes and the next pass will repost — slightly noisier but never silently drops a new finding. Trivial whitespace/version-tag changes are absorbed by body normalization before hashing, so identical content doesn't churn.
+The whole-body `fingerprint` (not per-finding) goes in the fenced fingerprint block at the end of the summary. If the review body later changes (new findings, edits), the fingerprint changes and the next pass will post the summary again — slightly noisier but never silently drops a new finding. Trivial whitespace/version-tag changes are absorbed by body normalization before hashing, so identical content doesn't churn.
 
 If `reviewBodyComments` is empty (or all entries dedupe), skip ONLY the review-body section of the summary in step 9. Still post thread replies for every non-Skip-reply thread from step 6a and handle issue comments per step 6b.
 
