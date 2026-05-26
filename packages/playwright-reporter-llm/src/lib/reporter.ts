@@ -12,6 +12,7 @@ import type {
   TestResult,
 } from "@playwright/test/reporter";
 
+import type { ActionRecord } from "./internal/actionDiagnostics";
 import { buildAttemptResult } from "./internal/attemptBuilder";
 import {
   buildFullTitle,
@@ -97,12 +98,13 @@ export default class LlmReporter implements Reporter {
 
     let network: NetworkReport;
     let consoleMessages: ConsoleEntry[];
+    let failingAction: ActionRecord | undefined;
     try {
       const traceDiagnostics = collectTraceDiagnosticsFromAttachments(
         tracePaths,
         attemptStartTimeMs,
       );
-      ({ network, consoleMessages } = traceDiagnostics);
+      ({ network, consoleMessages, failingAction } = traceDiagnostics);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const globalError: GlobalError = {
@@ -114,6 +116,7 @@ export default class LlmReporter implements Reporter {
       this.globalErrors.push(globalError);
       network = emptyNetworkReport();
       consoleMessages = [];
+      failingAction = undefined;
     }
 
     const attemptResult = buildAttemptResult({
@@ -122,6 +125,7 @@ export default class LlmReporter implements Reporter {
       attachments,
       network,
       consoleMessages,
+      ...(failingAction !== undefined && { failingAction }),
     });
 
     const existingEntry = this.entriesById.get(test.id);

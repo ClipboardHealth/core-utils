@@ -3,6 +3,7 @@ import path from "node:path";
 import type { TestResult } from "@playwright/test/reporter";
 
 import type { ConsoleEntry, NetworkReport, TestAttachment } from "../types";
+import { ActionBuilder, type ActionRecord } from "./actionDiagnostics";
 import { buildConsoleEntryFromEvent } from "./consoleProcessing";
 import { NetworkBuilder } from "./networkBuilder";
 import { buildNetworkObservationFromEvent } from "./networkProcessing";
@@ -14,6 +15,7 @@ import { readZipArchiveEntries } from "./zipArchive";
 interface TraceDiagnostics {
   network: NetworkReport;
   consoleMessages: ConsoleEntry[];
+  failingAction?: ActionRecord;
 }
 
 interface AttachmentsCollection {
@@ -25,6 +27,7 @@ interface TraceParseContext {
   archiveEntries: Record<string, Uint8Array>;
   anchor: MonotonicAnchor | undefined;
   attemptStartTimeMs: number;
+  actionBuilder: ActionBuilder;
   builder: NetworkBuilder;
   consoleMessages: ConsoleEntry[];
 }
@@ -60,11 +63,14 @@ function parseTraceLine(line: string, context: TraceParseContext): void {
   if (consoleEntry) {
     appendConsoleEntryWithPriority(context.consoleMessages, consoleEntry);
   }
+
+  context.actionBuilder.admit(eventRecord);
 }
 
 function parseTraceIntoBuilder(
   tracePath: string,
   attemptStartTimeMs: number,
+  actionBuilder: ActionBuilder,
   builder: NetworkBuilder,
   consoleMessages: ConsoleEntry[],
 ): void {
@@ -96,6 +102,7 @@ function parseTraceIntoBuilder(
     archiveEntries,
     anchor,
     attemptStartTimeMs,
+    actionBuilder,
     builder,
     consoleMessages,
   };
@@ -157,12 +164,18 @@ export function collectTraceDiagnosticsFromAttachments(
   tracePaths: string[],
   attemptStartTimeMs: number,
 ): TraceDiagnostics {
+  const actionBuilder = new ActionBuilder();
   const builder = new NetworkBuilder();
   const consoleMessages: ConsoleEntry[] = [];
 
   for (const tracePath of tracePaths) {
-    parseTraceIntoBuilder(tracePath, attemptStartTimeMs, builder, consoleMessages);
+    parseTraceIntoBuilder(tracePath, attemptStartTimeMs, actionBuilder, builder, consoleMessages);
   }
 
-  return { network: builder.finalize(), consoleMessages };
+  const failingAction = actionBuilder.findFailingAction();
+  return {
+    network: builder.finalize(),
+    consoleMessages,
+    ...(failingAction !== undefined && { failingAction }),
+  };
 }

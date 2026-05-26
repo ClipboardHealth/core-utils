@@ -36,6 +36,9 @@ export interface TestError {
   snippet?: string;
   diff?: { expected: string; actual: string };
   location?: TestLocation;
+  apiName?: string;
+  selector?: string;
+  actionLog?: string[];
 }
 
 export interface TestAttachment {

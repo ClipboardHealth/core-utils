@@ -55,6 +55,7 @@ Report: test-results/llm-report.json
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Pass/fail overview           | `summary`                                                                                                                                                        |
 | Triage failures              | Filter `tests[]` by `status === "failed"`, then read `errors[0].{message,diff,location,snippet}`                                                                 |
+| Diagnose locator detach      | `tests[].errors[0].{apiName,selector,actionLog}` for the failing action's resolved locator and retry narrative                                                   |
 | Identify flakes              | Filter `tests[]` by `flaky === true`; compare `attempts[]` statuses                                                                                              |
 | Reconstruct failure timeline | Pick an attempt where `status !== "passed"` (for flakes this is NOT the last attempt), then read `.timeline[]` (steps + network + console, sorted by `offsetMs`) |
 | Inspect failing requests     | `tests[].attempts[].network.instances[]` — filter by `status >= 400`, or join `groups[groupId].{failureText,wasAborted}`                                         |
@@ -239,6 +240,7 @@ See [`docs/example-report.json`](./docs/example-report.json) for a complete repo
 - **`tests[].errors[].message`** -- ANSI-stripped, clean error text
 - **`tests[].errors[].diff`** -- extracted expected/actual from assertion errors
 - **`tests[].errors[].location`** -- exact file and line of failure
+- **`tests[].errors[].{apiName,selector,actionLog}`** -- failing Playwright action context from trace logs when available. Useful for locator and detached-DOM failures; action log messages are capped at 512 characters, max 20 entries per error with an omission marker
 - **`tests[].flaky`** -- true if test passed after retry
 - **`tests[].attempts[]`** -- full retry history with per-attempt status, timing, stdio, attachments, steps, and network
 - **`tests[].attempts[].consoleMessages[]`** -- warning/error/pageerror/page-closed/page-crashed trace entries only (2KB text cap with `[truncated]` marker, max 50 per attempt, high-signal entries prioritized over low-signal)
