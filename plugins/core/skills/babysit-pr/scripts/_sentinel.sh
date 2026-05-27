@@ -2,13 +2,19 @@
 # _sentinel.sh — shared SENTINEL constants + append helper.
 # Sourced by unresolvedPrComments.sh, postSentinelReply.sh, postSentinelPrComment.sh.
 #
-# SENTINEL_PREFIX is the version-agnostic substring used for matching/dedupe so
-# pre-versioning sentinels (`<!-- babysit-pr:addressed v1 -->`) are still
-# recognized alongside versioned ones. SENTINEL is the literal emitted on new
-# replies; the `core@X.Y.Z` suffix records which plugin version produced it.
+# SENTINEL_PREFIX is the version-agnostic substring used for matching/dedupe.
+# It deliberately carries no wrapper (no `<!--`, no `<sub>`) so it matches BOTH
+# the legacy hidden-comment sentinels (`<!-- babysit-pr:addressed v1 ... -->`)
+# and the current visible footer below — pre-versioning and pre-visibility
+# replies stay recognized. SENTINEL is the literal emitted on new replies: a
+# human-visible footer (a robot mark plus the machine token in an inline
+# `<code>` span, wrapped in `<sub>` so it renders small) so reviewers can see an
+# agent posted the reply, while dedupe still works off the embedded token. The
+# `core@X.Y.Z` suffix records the plugin version (substituted at build time by
+# embedPluginVersion.mts).
 
-SENTINEL_PREFIX='<!-- babysit-pr:addressed v1 '
-SENTINEL='<!-- babysit-pr:addressed v1 core@3.4.1 -->'
+SENTINEL_PREFIX='babysit-pr:addressed v1 '
+SENTINEL='<sub>🤖 <code>babysit-pr:addressed v1 core@3.4.1</code></sub>'
 
 # Bot author allowlist (JSON array literal). Used by unresolvedPrComments.sh
 # as a fallback when GraphQL's `author.__typename == "Bot"` misses a GitHub
