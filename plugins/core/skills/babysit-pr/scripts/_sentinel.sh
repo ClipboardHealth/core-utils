@@ -2,16 +2,11 @@
 # _sentinel.sh — shared SENTINEL constants + append helper.
 # Sourced by unresolvedPrComments.sh, postSentinelReply.sh, postSentinelPrComment.sh.
 #
-# SENTINEL_PREFIX is the version-agnostic substring used for matching/dedupe.
-# It deliberately carries no wrapper (no `<!--`, no `<sub>`) so it matches BOTH
-# the legacy hidden-comment sentinels (`<!-- babysit-pr:addressed v1 ... -->`)
-# and the current visible footer below — pre-versioning and pre-visibility
-# replies stay recognized. SENTINEL is the literal emitted on new replies: a
-# human-visible footer (a robot mark plus the machine token in an inline
-# `<code>` span, wrapped in `<sub>` so it renders small) so reviewers can see an
-# agent posted the reply, while dedupe still works off the embedded token. The
-# `core@X.Y.Z` suffix records the plugin version (substituted at build time by
-# embedPluginVersion.mts).
+# SENTINEL is the literal emitted on new replies: a visible footer (robot mark +
+# token in `<code>`, wrapped in `<sub>`). SENTINEL_PREFIX is the wrapper-free
+# substring used for matching/dedupe, so it matches both this footer and legacy
+# `<!-- babysit-pr:addressed v1 ... -->` sentinels. The `core@X.Y.Z` suffix is
+# substituted at build time by embedPluginVersion.mts.
 
 SENTINEL_PREFIX='babysit-pr:addressed v1 '
 SENTINEL='<sub>🤖 <code>babysit-pr:addressed v1 core@3.4.1</code></sub>'
