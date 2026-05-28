@@ -42,7 +42,7 @@
     "@nx/vitest": "22.7.2",
     "@nx/webpack": "22.7.2",
     "@swc-node/register": "1.11.1",
-    "@swc/core": "1.15.33",
+    "@swc/core": "1.15.40",
     "@swc/helpers": "0.5.21",
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
