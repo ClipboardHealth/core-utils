@@ -9,7 +9,7 @@
 # substituted at build time by embedPluginVersion.mts.
 
 SENTINEL_PREFIX='babysit-pr:addressed v1 '
-SENTINEL='<sub>🤖 <code>babysit-pr:addressed v1 core@3.5.0</code></sub>'
+SENTINEL='<sub>🤖 <code>babysit-pr:addressed v1 core@3.6.0</code></sub>'
 
 # Bot author allowlist (JSON array literal). Used by unresolvedPrComments.sh
 # as a fallback when GraphQL's `author.__typename == "Bot"` misses a GitHub
