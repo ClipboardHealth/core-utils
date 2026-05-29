@@ -13,6 +13,7 @@ Clipboard's core development tools.
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
+  - [local-development](#local-development)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
@@ -67,6 +68,12 @@ Investigate production issues by querying Datadog logs, metrics, and APM traces,
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
+
+### local-development
+
+Start the Clipboard service stack locally with `cbh dev up` so a change can be verified against your own working tree. Supports interactive picking, non-interactive runs via `--services`, git worktrees via `--service-dir`, and auto-detects `cmux` / `tmux` / falls back to plain scripts. Invoke with `/local-development` or by asking to "run services locally", "spin up the local stack", or "boot backend-main locally". Hands off to `clipboard-testing` for verification.
+
+See [`skills/local-development/SKILL.md`](skills/local-development/SKILL.md) for usage details.
 
 ### local-package
 

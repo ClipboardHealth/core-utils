@@ -73,6 +73,7 @@
     "fieldsets",
     "flamegraph",
     "forwardable",
+    "frontends",
     "frontmatter",
     "gemini",
     "gentoken",
