@@ -196,6 +196,8 @@ Record the dispatched set in `/tmp/in-depth-review-meta.json` so Round 2 knows t
 
 Every finding **must** include a `failure_mode` field: one sentence on the concrete user-, oncall-, or maintainer-visible bad outcome that would occur if not fixed. Hypotheticals like "a future caller might…" do not satisfy this; such findings will be dropped during moderation.
 
+Run the litmus test on every candidate finding before keeping it: _"What is the concrete, current, product-visible cost of leaving this code in?"_ If you cannot answer in one sentence, drop the finding.
+
 ### Do-not-raise list (binding)
 
 Do not surface any of:
@@ -557,22 +559,16 @@ Fetch the most recent review by @<viewer-login> on PR <PR_URL>. For every inline
 
 Build the body in `/tmp/in-depth-review-payload.json` with literal newlines (use `jq -n --arg body "$BODY" '{body: $body, ...}'` or build the JSON via a small heredoc-fed `python -c` so newlines are real `\n` in the JSON string, not the two characters `\` `n`).
 
-Each comment body:
+### Each comment body
+
+**Budget:** ≤60 words of prose total + the code block. The hard caps below are binding — if a section won't fit, the finding is probably two findings; split or drop one.
 
 ````markdown
-**[SEVERITY] Title**
+**[SEVERITY] Title** <!-- ≤8 words -->
 
-<Point — one or two sentences. Any reference to a specific file/line elsewhere in the codebase must be a GitHub permalink pinned to head_sha, not a bare `file:lines` string. The line(s) the comment is already anchored to do not need to be relinked.>
+<Point — 1 sentence, ≤25 words. Any reference to a specific file/line elsewhere in the codebase must be a GitHub permalink pinned to head_sha, not a bare `file:lines` string. The line(s) the comment is already anchored to do not need to be relinked.>
 
-**Why it matters:** <failure_mode>
-
-**Example / context (when it clarifies the issue):**
-
-```ts
-// e.g. the established pattern being violated, the two diverging imports
-// inside the diff, the buggy snippet annotated, the existing usage to
-// compare against (with a permalink in the prose above).
-```
+**Why it matters:** <failure_mode — 1 sentence, ≤20 words. **Drop this line entirely** when it would only rephrase the Point.>
 
 **Suggested fix:**
 
@@ -583,11 +579,13 @@ Each comment body:
 
 Rules for code and links inside the comment body:
 
-- **Include a code snippet whenever it makes the bug or fix clearer than prose alone** — the established pattern being violated, the two diverging imports inside the diff, the corrected control-flow, or the comparison to existing usage. Skip the snippet only when the issue is purely structural or when the `suggestion` block alone says everything.
+- **No bulleted lists in the comment body.** Bullets fragment reasoning; either the prose fits in one sentence or it doesn't belong on the PR.
+- **No prose preamble on the suggested fix.** The code block speaks for itself — don't write "Suggested fix — route Rate the same way as Pay" before the block; just show the block.
+- **No trailing addenda.** "If feature X isn't shipped yet…", "Note that this also affects…", "While you're here…" — these belong in the in-chat synthesis, not on the posted comment. The reviewee can ask follow-ups on the thread.
+- **Include a `suggestion` block whenever it makes the fix concrete.** Skip it only when the issue is purely structural or when prose alone says everything.
 - **`suggestion` block stands alone on the PR.** GitHub already renders the diff vs. the anchored line(s) inside the suggestion block (red `-` lines + green `+` lines + one-click apply). Do **NOT** also include a `// Before` fenced block — it duplicates what GitHub already shows and makes the comment twice as long. This is different from the in-chat **Actionable** section, which DOES render `// Before` + `// After` pairs so the user can review the change before approving the post (the user has no GitHub renderer in their terminal).
 - **When to skip the `suggestion` block:** the fix is structural with no clean drop-in (e.g. "move this file"), OR `suggested_fix.after` is empty (pure deletion — write "_Delete the anchored line(s)._" instead), OR `suggested_fix.before` is empty (pure addition — the `suggestion` block still works, but prefix `suggested_fix.after` with a `// Add after line <N>` comment so the intent reads cleanly).
-- **For structural fixes with no `suggestion`**, you may use a regular language-tagged fenced block to show the target shape, and explain the move/rename in prose.
-- **Example / context block (optional, separate from the fix).** When a code snippet clarifies the bug — the established pattern being violated, the two diverging imports inside the diff, an existing usage to compare against — render it as a regular language-tagged fenced block under a `**Example / context:**` heading, with a permalink in the prose above pointing to where it lives in the tree. This is NOT a duplicate of the anchored lines; if you're tempted to paste the anchored lines as "context," you're rebuilding the `// Before` block GitHub already renders — drop it.
+- **Optional Example/context fenced block is opt-out by default.** Include a non-`suggestion` code block only when prose-plus-`suggestion` is genuinely ambiguous — e.g. you're flagging a pattern violation and the offending pattern is not in the anchored lines. Render it under an **Example / context:** heading as a regular language-tagged fenced block, with a permalink in the prose above pointing to where it lives in the tree. If you're tempted to paste the anchored lines as "context," you're rebuilding the `// Before` block GitHub already renders — drop it. Default: skip.
 - **Permalinks for in-prose line references.** Build them as `https://github.com/<owner>/<repo>/blob/<head_sha>/<path>#L<start>-L<end>` (single line: `#L<n>`). Always pin to `head_sha`, never `main` or a branch name — branch links break as soon as the branch moves. Use Markdown link syntax with a short, meaningful label (e.g. `[the existing ServiceResult pattern](https://github.com/...#L88-L104)`), not the raw URL.
 
 After posting, print the review `html_url` and a one-line summary of how many comments were posted (and how many fell back to general notes, if any).
@@ -603,6 +601,7 @@ After posting, print the review `html_url` and a one-line summary of how many co
 - The moderator filter is non-negotiable: empty `failure_mode` → drop, NIT not meeting the gate → drop, do-not-raise items → drop, caps applied.
 - Hide nits by default. Only print them when the user replies `show nits`.
 - Reviews are always `event: COMMENT`. Never approve or request changes on the user's behalf.
+- Posted comment bodies are terse: ≤60 words of prose + the code block, no bulleted lists, no prose preamble on the `suggestion`, no trailing addenda, and `Why it matters` is dropped when it would only rephrase the Point. The Example/context block is opt-out — include it only when prose + `suggestion` is genuinely ambiguous.
 - Conditional agents (E/F/G) run only when classification matches. Do not invent triggers; if the user wants a forced full run, they will say so.
 - The Adversarial agent (A) is opt-in. Default selected set is Engineering / Minimalist / Conventions / AntiSlop (B/C/D/H), plus the classified subset of Security / Database / Frontend (E/F/G). Dispatch Adversarial only when the user explicitly asks (`with adversarial`, `with agent a`, `+A`, etc.). Surface the Adversarial on/off decision in the Summary so the user can see what ran.
 - **Refer to agents by name in every user-facing surface** — Summary, Actionable items (`Raised by` / `agreed by`), Disagreements, Withdrawn, and `original_author` / `rebuttals[].from` in Round 2 output. Bare letters (A/B/C/D/E/F/G) are acceptable only as ID prefixes (`B1`, `C3`) and as parenthetical shorthand next to the name. The agent-name table in the "Agent roster" section is the authoritative mapping; do not invent alternative names.
