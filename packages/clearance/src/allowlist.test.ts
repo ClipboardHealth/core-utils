@@ -1,6 +1,6 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join } from "node:path";
+import path from "node:path";
 
 import { resolveAllowlist } from "./allowlist.ts";
 
@@ -78,7 +78,7 @@ describe(resolveAllowlist, () => {
     });
 
     const actual = resolveAllowlist({
-      env: { CLEARANCE_ALLOW_HOSTS_FILES: `/team${delimiter}/personal` },
+      env: { CLEARANCE_ALLOW_HOSTS_FILES: `/team${path.delimiter}/personal` },
       readFile,
     });
 
@@ -90,7 +90,7 @@ describe(resolveAllowlist, () => {
     const readFile = fakeFiles({ "/hosts": "foo.example.com\n" });
 
     const actual = resolveAllowlist({
-      env: { CLEARANCE_ALLOW_HOSTS_FILES: ` ${delimiter}/hosts${delimiter} ` },
+      env: { CLEARANCE_ALLOW_HOSTS_FILES: ` ${path.delimiter}/hosts${path.delimiter} ` },
       readFile,
     });
 
@@ -179,8 +179,8 @@ describe(resolveAllowlist, () => {
   });
 
   it("reads from disk via readFileSync by default", () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "resolve-allowlist-"));
-    const hostsFile = join(tempDir, "hosts");
+    const tempDir = mkdtempSync(path.join(tmpdir(), "resolve-allowlist-"));
+    const hostsFile = path.join(tempDir, "hosts");
     writeFileSync(hostsFile, "api.example.com\n");
     try {
       const actual = resolveAllowlist({

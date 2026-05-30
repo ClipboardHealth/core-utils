@@ -4,7 +4,7 @@ import {
   readFile as readFileFromDisk,
   writeFile as writeFileToDisk,
 } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -339,7 +339,7 @@ export async function loadContext(input: LoadContextInput): Promise<LoadedContex
     let fileContents: string;
 
     try {
-      fileContents = await readFile(resolve(cwd, contextFilePath), "utf8");
+      fileContents = await readFile(path.resolve(cwd, contextFilePath), "utf8");
     } catch (error) {
       throw new Error(
         `Failed to read context file ${contextFilePath}: ${formatErrorMessage(error)}`,
@@ -757,7 +757,7 @@ function resolveIntermediateOutputFilePath(input: {
   const { cwd, now, parsedArguments } = input;
 
   if (parsedArguments.intermediateOutputFilePath !== undefined) {
-    return resolve(cwd, parsedArguments.intermediateOutputFilePath);
+    return path.resolve(cwd, parsedArguments.intermediateOutputFilePath);
   }
 
   if (now === undefined) {
@@ -825,15 +825,15 @@ function resolveHtmlReportFilePath(input: {
   const { cwd, generatedAt, parsedArguments } = input;
 
   if (parsedArguments.htmlReportFilePath !== undefined) {
-    return resolve(cwd, parsedArguments.htmlReportFilePath);
+    return path.resolve(cwd, parsedArguments.htmlReportFilePath);
   }
 
   const timestamp = generatedAt.toISOString().replaceAll(":", "-").replaceAll(".", "-");
-  return resolve(cwd, HTML_REPORT_DIRECTORY, `${timestamp}.html`);
+  return path.resolve(cwd, HTML_REPORT_DIRECTORY, `${timestamp}.html`);
 }
 
 async function defaultWriteHtmlReport(filePath: string, html: string): Promise<void> {
-  await mkdir(dirname(filePath), { recursive: true });
+  await mkdir(path.dirname(filePath), { recursive: true });
   await writeFileToDisk(filePath, html, "utf8");
 }
 
@@ -985,7 +985,7 @@ function isMainModule(argv: readonly string[], moduleUrl: string): boolean {
     return false;
   }
 
-  return pathToFileURL(resolve(entryPoint)).href === moduleUrl;
+  return pathToFileURL(path.resolve(entryPoint)).href === moduleUrl;
 }
 
 /* v8 ignore next @preserve */
