@@ -6,9 +6,17 @@ Apply phase of the flaky-test-debugger skill. Takes a plan produced by [`plan.md
 
 Confirm the plan from `plan.md` has confidence ≥ 3. If confidence is 1-2, do not apply -- return to `plan.md` and gather more evidence first.
 
+Before editing, verify the plan is still current:
+
+- The failing commit's code path still exists on current `main`, or the plan has been adjusted for the current code.
+- The proposed fix targets the diagnosed failure surface, not only the final assertion.
+- Any retry/wait change is safe and idempotent; it must not repeat one-time credentials, duplicate writes, destructive actions, or rate-limited setup calls.
+
 ## Apply the Proposed Fix
 
 Edit the files listed in the plan's **Proposed fix** field. Keep the change minimal -- the plan already chose between test harness, product, and both.
+
+Do not convert an infrastructure, backend, auth/data, or product-state root cause into a frontend timeout or locator retry. If the plan's evidence no longer supports the proposed fix, stop and revise the plan.
 
 ## Fix Sibling Instances
 
@@ -56,6 +64,8 @@ When documenting the fix in a PR or issue, use this structure. Carry **Confidenc
 - **Test ID:** if provided in prompt
 - **Agent session ID:** your running session ID to resume if needed
 - **Confidence:** score (1-5) with brief justification
+- **Failure surface:** where the failure first surfaced and why the fix belongs there
+- **Current main status:** whether the failure path still existed when the fix was made
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)

@@ -9,14 +9,29 @@ Phases run in order. Skip a phase if you already have the information it produce
 
 This skill runs in one of two modes:
 
-- **Fix mode (default):** produce a plan, then apply it.
+- **Fix mode (default for local/unit-sized fixes):** produce a plan, then apply it.
 - **Plan mode:** produce a plan and stop, for human review.
 
-Use plan mode when the user asks for a plan, an investigation, a triage report, or says "don't fix yet" / "just plan it". Otherwise default to fix mode. Both modes share the same diagnosis path; the plan is the artifact you hand to a reviewer (plan mode) or to yourself (fix mode) before editing code.
+Use plan mode when the user asks for a plan, an investigation, a triage report, or says "don't fix yet" / "just plan it".
 
-## Phase 1: Classify Test Type
+For CI-sourced E2E flakes, prefer plan mode unless the user explicitly asks you to implement a fix or the root cause is already clear, high-confidence, and local to the repository. E2E flakes often originate in CI setup, auth/test-data infrastructure, backend behavior, deployment assets, or product code; avoid editing the test just because that is where the failure surfaced.
 
-Determine the test type from the user's input before doing anything else. The type dictates the investigation path.
+Both modes share the same diagnosis path; the plan is the artifact you hand to a reviewer (plan mode) or to yourself (fix mode) before editing code.
+
+## Phase 1: Classify Failure Surface and Test Type
+
+For E2E flakes, first classify where the failure surfaced in the lifecycle, then identify the test type. The failure surface dictates how broadly to investigate before reading or editing the test.
+
+Common E2E failure surfaces:
+
+- **CI/job setup:** dependency installation, CLI/tooling, environment setup, build/deploy, artifact download.
+- **Test setup/auth/data:** token minting, login bootstrap, seeded users/entities, one-time credentials, external service setup.
+- **App bootstrap/navigation:** static assets, route load, hydration, browser console/page errors before the user action.
+- **User action:** click/input completed but the expected request, dialog, route change, or state transition did not start.
+- **Backend request:** request emitted; backend returned error, stale data, unexpected shape, or excessive latency.
+- **Assertion/locator:** app state is correct, but the assertion/selector is brittle or out of sync with the intended UX.
+
+Then determine the test type from the user's input. The type dictates the detailed investigation path.
 
 | Type                             | Signals                                                                                                                                                              |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
