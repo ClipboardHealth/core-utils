@@ -50,7 +50,7 @@
     "@typescript/native-preview": "7.0.0-dev.20260527.2",
     "@vitest/coverage-v8": "4.1.7",
     "cspell": "10.0.0",
-    "dependency-cruiser": "17.4.2",
+    "dependency-cruiser": "17.4.3",
     "eslint": "8.57.1",
     "eslint-plugin-promise": "7.3.0",
     "husky": "9.1.7",
