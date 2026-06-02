@@ -27,13 +27,12 @@ The one you choose matters because of the workspace member permission model.
 
 | Connection                                    | ID                                     | When to use                                                                                                                                                        |
 | --------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Snowflake (Small Warehouse)**               | `f5606b78-4aba-4d11-9820-8712a8c765b2` | Default for dev/draft. Workspace members have QUERY access — alex can run cells.                                                                                   |
-| `snowflake analytics`                         | `530b70b8-b300-43c9-9b3e-e4b98ded0379` | Larger warehouse, same dev access.                                                                                                                                 |
+| `snowflake analytics`                         | `530b70b8-b300-43c9-9b3e-e4b98ded0379` | **Default for dev/draft.** Workspace members have QUERY access — alex can run cells.                                                                               |
 | `Hex Apps: Snowflake PII Service Account`     | `019bb2d8-d867-7001-bb8a-ccb8b6d16e8a` | Publish-time only — workspace members get VIEW_RESULTS, not QUERY. Cells silently return empty when alex runs them. The published app runs as the service account. |
 | `Hex Apps: Snowflake Non-PII Service Account` | `019da967-268c-700b-a1b1-f8f81f0e8c29` | Similar to PII — verify access before using.                                                                                                                       |
 
-Default to Small Warehouse for the migration. If the dashboard needs PII columns
-at publish time, switch the cells to the PII service account just before
+Default to `snowflake analytics` for the migration. If the dashboard needs PII
+columns at publish time, switch the cells to the PII service account just before
 publishing (the user can do this in the UI).
 
 ## Snowflake (database: `ANALYTICS`)

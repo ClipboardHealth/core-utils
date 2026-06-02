@@ -104,7 +104,7 @@ hex project create "<title>" -d "<description>" --json
 
 Capture the returned `id` (the projectId). Save it to `artifacts/project.env` for the rest of the run.
 
-Hex workspace: `e673b166-274e-4db9-972d-badc91dbfe1b`. Dev Snowflake connection: `Snowflake (Small Warehouse)` (id `f5606b78-4aba-4d11-9820-8712a8c765b2`). The PII service account silently returns empty when run as alex — only use it at publish time, never for draft work. See `references/cbh_stack.md`.
+Hex workspace: `e673b166-274e-4db9-972d-badc91dbfe1b`. Dev Snowflake connection: `snowflake analytics` (id `530b70b8-b300-43c9-9b3e-e4b98ded0379`). The PII service account silently returns empty when run as alex — only use it at publish time, never for draft work. See `references/cbh_stack.md`.
 
 ## Phase 5 — Create SQL cells
 
@@ -115,7 +115,7 @@ hex cell create "$PROJECT_ID" \
   -t sql \
   -s "$(cat path/to/card.sql)" \
   -l "Card label exactly as it should appear" \
-  --data-connection-id "f5606b78-4aba-4d11-9820-8712a8c765b2" \
+  --data-connection-id "530b70b8-b300-43c9-9b3e-e4b98ded0379" \
   --output-dataframe "snake_case_slug" \
   --json
 ```

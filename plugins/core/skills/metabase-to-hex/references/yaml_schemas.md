@@ -50,7 +50,7 @@ sharedFilters: []
       FROM ...
       WHERE col = {{ shift_id }}    # NO QUOTES around {{ var }}
     dataFrameCell: false
-    dataConnectionId: f5606b78-4aba-4d11-9820-8712a8c765b2
+    dataConnectionId: 530b70b8-b300-43c9-9b3e-e4b98ded0379
     resultVariableName: <snake_case_slug>
     useRichDisplay: true
     enablePreview: true

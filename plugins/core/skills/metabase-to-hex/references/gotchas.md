@@ -207,7 +207,7 @@ Account` connection (`019bb2d8-d867-7001-bb8a-ccb8b6d16e8a`). Workspace member
 alex isn't in the gating group "Hex Apps: Snowflake App PII Service Account", so
 they only get `VIEW_RESULTS` — running queries silently returns empty.
 
-**Fix:** Use `Snowflake (Small Warehouse)` (`f5606b78-4aba-4d11-9820-8712a8c765b2`)
+**Fix:** Use `snowflake analytics` (`530b70b8-b300-43c9-9b3e-e4b98ded0379`)
 for draft work. Only switch to the PII service account at publish time, when the
 app runs queries server-side as the service account.
 
