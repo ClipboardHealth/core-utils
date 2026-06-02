@@ -1,6 +1,6 @@
 ---
 name: simple-review
-description: Run a single-pass code review on the current branch or a PR, using the in-depth review rubric without subagents.
+description: Single-pass code review of the current branch or a PR using the in-depth review rubric without subagents, posted as anchored PR comments. Use when the user asks to review a small or medium diff, wants a fast or low-budget review, or runs /simple-review [PR-number-or-URL]. For large or high-stakes diffs that benefit from multiple debating reviewers, use in-depth-review instead.
 ---
 
 # Simple Review
@@ -106,66 +106,9 @@ When `context_ref = worktree (stale, user accepted risk)`:
 
 ## Cross-repo evidence policy
 
-A finding's evidence is "cross-repo" when its load-bearing claim depends on code in any repo other than the one containing the diff — most commonly a producer, consumer, or downstream parser of something the diff changes. **Never silently read external repos** — they may be stale or you may have no checkout at all. Equally, **never claim a downstream impact you have not verified.** Speculating that "the FE will break" or "a consumer will choke on this" without reading the consumer is a top source of false-positive findings.
+A finding's evidence is "cross-repo" when its load-bearing claim depends on code in any repo other than the one containing the diff — most commonly a consumer, producer, or downstream parser of something the diff changes. **Never silently read external repos and never claim a downstream impact you have not verified** — speculating that "the FE will break" without reading the consumer is a top source of false-positive findings. Cap any cross-repo finding at **MAJOR** until verified.
 
-### When this policy fires
-
-Treat a finding as cross-repo _before_ raising it whenever any of these apply:
-
-1. The diff touches a **contract/schema package** (anything in `packages/contract-*`, `packages/*-contract*`, ts-rest contracts, JSON Schema files, OpenAPI specs, Protobuf, Avro, etc.) — consumers of these packages live in other repos by design.
-2. The diff alters a **deployed-artifact boundary**: HTTP response shape, queue message shape, public SDK signature, exported library type, env-var contract, DB-record shape read by other services.
-3. The failure mode you wrote references a downstream actor by role rather than name: _"the FE will…", "the mobile app will…", "consumers will…", "a rolling deploy will break for…"_ — you cannot verify any of those claims from inside the diff's repo alone.
-4. The finding is a "backward-compatibility" or "rolling-deploy" concern about a producer change.
-5. The finding's argument is "this diverges from how other consumers do X" — and "other consumers" are not in this repo.
-
-If any of (1)–(5) is true, the finding is cross-repo. Move on to **Verify or downgrade** below before keeping it in your candidate list.
-
-### Verify or downgrade (binding)
-
-For each cross-repo finding:
-
-1. **Identify the specific consumer/producer file(s)** you would need to read to confirm the claim. Be concrete: _"facility app's `useGetInvoiceBalances` hook to see whether it imports the contract schema and whether `.parse()` is strict."_ If you cannot name a specific artifact, the finding is speculative — drop it.
-2. **Search likely locations you already have access to** before asking the user. Sibling repos under the same parent directory, monorepo workspaces, vendored copies. Use targeted `grep`/`git grep` — do not recursively scan the whole filesystem.
-3. **If found locally**, run the **same freshness preflight** on that external repo (branch, dirty state, behind/ahead). Read context via `git show "${external_context_ref}:<path>"`, never via worktree filesystem. Note "verified against: `<repo>@<short-sha>`" in the finding.
-4. **If not found locally**, ask the user for access using the template below. Do not raise the finding until the user has responded.
-5. **If the user picks `skip`**, you have two choices:
-   - **Drop the finding entirely** if the speculative version doesn't pass the litmus test ("concrete, current, product-visible cost").
-   - **Keep as MINOR with explicit "speculative" prefix in the title** — only when the worst-case is genuinely concerning AND you can name the _assumption_ the finding rests on (e.g., _"assuming the FE imports this schema and parses strictly, then…"_). Make the assumption visible so the PR author can confirm or refute it.
-
-Severity cap on any cross-repo finding is **MAJOR** until verified. Anything verified as actual breakage can be raised to its true severity.
-
-### Access-request template
-
-When asking the user for access to external repos, name the specific file and the specific question. Do not ask vaguely for "access to repo X" — ask for the evidence that would change your mind.
-
-> One finding depends on code outside `<primary-repo>`. Before I raise it, I need to verify:
->
-> **Finding:** `<short title>`
-> **Claim:** `<what the finding asserts about the consumer/producer>`
-> **What I need to read:** `<repo>/<path>` — to check `<specific question, e.g. "whether it imports GetFooResponseSchema and calls .strict() on it">`.
->
-> Options:
->
-> - **Local path** — give me an absolute path to a checkout (I'll run freshness preflight and read via `git show`).
-> - **`gh:<owner>/<repo>`** — I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=main`.
-> - **`skip`** — I'll either drop the finding or keep it as MINOR with a "speculative — assumes `<assumption>`" prefix; you can confirm/refute.
-> - **`skip all`** — apply `skip` to every remaining cross-repo finding.
-
-### What "verify" means in practice
-
-For a contract/schema change, the questions you must answer before claiming consumer impact are concrete:
-
-- Does the consumer **import the contract schema directly**, or define its own local schema? (Local schema = your contract change has zero direct effect on the consumer's parser.)
-- If it imports, does it call `.strict()`, `.passthrough()`, or rely on the default (strip unknowns)? Required fields missing → parse failure; extra fields → silently stripped under default.
-- Is the consumer pinned to a published version of the package, or symlinked/workspace-resolved? Pinned → upgrade is explicit and the consumer team controls timing.
-- Is the field actually read at runtime, or just typed? Type-only references don't fail at runtime even when the schema diverges.
-
-For an API response change (without consumer-side schema):
-
-- Does the consumer JSON-parse and read specific keys, or pass the body through opaquely (e.g. to a logger, to storage)?
-- Does any layer in between (BFF, gateway) apply its own validation?
-
-Answer these from real code, not from priors about "how FEs usually work." When you can't answer, you do not have a finding — you have a hypothesis.
+Read [references/cross-repo-evidence.md](references/cross-repo-evidence.md) before raising or finalizing any cross-repo finding — it has when the policy fires, the verify-or-downgrade procedure, the access-request template, and what "verify" means for contract/schema vs API-response changes.
 
 ## Diff classification (pick which lenses apply)
 
@@ -510,94 +453,9 @@ AskUserQuestion({
 
 ## Posting an anchored PR review (both modes)
 
-Post via the GitHub Reviews API as a **single** review with all selected actionable items as inline review comments anchored to specific diff lines. **Never** loose issue comments.
+When the user approves items to post, submit a **single** review via the GitHub Reviews API (`event: COMMENT` — never `APPROVE`/`REQUEST_CHANGES`), with every selected actionable item as an inline comment anchored to its diff line. Never use loose issue comments.
 
-```bash
-# /tmp/simple-review-payload.json contains: {event, commit_id, body, comments: [...]}
-gh api -X POST "repos/<owner>/<repo>/pulls/<N>/reviews" --input /tmp/simple-review-payload.json
-```
-
-Payload shape:
-
-```json
-{
-  "event": "COMMENT",
-  "commit_id": "<head_sha>",
-  "body": "<summary>",
-  "comments": [
-    { "path": "src/foo.ts", "line": 42, "side": "RIGHT", "body": "..." },
-    {
-      "path": "src/bar.ts",
-      "start_line": 10,
-      "line": 14,
-      "start_side": "RIGHT",
-      "side": "RIGHT",
-      "body": "..."
-    }
-  ]
-}
-```
-
-Rules:
-
-- `event` is **always `COMMENT`** — never `APPROVE` or `REQUEST_CHANGES`. Approval is a human decision.
-- Multi-line ranges: `start_line`, `line`, `start_side: "RIGHT"`, `side: "RIGHT"`.
-- No clean anchor → pick the first changed line of the most relevant file; if literally nothing anchorable, fold into the review `body` as a labeled "general note" and flag in the post-confirmation summary.
-- `commit_id` from `pr.headRefOid`.
-- Build JSON with literal newlines (use `jq -n --arg body "$BODY" '...'` or a small `python -c`/heredoc), not `\n` escapes.
-
-### Review body (top-level)
-
-Three blocks, in order:
-
-**1. Attribution line.** Exactly:
-
-> _These comments were generated by @\<viewer-login\> using Claude Code._
-
-Italicized. Substitute `<viewer-login>` from `gh api user --jq .login`. Non-negotiable — collaborators must be able to tell at a glance the review is AI-assisted. Do **not** mention the Simple Review skill by name; it's a local skill the PR author can't see or use.
-
-**2. Summary.** Same paragraph from the in-chat synthesis: what the change does and your recommendation. Do not include mode, lenses applied, or convention sources consulted — that's noise.
-
-**3. "Apply all comments at once" prompt.** A fenced block with a self-contained Claude Code prompt the PR author can paste into a Claude Code session on a checkout of this branch:
-
-````markdown
-**Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
-
-```
-Fetch the most recent review by @<viewer-login> on PR <PR_URL>. For every inline comment in that review, address the issue: when the comment includes a `suggestion` block, apply it verbatim; otherwise implement an equivalent fix that satisfies the comment's "Why it matters" rationale. After resolving each thread, post a reply on that thread with a one-line summary of what you changed. When all comments are handled, run the project's tests, commit the changes with a message that references the review, and report back any threads you could not resolve and why.
-```
-````
-
-### Each comment body
-
-**Budget:** ≤60 words of prose total + the code block. Hard caps below are binding — if a section won't fit, the finding is probably two findings; split or drop one.
-
-````markdown
-**[SEVERITY] Title** <!-- ≤8 words -->
-
-<Point — 1 sentence, ≤25 words. References to other code use GitHub permalinks pinned to head_sha, not bare `file:lines`. The line(s) the comment is anchored to do not need to be relinked.>
-
-**Why it matters:** <failure_mode — 1 sentence, ≤20 words. **Drop this line entirely** when it would only rephrase the Point.>
-
-**Suggested fix:**
-
-```suggestion
-<suggested_fix.after — replaces the anchored line(s); GitHub renders the diff vs. the anchored line(s) AND an "Apply suggestion" button>
-```
-````
-
-Rules:
-
-- **No bulleted lists in the comment body.** Bullets fragment reasoning; either the prose fits in one sentence or it doesn't belong on the PR.
-- **No prose preamble on the suggested fix.** The code block speaks for itself. Don't write "Suggested fix — route Rate the same way as Pay" before the block; just show the block.
-- **No trailing addenda.** "If feature X isn't shipped yet…", "Note that this also affects…", "While you're here…" — these belong in the in-chat synthesis, not on the posted comment. The reviewee can ask follow-ups on the thread.
-- **Optional Example/context fenced block is opt-out by default.** Include a non-suggestion code block only when prose-plus-`suggestion` is genuinely ambiguous (e.g. you're flagging a pattern violation and the offending pattern is not in the anchored lines). Default: skip.
-- **Include a `suggestion` block whenever it makes the fix concrete.** Skip when the issue is purely structural or when prose alone says everything.
-- **`suggestion` block stands alone on the PR.** GitHub already renders the diff vs. anchored line(s). Do **NOT** include a `// Before` fenced block in PR comments — it duplicates what GitHub shows. This is different from the in-chat **Actionable** section, which DOES render `// Before` + `// After` pairs so the user can review before approving the post.
-- **When to skip the `suggestion` block:** structural fix with no drop-in (use prose + a target-shape fenced block), OR `suggested_fix.after` is empty (pure deletion — write "_Delete the anchored line(s)._" instead), OR `suggested_fix.before` is empty (pure addition — `suggestion` block still works; prefix `after` with `// Add after line <N>`).
-- **Permalinks for in-prose line references.** Build as `https://github.com/<owner>/<repo>/blob/<head_sha>/<path>#L<start>-L<end>` (single line: `#L<n>`). Always pin to `head_sha`. Use Markdown link syntax with a meaningful label.
-
-After posting, print the review `html_url` and a one-line summary of how many comments were posted (and fallback general-notes count if any).
+Follow [references/posting-pr-review.md](references/posting-pr-review.md) exactly — it has the `gh api` call, the payload shape, the three-block review body (attribution line, summary, apply-all prompt), and the per-comment body budget and format. After posting, print the review `html_url` and a one-line summary of how many comments were posted (and fallback general-notes count if any).
 
 ## Rules
 

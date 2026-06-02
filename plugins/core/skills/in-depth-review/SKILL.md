@@ -1,6 +1,6 @@
 ---
 name: in-depth-review
-description: Run a multi-agent code review on the current branch or a PR, with engineering, minimalist, conventions, AntiSlop, and conditional specialist reviewers.
+description: Multi-agent code review of the current branch or a PR — parallel engineering, minimalist, conventions, and AntiSlop reviewers plus conditional security, database, and frontend specialists that debate, then a synthesized review posted as anchored PR comments. Use when the user asks for a deep, thorough, or multi-perspective review, reviews a large or high-stakes diff, or runs /in-depth-review [PR-number-or-URL]. For small diffs or a quick single-pass review, use simple-review instead.
 ---
 
 # In-Depth Review
@@ -143,39 +143,9 @@ When `context_ref` is `worktree (stale, user accepted risk)`:
 
 ## Cross-repo evidence policy (binding for all agents)
 
-A finding's evidence is "cross-repo" when it depends on code in any repo other than the one containing the diff. Examples: the diff is in `clipboard-health` but the finding claims that `cbh-admin-frontend`, `payment-service`, or `worker-service-backend` still calls a deprecated endpoint.
+A finding's evidence is "cross-repo" when it depends on code in any repo other than the one containing the diff (e.g. a consumer or producer in another service). Subagents must **NOT** silently read external repos — stale checkouts fabricate evidence and unverifiable paths can't be checked. Emit such findings with an `evidence_required` field and cap severity at **MAJOR** until the moderator verifies the evidence on a fresh ref; after Round 1 the moderator collects every `evidence_required` block and asks the user for access before Round 2.
 
-**Subagents must NOT silently read external repos.** Doing so risks (a) reading a stale local checkout and fabricating evidence (see "Freshness preflight"), or (b) citing a path the user has no checkout of, which the moderator can't verify.
-
-Subagent rule: if a finding's load-bearing evidence is in another repo, the subagent must emit the finding with the additional field:
-
-```json
-"evidence_required": {
-  "repos": ["cbh-admin-frontend", "payment-service"],
-  "what_to_verify": "concrete grep / file path / question the moderator should answer to confirm or kill the finding"
-}
-```
-
-…and cap the finding's severity at **MAJOR**. Findings marked `evidence_required` cannot be CRITICAL until the moderator has confirmed the cross-repo evidence on a verified-fresh ref.
-
-Moderator rule: after Round 1, collect every `evidence_required` block across all subagents and ask the user **before Round 2**:
-
-> Some findings depend on code outside `<primary-repo>`. To verify, I need access to:
->
-> - `<repo-1>` — to check `<what_to_verify>` (raised by agent <X>)
-> - `<repo-2>` — to check `<what_to_verify>` (raised by agent <Y>)
->
-> For each repo, reply with one of:
->
-> - a local path (e.g. `/Users/you/repos/cbh/<repo>`) — I will run the freshness preflight on it before reading
-> - `gh:<owner>/<repo>` — I will fetch the file content via `gh api repos/<owner>/<repo>/contents/<path>?ref=main` instead of cloning
-> - `skip` — the finding will be downgraded to "speculative — cross-repo evidence not verified" and capped at MINOR
->
-> Or reply `skip all` to downgrade every cross-repo finding.
-
-For each user-provided local path, run the **same freshness preflight** as on the primary repo (fetch, check ahead/behind, check working-tree cleanliness). If the external repo is stale or on a non-default branch, warn with the same template and require explicit user acknowledgement before reading. Always read external code via `git show "${external_context_ref}:<path>"` / `git grep ... "${external_context_ref}" -- <paths>`, never via the worktree filesystem.
-
-After verification, re-dispatch only the affected subagents (one agent per repo group) with the verified evidence (or its absence) inlined, so they can finalize severity for Round 2. Findings whose cross-repo evidence the user `skip`s are kept but capped at MINOR with a "speculative" prefix in the title.
+Read [references/cross-repo-evidence.md](references/cross-repo-evidence.md) before raising or finalizing any cross-repo finding — it has the `evidence_required` schema, the moderator's access-request prompt, the freshness rules for external repos, and `skip` handling.
 
 ## Diff classification (runs before Round 1)
 
@@ -496,99 +466,9 @@ Skip the plan step entirely — you are not implementing someone else's code.
 
 ## Posting an anchored PR review (both modes)
 
-Always post via the GitHub Reviews API as a **single** review, with all selected actionable items as inline review comments anchored to specific diff lines. **Never** loose issue comments.
+When the user approves items to post, submit a **single** review via the GitHub Reviews API (`event: COMMENT` — never `APPROVE`/`REQUEST_CHANGES`), with every selected actionable item as an inline comment anchored to its diff line. Never use loose issue comments.
 
-Build the payload as JSON and pipe it through `gh api --input`:
-
-```bash
-# /tmp/in-depth-review-payload.json contains: {event, commit_id, body, comments: [...]}
-gh api -X POST "repos/<owner>/<repo>/pulls/<N>/reviews" --input /tmp/in-depth-review-payload.json
-```
-
-Payload shape:
-
-```json
-{
-  "event": "COMMENT",
-  "commit_id": "<head_sha>",
-  "body": "<summary>",
-  "comments": [
-    { "path": "src/foo.ts", "line": 42, "side": "RIGHT", "body": "..." },
-    {
-      "path": "src/bar.ts",
-      "start_line": 10,
-      "line": 14,
-      "start_side": "RIGHT",
-      "side": "RIGHT",
-      "body": "..."
-    }
-  ]
-}
-```
-
-Rules for posting:
-
-- `event` is **always `COMMENT`** — never `APPROVE` or `REQUEST_CHANGES`. Approval / blocking is a human decision, not the skill's.
-- For multi-line ranges, set `start_line`, `line`, `start_side: "RIGHT"`, `side: "RIGHT"`.
-- For findings without a clean line anchor (rare), pick the first changed line of the most relevant file rather than dropping the comment or going loose.
-- If literally nothing is anchorable for a given finding, fold it into the review `body` as a labeled "general note" and flag this in the post-confirmation summary so the user knows.
-- Use `commit_id` from `pr.headRefOid` so comments anchor to the reviewed commit.
-- Resolve `<owner>/<repo>` once via `gh repo view --json nameWithOwner --jq .nameWithOwner` and stash it in `/tmp/in-depth-review-meta.json` alongside `head_sha` so permalinks below can be built without re-querying.
-
-### Review body (top-level comment)
-
-The `body` field on the review (not the inline comment bodies) must contain three blocks, in order:
-
-**1. Attribution line.** A single sentence disclosing that the review was generated by Claude Code. Use exactly:
-
-> _These comments were generated by @\<viewer-login\> using Claude Code._
-
-Substitute `<viewer-login>` from `gh api user --jq .login`. Italicize the line so it renders as muted text. This is non-negotiable — collaborators must be able to tell at a glance that the review is AI-assisted. Do **not** mention the In-Depth Review skill by name; it's a local skill the PR author can't see or use.
-
-**2. Synthesis Summary.** The same one-paragraph summary printed in the in-chat synthesis: what the change does and your recommendation. Do not include mode, per-agent headline verdicts, or which agents ran — that's methodology noise.
-
-**3. "Apply all comments at once" prompt.** A fenced block containing a self-contained Claude Code prompt the PR author (or any agent operator) can copy-paste into a Claude Code session on a checkout of this branch to address every inline comment in one shot. Template (substitute the `<…>` placeholders before posting):
-
-````markdown
-**Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
-
-```
-Fetch the most recent review by @<viewer-login> on PR <PR_URL>. For every inline comment in that review, address the issue: when the comment includes a `suggestion` block, apply it verbatim; otherwise implement an equivalent fix that satisfies the comment's "Why it matters" rationale. After resolving each thread, post a reply on that thread with a one-line summary of what you changed. When all comments are handled, run the project's tests, commit the changes with a message that references the review, and report back any threads you could not resolve and why.
-```
-````
-
-Build the body in `/tmp/in-depth-review-payload.json` with literal newlines (use `jq -n --arg body "$BODY" '{body: $body, ...}'` or build the JSON via a small heredoc-fed `python -c` so newlines are real `\n` in the JSON string, not the two characters `\` `n`).
-
-### Each comment body
-
-**Budget:** ≤60 words of prose total + the code block. The hard caps below are binding — if a section won't fit, the finding is probably two findings; split or drop one.
-
-````markdown
-**[SEVERITY] Title** <!-- ≤8 words -->
-
-<Point — 1 sentence, ≤25 words. Any reference to a specific file/line elsewhere in the codebase must be a GitHub permalink pinned to head_sha, not a bare `file:lines` string. The line(s) the comment is already anchored to do not need to be relinked.>
-
-**Why it matters:** <failure_mode — 1 sentence, ≤20 words. **Drop this line entirely** when it would only rephrase the Point.>
-
-**Suggested fix:**
-
-```suggestion
-<suggested_fix.after — replaces the anchored line(s); GitHub renders the diff vs. the anchored line(s) AND an "Apply suggestion" button>
-```
-````
-
-Rules for code and links inside the comment body:
-
-- **No bulleted lists in the comment body.** Bullets fragment reasoning; either the prose fits in one sentence or it doesn't belong on the PR.
-- **No prose preamble on the suggested fix.** The code block speaks for itself — don't write "Suggested fix — route Rate the same way as Pay" before the block; just show the block.
-- **No trailing addenda.** "If feature X isn't shipped yet…", "Note that this also affects…", "While you're here…" — these belong in the in-chat synthesis, not on the posted comment. The reviewee can ask follow-ups on the thread.
-- **Include a `suggestion` block whenever it makes the fix concrete.** Skip it only when the issue is purely structural or when prose alone says everything.
-- **`suggestion` block stands alone on the PR.** GitHub already renders the diff vs. the anchored line(s) inside the suggestion block (red `-` lines + green `+` lines + one-click apply). Do **NOT** also include a `// Before` fenced block — it duplicates what GitHub already shows and makes the comment twice as long. This is different from the in-chat **Actionable** section, which DOES render `// Before` + `// After` pairs so the user can review the change before approving the post (the user has no GitHub renderer in their terminal).
-- **When to skip the `suggestion` block:** the fix is structural with no clean drop-in (e.g. "move this file"), OR `suggested_fix.after` is empty (pure deletion — write "_Delete the anchored line(s)._" instead), OR `suggested_fix.before` is empty (pure addition — the `suggestion` block still works, but prefix `suggested_fix.after` with a `// Add after line <N>` comment so the intent reads cleanly).
-- **Optional Example/context fenced block is opt-out by default.** Include a non-`suggestion` code block only when prose-plus-`suggestion` is genuinely ambiguous — e.g. you're flagging a pattern violation and the offending pattern is not in the anchored lines. Render it under an **Example / context:** heading as a regular language-tagged fenced block, with a permalink in the prose above pointing to where it lives in the tree. If you're tempted to paste the anchored lines as "context," you're rebuilding the `// Before` block GitHub already renders — drop it. Default: skip.
-- **Permalinks for in-prose line references.** Build them as `https://github.com/<owner>/<repo>/blob/<head_sha>/<path>#L<start>-L<end>` (single line: `#L<n>`). Always pin to `head_sha`, never `main` or a branch name — branch links break as soon as the branch moves. Use Markdown link syntax with a short, meaningful label (e.g. `[the existing ServiceResult pattern](https://github.com/...#L88-L104)`), not the raw URL.
-
-After posting, print the review `html_url` and a one-line summary of how many comments were posted (and how many fell back to general notes, if any).
+Follow [references/posting-pr-review.md](references/posting-pr-review.md) exactly — it has the `gh api` call, the payload shape, the three-block review body (attribution line, synthesis summary, apply-all prompt), and the per-comment body budget and format. After posting, print the review `html_url` and a one-line summary of how many comments were posted (and how many fell back to general notes, if any).
 
 ## Rules
 
