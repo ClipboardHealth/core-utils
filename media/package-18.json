@@ -1,6 +1,6 @@
 {
   "name": "embedex",
-  "version": "2.5.14",
+  "version": "2.5.15",
   "description": "Embed shared text and code snippets from source files into destination files.",
   "keywords": [
     "cli",
