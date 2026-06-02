@@ -167,6 +167,10 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   plugins,
   rules: {
+    ...(isOutsideCoreUtilsMonorepo
+      ? { "@clipboard-health/no-swallowed-invariant-guard": "warn" }
+      : {}),
+
     // Start: Deprecated rules removed in v8
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/lines-between-class-members": "off",

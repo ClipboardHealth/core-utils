@@ -34,6 +34,23 @@ module.exports = {
 };
 ```
 
+## Rules
+
+### `@clipboard-health/no-swallowed-invariant-guard`
+
+Flags a `catch` clause that swallows a failed invariant guard and continues. Guard calls are
+identified by function names beginning with `ensure`, `assert`, `throwIf`, `validate`, or `verify`.
+
+The rule allows catches that rethrow, return an error-like value, or explicitly record the violation
+with a helper whose name starts with `record` or `report` and includes `Violation`, such as
+`recordInvariantViolation`.
+
+Use a standard disable comment for intentional exceptions:
+
+```ts
+// eslint-disable-next-line @clipboard-health/no-swallowed-invariant-guard -- reason
+```
+
 ## Local development commands
 
 See [`package.json`](./package.json) `scripts` for a list of commands.
