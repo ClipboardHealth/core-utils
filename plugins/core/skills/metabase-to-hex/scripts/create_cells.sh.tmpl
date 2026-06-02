@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Template — copy and edit per migration.
+# Creates SQL cells in a Hex project, one per .sql file in CELLS_DIR.
+# Logs each create response to LOG.
+set -euo pipefail
+
+PROJECT_ID="<paste-from-hex-project-create>"
+CONN_ID="f5606b78-4aba-4d11-9820-8712a8c765b2"  # Snowflake (Small Warehouse)
+
+CELLS_DIR="/home/alex/pii-migrations/dashboard_<ID>/hex_cells"
+LOG="/home/alex/pii-migrations/dashboard_<ID>/artifacts/cell_create_log.jsonl"
+> "$LOG"
+
+# filename → (label, output_dataframe_slug)
+# Label must match what the build_layout.py CARD_LABEL map expects.
+declare -A LABELS=(
+  # ["22130_App Shiftlogs Stg.sql"]="App Shiftlogs Stg"
+  # ...
+)
+declare -A DFS=(
+  # ["22130_App Shiftlogs Stg.sql"]="shift_logs"
+  # ...
+)
+
+for f in "$CELLS_DIR"/*.sql; do
+  base=$(basename "$f")
+  label="${LABELS[$base]:-$base}"
+  df="${DFS[$base]:-result}"
+  echo "→ Creating: $label  (df=$df)"
+  src=$(cat "$f")
+  result=$(hex cell create "$PROJECT_ID" \
+    -t sql \
+    -s "$src" \
+    -l "$label" \
+    --data-connection-id "$CONN_ID" \
+    --output-dataframe "$df" \
+    --json 2>&1)
+  echo "$base|$label|$df|$result" >> "$LOG"
+done
+
+echo "Done. Log: $LOG"
