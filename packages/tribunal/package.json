@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.81",
-    "@ai-sdk/google": "3.0.79",
+    "@ai-sdk/google": "3.0.80",
     "@ai-sdk/openai": "3.0.65",
     "ai": "6.0.191",
     "cosmiconfig": "9.0.1",
