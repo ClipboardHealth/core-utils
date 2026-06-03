@@ -29,7 +29,7 @@
     "@clipboard-health/util-ts": "5.8.14",
     "@opentelemetry/api": "1.9.1",
     "mongodb": "6.20.0",
-    "mongoose": "8.23.1"
+    "mongoose": "8.24.0"
   },
   "peerDependencies": {
     "@opentelemetry/api": ">=1.0",
