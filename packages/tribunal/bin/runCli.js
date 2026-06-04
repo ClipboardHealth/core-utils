@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { constants as osConstants } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 /**
  * Run a package source entrypoint by basename. Published packages run compiled
@@ -11,11 +11,11 @@ import { join } from "node:path";
  * @param {string} name
  */
 export function runCliEntrypoint(packageRoot, name) {
-  const compiledPath = join(packageRoot, "src", `${name}.js`);
+  const compiledPath = path.join(packageRoot, "src", `${name}.js`);
   const hasCompiledEntrypoint = existsSync(compiledPath);
   const entrypointPath = hasCompiledEntrypoint
     ? compiledPath
-    : join(packageRoot, "src", `${name}.ts`);
+    : path.join(packageRoot, "src", `${name}.ts`);
   const result = spawnSync(
     process.execPath,
     [

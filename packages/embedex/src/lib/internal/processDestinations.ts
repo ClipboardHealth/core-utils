@@ -25,7 +25,7 @@ const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
  * 2. The source file path
  */
 // eslint-disable-next-line security/detect-unsafe-regex
-const REGEX = /^(.*)<embedex source="(.+?)">(?:\r?\n)?[\S\s]*?<\/embedex>/gm;
+const REGEX = /^(?<prefix>.*)<embedex source="(?<source>.+?)">(?:\r?\n)?[\S\s]*?<\/embedex>/gm;
 
 export function processDestinations(
   params: Readonly<{
@@ -87,7 +87,7 @@ function processDestination(params: {
   const referencedSources = new Set<string>();
 
   for (const match of allEmbedexTags) {
-    const [_fullMatch, _otherCaptureGroup, sourcePath] = match;
+    const sourcePath = match.groups?.["source"];
     /* istanbul ignore next */
     if (sourcePath) {
       const absoluteSourcePath = absolutePath(sourcePath);
@@ -123,7 +123,10 @@ function processDestination(params: {
     };
   }
 
-  const matches = matchAll({ content, exists: (source) => sources.has(absolutePath(source)) });
+  const matches = matchAll({
+    content,
+    exists: (source) => sources.has(absolutePath(source)),
+  });
   /* istanbul ignore next */
   if (matches.length === 0) {
     return { code: "NO_MATCH", paths: { destination, sources: [] } };
@@ -153,7 +156,10 @@ function processDestination(params: {
     );
   }
 
-  const paths = { sources: uniqueMatches.map((m) => absolutePath(m.sourcePath)), destination };
+  const paths = {
+    sources: uniqueMatches.map((m) => absolutePath(m.sourcePath)),
+    destination,
+  };
   return content === updatedContent
     ? { code: "NO_CHANGE", paths }
     : { code: "UPDATE", paths, updatedContent };
@@ -168,7 +174,9 @@ function matchAll(
   const { content, exists } = params;
   return [...content.matchAll(REGEX)]
     .map((match) => {
-      const [fullMatch, prefix, sourcePath] = match;
+      const [fullMatch] = match;
+      const prefix = match.groups?.["prefix"];
+      const sourcePath = match.groups?.["source"];
       /* istanbul ignore next */
       return isDefined(fullMatch) &&
         isDefined(prefix) &&
@@ -202,7 +210,7 @@ function createReplacement(
     processedContent = processedContent
       .replaceAll(
         // eslint-disable-next-line security/detect-unsafe-regex
-        /^(.*)<embedex source=".+?">(?:\r?\n)?([\S\s]*?)<\/embedex>/gm,
+        /^(?<prefix>.*)<embedex source=".+?">(?:\r?\n)?(?<content>[\S\s]*?)<\/embedex>/gm,
         (_match, _prefix, c: string) => {
           const lines = c.split(/\r?\n/);
 
