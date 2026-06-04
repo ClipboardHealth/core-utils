@@ -1,4 +1,4 @@
-import { dirname } from "node:path";
+import path from "node:path";
 
 import {
   createDefaultIntermediateOutputPath,
@@ -55,7 +55,7 @@ describe("intermediate output recorder", () => {
 
     const lastSnapshot = parseLastSnapshot(writes);
 
-    expect(createdDirectories).toStrictEqual([dirname("/repo/.tribunal/runs/run.json")]);
+    expect(createdDirectories).toStrictEqual([path.dirname("/repo/.tribunal/runs/run.json")]);
     expect(writes).toHaveLength(4);
     expect(lastSnapshot).toMatchObject({
       calls: {
@@ -106,7 +106,7 @@ describe("intermediate output recorder", () => {
 
     const lastSnapshot = parseLastSnapshot(writes);
 
-    expect(createdDirectories).toStrictEqual([dirname("/repo/.tribunal/runs/run.json")]);
+    expect(createdDirectories).toStrictEqual([path.dirname("/repo/.tribunal/runs/run.json")]);
     expect(lastSnapshot).toMatchObject({
       response,
       status: "completed",
@@ -164,7 +164,7 @@ describe("intermediate output recorder", () => {
 
     const lastSnapshot = parseLastSnapshot(writes);
 
-    expect(createdDirectories).toStrictEqual([dirname("/repo/.tribunal/runs/run.json")]);
+    expect(createdDirectories).toStrictEqual([path.dirname("/repo/.tribunal/runs/run.json")]);
     expect(writeResults).toHaveLength(0);
     expect(lastSnapshot).toMatchObject({
       calls: {

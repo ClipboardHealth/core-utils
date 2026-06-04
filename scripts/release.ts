@@ -68,12 +68,12 @@ function resolveGitHubRepo(): { owner: string; repo: string } {
     encoding: "utf8",
   }).trim();
 
-  const match = /github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?$/.exec(remoteUrl);
+  const match = /github\.com[/:](?<owner>[\w.-]+)\/(?<repo>[\w.-]+?)(?:\.git)?$/.exec(remoteUrl);
   if (!match) {
     throw new Error(`Could not parse GitHub owner/repo from remote URL: ${remoteUrl}`);
   }
 
-  return { owner: match[1], repo: match[2] };
+  return { owner: match.groups!.owner, repo: match.groups!.repo };
 }
 
 function gitHubHeaders(token: string): Record<string, string> {
@@ -298,7 +298,14 @@ async function main(): Promise<void> {
     try {
       log(`  Creating release for ${tag}...`);
       // oxlint-disable-next-line no-await-in-loop
-      await createGitHubRelease({ owner, repo, token: ghToken, tag, body: contents, commitSha });
+      await createGitHubRelease({
+        owner,
+        repo,
+        token: ghToken,
+        tag,
+        body: contents,
+        commitSha,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`  Failed to create release for ${tag}: ${message}`);

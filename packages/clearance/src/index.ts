@@ -35,7 +35,7 @@ export interface ClearanceConfig {
 }
 
 export interface ClearanceLogger {
-  info(message: string): void;
+  info: (message: string) => void;
 }
 
 export type DnsLookup = (hostname: string) => Promise<readonly LookupAddress[]>;
@@ -568,9 +568,9 @@ function hostAllowed(hostname: string, allowedHosts: readonly string[]): boolean
 }
 
 function parseConnectTarget(input: string): ParsedConnectTarget | undefined {
-  const ipv6 = /^\[([^\]]+)]:(\d+)$/.exec(input);
+  const ipv6 = /^\[(?<host>[^\]]+)]:(?<port>\d+)$/.exec(input);
   if (ipv6 !== null) {
-    const [, host, rawPort] = ipv6;
+    const { host, port: rawPort } = ipv6.groups!;
     const port = parsePort(rawPort);
     /* v8 ignore next @preserve */
     if (host === undefined || port === undefined) {

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { delimiter as PATH_DELIMITER } from "node:path";
+import path from "node:path";
 
 import { normalizeRule, parseList } from "./hostRule.ts";
 
@@ -35,7 +35,7 @@ function parseFilesEnv(value: string | undefined): string[] {
   }
 
   return value
-    .split(PATH_DELIMITER)
+    .split(path.delimiter)
     .map((path) => path.trim())
     .filter((path) => path.length > 0);
 }

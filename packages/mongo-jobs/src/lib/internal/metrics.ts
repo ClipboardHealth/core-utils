@@ -8,9 +8,9 @@ import type { Registry } from "./registry";
 const REPORTING_PERIOD_MILLIS = 60_000;
 
 export interface MetricsReporter {
-  gauge(name: string, value: number, tags: Record<string, string>): void;
-  increment(name: string, tags: Record<string, string>): void;
-  timing(name: string, value: number | Date, tags: Record<string, string>): void;
+  gauge: (name: string, value: number, tags: Record<string, string>) => void;
+  increment: (name: string, tags: Record<string, string>) => void;
+  timing: (name: string, value: number | Date, tags: Record<string, string>) => void;
 }
 
 /**

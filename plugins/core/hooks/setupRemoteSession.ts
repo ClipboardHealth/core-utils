@@ -7,10 +7,10 @@
 import { execSync, spawnSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { arch as osArch, homedir, platform as osPlatform, tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 const GITHUB_API_URL = "https://api.github.com/repos/cli/cli/releases/latest";
-const LOCAL_BIN_DIR = join(homedir(), ".local", "bin");
+const LOCAL_BIN_DIR = path.join(homedir(), ".local", "bin");
 
 const STATUS = {
   ghAvailable: "gh-available",
@@ -50,11 +50,14 @@ function outputMessage(message: string): void {
 }
 
 function isGhAvailable(): boolean {
-  const globalCheck = spawnSync("gh", ["--version"], { shell: true, stdio: "pipe" });
+  const globalCheck = spawnSync("gh", ["--version"], {
+    shell: true,
+    stdio: "pipe",
+  });
   if (globalCheck.status === 0) {
     return true;
   }
-  const localPath = join(LOCAL_BIN_DIR, "gh");
+  const localPath = path.join(LOCAL_BIN_DIR, "gh");
   return (
     existsSync(localPath) && spawnSync(localPath, ["--version"], { stdio: "pipe" }).status === 0
   );
@@ -90,8 +93,8 @@ function installGh(): string | undefined {
     return "No gh CLI asset found for this platform";
   }
 
-  const tempDir = join(tmpdir(), `gh-install-${Date.now()}`);
-  const archivePath = join(tempDir, "gh.tar.gz");
+  const tempDir = path.join(tmpdir(), `gh-install-${Date.now()}`);
+  const archivePath = path.join(tempDir, "gh.tar.gz");
 
   try {
     mkdirSync(tempDir, { recursive: true });
@@ -104,11 +107,11 @@ function installGh(): string | undefined {
     }
 
     mkdirSync(LOCAL_BIN_DIR, { recursive: true });
-    const destPath = join(LOCAL_BIN_DIR, "gh");
+    const destPath = path.join(LOCAL_BIN_DIR, "gh");
     if (existsSync(destPath)) {
       rmSync(destPath);
     }
-    copyFileSync(join(tempDir, extracted, "bin", "gh"), destPath);
+    copyFileSync(path.join(tempDir, extracted, "bin", "gh"), destPath);
     chmodSync(destPath, 0o755);
 
     return spawnSync(destPath, ["--version"], { stdio: "pipe" }).status === 0

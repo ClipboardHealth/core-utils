@@ -24,7 +24,9 @@ async function build(): Promise<void> {
   await mkdir(outputDirectory, { recursive: true });
 
   await Promise.all([
-    cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), { recursive: true }),
+    cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), {
+      recursive: true,
+    }),
     cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), {
       recursive: true,
       filter: (source) => !isTestFile(source),
@@ -73,7 +75,7 @@ async function build(): Promise<void> {
 }
 
 function isTestFile(source: string): boolean {
-  return /\.(spec|test)\.ts$/.test(source);
+  return /\.(?<type>spec|test)\.ts$/.test(source);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

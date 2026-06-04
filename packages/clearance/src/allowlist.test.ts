@@ -1,6 +1,6 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join } from "node:path";
+import path from "node:path";
 
 import { resolveAllowlist } from "./allowlist.ts";
 
@@ -26,7 +26,9 @@ describe(resolveAllowlist, () => {
   });
 
   it("reads hosts from a file referenced by CLEARANCE_ALLOW_HOSTS_FILES", () => {
-    const readFile = fakeFiles({ "/team/hosts": "api.example.com\n*.example.com\n" });
+    const readFile = fakeFiles({
+      "/team/hosts": "api.example.com\n*.example.com\n",
+    });
 
     const actual = resolveAllowlist({
       env: { CLEARANCE_ALLOW_HOSTS_FILES: "/team/hosts" },
@@ -58,7 +60,9 @@ describe(resolveAllowlist, () => {
   });
 
   it("concatenates env literal and file hosts and dedupes", () => {
-    const readFile = fakeFiles({ "/hosts": "api.example.com\nfoo.example.com\n" });
+    const readFile = fakeFiles({
+      "/hosts": "api.example.com\nfoo.example.com\n",
+    });
 
     const actual = resolveAllowlist({
       env: {
@@ -71,14 +75,14 @@ describe(resolveAllowlist, () => {
     expect(actual).toStrictEqual(["api.example.com", "bar.example.com", "foo.example.com"]);
   });
 
-  it("loads multiple files separated by the platform PATH delimiter in declared order", () => {
+  it("loads multiple files separated by the platform PATH path.delimiter in declared order", () => {
     const readFile = fakeFiles({
       "/team": "team.example.com\n",
       "/personal": "personal.example.com\n",
     });
 
     const actual = resolveAllowlist({
-      env: { CLEARANCE_ALLOW_HOSTS_FILES: `/team${delimiter}/personal` },
+      env: { CLEARANCE_ALLOW_HOSTS_FILES: `/team${path.delimiter}/personal` },
       readFile,
     });
 
@@ -90,7 +94,9 @@ describe(resolveAllowlist, () => {
     const readFile = fakeFiles({ "/hosts": "foo.example.com\n" });
 
     const actual = resolveAllowlist({
-      env: { CLEARANCE_ALLOW_HOSTS_FILES: ` ${delimiter}/hosts${delimiter} ` },
+      env: {
+        CLEARANCE_ALLOW_HOSTS_FILES: ` ${path.delimiter}/hosts${path.delimiter} `,
+      },
       readFile,
     });
 
@@ -179,8 +185,8 @@ describe(resolveAllowlist, () => {
   });
 
   it("reads from disk via readFileSync by default", () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "resolve-allowlist-"));
-    const hostsFile = join(tempDir, "hosts");
+    const tempDir = mkdtempSync(path.join(tmpdir(), "resolve-allowlist-"));
+    const hostsFile = path.join(tempDir, "hosts");
     writeFileSync(hostsFile, "api.example.com\n");
     try {
       const actual = resolveAllowlist({

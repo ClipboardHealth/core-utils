@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import * as net from "node:net";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 
 import {
   type ClearanceListenerCheck,
@@ -13,7 +13,7 @@ import {
 } from "./launcher.ts";
 
 function createTempCacheDir(): string {
-  return mkdtempSync(join(tmpdir(), "clearance-"));
+  return mkdtempSync(path.join(tmpdir(), "clearance-"));
 }
 
 function cleanupCacheDir(cacheDir: string | undefined): void {
@@ -99,8 +99,8 @@ describe(ensureClearance, () => {
 
   it("starts a detached proxy and forwards allowlist env to the child", async () => {
     cacheDir = createTempCacheDir();
-    const logPath = join(cacheDir, "clearance.log");
-    const pidPath = join(cacheDir, "clearance.pid");
+    const logPath = path.join(cacheDir, "clearance.log");
+    const pidPath = path.join(cacheDir, "clearance.pid");
     const isListeningMock = createListenerMock([false, false, true]);
     const spawnMock = vi.fn<ClearanceSpawner>().mockReturnValue(12_345);
     const sleepMock = vi.fn<() => Promise<void>>().mockResolvedValue();
@@ -139,7 +139,7 @@ describe(ensureClearance, () => {
 
   it("forwards CLEARANCE_ALLOW_HOSTS_FILES through to the spawned child", async () => {
     cacheDir = createTempCacheDir();
-    const hostsFile = join(cacheDir, "team");
+    const hostsFile = path.join(cacheDir, "team");
     writeFileSync(hostsFile, "team.example.com\n");
     const isListeningMock = createListenerMock([false, true]);
     const spawnMock = vi.fn<ClearanceSpawner>().mockReturnValue(67_890);
@@ -159,7 +159,7 @@ describe(ensureClearance, () => {
   it("uses XDG cache home for the default cache dir", async () => {
     const xdgCacheHome = createTempCacheDir();
     cacheDir = xdgCacheHome;
-    const expectedCacheDir = join(xdgCacheHome, "clearance");
+    const expectedCacheDir = path.join(xdgCacheHome, "clearance");
     const isListeningMock = createListenerMock([false, false, true]);
     const spawnMock = vi.fn<ClearanceSpawner>().mockReturnValue(24_680);
 
@@ -174,7 +174,7 @@ describe(ensureClearance, () => {
       timeoutMs: 2,
     });
 
-    expect(actual.logPath).toBe(join(expectedCacheDir, "clearance.log"));
+    expect(actual.logPath).toBe(path.join(expectedCacheDir, "clearance.log"));
   });
 
   it("uses HOME for the default cache dir when XDG cache home is unset", async () => {
@@ -184,13 +184,17 @@ describe(ensureClearance, () => {
     const spawnMock = vi.fn<ClearanceSpawner>().mockReturnValue(11_223);
 
     const actual = await ensureClearance({
-      env: { CLEARANCE_ALLOW_HOSTS: "api.example.com", HOME: homeDir, XDG_CACHE_HOME: "" },
+      env: {
+        CLEARANCE_ALLOW_HOSTS: "api.example.com",
+        HOME: homeDir,
+        XDG_CACHE_HOME: "",
+      },
       isListening: isListeningMock,
       sleep: noopAsync,
       spawnDetached: spawnMock,
     });
 
-    expect(actual.pidPath).toBe(join(homeDir, ".cache", "clearance", "clearance.pid"));
+    expect(actual.pidPath).toBe(path.join(homeDir, ".cache", "clearance", "clearance.pid"));
   });
 
   it("fails fast when neither CLEARANCE_ALLOW_HOSTS nor _FILES is set", async () => {
@@ -278,7 +282,7 @@ describe(spawnClearance, () => {
 
   it("spawns a detached process and returns its pid", () => {
     cacheDir = createTempCacheDir();
-    const logPath = join(cacheDir, "clearance.log");
+    const logPath = path.join(cacheDir, "clearance.log");
 
     const actual = spawnClearance({
       args: ["-e", ""],
