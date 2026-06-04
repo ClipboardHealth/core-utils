@@ -23,6 +23,7 @@ export async function runWithExecutionContext<T = void>(
     getAsyncLocalStorage().run(context, () => {
       try {
         // eslint-disable-next-line promise/prefer-await-to-then
+        // oxlint-disable-next-line node/callback-return -- async callback, not Node.js error-first callback
         Promise.resolve(callback()).then(resolve).catch(reject);
       } catch (error) {
         // oxlint-disable-next-line typescript/prefer-promise-reject-errors -- re-throwing caught error

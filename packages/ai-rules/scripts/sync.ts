@@ -296,8 +296,8 @@ async function mergeSessionStartHook(): Promise<void> {
 async function extractHeading(filePath: string): Promise<string> {
   try {
     const content = await readFile(filePath, "utf8");
-    const match = /^#\s+(.+)$/m.exec(content);
-    return match?.[1] ?? path.basename(filePath, ".md");
+    const match = /^#\s+(?<heading>.+)$/m.exec(content);
+    return match?.groups?.["heading"] ?? path.basename(filePath, ".md");
   } catch {
     return path.basename(filePath, ".md");
   }

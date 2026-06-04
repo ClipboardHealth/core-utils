@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import path from "node:path";
 
 import type { ModelRole, ModelSpec } from "./models.ts";
 import type {
@@ -71,7 +71,7 @@ export function createDefaultIntermediateOutputPath(input: {
   const { cwd, now = createDate } = input;
   const timestamp = formatPathTimestamp(now());
 
-  return resolve(cwd, INTERMEDIATE_OUTPUT_DIRECTORY, `${timestamp}.json`);
+  return path.resolve(cwd, INTERMEDIATE_OUTPUT_DIRECTORY, `${timestamp}.json`);
 }
 
 export async function createIntermediateOutputRecorder(
@@ -96,7 +96,7 @@ export async function createIntermediateOutputRecorder(
   };
   let writeQueue = Promise.resolve();
 
-  await makeDirectory(dirname(filePath));
+  await makeDirectory(path.dirname(filePath));
   await persist(startedAt);
 
   async function onProgress(event: TribunalProgressEvent): Promise<void> {

@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import path from "node:path";
 
-const repoRoot = join(import.meta.dirname, "..");
+const repoRoot = path.join(import.meta.dirname, "..");
 
 // claude-agent-sdk doesn't resolve @mentions in CLAUDE.md like Claude Code CLI does, so load
 // AGENTS.md to give the agent the index; we're still testing that it Read the actual rule files.
-const agentsMd = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
+const agentsMd = readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
 
 const textGenFormat =
   "In your final response, output ONLY the requested content directly. Do not include explanation or commentary.";

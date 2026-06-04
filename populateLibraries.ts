@@ -1,5 +1,5 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
 
 const UTF8: BufferEncoding = "utf8";
 const MARKERS = {
@@ -24,28 +24,28 @@ interface PackageMetadata {
 
 const FILES: FileUpdate[] = [
   {
-    path: join(__dirname, "README.md"),
+    path: path.join(__dirname, "README.md"),
     label: "README.md '## Libraries'",
     formatLine: (entry) =>
       `- [${entry.name}](./packages/${entry.name}/README.md): ${entry.description}`,
   },
   {
-    path: join(__dirname, "packages", "ai-rules", "rules", "common", "coreLibraries.md"),
+    path: path.join(__dirname, "packages", "ai-rules", "rules", "common", "coreLibraries.md"),
     label: "ai-rules coreLibraries.md",
     formatLine: (entry) => `- **${entry.name}**: ${entry.description}`,
   },
 ];
 
 async function getLibraryEntries(): Promise<LibraryEntry[]> {
-  const entries = await readdir(join(__dirname, "packages"), {
+  const entries = await readdir(path.join(__dirname, "packages"), {
     withFileTypes: true,
   });
   const directories = entries.filter((dirent) => dirent.isDirectory());
 
   const results = await Promise.allSettled(
     directories.map(async (dirent) => {
-      const path = join(__dirname, "packages", dirent.name, "package.json");
-      const parsed = parsePackageMetadata(await readFile(path, UTF8));
+      const packageJsonPath = path.join(__dirname, "packages", dirent.name, "package.json");
+      const parsed = parsePackageMetadata(await readFile(packageJsonPath, UTF8));
       return { name: dirent.name, description: parsed.description ?? "" };
     }),
   );
