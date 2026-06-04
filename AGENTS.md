@@ -13,11 +13,16 @@ IMPORTANT: You MUST read the relevant rule files below before writing or reviewi
 | Testing                 | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                            |
 | TypeScript              | .rules/common/typeScript.md           | Writing ANY TypeScript code                                                                                   |
 
+## Agent Skills
+
+Agent skills are linked from `node_modules/@clipboard-health/ai-rules` into `.agents/`.
+If a referenced skill is missing or unreadable, run `npm ci` from the repository root and retry.
+
 <!-- Source: ./OVERLAY.md -->
 
 ## Project-specific rules
 
-- When modifying ./plugins/core rules or skills, run `node --run sync-ai-rules` to auto-generate the `.rules/` and `.agents/skills` versions
+- When modifying ./plugins/core rules or skills, run `node --run sync-ai-rules` to auto-generate `.rules/` and refresh `.agents/` links
 - Create agent-agnostic ./plugins/core skills unless explicitly told otherwise
 
 ### Development workflow

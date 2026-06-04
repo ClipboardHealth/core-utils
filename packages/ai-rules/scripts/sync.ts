@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { access, chmod, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, chmod, cp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -25,6 +25,9 @@ interface ParsedArguments {
   excludes: RuleId[];
 }
 
+type AgentDirectoryName = "skills" | "lib";
+type AgentDirectorySyncResult = "missing" | "linked" | "copied";
+
 async function sync() {
   try {
     const parsedArguments = parseArguments();
@@ -43,10 +46,10 @@ async function sync() {
       rm(skillsOutput, { recursive: true, force: true }),
       rm(libraryOutput, { recursive: true, force: true }),
     ]);
-    const [, skillsCopied, libraryCopied] = await Promise.all([
+    const [, skillsSyncResult, librarySyncResult] = await Promise.all([
       copyRuleFiles(ruleIds, rulesOutput),
-      copySkillFiles(skillsOutput),
-      copyLibraryFiles(libraryOutput),
+      syncAgentDirectory("skills", skillsOutput),
+      syncAgentDirectory("lib", libraryOutput),
       copySetupScript(),
       mergeSessionStartHook(),
     ]);
@@ -60,7 +63,10 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot, { skillsCopied, libCopied: libraryCopied });
+    await formatOutputFiles(PATHS.projectRoot, {
+      skillsCopied: skillsSyncResult === "copied",
+      libCopied: librarySyncResult === "copied",
+    });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -149,34 +155,56 @@ async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<vo
   );
 }
 
-async function copySkillFiles(skillsOutput: string): Promise<boolean> {
-  const skillsSource = path.join(PATHS.packageRoot, "skills");
+async function syncAgentDirectory(
+  directoryName: AgentDirectoryName,
+  destination: string,
+): Promise<AgentDirectorySyncResult> {
+  const source = await resolveAgentDirectorySource(directoryName);
 
+  if (!source) {
+    return "missing";
+  }
+
+  await mkdir(path.dirname(destination), { recursive: true });
+
+  const relativeSource = path.relative(path.dirname(destination), source);
   try {
-    await cp(skillsSource, skillsOutput, { recursive: true });
-    console.log(`📋 Synced skills to .agents/skills/`);
-    return true;
+    await symlink(relativeSource, destination, "dir");
+    console.log(`📋 Linked ${directoryName} to .agents/${directoryName}/`);
+    return "linked";
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return false;
-    }
-    throw error;
+    console.warn(
+      `⚠️ Could not symlink ${directoryName}; copying instead: ${toErrorMessage(error)}`,
+    );
+    await cp(source, destination, { recursive: true });
+    console.log(`📋 Synced ${directoryName} to .agents/${directoryName}/`);
+    return "copied";
   }
 }
 
-async function copyLibraryFiles(libraryOutput: string): Promise<boolean> {
-  const librarySource = path.join(PATHS.packageRoot, "lib");
+async function resolveAgentDirectorySource(
+  directoryName: AgentDirectoryName,
+): Promise<string | undefined> {
+  const packageSource = path.join(PATHS.packageRoot, directoryName);
+  const sourceTreeSource = path.join(PATHS.projectRoot, "plugins", "core", directoryName);
 
-  try {
-    await cp(librarySource, libraryOutput, { recursive: true });
-    console.log(`📋 Synced lib to .agents/lib/`);
-    return true;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return false;
-    }
-    throw error;
+  // This repo runs the built sync script from dist/, but checked-in links should
+  // target source assets rather than ignored build output.
+  if (isSourceBuildPackage() && (await fileExists(sourceTreeSource))) {
+    return sourceTreeSource;
   }
+
+  if (await fileExists(packageSource)) {
+    return packageSource;
+  }
+
+  return undefined;
+}
+
+function isSourceBuildPackage(): boolean {
+  return path
+    .normalize(PATHS.packageRoot)
+    .endsWith(path.normalize(path.join("dist", "packages", "ai-rules")));
 }
 
 async function copySetupScript(): Promise<void> {
@@ -294,6 +322,11 @@ async function generateAgentsIndex(ruleIds: RuleId[]): Promise<string> {
     "| Rule | File | When to Read |",
     "|------|------|-------------|",
     ...rows,
+    "",
+    "## Agent Skills",
+    "",
+    "Agent skills are linked from `node_modules/@clipboard-health/ai-rules` into `.agents/`.",
+    "If a referenced skill is missing or unreadable, run `npm ci` from the repository root and retry.",
     "",
   ].join("\n");
 }
