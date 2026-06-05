@@ -9,7 +9,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 **This is NOT a refactoring task.** It documents the _case_ for prioritization — cost of inaction, not a how-to guide.
 
-> Debt not well-understood yet (vague complaint, unclear cost)? Use `investigate-ticket` first. If the conversation already has investigation findings, use them — don't re-ask.
+> Debt not well-understood yet (vague complaint, unclear cost)? Use `core:investigate-ticket` first. If the conversation already has investigation findings, use them — don't re-ask.
 
 ## Process
 
@@ -38,7 +38,7 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 - **Never invent.** Every claim must be backed by code you read, data you found, or context from the conversation. If you can't find evidence for an assertion, don't include it — even if it seems plausible.
 - **One ticket, one concern.** If the debt spans multiple independent problems (e.g., a performance issue AND a maintainability issue in the same service), split into separate tickets — each with its own classification, evidence, and impact. Related debt can reference each other.
 - **Always document the repository.** Flag multi-repo debt to the user for splitting.
-- **Redirect non-debt.** Bugs → `write-bug-ticket`, features → `write-feature-ticket`.
+- **Redirect non-debt.** Bugs → `core:write-bug-ticket`, features → `core:write-feature-ticket`.
 
 ## Ticket Format
 

@@ -2,7 +2,7 @@
 
 ## Tool Availability
 
-This skill uses MCP tools when available: Datadog MCP for logs/traces/metrics, Snowflake MCP for data queries, LaunchDarkly MCP for flag state. If the Datadog MCP is not configured, use the `datadog-investigate` skill as an API reference — it provides curl commands and `dog` CLI patterns for querying logs, traces, metrics, and monitors directly.
+This skill uses MCP tools when available: Datadog MCP for logs/traces/metrics, Snowflake MCP for data queries, LaunchDarkly MCP for flag state. If the Datadog MCP is not configured, use the `core:datadog-investigate` skill as an API reference — it provides curl commands and `dog` CLI patterns for querying logs, traces, metrics, and monitors directly.
 
 ## Datadog Search Strategy
 

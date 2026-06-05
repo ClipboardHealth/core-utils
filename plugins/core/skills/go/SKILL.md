@@ -1,10 +1,10 @@
 ---
-description: Implement a plan file or direct request end-to-end, then hand off to commit-push-pr to ship it. Use when the user says 'go', 'execute the plan', 'implement the plan', or gives an implementation request.
+description: Implement a plan file or direct request end-to-end, then hand off to core:commit-push-pr to ship it. Use when the user says 'go', 'execute the plan', 'implement the plan', or gives an implementation request.
 ---
 
 # Go: Execute Work and Ship It
 
-Given a plan file or direct implementation request, implement the requested work, then invoke the `commit-push-pr` skill to create a PR.
+Given a plan file or direct implementation request, implement the requested work, then invoke the `core:commit-push-pr` skill to create a PR.
 
 This skill is the bridge between intent and shipping. It does not re-plan or re-design unless the user asked for that. If the request is wrong or cannot be implemented safely, surface that; do not silently improvise.
 
@@ -30,16 +30,16 @@ The plan or request is the source of truth for scope:
 ## Phase 3: Validate
 
 - Read `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or equivalent contributor instructions for the mandated pre-PR command (e.g. `node --run verify`). That wins over everything.
-- If the repo relies on pre-commit/pre-push hooks and mandates no manual command, don't invent one — let the hooks run during the `commit-push-pr` handoff.
+- If the repo relies on pre-commit/pre-push hooks and mandates no manual command, don't invent one — let the hooks run during the `core:commit-push-pr` handoff.
 - If the plan names specific checks, run them when practical. Ask before running anything that's clearly a slow CI-only suite.
 
 Fix any failures before handing off. Do not hand off with known failing checks unless the user explicitly accepts a pre-existing or unrelated failure.
 
 ## Phase 4: Hand Off
 
-Invoke the `commit-push-pr` skill. Do not commit, push, or open the PR yourself.
+Invoke the `core:commit-push-pr` skill. Do not commit, push, or open the PR yourself.
 
-If `commit-push-pr` reports `nothing to ship.`, surface that.
+If `core:commit-push-pr` reports `nothing to ship.`, surface that.
 
 ## Phase 5: Final Output
 

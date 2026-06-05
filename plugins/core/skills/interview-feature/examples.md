@@ -6,7 +6,7 @@
 >
 > **Agent:** Before I can write a ticket, I need to understand the problem Redis would solve. What's happening today that's painful? Are bookings slow? Are users seeing errors? Let me check Datadog for booking service performance first.
 >
-> _(Agent dispatches investigate-ticket, finds p99 latency at 4.2s)_
+> _(Agent dispatches `core:investigate-ticket`, finds p99 latency at 4.2s)_
 >
 > **Agent:** I found that booking lookups have a p99 of 4.2s — that's high. Who is this affecting most? Is it nurses searching for shifts, or facilities reviewing bookings?
 >
@@ -28,7 +28,7 @@
 >
 > **Agent:** Let me understand the current state before I ask you questions.
 >
-> _(Agent dispatches investigate-ticket — traces notification code, checks Snowflake for notification volumes, checks Datadog for delivery rates)_
+> _(Agent dispatches `core:investigate-ticket` — traces notification code, checks Snowflake for notification volumes, checks Datadog for delivery rates)_
 >
 > **Agent:** Here's what I found: there are 4 notification types sent to workplaces, none have per-workplace controls. The daily digest has the lowest engagement (12% open rate at phone-interview workplaces vs 64% at video workplaces). Is the daily digest the one causing friction, or are you thinking about all notification types?
 

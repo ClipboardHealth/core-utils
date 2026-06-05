@@ -5,7 +5,7 @@ description: Use when creating a Linear feature request ticket from conversation
 
 # Write Feature Ticket
 
-Draft Linear feature request tickets that describe what users need and why — never how to implement it. Dispatches to the `interview-feature` skill when context is insufficient to write a clear ticket.
+Draft Linear feature request tickets that describe what users need and why — never how to implement it. Dispatches to the `core:interview-feature` skill when context is insufficient to write a clear ticket.
 
 ## Process
 
@@ -13,8 +13,8 @@ Draft Linear feature request tickets that describe what users need and why — n
 2. **Clarity gate** — does the available context answer: (a) Who is affected? (b) What can't they do? (c) Why does it matter? Is the framing problem-shaped? Are there no invented details?
    - **Yes** → step 3
    - **1-2 factual gaps** (missing repo, unclear who) → ask the user directly. Don't dispatch the full interview for a single missing data point.
-   - **Structural problems** (solution-shaped framing, no problem articulated, mostly unknowns) → dispatch `interview-feature` skill. Receive a structured problem brief. Re-check gate against the brief.
-   - If `interview-feature` terminates without producing a problem brief (user refused to articulate a problem), abort the ticket process. Inform the user that the ticket cannot be created without a problem statement.
+   - **Structural problems** (solution-shaped framing, no problem articulated, mostly unknowns) → dispatch `core:interview-feature` skill. Receive a structured problem brief. Re-check gate against the brief.
+   - If `core:interview-feature` terminates without producing a problem brief (user refused to articulate a problem), abort the ticket process. Inform the user that the ticket cannot be created without a problem statement.
 3. **Final validation** — run the checklist below before drafting. This is the ticket skill's own quality check — it doesn't blindly trust upstream context.
 4. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
 5. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
@@ -25,7 +25,7 @@ Draft Linear feature request tickets that describe what users need and why — n
 
 ## Final Validation Checklist
 
-Before drafting, verify ALL of these. If any fail, bounce back to `interview-feature` or ask the user directly:
+Before drafting, verify ALL of these. If any fail, bounce back to `core:interview-feature` or ask the user directly:
 
 | Check                  | Fail condition                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,7 +46,7 @@ Before drafting, verify ALL of these. If any fail, bounce back to `interview-fea
 - **Never invent.** If a detail isn't established from the user, research, or conversation, it doesn't go in the ticket. Period.
 - **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
 - **Always document the repository.** Every ticket must specify which repo the work belongs in. If the feature spans multiple repos, flag this — it likely needs separate tickets.
-- **Feature requests only.** Redirect bug reports to `write-bug-ticket`, tech debt to `write-tech-debt-ticket`.
+- **Feature requests only.** Redirect bug reports to `core:write-bug-ticket`, tech debt to `core:write-tech-debt-ticket`.
 
 ## Ticket Format
 

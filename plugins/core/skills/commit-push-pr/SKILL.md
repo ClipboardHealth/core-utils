@@ -14,9 +14,9 @@ description: Commit, push, and open a PR. Use when the user wants to ship change
 
 ## Your task
 
-If `Commits ahead of default branch` is `(unknown)`, `origin/HEAD` couldn't be resolved — stop and tell the user to run `git remote set-head origin -a` (or otherwise set the default branch) before retrying, since the simplify step also depends on it. Otherwise, if `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
+If `Commits ahead of default branch` is `(unknown)`, `origin/HEAD` couldn't be resolved — stop and tell the user to run `git remote set-head origin -a` (or otherwise set the default branch) before retrying, since the `core:simplify` step also depends on it. Otherwise, if `Git status`, `Commits ahead of default branch`, and `Existing PR` are all empty/none, stop and reply `nothing to ship.`. Otherwise:
 
-Before doing any step, output the full 7-step checklist below in your first response so it stays in recent context across sub-skill calls. Do not skip this — it's what keeps you from stopping after `simplify`.
+Before doing any step, output the full 7-step checklist below in your first response so it stays in recent context across sub-skill calls. Do not skip this — it's what keeps you from stopping after `core:simplify`.
 
 Use this PR body shape when creating or refreshing descriptions:
 
@@ -40,7 +40,7 @@ Optional: ticket links, rollout plan, residual risk, or areas for reviewers to f
 Script paths in this procedure are written as `scripts/...`, relative to this SKILL.md. When executing a bundled script, run it from this skill directory or resolve it to this skill's installed directory; do not look for it at the repository root.
 
 1. Create a new branch if on main (e.g., `feat/add-user-validation`, `fix/null-check-in-parser`).
-2. Run the `simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. When it returns, your very next action is to restate the remaining steps (3–7) and continue with step 3 in the same turn. Do not stop, do not end the turn with a simplify summary.
+2. Run the `core:simplify` skill on the full PR diff — `git diff $(git merge-base HEAD origin/HEAD)..HEAD` plus any uncommitted changes. When it returns, your very next action is to restate the remaining steps (3–7) and continue with step 3 in the same turn. Do not stop, do not end the turn with a `core:simplify` summary.
 3. If `git status --short` shows changes, create a single conventional commit with `git commit --no-gpg-sign`.
 4. Push the branch to origin.
 5. Look up the current agent session ID by running this skill's bundled script: `bash scripts/find-session-id.sh '<phrase>'`. Pass a distinctive verbatim chunk (≥10 words) from the most recent user message; see the script header for quoting constraints. If the script prints `codex <id>`, use ``Agent session: `codex resume <id>` ``. If it prints `claude-code <id>`, use ``Agent session: `claude --resume <id>` ``. Keep the resume command in backticks so it renders as code in the PR description. If empty, there is no session footer line.

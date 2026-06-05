@@ -52,7 +52,7 @@ Use a direct implementation-shaped ticket. Keep the repository line near the top
 ## Groundcrew
 
 Repository: <repo>
-Implementation workflow: use the `core:go`/`go` skill when available. If that skill is unavailable, follow this repo's AGENTS.md/CLAUDE.md implementation workflow and run the documented verification.
+Implementation workflow: use the `core:go` skill when available. If the current host exposes the same skill without plugin namespaces, use that equivalent. If that skill is unavailable, follow this repo's AGENTS.md/CLAUDE.md implementation workflow and run the documented verification.
 
 ## Task
 

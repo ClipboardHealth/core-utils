@@ -1,6 +1,6 @@
 # Plan a Flaky Test Fix
 
-Diagnosis and planning phase of the flaky-test-debugger skill. Produces a structured plan that the user reviews. In fix mode, the plan is consumed by [`fix.md`](./fix.md).
+Diagnosis and planning phase of the `core:flaky-test-debugger` skill. Produces a structured plan that the user reviews. In fix mode, the plan is consumed by [`fix.md`](./fix.md).
 
 Route by the test type identified in Phase 1 of SKILL.md:
 

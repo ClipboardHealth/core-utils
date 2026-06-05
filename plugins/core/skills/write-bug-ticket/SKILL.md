@@ -5,9 +5,9 @@ description: Use when creating a Linear bug report ticket from conversation cont
 
 # Write Bug Ticket
 
-Structure and write Linear bug reports from evidence that already exists in the conversation. Never diagnose root cause or propose fixes. Never investigate — that's `investigate-ticket`'s job.
+Structure and write Linear bug reports from evidence that already exists in the conversation. Never diagnose root cause or propose fixes. Never investigate — that's `core:investigate-ticket`'s job.
 
-> **No evidence yet?** If the conversation lacks Datadog links, error details, or clear symptom descriptions, STOP and redirect to `investigate-ticket` first. It will hand off back here with structured findings.
+> **No evidence yet?** If the conversation lacks Datadog links, error details, or clear symptom descriptions, STOP and redirect to `core:investigate-ticket` first. It will hand off back here with structured findings.
 >
 > **Already investigated?** If the conversation contains investigation findings (Datadog links, code paths, Snowflake queries, flag state), use them directly — don't re-investigate.
 
@@ -23,11 +23,11 @@ Structure and write Linear bug reports from evidence that already exists in the 
 ## Hard Rules
 
 - **Symptom-first, diagnosis-never.** NEVER propose a fix, root cause, or investigation steps. Technical context is fine — speculation is not.
-- **Evidence belongs in the ticket, but gathering it does not.** Include Datadog links, Snowflake findings, and flag state from the conversation. If none exist, redirect to `investigate-ticket` — don't search yourself.
+- **Evidence belongs in the ticket, but gathering it does not.** Include Datadog links, Snowflake findings, and flag state from the conversation. If none exist, redirect to `core:investigate-ticket` — don't search yourself.
 - **STR preferred, not required.** If not reproduced: "Not yet reproduced manually. Observed via monitoring." NEVER invent STR.
 - **Clean titles.** No bracket prefixes. Describe the symptom. Under 70 characters.
 - **Always document the repository.** Flag multi-repo bugs to the user for splitting.
-- **Redirect non-bugs.** Features → `write-feature-ticket`, tech debt → `write-tech-debt-ticket`.
+- **Redirect non-bugs.** Features → `core:write-feature-ticket`, tech debt → `core:write-tech-debt-ticket`.
 
 ## Ticket Format
 
@@ -45,18 +45,18 @@ See reference.md for full examples.
 
 ## Red Flags — Self-Review Before Presenting
 
-| Anti-Pattern                   | Fix                                                                     |
-| ------------------------------ | ----------------------------------------------------------------------- |
-| Root cause diagnosis           | Remove — describe symptom and evidence only                             |
-| Proposed fix                   | Remove entirely                                                         |
-| Investigation runbook          | Remove — this is a bug report, not an investigation plan                |
-| Vague actual behavior          | Be specific: "Returns 500 error when..."                                |
-| Missing expected behavior      | Add what should happen                                                  |
-| Raw logs pasted inline         | Replace with Datadog log query link                                     |
-| No evidence in conversation    | STOP drafting — redirect to `investigate-ticket` to gather evidence     |
-| Searching Datadog yourself     | This skill writes, not investigates — use existing evidence or redirect |
-| Diagnosis disguised as context | Rewrite as observable: "Cache misses increased 3x after deploy"         |
-| STR invented from assumptions  | "Not yet reproduced. Observed via monitoring."                          |
-| Guessed team assignment        | Ask the user — never guess                                              |
-| Bracket title prefixes         | Describe the symptom without brackets                                   |
-| Missing repository             | Include repo name in ticket body — derive from git remote               |
+| Anti-Pattern                   | Fix                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Root cause diagnosis           | Remove — describe symptom and evidence only                              |
+| Proposed fix                   | Remove entirely                                                          |
+| Investigation runbook          | Remove — this is a bug report, not an investigation plan                 |
+| Vague actual behavior          | Be specific: "Returns 500 error when..."                                 |
+| Missing expected behavior      | Add what should happen                                                   |
+| Raw logs pasted inline         | Replace with Datadog log query link                                      |
+| No evidence in conversation    | STOP drafting — redirect to `core:investigate-ticket` to gather evidence |
+| Searching Datadog yourself     | This skill writes, not investigates — use existing evidence or redirect  |
+| Diagnosis disguised as context | Rewrite as observable: "Cache misses increased 3x after deploy"          |
+| STR invented from assumptions  | "Not yet reproduced. Observed via monitoring."                           |
+| Guessed team assignment        | Ask the user — never guess                                               |
+| Bracket title prefixes         | Describe the symptom without brackets                                    |
+| Missing repository             | Include repo name in ticket body — derive from git remote                |

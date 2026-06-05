@@ -15,7 +15,7 @@
 [Impact, urgency, business context — why this deserves a ticket]
 
 ### What we learned from research
-[Key findings from investigate-ticket — Datadog data, codebase observations, Snowflake queries, usage stats, etc. If no research was needed, note "Context was sufficient from conversation."]
+[Key findings from `core:investigate-ticket` — Datadog data, codebase observations, Snowflake queries, usage stats, etc. If no research was needed, note "Context was sufficient from conversation."]
 
 ### Open questions / unknowns
 [Anything that couldn't be answered, with context on why and suggestions for how to resolve. If none, note "No open questions."]

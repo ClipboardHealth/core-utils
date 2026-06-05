@@ -1,6 +1,6 @@
 # Apply a Flaky Test Fix
 
-Apply phase of the flaky-test-debugger skill. Takes a plan produced by [`plan.md`](./plan.md) and applies it.
+Apply phase of the `core:flaky-test-debugger` skill. Takes a plan produced by [`plan.md`](./plan.md) and applies it.
 
 ## Preflight
 

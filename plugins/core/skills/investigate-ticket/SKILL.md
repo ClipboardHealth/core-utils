@@ -50,5 +50,5 @@ Research-only workflow — no code changes, no fixes, no PRs. Produces a structu
 
 ## Cross-Referenced Skills
 
-- `write-bug-ticket`, `write-tech-debt-ticket`, `write-feature-ticket` — for creating tickets from findings
-- `datadog-investigate` — API reference for Datadog queries when no Datadog MCP is available
+- `core:write-bug-ticket`, `core:write-tech-debt-ticket`, `core:write-feature-ticket` — for creating tickets from findings
+- `core:datadog-investigate` — API reference for Datadog queries when no Datadog MCP is available

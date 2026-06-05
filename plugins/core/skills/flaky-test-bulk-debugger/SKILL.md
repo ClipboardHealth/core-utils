@@ -1,13 +1,13 @@
 ---
 name: flaky-test-bulk-debugger
-description: Bulk-triage flaky test investigation tickets by clustering sightings, sharing artifacts, and delegating per-cluster diagnosis to flaky-test-debugger. Use when investigating many flaky test tickets, Linear issues tagged flaky-investigation, CI flake bursts, or repeated failures that may share a root cause.
+description: Bulk-triage flaky test investigation tickets by clustering sightings, sharing artifacts, and delegating per-cluster diagnosis to core:flaky-test-debugger. Use when investigating many flaky test tickets, Linear issues tagged flaky-investigation, CI flake bursts, or repeated failures that may share a root cause.
 ---
 
 # Flaky Test Bulk Debugger
 
-Use this skill to investigate a queue of flaky test sightings efficiently. Its purpose is orchestration: collect tickets, build a compact manifest, cluster related failures, fetch shared artifacts once, then run `flaky-test-debugger` per cluster.
+Use this skill to investigate a queue of flaky test sightings efficiently. Its purpose is orchestration: collect tickets, build a compact manifest, cluster related failures, fetch shared artifacts once, then run `core:flaky-test-debugger` per cluster.
 
-Do not duplicate the detailed diagnosis workflow from `flaky-test-debugger`. When a cluster is ready for root-cause analysis, use `flaky-test-debugger` in plan mode unless the user explicitly asks to implement fixes.
+Do not duplicate the detailed diagnosis workflow from `core:flaky-test-debugger`. When a cluster is ready for root-cause analysis, use `core:flaky-test-debugger` in plan mode unless the user explicitly asks to implement fixes.
 
 ## Rules
 
@@ -35,7 +35,7 @@ Normalize errors before grouping:
 Cluster by strongest shared evidence first:
 
 1. Same CI run, commit, timestamp window, and setup/helper stack.
-2. Same failure surface from `flaky-test-debugger`: CI/job setup, test setup/auth/data, app bootstrap/navigation, user action, backend request, post-success render, assertion/locator.
+2. Same failure surface from `core:flaky-test-debugger`: CI/job setup, test setup/auth/data, app bootstrap/navigation, user action, backend request, post-success render, assertion/locator.
 3. Same first project stack frame or setup helper.
 4. Same endpoint/static asset/status-code pattern.
 5. Same test file or prior related tickets.
@@ -54,12 +54,12 @@ Record artifact paths in the manifest. Workers should receive paths and the rele
 
 ## Phase 4: Diagnose Clusters
 
-For each cluster, run `flaky-test-debugger` in plan mode. If the agent supports skills, explicitly load or invoke `flaky-test-debugger`; otherwise follow its workflow manually.
+For each cluster, run `core:flaky-test-debugger` in plan mode. If the agent supports skills, explicitly load or invoke `core:flaky-test-debugger`; otherwise follow its workflow manually.
 
 Use this worker prompt shape:
 
 ```text
-Use flaky-test-debugger in plan mode.
+Use core:flaky-test-debugger in plan mode.
 Investigate this cluster as one possible shared root cause, not as isolated tickets.
 
 Inputs: cluster summary, manifest rows, artifact/report paths, prior related tickets, and source ticket close-out instructions.
