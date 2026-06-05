@@ -42,7 +42,7 @@ Determine **mode**:
 - PR exists and authors differ → **reviewer mode**.
 - No PR → **author mode**.
 
-You hold everything in-context — no `/tmp/*` persistence needed.
+You hold review state in-context — no `/tmp/*` persistence needed for findings (the PR-posting step writes one transient payload file; see Posting an anchored PR review).
 
 ## Freshness preflight (mandatory before reading code)
 
@@ -206,7 +206,7 @@ Check the diff for (only what's actually documented in the consulted sources):
 
 Frontend conventions are the Frontend lens's job when activated. If FE lens isn't active (no FE files), surface FE convention drift here only if it appears.
 
-Tag every convention finding with `[CONVENTION]` in the title. Cap severity at MAJOR (only when behavior diverges as a result) or MINOR otherwise. In the Summary, list the convention sources you consulted.
+Tag every convention finding with `[CONVENTION]` in the title. Cap severity at MAJOR (only when behavior diverges as a result) or MINOR otherwise.
 
 ### AntiSlop (always)
 

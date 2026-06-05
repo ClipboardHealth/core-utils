@@ -228,7 +228,7 @@ Conventions are the Conventions agent's (D) job — do not double up.
 - When a migration is in the diff: rollback strategy, backward compatibility during rolling deploy, ETL / downstream impact. Hand to Database (F) if dispatched.
 - When DB schema or queries changed: indexes for new query patterns, N+1 risk, cascade-delete semantics, data-type fit. Hand to Database (F) if dispatched.
 - Telemetry covers _business / product_ value, not only engineering surface metrics (latency / error rate).
-- Contract / backward-compatibility for any consumer-visible response shape change.
+- Contract / backward-compatibility for any consumer-visible response shape change. If you suspect a consumer break, the evidence is cross-repo — emit `evidence_required` and cap at MAJOR rather than asserting it; never raise a speculative "the FE will fail to parse" finding without verified evidence.
 
 Skip items that fail the realistic-input test.
 
@@ -250,7 +250,7 @@ For every "delete this" finding, `failure_mode` must state the _concrete cost of
 - Null/undefined checks via `isDefined` / `isNil` over truthy.
 - 4+ argument functions → params object.
 - Error-handling patterns in the same service (typed `ServiceResult` vs throw).
-- Test conventions, naming, file location.
+- Test conventions, naming, file location (service test structure, `createTestContext` / `tearDown`, `beforeAll` / `afterAll` for GET).
 - Business-meaningful magic constants that should be named.
 - ENV access via the project's Configuration abstraction, not direct `process.env`.
 - Logging library standard for the repo (e.g. Winston) — derive from existing code, not hardcoded.
@@ -324,6 +324,7 @@ Even when your Round 1 findings are sparse because the diff is genuinely clean, 
 - Sensitive data in response payloads — over-fetching, over-serialization, internal IDs leaked.
 - PII handling — PII fields logged, cached, or sent to telemetry.
 - Input validation at the boundary (Zod / class-validator) on every new endpoint.
+- For numeric inputs: explicit `min` / `max` bounds. Verify what the JS engine does with `Number.MAX_SAFE_INTEGER + 1`, BigInt conversion, negative values, and whether the catch path returns a structured 400 or a 500 with stack log.
 
 Cap output at 8 findings. `failure_mode` required.
 
@@ -332,12 +333,14 @@ Cap output at 8 findings. `failure_mode` required.
 - Index coverage for new query patterns; missing compound indexes.
 - N+1 query shapes; loops issuing per-iteration queries.
 - Schema normalization — denormalization that creates write-amplification or update anomalies.
-- Data types — range, precision, locale (numeric, date, money).
+- Data types — range, precision, locale (numeric, date, money). Mongoose `Number` is IEEE 754 double; safe for integers up to 2^53.
 - Cascade-delete and FK-on-delete semantics; orphan risk.
 - Migration rollback strategy; can the migration run online without downtime?
 - Backward compatibility during a rolling deploy (old code reads new schema, new code reads old schema).
 - ETL / downstream consumer impact when schema or field semantics change.
 - New collections / tables ship with the indexes their query patterns need on day one.
+- Dual-write fields (storing both `amount` and `amountInMinorUnits`-style pairs): is canonicalization happening on write, or does the on-disk record encode two contradictory values?
+- Backfill for new fields on existing records: present, deferred (with ticket), or missing?
 
 Cap output at 8 findings. `failure_mode` required.
 
@@ -452,7 +455,7 @@ Ask exactly: _"Which items do you want to act on? Reply with ids (e.g. `B1, C2`)
 - `edit-plan` → revise from feedback, re-prompt.
 - `cancel` → stop.
 
-**Execute.** Use `TaskCreate` to track each step, apply the plan, run the verification, report results. If a step surfaces a new substantive issue not in the selected items, stop and ask before expanding scope.
+**Execute.** Use `TodoWrite` to track each step, apply the plan, run the verification, report results. If a step surfaces a new substantive issue not in the selected items, stop and ask before expanding scope.
 
 ### Reviewer mode
 
