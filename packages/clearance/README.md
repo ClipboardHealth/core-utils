@@ -1,7 +1,4 @@
-<h1 align="center">clearance</h1>
-<p align="center">
-  <img alt="Clearance logo." height="250px" src="../../static/clearance.svg">
-</p>
+# clearance
 
 A local HTTP/HTTPS forward proxy that gates network egress against a
 hostname allowlist. Built for deny-by-default sandboxes — coding agents,
