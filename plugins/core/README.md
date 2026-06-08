@@ -13,6 +13,7 @@ Clipboard's core development tools.
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
+  - [frontend-ui-verification](#frontend-ui-verification)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
@@ -67,6 +68,10 @@ Investigate production issues by querying Datadog logs, metrics, and APM traces,
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
+
+### frontend-ui-verification
+
+Verify Clipboard frontend UI work against code, design references, Storybook, and browser screenshots. Use for Figma/design implementation, redesign UI changes, Storybook checkpoints, and visual QA.
 
 ### local-package
 
