@@ -8,6 +8,7 @@ Clipboard's core development tools.
 - [Prerequisites](#prerequisites)
 - [Skills](#skills)
   - [babysit-pr](#babysit-pr)
+  - [clipboard-design-engineering](#clipboard-design-engineering)
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
@@ -46,6 +47,10 @@ Clipboard's core development tools.
 ### babysit-pr
 
 Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize automated review-body comments from CodeRabbit and Mendral. Invoke with `/babysit-pr` for the current branch's PR, or `/babysit-pr <number|url>` to check out and babysit a specific PR.
+
+### clipboard-design-engineering
+
+Apply Clipboard's design engineering standards for UI polish, component feel, interaction details, and motion decisions. Use for frontend polish, animation review, visual hierarchy, and component craft in admin or mobile UI.
 
 ### cognito-user-analysis
 
