@@ -13,6 +13,7 @@
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
     "embed:check": "node --run embed -- --check",
     "eval": "promptfoo eval --config evals/promptfooconfig.ts",
+    "eval:skill": "tsx scripts/runSkillEval.mts",
     "eval:view": "promptfoo view --yes",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
