@@ -20,6 +20,9 @@ The default skill run is manual and LLM-backed. For frontend UI verification it 
 FRONTEND_UI_VERIFICATION_EVAL_PROVIDERS=codex node --run eval:skill -- frontend-ui-verification -- --filter-first-n 1
 ```
 
-Claude runs require `ANTHROPIC_API_KEY`. Codex runs require the local Codex auth path used by Promptfoo's Codex adapter.
+Claude runs require `ANTHROPIC_API_KEY`.
+
+Codex runs use Promptfoo's `openai:codex-sdk` adapter. Set `OPENAI_API_KEY` or `CODEX_API_KEY` for explicit API-key auth, or run from a machine where the Codex SDK can read the normal local Codex login state.
+Set `CODEX_HOME=/path/to/.codex` when that state is not in the default Codex home.
 
 When adding another skill eval, add the Promptfoo config and one entry in `scripts/runSkillEval.mts`; do not add another package script.

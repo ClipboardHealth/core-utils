@@ -17,40 +17,51 @@ function normalize(output: string): string {
   return output.toLowerCase();
 }
 
-function hasAny(text: string, patterns: RegExp[]): boolean {
+function hasAnyPattern(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(text));
 }
 
-function checkRequired(text: string, issues: string[], label: string, patterns: RegExp[]): void {
-  if (!hasAny(text, patterns)) {
+function hasAllPatterns(text: string, patterns: RegExp[]): boolean {
+  return patterns.every((pattern) => pattern.test(text));
+}
+
+function checkAnyRequired(text: string, issues: string[], label: string, patterns: RegExp[]): void {
+  if (!hasAnyPattern(text, patterns)) {
+    issues.push(label);
+  }
+}
+
+function checkAllRequired(text: string, issues: string[], label: string, patterns: RegExp[]): void {
+  if (!hasAllPatterns(text, patterns)) {
     issues.push(label);
   }
 }
 
 function checkCoreWorkflow(text: string, issues: string[]): void {
-  checkRequired(text, issues, "Missing Storybook as the primary visual surface", [/\bstorybook\b/]);
-  checkRequired(text, issues, "Missing deterministic helper-script discovery", [
+  checkAnyRequired(text, issues, "Missing Storybook as the primary visual surface", [
+    /\bstorybook\b/,
+  ]);
+  checkAllRequired(text, issues, "Missing deterministic helper-script discovery", [
     /inspect-ui-verification-surface\.sh/,
     /\bstorybook-command\b/,
   ]);
-  checkRequired(text, issues, "Missing Storybook canvas or iframe URL", [
+  checkAnyRequired(text, issues, "Missing Storybook canvas or iframe URL", [
     /iframe\.html\?viewmode=story/,
     /\bcanvas url\b/,
     /\bstorybook iframe\b/,
   ]);
-  checkRequired(text, issues, "Missing browser screenshot or visual evidence capture", [
+  checkAnyRequired(text, issues, "Missing browser screenshot or visual evidence capture", [
     /\bscreenshot\b/,
     /\bvisual evidence\b/,
     /\bcapture evidence\b/,
   ]);
-  checkRequired(text, issues, "Missing viewport coverage", [
-    /\bviewport\b/,
+  checkAllRequired(text, issues, "Missing viewport coverage", [/\bviewport\b/, /\b1440x900\b/]);
+  checkAnyRequired(text, issues, "Missing mobile viewport coverage", [
     /\b375x812\b/,
     /\b390x844\b/,
-    /\b1440x900\b/,
     /\biphone\b/,
   ]);
-  checkRequired(text, issues, "Missing inspected UI states", [
+  checkAllRequired(text, issues, "Missing inspected UI states", [
     /\bloading\b/,
     /\bempty\b/,
     /\berror\b/,
@@ -58,11 +69,11 @@ function checkCoreWorkflow(text: string, issues: string[]): void {
     /\blong[- ]text\b/,
     /\bdense[- ]data\b/,
   ]);
-  checkRequired(text, issues, "Missing console classification", [
+  checkAnyRequired(text, issues, "Missing console classification", [
     /\bconsole\b.*\b(?:story-introduced|global|pre-existing|provider|decorator)/s,
     /\b(?:story-introduced|global|pre-existing|provider|decorator)\b.*\bconsole\b/s,
   ]);
-  checkRequired(text, issues, "Missing component or story search before new UI", [
+  checkAnyRequired(text, issues, "Missing component or story search before new UI", [
     /\bexisting components?\b/,
     /\bsearch\b.*\b(?:stories|components|patterns)\b/s,
     /\breuse\b.*\b(?:components|patterns|tokens)\b/s,
@@ -71,16 +82,16 @@ function checkCoreWorkflow(text: string, issues: string[]): void {
 
 function checkSourceScenario(text: string, scenario: string | undefined, issues: string[]): void {
   if (scenario === "figma") {
-    checkRequired(text, issues, "Missing Figma MCP/design-context extraction", [
+    checkAnyRequired(text, issues, "Missing Figma MCP/design-context extraction", [
       /get_design_context/,
       /design context/,
       /figma mcp/,
     ]);
-    checkRequired(text, issues, "Missing Figma screenshot extraction", [
+    checkAnyRequired(text, issues, "Missing Figma screenshot extraction", [
       /get_screenshot/,
       /figma screenshot/,
     ]);
-    checkRequired(text, issues, "Missing Figma metadata or variables", [
+    checkAnyRequired(text, issues, "Missing Figma metadata or variables", [
       /get_metadata/,
       /metadata/,
       /get_variable_defs/,
@@ -90,12 +101,12 @@ function checkSourceScenario(text: string, scenario: string | undefined, issues:
   }
 
   if (scenario === "screenshot") {
-    checkRequired(text, issues, "Missing screenshot-as-reference handling", [
+    checkAnyRequired(text, issues, "Missing screenshot-as-reference handling", [
       /screenshot.*reference/s,
       /static.*reference/s,
       /visual reference/,
     ]);
-    checkRequired(text, issues, "Missing callout for states or viewport gaps", [
+    checkAnyRequired(text, issues, "Missing callout for states or viewport gaps", [
       /missing.*states/s,
       /missing.*viewport/s,
       /not visible/,
@@ -105,13 +116,13 @@ function checkSourceScenario(text: string, scenario: string | undefined, issues:
   }
 
   if (scenario === "idea") {
-    checkRequired(text, issues, "Missing written-idea fallback", [
+    checkAnyRequired(text, issues, "Missing written-idea fallback", [
       /written idea/,
       /description only/,
       /product intent/,
       /free-form/,
     ]);
-    checkRequired(text, issues, "Missing human confirmation for subjective interpretation", [
+    checkAnyRequired(text, issues, "Missing human confirmation for subjective interpretation", [
       /human confirmation/,
       /ask.*confirm/s,
       /confirmation.*subjective/s,
@@ -122,7 +133,7 @@ function checkSourceScenario(text: string, scenario: string | undefined, issues:
 
 function checkSurface(text: string, surface: string | undefined, issues: string[]): void {
   if (surface === "admin") {
-    checkRequired(text, issues, "Missing admin Berlin/redesign component mapping", [
+    checkAnyRequired(text, issues, "Missing admin Berlin/redesign component mapping", [
       /\bberlin\b/,
       /src\/app[v]2\/redesign/,
       /redesign\/components/,
@@ -131,12 +142,12 @@ function checkSurface(text: string, surface: string | undefined, issues: string[
   }
 
   if (surface === "mobile") {
-    checkRequired(text, issues, "Missing mobile Storybook/decorator details", [
+    checkAnyRequired(text, issues, "Missing mobile Storybook/decorator details", [
       /theme.*decorator/s,
       /storybook.*decorator/s,
       /mobile.*decorator/s,
     ]);
-    checkRequired(text, issues, "Missing mobile viewport presets", [
+    checkAnyRequired(text, issues, "Missing mobile viewport presets", [
       /iphone12/,
       /390x844/,
       /iphone\s*se/,
@@ -152,32 +163,43 @@ function checkMotionScenario(text: string, scenario: string | undefined, issues:
     return;
   }
 
-  checkRequired(text, issues, "Missing deterministic motion replay/in-flight states", [
+  checkAnyRequired(text, issues, "Missing deterministic motion replay/in-flight states", [
     /\breplay\b/,
     /\bin-flight\b/,
     /\bsettled\b/,
     /animation.*starts.*settles/s,
   ]);
-  checkRequired(text, issues, "Missing reduced-motion handling", [
+  checkAnyRequired(text, issues, "Missing reduced-motion handling", [
     /prefers-reduced-motion/,
     /reduced motion/,
   ]);
-  checkRequired(text, issues, "Missing transition discipline", [
-    /transition: all/,
+  checkAllRequired(text, issues, "Missing transition discipline", [
     /transform.*opacity/s,
     /explicit transition/,
   ]);
+  checkForbiddenTransitionAll(text, issues);
+}
+
+function isExplicitWarningSentence(sentence: string): boolean {
+  return /\b(?:do not|don't|avoid|never|instead of)\b/.test(sentence);
+}
+
+function checkForbiddenTransitionAll(text: string, issues: string[]): void {
+  const usesTransitionAll = text
+    .split(/[.;\n]/)
+    .some((sentence) => /transition:\s*all/.test(sentence) && !isExplicitWarningSentence(sentence));
+
+  if (usesTransitionAll) {
+    issues.push("Allows transition: all instead of explicit motion properties");
+  }
 }
 
 function checkForbiddenPrimaryAppServer(text: string, issues: string[]): void {
   const appServerPrimarySentence = text.split(/[.;\n]/).some((sentence) => {
     const mentionsPrimaryAppServer =
       /\bapp server\b/.test(sentence) && /\bprimary\b/.test(sentence);
-    const isWarningAgainstPrimaryAppServer = /\b(?:do not|don't|avoid|never|not|instead of)\b/.test(
-      sentence,
-    );
 
-    return mentionsPrimaryAppServer && !isWarningAgainstPrimaryAppServer;
+    return mentionsPrimaryAppServer && !isExplicitWarningSentence(sentence);
   });
 
   if (appServerPrimarySentence) {

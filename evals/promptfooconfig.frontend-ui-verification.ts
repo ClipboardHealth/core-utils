@@ -62,7 +62,9 @@ function parseProviderNames(): ProviderName[] {
       throw new Error(`Unsupported frontend UI verification eval provider: ${providerName}`);
     }
 
-    providerNames.push(providerName);
+    if (!providerNames.includes(providerName)) {
+      providerNames.push(providerName);
+    }
   }
 
   if (providerNames.length === 0) {
