@@ -8,10 +8,12 @@ Clipboard's core development tools.
 - [Prerequisites](#prerequisites)
 - [Skills](#skills)
   - [babysit-pr](#babysit-pr)
+  - [clipboard-design-engineering](#clipboard-design-engineering)
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
+  - [frontend-ui-verification](#frontend-ui-verification)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simplify](#simplify)
@@ -47,6 +49,10 @@ Clipboard's core development tools.
 
 Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize automated review-body comments from CodeRabbit and Mendral. Invoke with `/babysit-pr` for the current branch's PR, or `/babysit-pr <number|url>` to check out and babysit a specific PR.
 
+### clipboard-design-engineering
+
+Apply Clipboard's design engineering standards for UI polish, component feel, interaction details, and motion decisions. Use for frontend polish, animation review, visual hierarchy, and component craft in admin or mobile UI.
+
 ### cognito-user-analysis
 
 Analyze and fix duplicate Cognito users by comparing against backend data. Useful for diagnosing 403 Forbidden errors, duplicate accounts sharing phone/email, and orphaned UNCONFIRMED signups. Invoke with `/cognito-user-analysis`.
@@ -62,6 +68,10 @@ Investigate production issues by querying Datadog logs, metrics, and APM traces,
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
+
+### frontend-ui-verification
+
+Verify Clipboard frontend UI work against code, design references, Storybook, and browser screenshots. Use for Figma/design implementation, redesign UI changes, Storybook checkpoints, and visual QA.
 
 ### local-package
 
