@@ -1,7 +1,7 @@
 export type BackgroundJobsImplementation = "mongo" | "postgres";
 
 export interface Handler<TData> {
-  // oxlint-disable-next-line typescript/no-invalid-void-type
+  // oxlint-disable-next-line typescript/no-invalid-void-type, typescript/method-signature-style -- method needed for class implementors
   perform(data: TData, job?: unknown): Promise<string | void>;
 }
 
@@ -85,6 +85,7 @@ export interface BackgroundJobsAdapter<
    * @param options - Optional configuration for the job
    * @returns A promise that resolves to the enqueued job or undefined (implementation-specific)
    */
+  // oxlint-disable-next-line typescript/method-signature-style -- method needed for generic type inference
   enqueue<T>(
     handler: string | HandlerClassOrInstance<T>,
     data: T,

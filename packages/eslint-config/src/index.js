@@ -161,6 +161,12 @@ module.exports = {
               "@clipboard-health/require-http-module-factory": "error",
             },
           },
+          {
+            files: ["**/*.contract.ts"],
+            rules: {
+              "@clipboard-health/require-zod-import-in-contracts": "error",
+            },
+          },
         ]
       : []),
   ],

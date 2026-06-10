@@ -18,7 +18,7 @@ export interface Span {
  * Tracer interface for distributed tracing operations.
  */
 export interface Tracer {
-  trace<T>(name: string, options: TraceOptions, fun: (span?: Span) => T): T;
+  trace: <T>(name: string, options: TraceOptions, fun: (span?: Span) => T) => T;
 }
 
 /**

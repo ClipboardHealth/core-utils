@@ -6,8 +6,8 @@ export interface QueueConsumerStartOptions {
 }
 
 export interface QueueConsumer extends EventTarget {
-  acquireNextJob(): Promise<BackgroundJobType<unknown> | undefined>;
-  start(options: QueueConsumerStartOptions): Promise<void>;
-  stop(): Promise<void>;
-  getConsumedQueues(): string[];
+  acquireNextJob: () => Promise<BackgroundJobType<unknown> | undefined>;
+  start: (options: QueueConsumerStartOptions) => Promise<void>;
+  stop: () => Promise<void>;
+  getConsumedQueues: () => string[];
 }

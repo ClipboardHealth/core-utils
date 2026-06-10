@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/oxlint-config",
-  "version": "1.9.4",
+  "version": "1.10.23",
   "description": "Shared Oxlint configuration for Clipboard Health repositories.",
   "keywords": [
     "config",

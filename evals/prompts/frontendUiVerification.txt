@@ -1,0 +1,11 @@
+You are handling a Clipboard frontend UI verification planning pass for this task.
+
+Task:
+{{task}}
+
+Constraints:
+- Before answering, run a read-only repository inspection to identify and read any matching `.agents/skills/**/SKILL.md` instructions. Do not skip this if the task matches a skill.
+- Do not edit files or run servers in this eval.
+- Answer with the exact workflow you would execute before product integration.
+- Include the design/reference source you would use, repo-specific Storybook surface, helper command, story/canvas URL shape, browser verification path, viewports, states, console classification, evidence to capture, and when human confirmation is required.
+- Keep the response concise but concrete enough that another agent could execute it.

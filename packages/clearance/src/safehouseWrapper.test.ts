@@ -1,10 +1,10 @@
 import { execFile } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join } from "node:path";
+import path from "node:path";
 
-const WRAPPER_PATH = join(import.meta.dirname, "..", "safehouse", "safehouse-clearance");
-const SAFEHOUSE_DIR = join(import.meta.dirname, "..", "safehouse");
+const WRAPPER_PATH = path.join(import.meta.dirname, "..", "safehouse", "safehouse-clearance");
+const SAFEHOUSE_DIR = path.join(import.meta.dirname, "..", "safehouse");
 
 interface StubPaths {
   nodeArgsPath: string;
@@ -40,21 +40,21 @@ async function execFileAsync(
 }
 
 async function runWrapper(input: { args: readonly string[]; tempDir: string }): Promise<StubPaths> {
-  const binDir = join(input.tempDir, "bin");
-  const nodeArgsPath = join(input.tempDir, "node-args.txt");
-  const safehouseArgsPath = join(input.tempDir, "safehouse-args.txt");
+  const binDir = path.join(input.tempDir, "bin");
+  const nodeArgsPath = path.join(input.tempDir, "node-args.txt");
+  const safehouseArgsPath = path.join(input.tempDir, "safehouse-args.txt");
   writeFileSync(nodeArgsPath, "");
   writeFileSync(safehouseArgsPath, "");
   mkdirSync(binDir, { recursive: true });
 
   writeExecutable(
-    join(binDir, "node"),
+    path.join(binDir, "node"),
     ["#!/usr/bin/env bash", String.raw`printf "%s\n" "$@" > "$NODE_ARGS_PATH"`, "exit 0", ""].join(
       "\n",
     ),
   );
   writeExecutable(
-    join(binDir, "safehouse"),
+    path.join(binDir, "safehouse"),
     [
       "#!/usr/bin/env bash",
       String.raw`printf "%s\n" "$@" > "$SAFEHOUSE_ARGS_PATH"`,
@@ -66,7 +66,7 @@ async function runWrapper(input: { args: readonly string[]; tempDir: string }): 
   const inheritedPath = process.env["PATH"] ?? "";
   await execFileAsync(WRAPPER_PATH, input.args, {
     NODE_ARGS_PATH: nodeArgsPath,
-    PATH: `${binDir}${delimiter}${inheritedPath}`,
+    PATH: `${binDir}${path.delimiter}${inheritedPath}`,
     SAFEHOUSE_ARGS_PATH: safehouseArgsPath,
   });
 
@@ -77,7 +77,7 @@ describe("safehouse-clearance wrapper", () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), "clearance-safehouse-wrapper-"));
+    tempDir = mkdtempSync(path.join(tmpdir(), "clearance-safehouse-wrapper-"));
   });
 
   afterEach(() => {
@@ -94,7 +94,7 @@ describe("safehouse-clearance wrapper", () => {
       "--help",
     ]);
     expect(readLines(paths.nodeArgsPath)).toStrictEqual([
-      `${join(import.meta.dirname, "..")}/bin/ensure.js`,
+      `${path.join(import.meta.dirname, "..")}/bin/ensure.js`,
     ]);
   });
 

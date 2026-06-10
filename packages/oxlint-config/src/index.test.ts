@@ -356,15 +356,15 @@ describe("oxlint-config", () => {
       );
       const baseConfig = getConfigWithRulesAndOverrides(base);
 
-      firstConfig.rules["curly"] = "off";
+      firstConfig.rules.curly = "off";
 
       const firstImportNoCycleRuleOptions = getRuleOptions(firstConfig.rules["import/no-cycle"]);
       firstImportNoCycleRuleOptions["maxDepth"] = 1;
 
       expect(firstConfig.rules).not.toBe(baseConfig.rules);
-      expect(firstConfig.rules["curly"]).toBe("off");
-      expect(secondConfig.rules["curly"]).toStrictEqual(["error", "all"]);
-      expect(baseConfig.rules["curly"]).toStrictEqual(["error", "all"]);
+      expect(firstConfig.rules.curly).toBe("off");
+      expect(secondConfig.rules.curly).toStrictEqual(["error", "all"]);
+      expect(baseConfig.rules.curly).toStrictEqual(["error", "all"]);
       expect(getRuleOptions(secondConfig.rules["import/no-cycle"])["maxDepth"]).toBe(16);
     });
 

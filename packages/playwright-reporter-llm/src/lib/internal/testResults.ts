@@ -40,13 +40,13 @@ function extractDiff(message: string): { expected: string; actual: string } | un
   let actualValue: string | undefined;
 
   for (const line of lines) {
-    const expectedMatch = /^Expected\b[^:]*:[ \t]*(.+)/i.exec(line);
-    if (expectedMatch?.[1]) {
-      expectedValue = stripAnsi(expectedMatch[1]).trim();
+    const expectedMatch = /^Expected\b[^:]*:[ \t]*(?<value>.+)/i.exec(line);
+    if (expectedMatch?.groups?.["value"]) {
+      expectedValue = stripAnsi(expectedMatch.groups["value"]).trim();
     }
-    const receivedMatch = /^Received\b[^:]*:[ \t]*(.+)/i.exec(line);
-    if (receivedMatch?.[1]) {
-      actualValue = stripAnsi(receivedMatch[1]).trim();
+    const receivedMatch = /^Received\b[^:]*:[ \t]*(?<value>.+)/i.exec(line);
+    if (receivedMatch?.groups?.["value"]) {
+      actualValue = stripAnsi(receivedMatch.groups["value"]).trim();
     }
   }
 

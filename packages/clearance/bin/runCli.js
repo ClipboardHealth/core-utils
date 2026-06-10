@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { constants as osConstants } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 /**
@@ -15,13 +15,13 @@ import { pathToFileURL } from "node:url";
  * @param {string} name
  */
 export async function runCli(packageRoot, name) {
-  const compiledPath = join(packageRoot, "src", `${name}.js`);
+  const compiledPath = path.join(packageRoot, "src", `${name}.js`);
   if (existsSync(compiledPath)) {
     await import(pathToFileURL(compiledPath).href);
     return;
   }
 
-  const sourcePath = join(packageRoot, "src", `${name}.ts`);
+  const sourcePath = path.join(packageRoot, "src", `${name}.ts`);
   const result = spawnSync(
     process.execPath,
     ["--conditions", "@clipboard-health/source", sourcePath, ...process.argv.slice(2)],

@@ -81,11 +81,9 @@ describe("ServiceResult", () => {
     });
 
     it("returns failure result when promise rejects", async () => {
-      const onError = (error: unknown) => new ServiceError(`Promise error: ${String(error)}`);
-
       const actual = await tryCatchAsync(
         async () => await Promise.reject(new Error("Promise failed")),
-        onError,
+        (error: unknown) => new ServiceError(`Promise error: ${String(error)}`),
       );
 
       expect(isFailure(actual)).toBe(true);
@@ -96,14 +94,12 @@ describe("ServiceResult", () => {
     });
 
     it("uses custom error handler when promise rejects", async () => {
-      const onError = (error: unknown) =>
-        new ServiceError({
-          issues: [{ code: ERROR_CODES.notFound, message: `Custom: ${String(error)}` }],
-        });
-
       const actual = await tryCatchAsync(
         async () => await Promise.reject(new Error("custom error")),
-        onError,
+        (error: unknown) =>
+          new ServiceError({
+            issues: [{ code: ERROR_CODES.notFound, message: `Custom: ${String(error)}` }],
+          }),
       );
 
       expect(isFailure(actual)).toBe(true);
@@ -131,11 +127,12 @@ describe("ServiceResult", () => {
     });
 
     it("returns failure result when function throws", () => {
-      const onError = (error: unknown) => new ServiceError(`Function error: ${String(error)}`);
-
-      const actual = tryCatch(() => {
-        throw new Error("Function failed");
-      }, onError);
+      const actual = tryCatch(
+        () => {
+          throw new Error("Function failed");
+        },
+        (error: unknown) => new ServiceError(`Function error: ${String(error)}`),
+      );
 
       expect(isFailure(actual)).toBe(true);
       expect(actual.isRight).toBe(false);
@@ -145,14 +142,15 @@ describe("ServiceResult", () => {
     });
 
     it("uses custom error handler when function throws", () => {
-      const onError = (error: unknown) =>
-        new ServiceError({
-          issues: [{ code: ERROR_CODES.badRequest, message: `Parse error: ${String(error)}` }],
-        });
-
-      const actual = tryCatch(() => {
-        throw new Error("string error");
-      }, onError);
+      const actual = tryCatch(
+        () => {
+          throw new Error("string error");
+        },
+        (error: unknown) =>
+          new ServiceError({
+            issues: [{ code: ERROR_CODES.badRequest, message: `Parse error: ${String(error)}` }],
+          }),
+      );
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;
@@ -293,11 +291,13 @@ describe("ServiceResult", () => {
   describe("handleError (via tryCatch and tryCatchAsync)", () => {
     it("uses onError to convert error to ServiceError", () => {
       const customError = new Error("custom error message");
-      const onError = (error: unknown) => new ServiceError(`Wrapped: ${String(error)}`);
 
-      const actual = tryCatch(() => {
-        throw customError;
-      }, onError);
+      const actual = tryCatch(
+        () => {
+          throw customError;
+        },
+        (error: unknown) => new ServiceError(`Wrapped: ${String(error)}`),
+      );
 
       expect(isFailure(actual)).toBe(true);
       const { error } = actual as Failure<ServiceError>;
