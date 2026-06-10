@@ -14,8 +14,10 @@ Clipboard's core development tools.
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
   - [frontend-ui-verification](#frontend-ui-verification)
+  - [in-depth-review](#in-depth-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
+  - [simple-review](#simple-review)
   - [simplify](#simplify)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
@@ -73,6 +75,10 @@ Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. I
 
 Verify Clipboard frontend UI work against code, design references, Storybook, and browser screenshots. Use for Figma/design implementation, redesign UI changes, Storybook checkpoints, and visual QA.
 
+### in-depth-review
+
+Run a multi-agent code review on the current branch or a PR identified by argument. Defaults to engineering, minimalist, conventions, and AntiSlop reviewers, conditionally adds security/database/frontend specialists based on changed files, and includes the adversarial reviewer only when explicitly requested. Invoke with `/in-depth-review` or `/in-depth-review <number|url>`.
+
 ### local-package
 
 Use Clipboard's internal CLI (`@clipboard-health/cli`) to link and unlink packages across repositories for local development. Invoke with `/local-package` or let Claude auto-trigger when discussing local package development.
@@ -82,6 +88,10 @@ See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage d
 ### seed-data
 
 Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HCPs, facilities, shifts) in development, staging, or prod-shadow environments. Invoke with `/seed-data` or by asking to seed/create test data.
+
+### simple-review
+
+Run a single-pass code review on the current branch or a PR identified by argument. Uses the in-depth review rubric without subagents for smaller reviews or lower-budget passes. Invoke with `/simple-review` or `/simple-review <number|url>`.
 
 ### simplify
 
