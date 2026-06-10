@@ -156,6 +156,36 @@ describe(ensureClearance, () => {
     expect(spawnInput.env["CLEARANCE_ALLOW_HOSTS_FILES"]).toBe(hostsFile);
   });
 
+  it("applies env overrides on top of clearance's default forwarded env", async () => {
+    cacheDir = createTempCacheDir();
+    const hostsFile = path.join(cacheDir, "team");
+    writeFileSync(hostsFile, "team.example.com\n");
+    const isListeningMock = createListenerMock([false, true]);
+    const spawnMock = vi.fn<ClearanceSpawner>().mockReturnValue(67_891);
+    vi.stubEnv("CLEARANCE_ALLOW_HOSTS", "api.example.com");
+    vi.stubEnv("CLEARANCE_ALLOW_HOSTS_FILES", "stale-hosts-file");
+    vi.stubEnv("CLEARANCE_ALLOW_PORTS", "443,8443");
+    vi.stubEnv("NOT_FORWARDED", "secret");
+
+    try {
+      await ensureClearance({
+        cacheDir,
+        envOverrides: { CLEARANCE_ALLOW_HOSTS_FILES: hostsFile },
+        isListening: isListeningMock,
+        sleep: noopAsync,
+        spawnDetached: spawnMock,
+      });
+
+      const spawnInput = onlySpawnInput(spawnMock);
+      expect(spawnInput.env["CLEARANCE_ALLOW_HOSTS"]).toBe("api.example.com");
+      expect(spawnInput.env["CLEARANCE_ALLOW_HOSTS_FILES"]).toBe(hostsFile);
+      expect(spawnInput.env["CLEARANCE_ALLOW_PORTS"]).toBe("443,8443");
+      expect(spawnInput.env["NOT_FORWARDED"]).toBeUndefined();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("uses XDG cache home for the default cache dir", async () => {
     const xdgCacheHome = createTempCacheDir();
     cacheDir = xdgCacheHome;
