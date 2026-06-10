@@ -43,6 +43,7 @@ export type ClearanceSpawner = (input: SpawnClearanceInput) => number;
 export interface EnsureClearanceInput {
   cacheDir?: string;
   env?: NodeJS.ProcessEnv;
+  envOverrides?: NodeJS.ProcessEnv;
   isListening?: ClearanceListenerCheck;
   logger?: (message: string) => void;
   pollIntervalMs?: number;
@@ -106,7 +107,7 @@ export function spawnClearance(input: SpawnClearanceInput): number {
 export async function ensureClearance(
   input: EnsureClearanceInput = {},
 ): Promise<EnsureClearanceResult> {
-  const env = input.env ?? defaultProxyEnv();
+  const env = proxyEnv(input);
   /* v8 ignore next @preserve -- default listener is covered directly by isClearanceListening tests */
   const isListening = input.isListening ?? isClearanceListening;
   const logger = input.logger ?? noop;
@@ -179,6 +180,18 @@ function childEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     ...env,
     CLEARANCE_LISTEN_HOST: CLEARANCE_HOST,
     CLEARANCE_PORT: String(CLEARANCE_PORT),
+  };
+}
+
+function proxyEnv(input: Pick<EnsureClearanceInput, "env" | "envOverrides">): NodeJS.ProcessEnv {
+  const env = input.env ?? defaultProxyEnv();
+  if (input.envOverrides === undefined) {
+    return env;
+  }
+
+  return {
+    ...env,
+    ...input.envOverrides,
   };
 }
 
