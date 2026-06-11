@@ -9,6 +9,10 @@ const JEST_RULES: DummyRuleMap = {
   "max-lines": ["error", { max: 2000 }],
   "jest/max-expects": "off",
   "jest/max-nested-describe": "off",
+  // False-positive explosion: flags spec files that contain no setTimeout call at all
+  // when a setup file calls jest.setTimeout (265k diagnostics across 764 clean files
+  // in clipboard-health as of oxlint 1.60).
+  "jest/no-confusing-set-timeout": "off",
   "jest/no-hooks": "off",
   "jest/prefer-ending-with-an-expect": "off",
   "jest/prefer-expect-assertions": "off",

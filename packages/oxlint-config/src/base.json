@@ -32,6 +32,8 @@
     "import/no-commonjs": "off",
     "import/no-cycle": ["error", { "ignoreExternal": true, "maxDepth": 16 }],
     "import/no-default-export": "off",
+    "import/no-named-as-default": "off",
+    "import/no-named-as-default-member": "off",
     "import/no-namespace": "off",
     "import/no-nodejs-modules": "off",
     "import/no-relative-parent-imports": "off",
@@ -68,6 +70,7 @@
     "oxc/no-async-await": "off",
     "oxc/no-optional-chaining": "off",
     "oxc/no-rest-spread-properties": "off",
+    "prefer-destructuring": "off",
     "prefer-promise-reject-errors": "off",
     "promise/avoid-new": "off",
     "promise/prefer-await-to-callbacks": "off",
@@ -77,6 +80,7 @@
     "return-await": "off",
     "sort-imports": "off",
     "sort-keys": "off",
+    "typescript/consistent-type-imports": "off",
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-module-boundary-types": "off",
     "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
@@ -111,6 +115,33 @@
         "no-console": "off",
         "node/no-process-env": "off",
         "unicorn/no-process-exit": "off"
+      }
+    },
+    {
+      "files": [
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.spec.js",
+        "**/*.spec.jsx",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.test.js",
+        "**/*.test.jsx",
+        "**/__mocks__/**",
+        "**/__tests__/**",
+        "**/service-test/**",
+        "**/tests/**"
+      ],
+      "rules": {
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/restrict-template-expressions": "off",
+        "typescript/unbound-method": "off"
       }
     }
   ]

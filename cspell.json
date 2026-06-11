@@ -130,6 +130,7 @@
     "oxlint",
     "oxlintrc",
     "parallelizable",
+    "paramtypes",
     "passthroughs",
     "pcpu",
     "permalinks",
