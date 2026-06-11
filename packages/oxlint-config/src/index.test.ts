@@ -50,7 +50,7 @@ describe("oxlint-config", () => {
         },
       });
 
-      expect(base.overrides).toHaveLength(2);
+      expect(base.overrides).toHaveLength(3);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
@@ -70,6 +70,7 @@ describe("oxlint-config", () => {
           "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
+          "jest/no-confusing-set-timeout": "off",
           "jest/no-hooks": "off",
           "jest/prefer-ending-with-an-expect": "off",
           "jest/prefer-expect-assertions": "off",
@@ -85,12 +86,17 @@ describe("oxlint-config", () => {
           "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
+          "jest/no-confusing-set-timeout": "off",
           "jest/no-hooks": "off",
           "jest/prefer-ending-with-an-expect": "off",
           "jest/prefer-expect-assertions": "off",
           "jest/prefer-importing-jest-globals": "off",
           "jest/prefer-lowercase-title": "off",
           "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+          "vitest/consistent-test-filename": [
+            "error",
+            { pattern: String.raw`.*\.(test|spec)\.[tj]sx?$` },
+          ],
           "vitest/max-expects": "off",
           "vitest/max-nested-describe": "off",
           "vitest/no-hooks": "off",

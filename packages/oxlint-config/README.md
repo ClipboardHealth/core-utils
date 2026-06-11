@@ -7,6 +7,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 - [Install](#install)
 - [Usage](#usage)
 - [What is shared](#what-is-shared)
+- [Intentionally disabled rules](#intentionally-disabled-rules)
 
 ## Install
 
@@ -134,3 +135,14 @@ The package includes:
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
+
+## Intentionally disabled rules
+
+`base.json` cannot hold comments, so the reasoning for non-obvious "off" entries lives here (audited against clipboard-health on oxlint 1.60, 2026-06-11):
+
+- **`typescript/consistent-type-imports`**: oxlint's port is not `emitDecoratorMetadata`-aware (even type-aware with the flag in the tsconfig chain), so it flags NestJS constructor-injected classes as type-only. Applying its fix converts DI tokens to `import type`, which SWC erases from `design:paramtypes` metadata, breaking injection at runtime. Do not enable in NestJS repos until oxlint matches typescript-eslint's decorator handling.
+- **`jest/no-confusing-set-timeout`** (jest/vitest presets): false-positive explosion — when a jest setup file calls `jest.setTimeout`, the rule flags spec files that contain no `setTimeout` call at all (265k diagnostics across 764 clean files).
+- **`import/no-named-as-default` / `import/no-named-as-default-member`**: low signal; they flag legitimate default-export import patterns far more often than real mistakes (870 hits, ~0 bugs).
+- **`prefer-destructuring`**: style preference with no bug-prevention value; not worth the churn as an agent guardrail.
+
+The test-file override in `base.json` disables the `typescript/no-unsafe-*` family, `unbound-method`, `no-non-null-assertion`, and `restrict-template-expressions` for test files: mocks, `expect.any`, and `createMock` make these rules ~90% noise in tests (mirrors the long-standing eslint-config override), while keeping them enforceable for production code.
