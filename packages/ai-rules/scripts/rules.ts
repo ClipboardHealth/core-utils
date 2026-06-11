@@ -146,7 +146,8 @@ export function generateAgentsIndex(rules: RuleMetadata[]): string {
  * contains this exact content; run scripts/populateReadme.ts after changing rules.
  */
 export function generateReadmeRulesSection(rules: RuleMetadata[]): string {
-  const categories = [...new Set(rules.map((rule) => rule.category))].toSorted();
+  const uniqueCategories = [...new Set(rules.map((rule) => rule.category))];
+  const categories = uniqueCategories.toSorted();
 
   const sections = categories.map((category) => {
     const rows = rules

@@ -59,13 +59,24 @@ describe(parseRuleFile, () => {
 
     expect(() => parseRuleFile({ content: input, filePath: "a/b.md" })).toThrow(/a\/b\.md/);
   });
+
+  it("defaults heading to filename when H1 is missing", () => {
+    const input = ["---", "description: Some description", "---", "", "Body without heading"].join(
+      "\n",
+    );
+
+    const actual = parseRuleFile({ content: input, filePath: "common/myRule.md" });
+
+    expect(actual.heading).toBe("myRule");
+  });
 });
 
 describe(discoverRules, () => {
   it("discovers all rule categories from directories", async () => {
     const actual = await discoveredRules;
 
-    const categories = [...new Set(actual.map((rule) => rule.category))].toSorted();
+    const uniqueCategories = [...new Set(actual.map((rule) => rule.category))];
+    const categories = uniqueCategories.toSorted();
     expect(categories).toStrictEqual(["backend", "common", "datamodeling", "frontend"]);
   });
 

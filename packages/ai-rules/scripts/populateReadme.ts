@@ -13,8 +13,10 @@ async function populateReadme(): Promise<void> {
 
   const startIndex = readme.indexOf(START_MARKER);
   const endIndex = readme.indexOf(END_MARKER);
-  if (startIndex === -1 || endIndex === -1) {
-    throw new Error(`README.md is missing the '${START_MARKER}' and '${END_MARKER}' markers`);
+  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
+    throw new Error(
+      `README.md must contain the '${START_MARKER}' marker followed by the '${END_MARKER}' marker`,
+    );
   }
 
   const rules = await discoverRules(path.join(PATHS.packageRoot, "rules"));

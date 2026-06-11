@@ -17,7 +17,7 @@ Read the following docs in the data-modeling repo; they define our modeling rule
 
 - When running dbt commands, reuse the existing `SNOWFLAKE_SCHEMA` environment variable value if it is already set — it is a unique per-session schema; never overwrite it with a hardcoded value.
 - Use `dbt build` to verify your changes.
-- ALL dbt staging models must have strictly defined datatypes (see the casting rule for staging models). These datatypes need to be defined in the YAML documentation too.
+- ALL dbt staging models must have strictly defined datatypes (see the `datamodeling/castingDbtStagingModels` rule). These datatypes need to be defined in the YAML documentation too.
 - When adding new fields to tables keep the original source field name format, but remove any custom field prefix (`__c`). For example `assignment_type__c` should be renamed to `assignment_type`. Verify column names against the source table before referencing them — do not guess.
 - If a source table doesn't exist, tell the user to ask the data-team to ingest it via the relevant ETL tool.
 - A model must always have a primary/unique key. If there's no obvious one, create a surrogate key using a combination of fields and by looking at the data. Use `dbt_utils.generate_surrogate_key` to do so.
