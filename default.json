@@ -33,7 +33,13 @@
     },
     {
       "groupName": "Clipboard Health",
-      "matchPackageNames": ["/^@clipboard-health/"]
+      "matchPackageNames": ["/^@clipboard-health/"],
+      "excludePackageNames": ["@clipboard-health/oxlint-config"]
+    },
+    {
+      "groupName": "oxlint",
+      "groupSlug": "oxlint",
+      "matchPackageNames": ["oxlint", "@clipboard-health/oxlint-config"]
     },
     {
       "groupName": "ts-rest",
