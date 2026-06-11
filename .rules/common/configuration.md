@@ -1,3 +1,7 @@
+---
+description: "Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages"
+---
+
 # Configuration
 
 ```text

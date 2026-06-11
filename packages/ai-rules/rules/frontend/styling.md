@@ -1,3 +1,7 @@
+---
+description: "Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS"
+---
+
 # Styling
 
 ## Core Rules
@@ -40,13 +44,3 @@ Use `rem` for fonts/heights (scales with user zoom), spacing indices for padding
 
 - ✅ Use full names: `padding`, `paddingX`, `marginY`
 - ❌ Avoid abbreviations: `p`, `px`, `my`
-
-## Pseudo-classes
-
-```typescript
-<Box sx={(theme) => ({
-  "&:hover": { backgroundColor: theme.palette.primary.dark },
-  "&:disabled": { opacity: 0.5 },
-  "& .MuiTypography-root": { color: theme.palette.text.secondary },
-})} />
-```

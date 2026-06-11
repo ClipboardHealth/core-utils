@@ -1,3 +1,7 @@
+---
+description: "Writing dbt YAML documentation and schema files"
+---
+
 # .yaml documentation rules
 
 - The YAML should include the following sections: `version`, `models`, and `columns`.

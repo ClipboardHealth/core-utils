@@ -1,10 +1,14 @@
+---
+description: "Implementing data fetching and error handling: React Query, API calls, caching, parsedApi"
+---
+
 # Data Fetching
 
 ## Core Rules
 
 1. Use React Query for all API calls
 2. Define Zod schemas for all request/response types
-3. Use `enabled` option for conditional fetching
+3. Use the `enabled` option for conditional fetching: `{ enabled: isDefined(dependencyData?.id) }`
 4. Use `invalidateQueries` (not `refetch`) for disabled queries
 
 ## Hook Pattern
@@ -36,7 +40,21 @@ export function useGetFeature(id: string, options = {}) {
 
 - Log errors via `meta.logErrorMessage` using centralized event constants
 - Display user-facing errors via `meta.userErrorMessage`
-- Do not use the deprecated `onError` callback for useQuery queries , use the `meta` pattern to handle errors. This rule doesn't apply to useMutation, using onError for useMutation is a valid pattern
+- Do not use the deprecated `onError` callback for useQuery queries — use the `meta` pattern. `onError` remains valid for useMutation.
+
+```typescript
+useMutation({
+  mutationFn: createItem,
+  onSuccess: () => {
+    showSuccessToast("Created");
+    queryClient.invalidateQueries(["items"]);
+  },
+  meta: {
+    logErrorMessage: APP_EVENTS.CREATE_FAILURE,
+    userErrorMessage: "Failed to create",
+  },
+});
+```
 
 ## Query Keys
 
@@ -47,26 +65,14 @@ queryKey: ["users", userId];
 queryKey: ["users", userId, "posts"];
 ```
 
-## Conditional Fetching
+## `parsedApi.ts` vs `api.ts`
 
-```typescript
-const { data } = useGetFeature(
-  { id: dependencyData?.id },
-  { enabled: isDefined(dependencyData?.id) },
-);
-```
+Frontend repos have two API layers:
 
-## Mutations
+- **`api.ts`** (legacy) — does not parse responses through Zod schemas. Inferred types say `Date` for `dateTimeSchema()` fields but the runtime value is still a string. Zod transforms (`.transform()`, `dateTimeSchema()`, enum fallbacks) produce **incorrect types at runtime**.
+- **`parsedApi.ts`** — parses both inputs (`z.input`) and outputs (`z.output`) through schemas. Types match runtime values.
 
-```typescript
-export function useCreateItem() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateItemRequest) => api.post("/items", data),
-    onSuccess: () => queryClient.invalidateQueries(["items"]),
-  });
-}
-```
+Use `parsedApi.ts` for all new API calls. However, `parsedApi.ts` means invalid contract schemas will fail at runtime — ensure contracts are forwards-compatible. Do not use `parsedApi.ts` if the contract contains bare `z.enum()` values that the backend may extend, as new enum values will cause parse failures on old clients. Migrate bare `z.enum()` to `requiredEnumWithFallback`/`optionalEnumWithFallback` first.
 
 ## Test Utilities
 

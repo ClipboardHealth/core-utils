@@ -1,3 +1,7 @@
+---
+description: "Working with Postgres: column types, schema changes, query patterns, Prisma TypedSQL"
+---
+
 # Postgres
 
 ## Column Types

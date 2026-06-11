@@ -1,3 +1,7 @@
+---
+description: "Writing E2E tests with Playwright"
+---
+
 # E2E Testing (Playwright)
 
 ## Core Rules
@@ -5,15 +9,7 @@
 - Test critical user flows only—not exhaustive scenarios; when in doubt, write a component test instead
 - Each test sets up its own data (no shared state between tests)
 - Mock feature flags and third-party services
-- Use user-centric locators (role, label, text)—avoid CSS selectors
-
-## Locator Priority
-
-1. `page.getByRole()`
-2. `page.getByLabel()`
-3. `page.getByPlaceholder()`
-4. `page.getByText()`
-5. `page.getByTestId()` (last resort)
+- Use user-centric locators in priority order: `getByRole`, `getByLabel`, `getByPlaceholder`, `getByText`; use `getByTestId` only as a last resort—avoid CSS/XPath selectors
 
 ## Assertions
 
@@ -38,4 +34,3 @@ Before adding an E2E test:
 - Hard-coded timeouts (`page.waitForTimeout`)
 - Testing loading states (non-deterministic)
 - Shared data between tests
-- CSS/XPath selectors
