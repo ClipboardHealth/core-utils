@@ -1,3 +1,7 @@
+---
+description: "Writing commit messages, PR titles, or reviewing pull requests"
+---
+
 # Git Workflow
 
 - Follow Conventional Commits 1.0 spec for commit messages and PR titles.

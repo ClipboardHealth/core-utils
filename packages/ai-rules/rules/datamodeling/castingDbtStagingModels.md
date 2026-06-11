@@ -1,3 +1,7 @@
+---
+description: "Casting data types in dbt staging models"
+---
+
 # Casting data-types for staging models
 
 1. Use declared schemas when available

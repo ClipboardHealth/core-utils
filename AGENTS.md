@@ -4,14 +4,15 @@
 
 IMPORTANT: You MUST read the relevant rule files below before writing or reviewing code.
 
-| Rule                    | File                                  | When to Read                                                                                                  |
-| ----------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                      |
-| Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/\* library |
-| Git Workflow            | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests                                                |
-| Logging & Observability | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                          |
-| Testing                 | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                            |
-| TypeScript              | .rules/common/typeScript.md           | Writing ANY TypeScript code                                                                                   |
+| Rule                    | File                                  | When to Read                                                                                                           |
+| ----------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                               |
+| Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/\* library          |
+| Git Workflow            | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests                                                         |
+| Library Authoring       | .rules/common/libraryAuthoring.md     | Authoring shared library code: @clipboard-health/\* packages or shared library modules within services (e.g., src/lib) |
+| Logging & Observability | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                   |
+| Testing                 | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                                     |
+| TypeScript              | .rules/common/typeScript.md           | Writing ANY TypeScript code                                                                                            |
 
 ## Agent Skills
 
