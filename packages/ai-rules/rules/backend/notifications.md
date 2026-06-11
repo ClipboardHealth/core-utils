@@ -1,3 +1,7 @@
+---
+description: "Implementing notifications via Knock: push notifications, deep links, workflow design"
+---
+
 # Notifications
 
 Send via [Knock](https://docs.knock.app) using `@clipboard-health/notifications`. Braze is deprecated.

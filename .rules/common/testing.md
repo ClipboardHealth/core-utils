@@ -1,8 +1,12 @@
+---
+description: "Writing unit tests: conventions, naming, structure"
+---
+
 # Testing
 
 ## Unit Tests
 
-Use when: error handling hard to trigger black-box, concurrency scenarios, >5 variations, pure function logic.
+Write unit tests for: pure function logic, error paths that are hard to trigger black-box, concurrency scenarios, and behavior with many variations (>5). Otherwise prefer testing through the public contract: service tests (backend) or component integration tests (frontend).
 
 ## Conventions
 

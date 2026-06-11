@@ -1,3 +1,7 @@
+---
+description: "Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas"
+---
+
 # Feature Flags
 
 **Naming:** `YYYY-MM-[kind]-[subject]` (e.g., `2024-03-release-new-booking-flow`)

@@ -1,3 +1,7 @@
+---
+description: "Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog"
+---
+
 # Logging & Observability
 
 ## Log Levels

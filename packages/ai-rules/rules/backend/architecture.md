@@ -1,3 +1,7 @@
+---
+description: "Structuring NestJS modules, services, repos: three-tier, microservices, ts-rest contracts"
+---
+
 # Architecture
 
 ## Three-Tier Architecture

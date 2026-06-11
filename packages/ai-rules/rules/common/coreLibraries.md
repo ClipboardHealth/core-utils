@@ -1,3 +1,7 @@
+---
+description: "Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library"
+---
+
 # Core Libraries
 
 Clipboard's shared `@clipboard-health/*` libraries. Check here before adding new dependencies or implementing functionality from scratch. For details on each library:

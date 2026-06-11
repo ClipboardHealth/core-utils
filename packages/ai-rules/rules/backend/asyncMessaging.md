@@ -1,3 +1,7 @@
+---
+description: "Working with queues, async messaging, or background jobs"
+---
+
 # Async Messaging & Background Jobs
 
 ## When to Use
