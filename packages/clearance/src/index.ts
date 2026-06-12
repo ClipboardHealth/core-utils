@@ -625,7 +625,7 @@ function parseConnectionHeaderTokens(value: http.OutgoingHttpHeader | undefined)
     .filter((token) => token.length > 0);
 }
 
-function normalizeAllowedPorts(rawPorts: readonly (number | string)[]): number[] {
+function normalizeAllowedPorts(rawPorts: ReadonlyArray<number | string>): number[] {
   const ports = rawPorts.map((rawPort) => {
     const port = typeof rawPort === "number" ? rawPort : Number(rawPort);
     if (!isValidPort(port)) {
@@ -695,7 +695,7 @@ function isPrivateIpAddress(ip: string, family: 4 | 6): boolean {
 }
 
 function createIpBlockList(
-  ranges: readonly (readonly [string, number])[],
+  ranges: ReadonlyArray<readonly [string, number]>,
   family: "ipv4" | "ipv6",
 ): net.BlockList {
   const blockList = new net.BlockList();

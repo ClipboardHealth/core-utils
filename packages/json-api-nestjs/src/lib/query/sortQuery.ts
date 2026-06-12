@@ -90,6 +90,6 @@ export function sortQuery<const FieldT extends readonly [Field, ...Field[]]>(fie
           }
         }
       })
-      .transform((value) => value as (`-${FieldT[number]}` | FieldT[number])[] | undefined),
+      .transform((value) => value as Array<`-${FieldT[number]}` | FieldT[number]> | undefined),
   };
 }

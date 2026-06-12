@@ -324,7 +324,7 @@ export class NotificationClient {
         }
 
         const chunks = chunkRecipients({ recipients: body.recipients });
-        const responses: { chunkNumber: number; id: string }[] = [];
+        const responses: Array<{ chunkNumber: number; id: string }> = [];
 
         // Sequential execution is intentional - we want to fail fast on error and track progress
         for (const recipientChunk of chunks) {

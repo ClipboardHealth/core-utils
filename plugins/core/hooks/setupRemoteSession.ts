@@ -35,7 +35,7 @@ interface SetupResult {
 }
 
 interface GithubRelease {
-  assets: readonly { browser_download_url: string; name: string }[];
+  assets: ReadonlyArray<{ browser_download_url: string; name: string }>;
   tag_name: string;
 }
 

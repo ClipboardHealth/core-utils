@@ -15,6 +15,8 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 npm install @clipboard-health/oxlint-config
 ```
 
+Requires `oxlint >= 1.68.0`: the config references rules that older oxlint versions do not register, which fails config parsing outright.
+
 ## Usage
 
 Use the package's TypeScript helper when a repo needs additive composition. Oxlint's built-in `extends` is useful for simple inheritance, but it does not let a repo safely append shared `plugins`, `overrides`, and similar array fields without re-specifying the shared values.
@@ -141,7 +143,7 @@ The package includes:
 `base.json` cannot hold comments, so the reasoning for non-obvious "off" entries lives here (audited against clipboard-health on oxlint 1.60, 2026-06-11):
 
 - **`typescript/consistent-type-imports`**: oxlint's port is not `emitDecoratorMetadata`-aware (even type-aware with the flag in the tsconfig chain), so it flags NestJS constructor-injected classes as type-only. Applying its fix converts DI tokens to `import type`, which SWC erases from `design:paramtypes` metadata, breaking injection at runtime. Do not enable in NestJS repos until oxlint matches typescript-eslint's decorator handling.
-- **`jest/no-confusing-set-timeout`** (jest/vitest presets): false-positive explosion — when a jest setup file calls `jest.setTimeout`, the rule flags spec files that contain no `setTimeout` call at all (265k diagnostics across 764 clean files).
+- **`jest/no-confusing-set-timeout`** (jest preset): false-positive explosion — when a jest setup file calls `jest.setTimeout`, the rule flags spec files that contain no `setTimeout` call at all (265k diagnostics across 764 clean files). The vitest preset carries no `jest/*` keys at all: under oxlint ≥1.68 with only the vitest plugin enabled, `jest/*` config keys are silently ignored, and jest-plugin-only rules (such as this one and `jest/prefer-ending-with-an-expect`) cannot fire — `vitest/no-confusing-set-timeout` is not a registered rule name, so an "off" entry for it fails config parsing.
 - **`import/no-named-as-default` / `import/no-named-as-default-member`**: low signal; they flag legitimate default-export import patterns far more often than real mistakes (870 hits, ~0 bugs).
 - **`prefer-destructuring`**: style preference with no bug-prevention value; not worth the churn as an agent guardrail.
 

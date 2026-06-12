@@ -15,7 +15,7 @@ export type FieldsSchema<MapT extends FieldsMap> = {
  * @template DocumentT - The JSON:API document.
  */
 export type AttributeFields<DocumentT extends JsonApiDocument> =
-  DocumentT["data"] extends (infer R extends Data)[]
+  DocumentT["data"] extends Array<infer R extends Data>
     ? keyof R["attributes"]
     : DocumentT["data"] extends Data
       ? keyof DocumentT["data"]["attributes"]

@@ -67,7 +67,7 @@ export interface ServiceIssue {
   message?: string | undefined;
 
   /** Path to issue location */
-  path?: (string | number)[];
+  path?: Array<string | number>;
 
   /**
    * Short, reusable summary of the problem (`errors.title`).
@@ -174,14 +174,14 @@ export class ServiceError extends Error {
    * @returns New ServiceError instance
    */
   public static fromJsonApi(jsonApiError: {
-    errors: {
+    errors: Array<{
       id?: string;
       status?: `${Status}`;
       code?: ErrorCode;
       title?: string;
       detail?: string;
       source?: Record<string, string>;
-    }[];
+    }>;
   }): ServiceError {
     const issues = jsonApiError.errors.map((error) => {
       const path = Object.values(error.source ?? {})?.[0]

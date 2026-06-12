@@ -159,7 +159,7 @@ function readTraceResourceBody(
   return body;
 }
 
-const URL_EXTENSION_RESOURCE_TYPES: readonly (readonly [RegExp, string])[] = [
+const URL_EXTENSION_RESOURCE_TYPES: ReadonlyArray<readonly [RegExp, string]> = [
   [/\.(?<ext>js|mjs|cjs)(?:$|\?|#)/i, "script"],
   [/\.css(?:$|\?|#)/i, "stylesheet"],
   [/\.(?<ext>png|jpe?g|gif|webp|svg|ico|bmp)(?:$|\?|#)/i, "image"],

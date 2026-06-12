@@ -6,7 +6,7 @@ import type { Rule, RuleContext } from "../rule";
  * @param rules The rules to run.
  */
 export function firstMatch<TInput, TOutput, TContext extends RuleContext<TInput, TOutput>>(
-  ...rules: Rule<TInput, TOutput, TContext>[]
+  ...rules: Array<Rule<TInput, TOutput, TContext>>
 ): Rule<TInput, TOutput, TContext> {
   return {
     runIf: (input) => rules.some((rule) => rule.runIf(input)),

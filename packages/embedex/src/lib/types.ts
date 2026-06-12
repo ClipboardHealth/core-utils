@@ -45,6 +45,6 @@ export type Embed =
 
 export interface EmbedResult {
   embeds: Embed[];
-  sources: { path: SourcePath; destinations: DestinationPath[] }[];
-  destinations: { path: DestinationPath; sources: SourcePath[] }[];
+  sources: Array<{ path: SourcePath; destinations: DestinationPath[] }>;
+  destinations: Array<{ path: DestinationPath; sources: SourcePath[] }>;
 }

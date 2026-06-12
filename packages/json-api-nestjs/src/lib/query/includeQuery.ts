@@ -21,7 +21,7 @@ export type RelationshipPaths<
   Prefix extends string = "",
 > =
   GreaterThan<Depth, 0> extends true
-    ? DocumentT["data"] extends (infer Data)[] | (infer Data)
+    ? DocumentT["data"] extends Array<infer Data> | (infer Data)
       ? Data extends { relationships?: infer Relation }
         ? Relation extends Relationships
           ? {
@@ -29,7 +29,7 @@ export type RelationshipPaths<
                 ? NonNullable<Relation[K]> extends Relationship
                   ? NonNullable<Relation[K]>["data"] extends
                       | { type?: infer RelationT }
-                      | { type?: infer RelationT }[]
+                      | Array<{ type?: infer RelationT }>
                     ? RelationT extends keyof MapT
                       ?
                           | `${Prefix}${K}`
@@ -138,6 +138,6 @@ export function includeQuery<const FieldT extends readonly string[]>(fields: Fie
           }
         }
       })
-      .transform((value) => value as FieldT[number][] | undefined),
+      .transform((value) => value as Array<FieldT[number]> | undefined),
   };
 }

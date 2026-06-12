@@ -3,7 +3,7 @@ import { forEachAsyncSequentially } from "./forEachAsyncSequentially";
 describe(forEachAsyncSequentially, () => {
   it("should pass the current executing index in the list to the async task", async () => {
     const input = ["a", "b", "c"];
-    const results: { item: string; index: number }[] = [];
+    const results: Array<{ item: string; index: number }> = [];
 
     await forEachAsyncSequentially(input, async (item, index) => {
       await Promise.resolve();
