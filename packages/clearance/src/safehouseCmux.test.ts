@@ -14,9 +14,21 @@ describe(resolveSafehouseCmuxIntegration, () => {
     });
 
     expect(actual.envPass).toStrictEqual(SAFEHOUSE_CMUX_ENV_PASS);
+    expect(actual.isActive).toBe(false);
     expect(actual.claudeCommandPrelude).toBe(SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE);
     expect(actual.claudeCommandPrelude).toContain("CMUX_CUSTOM_CLAUDE_PATH");
     expect(actual.claudeCommandPrelude).toContain("*/cmux-cli-shims/*|*/cmux-cli-shims)");
+  });
+
+  it("marks the integration active when cmux has installed its Claude shim", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: {
+        CMUX_CLAUDE_WRAPPER_SHIM: "/tmp/cmux-cli-shims/surface-1/claude",
+      },
+      readFile: () => "",
+    });
+
+    expect(actual.isActive).toBe(true);
   });
 
   it("resolves cmux read-only dirs from state and socket environment", () => {

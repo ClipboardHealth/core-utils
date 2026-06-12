@@ -47,6 +47,7 @@ export interface SafehouseCmuxIntegration {
   addDirsReadOnly: readonly string[];
   claudeCommandPrelude: string;
   envPass: readonly string[];
+  isActive: boolean;
   unreviewedEnvNames: readonly string[];
 }
 
@@ -64,8 +65,30 @@ export function resolveSafehouseCmuxIntegration(
     addDirsReadOnly: resolveCmuxReadOnlyDirs({ env }),
     claudeCommandPrelude: SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
     envPass: SAFEHOUSE_CMUX_ENV_PASS,
+    isActive: isSafehouseCmuxIntegrationActive({ env }),
     unreviewedEnvNames: resolveUnreviewedCmuxEnvNames({ env, readFile }),
   };
+}
+
+export function safehouseCmuxIntegrationWarningLines(input: {
+  commandName: string;
+  unreviewedEnvNames: readonly string[];
+}): readonly string[] {
+  if (input.unreviewedEnvNames.length === 0) {
+    return [];
+  }
+
+  return [
+    `${input.commandName}: cmux wrapper references unreviewed env vars: ${input.unreviewedEnvNames.join(", ")}`,
+    `${input.commandName}: update SAFEHOUSE_CMUX_ENV_PASS or SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES after reviewing them.`,
+  ];
+}
+
+function isSafehouseCmuxIntegrationActive(input: { env: NodeJS.ProcessEnv }): boolean {
+  return (
+    input.env["CMUX_SURFACE_ID"] !== undefined ||
+    input.env["CMUX_CLAUDE_WRAPPER_SHIM"] !== undefined
+  );
 }
 
 function resolveCmuxReadOnlyDirs(input: { env: NodeJS.ProcessEnv }): readonly string[] {

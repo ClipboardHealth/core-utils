@@ -178,6 +178,7 @@ async function runClaudeProxy(input: {
     process.env["PATH"] ?? "",
   ].join(path.delimiter);
   const env = {
+    CLEARANCE_NODE_BINARY: process.execPath,
     CLAUDE_CUSTOM_PATH_PATH: claudeCustomPathPath,
     CLAUDE_OUTPUT_PATH: claudeOutputPath,
     HOME: process.env["HOME"] ?? input.tempDir,
@@ -249,6 +250,13 @@ describe("safehouse-claude-proxy wrapper", () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("keeps cmux-specific behavior out of the shell launcher", () => {
+    const source = readFileSync(CLAUDE_PROXY_PATH, "utf8");
+
+    expect(source).toContain("safehouseClaudeProxy.js");
+    expect(source).not.toContain("CMUX_");
   });
 
   it("keeps the cmux claude shim active while pointing it at the real claude binary", async () => {

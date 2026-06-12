@@ -25,6 +25,7 @@ export {
   SAFEHOUSE_CMUX_ENV_PASS,
   SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES,
   resolveSafehouseCmuxIntegration,
+  safehouseCmuxIntegrationWarningLines,
   type ResolveSafehouseCmuxIntegrationInput,
   type SafehouseCmuxIntegration,
 } from "./safehouseCmux.ts";
