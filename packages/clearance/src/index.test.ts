@@ -12,7 +12,7 @@ import {
   startClearanceFromEnv,
 } from "./index.ts";
 
-const servers: (http.Server | net.Server)[] = [];
+const servers: Array<http.Server | net.Server> = [];
 
 describe("@clipboard-health/clearance", () => {
   afterEach(async () => {

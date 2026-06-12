@@ -108,7 +108,7 @@ describe("GET /users", () => {
   });
 
   it.each<{
-    error: { message: string; path: (string | number)[] };
+    error: { message: string; path: Array<string | number> };
     input: string;
     name: string;
   }>([

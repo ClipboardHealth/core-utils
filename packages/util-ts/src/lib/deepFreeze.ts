@@ -12,7 +12,7 @@ export function deepFreeze<T extends object>(value: T, seen = new WeakSet()): Re
   }
 
   seen.add(value);
-  (Reflect.ownKeys(value) as (keyof T)[]).forEach((key) => {
+  (Reflect.ownKeys(value) as Array<keyof T>).forEach((key) => {
     const property = value[key];
     if (typeof property === "object" && property !== null && !Object.isFrozen(property)) {
       deepFreeze(property, seen);

@@ -20,7 +20,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "oxlint": ">=1.60.0",
+    "oxlint": ">=1.68.0",
     "oxlint-tsgolint": ">=0.21.1"
   },
   "peerDependenciesMeta": {

@@ -221,7 +221,7 @@ async function mergeSessionStartHook(): Promise<void> {
   }
 
   const hooks = (settings["hooks"] ?? {}) as Record<string, unknown>;
-  const sessionStart = (hooks["SessionStart"] ?? []) as Record<string, unknown>[];
+  const sessionStart = (hooks["SessionStart"] ?? []) as Array<Record<string, unknown>>;
 
   // Every command string this package has ever shipped, past and present.
   const knownCommands = new Set([expectedCommand, '"$CLAUDE_PROJECT_DIR"/scripts/setup.sh']);
@@ -234,7 +234,7 @@ async function mergeSessionStartHook(): Promise<void> {
   let hasStale = false;
   let currentCount = 0;
   for (const entry of sessionStart) {
-    const entryHooks = (entry["hooks"] ?? []) as Record<string, unknown>[];
+    const entryHooks = (entry["hooks"] ?? []) as Array<Record<string, unknown>>;
     for (const h of entryHooks) {
       if (typeof h["command"] !== "string" || !knownCommands.has(h["command"])) {
         continue;
@@ -256,7 +256,7 @@ async function mergeSessionStartHook(): Promise<void> {
   // Remove only our specific hook commands from each entry, preserving unrelated
   // commands that may share the same entry. Drop entries left with no hooks.
   const cleaned = sessionStart.flatMap((entry) => {
-    const entryHooks = entry["hooks"] as Record<string, unknown>[] | undefined;
+    const entryHooks = entry["hooks"] as Array<Record<string, unknown>> | undefined;
     if (entryHooks?.some((h) => isKnownCommand(h)) !== true) {
       return [entry];
     }
