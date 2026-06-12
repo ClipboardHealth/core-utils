@@ -1,6 +1,7 @@
+/* v8 ignore file @preserve -- CLI bootstrap runs in a child process covered by safehouseWrapper.test.ts. */
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
-import { tmpdir, constants as osConstants } from "node:os";
+import { constants as osConstants, tmpdir } from "node:os";
 import path from "node:path";
 
 import {

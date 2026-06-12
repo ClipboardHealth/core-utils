@@ -92,11 +92,10 @@ function isSafehouseCmuxIntegrationActive(input: { env: NodeJS.ProcessEnv }): bo
 }
 
 function resolveCmuxReadOnlyDirs(input: { env: NodeJS.ProcessEnv }): readonly string[] {
+  const xdgStateHome = normalizeAbsolutePath({ value: input.env["XDG_STATE_HOME"] });
   const stateDir =
-    input.env["XDG_STATE_HOME"] === undefined
-      ? homeStateDir({ env: input.env })
-      : path.join(input.env["XDG_STATE_HOME"], "cmux");
-  const socketPath = input.env["CMUX_SOCKET_PATH"];
+    xdgStateHome === undefined ? homeStateDir({ env: input.env }) : path.join(xdgStateHome, "cmux");
+  const socketPath = normalizeAbsolutePath({ value: input.env["CMUX_SOCKET_PATH"] });
 
   return [
     ...new Set([
@@ -108,8 +107,16 @@ function resolveCmuxReadOnlyDirs(input: { env: NodeJS.ProcessEnv }): readonly st
 }
 
 function homeStateDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
-  const home = input.env["HOME"];
+  const home = normalizeAbsolutePath({ value: input.env["HOME"] });
   return home === undefined ? undefined : path.join(home, ".local", "state", "cmux");
+}
+
+function normalizeAbsolutePath(input: { value: string | undefined }): string | undefined {
+  if (input.value === undefined || input.value.length === 0 || !path.isAbsolute(input.value)) {
+    return undefined;
+  }
+
+  return input.value;
 }
 
 function resolveUnreviewedCmuxEnvNames(input: {

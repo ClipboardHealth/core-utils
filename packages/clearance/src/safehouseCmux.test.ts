@@ -1,9 +1,12 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
+  resolveSafehouseCmuxIntegration,
   SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
   SAFEHOUSE_CMUX_ENV_PASS,
-  resolveSafehouseCmuxIntegration,
+  safehouseCmuxIntegrationWarningLines,
 } from "./safehouseCmux.ts";
 
 describe(resolveSafehouseCmuxIntegration, () => {
@@ -18,6 +21,14 @@ describe(resolveSafehouseCmuxIntegration, () => {
     expect(actual.claudeCommandPrelude).toBe(SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE);
     expect(actual.claudeCommandPrelude).toContain("CMUX_CUSTOM_CLAUDE_PATH");
     expect(actual.claudeCommandPrelude).toContain("*/cmux-cli-shims/*|*/cmux-cli-shims)");
+  });
+
+  it("uses process environment when no env override is provided", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      readFile: () => "",
+    });
+
+    expect(actual.envPass).toStrictEqual(SAFEHOUSE_CMUX_ENV_PASS);
   });
 
   it("marks the integration active when cmux has installed its Claude shim", () => {
@@ -60,6 +71,19 @@ describe(resolveSafehouseCmuxIntegration, () => {
     expect(actual.addDirsReadOnly).toStrictEqual(["/Applications/cmux.app", "/state/cmux"]);
   });
 
+  it("skips empty and relative cmux read-only dirs", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: {
+        CMUX_SOCKET_PATH: "relative/cmux.sock",
+        HOME: "relative-home",
+        XDG_STATE_HOME: "",
+      },
+      readFile: () => "",
+    });
+
+    expect(actual.addDirsReadOnly).toStrictEqual(["/Applications/cmux.app"]);
+  });
+
   it("reports cmux wrapper env names that have not been reviewed", () => {
     const readFile = vi.fn<() => string>(() =>
       [
@@ -78,6 +102,23 @@ describe(resolveSafehouseCmuxIntegration, () => {
 
     expect(readFile).toHaveBeenCalledWith(path.join("/tmp/cmux/bin", "cmux-claude-wrapper"));
     expect(actual.unreviewedEnvNames).toStrictEqual(["CMUX_NEW_REQUIRED_SETTING"]);
+  });
+
+  it("reads the bundled cmux wrapper source with the default file reader", () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-test-"));
+    try {
+      writeFileSync(path.join(tempDir, "cmux-claude-wrapper"), "CMUX_NEW_FILE_SETTING", "utf8");
+
+      const actual = resolveSafehouseCmuxIntegration({
+        env: {
+          CMUX_BUNDLED_CLI_PATH: path.join(tempDir, "cmux"),
+        },
+      });
+
+      expect(actual.unreviewedEnvNames).toStrictEqual(["CMUX_NEW_FILE_SETTING"]);
+    } finally {
+      rmSync(tempDir, { force: true, recursive: true });
+    }
   });
 
   it("falls back to the default cmux wrapper path when the bundled wrapper is unavailable", () => {
@@ -110,5 +151,28 @@ describe(resolveSafehouseCmuxIntegration, () => {
     });
 
     expect(actual.unreviewedEnvNames).toStrictEqual([]);
+  });
+});
+
+describe(safehouseCmuxIntegrationWarningLines, () => {
+  it("returns no warnings when all cmux wrapper env names have been reviewed", () => {
+    const actual = safehouseCmuxIntegrationWarningLines({
+      commandName: "safehouse-claude-proxy",
+      unreviewedEnvNames: [],
+    });
+
+    expect(actual).toStrictEqual([]);
+  });
+
+  it("formats drift warnings for unreviewed cmux wrapper env names", () => {
+    const actual = safehouseCmuxIntegrationWarningLines({
+      commandName: "safehouse-claude-proxy",
+      unreviewedEnvNames: ["CMUX_NEW_SETTING"],
+    });
+
+    expect(actual).toStrictEqual([
+      "safehouse-claude-proxy: cmux wrapper references unreviewed env vars: CMUX_NEW_SETTING",
+      "safehouse-claude-proxy: update SAFEHOUSE_CMUX_ENV_PASS or SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES after reviewing them.",
+    ]);
   });
 });
