@@ -3,6 +3,8 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { resolveSafehouseCmuxIntegration } from "./safehouseCmux.ts";
+
 const WRAPPER_PATH = path.join(import.meta.dirname, "..", "safehouse", "safehouse-clearance");
 const CLAUDE_PROXY_PATH = path.join(
   import.meta.dirname,
@@ -11,6 +13,10 @@ const CLAUDE_PROXY_PATH = path.join(
   "safehouse-claude-proxy",
 );
 const SAFEHOUSE_DIR = path.join(import.meta.dirname, "..", "safehouse");
+const EXPECTED_CMUX_ENV_PASS_FLAG = `--env-pass=${resolveSafehouseCmuxIntegration({
+  env: {},
+  readFile: () => "",
+}).envPass.join(",")}`;
 
 interface StubPaths {
   claudeCustomPathPath: string;
@@ -257,9 +263,7 @@ describe("safehouse-claude-proxy wrapper", () => {
       tempDir,
     });
 
-    expect(readLines(paths.safehouseArgsPath)).toContain(
-      "--env-pass=CMUX_BUNDLED_CLI_PATH,CMUX_CLAUDE_HOOKS_DISABLED,CMUX_CLAUDE_WRAPPER_SHIM,CMUX_CLAUDE_WRAPPER_SHIM_ROOT,CMUX_CUSTOM_CLAUDE_PATH,CMUX_PANEL_ID,CMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV,CMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV_KEYS,CMUX_SOCKET_PATH,CMUX_SUPPRESS_SUBAGENT_NOTIFICATIONS,CMUX_SURFACE_ID,CMUX_TAB_ID,CMUX_WORKSPACE_ID",
-    );
+    expect(readLines(paths.safehouseArgsPath)).toContain(EXPECTED_CMUX_ENV_PASS_FLAG);
     expect(readLines(paths.safehouseArgsPath)).toContain(
       `--add-dirs-ro=/Applications/cmux.app:${process.env["HOME"]}/.local/state/cmux:${tempDir}`,
     );
@@ -307,9 +311,7 @@ describe("safehouse-claude-proxy wrapper", () => {
     );
     expect(paths.wrapperStderr).not.toContain("CMUX_SOCKET_PATH");
     expect(paths.wrapperStderr).not.toContain("CMUX_CLAUDE_PID");
-    expect(readLines(paths.safehouseArgsPath)).toContain(
-      "--env-pass=CMUX_BUNDLED_CLI_PATH,CMUX_CLAUDE_HOOKS_DISABLED,CMUX_CLAUDE_WRAPPER_SHIM,CMUX_CLAUDE_WRAPPER_SHIM_ROOT,CMUX_CUSTOM_CLAUDE_PATH,CMUX_PANEL_ID,CMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV,CMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV_KEYS,CMUX_SOCKET_PATH,CMUX_SUPPRESS_SUBAGENT_NOTIFICATIONS,CMUX_SURFACE_ID,CMUX_TAB_ID,CMUX_WORKSPACE_ID",
-    );
+    expect(readLines(paths.safehouseArgsPath)).toContain(EXPECTED_CMUX_ENV_PASS_FLAG);
   });
 
   it("omits cmux Safehouse flags outside cmux", async () => {

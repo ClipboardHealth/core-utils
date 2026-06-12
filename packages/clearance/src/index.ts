@@ -20,6 +20,14 @@ export {
   spawnClearance,
   type SpawnClearanceInput,
 } from "./launcher.ts";
+export {
+  SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
+  SAFEHOUSE_CMUX_ENV_PASS,
+  SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES,
+  resolveSafehouseCmuxIntegration,
+  type ResolveSafehouseCmuxIntegrationInput,
+  type SafehouseCmuxIntegration,
+} from "./safehouseCmux.ts";
 
 export const CLEARANCE_PACKAGE_NAME = "@clipboard-health/clearance";
 
