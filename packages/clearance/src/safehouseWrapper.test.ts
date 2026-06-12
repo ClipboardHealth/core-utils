@@ -21,6 +21,7 @@ const EXPECTED_CMUX_ENV_PASS_FLAG = `--env-pass=${resolveSafehouseCmuxIntegratio
 interface StubPaths {
   claudeCustomPathPath: string;
   claudeOutputPath: string;
+  effectiveHome: string;
   nodeArgsPath: string;
   safehouseArgsPath: string;
   shimTracePath: string;
@@ -62,6 +63,7 @@ async function runWrapper(input: { args: readonly string[]; tempDir: string }): 
   const nodeArgsPath = path.join(input.tempDir, "node-args.txt");
   const safehouseArgsPath = path.join(input.tempDir, "safehouse-args.txt");
   const shimTracePath = path.join(input.tempDir, "shim-trace.txt");
+  const effectiveHome = process.env["HOME"] ?? input.tempDir;
   writeFileSync(claudeCustomPathPath, "");
   writeFileSync(claudeOutputPath, "");
   writeFileSync(nodeArgsPath, "");
@@ -95,6 +97,7 @@ async function runWrapper(input: { args: readonly string[]; tempDir: string }): 
   return {
     claudeCustomPathPath,
     claudeOutputPath,
+    effectiveHome,
     nodeArgsPath,
     safehouseArgsPath,
     shimTracePath,
@@ -115,6 +118,7 @@ async function runClaudeProxy(input: {
   const nodeArgsPath = path.join(input.tempDir, "node-args.txt");
   const safehouseArgsPath = path.join(input.tempDir, "safehouse-args.txt");
   const shimTracePath = path.join(input.tempDir, "shim-trace.txt");
+  const effectiveHome = input.env?.["HOME"] ?? process.env["HOME"] ?? input.tempDir;
   writeFileSync(claudeCustomPathPath, "");
   writeFileSync(claudeOutputPath, "");
   writeFileSync(nodeArgsPath, "");
@@ -181,7 +185,7 @@ async function runClaudeProxy(input: {
     CLEARANCE_NODE_BINARY: process.execPath,
     CLAUDE_CUSTOM_PATH_PATH: claudeCustomPathPath,
     CLAUDE_OUTPUT_PATH: claudeOutputPath,
-    HOME: process.env["HOME"] ?? input.tempDir,
+    HOME: effectiveHome,
     NODE_ARGS_PATH: nodeArgsPath,
     PATH: childPath,
     SAFEHOUSE_ARGS_PATH: safehouseArgsPath,
@@ -193,6 +197,7 @@ async function runClaudeProxy(input: {
   return {
     claudeCustomPathPath,
     claudeOutputPath,
+    effectiveHome,
     nodeArgsPath,
     safehouseArgsPath,
     shimTracePath,
@@ -273,7 +278,7 @@ describe("safehouse-claude-proxy wrapper", () => {
 
     expect(readLines(paths.safehouseArgsPath)).toContain(EXPECTED_CMUX_ENV_PASS_FLAG);
     expect(readLines(paths.safehouseArgsPath)).toContain(
-      `--add-dirs-ro=/Applications/cmux.app:${process.env["HOME"]}/.local/state/cmux:${tempDir}`,
+      `--add-dirs-ro=/Applications/cmux.app:${paths.effectiveHome}/.local/state/cmux:${tempDir}`,
     );
     expect(readLines(paths.shimTracePath)).toStrictEqual(["shim"]);
     expect(readLines(paths.claudeCustomPathPath)).toStrictEqual([
