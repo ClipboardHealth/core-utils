@@ -90,6 +90,7 @@ describe("oxlint-config", () => {
             "error",
             { pattern: String.raw`.*\.(test|spec)\.[tj]sx?$` },
           ],
+          "vitest/expect-expect": "off",
           "vitest/max-expects": "off",
           "vitest/max-nested-describe": "off",
           "vitest/no-hooks": "off",
