@@ -303,8 +303,14 @@ function readPidFile(pidPath: string): number | undefined {
   let raw: string;
   try {
     raw = readFileSync(pidPath, "utf8");
-  } catch {
-    return undefined;
+  } catch (error) {
+    // A missing pidfile means "not running"; surface any other read failure
+    // (permissions, I/O) rather than masking it as a stopped proxy.
+    if (errnoCode(error) === "ENOENT") {
+      return undefined;
+    }
+
+    throw error;
   }
 
   const pid = Number.parseInt(raw.trim(), 10);
@@ -312,12 +318,16 @@ function readPidFile(pidPath: string): number | undefined {
 }
 
 function isAlreadyGoneError(error: unknown): boolean {
-  /* v8 ignore next @preserve -- defensive: thrown kill errors are always Error instances carrying a code */
-  if (!(error instanceof Error) || !("code" in error)) {
-    return false;
+  return errnoCode(error) === "ESRCH";
+}
+
+function errnoCode(error: unknown): string | undefined {
+  /* v8 ignore next @preserve -- defensive: thrown FS/signal errors are always Error instances carrying a string code */
+  if (!(error instanceof Error) || !("code" in error) || typeof error.code !== "string") {
+    return undefined;
   }
 
-  return error.code === "ESRCH";
+  return error.code;
 }
 
 function isClearanceCommand(value: string): value is ClearanceCommand {
@@ -397,6 +407,11 @@ async function pollUntil(input: {
   sleep: (ms: number) => Promise<void>;
   timeoutMs: number;
 }): Promise<boolean> {
+  // A non-positive interval makes `attempts` Infinity below, which would never terminate.
+  if (input.pollIntervalMs <= 0) {
+    throw new Error("pollIntervalMs must be a positive number");
+  }
+
   const attempts = Math.max(1, Math.ceil(input.timeoutMs / input.pollIntervalMs));
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     // eslint-disable-next-line no-await-in-loop -- readiness polling is intentionally sequential

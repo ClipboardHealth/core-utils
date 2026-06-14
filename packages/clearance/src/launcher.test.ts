@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import * as net from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -436,6 +436,34 @@ describe(stopClearance, () => {
       }),
     ).rejects.toThrow(/operation not permitted/);
     expect(isListeningMock).not.toHaveBeenCalled();
+  });
+
+  it("rethrows non-ENOENT pidfile read failures", async () => {
+    cacheDir = createTempCacheDir();
+    mkdirSync(path.join(cacheDir, "clearance.pid"));
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    await expect(
+      stopClearance({ cacheDir, isListening: isListeningMock, kill: killMock }),
+    ).rejects.toThrow(/EISDIR/);
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-positive poll interval", async () => {
+    cacheDir = createTempCacheDir();
+    writePidFile(cacheDir, 12_345);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>().mockResolvedValue(false);
+    const killMock = vi.fn<ProcessKiller>();
+
+    await expect(
+      stopClearance({
+        cacheDir,
+        isListening: isListeningMock,
+        kill: killMock,
+        pollIntervalMs: 0,
+      }),
+    ).rejects.toThrow(/pollIntervalMs must be a positive number/);
   });
 
   it("throws when the process refuses to stop within the timeout", async () => {
