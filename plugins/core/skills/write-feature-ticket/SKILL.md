@@ -19,9 +19,9 @@ Draft Linear feature request tickets that describe what users need and why — n
 4. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
 5. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
 6. **Self-review** — check every Red Flag below before presenting
-7. **Suggest metadata (conditional)** — priority (Urgent/High/Medium/Low/No Priority), labels, project when context supports it. Present metadata suggestions BELOW the ticket body, separate from the description.
+7. **Resolve metadata** — always include the `feature` type label (see Labels below). Suggest priority (Urgent/High/Medium/Low/No Priority), relevant team labels, and project when context supports it. Present metadata suggestions BELOW the ticket body, separate from the description.
 8. **Present for review** — show the draft to the user. Ask for team/assignee. Wait for explicit approval before proceeding.
-9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply any confirmed metadata. NEVER create without user approval.
+9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply the resolved labels and any confirmed metadata. Sub-issues carry the same `feature` type label as the parent. NEVER create without user approval.
 
 ## Final Validation Checklist
 
@@ -46,6 +46,7 @@ This gate checks the INPUTS before drafting (the Red Flags table below checks th
 - **Never invent.** If a detail isn't established from the user, research, or conversation, it doesn't go in the ticket. Period.
 - **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
 - **Always document the repository.** Every ticket must specify which repo the work belongs in. If the feature spans multiple repos, flag this — it likely needs separate tickets.
+- **Always label by type.** Every feature ticket (and each sub-issue) carries the `feature` type label (or the team's closest equivalent — never invent or create a label without the user's say-so). Also suggest relevant team labels for approval. See Labels.
 - **Always ask for team/assignee.** Never guess — ask the user.
 - **Feature requests only.** Redirect bug reports to `write-bug-ticket`, tech debt to `write-tech-debt-ticket`.
 
@@ -71,6 +72,14 @@ Each sub-issue follows the same format. Note blocking relationships (e.g., "_Blo
 
 See reference.md for full examples (good and bad).
 
+## Labels
+
+Every ticket gets its type label plus any relevant team labels. Labels are presented in the metadata block and applied when the user approves the ticket.
+
+1. **Type label (mandatory).** Fetch the target team's labels (Linear MCP `list_issue_labels` for that team) and apply the one denoting a feature: `feature` if it exists, otherwise the closest existing equivalent (e.g. `feature-request`). Match case-insensitively and accept grouped variants. If no reasonable match exists, ask the user which label to use — NEVER invent a label or create a new one without the user's say-so.
+2. **Relevant labels (suggested).** Review the team's other labels (e.g. `product-area`, area) and suggest those that fit this ticket. Apply them only on approval.
+3. **Sub-issues.** Each sub-issue carries the same `feature` type label as the parent, plus its own relevant labels.
+
 ## Red Flags — Self-Review Before Presenting
 
 This table checks the DRAFT after writing (the Final Validation Checklist above gates the inputs before drafting). If any row applies, fix before presenting.
@@ -91,3 +100,4 @@ This table checks the DRAFT after writing (the Final Validation Checklist above 
 | Bracket title prefixes                                            | Describe the capability without brackets                                                  |
 | Guessed team assignment                                           | Ask the user — never guess                                                                |
 | Missing repository                                                | Include repo name in ticket body — derive from git remote                                 |
+| No `feature` type label                                           | Always apply it (or the team's closest equivalent), on the parent and every sub-issue     |

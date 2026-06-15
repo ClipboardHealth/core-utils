@@ -36,7 +36,7 @@ Nurses on the mobile app are unable to complete shift bookings. After submitting
 - [RUM: session for user 12345 showing hang](https://app.datadoghq.com/rum/...)
 - [Logs: timeout errors on booking confirmation endpoint (last 7d)](https://app.datadoghq.com/logs?query=...)
 
-Suggested metadata: Priority: High
+Suggested metadata: Priority: High | Labels: bug (type), Shift Bookability (relevant)
 
 ### Monitoring-Surfaced Bug
 
@@ -70,4 +70,4 @@ Errors began at 2026-03-12 14:00 UTC. Error logs reference `MongoServerError: co
 
 Users unable to approve timesheets. ~300 failed requests in 4 hours.
 
-Suggested metadata: Priority: Urgent
+Suggested metadata: Priority: Urgent | Labels: bug (type), Workplace timesheets (relevant)

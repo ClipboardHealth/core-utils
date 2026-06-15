@@ -18,7 +18,8 @@ Structure and write Linear bug reports from evidence that already exists in the 
 3. **Draft** — title + description, structure scaled to complexity (see format below)
 4. **Self-review** — check every Red Flag below before presenting
 5. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
-6. **Create in Linear** — only after explicit approval
+6. **Resolve labels** — always include the `bug` type label, plus any relevant team labels (see Labels below).
+7. **Create in Linear** — only after explicit approval. Apply the resolved labels.
 
 ## Hard Rules
 
@@ -28,6 +29,7 @@ Structure and write Linear bug reports from evidence that already exists in the 
 - **Clean titles.** No bracket prefixes. Describe the symptom. Under 70 characters.
 - **Always document the repository.** Flag multi-repo bugs to the user for splitting.
 - **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
+- **Always label by type.** Every bug ticket carries the `bug` type label (or the team's closest equivalent — never invent or create a label without the user's say-so). Also suggest relevant team labels for approval. See Labels.
 - **Redirect non-bugs.** Features → `write-feature-ticket`, tech debt → `write-tech-debt-ticket`.
 
 ## Ticket Format
@@ -42,9 +44,16 @@ Structure and write Linear bug reports from evidence that already exists in the 
 
 **Complex bug** (multi-service, intermittent, wide impact): Use `## Expected Behavior`, `## Actual Behavior`, `## Steps to Reproduce`, `## Evidence`, `## Technical Context` (include repository — observables only, NOT diagnosis), `## Impact`.
 
-**Metadata:** Priority, labels (`bug`), presented BELOW the body. Always ask for team/assignee.
+**Metadata:** Priority, labels (`bug` type label + approved relevant labels, see Labels), presented BELOW the body. Always ask for team/assignee.
 
 See reference.md for full examples.
+
+## Labels
+
+Every ticket gets its type label plus any relevant team labels. Labels are presented in the metadata block and applied when the user approves the ticket.
+
+1. **Type label (mandatory).** Fetch the target team's labels (Linear MCP `list_issue_labels` for that team) and apply the one denoting a bug: `bug` if it exists, otherwise the closest existing equivalent (e.g. `bug-report`). Match case-insensitively and accept grouped variants. If no reasonable match exists, ask the user which label to use — NEVER invent a label or create a new one without the user's say-so.
+2. **Relevant labels (suggested).** Review the team's other labels (e.g. `product-area`, area, severity) and suggest those that fit this ticket. Apply them only on approval.
 
 ## Red Flags — Self-Review Before Presenting
 
@@ -63,3 +72,4 @@ See reference.md for full examples.
 | Guessed team assignment        | Ask the user — never guess                                              |
 | Bracket title prefixes         | Describe the symptom without brackets                                   |
 | Missing repository             | Include repo name in ticket body — derive from git remote               |
+| No `bug` type label            | Always apply it (or the team's closest equivalent)                      |

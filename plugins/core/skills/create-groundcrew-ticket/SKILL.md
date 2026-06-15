@@ -43,6 +43,7 @@ Optional metadata:
 - `parent`: parent Linear identifier, for example `ENG-123`
 - blocked-by relations: tickets this new ticket depends on
 - blocking relations: tickets this new ticket blocks
+- relevant labels: team labels (e.g. `product-area`) that fit the task, in addition to the required `agent-*` label
 
 ## Description Template
 
@@ -77,6 +78,7 @@ Use the current agent's structured Linear issue tool. Tool names and exact field
 - Assign it to the current Linear user.
 - Set its state to Todo.
 - Apply the chosen `agent-*` label.
+- Apply relevant team labels (e.g. `product-area`) drawn from the team's label set (Linear MCP `list_issue_labels`) when clearly inferable from the task; ask the user if unsure. These are in addition to — never a replacement for — the required `agent-*` label, and never an extra `agent-*` label (the eligibility contract allows exactly one).
 - Put the generated Markdown body in the issue description.
 - Set the parent issue when the user provided one.
 - Add dependency relations for blockers and blocked tickets.
