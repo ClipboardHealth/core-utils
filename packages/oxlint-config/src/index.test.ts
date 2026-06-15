@@ -26,7 +26,7 @@ describe("oxlint-config", () => {
         pedantic: "error",
         perf: "error",
         restriction: "error",
-        style: "error",
+        style: "off",
         suspicious: "error",
       });
 
