@@ -19,9 +19,9 @@ Draft Linear feature request tickets that describe what users need and why — n
 4. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
 5. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
 6. **Self-review** — check every Red Flag below before presenting
-7. **Resolve metadata** — always include the `feature` type label (see Labels below). Suggest priority (Urgent/High/Medium/Low/No Priority), relevant team labels, and project when context supports it. Present metadata suggestions BELOW the ticket body, separate from the description.
-8. **Present for review** — show the draft to the user. Ask for team/assignee. Wait for explicit approval before proceeding.
-9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply the resolved labels and any confirmed metadata. Sub-issues carry the same `feature` type label as the parent. NEVER create without user approval.
+7. **Present for review** — show the draft to the user, plus metadata suggestions BELOW the ticket body, separate from the description: the `feature` type label, priority (Urgent/High/Medium/Low/No Priority), relevant team labels, and project when context supports it. Ask for team/assignee.
+8. **Resolve labels** — once the team is known, resolve labels against that team's label set (see Labels below): the `feature` type label on the parent and every sub-issue, plus any approved relevant labels. Wait for explicit approval before proceeding.
+9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply the resolved labels and any confirmed metadata. NEVER create without user approval.
 
 ## Final Validation Checklist
 
@@ -75,6 +75,8 @@ See reference.md for full examples (good and bad).
 ## Labels
 
 Every ticket gets its type label plus any relevant team labels. Labels are presented in the metadata block and applied when the user approves the ticket.
+
+**Resolving labels requires the target team.** `list_issue_labels` is team-scoped, so confirm the team (the "Present for review" step) before resolving — suggest the type label by name up front, then resolve it against the team's actual label set once the team is known.
 
 1. **Type label (mandatory).** Fetch the target team's labels (Linear MCP `list_issue_labels` for that team) and apply the one denoting a feature: `feature` if it exists, otherwise the closest existing equivalent (e.g. `feature-request`). Match case-insensitively and accept grouped variants. If no reasonable match exists, ask the user which label to use — NEVER invent a label or create a new one without the user's say-so.
 2. **Relevant labels (suggested).** Review the team's other labels (e.g. `product-area`, area) and suggest those that fit this ticket. Apply them only on approval.

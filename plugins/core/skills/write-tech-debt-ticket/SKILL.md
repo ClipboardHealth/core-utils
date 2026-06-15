@@ -64,6 +64,8 @@ See reference.md for the debt types table, rating framework, and full examples.
 
 Every ticket gets its type label plus any relevant team labels. Labels are presented in the metadata block and applied when the user approves the ticket.
 
+**Resolving labels requires the target team.** `list_issue_labels` is team-scoped, so confirm the team (the "Present for review" step) before resolving — suggest the type label by name up front, then resolve it against the team's actual label set once the team is known.
+
 1. **Type label (mandatory).** Fetch the target team's labels (Linear MCP `list_issue_labels` for that team) and apply the one denoting tech debt: `technical-debt` if it exists, otherwise the closest existing equivalent. Match case-insensitively and accept grouped variants. If no reasonable match exists, ask the user which label to use — NEVER invent a label or create a new one without the user's say-so.
 2. **Relevant labels (suggested).** Review the team's other labels (e.g. `product-area`, area, severity) and suggest those that fit this ticket. Apply them only on approval.
 
