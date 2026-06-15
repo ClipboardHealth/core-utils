@@ -77,4 +77,4 @@ Employee admins need a way to manually enable or disable the daily interview dig
 - [ ] The toggle is not visible to non-employee-admin roles
 - [ ] The toggle reflects the current state of the setting
 
-Suggested metadata: Priority: Medium
+Suggested metadata: Priority: Medium | Labels: feature (type), Knock / Notifications (relevant) — applied to the parent and each sub-issue
