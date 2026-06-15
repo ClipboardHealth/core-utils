@@ -54,7 +54,7 @@ export default defineConfig(
       },
       settings: {
         node: {
-          version: ">=24.14.0",
+          version: ">=24.14.1",
         },
       },
     },
@@ -102,7 +102,7 @@ Create an `.oxlintrc.json` in your repo root:
   },
   "settings": {
     "node": {
-      "version": ">=24.14.0"
+      "version": ">=24.14.1"
     }
   }
 }
