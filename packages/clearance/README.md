@@ -132,11 +132,23 @@ shell aliases:
 
 ```bash
 SAFEHOUSE_CLEARANCE="$(npm root -g)/@clipboard-health/clearance/safehouse/safehouse-clearance"
+SAFEHOUSE_CLAUDE_PROXY="$(npm root -g)/@clipboard-health/clearance/safehouse/safehouse-claude-proxy"
 export CLEARANCE_ALLOW_HOSTS_FILES="$HOME/code/<your-repo>/clearance-allow-hosts:$HOME/.config/clearance/personal-allow-hosts"
 
 alias codex-proxy="$SAFEHOUSE_CLEARANCE codex --dangerously-bypass-approvals-and-sandbox"
-alias claude-proxy="$SAFEHOUSE_CLEARANCE claude --enable-auto-mode"
+alias claude-proxy="$SAFEHOUSE_CLAUDE_PROXY"
 ```
+
+`safehouse-claude-proxy` runs Claude through Safehouse with
+`--permission-mode auto`. When launched from a cmux terminal, it preserves
+cmux's Claude shim by forwarding the cmux session environment and granting
+read-only access to the cmux app/socket state. It also points the shim at the
+real Claude binary so the shim does not recurse through itself.
+
+The cmux environment pass-through is an explicit reviewed allowlist. If a cmux
+update adds new `CMUX_*` variables to its Claude wrapper contract,
+`safehouse-claude-proxy` prints a warning naming the unreviewed variables
+instead of automatically passing every `CMUX_*` value through the sandbox.
 
 For AWS SSO work, log in on the host first, then layer the safehouse cloud
 credentials flag through the wrapper:

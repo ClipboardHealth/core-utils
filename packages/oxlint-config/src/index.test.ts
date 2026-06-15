@@ -26,7 +26,7 @@ describe("oxlint-config", () => {
         pedantic: "error",
         perf: "error",
         restriction: "error",
-        style: "error",
+        style: "off",
         suspicious: "error",
       });
 
@@ -53,8 +53,15 @@ describe("oxlint-config", () => {
       expect(base.overrides).toHaveLength(3);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
+        "guard-for-in": "error",
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
+        "import/no-mutable-exports": "error",
         "no-else-return": ["error", { allowElseIf: false }],
+        "no-new-func": "error",
+        "no-return-assign": "error",
+        "no-script-url": "error",
+        "no-template-curly-in-string": "error",
+        "node/no-exports-assign": "error",
         "typescript/array-type": ["error", { default: "array-simple" }],
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",

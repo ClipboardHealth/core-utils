@@ -6,6 +6,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 
 - [Install](#install)
 - [Usage](#usage)
+- [Categories](#categories)
 - [What is shared](#what-is-shared)
 - [Intentionally disabled rules](#intentionally-disabled-rules)
 
@@ -34,11 +35,11 @@ export default defineConfig(
     localConfig: {
       categories: {
         correctness: "error",
-        nursery: "error",
+        nursery: "off",
         pedantic: "error",
         perf: "error",
         restriction: "error",
-        style: "error",
+        style: "off",
         suspicious: "error",
       },
       ignorePatterns: [".agents", "coverage/", "node_modules/"],
@@ -53,7 +54,7 @@ export default defineConfig(
       },
       settings: {
         node: {
-          version: ">=24.14.0",
+          version: ">=24.14.1",
         },
       },
     },
@@ -85,11 +86,11 @@ Create an `.oxlintrc.json` in your repo root:
   "extends": ["./node_modules/@clipboard-health/oxlint-config/src/base.json"],
   "categories": {
     "correctness": "error",
-    "nursery": "error",
+    "nursery": "off",
     "pedantic": "error",
     "perf": "error",
     "restriction": "error",
-    "style": "error",
+    "style": "off",
     "suspicious": "error"
   },
   "ignorePatterns": [".agents", "coverage/", "node_modules/"],
@@ -101,7 +102,7 @@ Create an `.oxlintrc.json` in your repo root:
   },
   "settings": {
     "node": {
-      "version": ">=24.14.0"
+      "version": ">=24.14.1"
     }
   }
 }
@@ -127,6 +128,20 @@ Override shared rules as needed:
   }
 }
 ```
+
+## Categories
+
+This config is tuned for agent-written code: enforce rules that prevent bugs or help agents work faster, ignore rules that only encode human style preferences. Categories are applied as a denylist (enable the category, then disable individual rules that are noise) rather than an allowlist, so new bug-catching rules in a category are adopted automatically as oxlint ships them.
+
+| Category                            | Setting | Why                                                                                                                                                                                                                                                                          |
+| ----------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `correctness`, `suspicious`, `perf` | `error` | Likely bugs and performance problems.                                                                                                                                                                                                                                        |
+| `restriction`                       | `error` | Carries high-value guardrails: `typescript/no-explicit-any`, `typescript/no-non-null-assertion`, `no-var`, `unicorn/no-abusive-eslint-disable`.                                                                                                                              |
+| `pedantic`                          | `error` | Carries `eqeqeq`, the `typescript/no-unsafe-*` family, `typescript/no-misused-promises`, `typescript/switch-exhaustiveness-check`, `array-callback-return`.                                                                                                                  |
+| `style`                             | `off`   | Idiomatic/consistency rules with no bug-prevention value. Rules kept are opted back in explicitly: deliberate consistency picks (`curly`, `no-else-return`) plus bug/security rules oxlint files under `style` (`no-new-func`, `guard-for-in`, `import/no-mutable-exports`). |
+| `nursery`                           | `off`   | Rules still under development; too unstable for agent-written code.                                                                                                                                                                                                          |
+
+`style` and `nursery` are off, not denylisted, because their future rules are noise rather than signal — there is nothing worth adopting automatically. Every `style` rule kept is therefore listed explicitly in `base.json`.
 
 ## What is shared
 

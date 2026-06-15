@@ -5,7 +5,7 @@
     "pedantic": "error",
     "perf": "error",
     "restriction": "error",
-    "style": "error",
+    "style": "off",
     "suspicious": "error"
   },
   "options": {
@@ -24,6 +24,7 @@
     "curly": ["error", "all"],
     "func-names": "off",
     "func-style": "off",
+    "guard-for-in": "error",
     "id-length": "off",
     "import/consistent-type-specifier-style": "off",
     "import/exports-last": "off",
@@ -32,6 +33,7 @@
     "import/no-commonjs": "off",
     "import/no-cycle": ["error", { "ignoreExternal": true, "maxDepth": 16 }],
     "import/no-default-export": "off",
+    "import/no-mutable-exports": "error",
     "import/no-named-as-default": "off",
     "import/no-named-as-default-member": "off",
     "import/no-namespace": "off",
@@ -53,7 +55,11 @@
     "no-inline-comments": "off",
     "no-magic-numbers": "off",
     "no-named-export": "off",
+    "no-new-func": "error",
     "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
+    "no-return-assign": "error",
+    "no-script-url": "error",
+    "no-template-curly-in-string": "error",
     "no-ternary": "off",
     "no-underscore-dangle": "off",
     "no-undefined": "off",
@@ -67,6 +73,7 @@
     ],
     "no-use-before-define": "off",
     "no-void": "off",
+    "node/no-exports-assign": "error",
     "object-shorthand": ["error", "properties"],
     "oxc/no-async-await": "off",
     "oxc/no-optional-chaining": "off",
@@ -135,6 +142,7 @@
         "**/tests/**"
       ],
       "rules": {
+        "no-shadow": "off",
         "typescript/no-non-null-assertion": "off",
         "typescript/no-unsafe-argument": "off",
         "typescript/no-unsafe-assignment": "off",
