@@ -1,8 +1,10 @@
-# Ticket Examples
+# Feature Ticket Reference
 
-Based on real ticket TG-3228 to show the contrast.
+## Examples
 
-## What NOT to write (anti-pattern)
+Based on real ticket TG-3228 to show the contrast. Headings inside these examples are deepened to nest within this document — real tickets use the `##` sections specified in SKILL.md.
+
+### What NOT to Write
 
 > **Title:** Disable Interview List (Daily Digest) Per Workplace
 >
@@ -10,7 +12,7 @@ Based on real ticket TG-3228 to show the contrast.
 
 This prescribes implementation (field names, specific cron job, migration strategy) and mixes what with how.
 
-## Simple Ticket
+### Simple Ticket
 
 **Title:** Allow workplaces to disable the daily interview digest
 
@@ -24,15 +26,15 @@ Workplaces using phone interviews receive a daily interview digest email that is
 
 **Repository:** ClipboardHealth/core-utils
 
-## Complex Ticket (with sub-issues)
+### Complex Ticket (with sub-issues)
 
 **Parent — Title:** Allow workplaces to disable the daily interview digest
 
-### Problem
+#### Problem
 
 Workplaces using phone interviews receive a daily interview digest email that isn't relevant to their workflow. There is no way to turn it off — the digest is sent to all workplaces regardless of their interview type. Employee admins need a way to control this per workplace.
 
-### Acceptance Criteria
+#### Acceptance Criteria
 
 - [ ] An employee admin can enable or disable the daily interview digest for a workplace
 - [ ] The digest is not sent to workplaces that have it disabled
@@ -40,16 +42,16 @@ Workplaces using phone interviews receive a daily interview digest email that is
 - [ ] When a workplace switches to phone interviews, the digest is automatically disabled
 - [ ] Only employee admins can change this setting (not workplace admins)
 
-### Context
+#### Context
 
 **Repository:** ClipboardHealth/core-utils
 
-### Scope
+#### Scope
 
 - **In:** Per-workplace toggle, auto-disable for phone interview workplaces
 - **Out:** Per-user digest preferences, other notification types
 
-### Sub-issues
+#### Sub-issues
 
 **Sub-issue 1 — Title:** Support per-workplace interview digest control
 
@@ -75,4 +77,4 @@ Employee admins need a way to manually enable or disable the daily interview dig
 - [ ] The toggle is not visible to non-employee-admin roles
 - [ ] The toggle reflects the current state of the setting
 
-**Suggested metadata:** Priority: Medium | Team: Team Gaia
+Suggested metadata: Priority: Medium

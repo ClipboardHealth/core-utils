@@ -1,6 +1,6 @@
 ---
 name: write-bug-ticket
-description: Use when creating a Linear bug report ticket from conversation context, investigation findings, or user-provided evidence. Focuses on structuring and writing — not investigating.
+description: Use when creating a Linear bug report ticket from conversation context, investigation findings, or user-provided evidence — when evidence already exists and needs structuring, not investigating.
 ---
 
 # Write Bug Ticket
@@ -27,6 +27,7 @@ Structure and write Linear bug reports from evidence that already exists in the 
 - **STR preferred, not required.** If not reproduced: "Not yet reproduced manually. Observed via monitoring." NEVER invent STR.
 - **Clean titles.** No bracket prefixes. Describe the symptom. Under 70 characters.
 - **Always document the repository.** Flag multi-repo bugs to the user for splitting.
+- **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
 - **Redirect non-bugs.** Features → `write-feature-ticket`, tech debt → `write-tech-debt-ticket`.
 
 ## Ticket Format
@@ -34,6 +35,8 @@ Structure and write Linear bug reports from evidence that already exists in the 
 **Title:** Describes the SYMPTOM, not the cause. Under 70 characters. No bracket prefixes.
 
 **Repository:** Always include the repository name in the ticket body. Run `git remote get-url origin | sed 's/\.git$//' | sed 's/.*[:/]\([^/]*\/[^/]*\)$/\1/'` to get the `org/repo` name. For simple bugs, include as a bold inline label. For complex bugs, include in `## Technical Context`.
+
+**Discovery context (optional):** If the bug was found while working on a ticket or PR, add a one-liner so reviewers understand how it surfaced (e.g., "Discovered while working on [TICKET-123](link)."). Place it after the opening paragraph for simple bugs, or in `## Technical Context` for complex bugs.
 
 **Simple bug** (<4 details): A paragraph with bold inline labels (**Expected:**, **Actual:**, **Repository:**, etc.). No `##` headers needed.
 
