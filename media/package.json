@@ -47,7 +47,7 @@
     "@swc/helpers": "0.5.23",
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
-    "@types/node": "24.13.1",
+    "@types/node": "24.13.2",
     "@typescript/native-preview": "7.0.0-dev.20260609.1",
     "@vitest/coverage-v8": "4.1.8",
     "cspell": "10.0.1",
