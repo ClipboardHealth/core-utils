@@ -203,8 +203,9 @@ def main():
 
         layout_tabs.append({"name": tab_meta["name"], "rows": rows})
 
-    doc["appLayout"]["tabs"] = layout_tabs
-    doc["appLayout"]["fullWidth"] = True
+    app_layout = doc.setdefault("appLayout", {})
+    app_layout["tabs"] = layout_tabs
+    app_layout["fullWidth"] = True
 
     # CRITICAL: sort cells so INPUT comes before MARKDOWN before SQL.
     # Otherwise SQL cells produce "Undefined variable(s)" at run time.

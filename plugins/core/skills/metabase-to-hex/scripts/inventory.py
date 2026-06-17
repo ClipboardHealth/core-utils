@@ -89,7 +89,8 @@ def main(path_str):
 
     for c in query_cards:
         kind = f"native(len={c['native_sql_len']})" if c["qtype"] == "native" else f"mbql(src_table={c['source_table_id']})"
-        print(f"  {c['cid']:>6}  tab={c['tab_name']:40s}  {c['display']:8s}  {kind:30s}  params={c['param_slugs']}  -- {c['name']}")
+        display = c["display"] or ""
+        print(f"  {c['cid']:>6}  tab={c['tab_name']:40s}  {display:8s}  {kind:30s}  params={c['param_slugs']}  -- {c['name']}")
     for c in text_cards:
         snippet = c["text"].replace("\n", " ")[:80]
         print(f"  [TEXT]  tab={c['tab_name']:40s}  r={c['row']} c={c['col']}  -- {snippet}")
