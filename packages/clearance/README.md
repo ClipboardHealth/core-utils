@@ -95,10 +95,28 @@ pid at `…/clearance.pid`.
 CLEARANCE_ALLOW_HOSTS_FILES="$REPO/clearance-allow-hosts" clearance-ensure
 ```
 
-To stop or restart the managed proxy after editing your allow-host files:
+### Lifecycle subcommands
+
+`clearance-ensure` accepts an optional subcommand. With none, it defaults to
+`start` (the idempotent launch above). All subcommands discover the running
+proxy through the pidfile.
+
+<!-- markdownlint-disable MD060 -->
+
+| Command                    | Behavior                                                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `clearance-ensure`         | Default `start`: launch the proxy if nothing is already listening.                                   |
+| `clearance-ensure start`   | Same as the bare invocation.                                                                         |
+| `clearance-ensure stop`    | Signal the pidfile process to terminate, wait for the port to close, and remove the pidfile.         |
+| `clearance-ensure restart` | `stop` the existing proxy (if any), then `start` a fresh one. Use this to pick up edited host files. |
+| `clearance-ensure status`  | Report whether the proxy is listening and its pid. Exits non-zero when it is not running.            |
+
+<!-- markdownlint-enable MD060 -->
+
+To pick up edited allow-host files, restart in one step:
 
 ```bash
-kill "$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.pid")"
+CLEARANCE_ALLOW_HOSTS_FILES="$REPO/clearance-allow-hosts" clearance-ensure restart
 ```
 
 ## Safehouse integration (macOS)

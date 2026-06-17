@@ -154,6 +154,7 @@
     "permalinks",
     "PGID",
     "pgid",
+    "pidfile",
     "pipefail",
     "pmem",
     "prereq",
