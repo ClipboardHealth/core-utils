@@ -144,17 +144,15 @@ SAFEHOUSE_CLEARANCE="$(npm root -g)/@clipboard-health/clearance/safehouse/safeho
   -- codex --dangerously-bypass-approvals-and-sandbox
 ```
 
-For day-to-day agent use, set `CLEARANCE_ALLOW_HOSTS_FILES` to point at
-your team's checked-in file (and optionally a personal file), then add
-shell aliases:
+For day-to-day agent use, configure your allow-host files and add shell
+aliases:
 
 ```bash
-SAFEHOUSE_CLEARANCE="$(npm root -g)/@clipboard-health/clearance/safehouse/safehouse-clearance"
-SAFEHOUSE_CLAUDE_PROXY="$(npm root -g)/@clipboard-health/clearance/safehouse/safehouse-claude-proxy"
+SAFEHOUSE="$(npm root -g)/@clipboard-health/clearance/safehouse"
 export CLEARANCE_ALLOW_HOSTS_FILES="$HOME/code/<your-repo>/clearance-allow-hosts:$HOME/.config/clearance/personal-allow-hosts"
 
-alias codex-proxy="$SAFEHOUSE_CLEARANCE codex --dangerously-bypass-approvals-and-sandbox"
-alias claude-proxy="$SAFEHOUSE_CLAUDE_PROXY"
+alias codex-proxy="$SAFEHOUSE/safehouse-clearance codex --dangerously-bypass-approvals-and-sandbox"
+alias claude-proxy="$SAFEHOUSE/safehouse-claude-proxy"
 ```
 
 `safehouse-claude-proxy` runs Claude through Safehouse with
@@ -173,7 +171,7 @@ credentials flag through the wrapper:
 
 ```bash
 aws sso login --profile <profile>
-AWS_PROFILE=<profile> "$SAFEHOUSE_CLEARANCE" \
+AWS_PROFILE=<profile> "$SAFEHOUSE/safehouse-clearance" \
   --enable=cloud-credentials --env-pass=AWS_PROFILE,AWS_REGION,AWS_SDK_LOAD_CONFIG,AWS_CONFIG_FILE,AWS_SHARED_CREDENTIALS_FILE,AWS_CA_BUNDLE \
   -- codex --dangerously-bypass-approvals-and-sandbox
 ```
