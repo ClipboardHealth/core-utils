@@ -28,7 +28,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@commander-js/extra-typings": "14.0.0",
+    "@commander-js/extra-typings": "15.0.0",
     "glob": "11.1.0",
     "tslib": "2.8.1",
     "yoctocolors-cjs": "2.1.3"
