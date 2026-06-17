@@ -1,38 +1,19 @@
+---
+description: "Designing REST APIs: JSON:API, auth, validation, pagination, ts-rest contracts, DTOs"
+---
+
 # REST API Design
 
 ## JSON:API Specification
 
-Follow [JSON:API spec](https://jsonapi.org/).
-
-```json
-{
-  "data": [
-    {
-      "id": "1",
-      "type": "shift",
-      "attributes": { "qualification": "nurse" },
-      "relationships": {
-        "assignedWorker": {
-          "data": { "type": "worker", "id": "9" }
-        },
-        "location": {
-          "data": { "type": "workplace", "id": "17" }
-        }
-      }
-    }
-  ]
-}
-```
+Follow the [JSON:API spec](https://jsonapi.org/) with these conventions:
 
 - Singular `type` values: `shift` not `shifts`
 - Links optional (use only for pagination)
 - Use `include` for related resources
 - Avoid `meta` unless necessary
 - Use lowerCamelCase for JSON keys
-
-## Error Responses
-
-Return errors using JSON:API `errors` array with `code`, `status`, and `title` fields.
+- Return errors using JSON:API `errors` array with `code`, `status`, and `title` fields
 
 ## URLs
 
@@ -44,27 +25,11 @@ POST /workers/:workerId/referral-codes
 
 ## HTTP Conventions
 
-- No PUT support — use PATCH for updates
-- POST returns the created resource DTO
-- Use only GET, POST, PATCH, DELETE
-- GET must be idempotent with no side effects
+- Use only GET, POST, PATCH, DELETE; no PUT support — use PATCH for updates
 - Model state changes as PATCH to resource attributes (not action-specific POST endpoints)
-
-## HTTP Status Codes
-
-| Code | Usage                                                 |
-| ---- | ----------------------------------------------------- |
-| 200  | GET, PATCH, DELETE success                            |
-| 201  | POST creation                                         |
-| 202  | Accepted (async processing)                           |
-| 400  | Syntactic errors or unsupported query params          |
-| 401  | Unauthenticated                                       |
-| 403  | Forbidden                                             |
-| 404  | Not found                                             |
-| 409  | Conflict                                              |
-| 422  | Semantic validation errors, unsupported filters/sorts |
-| 429  | Rate limited                                          |
-| 500  | Server error                                          |
+- POST returns the created resource DTO with 201
+- GET must be idempotent with no side effects
+- Return 400 for syntactic errors and unsupported query params; 422 for semantic validation errors and unsupported filters/sorts
 
 ## Authentication & Authorization
 
@@ -101,15 +66,6 @@ Use helpers from `@clipboard-health/contract-core` instead of raw Zod methods in
 - Name schemas with a `Schema` suffix: `ShiftAttributeSchema`, not `shiftAttribute`
 - Export at the DTO boundary (request/response schemas), not every intermediate schema
 - Compose relationships from shared schemas — don't redefine `type` literals per contract
-
-### `parsedApi.ts` vs `api.ts`
-
-Frontend repos have two API layers:
-
-- **`api.ts`** (legacy) — does not parse responses through Zod schemas. Inferred types say `Date` for `dateTimeSchema()` fields but the runtime value is still a string. Zod transforms (`.transform()`, `dateTimeSchema()`, enum fallbacks) produce **incorrect types at runtime**.
-- **`parsedApi.ts`** — parses both inputs (`z.input`) and outputs (`z.output`) through schemas. Types match runtime values.
-
-Use `parsedApi.ts` for all new API calls. However, `parsedApi.ts` means invalid contract schemas will fail at runtime — ensure contracts are forwards-compatible. Do not use `parsedApi.ts` if the contract contains bare `z.enum()` values that the backend may extend, as new enum values will cause parse failures on old clients. Migrate bare `z.enum()` to `requiredEnumWithFallback`/`optionalEnumWithFallback` first.
 
 ## Data Transfer
 

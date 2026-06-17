@@ -8,13 +8,16 @@ Clipboard's core development tools.
 - [Prerequisites](#prerequisites)
 - [Skills](#skills)
   - [babysit-pr](#babysit-pr)
-  - [clipboard-testing](#clipboard-testing)
+  - [clipboard-design-engineering](#clipboard-design-engineering)
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
+  - [frontend-ui-verification](#frontend-ui-verification)
+  - [in-depth-review](#in-depth-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
+  - [simple-review](#simple-review)
   - [simplify](#simplify)
 - [Syncing external plugins](#syncing-external-plugins)
   - [Adding a new repository](#adding-a-new-repository)
@@ -48,9 +51,9 @@ Clipboard's core development tools.
 
 Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize automated review-body comments from CodeRabbit and Mendral. Invoke with `/babysit-pr` for the current branch's PR, or `/babysit-pr <number|url>` to check out and babysit a specific PR.
 
-### clipboard-testing
+### clipboard-design-engineering
 
-End-to-end testing playbook for Clipboard Health changes. Verify, exercise, or set up test data for a backend or frontend change against a live environment. Defaults to the `development` AWS environment and is API-first (`cbh auth gentoken` + curl). The skill carries enough detail to run the core happy-path flow (workplace → worker → shift → clock in/out → pay → invoice) autonomously; for anything else, it orients around the codebase and asks for missing directories. Invoke with `/clipboard-testing` or by asking to test a change end-to-end.
+Apply Clipboard's design engineering standards for UI polish, component feel, interaction details, and motion decisions. Use for frontend polish, animation review, visual hierarchy, and component craft in admin or mobile UI.
 
 ### cognito-user-analysis
 
@@ -68,6 +71,14 @@ Investigate production issues by querying Datadog logs, metrics, and APM traces,
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
 
+### frontend-ui-verification
+
+Verify Clipboard frontend UI work against code, design references, Storybook, and browser screenshots. Use for Figma/design implementation, redesign UI changes, Storybook checkpoints, and visual QA.
+
+### in-depth-review
+
+Run a multi-agent code review on the current branch or a PR identified by argument. Defaults to engineering, minimalist, conventions, and AntiSlop reviewers, conditionally adds security/database/frontend specialists based on changed files, and includes the adversarial reviewer only when explicitly requested. Invoke with `/in-depth-review` or `/in-depth-review <number|url>`.
+
 ### local-package
 
 Use Clipboard's internal CLI (`@clipboard-health/cli`) to link and unlink packages across repositories for local development. Invoke with `/local-package` or let Claude auto-trigger when discussing local package development.
@@ -77,6 +88,10 @@ See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage d
 ### seed-data
 
 Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HCPs, facilities, shifts) in development, staging, or prod-shadow environments. Invoke with `/seed-data` or by asking to seed/create test data.
+
+### simple-review
+
+Run a single-pass code review on the current branch or a PR identified by argument. Uses the in-depth review rubric without subagents for smaller reviews or lower-budget passes. Invoke with `/simple-review` or `/simple-review <number|url>`.
 
 ### simplify
 

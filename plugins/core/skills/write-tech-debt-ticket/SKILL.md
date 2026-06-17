@@ -1,6 +1,6 @@
 ---
 name: write-tech-debt-ticket
-description: Use when creating a Linear tech debt ticket while working in the codebase — from code review, PR comments, codebase audits, or post-incident findings. Expects deep technical context; classifies debt, assesses interest/risk with evidence, and justifies impact.
+description: Use when creating a Linear tech debt ticket while working in the codebase — from code review, PR comments, codebase audits, or post-incident findings.
 ---
 
 # Write Tech Debt Ticket
@@ -15,16 +15,18 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 1. **Gather context** — from code, PR comment, conversation, or audit. Note how the debt was discovered (see Discovery Context below).
 2. **Analyze the code** — read the actual code. Understand what it does and why it qualifies as debt.
-3. **Classify** — pick a primary debt type (and optional secondary) from classification table in reference.md
+3. **Classify** — pick a primary debt type (and optional secondary) from the debt types table in reference.md
 4. **Gather evidence** (driven by classification):
    - Performance/Scalability/Reliability → search Datadog (NOT optional for these types)
    - Maintainability/DX → `git log` for change frequency and bug-fix commits, grep for workarounds
    - Security → check dependency versions, scan for vulnerability patterns
 5. **Assess interest & risk** — produce structured ratings with evidence (see reference.md for rating framework)
-6. **Draft** — title + description, structure scaled to complexity (see format below)
-7. **Self-review** — check every Red Flag below before presenting
-8. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
-9. **Create in Linear** — only after explicit approval. Apply `technical-debt` label.
+6. **Clarify (conditional)** — if blast radius, business impact, or ownership can't be determined from code or data, ask the user before drafting. NEVER invent answers.
+7. **Draft** — title + description, structure scaled to complexity (see format below)
+8. **Self-review** — check every Red Flag below before presenting
+9. **Present for review** — show ONLY the draft and metadata suggestions. Ask for team/assignee.
+10. **Resolve labels** — always include the `technical-debt` type label, plus any relevant team labels (see Labels below).
+11. **Create in Linear** — only after explicit approval. Apply the resolved labels.
 
 ## Hard Rules
 
@@ -38,6 +40,8 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 - **Never invent.** Every claim must be backed by code you read, data you found, or context from the conversation. If you can't find evidence for an assertion, don't include it — even if it seems plausible.
 - **One ticket, one concern.** If the debt spans multiple independent problems (e.g., a performance issue AND a maintainability issue in the same service), split into separate tickets — each with its own classification, evidence, and impact. Related debt can reference each other.
 - **Always document the repository.** Flag multi-repo debt to the user for splitting.
+- **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
+- **Always label by type.** Every tech debt ticket carries the `technical-debt` type label (or the team's closest equivalent — never invent or create a label without the user's say-so). Also suggest relevant team labels for approval. See Labels.
 - **Redirect non-debt.** Bugs → `write-bug-ticket`, features → `write-feature-ticket`.
 
 ## Ticket Format
@@ -52,9 +56,18 @@ Draft Linear tech debt tickets that justify _why_ the debt matters — cost to c
 
 **Complex debt** (multi-file, systemic, high-stakes): Use `## What Is The Debt` (include repository), `## Discovery Context` (if applicable — originating ticket/PR and how the work revealed the debt), `## Debt Classification` (type + rated interest/risk with justifications), `## Code References`, `## Evidence`, `## Ideal State` (destination, not route), `## Impact If Left Unaddressed`.
 
-**Metadata:** Priority, labels (`technical-debt`), presented BELOW the body. Always ask for team/assignee.
+**Metadata:** Priority, labels (`technical-debt` type label + approved relevant labels, see Labels), presented BELOW the body. Always ask for team/assignee.
 
-See reference.md for classification tables, rating framework, and full examples.
+See reference.md for the debt types table, rating framework, and full examples.
+
+## Labels
+
+Every ticket gets its type label plus any relevant team labels. Labels are presented in the metadata block and applied when the user approves the ticket.
+
+**Resolving labels requires the target team.** `list_issue_labels` is team-scoped, so confirm the team (the "Present for review" step) before resolving — suggest the type label by name up front, then resolve it against the team's actual label set once the team is known.
+
+1. **Type label (mandatory).** Fetch the target team's labels (Linear MCP `list_issue_labels` for that team) and apply the one denoting tech debt: `technical-debt` if it exists, otherwise the closest existing equivalent. Match case-insensitively and accept grouped variants. If no reasonable match exists, ask the user which label to use — NEVER invent a label or create a new one without the user's say-so.
+2. **Relevant labels (suggested).** Review the team's other labels (e.g. `product-area`, area, severity) and suggest those that fit this ticket. Apply them only on approval.
 
 ## Red Flags — Self-Review Before Presenting
 
@@ -70,6 +83,7 @@ See reference.md for classification tables, rating framework, and full examples.
 | No "Impact If Left Unaddressed"   | Always include — this gets the ticket prioritized         |
 | No Datadog for perf/reliability   | You MUST search Datadog for these types                   |
 | Forced Datadog on maintainability | Only for performance/reliability/scalability              |
-| Guessed team assignment           | Ask the user                                              |
+| Guessed team assignment           | Ask the user — never guess                                |
 | Missing repository                | Include repo name in ticket body — derive from git remote |
 | Missing discovery context         | If debt was found during ticket/PR work, link it          |
+| No `technical-debt` type label    | Always apply it (or the team's closest equivalent)        |

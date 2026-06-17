@@ -1,6 +1,6 @@
 ---
 name: write-feature-ticket
-description: Use when creating a Linear feature request ticket from conversation context, a brief description, or code/PR analysis. Interviews the user for clarity when context is insufficient.
+description: Use when creating a Linear feature request ticket from conversation context, a brief description, or code/PR analysis — including when context is too thin to draft from.
 ---
 
 # Write Feature Ticket
@@ -18,14 +18,14 @@ Draft Linear feature request tickets that describe what users need and why — n
 3. **Final validation** — run the checklist below before drafting. This is the ticket skill's own quality check — it doesn't blindly trust upstream context.
 4. **Assess scope** — does the problem contain multiple independent user-facing outcomes? If so, decompose into parent + sub-issues, each describing one outcome. Decomposition is about what the user gets, not how the engineer builds it.
 5. **Draft** — title + description, structure scaled to complexity (see Ticket Format below)
-6. **Self-review** — check every item in [red-flags.md](red-flags.md) before presenting
-7. **Suggest metadata (conditional)** — priority (Urgent/High/Medium/Low/No Priority), labels, project when context supports it. Present metadata suggestions BELOW the ticket body, separate from the description.
-8. **Present for review** — show the draft to the user. Wait for explicit approval before proceeding.
-9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply any confirmed metadata. NEVER create without user approval.
+6. **Self-review** — check every Red Flag below before presenting
+7. **Present for review** — show the draft to the user, plus metadata suggestions BELOW the ticket body, separate from the description: the `feature` type label, priority (Urgent/High/Medium/Low/No Priority), relevant team labels, and project when context supports it. Ask for team/assignee.
+8. **Resolve labels** — once the team is known, resolve labels against that team's label set (see Labels below): the `feature` type label on the parent and every sub-issue, plus any approved relevant labels. Wait for explicit approval before proceeding.
+9. **Create in Linear** — once the user approves (or approves with changes), create the ticket in Linear using the Linear MCP tools. For sub-issues, create parent first, then children linked to it. Apply the resolved labels and any confirmed metadata. NEVER create without user approval.
 
 ## Final Validation Checklist
 
-Before drafting, verify ALL of these. If any fail, bounce back to `interview-feature` or ask the user directly:
+This gate checks the INPUTS before drafting (the Red Flags table below checks the DRAFT after writing). Verify ALL of these. If any fail, bounce back to `interview-feature` or ask the user directly:
 
 | Check                  | Fail condition                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,11 +46,13 @@ Before drafting, verify ALL of these. If any fail, bounce back to `interview-fea
 - **Never invent.** If a detail isn't established from the user, research, or conversation, it doesn't go in the ticket. Period.
 - **Approval required.** Always present the draft for user review first. Only create the ticket in Linear after the user explicitly approves.
 - **Always document the repository.** Every ticket must specify which repo the work belongs in. If the feature spans multiple repos, flag this — it likely needs separate tickets.
+- **Always label by type.** Every feature ticket (and each sub-issue) carries the `feature` type label (or the team's closest equivalent — never invent or create a label without the user's say-so). Also suggest relevant team labels for approval. See Labels.
+- **Always ask for team/assignee.** Never guess — ask the user.
 - **Feature requests only.** Redirect bug reports to `write-bug-ticket`, tech debt to `write-tech-debt-ticket`.
 
 ## Ticket Format
 
-**Title:** Short, imperative, describes the CAPABILITY — not the implementation. Under 70 characters.
+**Title:** Short, imperative, describes the CAPABILITY — not the implementation. Under 70 characters. No bracket prefixes.
 
 **Repository:** Always include the repository name in the ticket body. Run `git remote get-url origin | sed 's/\.git$//' | sed 's/.*[:/]\([^/]*\/[^/]*\)$/\1/'` to get the `org/repo` name. For simple features, include as a bold inline label at the end. For complex features, include in `## Context`.
 
@@ -68,5 +70,36 @@ Sections as needed:
 **Sub-issues** (when decomposed):
 Each sub-issue follows the same format. Note blocking relationships (e.g., "_Blocked by: [sub-issue title]_").
 
-**For self-review anti-patterns**, see [red-flags.md](red-flags.md).
-**For ticket examples** (good and bad), see [examples.md](examples.md).
+See reference.md for full examples (good and bad).
+
+## Labels
+
+Every ticket gets its type label plus any relevant team labels. Labels are presented in the metadata block and applied when the user approves the ticket.
+
+**Resolving labels requires the target team.** `list_issue_labels` is team-scoped, so confirm the team (the "Present for review" step) before resolving — suggest the type label by name up front, then resolve it against the team's actual label set once the team is known.
+
+1. **Type label (mandatory).** Fetch the target team's labels (Linear MCP `list_issue_labels` for that team) and apply the one denoting a feature: `feature` if it exists, otherwise the closest existing equivalent (e.g. `feature-request`). Match case-insensitively and accept grouped variants. If no reasonable match exists, ask the user which label to use — NEVER invent a label or create a new one without the user's say-so.
+2. **Relevant labels (suggested).** Review the team's other labels (e.g. `product-area`, area) and suggest those that fit this ticket. Apply them only on approval.
+3. **Sub-issues.** Each sub-issue carries the same `feature` type label as the parent, plus its own relevant labels.
+
+## Red Flags — Self-Review Before Presenting
+
+This table checks the DRAFT after writing (the Final Validation Checklist above gates the inputs before drafting). If any row applies, fix before presenting.
+
+| Anti-Pattern                                                      | Fix                                                                                       |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| "Proposed Solution" section ("Add a toggle to settings")          | DELETE the section entirely — describe only the problem and desired outcome               |
+| Technical suggestions in body ("Use Redis for caching")           | Remove — describe the need, not the solution                                              |
+| Implementation steps as AC ("Add a column to the table")          | Rewrite as what the user can do or observe                                                |
+| Internal system behavior as AC ("The cron job skips...")          | Rewrite from user perspective — every AC must pass: "Could a non-engineer verify this?"   |
+| Implementation constraints as AC ("Persisted at workplace level") | Remove — this is an implementation detail                                                 |
+| Vague problem statement ("Improve search")                        | Add who is affected, what they can't do, why it matters                                   |
+| Solution-shaped title ("Add GraphQL endpoint for shifts")         | Rewrite as the capability: "Allow filtering shifts by..."                                 |
+| Code references in body ("Modify `DailyNotificationCronJob`")     | Remove all code references — describe the behavior change from the user's perspective     |
+| Parroting technical input (user says "field X", ticket says it)   | Translate to user-facing language — the ticket reader shouldn't need to know the codebase |
+| Invented details                                                  | Remove — if the detail is needed, bounce back to the interview skill                      |
+| No decomposition for multi-outcome work                           | Split into parent + sub-issues, each describing one deliverable outcome                   |
+| Bracket title prefixes                                            | Describe the capability without brackets                                                  |
+| Guessed team assignment                                           | Ask the user — never guess                                                                |
+| Missing repository                                                | Include repo name in ticket body — derive from git remote                                 |
+| No `feature` type label                                           | Always apply it (or the team's closest equivalent), on the parent and every sub-issue     |

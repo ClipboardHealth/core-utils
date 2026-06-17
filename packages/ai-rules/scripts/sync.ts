@@ -1,17 +1,10 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { access, chmod, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, chmod, cp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  CATEGORIES,
-  FILES,
-  type ProfileName,
-  PROFILES,
-  RULE_FILES,
-  type RuleId,
-  toRulePath,
-} from "./constants";
+import { FILES, type ProfileName, PROFILES } from "./constants";
 import { execAndLog } from "./execAndLog";
+import { discoverRules, generateAgentsIndex, resolveRules, type RuleMetadata } from "./rules";
 import { toErrorMessage } from "./toErrorMessage";
 
 const PATHS = {
@@ -21,15 +14,29 @@ const PATHS = {
 
 interface ParsedArguments {
   profile: ProfileName;
-  extraIncludes: RuleId[];
-  excludes: RuleId[];
+  extraIncludes: string[];
+  excludes: string[];
 }
+
+type AgentDirectoryName = "skills" | "lib";
+type AgentDirectorySyncResult = "missing" | "linked" | "copied";
 
 async function sync() {
   try {
     const parsedArguments = parseArguments();
-    const ruleIds = resolveRuleIds(parsedArguments);
-    if (ruleIds.length === 0) {
+    const allRules = await discoverRules(path.join(PATHS.packageRoot, "rules"));
+    const { rules, unknownIds } = resolveRules({
+      rules: allRules,
+      profileCategories: PROFILES[parsedArguments.profile].include,
+      includes: parsedArguments.extraIncludes,
+      excludes: parsedArguments.excludes,
+    });
+    if (unknownIds.length > 0) {
+      console.warn(`⚠️ Ignoring unknown rules: ${unknownIds.join(", ")}`);
+      console.warn(`Available rules: ${allRules.map((rule) => rule.id).join(", ")}`);
+    }
+
+    if (rules.length === 0) {
       console.error("❌ Error: No rules remaining after excludes");
       process.exit(1);
     }
@@ -43,33 +50,32 @@ async function sync() {
       rm(skillsOutput, { recursive: true, force: true }),
       rm(libraryOutput, { recursive: true, force: true }),
     ]);
-    const [, skillsCopied, libraryCopied] = await Promise.all([
-      copyRuleFiles(ruleIds, rulesOutput),
-      copySkillFiles(skillsOutput),
-      copyLibraryFiles(libraryOutput),
+    const [, skillsSyncResult, librarySyncResult] = await Promise.all([
+      copyRuleFiles(rules, rulesOutput),
+      syncAgentDirectory("skills", skillsOutput),
+      syncAgentDirectory("lib", libraryOutput),
       copySetupScript(),
       mergeSessionStartHook(),
     ]);
 
-    const agentsContent = await generateAgentsIndex(ruleIds);
+    const agentsContent = generateAgentsIndex(rules);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
     await writeFile(path.join(PATHS.projectRoot, FILES.claude), "@AGENTS.md\n", "utf8");
 
     console.log(
-      `✅ @clipboard-health/ai-rules synced ${parsedArguments.profile} (${ruleIds.length} rules)`,
+      `✅ @clipboard-health/ai-rules synced ${parsedArguments.profile} (${rules.length} rules)`,
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot, { skillsCopied, libCopied: libraryCopied });
+    await formatOutputFiles(PATHS.projectRoot, {
+      skillsCopied: skillsSyncResult === "copied",
+      libCopied: librarySyncResult === "copied",
+    });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
     process.exit(0);
   }
-}
-
-function isRuleId(value: string): value is RuleId {
-  return value in RULE_FILES;
 }
 
 function isProfileName(value: string): value is ProfileName {
@@ -89,8 +95,8 @@ function parseArguments(): ParsedArguments {
     printUsageAndExit();
   }
 
-  const extraIncludes: RuleId[] = [];
-  const excludes: RuleId[] = [];
+  const extraIncludes: string[] = [];
+  const excludes: string[] = [];
   let mode: "include" | "exclude" | undefined;
 
   for (const argument of processArguments.slice(1)) {
@@ -101,10 +107,6 @@ function parseArguments(): ParsedArguments {
     } else if (!mode) {
       console.error(`❌ Error: Unexpected argument "${argument}"`);
       printUsageAndExit();
-    } else if (!isRuleId(argument)) {
-      console.error(`❌ Error: Unknown rule "${argument}"`);
-      console.error(`Available rules: ${Object.keys(RULE_FILES).join(", ")}`);
-      process.exit(1);
     } else if (mode === "include") {
       extraIncludes.push(argument);
     } else {
@@ -125,58 +127,66 @@ function printUsageAndExit(): never {
   process.exit(1);
 }
 
-function resolveRuleIds(parsedArguments: ParsedArguments): RuleId[] {
-  const { profile, extraIncludes, excludes } = parsedArguments;
-
-  const profileRules = PROFILES[profile].include.flatMap((category) => CATEGORIES[category]);
-  const ruleSet = new Set<RuleId>([...profileRules, ...extraIncludes]);
-
-  for (const ruleId of excludes) {
-    ruleSet.delete(ruleId);
-  }
-
-  return [...ruleSet];
-}
-
-async function copyRuleFiles(ruleIds: RuleId[], rulesOutput: string): Promise<void> {
+async function copyRuleFiles(rules: RuleMetadata[], rulesOutput: string): Promise<void> {
   await Promise.all(
-    ruleIds.map(async (ruleId) => {
-      const rulePath = toRulePath(ruleId);
-      const destination = path.join(rulesOutput, rulePath);
+    rules.map(async (rule) => {
+      const destination = path.join(rulesOutput, rule.relativePath);
       await mkdir(path.dirname(destination), { recursive: true });
-      await cp(path.join(PATHS.packageRoot, "rules", rulePath), destination);
+      await cp(path.join(PATHS.packageRoot, "rules", rule.relativePath), destination);
     }),
   );
 }
 
-async function copySkillFiles(skillsOutput: string): Promise<boolean> {
-  const skillsSource = path.join(PATHS.packageRoot, "skills");
+async function syncAgentDirectory(
+  directoryName: AgentDirectoryName,
+  destination: string,
+): Promise<AgentDirectorySyncResult> {
+  const source = await resolveAgentDirectorySource(directoryName);
 
+  if (!source) {
+    return "missing";
+  }
+
+  await mkdir(path.dirname(destination), { recursive: true });
+
+  const relativeSource = path.relative(path.dirname(destination), source);
   try {
-    await cp(skillsSource, skillsOutput, { recursive: true });
-    console.log(`📋 Synced skills to .agents/skills/`);
-    return true;
+    await symlink(relativeSource, destination, "dir");
+    console.log(`📋 Linked ${directoryName} to .agents/${directoryName}/`);
+    return "linked";
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return false;
-    }
-    throw error;
+    console.warn(
+      `⚠️ Could not symlink ${directoryName}; copying instead: ${toErrorMessage(error)}`,
+    );
+    await cp(source, destination, { recursive: true });
+    console.log(`📋 Synced ${directoryName} to .agents/${directoryName}/`);
+    return "copied";
   }
 }
 
-async function copyLibraryFiles(libraryOutput: string): Promise<boolean> {
-  const librarySource = path.join(PATHS.packageRoot, "lib");
+async function resolveAgentDirectorySource(
+  directoryName: AgentDirectoryName,
+): Promise<string | undefined> {
+  const packageSource = path.join(PATHS.packageRoot, directoryName);
+  const sourceTreeSource = path.join(PATHS.projectRoot, "plugins", "core", directoryName);
 
-  try {
-    await cp(librarySource, libraryOutput, { recursive: true });
-    console.log(`📋 Synced lib to .agents/lib/`);
-    return true;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return false;
-    }
-    throw error;
+  // This repo runs the built sync script from dist/, but checked-in links should
+  // target source assets rather than ignored build output.
+  if (isSourceBuildPackage() && (await fileExists(sourceTreeSource))) {
+    return sourceTreeSource;
   }
+
+  if (await fileExists(packageSource)) {
+    return packageSource;
+  }
+
+  return undefined;
+}
+
+function isSourceBuildPackage(): boolean {
+  return path
+    .normalize(PATHS.packageRoot)
+    .endsWith(path.normalize(path.join("dist", "packages", "ai-rules")));
 }
 
 async function copySetupScript(): Promise<void> {
@@ -211,7 +221,7 @@ async function mergeSessionStartHook(): Promise<void> {
   }
 
   const hooks = (settings["hooks"] ?? {}) as Record<string, unknown>;
-  const sessionStart = (hooks["SessionStart"] ?? []) as Record<string, unknown>[];
+  const sessionStart = (hooks["SessionStart"] ?? []) as Array<Record<string, unknown>>;
 
   // Every command string this package has ever shipped, past and present.
   const knownCommands = new Set([expectedCommand, '"$CLAUDE_PROJECT_DIR"/scripts/setup.sh']);
@@ -224,7 +234,7 @@ async function mergeSessionStartHook(): Promise<void> {
   let hasStale = false;
   let currentCount = 0;
   for (const entry of sessionStart) {
-    const entryHooks = (entry["hooks"] ?? []) as Record<string, unknown>[];
+    const entryHooks = (entry["hooks"] ?? []) as Array<Record<string, unknown>>;
     for (const h of entryHooks) {
       if (typeof h["command"] !== "string" || !knownCommands.has(h["command"])) {
         continue;
@@ -246,7 +256,7 @@ async function mergeSessionStartHook(): Promise<void> {
   // Remove only our specific hook commands from each entry, preserving unrelated
   // commands that may share the same entry. Drop entries left with no hooks.
   const cleaned = sessionStart.flatMap((entry) => {
-    const entryHooks = entry["hooks"] as Record<string, unknown>[] | undefined;
+    const entryHooks = entry["hooks"] as Array<Record<string, unknown>> | undefined;
     if (entryHooks?.some((h) => isKnownCommand(h)) !== true) {
       return [entry];
     }
@@ -263,39 +273,6 @@ async function mergeSessionStartHook(): Promise<void> {
 
   const action = hasStale || currentCount > 1 ? "Updated" : "Added";
   console.log(`📋 ${action} SessionStart hook in .claude/settings.json`);
-}
-
-async function extractHeading(filePath: string): Promise<string> {
-  try {
-    const content = await readFile(filePath, "utf8");
-    const match = /^#\s+(.+)$/m.exec(content);
-    return match?.[1] ?? path.basename(filePath, ".md");
-  } catch {
-    return path.basename(filePath, ".md");
-  }
-}
-
-async function generateAgentsIndex(ruleIds: RuleId[]): Promise<string> {
-  const rows = await Promise.all(
-    ruleIds.map(async (ruleId) => {
-      const rulePath = toRulePath(ruleId);
-      const heading = await extractHeading(path.join(PATHS.packageRoot, "rules", rulePath));
-      return `| ${heading} | .rules/${rulePath} | ${RULE_FILES[ruleId]} |`;
-    }),
-  );
-
-  return [
-    "<!-- Generated by @clipboard-health/ai-rules -->",
-    "",
-    "# Coding Rules",
-    "",
-    "IMPORTANT: You MUST read the relevant rule files below before writing or reviewing code.",
-    "",
-    "| Rule | File | When to Read |",
-    "|------|------|-------------|",
-    ...rows,
-    "",
-  ].join("\n");
 }
 
 async function appendOverlay(projectRoot: string): Promise<void> {

@@ -1,6 +1,6 @@
 # Tech Debt Ticket Reference
 
-## Debt Classification
+## Debt Types
 
 | Type                     | Description                                          | Evidence to Gather                               |
 | ------------------------ | ---------------------------------------------------- | ------------------------------------------------ |
@@ -32,6 +32,8 @@
 Each: High/Medium/Low with a one-line justification backed by evidence.
 
 ## Examples
+
+Headings inside these examples are deepened to nest within this document — real tickets use the `##` sections specified in SKILL.md.
 
 ### Simple Tech Debt Ticket
 
@@ -65,7 +67,7 @@ Four cron jobs (`DailyDigestCron`, `ShiftReminderCron`, `CredentialExpiryCron`, 
 
 Discovered while implementing push notification support for [ENG-3891](https://linear.app/clipboard-health/issue/ENG-3891). Adding the new channel required duplicating dispatch logic into a fifth cron job, revealing the extent of the divergence.
 
-#### Classification
+#### Debt Classification
 
 - **Type:** Maintainability (primary), Reliability (secondary)
 - **Interest:** High — 11 commits across these 4 files in the last 90 days, 6 were bug fixes. Each fix required checking whether the same bug existed in the other three. Two workaround functions exist in `src/services/notifications/helpers.ts` solely to normalize behavior.
@@ -93,4 +95,4 @@ A single notification dispatch service handles recipient resolution, template se
 
 Every new notification type or channel requires duplicating logic in 4 places. Bug fixes remain whack-a-mole — every fix is 4x the work and still risks inconsistency. At current rate (~2 notification bugs/month), engineering cost compounds and reliability divergence widens.
 
-Suggested metadata: Priority: Medium | Labels: tech-debt, notifications
+Suggested metadata: Priority: Medium | Labels: technical-debt, notifications

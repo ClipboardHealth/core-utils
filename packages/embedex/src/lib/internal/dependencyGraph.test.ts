@@ -467,7 +467,9 @@ describe("dependencyGraph", () => {
   });
 });
 
-function createDestinationMap(entries: [destination: string, sources: string[]][]): DestinationMap {
+function createDestinationMap(
+  entries: Array<[destination: string, sources: string[]]>,
+): DestinationMap {
   return new Map(
     entries.map(([destination, sources]) => [
       destination,

@@ -24,7 +24,12 @@
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
     "packages/clearance": {
-      "entry": ["src/cli.ts", "src/ensureCli.ts"],
+      "entry": [
+        "bin/safehouseClaudeProxy.js",
+        "src/cli.ts",
+        "src/ensureCli.ts",
+        "src/safehouseClaudeProxyCli.ts",
+      ],
     },
     "packages/config": {
       "entry": ["examples/**/*.ts", "src/index.ts"],

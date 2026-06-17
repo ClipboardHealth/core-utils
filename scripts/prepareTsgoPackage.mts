@@ -7,7 +7,7 @@ import {
 } from "@nx/devkit";
 import { copyAssets as nxCopyAssets, getUpdatedPackageJsonContent } from "@nx/js";
 import { rmSync } from "node:fs";
-import { isAbsolute } from "node:path";
+import path from "node:path";
 
 type PackageJson = Parameters<typeof getUpdatedPackageJsonContent>[0];
 type Asset = Parameters<typeof nxCopyAssets>[0]["assets"][number];
@@ -48,13 +48,6 @@ const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
     "packages/oxlint-config/src/vitest.json",
   ],
   "packages/playwright-reporter-llm": ["packages/playwright-reporter-llm/docs/*.json"],
-  "packages/tribunal": [
-    {
-      input: "./packages/tribunal/bin",
-      glob: "**/*",
-      output: "./bin",
-    },
-  ],
 };
 
 async function main(): Promise<void> {
@@ -80,7 +73,7 @@ function normalizeProjectRoot(projectRoot: string): string {
   const segments = projectRoot.split("/").filter(Boolean);
 
   if (
-    isAbsolute(projectRoot) ||
+    path.isAbsolute(projectRoot) ||
     projectRoot.includes("\\") ||
     segments.length === 0 ||
     segments.some((segment) => segment === "." || segment === "..")
@@ -104,7 +97,10 @@ function cleanBuildOutput({
   outputPath: string;
   projectRoot: string;
 }): void {
-  rmSync(joinPathFragments(workspaceRoot, outputPath), { force: true, recursive: true });
+  rmSync(joinPathFragments(workspaceRoot, outputPath), {
+    force: true,
+    recursive: true,
+  });
   rmSync(
     joinPathFragments(workspaceRoot, ".nx", "tsbuildinfo", projectRoot, "tsconfig.lib.tsbuildinfo"),
     { force: true },

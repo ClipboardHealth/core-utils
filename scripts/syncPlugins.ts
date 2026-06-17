@@ -21,10 +21,10 @@ interface RepoConfig {
   repo: string;
   ref?: string;
   pluginsPath?: string;
-  plugins: {
+  plugins: Array<{
     name: string;
     components: SyncComponent[];
-  }[];
+  }>;
 }
 
 const SYNC_CONFIG: RepoConfig[] = [

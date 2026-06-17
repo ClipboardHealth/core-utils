@@ -2,11 +2,13 @@
 
 ## Examples
 
+Headings inside these examples are deepened to nest within this document — real tickets use the `##` sections specified in SKILL.md.
+
 ### What NOT to Write
 
 > **Title:** [BUG] 500 errors spiking on timesheet approval endpoint
 >
-> ### Investigation Notes
+> #### Investigation Notes
 >
 > - [ ] Pull error logs and stack traces from Datadog
 > - [ ] Check for recent deployments prior to 14:00 UTC
@@ -34,38 +36,38 @@ Nurses on the mobile app are unable to complete shift bookings. After submitting
 - [RUM: session for user 12345 showing hang](https://app.datadoghq.com/rum/...)
 - [Logs: timeout errors on booking confirmation endpoint (last 7d)](https://app.datadoghq.com/logs?query=...)
 
-Suggested metadata: Priority: High
+Suggested metadata: Priority: High | Labels: bug (type), Shift Bookability (relevant)
 
 ### Monitoring-Surfaced Bug
 
 **Title:** Elevated 500 errors on timesheet approval endpoint since 14:00 UTC
 
-## Expected Behavior
+#### Expected Behavior
 
 Timesheet approval requests complete successfully.
 
-## Actual Behavior
+#### Actual Behavior
 
 ~8% of requests returning 500 errors since 14:00 UTC on 2026-03-12. Error rate is 5x baseline.
 
-## Steps to Reproduce
+#### Steps to Reproduce
 
 Not yet reproduced manually. Observed via monitoring.
 
-## Evidence
+#### Evidence
 
 - [Logs: 500 errors on /api/timesheets/approve (last 4h)](https://app.datadoghq.com/logs?query=...)
 - [APM: error trace sample](https://app.datadoghq.com/apm/traces/...)
 - [Monitor: timesheet-approval-error-rate (alerting)](https://app.datadoghq.com/monitors/...)
 
-## Technical Context
+#### Technical Context
 
 **Repository:** ClipboardHealth/core-utils
 
 Errors began at 2026-03-12 14:00 UTC. Error logs reference `MongoServerError: connection pool exhausted`. Correlates with deploy at 13:45 UTC.
 
-## Impact
+#### Impact
 
 Users unable to approve timesheets. ~300 failed requests in 4 hours.
 
-Suggested metadata: Priority: Urgent
+Suggested metadata: Priority: Urgent | Labels: bug (type), Workplace timesheets (relevant)

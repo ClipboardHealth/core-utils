@@ -20,6 +20,15 @@ export {
   spawnClearance,
   type SpawnClearanceInput,
 } from "./launcher.ts";
+export {
+  resolveSafehouseCmuxIntegration,
+  type ResolveSafehouseCmuxIntegrationInput,
+  SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
+  SAFEHOUSE_CMUX_ENV_PASS,
+  SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES,
+  type SafehouseCmuxIntegration,
+  safehouseCmuxIntegrationWarningLines,
+} from "./safehouseCmux.ts";
 
 export const CLEARANCE_PACKAGE_NAME = "@clipboard-health/clearance";
 
@@ -35,7 +44,7 @@ export interface ClearanceConfig {
 }
 
 export interface ClearanceLogger {
-  info(message: string): void;
+  info: (message: string) => void;
 }
 
 export type DnsLookup = (hostname: string) => Promise<readonly LookupAddress[]>;
@@ -568,9 +577,9 @@ function hostAllowed(hostname: string, allowedHosts: readonly string[]): boolean
 }
 
 function parseConnectTarget(input: string): ParsedConnectTarget | undefined {
-  const ipv6 = /^\[([^\]]+)]:(\d+)$/.exec(input);
+  const ipv6 = /^\[(?<host>[^\]]+)]:(?<port>\d+)$/.exec(input);
   if (ipv6 !== null) {
-    const [, host, rawPort] = ipv6;
+    const { host, port: rawPort } = ipv6.groups!;
     const port = parsePort(rawPort);
     /* v8 ignore next @preserve */
     if (host === undefined || port === undefined) {
@@ -625,7 +634,7 @@ function parseConnectionHeaderTokens(value: http.OutgoingHttpHeader | undefined)
     .filter((token) => token.length > 0);
 }
 
-function normalizeAllowedPorts(rawPorts: readonly (number | string)[]): number[] {
+function normalizeAllowedPorts(rawPorts: ReadonlyArray<number | string>): number[] {
   const ports = rawPorts.map((rawPort) => {
     const port = typeof rawPort === "number" ? rawPort : Number(rawPort);
     if (!isValidPort(port)) {
@@ -695,7 +704,7 @@ function isPrivateIpAddress(ip: string, family: 4 | 6): boolean {
 }
 
 function createIpBlockList(
-  ranges: readonly (readonly [string, number])[],
+  ranges: ReadonlyArray<readonly [string, number]>,
   family: "ipv4" | "ipv6",
 ): net.BlockList {
   const blockList = new net.BlockList();

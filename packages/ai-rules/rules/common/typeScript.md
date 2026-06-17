@@ -1,26 +1,32 @@
+---
+description: "Writing ANY TypeScript code"
+---
+
 # TypeScript
+
+## Domain Language
+
+- Use `worker`, not `agent`, `hcp`, or `healthcareProvider`
+- Use `workplace`, not `facility`, `hcf`, or `healthcareFacility`
+- Use `qualification`, not `agentRequirement`, `agentReq`, or `workerType`
 
 ## Naming Conventions
 
 - Avoid acronyms and abbreviations; for those widely known, use camelCase: `httpRequest`, `gpsPosition`, `cliArguments`, `apiResponse`
 - File-scoped constants: `MAX_RETRY_COUNT`
-- Instead of `agentRequirement`, `agentReq`, `workerType`, use `qualification`
-- Instead of `agent`, `hcp`, `healthcareProvider`, use `worker`
-- Instead of `facility`, `hcf`, `healthcareFacility`, use `workplace`
 
 ## Core Rules
 
-- Strict-mode TypeScript
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
 - Files read top-to-bottom: exports first, internal helpers below
-- Boolean props: `is*`, `has*`, `should*`, `can*`
-- Use const assertions for constants: `as const`
 - Use immutable array methods (`toSorted`, `toReversed`) instead of mutating methods (`sort`, `reverse`)
 - Return Prisma decimal values as strings in API responses to avoid floating-point precision issues
 - Use explicit access modifiers (`public`, `private`, `protected`) on all class methods and properties
 - Use a `for` loop with `// eslint-disable-next-line no-await-in-loop` for intentional sequential execution (e.g., rate limiting, ordered processing, or resource constraints); prefer `Promise.all` when operations are independent
+- Functions take a single object argument typed by an interface and destructure it inside the function body
+- Make quantity values unambiguous: `{ amountInMinorUnits: 500, currencyCode: "USD" }`, `durationMinutes: 30`
 
 ## Dead Code Cleanup
 
@@ -34,37 +40,6 @@ In TypeScript code that has access to `@clipboard-health/util-ts`, prefer the na
 - Replace `x !== undefined`, `x !== null`, or `x` (as a truthy presence check) with `isDefined(x)`.
 
 Import from `@clipboard-health/util-ts`.
-
-## Types
-
-```typescript
-// Quantity values—always unambiguous
-const money = { amountInMinorUnits: 500, currencyCode: "USD" };
-const durationMinutes = 30;
-```
-
-## Functions
-
-```typescript
-// Object arguments with interfaces
-interface CreateUserRequest {
-  email: string;
-  name?: string;
-}
-
-function createUser(request: CreateUserRequest): User {
-  const { email, name } = request; // Destructure inside
-  // ...
-}
-
-// Guard clauses for early returns; happy path last
-function processOrder(order: Order): Result {
-  if (!order.isValid) {
-    return { error: "Invalid order" };
-  }
-  // Main logic
-}
-```
 
 ## Error Handling
 
@@ -90,30 +65,6 @@ throw new ServiceError({
 - Use `date-fns` only for timezone-agnostic timestamp math and parsing
 - Use `date-fns` comparison functions (`isBefore`, `isAfter`, `isEqual`, `isSameDay`, `compareAsc`, `compareDesc`) for all date comparisons — never use raw JS comparison operators (`>`, `<`, `===`, `>=`, `<=`) or `.getTime()` for equality/inequality checks
 - Never import `date-fns-tz`, `@date-fns/tz`, `moment`, or `moment-timezone`
-- In contracts, use `dateTimeSchema()` from `contract-core` for date fields — not `z.coerce.date()`, `z.string().datetime()`, or `z.date()`
-
-```typescript
-import { isBefore, isAfter, isSameDay } from "date-fns";
-
-// ✅ Good — explicit, readable, handles edge cases
-if (isBefore(shiftStart, now)) {
-}
-if (isSameDay(createdAt, today)) {
-}
-
-// ❌ Bad — raw JS comparison, implicit coercion risks
-if (shiftStart < now) {
-}
-if (shiftStart.getTime() === today.getTime()) {
-}
-```
-
-## Internal Libraries
-
-- Use object arguments and object return types in library APIs; wrap exported responses in `ServiceResult`; prefer `ServiceResult` for expected errors and reserve throwing for unexpected/unrecoverable failures
-- Library API types must not contain `any` or bare `object`; prefer specific types over `unknown`, but allow `unknown` when type safety requires caller-side narrowing; use TypeScript generics; define the public API exclusively through `src/index.ts` exports; place non-public code in `internal/`
-- Strive for 100% test coverage in library code (`/* istanbul ignore next */` only for genuinely untestable lines)
-- When wrapping another library, design the API from first principles for our use cases; do not mirror the wrapped library's API or leak implementation details through interface names
 
 ## Rules Engine
 

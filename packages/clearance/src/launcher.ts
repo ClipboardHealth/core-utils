@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { closeSync, mkdirSync, openSync, writeFileSync } from "node:fs";
 import * as net from "node:net";
 import { homedir } from "node:os";
-import { join, resolve as resolvePath } from "node:path";
+import path from "node:path";
 
 import { resolveAllowlist } from "./allowlist.ts";
 
@@ -43,6 +43,7 @@ export type ClearanceSpawner = (input: SpawnClearanceInput) => number;
 export interface EnsureClearanceInput {
   cacheDir?: string;
   env?: NodeJS.ProcessEnv;
+  envOverrides?: NodeJS.ProcessEnv;
   isListening?: ClearanceListenerCheck;
   logger?: (message: string) => void;
   pollIntervalMs?: number;
@@ -60,8 +61,8 @@ export interface EnsureClearanceResult {
 }
 
 // import.meta.dirname is `<package>/{src,dist}`; the proxy server bin lives at `<package>/bin/run.js`.
-const PACKAGE_ROOT = resolvePath(import.meta.dirname, "..");
-const CLEARANCE_BIN_PATH = resolvePath(PACKAGE_ROOT, "bin", "run.js");
+const PACKAGE_ROOT = path.resolve(import.meta.dirname, "..");
+const CLEARANCE_BIN_PATH = path.resolve(PACKAGE_ROOT, "bin", "run.js");
 
 export async function isClearanceListening(input: ClearanceCheckInput): Promise<boolean> {
   return await new Promise<boolean>((resolve) => {
@@ -106,7 +107,7 @@ export function spawnClearance(input: SpawnClearanceInput): number {
 export async function ensureClearance(
   input: EnsureClearanceInput = {},
 ): Promise<EnsureClearanceResult> {
-  const env = input.env ?? defaultProxyEnv();
+  const env = proxyEnv(input);
   /* v8 ignore next @preserve -- default listener is covered directly by isClearanceListening tests */
   const isListening = input.isListening ?? isClearanceListening;
   const logger = input.logger ?? noop;
@@ -120,8 +121,8 @@ export async function ensureClearance(
   resolveAllowlist({ env });
 
   const cacheDir = input.cacheDir ?? cacheDirFor(env);
-  const logPath = join(cacheDir, "clearance.log");
-  const pidPath = join(cacheDir, "clearance.pid");
+  const logPath = path.join(cacheDir, "clearance.log");
+  const pidPath = path.join(cacheDir, "clearance.pid");
   mkdirSync(cacheDir, { recursive: true });
 
   /* v8 ignore next @preserve -- default spawner is covered directly by spawnClearance tests */
@@ -161,17 +162,17 @@ function noop(): void {
 function cacheDirFor(env: NodeJS.ProcessEnv): string {
   const xdgCacheHome = env["XDG_CACHE_HOME"];
   if (xdgCacheHome !== undefined && xdgCacheHome.length > 0) {
-    return join(xdgCacheHome, "clearance");
+    return path.join(xdgCacheHome, "clearance");
   }
 
   const home = env["HOME"];
   /* v8 ignore else @preserve -- tests use HOME/XDG_CACHE_HOME to avoid writing to the real home dir */
   if (home !== undefined && home.length > 0) {
-    return join(home, ".cache", "clearance");
+    return path.join(home, ".cache", "clearance");
   }
 
   /* v8 ignore next @preserve -- tests pass HOME/XDG_CACHE_HOME to avoid writing to the real home dir */
-  return join(homedir(), ".cache", "clearance");
+  return path.join(homedir(), ".cache", "clearance");
 }
 
 function childEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
@@ -179,6 +180,18 @@ function childEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
     ...env,
     CLEARANCE_LISTEN_HOST: CLEARANCE_HOST,
     CLEARANCE_PORT: String(CLEARANCE_PORT),
+  };
+}
+
+function proxyEnv(input: Pick<EnsureClearanceInput, "env" | "envOverrides">): NodeJS.ProcessEnv {
+  const env = input.env ?? defaultProxyEnv();
+  if (input.envOverrides === undefined) {
+    return env;
+  }
+
+  return {
+    ...env,
+    ...input.envOverrides,
   };
 }
 

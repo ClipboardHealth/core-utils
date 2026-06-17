@@ -1,26 +1,8 @@
+---
+description: "Working with MongoDB/Mongoose: schemas, indexes, queries, transactions, migrations"
+---
+
 # MongoDB/Mongoose
-
-**ObjectId:**
-
-```typescript
-import mongoose, { Types, Schema } from "mongoose";
-
-const id = new Types.ObjectId();
-
-// In schemas
-const schema = new Schema({
-  authorId: { type: Schema.Types.ObjectId, ref: "User" },
-});
-
-// In interfaces
-interface Post {
-  authorId: Types.ObjectId;
-}
-
-// Validation
-if (mongoose.isObjectIdOrHexString(value)) {
-}
-```
 
 **File Structure:**
 
@@ -77,14 +59,3 @@ Run `explain("executionStats")` on new or changed queries; verify `$lookup` stag
 ## Batch Migrations
 
 Migrate large datasets in batches via background jobs using a cursor pattern (each job processes a batch and schedules the next); add 1-5s delay between batches; use the slow job group.
-
-## Repository Pattern
-
-```typescript
-class UserRepo {
-  // Named methods over generic CRUD
-  async findById(request: { id: UserId }): Promise<UserDo> {}
-  async findByEmail(request: { email: string }): Promise<UserDo> {}
-  async updateEmail(request: { id: UserId; email: string }): Promise<UserDo> {}
-}
-```

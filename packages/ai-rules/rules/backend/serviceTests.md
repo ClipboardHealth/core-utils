@@ -1,3 +1,7 @@
+---
+description: "Writing service tests: test data, background jobs, bug handling, migrations"
+---
+
 # Service Tests (Primary Testing Approach)
 
 Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (LaunchDarkly, Firebase, Stripe, Zendesk) and other microservices with fakes; fake the event bus.

@@ -26,7 +26,7 @@ describe("oxlint-config", () => {
         pedantic: "error",
         perf: "error",
         restriction: "error",
-        style: "error",
+        style: "off",
         suspicious: "error",
       });
 
@@ -50,10 +50,19 @@ describe("oxlint-config", () => {
         },
       });
 
-      expect(base.overrides).toHaveLength(2);
+      expect(base.overrides).toHaveLength(3);
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
+        "guard-for-in": "error",
         "import/no-cycle": ["error", { ignoreExternal: true, maxDepth: 16 }],
+        "import/no-mutable-exports": "error",
+        "no-else-return": ["error", { allowElseIf: false }],
+        "no-new-func": "error",
+        "no-return-assign": "error",
+        "no-script-url": "error",
+        "no-template-curly-in-string": "error",
+        "node/no-exports-assign": "error",
+        "typescript/array-type": ["error", { default: "array-simple" }],
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
@@ -70,6 +79,7 @@ describe("oxlint-config", () => {
           "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
+          "jest/no-confusing-set-timeout": "off",
           "jest/no-hooks": "off",
           "jest/prefer-ending-with-an-expect": "off",
           "jest/prefer-expect-assertions": "off",
@@ -83,14 +93,10 @@ describe("oxlint-config", () => {
         plugins: ["vitest"],
         rules: {
           "max-lines": ["error", { max: 2000 }],
-          "jest/max-expects": "off",
-          "jest/max-nested-describe": "off",
-          "jest/no-hooks": "off",
-          "jest/prefer-ending-with-an-expect": "off",
-          "jest/prefer-expect-assertions": "off",
-          "jest/prefer-importing-jest-globals": "off",
-          "jest/prefer-lowercase-title": "off",
-          "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
+          "vitest/consistent-test-filename": [
+            "error",
+            { pattern: String.raw`.*\.(test|spec)\.[tj]sx?$` },
+          ],
           "vitest/max-expects": "off",
           "vitest/max-nested-describe": "off",
           "vitest/no-hooks": "off",
@@ -532,9 +538,9 @@ function getConfigWithRulesAndOverrides(config: typeof base): {
 }
 
 function getFirstOverrideFiles(config: {
-  overrides: {
+  overrides: Array<{
     files: string[];
-  }[];
+  }>;
 }): string[] {
   const [firstOverride] = config.overrides;
 
@@ -569,7 +575,7 @@ async function loadPresetsModuleWithVitestJson(
 }
 
 function getLoadedPresetsModule(value: unknown): {
-  base: { overrides?: { files: string[]; rules?: Record<string, unknown> }[] };
+  base: { overrides?: Array<{ files: string[]; rules?: Record<string, unknown> }> };
 } {
   if (!isRecord(value) || !("base" in value) || !isRecord(value["base"])) {
     throw new TypeError("Expected presets module to expose a base preset.");

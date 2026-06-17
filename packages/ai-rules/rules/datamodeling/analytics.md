@@ -1,6 +1,10 @@
-# About
+---
+description: "Querying analytics data: dbt-mcp, Snowflake, source columns, output formatting"
+---
 
-General knowledge for running data analysis and querying our snowflake data warehouse.
+# Analytics
+
+General knowledge for running data analysis and querying our Snowflake data warehouse.
 
 ## Understanding dbt Model Relationships and Metadata
 
@@ -12,30 +16,30 @@ Use the dbt-mcp server to:
 
 ## Querying Snowflake Data Warehouse (using Snowflake MCP)
 
-- When you need to answer data-related questions or obtain analytics by querying the Snowflake data warehouse, please use the `snowflake` mcp tool.
-- When using the Snowflake MCP to run queries, you must set the database context properly in your queries. Use fully qualified table names or set the database context to avoid connection errors.
-- The `describe_object` tool in the Snowflake MCP has a bug where it misinterprets the target_object structure, treating the table name as a database name and causing 404 "database does not exist" errors. Use `run_snowflake_query` with "DESCRIBE TABLE" instead to get table schema information successfully.
+- When you need to answer data-related questions or obtain analytics by querying the Snowflake data warehouse, use the `snowflake` MCP tool.
+- Set the database context properly in queries: use fully qualified table names or set the database context to avoid connection errors.
+- As of mid-2026, the `describe_object` tool in the Snowflake MCP has a bug where it misinterprets the target_object structure, treating the table name as a database name and causing 404 "database does not exist" errors. Use `run_snowflake_query` with "DESCRIBE TABLE" instead to get table schema information.
 
 ## Guidelines when using this knowledge
 
 - Read all of the docs.yml files to learn about the analytics schema.
 - When in doubt, read the code in the data-modeling repo to learn how each column is calculated and where the data is coming from
-- Strongly prefer to use mart models (defined inside the mart folder, those that don't have an int- or stg- prefix) before int- and stg- models
+- Strongly prefer mart models (defined inside the mart folder, those that don't have an int- or stg- prefix) before int- and stg- models
 - Strongly prefer to query tables under the analytics schema, before querying any other schemas like airbyte_db/hevo_database
 - If unsure, confirm with the user and suggest candidate tables
-- If required, you might do some data analysis using python instead of pure SQL. Connect to snowflake using a python script and then use libraries like pandas, numpy, seaborn for visualization
+- If required, you might do some data analysis using Python instead of pure SQL. Connect to Snowflake using a Python script and then use libraries like pandas, numpy, seaborn for visualization
 
 ## Output format
 
-- When running queries against snowflake and providing the user with a final answer, always show the final query that produced the result along with the result itself, so that the user is able to validate the query makes sense.
-- Once you've reached a final query that you need to show to the user, use get_metabase_playground_link to generate a playground link where the user can run the query themselves. Format it as a link with the 'metabase playground link' label as the link text, using slack's Markdown format. This is A MUST
+- Always show the final query that produced the result along with the result itself, so the user can validate the query makes sense.
+- Always use get_metabase_playground_link to generate a playground link where the user can run the query themselves; label the link "metabase playground link" (when responding in Slack, use Slack's link format).
 - Include charts or tables formatted as Markdown if needed
-- If the final result is a single number, make sure to show this prominently to the user so it's very easy to see
+- If the final result is a single number, show it prominently so it's very easy to see
 
 ## Identifying the right columns to use and how to filter data
 
-For categorical columns, you might want to select distinct values for a specific column to see what the possible options are and how to filter data
-Read the model definitions in the dbt folders to see how that column is computed and what possible values it might have
+For categorical columns, select distinct values for a specific column to see what the possible options are and how to filter data.
+Read the model definitions in the dbt folders to see how that column is computed and what possible values it might have.
 
 ## Finding Source Columns for dbt Models
 
@@ -43,6 +47,9 @@ When working on dbt model modifications and you cannot find specific fields in t
 
 ## Column Discovery Best Practices
 
-When discovering columns in Snowflake source tables, use the full table name approach with information_schema.columns and avoid LIKE clauses for more precise results. Use queries like:
-`SELECT column_name, data_type FROM airbyte_database.information_schema.columns WHERE table_name = 'EVENT' AND table_schema = 'SALESFORCE' ORDER BY ordinal_position`
-Instead of using LIKE clauses or partial matching which can be imprecise.
+When discovering columns in Snowflake source tables, query `information_schema.columns` with the full table name instead of LIKE clauses or partial matching, which can be imprecise:
+
+```sql
+SELECT column_name, data_type FROM airbyte_database.information_schema.columns
+WHERE table_name = 'EVENT' AND table_schema = 'SALESFORCE' ORDER BY ordinal_position
+```

@@ -221,7 +221,7 @@ Example job with dependencies:
 import type { HandlerInterface } from "@clipboard-health/mongo-jobs";
 
 interface EmailService {
-  send(to: string, subject: string, body: string): Promise<void>;
+  send: (to: string, subject: string, body: string) => Promise<void>;
 }
 
 export interface EmailServiceJobData {

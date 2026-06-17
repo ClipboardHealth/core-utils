@@ -139,6 +139,7 @@ export async function withProducerTrace<T>(
       try {
         // Inject trace context for distributed tracing
         const traceHeaders = injectTraceHeaders();
+        // oxlint-disable-next-line node/callback-return -- async callback, not Node.js error-first callback
         const job = await callback({ ...data, _traceHeaders: traceHeaders });
 
         if (job) {
@@ -176,6 +177,7 @@ async function executeJobTrace(
     parentContext,
     async (span: Span) => {
       try {
+        // oxlint-disable-next-line node/callback-return -- async callback, not Node.js error-first callback
         await callback();
         span.setStatus({ code: SpanStatusCode.OK });
       } catch (error) {
@@ -231,6 +233,7 @@ export async function withInternalsTrace<T>(
     },
     async (span: Span) => {
       try {
+        // oxlint-disable-next-line node/callback-return -- async callback, not Node.js error-first callback
         const result = await callback();
         span.setStatus({ code: SpanStatusCode.OK });
         return result;

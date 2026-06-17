@@ -16,7 +16,7 @@ import type { Rule, RuleContext } from "../rule";
  */
 export function allIf<TInput, TOutput, TContext extends RuleContext<TInput, TOutput>>(
   allIfPredicate: (input: RuleContext<TInput, TOutput>["input"]) => boolean,
-  ...rules: Rule<TInput, TOutput, TContext>[]
+  ...rules: Array<Rule<TInput, TOutput, TContext>>
 ): Rule<TInput, TOutput, TContext> {
   return {
     runIf: (input) => allIfPredicate(input),

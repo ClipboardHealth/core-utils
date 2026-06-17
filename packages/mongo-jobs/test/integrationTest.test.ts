@@ -27,7 +27,7 @@ async function getMappedJobRuns() {
 interface WaitForFailedJobsOptions {
   backgroundJobs: BackgroundJobs;
   expectedCount: number;
-  jobIds?: BackgroundJobType<unknown>["_id"][];
+  jobIds?: Array<BackgroundJobType<unknown>["_id"]>;
   timeoutMilliseconds?: number;
 }
 

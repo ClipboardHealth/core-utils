@@ -15,7 +15,7 @@ describe("parse", () => {
     it("parses JSON array", () => {
       const jsonString = '[1, 2, 3, "test"]';
 
-      const result = parseJson<(string | number)[]>(jsonString);
+      const result = parseJson<Array<string | number>>(jsonString);
 
       expect(result).toStrictEqual([1, 2, 3, "test"]);
       expect(result).toHaveLength(4);

@@ -159,12 +159,12 @@ function readTraceResourceBody(
   return body;
 }
 
-const URL_EXTENSION_RESOURCE_TYPES: readonly (readonly [RegExp, string])[] = [
-  [/\.(js|mjs|cjs)(?:$|\?|#)/i, "script"],
+const URL_EXTENSION_RESOURCE_TYPES: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\.(?<ext>js|mjs|cjs)(?:$|\?|#)/i, "script"],
   [/\.css(?:$|\?|#)/i, "stylesheet"],
-  [/\.(png|jpe?g|gif|webp|svg|ico|bmp)(?:$|\?|#)/i, "image"],
-  [/\.(woff2?|ttf|otf|eot)(?:$|\?|#)/i, "font"],
-  [/\.(mp4|webm|ogg|mp3|wav)(?:$|\?|#)/i, "media"],
+  [/\.(?<ext>png|jpe?g|gif|webp|svg|ico|bmp)(?:$|\?|#)/i, "image"],
+  [/\.(?<ext>woff2?|ttf|otf|eot)(?:$|\?|#)/i, "font"],
+  [/\.(?<ext>mp4|webm|ogg|mp3|wav)(?:$|\?|#)/i, "media"],
 ];
 
 function inferResourceTypeFromContentType(contentType: string | undefined): string | undefined {
