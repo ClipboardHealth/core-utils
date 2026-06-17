@@ -313,8 +313,13 @@ function readPidFile(pidPath: string): number | undefined {
     throw error;
   }
 
-  const pid = Number.parseInt(raw.trim(), 10);
-  return pid > 0 ? pid : undefined;
+  const trimmedPid = raw.trim();
+  if (!/^\d+$/.test(trimmedPid)) {
+    return undefined;
+  }
+
+  const pid = Number.parseInt(trimmedPid, 10);
+  return Number.isSafeInteger(pid) && pid > 0 ? pid : undefined;
 }
 
 function isAlreadyGoneError(error: unknown): boolean {
