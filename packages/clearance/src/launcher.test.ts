@@ -411,6 +411,22 @@ describe(stopClearance, () => {
     expect(killMock).not.toHaveBeenCalled();
   });
 
+  it("treats an unsafe numeric pidfile as not running", async () => {
+    cacheDir = createTempCacheDir();
+    writeFileSync(path.join(cacheDir, "clearance.pid"), `${Number.MAX_SAFE_INTEGER + 1}\n`);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    const actual = await stopClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      kill: killMock,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
   it("removes a stale pidfile when the process is already gone", async () => {
     cacheDir = createTempCacheDir();
     const pidPath = writePidFile(cacheDir, 999_999);
