@@ -49,7 +49,7 @@
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "24.13.2",
     "@typescript/native-preview": "7.0.0-dev.20260616.1",
-    "@vitest/coverage-v8": "4.1.8",
+    "@vitest/coverage-v8": "4.1.9",
     "cspell": "10.0.1",
     "dependency-cruiser": "17.4.3",
     "eslint": "8.57.1",
@@ -71,7 +71,7 @@
     "typedoc": "0.28.19",
     "typescript": "5.9.3",
     "vite": "8.0.16",
-    "vitest": "4.1.8"
+    "vitest": "4.1.9"
   },
   "overrides": {
     "@anthropic-ai/claude-agent-sdk": {
