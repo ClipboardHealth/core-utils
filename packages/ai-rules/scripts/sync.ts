@@ -149,6 +149,14 @@ async function syncAgentDirectory(
 
   await mkdir(path.dirname(destination), { recursive: true });
 
+  // Action repos are consumed via `uses:` with no `npm install`, so a symlink into
+  // node_modules would dangle. Copy real files there; symlink everywhere else.
+  if (await fileExists(path.join(PATHS.projectRoot, "action.yml"))) {
+    await cp(source, destination, { recursive: true });
+    console.log(`📋 Synced ${directoryName} to .agents/${directoryName}/`);
+    return "copied";
+  }
+
   const relativeSource = path.relative(path.dirname(destination), source);
   try {
     await symlink(relativeSource, destination, "dir");
