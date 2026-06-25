@@ -12,6 +12,7 @@ Clipboard's core development tools.
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
+  - [deslop](#deslop)
   - [flaky-test-debugger](#flaky-test-debugger)
   - [frontend-ui-verification](#frontend-ui-verification)
   - [in-depth-review](#in-depth-review)
@@ -66,6 +67,10 @@ Commit changes, push to origin, and create a PR in one step. Invoke with `/commi
 ### datadog-investigate
 
 Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase. Invoke with `/datadog-investigate` or by mentioning production errors, latency spikes, error rates, or trace IDs.
+
+### deslop
+
+Remove AI-generated slop from a branch's diff against main (restating comments, defensive guards on already-validated inputs, `any` casts, leftover debug statements) or from prose you draft (hedging, throat-clearing, marketing adjectives, bullet bloat, em-dashes). Edits in place with restraint, never changing runtime behavior. Invoke with `/deslop`, typically before committing or opening a PR.
 
 ### flaky-test-debugger
 
