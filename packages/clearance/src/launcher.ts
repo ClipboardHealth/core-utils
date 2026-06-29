@@ -318,7 +318,7 @@ function readPidFile(pidPath: string): number | undefined {
     return undefined;
   }
 
-  const pid = Number.parseInt(trimmedPid, 10);
+  const pid = Math.trunc(Number(trimmedPid));
   return Number.isSafeInteger(pid) && pid > 0 ? pid : undefined;
 }
 
