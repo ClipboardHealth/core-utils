@@ -10,6 +10,7 @@
     "@anthropic-ai/claude-agent-sdk",
     "@nx/webpack",
     "eslint-plugin-promise",
+    "oxlint-tsgolint",
     "ts-node",
     "tslib",
     "webpack-cli",
