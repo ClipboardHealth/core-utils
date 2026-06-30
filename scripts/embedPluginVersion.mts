@@ -15,7 +15,9 @@
  *     Code, and any other host see the same literal string without resolving
  *     a Claude-specific manifest path.
  *
- * Idempotent: re-running with no version change rewrites nothing.
+ * Idempotent: re-running with no version change rewrites nothing. Pass
+ * `--check` to report drift without writing (exits non-zero when any file is
+ * out of sync); `verify` runs it that way so the three locations can't drift.
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -30,7 +32,6 @@ const PACKAGE_JSON = path.join(REPO_ROOT, "plugins/core/package.json");
 const PLUGIN_JSON = path.join(REPO_ROOT, "plugins/core/.claude-plugin/plugin.json");
 const SKILLS_ROOT = path.join(REPO_ROOT, "plugins/core/skills");
 const SENTINEL_PATTERN = /core@\d+\.\d+\.\d+/g;
-const MANIFEST_VERSION_PATTERN = /("version":\s*")\d+\.\d+\.\d+(")/;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
 
 function walk(directory: string): string[] {
@@ -46,7 +47,16 @@ function walk(directory: string): string[] {
   return result;
 }
 
-export function syncPluginVersion(): { version: string; changedFiles: string[] } {
+/**
+ * Propagates plugins/core/package.json's version into the plugin manifest and
+ * skill sentinels. With `check`, computes what would change but writes nothing,
+ * returning the would-be-changed files so callers can fail on drift.
+ */
+export function syncPluginVersion(options: { check?: boolean } = {}): {
+  version: string;
+  changedFiles: string[];
+} {
+  const { check = false } = options;
   const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as { version: unknown };
   if (typeof version !== "string" || !SEMVER_PATTERN.test(version)) {
     throw new TypeError(`Invalid version in ${PACKAGE_JSON}: ${String(version)}`);
@@ -54,10 +64,12 @@ export function syncPluginVersion(): { version: string; changedFiles: string[] }
 
   const changedFiles: string[] = [];
 
-  const manifest = readFileSync(PLUGIN_JSON, "utf8");
-  const updatedManifest = manifest.replace(MANIFEST_VERSION_PATTERN, `$1${version}$2`);
-  if (updatedManifest !== manifest) {
-    writeFileSync(PLUGIN_JSON, updatedManifest);
+  const manifest = JSON.parse(readFileSync(PLUGIN_JSON, "utf8")) as { version?: string };
+  if (manifest.version !== version) {
+    if (!check) {
+      manifest.version = version;
+      writeFileSync(PLUGIN_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
+    }
     changedFiles.push(PLUGIN_JSON);
   }
 
@@ -69,7 +81,9 @@ export function syncPluginVersion(): { version: string; changedFiles: string[] }
     }
     const replaced = content.replaceAll(SENTINEL_PATTERN, target);
     if (replaced !== content) {
-      writeFileSync(file, replaced);
+      if (!check) {
+        writeFileSync(file, replaced);
+      }
       changedFiles.push(file);
     }
   }
@@ -78,6 +92,18 @@ export function syncPluginVersion(): { version: string; changedFiles: string[] }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { version, changedFiles } = syncPluginVersion();
-  console.log(`✓ Synced core@${version} into ${changedFiles.length} file(s)`);
+  const check = process.argv.includes("--check");
+  const { version, changedFiles } = syncPluginVersion({ check });
+  if (check && changedFiles.length > 0) {
+    const stale = changedFiles.map((file) => path.relative(REPO_ROOT, file)).join(", ");
+    console.error(
+      `✗ plugins/core version out of sync with package.json (core@${version}). Run \`node scripts/embedPluginVersion.mts\`. Stale: ${stale}`,
+    );
+    process.exit(1);
+  }
+  console.log(
+    check
+      ? `✓ plugins/core version in sync (core@${version})`
+      : `✓ Synced core@${version} into ${changedFiles.length} file(s)`,
+  );
 }

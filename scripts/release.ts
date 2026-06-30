@@ -192,10 +192,10 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
 type ProjectsVersionData = Awaited<ReturnType<typeof releaseVersion>>["projectsVersionData"];
 
 /**
- * The core plugin's version lives in plugins/core/.claude-plugin/plugin.json and
- * in skill sentinels, not the package.json that Nx versions. Propagate the bump
- * into them after versioning and before the release commit, so they land in the
- * same commit. No-op when the plugin was not part of this release.
+ * Nx bumps plugins/core/package.json; plugin.json and the skill sentinels derive
+ * from it. Propagate the bump into them after versioning and before the release
+ * commit, so they land in the same commit. No-op when the plugin was not part of
+ * this release.
  */
 function syncCorePluginVersion(projectsVersionData: ProjectsVersionData, dryRun: boolean): void {
   const pluginVersion = projectsVersionData["core-plugin"]?.newVersion;
