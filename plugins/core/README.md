@@ -14,6 +14,7 @@ Clipboard's core development tools.
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
   - [frontend-ui-verification](#frontend-ui-verification)
+  - [humanize-prose](#humanize-prose)
   - [in-depth-review](#in-depth-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
@@ -74,6 +75,10 @@ Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. I
 ### frontend-ui-verification
 
 Verify Clipboard frontend UI work against code, design references, Storybook, and browser screenshots. Use for Figma/design implementation, redesign UI changes, Storybook checkpoints, and visual QA.
+
+### humanize-prose
+
+Strip AI writing tells (hedging, throat-clearing, marketing adjectives, bullet bloat, connective filler, em-dashes) from prose you draft or clean: PR descriptions, Slack messages, docs, emails, and commit messages. Edits in place while preserving meaning. Invoke with `/humanize-prose` or let Claude auto-trigger when drafting text for you. For cleaning up code (defensive guards, type escapes, unnecessary comments), use `/simplify`.
 
 ### in-depth-review
 
