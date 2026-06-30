@@ -73,7 +73,7 @@
       "commit": true,
       "commitMessage": "chore(release): publish {projectName} {version} [skip actions]"
     },
-    "projects": ["packages/*", "!packages/example-*"],
+    "projects": ["packages/*", "!packages/example-*", "core-plugin"],
     "projectsRelationship": "independent",
     "version": {
       "conventionalCommits": true,
