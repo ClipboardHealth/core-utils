@@ -34,6 +34,9 @@ Review the same changes for hacky patterns:
 6. **Unnecessary JSX nesting**: wrapper Boxes/elements that add no layout value — check if inner component props (flexShrink, alignItems, etc.) already provide the needed behavior
 7. **Nested conditionals**: ternary chains (`a ? x : b ? y : ...`), nested if/else, or nested switch 3+ levels deep — flatten with early returns, guard clauses, a lookup table, or an if/else-if cascade
 8. **Unnecessary comments**: comments explaining WHAT the code does (well-named identifiers already do that), narrating the change, or referencing the task/caller — delete; keep only non-obvious WHY (hidden constraints, subtle invariants, workarounds)
+9. **Defensive code on trusted inputs**: null/empty/type guards on inputs already guaranteed upstream (a validated DTO, the type system, a controller that already checked), optional chaining where the types guarantee presence, fallbacks that mask bugs (`?? ''`, `|| []`, `?? 0` on values that should never be absent), and try/catch that only logs and rethrows or guards an impossible state. Leave guards at genuine trust boundaries (raw request bodies, webhook payloads, third-party responses) and any error handling around real I/O, network, parsing, or payments — removing those changes behavior
+10. **Type escapes**: `as any`, `: any`, `as unknown as X`, gratuitous non-null `!`, `@ts-ignore`/`@ts-expect-error` added to dodge a type error — replace with the real type when it is determinable from the call site, the imported type, or the shape in use; if it is not, leave it and flag it rather than deleting it (breaks the build) or swapping in a TODO (more clutter)
+11. **Leftover debug statements**: stray `console.log` or debug logging added during development
 
 ### Agent 3: Efficiency Review
 

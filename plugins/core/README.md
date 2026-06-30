@@ -12,9 +12,9 @@ Clipboard's core development tools.
   - [cognito-user-analysis](#cognito-user-analysis)
   - [commit-push-pr](#commit-push-pr)
   - [datadog-investigate](#datadog-investigate)
-  - [deslop](#deslop)
   - [flaky-test-debugger](#flaky-test-debugger)
   - [frontend-ui-verification](#frontend-ui-verification)
+  - [humanize-prose](#humanize-prose)
   - [in-depth-review](#in-depth-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
@@ -68,10 +68,6 @@ Commit changes, push to origin, and create a PR in one step. Invoke with `/commi
 
 Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase. Invoke with `/datadog-investigate` or by mentioning production errors, latency spikes, error rates, or trace IDs.
 
-### deslop
-
-Remove AI-generated slop from a branch's diff against main (restating comments, defensive guards on already-validated inputs, `any` casts, leftover debug statements) or from prose you draft (hedging, throat-clearing, marketing adjectives, bullet bloat, em-dashes). Edits in place with restraint, never changing runtime behavior. Invoke with `/deslop`, typically before committing or opening a PR.
-
 ### flaky-test-debugger
 
 Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
@@ -79,6 +75,10 @@ Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. I
 ### frontend-ui-verification
 
 Verify Clipboard frontend UI work against code, design references, Storybook, and browser screenshots. Use for Figma/design implementation, redesign UI changes, Storybook checkpoints, and visual QA.
+
+### humanize-prose
+
+Strip AI writing tells (hedging, throat-clearing, marketing adjectives, bullet bloat, connective filler, em-dashes) from prose you draft or clean: PR descriptions, Slack messages, docs, emails, and commit messages. Edits in place while preserving meaning. Invoke with `/humanize-prose` or let Claude auto-trigger when drafting text for you. For cleaning up code (defensive guards, type escapes, unnecessary comments), use `/simplify`.
 
 ### in-depth-review
 
