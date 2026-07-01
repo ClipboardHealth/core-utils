@@ -42,9 +42,6 @@
       "path": "./packages/testing-core"
     },
     {
-      "path": "./packages/mongo-jobs"
-    },
-    {
       "path": "./packages/analytics"
     },
     {
