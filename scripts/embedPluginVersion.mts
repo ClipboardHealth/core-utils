@@ -47,19 +47,28 @@ function walk(directory: string): string[] {
   return result;
 }
 
+function readPackageJsonVersion(): string {
+  const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as { version: unknown };
+  return typeof version === "string" ? version : String(version);
+}
+
 /**
- * Propagates plugins/core/package.json's version into the plugin manifest and
- * skill sentinels. With `check`, computes what would change but writes nothing,
+ * Propagates a version into the plugin manifest and skill sentinels.
+ *
+ * Pass `version` to use an explicit version (the release flow passes the version
+ * Nx just computed, so the sync does not depend on when Nx flushes package.json
+ * to disk); omit it to read the current version from package.json (the CLI and
+ * postinstall path). With `check`, computes what would change but writes nothing,
  * returning the would-be-changed files so callers can fail on drift.
  */
-export function syncPluginVersion(options: { check?: boolean } = {}): {
+export function syncPluginVersion(options: { check?: boolean; version?: string } = {}): {
   version: string;
   changedFiles: string[];
 } {
   const { check = false } = options;
-  const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as { version: unknown };
-  if (typeof version !== "string" || !SEMVER_PATTERN.test(version)) {
-    throw new TypeError(`Invalid version in ${PACKAGE_JSON}: ${String(version)}`);
+  const version = options.version ?? readPackageJsonVersion();
+  if (!SEMVER_PATTERN.test(version)) {
+    throw new TypeError(`Invalid plugin version: ${JSON.stringify(version)}`);
   }
 
   const changedFiles: string[] = [];

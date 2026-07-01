@@ -208,7 +208,10 @@ function syncCorePluginVersion(projectsVersionData: ProjectsVersionData, dryRun:
     return;
   }
 
-  const { changedFiles } = syncPluginVersion();
+  // Pass the version Nx just computed rather than re-reading package.json:
+  // Nx stages the bump without the working-tree read reflecting it yet, so a
+  // disk read here would see the old version and silently skip the sync.
+  const { changedFiles } = syncPluginVersion({ version: pluginVersion });
   if (changedFiles.length > 0) {
     execFileSync("git", ["add", ...changedFiles], { stdio: "inherit" });
   }
