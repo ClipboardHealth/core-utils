@@ -100,7 +100,7 @@ export function syncPluginVersion(options: { check?: boolean; version?: string }
   return { version, changedFiles };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const check = process.argv.includes("--check");
   const { version, changedFiles } = syncPluginVersion({ check });
   if (check && changedFiles.length > 0) {
