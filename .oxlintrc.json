@@ -40,7 +40,7 @@
       }
     },
     {
-      "files": ["**/config/**/*.ts", "**/mongo-jobs/**/*.ts", "**/plugins/**/*.ts"],
+      "files": ["**/config/**/*.ts", "**/plugins/**/*.ts"],
       "rules": {
         "node/no-process-env": "off"
       }
