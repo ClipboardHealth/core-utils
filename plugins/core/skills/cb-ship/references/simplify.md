@@ -18,15 +18,16 @@ Review each change for hacky patterns:
 
 1. **Redundant state** that duplicates existing state, cached values that could be derived, observers/effects that could be direct calls.
 2. **Parameter sprawl**: Adding new parameters to a function instead of generalizing or restructuring existing ones.
-3. **Copy-paste with slight variation**: near-duplicate code blocks that should be unified with a shared abstraction.
+3. **Copy-paste with slight variation**: near-duplicate code blocks that should be unified with a shared abstraction. Exempt intentional, structurally-parallel repetition that aids readability — test arrange/act/assert blocks are the common case.
 4. **Leaky abstractions**: exposing internal details that should be encapsulated, or breaking existing abstraction boundaries.
-5. **Stringly-typed code**: using raw strings where constants, enums (string unions), or branded types already exist in the codebase.
-6. **Unnecessary JSX nesting**: wrapper Boxes/elements that add no layout value. Check if inner component props (flexShrink, alignItems, etc.) already provide the needed behavior.
-7. **Nested conditionals**: ternary chains (`a ? x : b ? y : ...`), nested if/else, or nested switch 3+ levels deep. Flatten with early returns, guard clauses, a lookup table, or an if/else-if cascade.
-8. **Unnecessary comments**: Delete comments explaining WHAT the code does (well-named identifiers already do that), narrating the change, or referencing the task/caller. Keep only non-obvious WHY (hidden constraints, subtle invariants, workarounds).
-9. **Defensive code on trusted inputs**: null/empty/type guards on inputs already guaranteed upstream (a validated DTO, the type system, a controller that already checked), optional chaining where the types guarantee presence, fallbacks that mask bugs (`?? ''`, `|| []`, `?? 0` on values that should never be absent), and try/catch that only logs and rethrows or guards an impossible state. Leave guards at genuine trust boundaries (raw request bodies, webhook payloads, third-party responses) and any error handling around real I/O, network, parsing, or payments — removing those changes behavior.
-10. **Type escapes**: `as any`, `: any`, `as unknown as X`, gratuitous non-null `!`, `@ts-ignore`/`@ts-expect-error` added to dodge a type error — replace with the real type when it is determinable from the call site, the imported type, or the shape in use; if it is not, leave it and flag it rather than deleting it (breaks the build) or swapping in a TODO (more clutter).
-11. **Leftover debug statements**: stray `console.log`/print-style output used to debug; keep intentional logging that goes through the repo's logger.
+5. **Premature abstraction (YAGNI)**: an interface, wrapper, or config object introduced for a single caller — inline it until a second caller justifies it.
+6. **Stringly-typed code**: using raw strings where constants, enums (string unions), or branded types already exist in the codebase.
+7. **Unnecessary JSX nesting**: wrapper Boxes/elements that add no layout value. Check if inner component props (flexShrink, alignItems, etc.) already provide the needed behavior.
+8. **Nested conditionals**: ternary chains (`a ? x : b ? y : ...`), nested if/else, or nested switch 3+ levels deep. Flatten with early returns, guard clauses, a lookup table, or an if/else-if cascade.
+9. **Unnecessary comments**: Delete comments explaining WHAT the code does (well-named identifiers already do that), narrating the change, or referencing the task/caller. Keep only non-obvious WHY (hidden constraints, subtle invariants, workarounds).
+10. **Defensive code on trusted inputs**: null/empty/type guards on inputs already guaranteed upstream (a validated DTO, the type system, a controller that already checked), optional chaining where the types guarantee presence, fallbacks that mask bugs (`?? ''`, `|| []`, `?? 0` on values that should never be absent), and try/catch that only logs and rethrows or guards an impossible state. Leave guards at genuine trust boundaries (raw request bodies, webhook payloads, third-party responses) and any error handling around real I/O, network, parsing, or payments — removing those changes behavior.
+11. **Type escapes**: `as any`, `: any`, `as unknown as X`, gratuitous non-null `!`, `@ts-ignore`/`@ts-expect-error` added to dodge a type error — replace with the real type when it is determinable from the call site, the imported type, or the shape in use; if it is not, leave it and flag it rather than deleting it (breaks the build) or swapping in a TODO (more clutter).
+12. **Dead & leftover code**: unreachable branches and stray debug statements (`console.log`/print-style output) — delete outright rather than commenting out; keep intentional logging that goes through the repo's logger. Unused exports/symbols with no remaining references are already covered by `.rules/common/typeScript.md`'s Dead Code Cleanup rule.
 
 ### 3: Efficiency review
 
