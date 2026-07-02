@@ -1,6 +1,6 @@
 ---
 name: create-groundcrew-ticket
-description: "Create Linear tickets that Groundcrew can pick up: assigned to the current Linear user, labeled with agent-*, tied to an implementation repository in the description, optionally linked to parent and blocker tickets, and written to use the core:go implementation workflow."
+description: "Create Linear tickets that Groundcrew can pick up: assigned to the current Linear user, labeled with agent-*, tied to an implementation repository in the description, optionally linked to parent and blocker tickets, and written to use the core:cb-work implementation workflow."
 ---
 
 # Create Groundcrew Ticket
@@ -53,7 +53,7 @@ Use a direct implementation-shaped ticket. Keep the repository line near the top
 ## Groundcrew
 
 Repository: <repo>
-Implementation workflow: use the `core:go`/`go` skill when available. If that skill is unavailable, follow this repo's AGENTS.md/CLAUDE.md implementation workflow and run the documented verification.
+Implementation workflow: use the `core:cb-work`/`cb-work` skill when available. If that skill is unavailable, follow this repo's AGENTS.md/CLAUDE.md implementation workflow and run the documented verification.
 
 ## Task
 

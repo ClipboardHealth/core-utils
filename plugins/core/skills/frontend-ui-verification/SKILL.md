@@ -98,7 +98,7 @@ Stop before continuing if:
 
 ## Helper Script
 
-Script paths below are written as `scripts/...`, relative to this `SKILL.md`, matching the other core skills such as `babysit-pr`.
+Script paths below are written as `scripts/...`, relative to this `SKILL.md`, matching the other core skills such as `cb-babysit`.
 
 Use the helper before visual work to make the verification surface deterministic:
 

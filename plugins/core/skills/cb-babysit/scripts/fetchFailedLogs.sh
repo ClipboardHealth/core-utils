@@ -5,9 +5,9 @@
 #   pr-number: optional; defaults to the PR on the current branch.
 #
 # Output (plain text on stdout). First line is either:
-#   # babysit-pr: no failing checks
+#   # cb-babysit: no failing checks
 # or:
-#   # babysit-pr: failing checks
+#   # cb-babysit: failing checks
 # followed by one delimited block per failing job:
 #   # --- run=<id> job=<id> ---
 #   <log body>
@@ -16,10 +16,9 @@
 # first line). Exit 1 on infrastructure errors (gh missing, not authed, no PR).
 # Exit 2 on usage errors.
 #
-# Filter uses `bucket == "fail"` (gh CLI's normalized lowercase field) instead
-# of `.conclusion` because the two gh APIs disagree on case —
-# `gh pr view --json statusCheckRollup` returns UPPER (GraphQL enum),
-# `gh run view --json jobs` returns lower (REST). `bucket` sidesteps it.
+# Failing-check detection normalizes `bucket`, `.conclusion`, and `.state`
+# because gh's PR GraphQL and Actions REST payloads expose different fields and
+# casing, and some status contexts have a null `bucket`.
 #
 # Requires: gh, jq.
 
@@ -74,7 +73,7 @@ FAILING_RAW="$(printf '%s' "$ROLLUP" \
     ')"
 
 if [ -z "$FAILING_RAW" ]; then
-  echo "# babysit-pr: no failing checks"
+  echo "# cb-babysit: no failing checks"
   exit 0
 fi
 
@@ -98,7 +97,7 @@ $FAILING_RAW
 EOF
 RUN_IDS="$(printf '%s\n' $RUN_IDS | sort -u | tr '\n' ' ')"
 
-echo "# babysit-pr: failing checks"
+echo "# cb-babysit: failing checks"
 
 for RUN_ID in $RUN_IDS; do
   for JOB_ID in $(gh run view "$RUN_ID" --json jobs \

@@ -3,21 +3,11 @@
  * manifest and skill sentinels.
  *
  * `plugins/core/package.json` is the source of truth that `nx release` bumps
- * (it is private, so it is never published to npm). This script propagates
- * that version to:
- *
- *   - `plugins/core/.claude-plugin/plugin.json` — the manifest Claude Code
- *     reads at runtime.
- *   - `core@<major>.<minor>.<patch>` sentinels in the babysit-pr and
- *     commit-push-pr skills, so PR comments stay traceable to the plugin
- *     version that produced them. Substituting here (rather than reading a
- *     manifest at runtime) keeps the skills agent-agnostic: Codex, Claude
- *     Code, and any other host see the same literal string without resolving
- *     a Claude-specific manifest path.
+ * (it is private, so it is never published to npm).
  *
  * Idempotent: re-running with no version change rewrites nothing. Pass
  * `--check` to report drift without writing (exits non-zero when any file is
- * out of sync); `verify` runs it that way so the three locations can't drift.
+ * out of sync); `verify` runs it that way so managed files can't drift.
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";

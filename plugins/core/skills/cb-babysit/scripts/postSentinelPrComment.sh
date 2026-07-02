@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # postSentinelPrComment.sh — Post a top-level PR comment (used for nitpick summaries).
-# Appends the babysit-pr sentinel if missing.
+# Appends the cb-babysit sentinel if missing.
 #
 # Usage: bash postSentinelPrComment.sh <pr-number> <body>
 #
