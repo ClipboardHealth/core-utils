@@ -1,6 +1,6 @@
 ---
-name: flaky-test-debugger
-description: Debug and fix flaky tests including Playwright E2E, NestJS service/integration, React component, and unit tests. Use this skill when investigating intermittent test failures, triaging flaky tests, or fixing test instability.
+name: flaky-debug
+description: Debug and fix flaky tests including Playwright E2E, NestJS service/integration, React component, and unit tests.
 ---
 
 Phases run in order. Skip a phase if you already have the information it produces. Phase 3 runs only in fix mode.
@@ -20,18 +20,7 @@ Both modes share the same diagnosis path; the plan is the artifact you hand to a
 
 ## Phase 1: Classify Failure Surface and Test Type
 
-For E2E flakes, first classify where the failure surfaced in the lifecycle, then identify the test type. The failure surface dictates how broadly to investigate before reading or editing the test.
-
-Common E2E failure surfaces:
-
-- **CI/job setup:** dependency installation, CLI/tooling, environment setup, build/deploy, artifact download.
-- **Test setup/auth/data:** token minting, login bootstrap, seeded users/entities, one-time credentials, external service setup.
-- **App bootstrap/navigation:** static assets, route load, hydration, browser console/page errors before the user action.
-- **User action:** click/input completed but the expected request, dialog, route change, or state transition did not start.
-- **Backend request:** request emitted; backend returned error, stale data, unexpected shape, or excessive latency.
-- **Assertion/locator:** app state is correct, but the assertion/selector is brittle or out of sync with the intended UX.
-
-Then determine the test type from the user's input. The type dictates the detailed investigation path.
+Determine the test type from the user's input. The type dictates the detailed investigation path.
 
 | Type                             | Signals                                                                                                                                                              |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,6 +30,8 @@ Then determine the test type from the user's input. The type dictates the detail
 | **Unit**                         | Pure logic tests, `.test.ts` file, no app bootstrap or DOM, Jest/Vitest matchers on plain functions or classes                                                       |
 
 If the type is ambiguous, check the test file extension and imports to confirm.
+
+If the type is E2E, also classify where the failure surfaced in the lifecycle -- see [Classify the E2E Failure Surface](./references/plan-e2e.md#classify-the-e2e-failure-surface) in `plan-e2e.md`. The failure surface dictates how broadly to investigate before reading or editing the test.
 
 ## Phase 1b: Check for Existing Fixes
 
@@ -64,9 +55,7 @@ If no existing fix is found, proceed to Phase 2.
 
 ## Phase 2: Produce a plan
 
-Follow [`references/plan.md`](./references/plan.md). It walks investigation, diagnosis, evidence gathering, and the fix decision tree, and produces a structured plan with confidence score.
-
-If the plan's confidence is less than 5/5, it must include the frontend and/or backend observability changes needed to reach 5/5 confidence next time. The plan may request changes across multiple repositories; assume we have access to all code.
+Follow [`references/plan-e2e.md`](./references/plan-e2e.md) for E2E tests, or [`references/plan-fast-path.md`](./references/plan-fast-path.md) for service, component, and unit tests. Both converge on [`references/plan.md`](./references/plan.md) for the fix decision and plan output format, and produce a structured plan with a confidence score.
 
 If you are in plan mode, present the plan and stop here.
 

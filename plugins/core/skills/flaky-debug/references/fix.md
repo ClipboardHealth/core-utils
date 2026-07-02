@@ -1,6 +1,6 @@
 # Apply a Flaky Test Fix
 
-Apply phase of the flaky-test-debugger skill. Takes a plan produced by [`plan.md`](./plan.md) and applies it.
+Apply phase of the flaky-debug skill. Takes a plan produced by the planning phase ([`plan-e2e.md`](./plan-e2e.md) or [`plan-fast-path.md`](./plan-fast-path.md), finished by [`plan.md`](./plan.md)) and applies it.
 
 ## Preflight
 
@@ -20,7 +20,7 @@ Do not convert an infrastructure, backend, auth/data, or product-state root caus
 
 ## Fix Sibling Instances
 
-After fixing the root cause, search for other tests that exhibit the same anti-pattern and fix them too. A flaky pattern in one test file almost always has siblings nearby.
+After fixing the root cause, search for other tests that exhibit the same anti-pattern. Flaky patterns often have siblings nearby, but do not turn a one-test plan into broad repo churn.
 
 ### When to search
 
@@ -47,7 +47,7 @@ Skip this step when the fix is **specific to one test's logic** -- for example a
 
 2. Scope the search to the same area of the codebase first (same package or directory), then widen if the pattern is pervasive.
 
-3. Apply the same fix to each sibling. Keep changes minimal; fix the anti-pattern, nothing else.
+3. Apply the same fix to each sibling named in the plan or directly confirmed as the same root cause. Keep changes minimal; fix the anti-pattern, nothing else. Report broader candidates instead of editing them unless they clearly share the root cause.
 
 4. List the sibling files you fixed in the output so reviewers can verify them.
 

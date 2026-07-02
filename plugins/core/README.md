@@ -16,7 +16,7 @@ Clipboard's core development tools.
   - [cognito-user-analysis](#cognito-user-analysis)
   - [create-groundcrew-ticket](#create-groundcrew-ticket)
   - [datadog-investigate](#datadog-investigate)
-  - [flaky-test-debugger](#flaky-test-debugger)
+  - [flaky-debug](#flaky-debug)
   - [frontend-ui-verification](#frontend-ui-verification)
   - [humanize-prose](#humanize-prose)
   - [in-depth-review](#in-depth-review)
@@ -74,9 +74,9 @@ Create Linear tickets that Groundcrew can pick up.
 
 Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase. Invoke with `/datadog-investigate` or by mentioning production errors, latency spikes, error rates, or trace IDs.
 
-### flaky-test-debugger
+### flaky-debug
 
-Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog. Invoke with `/flaky-test-debugger` or when investigating intermittent test failures.
+Debug and fix flaky Playwright E2E tests using Playwright reports and Datadog.
 
 ### frontend-ui-verification
 
