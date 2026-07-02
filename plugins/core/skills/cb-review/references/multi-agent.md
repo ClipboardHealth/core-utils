@@ -6,17 +6,16 @@ Read this only when effort is `high`. Referenced from `SKILL.md`. The rubric in 
 
 One reviewer agent per active lens. **Refer to agents by name in everything the user sees**; the letter is only a compact prefix for internal finding IDs (`B1`, `C3`, …).
 
-| Letter | Name        | Rubric section | When it runs                  |
-| ------ | ----------- | -------------- | ----------------------------- |
-| A      | Adversarial | §Adversarial   | Opt-in only (`--adversarial`) |
-| B      | Engineering | §Engineering   | Always                        |
-| C      | Minimalist  | §Minimalism    | Always                        |
-| D      | Conventions | §Conventions   | Always                        |
-| E      | Security    | §Security      | Classification trigger        |
-| F      | Database    | §Database      | Classification trigger        |
-| G      | Frontend    | §Frontend      | Classification trigger        |
-| H      | AntiSlop    | §AntiSlop      | Always                        |
-| S      | Spec        | §Spec          | Spec source found             |
+| Letter | Name        | Rubric section | When it runs           |
+| ------ | ----------- | -------------- | ---------------------- |
+| B      | Engineering | §Engineering   | Always                 |
+| C      | Minimalist  | §Minimalism    | Always                 |
+| D      | Conventions | §Conventions   | Always                 |
+| E      | Security    | §Security      | Classification trigger |
+| F      | Database    | §Database      | Classification trigger |
+| G      | Frontend    | §Frontend      | Classification trigger |
+| H      | AntiSlop    | §AntiSlop      | Always                 |
+| S      | Spec        | §Spec          | Spec source found      |
 
 Record the dispatched set in `/tmp/cb-review-meta.json` so Round 2 knows the full agent list.
 

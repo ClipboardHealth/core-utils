@@ -1,7 +1,7 @@
 ---
 name: cb-review
 description: Code review of the current branch or a PR — single-pass by default, parallel reviewer agents that debate at high effort, plus a spec-compliance lens when the originating ticket or PRD is available; findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, or runs /cb-review [pr-number-or-url] [--effort low|high].
-argument-hint: "[pr-number-or-url] [--effort low|high] [--adversarial]"
+argument-hint: "[pr-number-or-url] [--effort low|high]"
 ---
 
 # CB Review
@@ -16,7 +16,6 @@ Review a diff against one rubric, filter to the few findings worth raising, gate
 - `/cb-review` — review the current branch (resolves the open PR for the branch if any, otherwise diffs against the default branch).
 - `/cb-review <pr-number-or-url>` — review that PR without checking it out; forces reviewer mode. Accepts a bare number (current repo) or full GitHub URL (identifies owner/repo).
 - `--effort low|high` — pick the engine explicitly. Phrases also select: "quick"/"fast" → low; "deep"/"thorough"/"multi-perspective" → high.
-- `--adversarial` (or "with adversarial") — add the opt-in Adversarial lens (low) or agent (high).
 
 **Effort auto-select** (no flag, no phrase): `high` when the diff exceeds 20 changed files or 600 changed lines, else `low`. Before reviewing, print one line — `Effort: <low|high> (<N> files, <M> lines; override with --effort <other>)` — so the user can interrupt.
 
@@ -127,7 +126,7 @@ Walk the changed-file list. Activate lenses that match:
 - **Frontend** triggers on: `*.tsx`, `*.jsx`, `*.css`, `*.scss`, `pages/`, `components/`, `hooks/`, or anything importing from `react`, `@tanstack/react-query`, or a design-system package.
 - **Spec** triggers when a spec source exists. Look in order: (1) issue/ticket references in the PR body or commit messages (`#123`, `Closes #45`, Linear/Jira keys) — fetch via `gh` or the tracker; (2) a path the user passed as an argument; (3) a plan/PRD file under `docs/`, `specs/`, or `.scratch/` matching the branch or feature name. Nothing found → skip the lens and note "no spec available" in Summary.
 
-Always-on lenses: **Engineering**, **Minimalism**, **Conventions**, **AntiSlop**. Opt-in: **Adversarial** (only when the user asked — see Invocation).
+Always-on lenses: **Engineering**, **Minimalism**, **Conventions**, **AntiSlop**.
 
 ## Review
 
@@ -234,7 +233,7 @@ Follow [references/posting-pr-review.md](references/posting-pr-review.md) exactl
 - Freshness preflight is mandatory before reading code. Read repo context via `git show "<context_ref>:<path>"`, not the worktree filesystem, unless `context_ref = worktree (stale, user accepted risk)`.
 - Never run state-modifying git commands on the user's behalf (`checkout`, `stash`, `reset`, `clean`, `pull` with merge). Warn and ask. `git fetch` is allowed.
 - Cross-repo evidence: **never raise a "consumer will break" finding without reading the consumer.** Cap at MAJOR until verified; user `skip` → drop or keep as MINOR with a visible "speculative — assumes `<X>`" prefix.
-- Conditional lenses (Security/Database/Frontend/Spec) run only when classification matches. Adversarial runs only on explicit opt-in; surface the on/off decision in one line before reviewing so the user can see what ran.
+- Conditional lenses (Security/Database/Frontend/Spec) run only when classification matches.
 - Hide nits by default. Print only when the user selects the NIT toggle in gate 1.
 - Reviews are always `event: COMMENT`. Never approve or request changes on the user's behalf.
 - Both user gates are mandatory. Do not auto-apply recommendations and do not auto-post reviews.

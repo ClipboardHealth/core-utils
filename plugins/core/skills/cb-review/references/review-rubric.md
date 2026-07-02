@@ -134,7 +134,7 @@ This PR may have been written or assisted by an LLM. For each addition, ask: _"I
 
 Default `suggested_fix` is **delete** (empty `after`) or **simplify** (smaller `after`). Suggesting "add a justifying comment" is itself slop — do not propose it.
 
-Stay in your lane: do not raise items the Conventions lens owns (anything a documented rule file covers); do not demand observability, tests, or error handling that does **not** exist in the diff — you only call out what's _present_ and unnecessary; do not challenge whether the PR solves the right problem — that's Adversarial's turf when opted in. A change that's small but unnecessary is still slop; a change that's large but earns each line is not.
+Stay in your lane: do not raise items the Conventions lens owns (anything a documented rule file covers); do not demand observability, tests, or error handling that does **not** exist in the diff — you only call out what's _present_ and unnecessary; do not challenge whether the PR solves the right problem. A change that's small but unnecessary is still slop; a change that's large but earns each line is not.
 
 ## Spec (when a spec source exists)
 
@@ -184,15 +184,3 @@ Will this behave correctly under realistic user conditions? FE conventions (data
 - Accessibility: keyboard navigation, ARIA roles, labels on interactive controls.
 - State that survives realistic interaction: rapid re-clicks, back navigation, stale cache, concurrent mutations, slow networks.
 - Render correctness with realistic data: long strings, empty lists, zero/negative values, missing optional fields.
-
-## Adversarial (opt-in only)
-
-First-principles challenge: _"What is the single most important thing this PR gets wrong? Then up to 7 more, ranked."_ Question whether the change solves the underlying problem and whether the chosen approach is right. Challenge specific library / pattern / approach choices when they don't hold up on their own merits; do **not** challenge foundational stack choices out of scope for the PR. Conventions are the Conventions lens's job — do not double up. Specifically probe:
-
-- Is this solving a symptom or a root cause? Is the root cause fixed in _every_ place it manifests?
-- What is the simplest version that would work, and how does the diff compare? What is the cost of not doing this at all?
-- Should this PR be split, or is it bundling unrelated tickets?
-- Is a feature flag warranted but missing? Are there old flags or dead references this change makes deletable?
-- What assumption is this built on, and what is the cheapest way to test the riskiest one (hours, not weeks)?
-
-Lead with the strongest objection; limit to the objections that actually matter. If the work is genuinely solid, say so briefly and focus on the one or two things that could go wrong.
