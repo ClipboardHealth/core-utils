@@ -19,6 +19,7 @@ const CHECKS = [
   { cmd: "node --run knip", name: "knip" },
   { cmd: "node --run lint", name: "lint" },
   { cmd: "node --run markdown:lint", name: "markdown:lint" },
+  { cmd: "node --run plugin:version:check", name: "plugin:version:check" },
   { cmd: "node --run spell:check -- .", name: "spell:check" },
   { cmd: "node --run syncpack:lint", name: "syncpack:lint" },
 ] as const;

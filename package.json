@@ -22,6 +22,7 @@
     "knip": "NX_DAEMON=false knip --no-config-hints",
     "lint": "oxlint",
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
+    "plugin:version:check": "node scripts/embedPluginVersion.mts --check",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
     "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
