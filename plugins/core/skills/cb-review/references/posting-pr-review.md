@@ -64,7 +64,7 @@ Italicized. Substitute `<viewer-login>` from `gh api user --jq .login`. Non-nego
 **Apply all comments at once** — paste this into Claude Code on a checkout of this branch:
 
 ```
-Fetch the most recent review by @<viewer-login> on PR <PR_URL>. For every inline comment in that review, address the issue: when the comment includes a `suggestion` block, apply it verbatim; otherwise implement an equivalent fix that satisfies the comment's "Why it matters" rationale. After resolving each thread, post a reply on that thread with a one-line summary of what you changed. When all comments are handled, run the project's tests, commit the changes with a message that references the review, and report back any threads you could not resolve and why.
+Fetch the review by @<viewer-login> on PR <PR_URL> that contains this exact prompt. For every inline comment in that review, address the issue: when the comment includes a `suggestion` block, apply it verbatim; otherwise implement an equivalent fix that satisfies the comment's "Why it matters" rationale. After resolving each thread, post a reply on that thread with a one-line summary of what you changed. When all comments are handled, run the project's tests, commit the changes with a message that references the review, and report back any threads you could not resolve and why.
 ```
 ````
 

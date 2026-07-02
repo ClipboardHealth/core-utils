@@ -73,16 +73,14 @@ Decide `context_ref`:
 Stop and ask the user when:
 
 1. `git fetch` failed (offline, auth).
-2. `HEAD` differs from `origin/${base}` on Path A.
-3. Working tree is dirty AND dirty paths overlap the diff's changed-file list or anything you'll need to read.
-4. `HEAD` is behind `origin/${base}` (any non-zero "behind").
-5. `HEAD` is more than a small number of commits ahead of `origin/${base}` on Path A.
+2. Path B: working tree is dirty AND dirty paths overlap the diff's changed-file list or anything you'll need to read.
+3. Path B: `HEAD` is behind `origin/${base}` (any non-zero "behind") — findings may target code the base has already changed.
 
 Warn template (substitute verified state):
 
 > Freshness check for `<owner>/<repo>` at `<worktree-path>`:
 >
-> - on branch `<HEAD-branch>` (expected `<base>` for Path A)
+> - on branch `<HEAD-branch>`
 > - `<N>` ahead, `<M>` behind `origin/<base>` (last: `<short-sha> <iso-date>`)
 > - working tree: `<clean | dirty: N file(s)>`
 >
@@ -91,7 +89,7 @@ Warn template (substitute verified state):
 
 **Never** run `git checkout`, `stash`, `reset`, or other state-modifying git on the user's behalf. The skill warns and asks; the user resolves local state. `git fetch` is allowed (read-only).
 
-For Path A PR review when the worktree is dirty or on a non-base branch, fetch the PR head to a local ref instead:
+On Path A, local branch state never blocks the review — all reads go through origin refs, no checkout needed. When `HEAD` differs from `origin/${base}` or the tree is dirty, fetch the PR head to a local ref:
 
 ```bash
 git fetch origin "pull/<N>/head:refs/remotes/origin/pr-<N>" --quiet

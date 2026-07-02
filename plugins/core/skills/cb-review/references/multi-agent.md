@@ -21,7 +21,7 @@ Record the dispatched set in `/tmp/cb-review-meta.json` so Round 2 knows the ful
 
 ## Dispatch mechanics
 
-Use the host's parallel subagent mechanism (in Claude Code: the `Agent` tool with `subagent_type: general-purpose`, all calls in a single message so they run truly in parallel). Use fresh agents for every round. If one agent fails or returns malformed output, re-dispatch **that agent only** — do not restart the round. If the host cannot run subagents, run each role as a sequential pass in the main context, writing each role's findings to `/tmp/cb-review-round1-<name>.md` before starting the next so later passes can't contaminate earlier ones.
+Use the host's parallel subagent mechanism (in Claude Code: the `Agent` tool with `subagent_type: general-purpose`, all calls in a single message so they run truly in parallel). Use fresh agents for every round. If one agent fails or returns malformed output, re-dispatch **that agent only** — do not restart the round. If the host cannot run subagents, high effort's independence guarantee is unattainable — fall back to the low-effort engine and tell the user why.
 
 Keep large content on disk (`/tmp/cb-review-*`) so Round 2 prompts stay compact.
 

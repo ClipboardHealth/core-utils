@@ -56,7 +56,7 @@ When asking the user for access to external repos, name the specific file and th
 > Options:
 >
 > - **Local path** — give me an absolute path to a checkout (I'll run freshness preflight and read via `git show`).
-> - **`gh:<owner>/<repo>`** — I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=main`.
+> - **`gh:<owner>/<repo>[@<ref>]`** — I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=<ref>`, defaulting `<ref>` to the repo's default branch.
 > - **`skip`** — I'll either drop the finding or keep it as MINOR with a "speculative — assumes `<assumption>`" prefix; you can confirm/refute.
 > - **`skip all`** — apply `skip` to every remaining cross-repo finding.
 
