@@ -211,13 +211,16 @@ function syncCorePluginVersion(projectsVersionData: ProjectsVersionData, dryRun:
   // Pass the version Nx just computed rather than re-reading package.json:
   // Nx stages the bump without the working-tree read reflecting it yet, so a
   // disk read here would see the old version and silently skip the sync.
-  const { changedFiles } = syncPluginVersion({ version: pluginVersion });
-  if (changedFiles.length > 0) {
-    execFileSync("git", ["add", ...changedFiles], { stdio: "inherit" });
-  }
+  const { changedFiles, managedFiles } = syncPluginVersion({ version: pluginVersion });
+
+  // Stage the manifest and sentinels unconditionally. The postinstall npm runs
+  // mid-release may have already written the new version to these files but left
+  // them unstaged, so changedFiles is empty here even though they must land in
+  // the release commit. Staging an unchanged file is a no-op.
+  execFileSync("git", ["add", "--", ...managedFiles], { stdio: "inherit" });
 
   log(
-    `  Synced plugin manifest and sentinels to ${pluginVersion} (${changedFiles.length} file(s))`,
+    `  Synced plugin manifest and sentinels to ${pluginVersion} (${changedFiles.length} changed, ${managedFiles.length} staged)`,
   );
 }
 
