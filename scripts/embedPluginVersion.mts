@@ -64,6 +64,7 @@ function readPackageJsonVersion(): string {
 export function syncPluginVersion(options: { check?: boolean; version?: string } = {}): {
   version: string;
   changedFiles: string[];
+  managedFiles: string[];
 } {
   const { check = false } = options;
   const version = options.version ?? readPackageJsonVersion();
@@ -72,6 +73,10 @@ export function syncPluginVersion(options: { check?: boolean; version?: string }
   }
 
   const changedFiles: string[] = [];
+  // Every file this sync owns, whether or not it changed this run. Callers stage
+  // these so a version already written out-of-band (e.g. by the postinstall that
+  // npm runs mid-release) still lands in the commit even when changedFiles is empty.
+  const managedFiles: string[] = [PLUGIN_JSON];
 
   const manifest = JSON.parse(readFileSync(PLUGIN_JSON, "utf8")) as { version?: string };
   if (manifest.version !== version) {
@@ -88,6 +93,7 @@ export function syncPluginVersion(options: { check?: boolean; version?: string }
     if (!content.includes("core@")) {
       continue;
     }
+    managedFiles.push(file);
     const replaced = content.replaceAll(SENTINEL_PATTERN, target);
     if (replaced !== content) {
       if (!check) {
@@ -97,7 +103,7 @@ export function syncPluginVersion(options: { check?: boolean; version?: string }
     }
   }
 
-  return { version, changedFiles };
+  return { version, changedFiles, managedFiles };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
