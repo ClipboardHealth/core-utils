@@ -131,7 +131,7 @@ Every finding **must** include a `failure_mode`: one sentence on the concrete us
 
 ### Do-not-raise list (binding)
 
-- Speculative defensiveness at trusted internal boundaries.
+- Speculative defensiveness at trusted internal boundaries (only where the boundary's guarantee is actually _enforced_ — a declared or cast type is not enforcement; see AntiSlop).
 - Restating the obvious ("consider a comment explaining what this does").
 - Hypothetical future-caller scenarios with no current caller.
 - Style/formatting a linter or formatter covers.
@@ -150,6 +150,8 @@ For every candidate finding, run the litmus test before keeping it: _"What is th
 
 For each change name a realistic input or condition that would expose a bug. If you cannot, do not raise it.
 
+- **Declared ≠ enforced — check what actually guarantees a precondition.** When new code performs an operation that faults on a missing or malformed input (destructuring, property/array access, non-null assertion, iteration, parsing, arithmetic), do not accept a declared type, function signature, cast, or `as` as proof the input is safe — those _label_ a value, they don't _check_ it. Ask what enforces the precondition on this path: a runtime validator, a preceding explicit check, or a constructor/factory invariant. If nothing does, trace the value to its origin — it can fault on real data even though it compiles. Look at the operation that would actually throw, not only the named field beside it.
+- **Asymmetric handling across sibling call sites is a likely bug, not a style nit.** When the diff guards, validates, converts, or error-wraps a value in one place but consumes the same value or shape bare elsewhere, exactly one side is usually right. Compare the call sites against each other instead of reviewing each in isolation, and resolve the inconsistency: guard missing where it's absent → bug; guard unnecessary everywhere → slop to remove.
 - Edge cases, error paths, observability of real failure modes.
 - Tests cover real risk, not lines.
 - Concurrency, performance at real scale, data integrity.
@@ -212,7 +214,7 @@ Tag every convention finding with `[CONVENTION]` in the title. Cap severity at M
 
 This PR may have been written or assisted by an LLM. For each addition, ask: _"Is this line earning its keep, or is it pattern-matching what code is supposed to look like?"_ Push back on what other lenses are too polite to flag. Apply to additions **inside the diff itself**.
 
-- **Defensive code at trusted internal boundaries.** Null guards on private helpers whose callers' types guarantee non-null; `try`/`catch` wrapping a single non-throwing call, or that re-throws unchanged, or that "logs and swallows" without naming what to do next; optional-chaining through types that don't include optionality.
+- **Defensive code at trusted internal boundaries.** Null guards on private helpers whose callers' types guarantee non-null; `try`/`catch` wrapping a single non-throwing call, or that re-throws unchanged, or that "logs and swallows" without naming what to do next; optional-chaining through types that don't include optionality. **But "trusted" means the guarantee is _enforced_** — by a validator on this path, a constructor/factory invariant, or a preceding check you can point to. A type, signature, cast, or `as`/non-null-assertion only _asserts_ the guarantee; a guard backing a merely-asserted guarantee is load-bearing, not slop. Confirm what enforces the type at the call site before flagging the guard.
 - **Defensiveness against unrealistic product scenarios.** Litmus: _"In the real product flow this code participates in, what user action / system event / upstream call could land us in this branch?"_ If the answer is "none" or "I had to invent one to justify the guard", it's slop. Concrete shapes:
   - Null/undefined guard on an ID immediately after that ID was used to load (and find) the entity.
   - A `null`/`undefined`/`""`/`0` branch on a field whose TypeScript or Zod/class-validator already rejects those.
@@ -282,7 +284,7 @@ Does this follow our FE conventions, and will it behave correctly under realisti
 After walking the checklist, apply these filters to your candidate findings:
 
 1. **Drop findings with empty or hypothetical `failure_mode`.** "A future caller might…", "in case someone…" → drop.
-2. **Self-audit for slop.** For every finding you wrote, ask: does it match a slop pattern (asks-for-defensive-guard on already-narrowed value; hypothetical future caller; restating-obvious comment request; abstract refactor with no concrete cost-of-keeping; observability without named failure mode; test for trivially-verifiable code; defends against a state the product cannot produce)? If yes and you can't write a concrete, product-specific cost in one sentence — drop it. Being your own AntiSlop reviewer is the main lever for keeping this skill honest.
+2. **Self-audit for slop.** For every finding you wrote, ask: does it match a slop pattern (asks-for-defensive-guard on an already-narrowed value — but only if an _enforced_ check narrows it, not merely a declared type or cast (see Engineering's declared ≠ enforced); hypothetical future caller; restating-obvious comment request; abstract refactor with no concrete cost-of-keeping; observability without named failure mode; test for trivially-verifiable code; defends against a state the product cannot produce)? If yes and you can't write a concrete, product-specific cost in one sentence — drop it. Being your own AntiSlop reviewer is the main lever for keeping this skill honest.
 3. **Cross-repo audit.** For every finding, ask: does the failure_mode reference a downstream actor (FE, mobile, consumer service, rolling deploy, external library user) or a contract/schema/public-artifact boundary? If yes, did you actually read the relevant external file(s) to confirm the claim, or are you reasoning from priors about "how FEs usually work"? If you didn't read it, the finding is cross-repo — route to the Cross-repo evidence policy (verify, ask for access, or downgrade to a clearly-labeled "speculative" MINOR). Do not ship a "consumer will break" finding sourced from imagination.
 4. **Drop do-not-raise items** that slipped through.
 5. **Apply the NIT gate.** NITs that don't meet (a)/(b)/(c) → drop. Kept internally but hidden by default in synthesis.
