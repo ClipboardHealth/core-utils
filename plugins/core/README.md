@@ -6,11 +6,15 @@ Clipboard's core development tools.
 
 - [Installation](#installation)
 - [Prerequisites](#prerequisites)
+- [Workflow skills](#workflow-skills)
+  - [cb-work](#cb-work)
+  - [cb-ship](#cb-ship)
+  - [cb-babysit](#cb-babysit)
 - [Skills](#skills)
-  - [babysit-pr](#babysit-pr)
+  - [adversarial-review](#adversarial-review)
   - [clipboard-design-engineering](#clipboard-design-engineering)
   - [cognito-user-analysis](#cognito-user-analysis)
-  - [commit-push-pr](#commit-push-pr)
+  - [create-groundcrew-ticket](#create-groundcrew-ticket)
   - [datadog-investigate](#datadog-investigate)
   - [flaky-test-debugger](#flaky-test-debugger)
   - [frontend-ui-verification](#frontend-ui-verification)
@@ -19,12 +23,6 @@ Clipboard's core development tools.
   - [local-package](#local-package)
   - [seed-data](#seed-data)
   - [simple-review](#simple-review)
-  - [simplify](#simplify)
-- [Syncing external plugins](#syncing-external-plugins)
-  - [Adding a new repository](#adding-a-new-repository)
-  - [Keeping in sync](#keeping-in-sync)
-- [Recommended plugins](#recommended-plugins)
-  - [claude-plugins-official](#claude-plugins-official)
 
 ## Installation
 
@@ -39,18 +37,26 @@ Clipboard's core development tools.
 ## Prerequisites
 
 - [GitHub CLI](https://cli.github.com/) (`gh`) — used by CI check and PR skills
-- GNU coreutils `timeout` — used by `babysit-pr` for CI watch timeout
 
-  ```bash
-  # macOS (via Homebrew)
-  brew install coreutils
-  ```
+## Workflow skills
+
+### cb-work
+
+Implement a plan file or direct request end-to-end, validate, and ship via cb-ship.
+
+### cb-ship
+
+Ship changes: simplify the diff, commit, push, and open or update a PR.
+
+### cb-babysit
+
+Watch a PR through CI and review feedback: auto-fix high-confidence failures and address review comments.
 
 ## Skills
 
-### babysit-pr
+### adversarial-review
 
-Watch a PR through CI and review feedback: commit/push, wait for CI, auto-fix high-confidence failures, reply to active review threads, and summarize automated review-body comments from CodeRabbit and Mendral. Invoke with `/babysit-pr` for the current branch's PR, or `/babysit-pr <number|url>` to check out and babysit a specific PR.
+Perform an adversarial review of proposed work.
 
 ### clipboard-design-engineering
 
@@ -60,9 +66,9 @@ Apply Clipboard's design engineering standards for UI polish, component feel, in
 
 Analyze and fix duplicate Cognito users by comparing against backend data. Useful for diagnosing 403 Forbidden errors, duplicate accounts sharing phone/email, and orphaned UNCONFIRMED signups. Invoke with `/cognito-user-analysis`.
 
-### commit-push-pr
+### create-groundcrew-ticket
 
-Commit changes, push to origin, and create a PR in one step. Invoke with `/commit-push-pr`.
+Create Linear tickets that Groundcrew can pick up.
 
 ### datadog-investigate
 
@@ -78,7 +84,7 @@ Verify Clipboard frontend UI work against code, design references, Storybook, an
 
 ### humanize-prose
 
-Strip AI writing tells (hedging, throat-clearing, marketing adjectives, bullet bloat, connective filler, em-dashes) from prose you draft or clean: PR descriptions, Slack messages, docs, emails, and commit messages. Edits in place while preserving meaning. Invoke with `/humanize-prose` or let Claude auto-trigger when drafting text for you. For cleaning up code (defensive guards, type escapes, unnecessary comments), use `/simplify`.
+Strip AI writing tells (hedging, throat-clearing, marketing adjectives, bullet bloat, connective filler, em-dashes) from prose you draft or clean: PR descriptions, Slack messages, docs, emails, and commit messages. Edits in place while preserving meaning. Invoke with `/humanize-prose` or let Claude auto-trigger when drafting text for you. For cleaning up code (defensive guards, type escapes, unnecessary comments), use `cb-ship`'s simplify pass before opening a PR.
 
 ### in-depth-review
 
@@ -97,68 +103,3 @@ Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HC
 ### simple-review
 
 Run a single-pass code review on the current branch or a PR identified by argument. Uses the in-depth review rubric without subagents for smaller reviews or lower-budget passes. Invoke with `/simple-review` or `/simple-review <number|url>`.
-
-### simplify
-
-Review all changed files for reuse, quality, and efficiency, then fix any issues found. Launches parallel review agents for dead code, library reuse, and code quality. Invoke with `/simplify`.
-
-## Syncing external plugins
-
-This plugin syncs components from external repositories using a sync script. This works around the limitation that [Claude Code plugins do not support dependencies](https://github.com/anthropics/claude-code/issues/9444).
-
-To run the sync:
-
-```bash
-node --run sync-plugins
-```
-
-### Adding a new repository
-
-Edit [`syncPlugins.ts`](../../scripts/syncPlugins.ts) and add an entry to `SYNC_CONFIG`:
-
-```typescript
-{
-  repo: "https://github.com/your-org/your-plugins-repo.git",
-  ref: "main",            // Optional: branch, tag, or commit SHA
-  pluginsPath: "plugins", // Optional: path to plugins dir (default: "plugins")
-  plugins: [
-    {
-      name: "plugin-name",
-      components: [
-        { source: { type: "agents", name: "agent-name" } },
-        { source: { type: "skills", name: "skill-name" } },
-        { source: { type: "hooks", name: "hook-name" } },
-      ],
-    },
-  ],
-}
-```
-
-### Keeping in sync
-
-Run `node --run sync-plugins` periodically or when upstream repositories have changes you want to pull in.
-
-## Recommended plugins
-
-### [claude-plugins-official](https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json)
-
-```bash
-/plugin marketplace add claude-plugins-official
-
-/plugin install commit-commands@claude-plugins-official --scope user
-
-# === Fullstack ===
-
-# Helpful MCP servers. Restart after install and run `/mcp` to authenticate.
-# Note: GitHub MCP exists, but having Claude use `gh` CLI is more context efficient.
-/plugin install linear@claude-plugins-official --scope user
-/plugin install Notion@claude-plugins-official --scope user
-# Note: typescript-lsp@claude-plugins-official exists; as of 2026-01-12, Serena is more powerful.
-# See https://github.com/oraios/serena/issues/858
-/plugin install serena@claude-plugins-official --scope user
-
-# === Frontend ===
-
-# Note: Playwright MCP exists, but having Claude use `npx playwright` CLI is more context efficient.
-/plugin install figma@claude-plugins-official --scope user
-```

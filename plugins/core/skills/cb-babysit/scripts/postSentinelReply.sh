@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # postSentinelReply.sh — Post a threaded reply to a PR review thread.
-# The body MUST end with the babysit-pr sentinel; this script enforces that.
+# The body MUST end with the cb-babysit sentinel; this script enforces that.
 # Does NOT resolve the thread — that stays with the human.
 #
 # Usage: bash postSentinelReply.sh <thread-id> <body>

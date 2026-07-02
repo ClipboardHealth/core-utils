@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# unresolvedPrComments.sh — Fetch review data for babysit-pr.
+# unresolvedPrComments.sh — Fetch review data for cb-babysit.
 #
 # Returns one JSON document with:
 #   - threads / activeThreads / uncertainThreads — review threads with
@@ -10,10 +10,10 @@
 #   - issueComments — every top-level PR conversation comment, tagged with
 #     isBabysitSentinel and isKnownBot flags.
 #   - activeIssueComments — non-sentinel, non-bot issue comments whose
-#     per-comment fingerprint is NOT already listed in any prior babysit-pr
+#     per-comment fingerprint is NOT already listed in any prior cb-babysit
 #     summary. These are the human Conversation-tab comments needing a reply.
 #   - priorBabysitSentinels — issue comments whose body contains the
-#     babysit-pr sentinel prefix. Used for review-body + issue-comment dedupe.
+#     cb-babysit sentinel prefix. Used for review-body + issue-comment dedupe.
 #   - truncated — array naming any GraphQL connection that hit GitHub's
 #     100-item cap (reviewThreads, thread-comments, reviews, issueComments).
 #     Agent must surface this in the final summary.
@@ -258,9 +258,9 @@ main() {
   #   - postSentinelHumanComments: ARRAY of every human comment after the sentinel
   #   - activityState: "active" / "uncertain" / "addressed"
   local threads_json
-  threads_json="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --argjson bots "$BOTS_JSON" '
+  threads_json="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --arg legacy_sentinel_prefix "$LEGACY_SENTINEL_PREFIX" --argjson bots "$BOTS_JSON" '
     def is_bot: ((.author.__typename // "") == "Bot") or ((.author.login // "") | IN($bots[]));
-    def is_sentinel: ((.body // "") | contains($sentinel_prefix));
+    def is_sentinel: ((.body // "") | contains($sentinel_prefix) or contains($legacy_sentinel_prefix));
     [
       .data.repository.pullRequest.reviewThreads.nodes[]
       | select(.isResolved == false)
@@ -416,8 +416,8 @@ main() {
 
   # All issue comments (top-level Conversation-tab comments).
   local raw_issue_comments
-  raw_issue_comments="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --argjson bots "$BOTS_JSON" '
-    def is_sentinel_body: ((.body // "") | contains($sentinel_prefix));
+  raw_issue_comments="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --arg legacy_sentinel_prefix "$LEGACY_SENTINEL_PREFIX" --argjson bots "$BOTS_JSON" '
+    def is_sentinel_body: ((.body // "") | contains($sentinel_prefix) or contains($legacy_sentinel_prefix));
     def is_bot_author: ((.author.__typename // "") == "Bot") or ((.author.login // "") | IN($bots[]));
     [
       .data.repository.pullRequest.comments.nodes[]
@@ -443,12 +443,12 @@ main() {
 
   # Concatenate prior sentinel bodies into one blob — used as a haystack for
   # fingerprint dedupe (both review-body and issue-comment fingerprints land
-  # in the fenced block at the end of a babysit-pr summary).
+  # in the fenced block at the end of a cb-babysit summary).
   local prior_sentinel_blob
   prior_sentinel_blob="$(printf '%s' "$prior_sentinels" | jq -r '[.[].body] | join("\n")')"
 
   # activeIssueComments: non-sentinel, non-bot comments whose fingerprint is
-  # NOT already listed in any prior babysit-pr summary.
+  # NOT already listed in any prior cb-babysit summary.
   local active_issue_comments
   active_issue_comments="$(printf '%s' "$issue_comments" | jq --arg blob "$prior_sentinel_blob" '
     [.[]

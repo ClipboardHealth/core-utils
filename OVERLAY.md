@@ -7,7 +7,7 @@
 
 1. Use red, green, refactor test-driven development
 2. Validate changes with at least `node --run verify`
-3. Invoke core:go skill for ALL code changes
+3. Invoke core:cb-work skill for ALL code changes
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
