@@ -38,9 +38,9 @@ Phase 1 is done when every non-skipped candidate has a manifest row — don't ca
 Fetch what is already being worked, to catch duplicates before they spawn plans. Scope searches to the repos, files, normalized errors, helper names, and prior tickets from the Phase 1 manifest first; widen only when the scoped search leaves a plausible duplicate unresolved.
 
 - Open Linear tickets labeled `flaky-implementation` (any state but terminal).
-- Open PRs: `gh search prs --owner ClipboardHealth --label flaky-test-fix --state open` (also try title keywords `flaky`/`deflake`).
+- PRs: search `flaky-test-fix` in both `open` and `closed` states; treat closed-unmerged siblings as duplicate signals, not already-fixed proof. Also try title keywords `flaky`/`deflake`.
 - Open `[storm:` / `[burst:` tickets and their contained fingerprints.
-- Investigation/implementation tickets closed in the last 14 days, for already-fixed matches (D3).
+- Investigation/implementation tickets closed in the last 14 days, for already-fixed matches only after confirming the merged fix is on main and the sighting predates it (D3).
 
 Check all four sources before Phase 3 — a cluster decided against partial in-flight context can't be trusted.
 
@@ -56,7 +56,7 @@ Cluster by strongest shared evidence first:
 4. Same endpoint / static asset / status-code pattern.
 5. **Same module mechanism:** sibling tests in one file family or suite exercising the same logic class — e.g., several boundary/threshold tests of one module failing on timing, or several tests of one dialog failing on the same interaction — even when assertion messages differ. Name the shared mechanism explicitly; "same file" alone is insufficient.
 6. Shared prior related tickets.
-7. **Same environment incident:** multiple otherwise-distinct clusters whose failures all reduce to backend 5xx in seed/setup/readiness helpers within the same few minutes, across ≥2 repos or pipelines. Different helpers and error text do not separate them — one staging outage surfaces through every helper that touches it. Merge them into one incident cluster (backtest lesson: 2026-06-09's 13 tickets were four helper-level clusters but one incident).
+7. **Same environment incident:** multiple otherwise-distinct clusters whose failures all reduce to backend 5xx in seed/setup/readiness helpers within the same few minutes, across ≥2 repos or ≥3 pipelines. Different helpers and error text do not separate them — one staging outage surfaces through every helper that touches it. Merge them into one incident cluster (backtest lesson: 2026-06-09's 13 tickets were four helper-level clusters but one incident).
 
 Do not merge clusters merely because failures share a run. Same-run failures can have different root causes.
 
@@ -64,7 +64,7 @@ Do not merge clusters merely because failures share a run. Same-run failures can
 
 1. **Matches in-flight work** — error family or mechanism matches an open implementation ticket or open PR: close every member as Duplicate linked to that canonical, comment citing B5/D2 with the match evidence. Release nothing.
 2. **Matches an open storm/burst ticket** — normalized error matches its signature or contained fingerprints: close members as Duplicate of the storm/burst ticket so late stragglers join the existing event.
-3. **Infra blip / environment incident** — an incident cluster (evidence tier 7): ≥2 repos or ≥3 pipelines failing in the same few minutes, dominated by backend 5xx in setup/seed/readiness paths with no common code change. In production runs, corroborate via Phase 2 (Datadog monitor history / error spike through `pup` when available; passed-on-retry signals). Default action: close all members as Canceled with a D1 comment. If the incident exposes a hardening gap (e.g., seed path lacks diagnostics), release ONE canonical for that hardening and dup the rest to it — never one per helper.
+3. **Infra blip / environment incident** — an incident cluster (evidence tier 7): use the Phase 3 threshold above. In production runs, corroborate via Phase 2 (Datadog monitor history / error spike through `pup` when available; passed-on-retry signals). Default action: close all members as Canceled with a D1 comment. If the incident exposes a hardening gap (e.g., seed path lacks diagnostics), release ONE canonical for that hardening and dup the rest to it — never one per helper.
 4. **Multi-ticket cluster** — pick the canonical (richest evidence: most failures, clearest artifacts). Comment the cluster manifest on it: member IDs, shared mechanism, evidence tier from Phase 3, and the marker `<!-- flaky-triage: cluster=<short-slug> -->`. Close the other members as Duplicate of the canonical (D2 format). Release the canonical.
 5. **Singleton or uncertain** — release as-is with a brief `<!-- flaky-triage: singleton -->` comment.
 

@@ -21,9 +21,11 @@ Your job is adversarial: assume the plan papers over the root cause until its ev
 - A plan outside the rubric's taxonomy is **needs-human**, not a guess. Uncertainty bounces up, never through.
 - Verdicts are about the plan in front of you; do not penalize brevity when the required evidence is present, and do not reward thoroughness that lacks it.
 
-## Phase 1: Queue
+## Phase 1: Queue (shadow/enforce only)
 
-Linear: Groundcrew project, label `flaky-implementation`, state `Triage`. Skip already-marked tickets per the rule above. For every matching ticket, fetch its linked investigation ticket (the plan's evidence usually lives there) and note any linked PRs. Use `list_issues` only to enumerate; fetch plan content with `get_issue` — list results truncate descriptions.
+Linear: Groundcrew project, label `flaky-implementation`, state `Triage`. Skip already-marked tickets per the rule above. For shadow/enforce runs, fetch the linked investigation ticket (the plan's evidence usually lives there) and note any linked PRs. Use `list_issues` only to enumerate; fetch plan content with `get_issue` — list results truncate descriptions.
+
+In backtest mode, skip the live queue and linked metadata lookups. Use only the supplied historical plan content or ticket snapshot; do not fetch linked investigation tickets, linked PRs, current ticket state, comments after the plan, or how the work actually resolved.
 
 If the queue is empty, skip to the digest. Fetch linked investigation tickets and linked PR metadata in parallel when the available tooling supports it.
 
@@ -48,7 +50,7 @@ Fix class claimed: A1 (readiness gate). Missing required evidence: polled signal
 ```
 
 - **shadow**: comment only, prefixed `[shadow]`.
-- **enforce**: approve → move the ticket to Todo (leave assignee). Reject → comment and leave in Triage; the investigating flow gets one bounce. A second reject on the same ticket → comment `needs-human` and stop touching it.
+- **enforce**: approve → move the ticket to Todo and assign it to the Linear API user. Reject → comment and leave in Triage; the investigating flow gets one bounce. A second reject on the same ticket → comment `needs-human` and stop touching it.
 - **needs-human**: comment with what the rubric cannot answer; never move the ticket.
 
 ## Phase 4: Taste capture
