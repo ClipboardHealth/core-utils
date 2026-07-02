@@ -85,7 +85,7 @@ Use these names (Fowler, _Refactoring_ ch.3) to label structural findings — a 
 - **Mysterious Name** — name doesn't reveal what it does or holds → rename; if no honest name comes, the design's murky.
 - **Duplicated Code** — same logic shape in more than one hunk/file of the change → extract the shared shape.
 - **Feature Envy** — method reaches into another object's data more than its own → move it onto the data it envies.
-- **Data Clumps** — the same few fields/params keep travelling together → bundle into one type.
+- **Data Clumps** — the same few fields/params keep traveling together → bundle into one type.
 - **Primitive Obsession** — a primitive standing in for a domain concept → give the concept its own small type.
 - **Repeated Switches** — same `switch`/`if`-cascade on the same type recurs across the change → polymorphism or one shared map.
 - **Shotgun Surgery** — one logical change forces scattered edits across many files → gather what changes together.
