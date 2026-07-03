@@ -1,6 +1,6 @@
 ---
 name: cb-review
-description: Code review of the current branch or a PR — single-pass by default, parallel reviewer agents that debate at high effort, plus a spec-compliance lens when the originating ticket or PRD is available; findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, or runs /cb-review [pr-number-or-url] [--effort low|high].
+description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high].
 argument-hint: "[pr-number-or-url] [--effort low|high]"
 ---
 
@@ -49,7 +49,7 @@ Determine **mode**:
 - PR exists and authors differ → **reviewer mode**.
 - No PR → **author mode**.
 
-**Persistence:** low effort holds everything in-context. High effort persists for subagents: diff → `/tmp/cb-review-diff.patch`, context → `/tmp/cb-review-context.md`, changed files → `/tmp/cb-review-files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`, dispatched agent set) → `/tmp/cb-review-meta.json`.
+**Persistence:** low effort holds everything in-context. High effort persists for subagents: diff → `/tmp/cb-review-diff.patch`, context → `/tmp/cb-review-context.md`, changed files → `/tmp/cb-review-files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`) → `/tmp/cb-review-meta.json`.
 
 ## Freshness preflight (mandatory before reading code)
 
@@ -111,9 +111,7 @@ When `context_ref = worktree (stale, user accepted risk)`:
 
 ## Cross-repo evidence policy
 
-A finding's evidence is "cross-repo" when its load-bearing claim depends on code in any repo other than the one containing the diff. **Never silently read external repos and never claim a downstream impact you have not verified** — speculating that "the FE will break" without reading the consumer is a top source of false-positive findings. Cap any cross-repo finding at **MAJOR** until verified.
-
-Read [references/cross-repo-evidence.md](references/cross-repo-evidence.md) before raising or finalizing any cross-repo finding — it has when the policy fires, the verify-or-downgrade procedure, the access-request template, and what "verify" means for contract/schema vs API-response changes.
+A finding's evidence is "cross-repo" when its load-bearing claim depends on code in any repo other than the one containing the diff. Read [references/cross-repo-evidence.md](references/cross-repo-evidence.md) before raising or finalizing any cross-repo finding — it has when the policy fires, the verify-or-downgrade procedure, the severity cap, the access-request template, and what "verify" means for contract/schema vs API-response changes.
 
 ## Diff classification (pick which lenses apply)
 
@@ -132,7 +130,7 @@ The rubric — severity ladder, `failure_mode` contract, do-not-raise list, NIT 
 
 ### Low effort
 
-Read the full rubric, then walk the diff once, applying the active lenses yourself. You're looking for _the smallest number of high-signal findings_, not exhaustive coverage. **No subagents** — if a finding needs deeper independent investigation than you can do confidently in-line, surface it as a flagged finding rather than guess.
+Read the full rubric, then walk the diff, applying the active lenses yourself — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: report _the smallest number of high-signal findings_, not everything you noticed. **No subagents** — if a finding needs deeper independent investigation than you can do confidently in-line, surface it as a flagged finding rather than guess.
 
 ### High effort
 
@@ -143,12 +141,11 @@ Follow [references/multi-agent.md](references/multi-agent.md): dispatch one revi
 Low effort: apply to your own candidates. High effort: the moderator filter in multi-agent.md extends this list — apply that version.
 
 1. **Drop findings with empty or hypothetical `failure_mode`.** "A future caller might…", "in case someone…" → drop.
-2. **Self-audit for slop.** For every finding, ask: does it match a slop pattern (asks-for-defensive-guard on an already-narrowed value — but only if an _enforced_ check narrows it, not merely a declared type or cast; hypothetical future caller; restating-obvious comment request; abstract refactor with no concrete cost-of-keeping; observability without named failure mode; test for trivially-verifiable code; defends against a state the product cannot produce)? If yes and you can't write a concrete, product-specific cost in one sentence — drop it.
-3. **Cross-repo audit.** Does the failure_mode reference a downstream actor or a contract/schema/public-artifact boundary? If you didn't actually read the external code, route through the cross-repo evidence policy (verify, ask for access, or downgrade to a labeled "speculative" MINOR).
-4. **Drop do-not-raise items** that slipped through.
-5. **Apply the NIT gate.** NITs that don't meet it → drop. Kept NITs stay internal, hidden by default.
-6. **Merge near-duplicates** under one finding (note which lens(es) surfaced it).
-7. **Apply hard caps.** 6 actionable, 8 NITs retained; rest summarized as "N additional items omitted; ask for the full list."
+2. **Drop do-not-raise matches.** For every finding, ask: does it match a do-not-raise item (rubric §Admission)? If it matches a `slop:` tag and you can't write a concrete, product-specific cost in one sentence — drop it.
+3. **Cross-repo audit.** Does the failure_mode reference a downstream actor or a contract/schema/public-artifact boundary you didn't actually read? Route through the cross-repo evidence policy.
+4. **Apply the NIT gate.** NITs that don't meet it → drop. Kept NITs stay internal, hidden by default.
+5. **Merge near-duplicates** under one finding (note which lens(es) surfaced it).
+6. **Apply hard caps.** 6 actionable, 8 NITs retained; rest summarized as "N additional items omitted; ask for the full list."
 
 Track dropped items in Withdrawn (one-liner each) so the user can see what was filtered.
 
@@ -194,6 +191,8 @@ Option-label format: `<id> - <short title> (<SEVERITY>)`. The `description` is t
 
 ## Branch on mode
 
+Gate 2 is mandatory in both modes — never auto-apply fixes and never auto-post reviews.
+
 ### Author mode
 
 **Plan.** For the selected ids only, produce an ordered implementation plan: steps, files touched per step, tests to add/update, verification commands. Do **not** edit files yet.
@@ -223,16 +222,3 @@ Skip the plan step — you are not implementing someone else's code.
 When the user approves items to post, submit a **single** review via the GitHub Reviews API (`event: COMMENT` — never `APPROVE`/`REQUEST_CHANGES`), with every selected item as an inline comment anchored to its diff line. Never use loose issue comments.
 
 Follow [references/posting-pr-review.md](references/posting-pr-review.md) exactly — it has the `gh api` call, the payload shape, the three-block review body, and the per-comment body budget and format. After posting, print the review `html_url` and a one-line summary of how many comments were posted (and fallback general-notes count if any).
-
-## Rules
-
-- The rubric file is binding for both engines: empty `failure_mode` → drop, NIT not meeting the gate → drop, do-not-raise items → drop, caps applied (6 actionable, 8 nits).
-- Issue independent `gh`/`git` commands in parallel (PR view, diff, files, viewer).
-- Freshness preflight is mandatory before reading code. Read repo context via `git show "<context_ref>:<path>"`, not the worktree filesystem, unless `context_ref = worktree (stale, user accepted risk)`.
-- Never run state-modifying git commands on the user's behalf (`checkout`, `stash`, `reset`, `clean`, `pull` with merge). Warn and ask. `git fetch` is allowed.
-- Cross-repo evidence: **never raise a "consumer will break" finding without reading the consumer.** Cap at MAJOR until verified; user `skip` → drop or keep as MINOR with a visible "speculative — assumes `<X>`" prefix.
-- Conditional lenses (Security/Database/Frontend/Spec) run only when classification matches.
-- Hide nits by default. Print only when the user selects the NIT toggle in gate 1.
-- Reviews are always `event: COMMENT`. Never approve or request changes on the user's behalf.
-- Both user gates are mandatory. Do not auto-apply recommendations and do not auto-post reviews.
-- If the diff is empty, stop with a one-line message — do not invent findings.

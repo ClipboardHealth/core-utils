@@ -19,13 +19,16 @@ Litmus test before keeping any candidate: _"What is the concrete, current, produ
 
 ### Do-not-raise list
 
-- Speculative defensiveness at trusted internal boundaries (only where the boundary's guarantee is actually _enforced_ — a declared or cast type is not enforcement; see AntiSlop).
-- Restating the obvious ("consider a comment explaining what this does").
-- Hypothetical future-caller scenarios with no current caller.
+Drop candidates that match. The tagged items double as the slop taxonomy for the Filter (SKILL.md) and for AntiSlop's Round 2 audit of other agents' findings (multi-agent.md), which cites the tags verbatim.
+
+- `slop: asks for defensive guard on already-narrowed value` — speculative defensiveness at a boundary whose guarantee is actually _enforced_; a declared or cast type is not enforcement (see AntiSlop).
+- `slop: hypothetical future caller — no current path` — future-caller scenarios with no current caller.
+- `slop: restating-the-obvious comment request` — comment/JSDoc requests where name + signature already convey intent.
+- `slop: refactor with no concrete cost-of-keeping` — abstract SOLID-style "consider extracting…" with no concrete failure mode.
+- `slop: observability without named failure mode` — "add a log/metric" without the specific failure it would debug.
+- `slop: test for trivially-verifiable code` — test demands on type-evident or already-exercised code.
+- `slop: defends against a state the product cannot produce`.
 - Style/formatting a linter or formatter covers.
-- Test-coverage demands on trivially-verifiable code.
-- "Add observability" without naming a concrete failure mode it would help debug.
-- Abstract SOLID-style "consider extracting…" without a concrete failure mode.
 - Aesthetic naming preferences — only raise names that mislead about behavior.
 
 ### Caps
