@@ -22,6 +22,7 @@ Unless instructed otherwise:
 The plan or request is the source of truth for scope:
 
 - Make exactly the changes requested, no extra refactors or cleanup.
+- Target ≤ ~500 changed lines per PR: if the work will clearly exceed that, stop and propose a split into separately shippable slices before implementing.
 - On any drift from the plan (e.g. referenced files or utilities missing, an assumption invalid, a constraint missed) stop and report. Do not silently rewrite the approach.
 - Do not modify the plan file itself unless asked.
 

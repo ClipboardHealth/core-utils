@@ -1,6 +1,6 @@
 # High-effort engine — parallel reviewers, one debate round, moderator filter
 
-Read this only when effort is `high`. Referenced from `SKILL.md`. The rubric in `review-rubric.md` is binding for every agent.
+Read this when effort is `high`; low effort borrows only the two dispatch contracts (§Dispatch mechanics) and the Round 1 output shape. Referenced from `SKILL.md`. The rubric in `review-rubric.md` is binding for every agent.
 
 ## Roster
 
@@ -17,17 +17,17 @@ One reviewer agent per active lens. **Refer to agents by name in everything the 
 | H      | AntiSlop    | §AntiSlop      | Always                 |
 | S      | Spec        | §Spec          | Spec source found      |
 
-Record the dispatched set in `/tmp/cb-review-meta.json` so Round 2 knows the full agent list.
+Record the dispatched set in `$RUN_DIR/meta.json` so Round 2 knows the full agent list.
 
 ## Dispatch mechanics
 
-Use the host's parallel subagent mechanism (in Claude Code: the `Agent` tool with `subagent_type: general-purpose`, all calls in a single message so they run truly in parallel). Use fresh agents for every round. If one agent fails or returns malformed output, re-dispatch **that agent only** — do not restart the round. If the host cannot run subagents, high effort's independence guarantee is unattainable — fall back to the low-effort engine and tell the user why.
+Use the host's parallel subagent mechanism (in Claude Code: the `Agent` tool with `subagent_type: general-purpose`, all calls in a single message so they run truly in parallel). Use fresh agents for every round. If one agent fails or returns malformed output, re-dispatch **that agent only** — do not restart the round. If the host cannot run subagents, high effort's independence guarantee is unattainable — fall back to the low-effort engine (which then runs its single pass inline) and tell the user why.
 
-Keep large content on disk (`/tmp/cb-review-*`) so Round 2 prompts stay compact.
+Keep large content on disk (`$RUN_DIR/*`, from SKILL.md §Scope Persistence) so Round 2 prompts stay compact.
 
 Every agent prompt includes:
 
-- The file paths from Scope (`/tmp/cb-review-diff.patch`, `-context.md`, `-files.txt`).
+- The file paths from Scope (`$RUN_DIR/diff.patch`, `$RUN_DIR/context.md`, `$RUN_DIR/files.txt`).
 - An instruction to read `review-rubric.md` **§Admission** plus the agent's own lens section (give the absolute path to this skill's `references/review-rubric.md`), and — for Spec — the spec source content or how to fetch it.
 - The two contracts below, verbatim (substitute `<context_ref>` from the freshness preflight):
 

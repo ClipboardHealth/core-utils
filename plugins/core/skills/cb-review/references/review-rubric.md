@@ -1,6 +1,6 @@
 # Review rubric (binding for both engines)
 
-Low effort: the main agent reads this whole file and walks every active lens. High effort: each reviewer agent reads **Admission** plus its own lens section. Referenced from `SKILL.md`.
+Low effort: the single reviewer subagent reads this whole file and walks every active lens. High effort: each reviewer agent reads **Admission** plus its own lens section. Referenced from `SKILL.md`.
 
 ## Admission
 
@@ -57,6 +57,8 @@ For each change name a realistic input or condition that would expose a bug. If 
 - **Asymmetric handling across sibling call sites is a likely bug, not a style nit.** When the diff guards, validates, converts, or error-wraps a value in one place but consumes the same value or shape bare elsewhere, exactly one side is usually right. Compare the call sites against each other instead of reviewing each in isolation, and resolve the inconsistency: guard missing where it's absent → bug; guard unnecessary everywhere → slop to remove.
 - Edge cases, error paths, observability of real failure modes.
 - Tests cover real risk, not lines.
+- A diff that changes runtime behavior with zero test delta is raisable when the repo's documented rules mandate tests (cite the rule) — "the new behavior ships unverified" is a concrete failure_mode, not a hypothetical.
+- Hard-coded environment-specific identifiers (pool/account IDs, environment URLs) in code, scripts, or docs meant for reuse.
 - Concurrency, performance at real scale, data integrity.
 - Backward compatibility, on-call implications, degraded-mode behavior.
 - Async/await ordering matches actual data dependencies.
@@ -66,6 +68,7 @@ For each change name a realistic input or condition that would expose a bug. If 
 - Schema/query changed → indexes for new patterns, N+1, cascade semantics, type fit (deep dive under Database).
 - Telemetry covers business/product value, not only engineering surface metrics.
 - Contract/backward-compat for any consumer-visible response shape change. **If you suspect a consumer break, the finding is cross-repo — follow the cross-repo evidence policy before raising it.**
+- Before raising a version/back-compat break on a published package, read its `package.json` at `${context_ref}` — 0.x caret semantics or a days-old package can refute the failure_mode.
 
 ## Minimalism (always)
 
@@ -74,6 +77,8 @@ The smallest diff that ships the intent is the best diff.
 - Unneeded abstractions, speculative generality, dead branches.
 - Redundant validation, defensive code at trusted internal boundaries.
 - Comments that restate code; new files/utilities that duplicate existing ones.
+- Near-duplicate tests or assertions within the diff; conditions or variables another hunk of the same diff makes unnecessary.
+- New docs or guidance lines that restate an adjacent existing line.
 - Tests that exercise the framework, not behavior.
 - Flags/config knobs without a concrete caller.
 - Duplicated error handlers in the same scope.
