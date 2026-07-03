@@ -9,7 +9,9 @@
 #
 # Does NOT use `git add -A` — the caller MUST name every file to stage, so the
 # skill never sweeps up unrelated uncommitted work. Does NOT skip hooks
-# (no --no-verify); a hook failure surfaces as a non-zero exit.
+# (no --no-verify); a hook failure surfaces as a non-zero exit. Commits with
+# --no-gpg-sign (cb-ship's convention) — agent runs can't service a signing
+# prompt, and a missing signer otherwise fails the commit after hooks pass.
 #
 # Exit 0 on success. Exit 1 on runtime errors. Exit 2 on usage errors.
 #
@@ -51,7 +53,7 @@ if git diff --cached --quiet; then
   exit 1
 fi
 
-git commit -m "$MSG"
+git commit --no-gpg-sign -m "$MSG"
 git push
 
 SHA="$(git rev-parse HEAD)"
