@@ -27,7 +27,7 @@ Keep large content on disk (`$RUN_DIR/*`, from SKILL.md §Scope Persistence) so 
 
 Every agent prompt includes:
 
-- The file paths from Scope (`$RUN_DIR/diff.patch`, `context.md`, `files.txt`).
+- The file paths from Scope (`$RUN_DIR/diff.patch`, `$RUN_DIR/context.md`, `$RUN_DIR/files.txt`).
 - An instruction to read `review-rubric.md` **§Admission** plus the agent's own lens section (give the absolute path to this skill's `references/review-rubric.md`), and — for Spec — the spec source content or how to fetch it.
 - The two contracts below, verbatim (substitute `<context_ref>` from the freshness preflight):
 
