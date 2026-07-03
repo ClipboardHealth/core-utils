@@ -1,21 +1,22 @@
 ---
 name: cb-review
 description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high].
-argument-hint: "[pr-number-or-url] [--effort low|high]"
+argument-hint: "[pr-number-or-url] [--effort low|high] [--report]"
 ---
 
 # CB Review
 
-Review a diff against one rubric, filter to the few findings worth raising, gate with the user, optionally post as anchored PR comments. Two engines share everything except how the rubric is applied:
+Review a diff against one rubric, filter to the few findings worth raising, gate with the user, optionally post as anchored PR comments. `--report` replaces the gates with a findings report for an agent caller. Two engines share everything except how the rubric is applied:
 
-- **low** — single pass by you (the main agent), no subagents. Default.
-- **high** — parallel reviewer agents, one debate round, moderator filter. For large or high-stakes diffs.
+- **low** — one reviewer subagent, single pass. Default.
+- **high** — parallel reviewer subagents, one debate round, moderator filter. For large or high-stakes diffs.
 
 ## Invocation
 
 - `/cb-review` — review the current branch (resolves the open PR for the branch if any, otherwise diffs against the default branch).
 - `/cb-review <pr-number-or-url>` — review that PR without checking it out; forces reviewer mode. Accepts a bare number (current repo) or full GitHub URL (identifies owner/repo).
 - `--effort low|high` — pick the engine explicitly. Phrases also select: "quick"/"fast" → low; "deep"/"thorough"/"multi-perspective" → high.
+- `--report` — non-interactive: stop after Synthesize and return the findings to the caller. No user gates, no posting, no implementing. For agent callers (e.g. cb-ship's review step).
 
 **Effort auto-select** (no flag, no phrase): `high` when the diff exceeds 20 changed files or 600 changed lines, else `low`. Before reviewing, print one line — `Effort: <low|high> (<N> files, <M> lines; override with --effort <other>)` — so the user can interrupt.
 
@@ -49,7 +50,7 @@ Determine **mode**:
 - PR exists and authors differ → **reviewer mode**.
 - No PR → **author mode**.
 
-**Persistence:** low effort holds everything in-context. High effort persists for subagents: diff → `/tmp/cb-review-diff.patch`, context → `/tmp/cb-review-context.md`, changed files → `/tmp/cb-review-files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`) → `/tmp/cb-review-meta.json`.
+**Persistence:** both efforts persist for subagents: diff → `/tmp/cb-review-diff.patch`, context → `/tmp/cb-review-context.md`, changed files → `/tmp/cb-review-files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`) → `/tmp/cb-review-meta.json`.
 
 ## Freshness preflight (mandatory before reading code)
 
@@ -130,7 +131,7 @@ The rubric — severity ladder, `failure_mode` contract, do-not-raise list, NIT 
 
 ### Low effort
 
-Read the full rubric, then walk the diff, applying the active lenses yourself — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: report _the smallest number of high-signal findings_, not everything you noticed. **No subagents** — if a finding needs deeper independent investigation than you can do confidently in-line, surface it as a flagged finding rather than guess.
+Dispatch **one** reviewer subagent — fresh eyes on the diff, and the bulk content stays out of your context. Its prompt carries the persisted file paths, the absolute path to references/review-rubric.md with the instruction to read it in full, the active lens list, and the two contracts from multi-agent.md §Dispatch mechanics (context-read, cross-repo evidence) verbatim. The subagent walks the diff, applying every active lens — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: it returns _the smallest number of high-signal findings_ in the Round 1 output shape (multi-agent.md §Round 1), flagging anything that needs deeper investigation than it can do confidently rather than guessing. If the host cannot run subagents, do that same single pass yourself inline.
 
 ### High effort
 
@@ -138,7 +139,7 @@ Follow [references/multi-agent.md](references/multi-agent.md): dispatch one revi
 
 ## Filter (before synthesis)
 
-Low effort: apply to your own candidates. High effort: the moderator filter in multi-agent.md extends this list — apply that version.
+Low effort: apply to the reviewer subagent's candidates. High effort: the moderator filter in multi-agent.md extends this list — apply that version.
 
 1. **Drop findings with empty or hypothetical `failure_mode`.** "A future caller might…", "in case someone…" → drop.
 2. **Drop do-not-raise matches.** For every finding, ask: does it match a do-not-raise item (rubric §Admission)? If it matches a `slop:` tag and you can't write a concrete, product-specific cost in one sentence — drop it.
@@ -178,6 +179,10 @@ Do **not** print by default. Print only: _"N nit(s) available (M from convention
 ### Withdrawn
 
 Terse one-liners of items dropped by the filter. Transparency only.
+
+## Report mode (--report)
+
+Stop after Synthesize: print the Summary, the Actionable list, and the retained NITs as one-liners (the caller is an agent — the hide-nits default is for humans), then end. No user gates, no posting, no implementing; the caller triages every finding itself and owns any fixes.
 
 ## User gate 1 — select items
 
