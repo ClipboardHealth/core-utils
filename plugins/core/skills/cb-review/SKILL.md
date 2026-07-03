@@ -1,6 +1,6 @@
 ---
 name: cb-review
-description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high].
+description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high] [--report].
 argument-hint: "[pr-number-or-url] [--effort low|high] [--report]"
 ---
 
@@ -50,7 +50,7 @@ Determine **mode**:
 - PR exists and authors differ → **reviewer mode**.
 - No PR → **author mode**.
 
-**Persistence:** both efforts persist for subagents: diff → `/tmp/cb-review-diff.patch`, context → `/tmp/cb-review-context.md`, changed files → `/tmp/cb-review-files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`) → `/tmp/cb-review-meta.json`.
+**Persistence:** both efforts persist for subagents into a fresh per-run directory — `RUN_DIR=$(mktemp -d "${TMPDIR:-/tmp}/cb-review.XXXXXX")` — so concurrent sessions never clobber each other: diff → `$RUN_DIR/diff.patch`, context → `$RUN_DIR/context.md`, changed files → `$RUN_DIR/files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`) → `$RUN_DIR/meta.json`.
 
 ## Freshness preflight (mandatory before reading code)
 
@@ -131,7 +131,7 @@ The rubric — severity ladder, `failure_mode` contract, do-not-raise list, NIT 
 
 ### Low effort
 
-Dispatch **one** reviewer subagent — fresh eyes on the diff, and the bulk content stays out of your context. Its prompt carries the persisted file paths, the absolute path to references/review-rubric.md with the instruction to read it in full, the active lens list, and the two contracts from multi-agent.md §Dispatch mechanics (context-read, cross-repo evidence) verbatim. The subagent walks the diff, applying every active lens — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: it returns _the smallest number of high-signal findings_ in the Round 1 output shape (multi-agent.md §Round 1), flagging anything that needs deeper investigation than it can do confidently rather than guessing. If the host cannot run subagents, do that same single pass yourself inline.
+Dispatch **one** reviewer subagent — fresh eyes on the diff, and the bulk content stays out of your context. Its prompt carries the persisted file paths, the absolute path to references/review-rubric.md with the instruction to read it in full, the active lens list, and the two contracts from multi-agent.md §Dispatch mechanics (context-read, cross-repo evidence) with `<context_ref>` substituted and the moderator/Round-2 sentence replaced by: emit `evidence_required` findings capped at MAJOR; the dispatching agent resolves them in the Filter's cross-repo audit. Finding ids use an `R` prefix in place of roster letters. The subagent walks the diff, applying every active lens — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: it returns _the smallest number of high-signal findings_ in the Round 1 output shape (multi-agent.md §Round 1), flagging anything that needs deeper investigation than it can do confidently rather than guessing. If the host cannot run subagents, do that same single pass yourself inline.
 
 ### High effort
 
@@ -183,6 +183,8 @@ Terse one-liners of items dropped by the filter. Transparency only.
 ## Report mode (--report)
 
 Stop after Synthesize: print the Summary, the Actionable list, and the retained NITs as one-liners (the caller is an agent — the hide-nits default is for humans), then end. No user gates, no posting, no implementing; the caller triages every finding itself and owns any fixes.
+
+Earlier interactive checkpoints resolve to their safe defaults instead of prompting: the freshness preflight's stop-and-ask resolves as `use-origin` (fetch failure → return an error to the caller instead of findings), and cross-repo access requests resolve as `skip all` (downgrade per the cross-repo policy).
 
 ## User gate 1 — select items
 
