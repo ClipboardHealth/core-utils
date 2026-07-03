@@ -53,15 +53,7 @@ Dispatch the same agent set, in parallel. Each agent receives **all Round 1 outp
 
 Output per item: `id`, `original_author` (agent **name**, not letter), `verdict` (keep | withdraw | agree | disagree | refine), `final_severity`, `final_title`, `final_failure_mode`, `reasoning`, `suggested_fix`, and rebuttals `[{from, stance, reasoning}]` (`from` is also a name).
 
-**AntiSlop plays an expanded Round 2 role**: beyond defending or withdrawing its own findings, it audits every other agent's finding for the slop patterns it scans code for, and marks matches `disagree` with a one-line `slop:` label in `reasoning`:
-
-- "Add a null check / try-catch / validation" on a value already typed, validated upstream, or guaranteed by a preceding call → `slop: asks for defensive guard on already-narrowed value`.
-- "What if a future caller / someone later…" with no current realistic input → `slop: hypothetical future caller — no current path`.
-- Comment/JSDoc requests where name + signature already convey intent → `slop: restating-the-obvious comment request`.
-- Refactor suggestions whose failure_mode is shape-of-the-code → `slop: refactor with no concrete cost-of-keeping`.
-- "Add a log/metric" without the specific failure it would debug → `slop: observability without named failure mode`.
-- Test demands on type-evident or already-exercised code → `slop: test for trivially-verifiable code`.
-- Worries about states the product cannot produce → `slop: defends against a state the product cannot produce`.
+**AntiSlop plays an expanded Round 2 role**: beyond defending or withdrawing its own findings, it audits every other agent's finding against the tagged do-not-raise items (rubric §Admission) and marks matches `disagree` with the item's `slop:` tag in `reasoning`.
 
 When an agent sees a slop tag on its own finding, it either rebuts with a concrete, product-specific `final_failure_mode` or withdraws — not both stand on the original framing. Even when AntiSlop's own Round 1 findings are sparse because the diff is clean, it must not under-spend on this audit — stopping slop _suggestions_ from polluting the review is often the bigger lever.
 

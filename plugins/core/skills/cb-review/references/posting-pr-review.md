@@ -2,12 +2,6 @@
 
 Read this once the user approves items to post. Referenced from `SKILL.md`.
 
-## Contents
-
-- API call and payload shape
-- Review body (top-level): attribution line, summary, apply-all prompt
-- Each comment body: budget, template, formatting rules
-
 ## API call and payload
 
 Post via the GitHub Reviews API as a **single** review with all selected actionable items as inline review comments anchored to specific diff lines. **Never** loose issue comments.
