@@ -10,6 +10,7 @@ Clipboard's core development tools.
   - [cb-work](#cb-work)
   - [cb-ship](#cb-ship)
   - [cb-babysit](#cb-babysit)
+  - [cb-review](#cb-review)
 - [Skills](#skills)
   - [adversarial-review](#adversarial-review)
   - [clipboard-design-engineering](#clipboard-design-engineering)
@@ -19,10 +20,8 @@ Clipboard's core development tools.
   - [flaky-test-debugger](#flaky-test-debugger)
   - [frontend-ui-verification](#frontend-ui-verification)
   - [humanize-prose](#humanize-prose)
-  - [in-depth-review](#in-depth-review)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
-  - [simple-review](#simple-review)
 
 ## Installation
 
@@ -51,6 +50,10 @@ Ship changes: simplify the diff, commit, push, and open or update a PR.
 ### cb-babysit
 
 Watch a PR through CI and review feedback: auto-fix high-confidence failures and address review comments.
+
+### cb-review
+
+Review a diff, branch, or PR against a single rubric: single-pass by default, parallel reviewer agents with a debate round at high effort, plus a spec-compliance lens when the originating ticket or PRD is available. Invoke with `/cb-review [pr-number-or-url] [--effort low|high]`.
 
 ## Skills
 
@@ -86,10 +89,6 @@ Verify Clipboard frontend UI work against code, design references, Storybook, an
 
 Strip AI writing tells (hedging, throat-clearing, marketing adjectives, bullet bloat, connective filler, em-dashes) from prose you draft or clean: PR descriptions, Slack messages, docs, emails, and commit messages. Edits in place while preserving meaning. Invoke with `/humanize-prose` or let Claude auto-trigger when drafting text for you. For cleaning up code (defensive guards, type escapes, unnecessary comments), use `cb-ship`'s simplify pass before opening a PR.
 
-### in-depth-review
-
-Run a multi-agent code review on the current branch or a PR identified by argument. Defaults to engineering, minimalist, conventions, and AntiSlop reviewers, conditionally adds security/database/frontend specialists based on changed files, and includes the adversarial reviewer only when explicitly requested. Invoke with `/in-depth-review` or `/in-depth-review <number|url>`.
-
 ### local-package
 
 Use Clipboard's internal CLI (`@clipboard-health/cli`) to link and unlink packages across repositories for local development. Invoke with `/local-package` or let Claude auto-trigger when discussing local package development.
@@ -99,7 +98,3 @@ See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage d
 ### seed-data
 
 Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HCPs, facilities, shifts) in development, staging, or prod-shadow environments. Invoke with `/seed-data` or by asking to seed/create test data.
-
-### simple-review
-
-Run a single-pass code review on the current branch or a PR identified by argument. Uses the in-depth review rubric without subagents for smaller reviews or lower-budget passes. Invoke with `/simple-review` or `/simple-review <number|url>`.
