@@ -30,6 +30,19 @@ For each cross-repo finding:
 
 Severity cap on any cross-repo finding is **MAJOR** until verified. Anything verified as actual breakage can be raised to its true severity.
 
+## High effort — subagent and moderator flow
+
+Reviewer agents must **not** do the verification themselves. An agent whose finding is cross-repo emits it with:
+
+```json
+"evidence_required": {
+  "repos": ["cbh-admin-frontend", "payment-service"],
+  "what_to_verify": "concrete grep / file path / question the moderator should answer to confirm or kill the finding"
+}
+```
+
+…and caps severity at MAJOR. After Round 1 the moderator (main agent) collects every `evidence_required` block, runs **Verify or downgrade** above for each (including the user access-request when needed), then re-dispatches only the affected agents with the verified evidence (or its absence) inlined so they can finalize severity in Round 2. Findings whose evidence the user `skip`s are kept but capped per step 5.
+
 ## Access-request template
 
 When asking the user for access to external repos, name the specific file and the specific question. Do not ask vaguely for "access to repo X" — ask for the evidence that would change your mind.
@@ -43,7 +56,7 @@ When asking the user for access to external repos, name the specific file and th
 > Options:
 >
 > - **Local path** — give me an absolute path to a checkout (I'll run freshness preflight and read via `git show`).
-> - **`gh:<owner>/<repo>`** — I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=main`.
+> - **`gh:<owner>/<repo>[@<ref>]`** — I'll fetch via `gh api repos/<owner>/<repo>/contents/<path>?ref=<ref>`, defaulting `<ref>` to the repo's default branch.
 > - **`skip`** — I'll either drop the finding or keep it as MINOR with a "speculative — assumes `<assumption>`" prefix; you can confirm/refute.
 > - **`skip all`** — apply `skip` to every remaining cross-repo finding.
 
