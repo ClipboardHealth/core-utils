@@ -67,10 +67,10 @@ If `mergeable == "CONFLICTING"` (or `mergeStateStatus == "DIRTY"`), merge the ba
 ```bash
 BASE=$(gh pr view --json baseRefName --jq .baseRefName)
 git fetch origin "$BASE"
-git merge --no-edit "origin/$BASE"
+git merge --no-edit --no-gpg-sign "origin/$BASE"
 ```
 
-Resolve directly only for lockfile/generated regenerations, additive non-overlapping edits, or trivial textual conflicts in PR-touched files. `git merge --abort` for anything semantic, ambiguous, or outside the PR's intentional surface, and skip to step 10 to exit **stuck** with a diagnosis. After a clean resolution, commit the merge and `git push origin HEAD`.
+Resolve directly only for lockfile/generated regenerations, additive non-overlapping edits, or trivial textual conflicts in PR-touched files. `git merge --abort` for anything semantic, ambiguous, or outside the PR's intentional surface, and skip to step 10 to exit **stuck** with a diagnosis. After a clean resolution, commit the merge with `git commit --no-gpg-sign` and `git push origin HEAD`.
 
 ### 3. Wait for CI
 
