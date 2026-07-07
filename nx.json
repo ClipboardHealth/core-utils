@@ -28,7 +28,8 @@
     "packageBuild": [
       "production",
       "{projectRoot}/*.md",
-      "{workspaceRoot}/scripts/prepareTsgoPackage.mts"
+      "{workspaceRoot}/scripts/prepareTsgoPackage.mts",
+      "{workspaceRoot}/scripts/buildEsmPackage.mts"
     ]
   },
   "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
