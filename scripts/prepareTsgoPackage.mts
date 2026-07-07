@@ -6,12 +6,11 @@ import {
   type ExecutorContext,
 } from "@nx/devkit";
 import { copyAssets as nxCopyAssets, getUpdatedPackageJsonContent } from "@nx/js";
-import { existsSync, readdirSync, rmSync } from "node:fs";
+import { rmSync } from "node:fs";
 import path from "node:path";
 
 type PackageJson = Parameters<typeof getUpdatedPackageJsonContent>[0];
 type Asset = Parameters<typeof nxCopyAssets>[0]["assets"][number];
-type ExportsMap = Exclude<NonNullable<PackageJson["exports"]>, string>;
 
 const EXTRA_ASSETS_BY_PROJECT_ROOT: Record<string, Asset[]> = {
   "packages/clearance": [
@@ -179,77 +178,9 @@ async function writePackageJson({
 
   packageJson.types ??= packageJson.typings;
   removeSourceExportCondition(packageJson);
-  addDualFormatExports({ packageJson, projectRoot });
 
   const packageJsonPath = joinPathFragments(workspaceRoot, outputPath, "package.json");
   writeJsonFile(packageJsonPath, packageJson);
-}
-
-/**
- * Packages with a tsconfig.lib.esm.json get a second, tree-shakeable ESM build
- * at `esm/` (see scripts/buildEsmPackage.mts). Point bundlers at it through an
- * `exports` map, with a subpath per module so consumers can also skip the
- * barrel entirely. Generated instead of hand-maintained so subpaths cannot
- * drift from the source tree.
- */
-function addDualFormatExports({
-  packageJson,
-  projectRoot,
-}: {
-  packageJson: PackageJson;
-  projectRoot: string;
-}): void {
-  if (!existsSync(joinPathFragments(workspaceRoot, projectRoot, "tsconfig.lib.esm.json"))) {
-    return;
-  }
-
-  const exports: ExportsMap = {
-    "./package.json": "./package.json",
-    ".": dualFormatExportEntry({ modulePath: "index" }),
-  };
-
-  for (const modulePath of listExportableModules({ projectRoot })) {
-    const subpath = `./${path.basename(modulePath)}`;
-
-    if (subpath in exports) {
-      throw new Error(
-        `Subpath ${subpath} (from ${modulePath}) collides with another module in ${projectRoot}`,
-      );
-    }
-
-    exports[subpath] = dualFormatExportEntry({ modulePath });
-  }
-
-  packageJson.exports = exports;
-}
-
-function dualFormatExportEntry({ modulePath }: { modulePath: string }): ExportsMap[string] {
-  return {
-    types: `./src/${modulePath}.d.ts`,
-    import: `./esm/src/${modulePath}.js`,
-    require: `./src/${modulePath}.js`,
-    default: `./src/${modulePath}.js`,
-  };
-}
-
-function listExportableModules({ projectRoot }: { projectRoot: string }): string[] {
-  const sourceRoot = joinPathFragments(workspaceRoot, projectRoot, "src");
-
-  return (
-    readdirSync(sourceRoot, { recursive: true, withFileTypes: true })
-      .filter(
-        (entry) =>
-          entry.isFile() &&
-          entry.name.endsWith(".ts") &&
-          !entry.name.endsWith(".test.ts") &&
-          entry.name !== "index.ts",
-      )
-      .map((entry) =>
-        path.relative(sourceRoot, path.join(entry.parentPath, entry.name)).replace(/\.ts$/, ""),
-      )
-      // eslint-disable-next-line unicorn/no-array-sort -- sorting a freshly mapped array; toSorted is not in scripts' lint lib
-      .sort()
-  );
 }
 
 function removeSourceExportCondition(packageJson: PackageJson): void {
