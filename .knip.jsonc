@@ -18,7 +18,7 @@
   "webpack": false,
   "workspaces": {
     ".": {
-      "entry": ["scripts/prepareTsgoPackage.mts"],
+      "entry": ["scripts/buildEsmPackage.mts", "scripts/prepareTsgoPackage.mts"],
       "project": ["scripts/**/*.mts"],
     },
     "packages/analytics": {

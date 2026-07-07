@@ -6,11 +6,20 @@
   "tags": [],
   "targets": {
     "build": {
-      "dependsOn": ["prepare-build-package", "^build"],
+      "dependsOn": ["prepare-build-package", "build-esm", "^build"],
       "inputs": ["packageBuild", "^production"],
       "outputs": ["{workspaceRoot}/dist/packages/contract-core"],
       "options": {
         "forwardAllArgs": false
+      }
+    },
+    "build-esm": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/contract-core/esm"],
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/buildEsmPackage.mts packages/contract-core"
       }
     },
     "lint": {
