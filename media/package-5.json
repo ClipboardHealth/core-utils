@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/contract-core",
-  "version": "3.8.7",
+  "version": "4.0.0",
   "description": "Shared Zod schemas for Clipboard's contracts.",
   "keywords": [
     "contract",
@@ -16,16 +16,32 @@
     "directory": "packages/contract-core"
   },
   "type": "commonjs",
+  "sideEffects": false,
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
   "publishConfig": {
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "types": "./src/index.d.ts",
+        "import": "./esm/src/index.js",
+        "require": "./src/index.js",
+        "default": "./src/index.js"
+      },
+      "./*": {
+        "types": "./src/lib/schemas/*.d.ts",
+        "import": "./esm/src/lib/schemas/*.js",
+        "require": "./src/lib/schemas/*.js",
+        "default": "./src/lib/schemas/*.js"
+      }
+    },
     "access": "public"
   },
   "dependencies": {
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@clipboard-health/testing-core": "2.7.7",
+    "@clipboard-health/testing-core": "2.7.8",
     "zod": "3.25.76"
   },
   "peerDependencies": {
