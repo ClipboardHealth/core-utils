@@ -1,6 +1,6 @@
 ---
 name: flaky-critic
-description: Adversarial reviewer for flaky-test fix plans and PRs, enforcing the flaky-fix rubric. Gates implementation tickets from Triage to Todo (enforce by default; approve releases, reject bounces, cancel stays human). Use when running the recurring flaky-critic task, when asked to review a flaky-fix plan or PR against the rubric, or to backtest verdicts against historical tickets.
+description: Adversarial reviewer for flaky-test fix plans and PRs, enforcing the flaky-fix rubric. Gates implementation tickets from Triage to Todo (enforce by default; approve releases, reject bounces; canceling tickets stays human-only). Use when running the recurring flaky-critic task, when asked to review a flaky-fix plan or PR against the rubric, or to backtest verdicts against historical tickets.
 ---
 
 The quality gate of the flaky-test pipeline. Implementation tickets created by investigation agents land in the **Triage** state; this skill reviews each plan against `references/rubric.md` and decides whether it dispatches. It replaces per-plan human review; the human sees only disagreements, bounces, and the audit sample.
