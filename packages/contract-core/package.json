@@ -19,22 +19,22 @@
   "sideEffects": false,
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "types": "./src/index.d.ts",
-      "import": "./esm/src/index.js",
-      "require": "./src/index.js",
-      "default": "./src/index.js"
-    },
-    "./*": {
-      "types": "./src/lib/schemas/*.d.ts",
-      "import": "./esm/src/lib/schemas/*.js",
-      "require": "./src/lib/schemas/*.js",
-      "default": "./src/lib/schemas/*.js"
-    }
-  },
   "publishConfig": {
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "types": "./src/index.d.ts",
+        "import": "./esm/src/index.js",
+        "require": "./src/index.js",
+        "default": "./src/index.js"
+      },
+      "./*": {
+        "types": "./src/lib/schemas/*.d.ts",
+        "import": "./esm/src/lib/schemas/*.js",
+        "require": "./src/lib/schemas/*.js",
+        "default": "./src/lib/schemas/*.js"
+      }
+    },
     "access": "public"
   },
   "dependencies": {
