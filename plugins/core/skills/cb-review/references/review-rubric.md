@@ -17,6 +17,10 @@ Every finding **must** include a `failure_mode`: one sentence on the concrete us
 
 Litmus test before keeping any candidate: _"What is the concrete, current, product-visible cost of leaving this code in?"_ If you can't answer in one sentence, drop it.
 
+### Evidence discipline
+
+Prose is a claim, not evidence. PR descriptions, code comments, JSDoc, and commit messages assert intent — validate the assertion against the code in the diff (or via `${context_ref}` reads) before relying on it to admit **or drop** a finding. A claim the code contradicts is itself a finding (AntiSlop: tone/description mismatch); a claim you cannot check stays a claim — state that in the finding rather than treating it as fact.
+
 ### Do-not-raise list
 
 Drop candidates that match. The tagged items double as the slop taxonomy for the Filter (SKILL.md) and for AntiSlop's Round 2 audit of other agents' findings (multi-agent.md), which cites the tags verbatim.
@@ -56,6 +60,8 @@ For each change name a realistic input or condition that would expose a bug. If 
 - **Declared ≠ enforced — check what actually guarantees a precondition.** When new code performs an operation that faults on a missing or malformed input (destructuring, property/array access, non-null assertion, iteration, parsing, arithmetic), do not accept a declared type, function signature, cast, or `as` as proof the input is safe — those _label_ a value, they don't _check_ it. Ask what enforces the precondition on this path: a runtime validator, a preceding explicit check, or a constructor/factory invariant. If nothing does, trace the value to its origin — it can fault on real data even though it compiles. Look at the operation that would actually throw, not only the named field beside it.
 - **Asymmetric handling across sibling call sites is a likely bug, not a style nit.** When the diff guards, validates, converts, or error-wraps a value in one place but consumes the same value or shape bare elsewhere, exactly one side is usually right. Compare the call sites against each other instead of reviewing each in isolation, and resolve the inconsistency: guard missing where it's absent → bug; guard unnecessary everywhere → slop to remove.
 - Edge cases, error paths, observability of real failure modes.
+- **Order of operations: cheap gates before expensive work.** When a short-circuit exists on a path (feature flag, config kill-switch, precondition, early return), check what runs before it: work that executes ahead of a gate that could have skipped it — DB reads, network calls, heavy computation — is a raisable finding when the gate's inputs are available before that work (a gate keyed on data the work loads cannot move); name the wasted work in the `failure_mode`. Confirm the gate's name reflects its actual scope: a global kill-switch named like a per-entity property misleads about blast radius.
+- **A kept failure path must be debuggable.** Where an error is caught and execution correctly continues — the surrounding flow requires it, e.g. per-item batch processing where one failure must not abort the batch — the log or telemetry must carry the identifiers needed to act on a recurrence (entity/job IDs, not just the error object); a bare error log there is raisable, and its failure_mode is already named: a recurring failure is undiagnosable from logs. Where nothing requires continuing, the catch itself is the finding (AntiSlop: logs-and-swallows), not the log. Everywhere else `slop: observability without named failure mode` still applies.
 - Tests cover real risk, not lines.
 - A diff that changes runtime behavior with zero test delta is raisable when the repo's documented rules mandate tests (cite the rule) — "the new behavior ships unverified" is a concrete failure_mode, not a hypothetical.
 - Hard-coded environment-specific identifiers (pool/account IDs, environment URLs) in code, scripts, or docs meant for reuse.
@@ -112,6 +118,8 @@ You are the convention owner — validate against what the repo actually documen
 - Package READMEs in the touched paths.
 
 Flag only violations of what those sources document — do not import conventions from other repos or from memory. One check needs no documented rule: **internal inconsistency within the diff itself** (e.g. half of imports from one package family, half from upstream; same persisted shape written three different ways across three call sites).
+
+Deprecations count: new diff code calling an API the consulted sources document as deprecated or superseded is a `[CONVENTION]` finding even when it still works — the failure_mode is concrete: the diff enlarges the migration surface of an API the repo has already decided to retire.
 
 This lens owns all documented-rule checking, whatever domains the table covers (common, backend, frontend, data). Tag every convention finding with `[CONVENTION]` in the title. Cap severity at MAJOR (only when behavior diverges as a result) or MINOR otherwise.
 
