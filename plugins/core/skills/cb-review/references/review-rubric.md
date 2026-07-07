@@ -19,7 +19,7 @@ Litmus test before keeping any candidate: _"What is the concrete, current, produ
 
 ### Evidence discipline
 
-Prose is a claim, not evidence. PR descriptions, code comments, docstrings, and commit messages assert intent — validate the assertion against the code in the diff (or via `${context_ref}` reads) before relying on it to admit **or drop** a finding. A claim the code contradicts is itself a finding (AntiSlop: tone/description mismatch); a claim you cannot check stays a claim — state that in the finding rather than treating it as fact.
+Prose is a claim, not evidence. PR descriptions, code comments, JSDoc, and commit messages assert intent — validate the assertion against the code in the diff (or via `${context_ref}` reads) before relying on it to admit **or drop** a finding. A claim the code contradicts is itself a finding (AntiSlop: tone/description mismatch); a claim you cannot check stays a claim — state that in the finding rather than treating it as fact.
 
 ### Do-not-raise list
 
