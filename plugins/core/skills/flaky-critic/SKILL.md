@@ -1,6 +1,6 @@
 ---
 name: flaky-critic
-description: Adversarial reviewer for flaky-test fix plans and PRs, enforcing the flaky-fix rubric. Gates implementation tickets from Triage to Todo (shadow mode posts verdicts without moving tickets). Use when running the recurring flaky-critic task, when asked to review a flaky-fix plan or PR against the rubric, or to backtest verdicts against historical tickets.
+description: Adversarial reviewer for flaky-test fix plans and PRs, enforcing the flaky-fix rubric. Gates implementation tickets from Triage to Todo (enforce by default; approve releases, reject bounces; canceling tickets stays human-only). Use when running the recurring flaky-critic task, when asked to review a flaky-fix plan or PR against the rubric, or to backtest verdicts against historical tickets.
 ---
 
 The quality gate of the flaky-test pipeline. Implementation tickets created by investigation agents land in the **Triage** state; this skill reviews each plan against `references/rubric.md` and decides whether it dispatches. It replaces per-plan human review; the human sees only disagreements, bounces, and the audit sample.
@@ -9,8 +9,8 @@ Your job is adversarial: assume the plan papers over the root cause until its ev
 
 ## Modes
 
-- **shadow** (default): post the verdict comment only. Never change ticket state. The human still gates; agreement between your verdicts and their actions is the promotion metric.
-- **enforce**: act on verdicts per Phase 3. Only when the task description explicitly says enforce.
+- **enforce** (default): act on verdicts per Phase 3 — approve releases, reject bounces. Canceling tickets is out of scope: cancel is not in the verdict vocabulary, and no shadow evidence backs it. Promoted from shadow 2026-07-06 after the shadow-agreement measurement (approve 38/41 with all misses strategy/bulk sweeps; reject 6/8 with both overrides format-level rejects).
+- **shadow**: post the verdict comment only, prefixed `[shadow]`; never change ticket state. Use only when the task description says shadow, for re-measurement of agreement.
 - **backtest**: verdicts on historical plans provided as files or ticket IDs; write nothing anywhere. Judge ONLY from the plan content — never look up ticket states, comments after the plan, linked PRs, or how things actually resolved.
 
 ## Rules
@@ -42,15 +42,15 @@ If the queue is empty, skip to the digest. Fetch linked investigation tickets an
 Post the verdict comment on the implementation ticket:
 
 ```text
-[shadow] VERDICT: reject — B2, B6
+VERDICT: reject — B2, B6
 - B2: "increase the navigation timeout to 30s" — timeout inflation without a root-cause statement of why the operation is legitimately slow.
 - B6: plan states confidence 3/5 but has no observability-to-reach-5/5 section.
 Fix class claimed: A1 (readiness gate). Missing required evidence: polled signal is not shown to be the one the failing UI path uses.
-<!-- flaky-critic: verdict=reject mode=shadow -->
+<!-- flaky-critic: verdict=reject mode=enforce -->
 ```
 
-- **shadow**: comment only, prefixed `[shadow]`.
 - **enforce**: approve → move the ticket to Todo and assign it to the Linear API user. Reject → comment and leave in Triage; the investigating flow gets one bounce. A second reject on the same ticket → comment `needs-human` and stop touching it.
+- **shadow**: comment only, prefixed `[shadow]`, marker `mode=shadow`.
 - **needs-human**: comment with what the rubric cannot answer; never move the ticket.
 
 ## Phase 4: Taste capture
@@ -63,6 +63,6 @@ End with: tickets reviewed, verdicts by type with rule-ID counts, agreement even
 
 ## PR checkpoint (when the task description asks for it)
 
-Sweep open pipeline-authored flaky-fix PRs the same way, using the rubric's diff-level detection heuristics: B-rule patterns on the diff itself, the claimed A-class's required evidence in the PR body, attempt-to-fix key present, current-main status stated (B7). Shadow = review comment only. Never merge; merge rights are out of scope.
+Sweep open pipeline-authored flaky-fix PRs the same way, using the rubric's diff-level detection heuristics: B-rule patterns on the diff itself, the claimed A-class's required evidence in the PR body, attempt-to-fix key present, current-main status stated (B7). Review comment only, in every mode. Never merge; merge rights are out of scope.
 
 When posting PR feedback, follow `../simple-review/references/posting-pr-review.md`: use one GitHub Review with event `COMMENT`, anchor actionable comments to changed lines, and keep approval decisions for humans.
