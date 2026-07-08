@@ -75,13 +75,16 @@ const rule = createRule({
   },
 
   create(context) {
-    const packageName = nearestPackageName(path.dirname(context.filename));
+    // context.filename requires ESLint >=8.40; fall back for older 8.x hosts.
+    const filename = (context as Partial<typeof context>).filename ?? context.getFilename();
+    const packageName = nearestPackageName(path.dirname(filename));
     if (packageName === undefined || !CONTRACT_PACKAGE_PATTERN.test(packageName)) {
       return {};
     }
 
     function checkSpecifier(node: TSESTree.Node, specifier: string): void {
-      if (isBannedSpecifier(specifier)) {
+      const isSelfImport = specifier === packageName || specifier.startsWith(`${packageName}/`);
+      if (!isSelfImport && isBannedSpecifier(specifier)) {
         context.report({
           node,
           messageId: "noCrossContractImport",

@@ -62,6 +62,14 @@ ruleTester.run("no-cross-contract-imports", rule, {
       `,
     },
     {
+      name: "self-import of the package's own published name is allowed",
+      filename: inContractPackage,
+      code: `
+        import { fooSchema } from "@clipboard-health/contract-fixture-service";
+        import { barSchema } from "@clipboard-health/contract-fixture-service/foo.contract";
+      `,
+    },
+    {
       name: "outside a contract package the rule does not apply",
       filename: inConsumerApp,
       code: `
