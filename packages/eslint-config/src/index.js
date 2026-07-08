@@ -167,6 +167,14 @@ module.exports = {
               "@clipboard-health/require-zod-import-in-contracts": "error",
             },
           },
+          {
+            // Self-scoped: no-ops unless the nearest package.json name matches
+            // the contract package pattern, so it is safe on every file.
+            files: ["**/*.ts", "**/*.tsx"],
+            rules: {
+              "@clipboard-health/no-cross-contract-imports": "error",
+            },
+          },
         ]
       : []),
   ],
