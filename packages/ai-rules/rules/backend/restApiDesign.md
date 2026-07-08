@@ -55,7 +55,9 @@ GET /shifts?filter[verified]=true&sort=startDate,-urgency&page[cursor]=abc&page[
 
 - Add contracts to `contract-<microservice-name>` package
 - Use `ts-rest` with composable Zod schemas (enforced by `enforce-ts-rest-in-controllers`)
-- Do not add other contract packages (`contract-*`, `api-contract-*`, `flag-*`) to a contract package's `dependencies` — cross-contract exact pins force vendored duplicate copies into every consumer's bundle and can create dependency cycles that never dedupe. Import shared primitives from `@clipboard-health/contract-core`; for the rare shared domain shape, duplicate the schema definition locally instead of importing it (Zod brands are structural, so duplicates stay type-compatible, and response validation catches drift)
+- Own the shape of your inputs and outputs — do not depend on other contract packages (`contract-*`, `api-contract-*`, `flag-*`); `@clipboard-health/contract-core` is the only shared contract dependency
+- Duplicate schemas from other contracts locally when needed — type-checking and response validation catch drift
+- Do not re-export or pass through another contract's schemas or endpoints
 
 ### Schema rules
 
