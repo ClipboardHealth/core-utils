@@ -7,7 +7,7 @@ argument-hint: "[--draft]"
 ## Setup
 
 - If `gh auth status` fails, stop and tell the user.
-- If `git fetch` or `git push` fails with public key or agent errors, retry the same operation via `git -c credential.helper='!gh auth git-credential' <cmd> https://github.com/<org>/<repo>.git` instead of stopping.
+- If `git fetch` or `git push` fails with public key or agent errors, retry the same operation with `git -c credential.helper='!gh auth git-credential'` while preserving the original remote and branch mapping. For `git fetch`, keep the configured remote (e.g., `git -c credential.helper='!gh auth git-credential' fetch origin <same arguments>`) so `origin/*` refs update; for `git push`, use the same destination and branch mapping, substituting `https://github.com/<org>/<repo>.git` only when the configured remote URL is SSH.
 - If `git rev-parse --verify origin/HEAD` fails, `origin/HEAD` is unset. Stop and tell the user to run `git remote set-head origin -a`.
 - If `git status --short`, `git log --oneline origin/HEAD..HEAD`, and `gh pr view --json url --jq .url 2>/dev/null` are all empty, stop and reply "nothing to ship."
 
