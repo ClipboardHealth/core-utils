@@ -17,6 +17,7 @@ description: "Writing ANY TypeScript code"
 
 ## Core Rules
 
+- Do not add ticket or issue numbers (e.g. Linear, Jira IDs) to code, variable names, or comments unless explicitly asked
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
