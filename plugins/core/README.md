@@ -21,6 +21,7 @@ Clipboard's core development tools.
   - [frontend-ui-verification](#frontend-ui-verification)
   - [humanize-prose](#humanize-prose)
   - [local-package](#local-package)
+  - [production-triage](#production-triage)
   - [seed-data](#seed-data)
 
 ## Installation
@@ -94,6 +95,10 @@ Strip AI writing tells (hedging, throat-clearing, marketing adjectives, bullet b
 Use Clipboard's internal CLI (`@clipboard-health/cli`) to link and unlink packages across repositories for local development. Invoke with `/local-package` or let Claude auto-trigger when discussing local package development.
 
 See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage details.
+
+### production-triage
+
+Route a fired production alert to its owning team using the groundtruth ownership registry (registry-only routing, per the DEVOP-5819 consumption contract), then orient with the architecture map and hand off deeper investigation. Invoke with `/production-triage` or when a Datadog monitor fires and needs an owner.
 
 ### seed-data
 
