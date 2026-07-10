@@ -21,7 +21,7 @@ This skill encodes the triage consumption contract ratified on [DEVOP-5819](http
 The registry is a local groundtruth checkout at `<repoRoot>/groundtruth`:
 
 - `repoRoot` defaults to `~/dev`; a per-dev override lives in `~/.config/groundtruth/config.json` as `{"repoRoot": "/path/to/repos"}`.
-- Clone if missing: `gh repo clone ClipboardHealth/groundtruth`.
+- Clone if missing: `gh repo clone ClipboardHealth/groundtruth "<repoRoot>/groundtruth"` (pass the destination explicitly; a bare clone lands in the current directory).
 - **Pull before every resolution** (`git -C <repoRoot>/groundtruth pull --ff-only`). A stale checkout silently routing to a pre-rename team is the exact failure the registry exists to prevent. If the checkout has local changes or a non-main branch, read via the degraded mode instead of trusting it.
 - Degraded mode (environments that can't clone or pull): raw reads off `main`, e.g. `gh api repos/ClipboardHealth/groundtruth/contents/registry/teams.json -H "Accept: application/vnd.github.raw"`. Note in your output when you used it.
 
@@ -77,7 +77,7 @@ A miss is any alert whose `service:` tag resolves to nothing in `services.json` 
 On every miss, before composing the route:
 
 1. Consult `architecture/serviceMap.json` `unregistered[]` for prior evidence and candidates for the observed name (skip silently if the map is absent).
-2. **File a deduped registry-gap ticket in DEVOP**: search open DEVOP issues for the normalized service name first; if one exists, comment with the new observation instead of duplicating. Ticket body: the evidence bundle plus the monitor link. Title convention: `Registry gap: unresolved service "<normalized-name>"`.
+2. **File a deduped registry-gap ticket in DEVOP**: search open DEVOP issues for the normalized service name first; if one exists, comment with the new observation instead of duplicating. Ticket body: the evidence bundle plus the monitor link. Title convention: `Registry gap: unresolved service "<normalized-name>"`. When the alert has no `service:` tag there is no name to normalize — dedupe on the monitor instead, title the ticket `Registry gap: monitor <monitor-id> has no service tag`, and record the raw `team:` tag in the evidence bundle.
 
 ## Triage post format
 
@@ -94,4 +94,4 @@ Post to the resolved alerts channel (thread off the alert when possible):
 
 ## Dry runs
 
-When asked to dry-run a resolution (or when validating this skill), execute the full read path — pull, resolve, orient, live-query — but produce no side effects: render the exact posts, pages, and tickets that would be sent, each labeled with its destination, instead of sending them. Never page during a dry run.
+When asked to dry-run a resolution (or when validating this skill), execute the full read path — pull, resolve, orient, live-query — but produce no outward side effects: render the exact posts, pages, and tickets that would be sent, each labeled with its destination, instead of sending them. Syncing the local registry checkout (pull, or clone if missing) is deliberately allowed — a dry run against stale data validates nothing; environments where even that is unwanted should use the degraded raw-read mode. Never page during a dry run.
