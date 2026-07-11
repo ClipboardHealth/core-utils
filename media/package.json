@@ -62,7 +62,7 @@
     "lint-staged": "17.0.8",
     "markdownlint-cli2": "0.23.0",
     "nx": "22.7.6",
-    "oxfmt": "0.57.0",
+    "oxfmt": "0.58.0",
     "oxlint": "1.72.0",
     "oxlint-tsgolint": "0.24.0",
     "promptfoo": "0.121.17",
