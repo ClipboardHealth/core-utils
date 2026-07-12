@@ -23,7 +23,7 @@
     "lint": "oxlint",
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
     "plugin:version:check": "node scripts/embedPluginVersion.mts --check",
-    "postinstall": "node --run sync-ai-rules",
+    "postinstall": "node --run sync-ai-rules || true",
     "prepare": "husky",
     "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
     "sync-ai-rules": "node scripts/embedPluginVersion.mts && nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
@@ -81,7 +81,7 @@
     "@swc/core": "$@swc/core",
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0",
-    "typescript": "$typescript"
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": "24.15.0",
