@@ -56,8 +56,10 @@ GET /shifts?filter[verified]=true&sort=startDate,-urgency&page[cursor]=abc&page[
 - Add contracts to `contract-<microservice-name>` package
 - Use `ts-rest` with composable Zod schemas (enforced by `enforce-ts-rest-in-controllers`)
 - Own the shape of your inputs and outputs — do not depend on other contract packages (`contract-*`, `api-contract-*`, `flag-*`); `@clipboard-health/contract-core` is the only shared contract dependency
+- Contracts validate the shape of the request and response, not the business logic
 - Duplicate schemas from other contracts locally when needed — type-checking and response validation catch drift
 - Do not re-export or pass through another contract's schemas or endpoints
+- Do not directly test contracts; use a service test to verify the contract is working as expected
 
 ### Schema rules
 
