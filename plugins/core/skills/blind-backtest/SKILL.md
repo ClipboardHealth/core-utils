@@ -16,7 +16,7 @@ Spawn a subagent that may read the historical record (Linear, GitHub, logs) to:
 - **Select a balanced cohort** (~20 cases is usually enough to expose error structure): both outcome classes represented, ideally ~60/40. If one class is rare, say so rather than padding with weak cases.
 - **Verify outcomes, don't assume them.** "Ticket Done" is weaker than "Done AND the PR merged"; "Canceled" is weaker than "canceled by a reviewer's judgment" (bulk sweeps and staleness cancellations are noisy labels — flag them in the key).
 - **Sanitize each case into an input file** containing only what existed _before_ the human verdict: the plan/content under judgment and its cited evidence. Strip everything outcome-revealing: states, completion/cancel dates, merge status, post-decision comments, and identifiers (ticket/PR numbers → `[redacted]`) that the judge could look up.
-- **Write** `inputs/` files (shuffled, no class grouping) and `answer-key.json` (`{file, source, outcome, basis}`) to a scratch directory, then grep the inputs for leak terms (merged, closed, canceled, done, wontfix) and justify any survivor.
+- **Write** `inputs/` files (shuffled, opaque/neutral filenames like `case-01`, no class grouping) and `answer-key.json` (`{file, source, outcome, basis}`) to a scratch directory, then grep the inputs — contents, filenames, and any frontmatter — for leak terms (merged, closed, canceled, done, wontfix, approved, rejected, released, accepted, resolved) and justify any survivor.
 - Report cohort size, balance, weak-label caveats, and any correlated cases (same family/mechanism) that could let the judge score unearned points.
 
 ## Phase 2: Blind judge (sees nothing but the inputs)
@@ -32,7 +32,7 @@ Never reuse the assembler as the judge; an agent cannot unsee outcomes.
 
 ## Phase 3: Grade (coordinator)
 
-- Build the confusion matrix against the answer key. Escalations (needs-human) on a correct-outcome case count as _safe non-matches_, not errors — bouncing up is designed behavior.
+- Build the confusion matrix against the answer key. Escalations (needs-human) on a correct-outcome case count as _safe non-matches_, not errors — bouncing up is designed behavior — but track them as a distinct outcome and report the escalation rate separately, so an agent that escalates everything cannot look artificially safe.
 - **Decompose every error before trusting the headline number.** The three buckets that recur:
   1. **Era artifacts** — the skill enforces conventions that postdate the historical cases (will vanish on live traffic; consider scoring without them, but say so).
   2. **Weak ground truth** — sweep-canceled, stale, or bulk-handled cases where the label doesn't reflect a judgment on quality.
