@@ -27,8 +27,12 @@ export type ServiceResult<A> = SuccessResult<A> | FailureResult;
 
 /**
  * Creates a successful ServiceResult.
+ *
+ * Call with no argument for a `ServiceResult<void>`; the value is `undefined`.
  */
-export function success<A>(value: A): ServiceResult<A> {
+export function success(): ServiceResult<void>;
+export function success<A>(value: A): ServiceResult<A>;
+export function success<A>(value?: A): ServiceResult<A | void> {
   return Object.freeze({
     isRight: true,
     isSuccess: true,

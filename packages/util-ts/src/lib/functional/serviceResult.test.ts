@@ -9,6 +9,7 @@ import {
   isFailure,
   isSuccess,
   mapFailure,
+  type ServiceResult,
   type Success,
   success,
   tryCatch,
@@ -30,6 +31,15 @@ describe("ServiceResult", () => {
       expect(isFailure(actual)).toBe(false);
       expect(actual.isSuccess).toBe(true);
       expect((actual as Success<{ data: string }>).value).toStrictEqual(input);
+    });
+
+    it("creates a void success result with no argument", () => {
+      // Assigning to ServiceResult<void> compiles only if success() is typed as such.
+      const actual: ServiceResult<void> = success();
+
+      expect(isSuccess(actual)).toBe(true);
+      expect(actual.isSuccess).toBe(true);
+      expect((actual as Success<void>).value).toBeUndefined();
     });
   });
 
