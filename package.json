@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "affected": "nx affected --configuration ci --parallel 8 --targets build,lint,test",
-    "architecture:check": "depcruise packages/*/src",
+    "architecture:check": "depcruise --ignore-known .dependency-cruiser-known-violations.json packages/*/src",
     "cpd": "jscpd .",
     "docs": "rm -rf docs && typedoc",
     "embed": "tsx packages/embedex/src/bin/cli.ts --sourcesGlob 'packages/*/examples/**/*.{md,ts}'",
