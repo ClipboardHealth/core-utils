@@ -25,19 +25,20 @@ Spawn a separate subagent with an explicit blind protocol in its prompt:
 
 - May read ONLY: the judgment skill under test (and its references), and the `inputs/` files.
 - Forbidden, named explicitly: the answer key, the scratch directory's other files, Linear/GitHub/network, and anything that could reveal resolutions. Writes nothing.
-- Must judge each case per the skill under test, outputting one structured line per case: verdict, confidence, classification, cited rules, one-line justification quoting the decisive content.
+- Must judge each case per the skill under test, outputting exactly one structured line per case, keyed by the input's opaque filename: verdict, confidence, classification, cited rules, one-line justification quoting the decisive content.
 - Must flag cases it found genuinely borderline — those are where the grading discussion matters.
 
 Never reuse the assembler as the judge; an agent cannot unsee outcomes.
 
 ## Phase 3: Grade (coordinator)
 
+- Join each verdict to `answer-key.json` by its opaque filename, never by output order. Require exactly one well-formed verdict per input; treat missing, duplicate, or malformed records as protocol failures (re-run or exclude with a noted reason), not silent drops from the matrix.
 - Build the confusion matrix against the answer key. Escalations (needs-human) on a correct-outcome case count as _safe non-matches_, not errors — bouncing up is designed behavior — but track them as a distinct outcome and report the escalation rate separately, so an agent that escalates everything cannot look artificially safe.
 - **Decompose every error before trusting the headline number.** The three buckets that recur:
   1. **Era artifacts** — the skill enforces conventions that postdate the historical cases (will vanish on live traffic; consider scoring without them, but say so).
   2. **Weak ground truth** — sweep-canceled, stale, or bulk-handled cases where the label doesn't reflect a judgment on quality.
   3. **Genuine misses** — the only bucket that demands a rule change.
-- **Convert findings into amendments**: every genuine miss and every systematic era artifact becomes a concrete edit to the skill/rubric under test, applied immediately and noted with date + "backtest amendment" provenance.
+- **Convert findings into amendments**: every genuine miss becomes a concrete edit to the skill/rubric under test, applied immediately and noted with date + "backtest amendment" provenance. Era artifacts are reported separately and become edits only when independently confirmed as live rule gaps — never amend the rubric for a systematic artifact alone, or you encode obsolete conventions and overfit future judgments.
 - A backtest validates the _mechanism_ (verdicts cite checkable rules) and surfaces rule gaps.
 
 ## Output
