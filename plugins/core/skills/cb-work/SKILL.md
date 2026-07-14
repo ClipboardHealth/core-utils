@@ -44,4 +44,4 @@ Done when every selected check passes or the user has explicitly accepted a fail
 
 ## Hand off
 
-Invoke the `cb-ship` skill, passing `--draft` if it was passed to this skill. Pass `--spec-context` with the source of truth: the plan path, ticket or spec reference, or the natural-language implementation request. Preserve the original context instead of relying on the eventual commit or PR description to reconstruct it. Relay `cb-ship`'s reply to the user.
+Invoke the `cb-ship` skill, passing `--draft` if it was passed to this skill. Pass `--spec-context` with the source of truth: the resolved absolute plan path, ticket or spec reference, or the natural-language implementation request. Preserve the original context instead of relying on the eventual commit or PR description to reconstruct it. Relay `cb-ship`'s reply to the user.
