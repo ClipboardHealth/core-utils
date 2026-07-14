@@ -1,49 +1,106 @@
 [
   {
-    "type": "module",
-    "from": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-    "to": "packages/notifications/src/lib/types.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-      "packages/notifications/src/lib/types.ts",
-      "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-      "packages/notifications/src/lib/notificationJobEnqueuer.ts"
-    ],
-    "comment": "False positive: all imports in this cycle are type-only (import type). dependency-cruiser <19 cannot parse TypeScript 7 and misreports these as runtime cycles."
-  },
-  {
-    "type": "module",
-    "from": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-    "to": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-      "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-      "packages/notifications/src/lib/notificationJobEnqueuer.ts"
-    ],
-    "comment": "False positive: triggerIdempotencyKey.ts only uses `import type` from notificationJobEnqueuer.ts."
-  },
-  {
-    "type": "module",
+    "type": "cycle",
     "from": "packages/notifications/src/lib/internal/triggerIdempotencyKeyParamsToHash.ts",
     "to": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
+    "unresolvedTo": "../triggerIdempotencyKey",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
     "rule": {
       "severity": "error",
       "name": "no-circular"
     },
     "cycle": [
-      "packages/notifications/src/lib/internal/triggerIdempotencyKeyParamsToHash.ts",
-      "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-      "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-      "packages/notifications/src/lib/internal/triggerIdempotencyKeyParamsToHash.ts"
+      {
+        "name": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/notifications/src/lib/internal/triggerIdempotencyKeyParamsToHash.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
+    "to": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
+    "unresolvedTo": "./triggerIdempotencyKey",
+    "dependencyTypes": [
+      "local",
+      "import"
     ],
-    "comment": "False positive: all imports forming this cycle are type-only."
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
+    "to": "packages/notifications/src/lib/types.ts",
+    "unresolvedTo": "./types",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "packages/notifications/src/lib/types.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
   }
 ]
