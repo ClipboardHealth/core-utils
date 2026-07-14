@@ -32,7 +32,7 @@ Never reuse the assembler as the judge; an agent cannot unsee outcomes.
 
 ## Phase 3: Grade (coordinator)
 
-- Join each verdict to `answer-key.json` by its opaque filename, never by output order. Require exactly one well-formed verdict per input; treat missing, duplicate, or malformed records as protocol failures (re-run or exclude with a noted reason), not silent drops from the matrix.
+- Join each verdict to `answer-key.json` by its opaque filename, never by output order. Require exactly one well-formed verdict per input before grading; missing, duplicate, or malformed records are protocol failures — re-run the affected cases under the same blind protocol until each input has exactly one verdict. Never drop or exclude a case after seeing its verdict; outcome-dependent exclusion biases the matrix. Cohort membership is fixed before judging.
 - Build the confusion matrix against the answer key. Escalations (needs-human) on a correct-outcome case count as _safe non-matches_, not errors — bouncing up is designed behavior — but track them as a distinct outcome and report the escalation rate separately, so an agent that escalates everything cannot look artificially safe.
 - **Decompose every error before trusting the headline number.** The three buckets that recur:
   1. **Era artifacts** — the skill enforces conventions that postdate the historical cases (will vanish on live traffic; consider scoring without them, but say so).
