@@ -39,7 +39,7 @@ Mock only at system boundaries such as third-party APIs, time, randomness, or ex
 
 ## Validate
 
-If the plan names specific checks, use those; skip clearly slow or CI-only suites. Otherwise find validation commands in, e.g., `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or pre-commit/pre-push hooks. After the focused implementation checks pass, run the repository's complete required validation once.
+If the plan names specific checks, use those. Otherwise find validation commands in, e.g., `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or pre-commit/pre-push hooks. After the focused implementation checks pass, run the repository's complete required validation once. Skip only additional slow or CI-only suites that the repository does not require.
 
 Done when every check passes or the user has explicitly accepted a failure.
 
