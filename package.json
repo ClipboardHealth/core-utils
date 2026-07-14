@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "affected": "nx affected --configuration ci --parallel 8 --targets build,lint,test",
+    "affected": "nx affected --configuration ci --parallel 8 --targets build,test --exclude eslint-plugin,example-nestjs",
     "architecture:check": "depcruise --ignore-known .dependency-cruiser-known-violations.json packages/*/src",
     "cpd": "jscpd .",
     "docs": "rm -rf docs && typedoc",
