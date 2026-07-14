@@ -1,7 +1,7 @@
 ---
 name: cb-review
-description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high] [--report].
-argument-hint: "[pr-number-or-url] [--effort low|high] [--report]"
+description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high] [--report] [--spec-context <path-or-reference-or-text>].
+argument-hint: "[pr-number-or-url] [--effort low|high] [--report] [--spec-context <path-or-reference-or-text>]"
 ---
 
 # CB Review
@@ -17,6 +17,7 @@ Review a diff against one rubric, filter to the few findings worth raising, gate
 - `/cb-review <pr-number-or-url>` — review that PR without checking it out; forces reviewer mode. Accepts a bare number (current repo) or full GitHub URL (identifies owner/repo).
 - `--effort low|high` — pick the engine explicitly. Phrases also select: "quick"/"fast" → low; "deep"/"thorough"/"multi-perspective" → high.
 - `--report` — non-interactive: stop after Synthesize and return the findings to the caller. No user gates, no posting, no implementing. For agent callers (e.g. cb-ship's review step).
+- `--spec-context <path-or-reference-or-text>` — use the value only as the originating source of truth, never as the PR selector. Read a local path in full, fetch a ticket or spec reference, or preserve natural-language text verbatim. Use the resolved content for the Spec lens instead of reconstructing intent from commit or PR prose.
 
 **Effort auto-select** (no flag, no phrase): `high` when the diff exceeds 20 changed files or 600 changed lines, else `low`. Before reviewing, print one line — `Effort: <low|high> (<N> files, <M> lines; override with --effort <other>)` — so the user can interrupt.
 
@@ -50,7 +51,9 @@ Determine **mode**:
 - PR exists and authors differ → **reviewer mode**.
 - No PR → **author mode**.
 
-**Persistence:** both efforts persist for subagents into a fresh per-run directory — `RUN_DIR=$(mktemp -d "${TMPDIR:-/tmp}/cb-review.XXXXXX")` — so concurrent sessions never clobber each other: diff → `$RUN_DIR/diff.patch`, context → `$RUN_DIR/context.md`, changed files → `$RUN_DIR/files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`) → `$RUN_DIR/meta.json`.
+**Persistence:** both efforts persist for subagents into a fresh per-run directory — `RUN_DIR=$(mktemp -d "${TMPDIR:-/tmp}/cb-review.XXXXXX")` — so concurrent sessions never clobber each other: diff → `$RUN_DIR/diff.patch`, context → `$RUN_DIR/context.md`, changed files → `$RUN_DIR/files.txt`, metadata (PR number/url/base/author, viewer, head SHA, owner/repo, mode, `context_ref`, `spec_source`) → `$RUN_DIR/meta.json`.
+
+When the caller supplied source-of-truth context, include it verbatim in `$RUN_DIR/context.md` and set `spec_source` so every dispatched reviewer uses it.
 
 ## Freshness preflight (mandatory before reading code)
 
@@ -121,7 +124,7 @@ Walk the changed-file list. Activate lenses that match:
 - **Security** triggers on: `routes/`, `controllers/`, `middleware*/`, files matching `auth*`/`*permission*`/`*acl*`/`*token*`/`*session*`, response serializers, OpenAPI/contract definitions, new API endpoint files.
 - **Database** triggers on: `migrations/`, `*.sql`, files matching `schema*`, Mongoose/Prisma model files (`models/`, `*.model.ts`, `*.schema.ts`), repository/DAL files, query builders.
 - **Frontend** triggers on: `*.tsx`, `*.jsx`, `*.css`, `*.scss`, `pages/`, `components/`, `hooks/`, or anything importing from `react`, `@tanstack/react-query`, or a design-system package.
-- **Spec** triggers when a spec source exists. Look in order: (1) issue/ticket references in the PR body or commit messages (`#123`, `Closes #45`, Linear/Jira keys) — fetch via `gh` or the tracker; (2) a path the user passed as an argument; (3) a plan/PRD file under `docs/`, `specs/`, or `.scratch/` matching the branch or feature name. Nothing found → skip the lens and note "no spec available" in Summary.
+- **Spec** triggers when a spec source exists. Look in order: (1) source-of-truth context supplied by the caller; (2) issue/ticket references in the PR body or commit messages (`#123`, `Closes #45`, Linear/Jira keys) — fetch via `gh` or the tracker; (3) a plan/PRD file under `docs/`, `specs/`, or `.scratch/` matching the branch or feature name. Nothing found → skip the lens and note "no spec available" in Summary.
 
 Always-on lenses: **Engineering**, **Minimalism**, **Conventions**, **AntiSlop**.
 
@@ -131,7 +134,7 @@ The rubric — severity ladder, `failure_mode` contract, do-not-raise list, NIT 
 
 ### Low effort
 
-Dispatch **one** reviewer subagent — fresh eyes on the diff, and the bulk content stays out of your context. Its prompt carries the persisted file paths, the absolute path to references/review-rubric.md with the instruction to read it in full, the active lens list, and the two contracts from multi-agent.md §Dispatch mechanics (context-read, cross-repo evidence) with `<context_ref>` substituted and the moderator/Round-2 sentence replaced by: emit `evidence_required` findings capped at MAJOR; the dispatching agent resolves them in the Filter's cross-repo audit. Finding ids use an `R` prefix in place of roster letters. The subagent walks the diff, applying every active lens — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: it returns _the smallest number of high-signal findings_ in the Round 1 output shape (multi-agent.md §Round 1), flagging anything that needs deeper investigation than it can do confidently rather than guessing. If the host cannot run subagents, do that same single pass yourself inline.
+Dispatch **one** reviewer subagent — fresh eyes on the diff, and the bulk content stays out of your context. Its prompt carries the persisted file paths, the absolute path to references/review-rubric.md with the instruction to read it in full, the active lens list, the spec source when the Spec lens is active, and the two contracts from multi-agent.md §Dispatch mechanics (context-read, cross-repo evidence) with `<context_ref>` substituted and the moderator/Round-2 sentence replaced by: emit `evidence_required` findings capped at MAJOR; the dispatching agent resolves them in the Filter's cross-repo audit. Finding ids use an `R` prefix in place of roster letters. The subagent walks the diff, applying every active lens — the walk is done only when every hunk has been read under each active lens. Exhaustive reading, selective output: it returns _the smallest number of high-signal findings_ in the Round 1 output shape (multi-agent.md §Round 1), flagging anything that needs deeper investigation than it can do confidently rather than guessing. If the host cannot run subagents, do that same single pass yourself inline.
 
 ### High effort
 
