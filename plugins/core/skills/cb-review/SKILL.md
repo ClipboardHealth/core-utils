@@ -124,7 +124,7 @@ Walk the changed-file list. Activate lenses that match:
 - **Security** triggers on: `routes/`, `controllers/`, `middleware*/`, files matching `auth*`/`*permission*`/`*acl*`/`*token*`/`*session*`, response serializers, OpenAPI/contract definitions, new API endpoint files.
 - **Database** triggers on: `migrations/`, `*.sql`, files matching `schema*`, Mongoose/Prisma model files (`models/`, `*.model.ts`, `*.schema.ts`), repository/DAL files, query builders.
 - **Frontend** triggers on: `*.tsx`, `*.jsx`, `*.css`, `*.scss`, `pages/`, `components/`, `hooks/`, or anything importing from `react`, `@tanstack/react-query`, or a design-system package.
-- **Spec** triggers when a spec source exists. Look in order: (1) source-of-truth context supplied by the caller; (2) issue/ticket references in the PR body or commit messages (`#123`, `Closes #45`, Linear/Jira keys) — fetch via `gh` or the tracker; (3) a path the user passed as an argument; (4) a plan/PRD file under `docs/`, `specs/`, or `.scratch/` matching the branch or feature name. Nothing found → skip the lens and note "no spec available" in Summary.
+- **Spec** triggers when a spec source exists. Look in order: (1) source-of-truth context supplied by the caller; (2) issue/ticket references in the PR body or commit messages (`#123`, `Closes #45`, Linear/Jira keys) — fetch via `gh` or the tracker; (3) a plan/PRD file under `docs/`, `specs/`, or `.scratch/` matching the branch or feature name. Nothing found → skip the lens and note "no spec available" in Summary.
 
 Always-on lenses: **Engineering**, **Minimalism**, **Conventions**, **AntiSlop**.
 
