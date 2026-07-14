@@ -4,10 +4,7 @@
     "from": "packages/notifications/src/lib/internal/triggerIdempotencyKeyParamsToHash.ts",
     "to": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
     "unresolvedTo": "../triggerIdempotencyKey",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
+    "dependencyTypes": ["local", "import"],
     "rule": {
       "severity": "error",
       "name": "no-circular"
@@ -15,24 +12,15 @@
     "cycle": [
       {
         "name": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       },
       {
         "name": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       },
       {
         "name": "packages/notifications/src/lib/internal/triggerIdempotencyKeyParamsToHash.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       }
     ]
   },
@@ -41,10 +29,7 @@
     "from": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
     "to": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
     "unresolvedTo": "./triggerIdempotencyKey",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
+    "dependencyTypes": ["local", "import"],
     "rule": {
       "severity": "error",
       "name": "no-circular"
@@ -52,17 +37,11 @@
     "cycle": [
       {
         "name": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       },
       {
         "name": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       }
     ]
   },
@@ -71,10 +50,7 @@
     "from": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
     "to": "packages/notifications/src/lib/types.ts",
     "unresolvedTo": "./types",
-    "dependencyTypes": [
-      "local",
-      "import"
-    ],
+    "dependencyTypes": ["local", "import"],
     "rule": {
       "severity": "error",
       "name": "no-circular"
@@ -82,24 +58,15 @@
     "cycle": [
       {
         "name": "packages/notifications/src/lib/types.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       },
       {
         "name": "packages/notifications/src/lib/triggerIdempotencyKey.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       },
       {
         "name": "packages/notifications/src/lib/notificationJobEnqueuer.ts",
-        "dependencyTypes": [
-          "local",
-          "import"
-        ]
+        "dependencyTypes": ["local", "import"]
       }
     ]
   }
