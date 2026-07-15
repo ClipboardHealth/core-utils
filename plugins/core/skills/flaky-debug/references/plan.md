@@ -6,13 +6,13 @@ Shared tail of the flaky-debug planning phase, used by both [`plan-e2e.md`](./pl
 
 Rate your confidence in the root cause on a 1-5 scale. Report this score alongside your evidence.
 
-| Score | Meaning             | Criteria                                                                                                                                                                                       |
-| ----- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **5** | Certain             | Root cause is directly visible in artifacts AND reproduced by inducing it — fault injection in the harness (delay/fail the blamed response or step) or a focused lower-level test that deterministically triggers the race. Without reproduction, the ceiling is 4                                              |
-| **4** | High confidence     | The chain terminates at an evidenced cause (file/line, config key, or log line) but one intermediate link is inferred rather than observed. An unevidenced terminal cause is a broken chain, capped at 2 (see [Causal Chain](#causal-chain)) |
-| **3** | Moderate confidence | Evidence is consistent with the diagnosis but alternative explanations remain plausible. Flag the alternatives explicitly                                                                      |
-| **2** | Low confidence      | Limited evidence, mostly reasoning from code patterns rather than observed artifacts. Recommend gathering more data before committing to a fix                                                 |
-| **1** | Speculative         | No direct evidence for the root cause. The fix is a best guess. Recommend reproducing the failure locally or adding instrumentation before proceeding                                          |
+| Score | Meaning             | Criteria                                                                                                                                                                                                                                                           |
+| ----- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **5** | Certain             | Root cause is directly visible in artifacts AND reproduced by inducing it — fault injection in the harness (delay/fail the blamed response or step) or a focused lower-level test that deterministically triggers the race. Without reproduction, the ceiling is 4 |
+| **4** | High confidence     | The chain terminates at an evidenced cause (file/line, config key, or log line) but one intermediate link is inferred rather than observed. An unevidenced terminal cause is a broken chain, capped at 2 (see [Causal Chain](#causal-chain))                       |
+| **3** | Moderate confidence | Evidence is consistent with the diagnosis but alternative explanations remain plausible. Flag the alternatives explicitly                                                                                                                                          |
+| **2** | Low confidence      | Limited evidence, mostly reasoning from code patterns rather than observed artifacts. Recommend gathering more data before committing to a fix                                                                                                                     |
+| **1** | Speculative         | No direct evidence for the root cause. The fix is a best guess. Recommend reproducing the failure locally or adding instrumentation before proceeding                                                                                                              |
 
 Apply the score:
 
