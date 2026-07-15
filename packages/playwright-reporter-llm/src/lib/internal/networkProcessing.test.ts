@@ -182,6 +182,8 @@ describe(buildNetworkObservationFromEvent, () => {
         url: "https://api.example.com/data",
         headers: [
           { name: "traceparent", value: "00-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+          { name: "x-datadog-trace-id", value: "13639781014258445719" },
+          { name: "x-datadog-parent-id", value: "7268017665183408395" },
         ],
       },
       response: {
@@ -196,6 +198,46 @@ describe(buildNetworkObservationFromEvent, () => {
 
     expect(result?.instance.traceId).toBe("22222222222222222222222222222222");
     expect(result?.instance.spanId).toBe("bbbbbbbbbbbbbbbb");
+  });
+
+  it("prefers Datadog request context over a conflicting request traceparent", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "00-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+          { name: "x-datadog-trace-id", value: "13639781014258445719" },
+          { name: "x-datadog-parent-id", value: "7268017665183408395" },
+        ],
+      },
+      response: { status: -1, _failureText: "net::ERR_FAILED" },
+    });
+
+    const result = buildObservation(event);
+
+    expect(result?.instance.traceId).toBe("0000000000000000bd4a3c90d8fded97");
+    expect(result?.instance.spanId).toBe("64dd2f8f1285610b");
+  });
+
+  it("falls back to request traceparent when Datadog request ids are invalid", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "00-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+          { name: "x-datadog-trace-id", value: "18446744073709551616" },
+          { name: "x-datadog-parent-id", value: "not-a-decimal-id" },
+        ],
+      },
+      response: { status: -1, _failureText: "net::ERR_FAILED" },
+    });
+
+    const result = buildObservation(event);
+
+    expect(result?.instance.traceId).toBe("11111111111111111111111111111111");
+    expect(result?.instance.spanId).toBe("aaaaaaaaaaaaaaaa");
   });
 
   it("extracts failureText and wasAborted onto shape", () => {

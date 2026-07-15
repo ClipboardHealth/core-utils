@@ -18,6 +18,8 @@ export const ABORTED_FAILURE_PATTERN = /^net::ERR_ABORTED\b/i;
 
 export const REQUEST_HEADER_ALLOWLIST = new Set([
   "content-type",
+  "x-datadog-parent-id",
+  "x-datadog-trace-id",
   "x-request-id",
   "x-correlation-id",
   "traceparent",
