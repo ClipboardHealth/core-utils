@@ -3,7 +3,32 @@ name: flaky-debug
 description: Debug and fix flaky tests including Playwright E2E, NestJS service/integration, React component, and unit tests.
 ---
 
-Phases run in order. Skip a phase if you already have the information it produces. Phase 3 runs only in fix mode.
+Phases run in order. Phase 0 is mandatory. Skip a later phase if you already have the information it produces. Phase 3 runs only in fix mode.
+
+## Phase 0: Verify investigation access
+
+Run these checks before classifying or diagnosing the failure. Do not silently continue with reduced evidence if a check fails.
+
+1. Verify that `pup` can read APM spans. Do not use `pup auth status`; it can fail in sandboxes where environment-variable authentication works.
+
+   ```bash
+   command -v pup
+   pup traces search \
+     --query="service:cbh-backend-main env:staging" \
+     --from=15m \
+     --limit=1 \
+     --jq='.data | length'
+   ```
+
+   A successful query is sufficient even when the count is zero. If `pup` is missing, install it and rerun the check. For `401`/authentication failures, run `pup auth login` on a developer machine or provide `DD_API_KEY` and `DD_APP_KEY` in a sandbox/CI session. For `403`, obtain an application key or OAuth session with APM read access.
+
+2. For a CI-sourced E2E failure, verify artifact access by fetching the exact run before doing any diagnosis:
+
+   ```bash
+   bash "<flaky-debug-skill-dir>/scripts/fetch-llm-report.sh" "<github-actions-url>"
+   ```
+
+   If GitHub authentication fails, run `gh auth login --hostname github.com` and ensure the token can read Actions artifacts in the repository. If the artifact is missing or expired, rerun the source workflow or obtain the `playwright-llm-report`/Playwright HTML report from the user. A missing run URL or inaccessible artifact blocks a CI-sourced E2E investigation; report the failed command and remediation instead of degrading the confidence score. Artifact access is not applicable to service, component, or unit failures that were reproduced locally with complete output.
 
 ## Mode: plan vs fix
 

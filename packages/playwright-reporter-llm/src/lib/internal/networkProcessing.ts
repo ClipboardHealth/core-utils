@@ -113,11 +113,49 @@ function deriveNetworkDurationMs(timings: NetworkTimingBreakdown | undefined): n
 function extractTraceContext(
   requestHeaders: Record<string, string> | undefined,
   responseHeaders: Record<string, string> | undefined,
-): { traceId: string; spanId: string } | undefined {
-  return (
-    parseTraceparent(responseHeaders?.["traceparent"]) ??
-    parseTraceparent(requestHeaders?.["traceparent"])
-  );
+): { traceId: string; spanId?: string } | undefined {
+  const responseTraceContext = parseTraceparent(responseHeaders?.["traceparent"]);
+  if (responseTraceContext) {
+    return responseTraceContext;
+  }
+
+  const datadogTraceId = parseDatadogIdentifier({
+    value: requestHeaders?.["x-datadog-trace-id"],
+    hexadecimalWidth: 32,
+  });
+  if (datadogTraceId) {
+    const datadogParentId = parseDatadogIdentifier({
+      value: requestHeaders?.["x-datadog-parent-id"],
+      hexadecimalWidth: 16,
+    });
+    return {
+      traceId: datadogTraceId,
+      ...(datadogParentId !== undefined && { spanId: datadogParentId }),
+    };
+  }
+
+  return parseTraceparent(requestHeaders?.["traceparent"]);
+}
+
+interface ParseDatadogIdentifierInput {
+  value: string | undefined;
+  hexadecimalWidth: number;
+}
+
+function parseDatadogIdentifier({
+  value,
+  hexadecimalWidth,
+}: ParseDatadogIdentifierInput): string | undefined {
+  if (value === undefined || !/^\d+$/.test(value)) {
+    return undefined;
+  }
+
+  const identifier = BigInt(value);
+  if (identifier === 0n || identifier > 0xff_ff_ff_ff_ff_ff_ff_ffn) {
+    return undefined;
+  }
+
+  return identifier.toString(16).padStart(hexadecimalWidth, "0");
 }
 
 function readTraceResourceBody(
@@ -294,7 +332,9 @@ function buildInstance(params: {
   const traceContext = extractTraceContext(requestHeaders, responseHeaders);
   if (traceContext) {
     instance.traceId = traceContext.traceId;
-    instance.spanId = traceContext.spanId;
+    if (traceContext.spanId !== undefined) {
+      instance.spanId = traceContext.spanId;
+    }
   }
   const requestId = requestHeaders?.["x-request-id"] ?? responseHeaders?.["x-request-id"];
   if (requestId !== undefined) {

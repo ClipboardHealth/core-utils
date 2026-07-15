@@ -136,6 +136,8 @@ Scan `attempts[].network.instances[]` for 4xx/5xx responses near the failure's `
 
 **`traceId`** — when present on a failing instance (`attempts[].network.instances[].traceId`), you must follow [`./datadog-apm-traces.md`](./datadog-apm-traces.md) to correlate with backend behavior. This is the bridge between frontend test failure and potential backend root cause.
 
+Use the per-request `network.instances[].traceId`, not the test-level `traceparent` annotation. Datadog RUM adds `x-datadog-*` headers to first-party requests, and the staging backend selects that context when it conflicts with the fixture's W3C `traceparent`. The reporter prefers the response `traceparent`; for an unreadable/aborted response it normalizes the request's `x-datadog-trace-id` to the same zero-padded hexadecimal form. Older reporter versions may fall back to the fixture ID instead; inspect the full Playwright trace for `x-datadog-trace-id` or use the request-ID/time-window correlation path in `datadog-apm-traces.md`.
+
 If no expected request was emitted, say that explicitly and do not diagnose backend latency for that action. Instead, use the trace, console/page errors, session/permission state, and frontend code path to explain why the request never started.
 
 Check `attempts[].network.summary` for saturation. Non-zero `instancesDroppedByGroupCap`, `instancesDroppedByInstanceCap`, or `instancesEvictedAfterAdmission` means retained content is a sample and the request you care about may have been dropped — note this as a confidence-reducing factor. `instancesDroppedByFilter` alone is expected (static assets are filtered by design). v3 caps: instances 500, groups 200, bodies 100 per attempt.
