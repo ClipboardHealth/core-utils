@@ -3,7 +3,8 @@
 #
 # Returns one JSON document with:
 #   - threads / activeThreads / uncertainThreads — review threads with
-#     sentinel-recency state (active / uncertain / addressed).
+#     sentinel-recency state (active / uncertain / addressed). Ordinary
+#     PR-summary comments carry per-thread activity keys for dedupe.
 #   - reviewBodyComments — raw bodies of every review from known automated
 #     reviewers (CodeRabbit, Mendral, etc.), each with a stable fingerprint.
 #     The agent reads bodies directly; we no longer pre-parse findings.
@@ -120,6 +121,7 @@ query($owner: String!, $repo: String!, $pr: Int!) {
               line
               originalLine
               createdAt
+              url
               author {
                 login
                 __typename
@@ -283,6 +285,7 @@ main() {
               createdAt,
               file: .path,
               line: (.line // .originalLine),
+              url,
               isBabysitSentinel: is_sentinel,
               isKnownBot: is_bot
             }
@@ -347,53 +350,6 @@ main() {
     ]
   ')"
 
-  # Flattened unresolved_comments — retained for backward compat.
-  local all_unresolved
-  all_unresolved="$(printf '%s' "$threads_json" | jq '[
-    .[]
-    | select(.activityState != "addressed")
-    | .comments[]
-    | select(.isBabysitSentinel | not)
-    | {
-        author,
-        body,
-        createdAt,
-        file,
-        line
-      }
-  ]')"
-
-  # Filter out fixed code-scanning alerts from github-advanced-security.
-  local security_alerts
-  security_alerts="$(printf '%s' "$all_unresolved" | jq -r '
-    .[]
-    | select(.author == "github-advanced-security" or .author == "github-advanced-security[bot]")
-    | try (.body | capture("/code-scanning/(?<n>[0-9]+)") | .n)
-  ' | sort -u)"
-
-  local fixed_alerts="" alert_number
-  for alert_number in $security_alerts; do
-    if is_code_scanning_alert_fixed "$owner" "$repo" "$alert_number"; then
-      fixed_alerts="${fixed_alerts} ${alert_number}"
-    fi
-  done
-
-  local unresolved_comments
-  if [ -z "$fixed_alerts" ]; then
-    unresolved_comments="$all_unresolved"
-  else
-    unresolved_comments="$(printf '%s' "$all_unresolved" | jq --arg fixed "$fixed_alerts" '
-      ($fixed | split(" ") | map(select(length > 0))) as $fixedSet
-      | map(
-          . as $c
-          | if ($c.author == "github-advanced-security" or $c.author == "github-advanced-security[bot]") then
-              (((try ($c.body | capture("/code-scanning/(?<n>[0-9]+)") | .n)) // null)) as $n
-              | if ($n != null and ($n | IN($fixedSet[]))) then empty else $c end
-            else $c end
-        )
-    ')"
-  fi
-
   # Raw review-body comments from known bots. The agent reads each body itself
   # and extracts findings; no pre-parsing.
   local raw_review_body_comments
@@ -447,6 +403,127 @@ main() {
   local prior_sentinel_blob
   prior_sentinel_blob="$(printf '%s' "$prior_sentinels" | jq -r '[.[].body] | join("\n")')"
 
+  # Fold ordinary PR-summary activity keys into the existing thread recency
+  # model. A summary key points at the newest thread comment handled by that
+  # pass. Any later human comment reactivates the thread; bot-only activity is
+  # uncertain and still needs semantic inspection by the agent.
+  threads_json="$(printf '%s' "$threads_json" | jq --arg blob "$prior_sentinel_blob" '
+    map(
+      . as $thread
+      | ([.comments[] | select(.isBabysitSentinel | not)] | last) as $latestComment
+      | ([
+          .comments[]
+          | select(.isBabysitSentinel | not)
+          | . as $comment
+          | select($blob | contains("thread:\($thread.threadId):\($comment.id)"))
+        ] | sort_by(.createdAt) | last) as $lastSummaryComment
+      | ([.lastBabysitSentinelAt, ($lastSummaryComment.createdAt // null)]
+          | map(select(. != null))
+          | sort
+          | last) as $lastAddressedAt
+      | .activityKey = (
+          if $latestComment == null then null
+          else "thread:\(.threadId):\($latestComment.id)"
+          end
+        )
+      | .url = (.comments[0].url // null)
+      | .lastBabysitSummaryAt = ($lastSummaryComment.createdAt // null)
+      | .lastBabysitAddressedAt = $lastAddressedAt
+      | .postSentinelBotComments = (
+          if $lastAddressedAt == null then []
+          else [
+            .comments[]
+            | select(.isKnownBot)
+            | select(.isBabysitSentinel | not)
+            | select(.createdAt > $lastAddressedAt)
+            | {
+                id,
+                createdAt,
+                author,
+                authorType,
+                body
+              }
+          ]
+          end
+        )
+      | .postSentinelHumanComments = (
+          if $lastAddressedAt == null then []
+          else [
+            .comments[]
+            | select(.isKnownBot | not)
+            | select(.isBabysitSentinel | not)
+            | select(.createdAt > $lastAddressedAt)
+            | {
+                id,
+                createdAt,
+                author,
+                body
+              }
+          ]
+          end
+        )
+      | .activityState = (
+          if $lastAddressedAt == null then
+            "active"
+          elif (.postSentinelHumanComments | length) > 0 then
+            "active"
+          elif (.postSentinelBotComments | length) > 0 then
+            "uncertain"
+          else
+            "addressed"
+          end
+        )
+    )
+  ')"
+
+  # Flattened unresolved_comments — retained for backward compat. Build this
+  # after PR-summary dedupe so it matches activeThreads.
+  local all_unresolved
+  all_unresolved="$(printf '%s' "$threads_json" | jq '[
+    .[]
+    | select(.activityState != "addressed")
+    | .comments[]
+    | select(.isBabysitSentinel | not)
+    | {
+        author,
+        body,
+        createdAt,
+        file,
+        line
+      }
+  ]')"
+
+  # Filter out fixed code-scanning alerts from github-advanced-security.
+  local security_alerts
+  security_alerts="$(printf '%s' "$all_unresolved" | jq -r '
+    .[]
+    | select(.author == "github-advanced-security" or .author == "github-advanced-security[bot]")
+    | try (.body | capture("/code-scanning/(?<n>[0-9]+)") | .n)
+  ' | sort -u)"
+
+  local fixed_alerts="" alert_number
+  for alert_number in $security_alerts; do
+    if is_code_scanning_alert_fixed "$owner" "$repo" "$alert_number"; then
+      fixed_alerts="${fixed_alerts} ${alert_number}"
+    fi
+  done
+
+  local unresolved_comments
+  if [ -z "$fixed_alerts" ]; then
+    unresolved_comments="$all_unresolved"
+  else
+    unresolved_comments="$(printf '%s' "$all_unresolved" | jq --arg fixed "$fixed_alerts" '
+      ($fixed | split(" ") | map(select(length > 0))) as $fixedSet
+      | map(
+          . as $c
+          | if ($c.author == "github-advanced-security" or $c.author == "github-advanced-security[bot]") then
+              (((try ($c.body | capture("/code-scanning/(?<n>[0-9]+)") | .n)) // null)) as $n
+              | if ($n != null and ($n | IN($fixedSet[]))) then empty else $c end
+            else $c end
+        )
+    ')"
+  fi
+
   # activeIssueComments: non-sentinel, non-bot comments whose fingerprint is
   # NOT already listed in any prior cb-babysit summary.
   local active_issue_comments
@@ -458,7 +535,8 @@ main() {
     ]
   ')"
 
-  # Active threads: anything NOT yet addressed.
+  # Active threads: anything NOT yet addressed by either an inline legacy
+  # sentinel or an ordinary PR-summary activity key.
   local active_threads total_active_threads uncertain_threads total_uncertain_threads
   active_threads="$(printf '%s' "$threads_json" | jq '[.[] | select(.activityState != "addressed")]')"
   total_active_threads="$(printf '%s' "$active_threads" | jq 'length')"

@@ -13,6 +13,10 @@ interface CheckResult {
 // These run a pre-push hook and should not modify files
 const CHECKS = [
   { cmd: "node --run architecture:check", name: "architecture:check" },
+  {
+    cmd: "bash plugins/core/skills/cb-babysit/scripts/unresolvedPrComments.test.sh",
+    name: "cb-babysit:test",
+  },
   { cmd: "node --run cpd", name: "cpd" },
   { cmd: "node --run embed:check", name: "embed:check" },
   { cmd: "node --run format:check", name: "format:check" },

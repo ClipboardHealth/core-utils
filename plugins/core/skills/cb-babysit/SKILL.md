@@ -19,9 +19,9 @@ Resolve bundled "./scripts" paths relative to SKILL.md.
 
 The skill uses two sentinels with visible footer lines.
 
-**Addressed sentinel**: `<sub>🤖 <code>cb-babysit:addressed v1 core@3.17.1</code></sub>`. Appended on its own line at the end of every reply the skill posts so re-runs know which threads and review-body comments are already handled. Dedupe also recognizes the legacy `babysit-pr:addressed v1` prefix from before this skill was renamed.
+**Addressed sentinel**: `<sub>🤖 <code>cb-babysit:addressed v1 core@3.17.1</code></sub>`. Appended on its own line at the end of every PR-level summary comment the skill posts so re-runs know which feedback is already handled. Dedupe also recognizes the legacy `babysit-pr:addressed v1` prefix from before this skill was renamed.
 
-**Follow-up sentinel**: `<sub>🤖 <code>cb-babysit:followup v1 core@3.17.1</code></sub>`. Attached to replies that defer an out-of-scope comment as a tracked follow-up. The sentinel is additive: the post-reply scripts still append the `addressed` sentinel at the end.
+**Follow-up sentinel**: `<sub>🤖 <code>cb-babysit:followup v1 core@3.17.1</code></sub>`. Attached to summary items that defer an out-of-scope comment as tracked follow-up work. The sentinel is additive: the PR-comment script still appends the `addressed` sentinel at the end.
 
 **Sentinel recency rules.** The script emits a per-thread `activityState` with three values. Step 6a owns the handling rules for each state.
 
@@ -30,6 +30,8 @@ The skill uses two sentinels with visible footer lines.
 - **`addressed`**: the sentinel is the newest relevant activity on the thread.
 
 Automated review bodies and top-level Conversation-tab comments each carry a stable `fingerprint` (sha256 of the normalized body); prior sentinel bodies embed them, and steps 4 and 7 do the dedupe.
+
+Review threads use a stable activity key in PR-level summaries: `thread:<threadId>:<latest-comment-id>`. `unresolvedPrComments.sh` matches these keys against prior summaries, so a new thread comment reactivates the thread without requiring an inline review reply.
 
 ## Workflow
 
@@ -98,13 +100,13 @@ bash scripts/unresolvedPrComments.sh
 
 The output JSON has:
 
-- `threads`: every unresolved review thread, with `threadId`, `replyToCommentDatabaseId`, `comments[]`, `lastBabysitSentinelAt`, `lastHumanCommentAt`, `lastBotCommentAt`, `postSentinelBotComments[]`, `postSentinelHumanComments[]`, and `activityState` (`"active"` / `"uncertain"` / `"addressed"`).
-- `activeThreads`: threads where `activityState != "addressed"`; these need attention this pass (active AND uncertain).
+- `threads`: every unresolved review thread, with `threadId`, `url`, `activityKey`, `comments[]`, `lastBabysitSentinelAt`, `lastBabysitSummaryAt`, `lastHumanCommentAt`, `lastBotCommentAt`, `postSentinelBotComments[]`, `postSentinelHumanComments[]`, and `activityState` (`"active"` / `"uncertain"` / `"addressed"`).
+- `activeThreads`: threads where `activityState != "addressed"`; these need attention this pass (active AND uncertain). The script filters threads whose current `activityKey` already appears in a prior PR-level summary.
 - `uncertainThreads`: just the uncertain subset. For each, read EVERY entry in `postSentinelBotComments` before deciding.
 - `reviewBodyComments`: every review from a known automated reviewer (CodeRabbit, Mendral, Dependabot, etc.), with the raw body and a stable per-review `fingerprint`. The agent reads each body directly to extract findings.
 - `issueComments`: every top-level Conversation-tab comment, each with `isBabysitSentinel`, `isKnownBot`, and a per-comment `fingerprint`.
 - `activeIssueComments`: the subset of `issueComments` that are NOT cb-babysit sentinels, NOT from a known bot, and whose `fingerprint` is NOT already listed in any prior cb-babysit summary. These are the human Conversation-tab comments still needing a reply.
-- `priorBabysitSentinels`: prior cb-babysit summary comments posted as PR issue-comments. The script does the dedupe lookup for `activeIssueComments` automatically; the agent uses this array for `reviewBodyComments` dedupe.
+- `priorBabysitSentinels`: prior cb-babysit summary comments posted as PR issue-comments. The script does the dedupe lookup for review threads and `activeIssueComments` automatically; the agent uses this array for `reviewBodyComments` dedupe.
 - `truncated`: array naming any GraphQL connection that hit GitHub's 100-item cap (`reviewThreads`, `thread-comments`, `reviews`, `issueComments`). Non-empty means some comments may not be in this JSON; surface this in the final summary.
 - `totalActiveThreads`, `totalUncertainThreads`, `totalActiveIssueComments`, `totalReviewBodyComments`, `totalUnresolvedComments` for quick checks.
 
@@ -176,7 +178,7 @@ For every thread in `activeThreads` (this includes both `"active"` and `"uncerta
   - If ANY entry carries new actionable content (new nit, new finding, corrected diagnosis) → treat the thread as new feedback and proceed below. Note in the final summary that an uncertain thread was reactivated, citing the specific comment.
   - If you cannot confidently classify every entry → default to treating it as new feedback.
 - Each remaining thread (i.e., NOT marked Skip-reply) gets a scope classification first. Use the Scope subsection to label it in-scope or out-of-scope. For comments on deleted lines, record that the anchor is on the removed side of the diff. For any unchanged/context-line comment classified in scope via the narrow escape hatch, record the external signal and the changed `file:line` when applicable.
-- Then pick one verdict; each of these (except Skip-reply) will get a reply posted in step 9:
+- Then pick one verdict; each of these (except Skip-reply) will get an item in the ordinary PR comment posted in step 9:
   - **In-scope** threads use the original three verdicts:
     - **Agree**: the comment identifies a real issue. Apply the fix. Record the thread ID and a one-line what-changed.
     - **Disagree**: the current code is acceptable. Record a short reasoning.
@@ -193,7 +195,7 @@ For every entry in `activeIssueComments`, humans commenting on the PR Conversati
 - Apply the **Scope** subsection's rules. A top-level comment is in scope when the reviewer explicitly ties it to a changed file/line, behavior the PR introduced, or a contract the PR altered. Otherwise out of scope by default.
 - Pick a verdict the same way as a thread: Agree / Disagree / Already fixed (in-scope), or Agree-meets-bar / Defer (out-of-scope). Apply fixes for Agree verdicts.
 - Replies are NOT posted as individual top-level comments. That would clutter the conversation. Instead, every issue-comment verdict goes into the **same step-9 PR-level summary** as the review-body findings, under its own `## Conversation-tab comments` heading. Per-comment fingerprints join the fenced fingerprint block so future runs dedupe.
-- If `activeIssueComments` is empty AND `reviewBodyComments` is empty (or all dedupe), skip the PR-level summary comment entirely in step 9.
+- If no review threads, active issue comments, or review-body findings remain after dedupe, skip the PR-level summary comment entirely in step 9.
 
 ### 7. Assess automated review bodies
 
@@ -208,7 +210,7 @@ For every entry in `reviewBodyComments`:
 
 The whole-body `fingerprint` (not per-finding) goes in the fenced fingerprint block at the end of the summary. If the review body later changes (new findings, edits), the fingerprint changes and the next pass will post the summary again. It's slightly noisier but never silently drops a new finding.
 
-If `reviewBodyComments` is empty (or all entries dedupe), skip ONLY the review-body section of the summary in step 9. Still post thread replies for every non-Skip-reply thread from step 6a and handle issue comments per step 6b.
+If `reviewBodyComments` is empty (or all entries dedupe), skip ONLY the review-body section of the summary in step 9. Still summarize every non-Skip-reply thread from step 6a and handle issue comments per step 6b.
 
 ### 8. Commit and push (if any edits)
 
@@ -230,30 +232,13 @@ sha=<commit-sha>
 url=https://github.com/<owner>/<repo>/commit/<sha>
 ```
 
-Capture the `url=` line for the reply templates in step 9.
+Capture the `url=` line for the summary templates in step 9.
 
-### 9. Post replies
+### 9. Post an ordinary PR comment
 
-For every thread assessed in step 6a that was NOT marked **Skip-reply** (i.e., one of Agree / Disagree / Already fixed / Defer):
+Never create a GitHub review or review comment. Do not use the GitHub Reviews API, `gh pr review`, or `addPullRequestReviewThreadReply`; those paths can leave feedback in a pending review that a human must submit. Post only an ordinary top-level Conversation-tab comment through the Issues comments API.
 
-```bash
-bash scripts/postSentinelReply.sh "$THREAD_ID" "$BODY"
-```
-
-Skip-reply threads are left alone as the existing sentinel already covers them.
-
-Body templates (the script appends the `addressed` sentinel if missing):
-
-- **Agree**: `Addressed in <commit-url>. <one-line what-changed>.`
-- **Disagree**: `Leaving current behavior. <reasoning>.`
-- **Already fixed**: `Already handled by <commit-url-or-file:line>. <brief pointer>.`
-- **Defer**: `Out of scope for this PR; this looks like follow-up work rather than something introduced or required by this change. <one-line rationale or pointer if useful>.\n\n<sub>🤖 <code>cb-babysit:followup v1 core@3.17.1</code></sub>`
-
-For Defer replies, include the follow-up sentinel on its own line as shown. The script will append the `addressed` sentinel after it on its own line, so the final body ends with the follow-up sentinel followed by a blank line followed by the `addressed` sentinel. `grep cb-babysit:followup` finds the deferral and `grep cb-babysit:addressed` still marks the thread handled for dedupe.
-
-The script uses the `addPullRequestReviewThreadReply` GraphQL mutation. It does NOT resolve the thread.
-
-If any automated review bodies were assessed in step 7 OR any active issue comments were assessed in step 6b, post ONE top-level PR comment summarizing all of them:
+If any review threads were assessed in step 6a, automated review bodies were assessed in step 7, or active issue comments were assessed in step 6b, post ONE ordinary PR comment summarizing all of them:
 
 ```bash
 bash scripts/postSentinelPrComment.sh "$PR_NUMBER" "$BODY"
@@ -261,11 +246,14 @@ bash scripts/postSentinelPrComment.sh "$PR_NUMBER" "$BODY"
 
 The PR-level summary should:
 
-- Group by source. Use `## Review-body findings` for step-7 work and `## Conversation-tab comments` for step-6b work. Omit a section if its list is empty.
+- Group by source. Use `## Review threads` for step-6a work, `## Review-body findings` for step-7 work, and `## Conversation-tab comments` for step-6b work. Omit a section if its list is empty.
 - Inside each section, group verdicts under **Agree / Disagree / Already fixed / Deferred (out of scope)** subheadings. Omit a subheading if its list is empty.
+- For each review-thread item, link to its `url` and use the applicable body: `Addressed in <commit-url>. <one-line what-changed>.`, `Leaving current behavior. <reasoning>.`, `Already handled by <commit-url-or-file:line>. <brief pointer>.`, or the Defer text below.
 - Under **Deferred (out of scope)**, list each deferred item as a bullet, followed on its own line by `<sub>🤖 <code>cb-babysit:followup v1 core@3.17.1</code></sub>` so grep catches them individually.
 - Include the commit URL for fixes.
-- End with a fenced fingerprint block listing every current fingerprint (addressed and deferred) one per line. Include both `reviewBodyComments[].fingerprint` (whole-body, one per automated review) and `activeIssueComments[].fingerprint` (per Conversation-tab comment). Future runs dedupe by matching these against `priorBabysitSentinels`.
+- End with a fenced fingerprint block listing every current marker (addressed and deferred) one per line. Include each assessed review thread's `activityKey`, each `reviewBodyComments[].fingerprint` (whole-body, one per automated review), and each `activeIssueComments[].fingerprint` (per Conversation-tab comment). Future runs dedupe by matching these against `priorBabysitSentinels`.
+
+The script appends the `addressed` sentinel if missing. For Defer items, include the follow-up sentinel on its own line. `grep cb-babysit:followup` finds deferrals and `grep cb-babysit:addressed` identifies the ordinary summary comment for dedupe.
 
 ### 10. Summarize
 
@@ -274,7 +262,7 @@ Report:
 - Commits made (with URLs).
 - Merge conflict status if relevant (resolved or aborted with reason).
 - CI checks fixed / still failing / skipped-with-diagnosis.
-- Review threads replied to, grouped by verdict (including any Defer count: "X threads deferred as follow-ups").
+- Review threads summarized in the ordinary PR comment, grouped by verdict (including any Defer count: "X threads deferred as follow-ups").
 - Conversation-tab comments addressed, grouped by verdict (e.g. "Z conversation comments deferred as follow-ups").
 - Review-body findings summarized (or skipped because already covered), including the Deferred count: "Y review-body findings deferred as follow-ups".
 - Threads left active because of bot-acknowledgement uncertainty (flag by thread URL).
@@ -287,15 +275,15 @@ When the report mentions any deferrals, include a one-liner the user can run lat
 gh api graphql -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){reviewThreads(first:100){nodes{comments(first:50){nodes{body url}}}}comments(first:100){nodes{body url}}}}}' -F o=<owner> -F r=<repo> -F n=<pr> | grep -B1 cb-babysit:followup
 ```
 
-Do not rely only on `gh pr view --json comments,reviews`. That view can miss inline review-thread replies, which is where most Defer replies live.
+Do not rely only on `gh pr view --json comments,reviews`. Use the Issues comments API when checking cb-babysit's ordinary PR comments.
 
 ## Loop control
 
 After the single pass completes, pick exactly one outcome:
 
-- **Exit clean**: all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6a's inspection or has already received a fresh sentinel reply in this pass (Agree / Disagree / Already-fixed / **Defer** all count. A Defer reply is a sentinel reply), AND every entry in `activeIssueComments` is covered by this pass's PR-level summary, AND every current review-body fingerprint is covered by an existing sentinel comment (deferred review-body and conversation-comment fingerprints count; they're in the summary's fenced block). Do not use raw `totalActiveThreads` / `totalActiveIssueComments` from the script output. They're pre-inspection and will stay non-zero for Skip-reply or post-summary cases. A PR with Deferred items is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
-- **Exit progressing**: pass made commits, posted new replies, or both, and the PR is not yet clean (CI is still pending, a new CI run was triggered by this pass's commits, or more work remains). There is real work still in flight that another run would pick up. Report what was done and what is pending, and tell the user to re-run `/cb-babysit` once CI settles, or to wrap the call with `/loop <cadence> /cb-babysit` (or a shell `while true; do ...; done`) for automatic re-runs.
-- **Exit stuck**: pass made no commits and posted no new replies, and the PR is still not clean. Nothing actionable happened this pass. Use this whenever progress is blocked on something outside the skill's scope, including:
+- **Exit clean**: all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6a's inspection or has its current activity key in this pass's ordinary PR comment, AND every entry in `activeIssueComments` is covered by this pass's PR-level summary, AND every current review-body fingerprint is covered by an existing sentinel comment (deferred thread, review-body, and conversation-comment markers count; they're in the summary's fenced block). Do not use raw `totalActiveThreads` / `totalActiveIssueComments` from the script output. They're pre-inspection and will stay non-zero for Skip-reply or post-summary cases. A PR with Deferred items is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
+- **Exit progressing**: pass made commits, posted a new ordinary PR comment, or both, and the PR is not yet clean (CI is still pending, a new CI run was triggered by this pass's commits, or more work remains). There is real work still in flight that another run would pick up. Report what was done and what is pending, and tell the user to re-run `/cb-babysit` once CI settles, or to wrap the call with `/loop <cadence> /cb-babysit` (or a shell `while true; do ...; done`) for automatic re-runs.
+- **Exit stuck**: pass made no commits and posted no new ordinary PR comment, and the PR is still not clean. Nothing actionable happened this pass. Use this whenever progress is blocked on something outside the skill's scope, including:
   - Merge conflict in step 2 that exceeded the high-confidence resolution bar.
   - CI still running (`gh pr checks --watch` timed out with pending checks).
   - CI failing with a diagnosis-only verdict from Step 5 (flaky / infra / auth / external check / ambiguous / out-of-scope failure).

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # _sentinel.sh — shared SENTINEL constants + append helper.
-# Sourced by unresolvedPrComments.sh, postSentinelReply.sh, postSentinelPrComment.sh.
+# Sourced by unresolvedPrComments.sh and postSentinelPrComment.sh.
 #
-# SENTINEL is the literal emitted on new replies: a visible footer (robot mark +
+# SENTINEL is the literal emitted on new comments: a visible footer (robot mark +
 # token in `<code>`, wrapped in `<sub>`). SENTINEL_PREFIX is the wrapper-free
 # substring used for matching/dedupe. LEGACY_SENTINEL_PREFIX keeps old
 # `babysit-pr:addressed v1` comments from being reprocessed after the rename.

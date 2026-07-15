@@ -1,0 +1,111 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "title": "Use ordinary comments",
+        "url": "https://github.com/acme/widgets/pull/42",
+        "reviewThreads": {
+          "pageInfo": { "hasNextPage": false },
+          "nodes": [
+            {
+              "id": "T_addressed",
+              "isResolved": false,
+              "comments": {
+                "pageInfo": { "hasNextPage": false },
+                "nodes": [
+                  {
+                    "id": "C_addressed",
+                    "databaseId": 1,
+                    "body": "Please adjust this.",
+                    "path": "src/addressed.ts",
+                    "line": 10,
+                    "originalLine": 10,
+                    "createdAt": "2026-07-15T10:00:00Z",
+                    "url": "https://github.com/acme/widgets/pull/42#discussion_r1",
+                    "author": { "login": "reviewer", "__typename": "User" }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "T_bot",
+              "isResolved": false,
+              "comments": {
+                "pageInfo": { "hasNextPage": false },
+                "nodes": [
+                  {
+                    "id": "C_bot_old",
+                    "databaseId": 2,
+                    "body": "Please adjust this.",
+                    "path": "src/bot.ts",
+                    "line": 20,
+                    "originalLine": 20,
+                    "createdAt": "2026-07-15T10:00:00Z",
+                    "url": "https://github.com/acme/widgets/pull/42#discussion_r2",
+                    "author": { "login": "coderabbitai[bot]", "__typename": "Bot" }
+                  },
+                  {
+                    "id": "C_bot_new",
+                    "databaseId": 3,
+                    "body": "Thanks, resolved.",
+                    "path": "src/bot.ts",
+                    "line": 20,
+                    "originalLine": 20,
+                    "createdAt": "2026-07-15T11:00:00Z",
+                    "url": "https://github.com/acme/widgets/pull/42#discussion_r3",
+                    "author": { "login": "coderabbitai[bot]", "__typename": "Bot" }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "T_human",
+              "isResolved": false,
+              "comments": {
+                "pageInfo": { "hasNextPage": false },
+                "nodes": [
+                  {
+                    "id": "C_human_old",
+                    "databaseId": 4,
+                    "body": "Please adjust this.",
+                    "path": "src/human.ts",
+                    "line": 30,
+                    "originalLine": 30,
+                    "createdAt": "2026-07-15T10:00:00Z",
+                    "url": "https://github.com/acme/widgets/pull/42#discussion_r4",
+                    "author": { "login": "reviewer", "__typename": "User" }
+                  },
+                  {
+                    "id": "C_human_new",
+                    "databaseId": 5,
+                    "body": "One more concern.",
+                    "path": "src/human.ts",
+                    "line": 30,
+                    "originalLine": 30,
+                    "createdAt": "2026-07-15T11:00:00Z",
+                    "url": "https://github.com/acme/widgets/pull/42#discussion_r5",
+                    "author": { "login": "reviewer", "__typename": "User" }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "reviews": { "pageInfo": { "hasNextPage": false }, "nodes": [] },
+        "comments": {
+          "pageInfo": { "hasNextPage": false },
+          "nodes": [
+            {
+              "id": "I_summary",
+              "databaseId": 10,
+              "body": "Handled feedback.\n\n```\nthread:T_addressed:C_addressed\nthread:T_bot:C_bot_old\nthread:T_human:C_human_old\n```\n\n<sub>🤖 <code>cb-babysit:addressed v1 core@3.17.1</code></sub>",
+              "createdAt": "2026-07-15T10:30:00Z",
+              "url": "https://github.com/acme/widgets/pull/42#issuecomment-10",
+              "author": { "login": "agent", "__typename": "User" }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
