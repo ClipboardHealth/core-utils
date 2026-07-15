@@ -27,7 +27,8 @@ Every plan must trace the failure to a terminal _cause_, not a symptom:
 failing assertion → app/UI state → network/trace/log evidence → owning service and repo → cause at a file/line, config key, or specific log line.
 
 - A status code, timeout, or throttle is a link in the chain, never the terminus. "The request 500ed" or "setup was throttled" is where the investigation continues, not where it stops.
-- Resolve the owning service and repo for any implicated request via the groundtruth ownership registry (`ClipboardHealth/groundtruth`: `registry/services.json` → `registry/repos.json`; per-repo context in `context/devin-wiki/<repo>/`). Follow the chain into that repo's code — do not stop at the repo the test lives in.
+- The link types adapt to the failure surface. CI/setup, fixture, component, and unit failures substitute build logs, fixture state, or runner artifacts for network evidence, and the owning package/repo for a deployed service. The invariant is the terminus — a cause, not a symptom — not the specific link types.
+- When a network request or deployed service is implicated, resolve its owning service and repo via the groundtruth ownership registry (`ClipboardHealth/groundtruth`: `registry/services.json` → `registry/repos.json`; per-repo context in `context/devin-wiki/<repo>/`). Follow the chain into that repo's code — do not stop at the repo the test lives in.
 - When the causal event may be outside the test's own request path (seeding, deploys, CDC lag, async jobs), trace-ID lookup cannot reach it. Use time-window log queries scoped to the run instead.
 - If evidence runs out, state exactly which link breaks and what observability would extend it. That caps confidence at 2, and the instrumentation becomes the deliverable.
 
