@@ -5,6 +5,7 @@ export * from "./lib/forceCast";
 export * from "./lib/functional";
 export type * from "./lib/logger";
 export * from "./lib/nullish";
+export * from "./lib/objects";
 export * from "./lib/strings";
 export * from "./lib/strings/parseJson";
 export type * from "./lib/types";
