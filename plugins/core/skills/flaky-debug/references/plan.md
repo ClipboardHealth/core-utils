@@ -6,19 +6,31 @@ Shared tail of the flaky-debug planning phase, used by both [`plan-e2e.md`](./pl
 
 Rate your confidence in the root cause on a 1-5 scale. Report this score alongside your evidence.
 
-| Score | Meaning             | Criteria                                                                                                                                                                                       |
-| ----- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **5** | Certain             | Root cause is directly visible in artifacts (e.g., assertion diff shows stale data, network response confirms 5xx, screenshot shows error banner)                                              |
-| **4** | High confidence     | Evidence strongly supports the diagnosis but one link in the chain is inferred rather than observed (e.g., timeline shows the right sequence but no Datadog trace to confirm backend behavior) |
-| **3** | Moderate confidence | Evidence is consistent with the diagnosis but alternative explanations remain plausible. Flag the alternatives explicitly                                                                      |
-| **2** | Low confidence      | Limited evidence, mostly reasoning from code patterns rather than observed artifacts. Recommend gathering more data before committing to a fix                                                 |
-| **1** | Speculative         | No direct evidence for the root cause. The fix is a best guess. Recommend reproducing the failure locally or adding instrumentation before proceeding                                          |
+| Score | Meaning             | Criteria                                                                                                                                                                                                                                                           |
+| ----- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **5** | Certain             | Root cause is directly visible in artifacts AND reproduced by inducing it — fault injection in the harness (delay/fail the blamed response or step) or a focused lower-level test that deterministically triggers the race. Without reproduction, the ceiling is 4 |
+| **4** | High confidence     | The chain terminates at an evidenced cause (file/line, config key, or log line) but one intermediate link is inferred rather than observed. An unevidenced terminal cause is a broken chain, capped at 2 (see [Causal Chain](#causal-chain))                       |
+| **3** | Moderate confidence | Evidence is consistent with the diagnosis but alternative explanations remain plausible. Flag the alternatives explicitly                                                                                                                                          |
+| **2** | Low confidence      | Limited evidence, mostly reasoning from code patterns rather than observed artifacts. Recommend gathering more data before committing to a fix                                                                                                                     |
+| **1** | Speculative         | No direct evidence for the root cause. The fix is a best guess. Recommend reproducing the failure locally or adding instrumentation before proceeding                                                                                                              |
 
 Apply the score:
 
 - **If >2:** continue to [Decide Fix Approach](#decide-fix-approach).
-- **If less than 5/5:** the plan must include the frontend and/or backend observability changes that would make the next occurrence diagnosable at 5/5 confidence. Scope recommendations to repositories and services implicated by the evidence; include multiple repositories only when the artifacts link them to the failure.
+- **If less than 5/5:** the plan must include the frontend and/or backend observability changes that would make the next occurrence's root cause directly visible in artifacts (the artifact half of 5/5; reaching 5/5 additionally requires reproduction per [Causal Chain](#causal-chain)). Scope recommendations to the repositories and services on the causal chain; resolve owners via the groundtruth registry rather than assuming the failure belongs to the repo the test lives in.
 - **If confidence is 2 or below:** do not propose a code fix. Instead, recommend specific instrumentation or reproduction steps to raise confidence.
+
+## Causal Chain
+
+Every plan must trace the failure to a terminal _cause_, not a symptom:
+
+failing assertion → app/UI state → network/trace/log evidence → owning service and repo → cause at a file/line, config key, or specific log line.
+
+- A status code, timeout, or throttle is a link in the chain, never the terminus. "The request 500ed" or "setup was throttled" is where the investigation continues, not where it stops.
+- The link types adapt to the failure surface. CI/setup, fixture, component, and unit failures substitute build logs, fixture state, or runner artifacts for network evidence, and the owning package/repo for a deployed service. The invariant is the terminus — a cause, not a symptom — not the specific link types.
+- When a network request or deployed service is implicated, resolve its owning service and repo via the groundtruth ownership registry (`ClipboardHealth/groundtruth`: `registry/services.json` → `registry/repos.json`; per-repo context in `context/devin-wiki/<repo>/`). Follow the chain into that repo's code — do not stop at the repo the test lives in.
+- When the causal event may be outside the test's own request path (seeding, deploys, CDC lag, async jobs), trace-ID lookup cannot reach it. Use time-window log queries scoped to the run instead.
+- If evidence runs out, state exactly which link breaks and what observability would extend it. That caps confidence at 2, and the instrumentation becomes the deliverable.
 
 ## Decide Fix Approach
 
@@ -84,9 +96,10 @@ Produce the plan with these fields:
 - **Current main status:** whether the failing commit's code path still exists on current `main`, has already been fixed, or has changed enough that the plan must be adjusted
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
+- **Causal chain:** each link from failing assertion to terminal cause with its evidence, or the explicit break point and the observability that would extend it (see [Causal Chain](#causal-chain))
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)
 - **Proposed fix:** test harness, product, or both — with the specific file(s) and the change you would make
-- **Observability to reach 5/5:** required when confidence is less than 5/5. List the frontend and/or backend telemetry, logging, tracing, reporter, or metric changes that would make this flake diagnosable with 5/5 confidence next time. Include another repository only when the evidence implicates it. Use "N/A -- confidence is 5/5" only for a 5/5 plan.
+- **Observability to reach 5/5:** required when confidence is less than 5/5. List the frontend and/or backend telemetry, logging, tracing, reporter, or metric changes that would make this flake's root cause directly visible in artifacts next time (reproduction then completes 5/5). Include another repository only when the evidence implicates it. Use "N/A -- confidence is 5/5" only for a 5/5 plan.
 - **Sibling candidates:** files that appear to share the same anti-pattern, for the reviewer (or fix.md) to confirm. Or "N/A -- fix is test-specific" if the issue is one-off (see [`fix.md`](./fix.md) for what counts as a structural anti-pattern worth searching for).
 - **Validation plan:** lint/typecheck commands and test commands to run after applying the fix
 - **Open questions:** anything that needs human input before fixing

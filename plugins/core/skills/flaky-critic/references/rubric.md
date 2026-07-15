@@ -8,7 +8,7 @@ This rubric turns Rocky's observed review standards into checkable rules for fla
 
 Findings from automated reviewers (Mendral, CodeRabbit, etc.) are **advisory inputs, not binding rules**: the critic evaluates each on rubric merits and may decline one with stated reasoning, exactly as cb-babysit's Disagree replies do.
 
-**Statement-missing vs substance-missing (backtest amendment, 2026-06-11):** B5/B6/B7 each require an explicit statement in the plan (dedup-check results, confidence score plus observability section, current-main status). When the _statement_ is absent but the violation is not demonstrated — no actual duplicate found, no actual low-confidence code fix, no actual staleness — the verdict is reject with disposition **amend-and-resubmit**: one bounce asking for exactly the missing sections, never escalation. A demonstrated violation (a real duplicate, a real ≤2/5 code fix) is a substantive reject. The 2026-06-11 backtest showed 6 of 7 false rejections were statement-missing on plans predating these conventions; live plans carry the sections by template, but the distinction stays load-bearing for the agreement metric.
+**Statement-missing vs substance-missing (backtest amendment, 2026-06-11):** B5/B6/B7/B8 each require an explicit statement in the plan (dedup-check results, confidence score plus observability section, current-main status, causal-chain section). When the _statement_ is absent but the violation is not demonstrated — no actual duplicate found, no actual low-confidence code fix, no actual staleness, no demonstrably symptom-terminated diagnosis — the verdict is reject with disposition **amend-and-resubmit**: one bounce asking for exactly the missing sections, never escalation. A demonstrated violation (a real duplicate, a real ≤2/5 code fix, a diagnosis that demonstrably stops at a symptom) is a substantive reject. The 2026-06-11 backtest showed 6 of 7 false rejections were statement-missing on plans predating these conventions; live plans carry the sections by template, but the distinction stays load-bearing for the agreement metric.
 
 ## 2. Banned patterns
 
@@ -71,6 +71,21 @@ Implementing a plan against code that has changed on `main`, or for a flake alre
 **Detection heuristic:** PR body lacks a "current main status" statement; or the diff conflicts with/duplicates a commit already on main touching the same lines.
 
 **Staleness clause (backtest amendment, 2026-06-11):** a plan more than ~14 days old, or one whose fingerprint has new sightings since the plan was written, requires re-verification against current main before approval — treat unverified staleness as B7. (Two backtest "rejections" were plans that sat unworked until a sweep canceled them; freshness is part of a plan being gateable.)
+
+### B8 — Unterminated causal chain (symptom-level diagnosis)
+
+Proposing a code fix from a diagnosis that stops at the failure symptom — "the request 500ed/timed out," "setup was throttled," "the element never appeared" — without establishing _why_ at a specific cause in the owning code, config, or infrastructure.
+
+**Why (amendment, 2026-07-07):** post-Done recurrence is the pipeline's dominant failure mode: in the Jun 2–Jul 6 window, 21 fingerprint families re-flaked after a Done closure, and the fullLifecycle family (33deef731a10) was closed Done six times. Each recurrence traces to a diagnosis that dead-ended at the repo boundary or at a status code and patched the symptom locally. Local-symptom plans are the cheapest to produce, so as long as the gate accepts them, agents keep producing them; this rule makes boundary-crossing the only way to pass.
+
+**Required structure:** the plan must contain a **Causal chain** section: failing assertion → app/UI state → network/trace/log evidence (trace ID, or run-window log queries when the causal event is outside the test's request path: seeding, deploys, CDC/async jobs) → owning service and repo, resolved via the groundtruth ownership registry (`ClipboardHealth/groundtruth`, `registry/services.json` → `registry/repos.json`) → terminal cause cited at file/line, config key, or specific log line. The link types adapt to the failure surface: CI/setup, fixture, component, and unit failures substitute build logs, fixture state, or runner artifacts for network evidence and the owning package/repo for a deployed service — the critic checks the terminus, not a fixed link shape. Two valid terminal states:
+
+1. **Terminated:** the chain ends at a cause. A status code, timeout, or throttle is a link, never a terminus.
+2. **Explicitly broken:** the chain names the link where evidence ran out and the observability that would extend it; confidence is capped at 2/5 and B6 applies — the deliverable is the instrumentation, not a code fix.
+
+**Confidence ceiling:** 5/5 additionally requires reproduction by inducing the blamed cause — fault injection in the harness (delay or fail the specific response, disable the seed step) or a focused lower-level test that deterministically reproduces the race. Without reproduction, the ceiling is 4/5. One inferred _intermediate_ link with an evidenced terminus is still a terminated chain (≤4/5); an unevidenced terminus is a broken chain (cap 2/5).
+
+**Detection heuristic:** plan lacks a Causal chain section (statement-missing → amend-and-resubmit per §1); the terminal link is a symptom rather than a cause; the chain implicates another service or repo but cites no code/log evidence from it and doesn't route per C5/D5; or the plan claims 5/5 without reproduction evidence.
 
 ## 3. Allowed/safe patterns
 
