@@ -151,7 +151,7 @@ function parseDatadogIdentifier({
   }
 
   const identifier = BigInt(value);
-  if (identifier === 0n || identifier > 0xffff_ffff_ffff_ffffn) {
+  if (identifier === 0n || identifier > 0xff_ff_ff_ff_ff_ff_ff_ffn) {
     return undefined;
   }
 

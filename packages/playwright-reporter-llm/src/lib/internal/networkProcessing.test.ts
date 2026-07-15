@@ -220,6 +220,25 @@ describe(buildNetworkObservationFromEvent, () => {
     expect(result?.instance.spanId).toBe("64dd2f8f1285610b");
   });
 
+  it("omits the span id when Datadog request context has no parent id", () => {
+    const event = makeResourceSnapshot({
+      request: {
+        method: "GET",
+        url: "https://api.example.com/data",
+        headers: [
+          { name: "traceparent", value: "00-11111111111111111111111111111111-aaaaaaaaaaaaaaaa-01" },
+          { name: "x-datadog-trace-id", value: "13639781014258445719" },
+        ],
+      },
+      response: { status: -1, _failureText: "net::ERR_FAILED" },
+    });
+
+    const result = buildObservation(event);
+
+    expect(result?.instance.traceId).toBe("0000000000000000bd4a3c90d8fded97");
+    expect(result?.instance.spanId).toBeUndefined();
+  });
+
   it("falls back to request traceparent when Datadog request ids are invalid", () => {
     const event = makeResourceSnapshot({
       request: {
