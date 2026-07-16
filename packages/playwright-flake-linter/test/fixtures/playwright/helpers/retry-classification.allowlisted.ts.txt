@@ -1,0 +1,2 @@
+// flake-lint-allow retry-classification -- The callback only asserts an idempotent mock.
+await retryUntilPassOrTimeout(async () => expectMockCall());

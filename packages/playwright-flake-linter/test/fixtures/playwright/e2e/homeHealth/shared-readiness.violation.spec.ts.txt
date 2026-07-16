@@ -1,0 +1,3 @@
+await page.waitForResponse(
+  (response) => response.request().method() === "PATCH" && response.url().includes("/visits/123"),
+);

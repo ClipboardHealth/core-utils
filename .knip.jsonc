@@ -68,5 +68,8 @@
     "packages/playwright-reporter-llm": {
       "entry": ["src/index.ts", "test/e2e/playwright.config.ts"],
     },
+    "packages/playwright-flake-linter": {
+      "entry": ["src/bin/cli.ts", "src/index.ts"],
+    },
   },
 }

@@ -66,6 +66,9 @@
       "path": "./packages/clearance"
     },
     {
+      "path": "./packages/playwright-flake-linter"
+    },
+    {
       "path": "./packages/playwright-toolkit"
     }
   ]

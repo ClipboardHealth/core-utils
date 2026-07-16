@@ -34,6 +34,7 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **nx-plugin**: An Nx plugin with generators to manage libraries and applications.
 - **oxlint-config**: Shared Oxlint configuration for Clipboard Health repositories.
 - **phone-number**: Phone number utility functions.
+- **playwright-flake-linter**: Shared configurable checks for Playwright flake anti-patterns.
 - **playwright-reporter-llm**: Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.
 - **playwright-toolkit**: Shared anti-flake primitives for Clipboard Health Playwright suites.
 - **rules-engine**: A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.

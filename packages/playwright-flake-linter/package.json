@@ -1,0 +1,31 @@
+{
+  "name": "@clipboard-health/playwright-flake-linter",
+  "version": "0.0.0",
+  "description": "Shared configurable checks for Playwright flake anti-patterns.",
+  "keywords": [
+    "flaky-tests",
+    "lint",
+    "playwright",
+    "testing"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/playwright-flake-linter"
+  },
+  "bin": {
+    "playwright-flake-lint": "./src/bin/cli.js"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "glob": "13.0.6",
+    "tslib": "2.8.1",
+    "typescript": "5.9.3"
+  }
+}
