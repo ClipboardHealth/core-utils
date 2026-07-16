@@ -1,0 +1,21 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
+  "parserOptions": {
+    "project": "packages/playwright-toolkit/tsconfig.lint.json"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "security/detect-non-literal-fs-filename": "off",
+        "unicorn/filename-case": ["error", { "case": "camelCase" }]
+      }
+    }
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

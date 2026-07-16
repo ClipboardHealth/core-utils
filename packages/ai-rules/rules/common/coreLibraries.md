@@ -30,13 +30,13 @@ When a bug traces into a `@clipboard-health/*` library, read the source code in 
 - **execution-context**: A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.
 - **json-api**: TypeScript-friendly utilities for adhering to the JSON:API specification.
 - **json-api-nestjs**: TypeScript-friendly utilities for adhering to the JSON:API specification with NestJS.
-- **mongo-jobs**: MongoDB-powered background jobs.
 - **notifications**: Send notifications through third-party providers.
 - **nx-plugin**: An Nx plugin with generators to manage libraries and applications.
 - **oxlint-config**: Shared Oxlint configuration for Clipboard Health repositories.
 - **phone-number**: Phone number utility functions.
 - **playwright-flake-linter**: Shared configurable checks for Playwright flake anti-patterns.
 - **playwright-reporter-llm**: Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.
+- **playwright-toolkit**: Shared anti-flake primitives for Clipboard Health Playwright suites.
 - **rules-engine**: A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 - **testing-core**: TypeScript-friendly testing utilities.
 - **util-ts**: TypeScript utilities.
