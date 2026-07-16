@@ -38,7 +38,6 @@ Resolve bundled "./references" paths relative to SKILL.md.
 
    - Directory: [Absolute path]
    - Branch: [Branch name]
-   - Validation: [Checks run and their results]
    - Review: [N findings — M applied, K dismissed with a one-line reason each] (omit if step 4 skipped or found nothing)
    - Session: [Resume command from 6a] (omit if none)
    - Existing changes: [Uncommitted changes that remain outside the shipped scope] (omit if none)
