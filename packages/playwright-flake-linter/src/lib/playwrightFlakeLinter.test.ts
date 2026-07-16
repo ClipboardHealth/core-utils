@@ -275,6 +275,21 @@ describe("findPlaywrightFlakePatternViolations", () => {
     expect(actual.map(({ ruleId }) => ruleId)).toEqual(["response-wait"]);
   });
 
+  it("does not count an unused delegated matcher as discrimination", () => {
+    const actual = findPlaywrightFlakePatternViolations({
+      config,
+      filePath: "playwright/e2e/example.spec.ts",
+      source: `
+        await page.waitForResponse((response) => {
+          isMatchingRequest(response.request());
+          return response.ok();
+        });
+      `,
+    });
+
+    expect(actual.map(({ ruleId }) => ruleId)).toEqual(["response-wait"]);
+  });
+
   it("accepts a dynamic URL segment as a discriminating request property", () => {
     const actual = findPlaywrightFlakePatternViolations({
       config,
@@ -324,6 +339,22 @@ describe("findPlaywrightFlakePatternViolations", () => {
     });
 
     expect(actual).toEqual([]);
+  });
+
+  it("does not count a dead classifier reference as retry classification", () => {
+    const actual = findPlaywrightFlakePatternViolations({
+      config,
+      filePath: "playwright/helpers/retry.ts",
+      source: `
+        await retry(async () => {
+          const retryClassification = classifyError();
+          console.info(retryClassification);
+          await createWorker();
+        });
+      `,
+    });
+
+    expect(actual.map(({ ruleId }) => ruleId)).toEqual(["retry-classification"]);
   });
 
   it("flags non-literal random lengths and Math.random identities", () => {

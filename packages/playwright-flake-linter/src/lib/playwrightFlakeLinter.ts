@@ -351,7 +351,7 @@ function hasUndiscriminatingResponsePredicate({
   let checksUrl = false;
   let checksDiscriminatingRequestProperty = false;
 
-  function visitFullPredicate(node: ts.Node): void {
+  function visitResultDependency(node: ts.Node): void {
     if (ts.isCallExpression(node)) {
       checksStatus ||= isDirectResponseCall({
         callExpression: node,
@@ -361,13 +361,6 @@ function hasUndiscriminatingResponsePredicate({
       delegatesSpecificRequestMatching ||=
         ts.isIdentifier(node.expression) &&
         specificRequestMatcherNames.includes(node.expression.text);
-    }
-
-    ts.forEachChild(node, visitFullPredicate);
-  }
-
-  function visitResultDependency(node: ts.Node): void {
-    if (ts.isCallExpression(node)) {
       checksUrl ||= isDirectResponseCall({
         callExpression: node,
         methodNames: ["url"],
@@ -392,8 +385,6 @@ function hasUndiscriminatingResponsePredicate({
 
     ts.forEachChild(node, visitResultDependency);
   }
-
-  visitFullPredicate(predicate);
 
   for (const resultNode of getPredicateResultDependencies(predicate)) {
     visitResultDependency(resultNode);
@@ -697,18 +688,102 @@ function isUndiscriminatingRetryCall({
   const classifierPatterns = (
     config.transientClassifierNamePatterns ?? DEFAULT_TRANSIENT_CLASSIFIER_NAME_PATTERNS
   ).map((pattern) => new RegExp(pattern));
-  let usesTransientClassifier = false;
+
+  return !usesTransientClassifierToGovernRetry({
+    callback,
+    classifierPatterns,
+  });
+}
+
+interface UsesTransientClassifierToGovernRetryParams {
+  callback: ts.FunctionLikeDeclaration;
+  classifierPatterns: readonly RegExp[];
+}
+
+function usesTransientClassifierToGovernRetry({
+  callback,
+  classifierPatterns,
+}: UsesTransientClassifierToGovernRetryParams): boolean {
+  if (callback.body === undefined || !ts.isBlock(callback.body)) {
+    return false;
+  }
+
+  const bailParameter = callback.parameters[0]?.name;
+
+  if (bailParameter === undefined || !ts.isIdentifier(bailParameter)) {
+    return false;
+  }
+
+  const bailParameterName = bailParameter.text;
+  const dependencies: ts.Node[] = [];
+  const initializerByName = new Map<string, ts.Expression>();
+  const callbackBody = callback.body;
 
   function visit(node: ts.Node): void {
-    if (ts.isIdentifier(node) && classifierPatterns.some((pattern) => pattern.test(node.text))) {
-      usesTransientClassifier = true;
+    if (node !== callback && ts.isFunctionLike(node)) {
+      return;
+    }
+
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer !== undefined
+    ) {
+      initializerByName.set(node.name.text, node.initializer);
+    }
+
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === bailParameterName
+    ) {
+      addGoverningConditions({
+        boundary: callbackBody,
+        dependencies,
+        node,
+      });
     }
 
     ts.forEachChild(node, visit);
   }
 
-  visit(callback);
-  return !usesTransientClassifier;
+  visit(callbackBody);
+
+  for (const dependency of dependencies) {
+    addReferencedInitializers({
+      dependencies,
+      initializerByName,
+      node: dependency,
+    });
+  }
+
+  return dependencies.some((dependency) =>
+    containsClassifierReference({
+      classifierPatterns,
+      node: dependency,
+    }),
+  );
+}
+
+interface ContainsClassifierReferenceParams {
+  classifierPatterns: readonly RegExp[];
+  node: ts.Node;
+}
+
+function containsClassifierReference({
+  classifierPatterns,
+  node,
+}: ContainsClassifierReferenceParams): boolean {
+  if (ts.isIdentifier(node) && classifierPatterns.some((pattern) => pattern.test(node.text))) {
+    return true;
+  }
+
+  return node.getChildren().some((childNode) =>
+    containsClassifierReference({
+      classifierPatterns,
+      node: childNode,
+    }),
+  );
 }
 
 interface IsLowEntropyTestDataIdentityCallParams {

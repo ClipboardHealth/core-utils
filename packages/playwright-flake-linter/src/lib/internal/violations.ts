@@ -5,9 +5,22 @@ export function compareViolations(
   second: PlaywrightFlakePatternViolation,
 ): number {
   return (
-    first.filePath.localeCompare(second.filePath) ||
+    compareStrings({ first: first.filePath, second: second.filePath }) ||
     first.line - second.line ||
     first.column - second.column ||
-    first.ruleId.localeCompare(second.ruleId)
+    compareStrings({ first: first.ruleId, second: second.ruleId })
   );
+}
+
+interface CompareStringsParams {
+  first: string;
+  second: string;
+}
+
+function compareStrings({ first, second }: CompareStringsParams): number {
+  if (first === second) {
+    return 0;
+  }
+
+  return first < second ? -1 : 1;
 }
