@@ -22,6 +22,7 @@ Clipboard's core development tools.
   - [humanize-prose](#humanize-prose)
   - [local-package](#local-package)
   - [seed-data](#seed-data)
+  - [update-tempo-alerts](#update-tempo-alerts)
 
 ## Installation
 
@@ -98,3 +99,7 @@ See [`skills/local-package/SKILL.md`](skills/local-package/SKILL.md) for usage d
 ### seed-data
 
 Trigger the `Generate Seed Data` GitHub Actions workflow to create test data (HCPs, facilities, shifts) in development, staging, or prod-shadow environments. Invoke with `/seed-data` or by asking to seed/create test data.
+
+### update-tempo-alerts
+
+Incrementally update the "🚨 Tempo alerts" Notion doc from the `#team-tempo-alerts` Slack channel: reads Datadog + Hex alerts posted since the current week's `Last updated` cursor, increments Warn/Error counts for repeat alerts (no duplicate rows), adds new alerts with why-it-fired / what-we-did notes, and advances the cursor. Meant to run daily. Invoke with `/update-tempo-alerts`.
