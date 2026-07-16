@@ -130,6 +130,7 @@ Live enforce-mode monitoring is implemented in the flaky-critic skill for the 14
 - headline plans are deduplicated when both rules fire, with per-rule attribution retained;
 - more than 25% at window close invokes `cb-work` for the narrowest flaky-debug plan-producing source, with a linked implementation ticket as fallback, never a weaker gate;
 - any systematic substantive false-reject pattern triggers a Rocky-approved rubric amendment proposal regardless of rate.
+- claim and action leases plus a pre-creation ownership recheck prevent overlapping finalizers from creating duplicate work;
 - the final digest and action links are persisted on STAFF-1818 with `<!-- flaky-critic: b8-prior-monitoring-finalized -->` so later runs do not repeat finalization.
 
 ## What this establishes
