@@ -100,4 +100,4 @@ If you are in plan mode, present the plan and stop here.
 
 ## Phase 3: Apply the plan (fix mode only)
 
-Follow [`references/fix.md`](./references/fix.md). It takes the plan from Phase 2, applies the proposed fix, searches for sibling anti-patterns, and verifies. PR creation is out of scope -- if the user later opens one (or invokes a PR-shipping skill), label it `flaky-test-fix`.
+Follow [`references/fix.md`](./references/fix.md). It takes the plan from Phase 2, validates the recorded sibling frontend check and reruns it when stale or missing, applies the proposed fix, searches for same-repo sibling anti-patterns, and verifies. PR creation is out of scope -- if the user later opens one (or invokes a PR-shipping skill), label it `flaky-test-fix`.
