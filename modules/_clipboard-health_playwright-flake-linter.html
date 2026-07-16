@@ -1,0 +1,198 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@clipboard-health/playwright-flake-linter | core-utils</title><meta name="description" content="Documentation for core-utils"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">core-utils</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="" aria-current="page">@clipboard-health/playwright-flake-linter</a></li></ul>
+<h1>Module @clipboard-health/playwright-flake-linter</h1></div>
+<section class="tsd-panel tsd-typography"><h1 id="clipboard-healthplaywright-flake-linter" class="tsd-anchor-link">@clipboard-health/playwright-flake-linter<a href="#clipboard-healthplaywright-flake-linter" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<p>Shared, configurable TypeScript AST checks for Playwright flake anti-patterns.
+The rule implementation lives in this package; consuming repositories provide
+only their paths, helper names, mechanism names, and justified exceptions.</p>
+<h2 id="install" class="tsd-anchor-link">Install<a href="#install" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<pre><code class="bash"><span class="hl-1">npm</span><span class="hl-2"> </span><span class="hl-3">install</span><span class="hl-2"> </span><span class="hl-4">--save-dev</span><span class="hl-2"> </span><span class="hl-3">@clipboard-health/playwright-flake-linter</span>
+</code><button type="button">Copy</button></pre>
+
+<p>TypeScript is a runtime dependency because the checker uses the compiler API;
+<code>glob</code> provides the repository-standard source discovery used by <code>embedex</code>.
+Both are actively maintained, commercially compatible (Apache-2.0 and ISC),
+already standardized in this monorepo, and the CLI is not included in
+application bundles.</p>
+<h2 id="configure" class="tsd-anchor-link">Configure<a href="#configure" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Create <code>playwright-flake-lint.config.mjs</code> at the repository root:</p>
+<pre><code class="javascript"><span class="hl-7">export</span><span class="hl-2"> </span><span class="hl-7">default</span><span class="hl-2"> {</span><br/><span class="hl-2">  </span><span class="hl-8">scanRoots:</span><span class="hl-2"> [</span><span class="hl-3">&quot;playwright&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">hardenedIdentityHelperNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;generateRandomUserEmail&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">identityHelperMinimumLengths:</span><span class="hl-2"> {</span><br/><span class="hl-2">    </span><span class="hl-8">generateRandomAlphaNumericString:</span><span class="hl-2"> </span><span class="hl-11">24</span><span class="hl-2">,</span><br/><span class="hl-2">    </span><span class="hl-8">generateRandomString:</span><span class="hl-2"> </span><span class="hl-11">26</span><span class="hl-2">,</span><br/><span class="hl-2">  },</span><br/><span class="hl-2">  </span><span class="hl-8">retryHelperNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;retry&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">specificRequestMatcherNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;isMatchingRequest&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">transientClassifierNamePatterns:</span><span class="hl-2"> [</span><span class="hl-3">&quot;^isRetryable&quot;</span><span class="hl-2">, </span><span class="hl-3">&quot;retryClassification&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">undiscriminatingRetryHelperNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;retryUntilPassOrTimeout&quot;</span><span class="hl-2">, </span><span class="hl-3">&quot;toPass&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">sharedReadinessMechanisms:</span><span class="hl-2"> [</span><br/><span class="hl-2">    {</span><br/><span class="hl-2">      </span><span class="hl-8">name:</span><span class="hl-2"> </span><span class="hl-3">&quot;Home Health response readiness&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-8">filePathPattern:</span><span class="hl-2"> </span><span class="hl-3">&quot;playwright/e2e/homeHealth/.*</span><span class="hl-5">\\</span><span class="hl-3">.spec</span><span class="hl-5">\\</span><span class="hl-3">.ts$&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-8">directCallNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;waitForResponse&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">      </span><span class="hl-8">sharedHelperNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;waitForHomeHealthResponse&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">    },</span><br/><span class="hl-2">  ],</span><br/><span class="hl-2">};</span>
+</code><button type="button">Copy</button></pre>
+
+<p>The mobile repository can use its own genuine names without changing a rule:</p>
+<pre><code class="javascript"><span class="hl-7">export</span><span class="hl-2"> </span><span class="hl-7">default</span><span class="hl-2"> {</span><br/><span class="hl-2">  </span><span class="hl-8">scanRoots:</span><span class="hl-2"> [</span><span class="hl-3">&quot;playwright&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">identityHelperMinimumLengths:</span><span class="hl-2"> {</span><br/><span class="hl-2">    </span><span class="hl-8">mobileRandomSuffix:</span><span class="hl-2"> </span><span class="hl-11">32</span><span class="hl-2">,</span><br/><span class="hl-2">  },</span><br/><span class="hl-2">  </span><span class="hl-8">retryHelperNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;retryMobileAction&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">specificRequestMatcherNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;matchesMobileRequest&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">transientClassifierNamePatterns:</span><span class="hl-2"> [</span><span class="hl-3">&quot;^isTransientMobile&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">sharedReadinessMechanisms:</span><span class="hl-2"> [</span><br/><span class="hl-2">    {</span><br/><span class="hl-2">      </span><span class="hl-8">name:</span><span class="hl-2"> </span><span class="hl-3">&quot;BottomSheet readiness&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-8">filePathPattern:</span><span class="hl-2"> </span><span class="hl-3">&quot;playwright/e2e/sheets/.*</span><span class="hl-5">\\</span><span class="hl-3">.spec</span><span class="hl-5">\\</span><span class="hl-3">.ts$&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-8">directCallNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;waitForResponse&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">      </span><span class="hl-8">sharedHelperNames:</span><span class="hl-2"> [</span><span class="hl-3">&quot;waitForBottomSheet&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">    },</span><br/><span class="hl-2">  ],</span><br/><span class="hl-2">};</span>
+</code><button type="button">Copy</button></pre>
+
+<p>All pattern fields are JavaScript regular-expression source strings. Optional
+configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>allowlist</code></td>
+<td>Reason-required repository exceptions by rule and file pattern</td>
+</tr>
+<tr>
+<td><code>hardenedIdentityHelperNames</code></td>
+<td>Identity helpers that are safe without a length argument</td>
+</tr>
+<tr>
+<td><code>identityHelperMinimumLengths</code></td>
+<td>Repository random-helper names and their safe minimum lengths</td>
+</tr>
+<tr>
+<td><code>identityNamePattern</code></td>
+<td>Names treated as parallel-worker-sensitive identities</td>
+</tr>
+<tr>
+<td><code>responseWaitCallNames</code></td>
+<td>Repository response-wait utility names</td>
+</tr>
+<tr>
+<td><code>retryHelperNames</code></td>
+<td>Retry utilities whose callbacks must classify transient failures</td>
+</tr>
+<tr>
+<td><code>sharedReadinessMechanisms</code></td>
+<td>File/mechanism registry mapping direct gates to shared helpers</td>
+</tr>
+<tr>
+<td><code>specificRequestMatcherNames</code></td>
+<td>Delegated helpers that fully discriminate a response request</td>
+</tr>
+<tr>
+<td><code>specFilePattern</code></td>
+<td>Files where fixed-sleep checks apply</td>
+</tr>
+<tr>
+<td><code>transientClassifierNamePatterns</code></td>
+<td>Classifier names accepted inside retry callbacks</td>
+</tr>
+<tr>
+<td><code>undiscriminatingRetryHelperNames</code></td>
+<td>Utilities that inherently retry any failure and are always rejected</td>
+</tr>
+</tbody>
+</table>
+<p><code>sharedReadinessMechanisms[].name</code> is the diagnostic label, so repositories can
+use their native terminology such as <code>Dialog</code> or <code>BottomSheet</code>.</p>
+<h2 id="wire-into-ci" class="tsd-anchor-link">Wire into CI<a href="#wire-into-ci" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Add the executable to the repository's existing verification chain:</p>
+<pre><code class="json"><span class="hl-2">{</span><br/><span class="hl-2">  </span><span class="hl-6">&quot;scripts&quot;</span><span class="hl-2">: {</span><br/><span class="hl-2">    </span><span class="hl-6">&quot;architecture:check&quot;</span><span class="hl-2">: </span><span class="hl-3">&quot;existing-checks &amp;&amp; playwright-flake-lint&quot;</span><br/><span class="hl-2">  }</span><br/><span class="hl-2">}</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Use a non-default config location with
+<code>playwright-flake-lint --config path/to/config.mjs</code>.</p>
+<h2 id="rules" class="tsd-anchor-link">Rules<a href="#rules" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<table>
+<thead>
+<tr>
+<th>Rule ID</th>
+<th>Anti-pattern</th>
+<th>Required alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fixed-sleep</code></td>
+<td><code>waitForTimeout</code> or <code>setTimeout</code> delays in specs</td>
+<td>Rubric B2: use a deterministic readiness signal</td>
+</tr>
+<tr>
+<td><code>response-wait</code></td>
+<td>Status/<code>.ok()</code> response predicates without specific request data</td>
+<td>Rubric B2: match method, URL, and a discriminating request predicate</td>
+</tr>
+<tr>
+<td><code>retry-classification</code></td>
+<td>Retry utilities invoked without transient-only classification</td>
+<td>Rubric B1: classify transient failures and fail fast otherwise</td>
+</tr>
+<tr>
+<td><code>test-data-identity</code></td>
+<td>Low-entropy identities or bypasses of hardened random helpers</td>
+<td>Rubric A2: use configured hardened or UUID-backed identities</td>
+</tr>
+<tr>
+<td><code>shared-readiness</code></td>
+<td>Per-spec readiness gates where a shared mechanism helper exists</td>
+<td>Rubric A1: use or extend the configured shared helper</td>
+</tr>
+</tbody>
+</table>
+<h2 id="allowlisting" class="tsd-anchor-link">Allowlisting<a href="#allowlisting" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Prefer fixing a violation. A justified inline exception must immediately
+precede the violating statement and include a reason:</p>
+<pre><code class="typescript"><span class="hl-0">// flake-lint-allow fixed-sleep -- The timer fixture verifies elapsed product time.</span><br/><span class="hl-7">await</span><span class="hl-2"> </span><span class="hl-8">page</span><span class="hl-2">.</span><span class="hl-1">waitForTimeout</span><span class="hl-2">(</span><span class="hl-11">100</span><span class="hl-2">);</span>
+</code><button type="button">Copy</button></pre>
+
+<p>A repository-level exception also requires a reason:</p>
+<pre><code class="javascript"><span class="hl-7">export</span><span class="hl-2"> </span><span class="hl-7">default</span><span class="hl-2"> {</span><br/><span class="hl-2">  </span><span class="hl-8">scanRoots:</span><span class="hl-2"> [</span><span class="hl-3">&quot;playwright&quot;</span><span class="hl-2">],</span><br/><span class="hl-2">  </span><span class="hl-8">allowlist:</span><span class="hl-2"> [</span><br/><span class="hl-2">    {</span><br/><span class="hl-2">      </span><span class="hl-8">ruleId:</span><span class="hl-2"> </span><span class="hl-3">&quot;fixed-sleep&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-8">filePathPattern:</span><span class="hl-2"> </span><span class="hl-3">&quot;playwright/e2e/legacy/timer</span><span class="hl-5">\\</span><span class="hl-3">.spec</span><span class="hl-5">\\</span><span class="hl-3">.ts$&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">      </span><span class="hl-8">reason:</span><span class="hl-2"> </span><span class="hl-3">&quot;The timer fixture verifies elapsed product time.&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">    },</span><br/><span class="hl-2">  ],</span><br/><span class="hl-2">};</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Comments or config entries without a non-empty reason do not suppress a
+violation.</p>
+<h2 id="future-shared-rules" class="tsd-anchor-link">Future shared rules<a href="#future-shared-rules" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The existing per-repository Dialog/query-list checks are a candidate for this
+package. Their component-name difference (<code>Dialog</code> in admin and <code>BottomSheet</code>
+in mobile) belongs in repository config when that rule is migrated; this
+package does not change those checks yet.</p>
+</section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Interfaces"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="interfaces">Interfaces<a href="#interfaces" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary><dl class="tsd-member-summaries"><dt class="tsd-member-summary" id="playwrightflakelinterallowlistentry"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><a href="../interfaces/_clipboard-health_playwright-flake-linter.PlaywrightFlakeLinterAllowlistEntry.html">PlaywrightFlakeLinterAllowlistEntry</a><a href="#playwrightflakelinterallowlistentry" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd><dt class="tsd-member-summary" id="playwrightflakelinterconfig"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><a href="../interfaces/_clipboard-health_playwright-flake-linter.PlaywrightFlakeLinterConfig.html">PlaywrightFlakeLinterConfig</a><a href="#playwrightflakelinterconfig" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd><dt class="tsd-member-summary" id="playwrightflakepatternviolation"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><a href="../interfaces/_clipboard-health_playwright-flake-linter.PlaywrightFlakePatternViolation.html">PlaywrightFlakePatternViolation</a><a href="#playwrightflakepatternviolation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd><dt class="tsd-member-summary" id="sharedreadinessmechanism"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><a href="../interfaces/_clipboard-health_playwright-flake-linter.SharedReadinessMechanism.html">SharedReadinessMechanism</a><a href="#sharedreadinessmechanism" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd></dl></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Type Aliases"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="type-aliases">Type Aliases<a href="#type-aliases" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary><dl class="tsd-member-summaries"><dt class="tsd-member-summary" id="playwrightflakeruleid"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Type Alias"><use href="../assets/icons.svg#icon-2097152"></use></svg><a href="../types/_clipboard-health_playwright-flake-linter.PlaywrightFlakeRuleId.html">PlaywrightFlakeRuleId</a><a href="#playwrightflakeruleid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd></dl></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Variables"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="variables">Variables<a href="#variables" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary><dl class="tsd-member-summaries"><dt class="tsd-member-summary" id="playwright_flake_rule_ids"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Variable"><use href="../assets/icons.svg#icon-32"></use></svg><a href="../variables/_clipboard-health_playwright-flake-linter.PLAYWRIGHT_FLAKE_RULE_IDS.html">PLAYWRIGHT_FLAKE_RULE_IDS</a><a href="#playwright_flake_rule_ids" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd></dl></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Functions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="functions">Functions<a href="#functions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary><dl class="tsd-member-summaries"><dt class="tsd-member-summary" id="defineplaywrightflakelinterconfig"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><a href="../functions/_clipboard-health_playwright-flake-linter.definePlaywrightFlakeLinterConfig.html">definePlaywrightFlakeLinterConfig</a><a href="#defineplaywrightflakelinterconfig" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd><dt class="tsd-member-summary" id="findplaywrightflakepatternviolations"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><a href="../functions/_clipboard-health_playwright-flake-linter.findPlaywrightFlakePatternViolations.html">findPlaywrightFlakePatternViolations</a><a href="#findplaywrightflakepatternviolations" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd><dt class="tsd-member-summary" id="lintplaywrightproject"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><a href="../functions/_clipboard-health_playwright-flake-linter.lintPlaywrightProject.html">lintPlaywrightProject</a><a href="#lintplaywrightproject" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd><dt class="tsd-member-summary" id="loadplaywrightflakelinterconfig"><span class="tsd-member-summary-name"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><a href="../functions/_clipboard-health_playwright-flake-linter.loadPlaywrightFlakeLinterConfig.html">loadPlaywrightFlakeLinterConfig</a><a href="#loadplaywrightflakelinterconfig" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></span></dt><dd class="tsd-member-summary"></dd></dl></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#clipboard-healthplaywright-flake-linter"><span>@clipboard-<wbr/>health/playwright-<wbr/>flake-<wbr/>linter</span></a>
+<ul>
+<li><a href="#install"><span>Install</span></a></li>
+<li><a href="#configure"><span>Configure</span></a></li>
+<li><a href="#wire-into-ci"><span>Wire into <wbr/>CI</span></a></li>
+<li><a href="#rules"><span>Rules</span></a></li>
+<li><a href="#allowlisting"><span>Allowlisting</span></a></li>
+<li><a href="#future-shared-rules"><span>Future shared rules</span></a></li></ul>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Interfaces"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Interfaces</summary>
+<div><a href="#playwrightflakelinterallowlistentry"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><span>Playwright<wbr/>Flake<wbr/>Linter<wbr/>Allowlist<wbr/>Entry</span></a><a href="#playwrightflakelinterconfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><span>Playwright<wbr/>Flake<wbr/>Linter<wbr/>Config</span></a><a href="#playwrightflakepatternviolation"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><span>Playwright<wbr/>Flake<wbr/>Pattern<wbr/>Violation</span></a><a href="#sharedreadinessmechanism"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Interface"><use href="../assets/icons.svg#icon-256"></use></svg><span>Shared<wbr/>Readiness<wbr/>Mechanism</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Type Aliases"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Type Aliases</summary>
+<div><a href="#playwrightflakeruleid"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Type Alias"><use href="../assets/icons.svg#icon-2097152"></use></svg><span>Playwright<wbr/>Flake<wbr/>Rule<wbr/>Id</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Variables"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Variables</summary>
+<div><a href="#playwright_flake_rule_ids"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Variable"><use href="../assets/icons.svg#icon-32"></use></svg><span>PLAYWRIGHT_<wbr/>FLAKE_<wbr/>RULE_<wbr/>IDS</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Functions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Functions</summary>
+<div><a href="#defineplaywrightflakelinterconfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><span>define<wbr/>Playwright<wbr/>Flake<wbr/>Linter<wbr/>Config</span></a><a href="#findplaywrightflakepatternviolations"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><span>find<wbr/>Playwright<wbr/>Flake<wbr/>Pattern<wbr/>Violations</span></a><a href="#lintplaywrightproject"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><span>lint<wbr/>Playwright<wbr/>Project</span></a><a href="#loadplaywrightflakelinterconfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Function"><use href="../assets/icons.svg#icon-64"></use></svg><span>load<wbr/>Playwright<wbr/>Flake<wbr/>Linter<wbr/>Config</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">core-utils</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>
