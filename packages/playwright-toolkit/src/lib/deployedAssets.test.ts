@@ -194,8 +194,11 @@ describe("deployed asset verification", () => {
 
   it.each([
     ["text/javascript", "application/javascript"],
+    ["application/javascript", "text/javascript"],
     ["application/manifest+json", "application/json"],
+    ["application/json", "application/manifest+json"],
     ["image/vnd.microsoft.icon", "image/x-icon"],
+    ["image/x-icon", "image/vnd.microsoft.icon"],
   ])("treats expected %s as equivalent to actual %s", async (expected, actualContentType) => {
     const actual = await verifyDeployedAssets({
       checks: [

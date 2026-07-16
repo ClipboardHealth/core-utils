@@ -138,10 +138,23 @@ describe("runWithRetry", () => {
       message: "intervalsMs must be finite and non-negative",
     },
     {
+      mode: { kind: "poll" as const, timeoutMs: 100, intervalsMs: [-1] },
+      message: "intervalsMs must be finite and non-negative",
+    },
+    {
       mode: {
         kind: "classified" as const,
         maxAttempts: 2,
         delayMs: Number.POSITIVE_INFINITY,
+        isTransient: () => true,
+      },
+      message: "delayMs must be finite and non-negative",
+    },
+    {
+      mode: {
+        kind: "classified" as const,
+        maxAttempts: 2,
+        delayMs: -1,
         isTransient: () => true,
       },
       message: "delayMs must be finite and non-negative",
