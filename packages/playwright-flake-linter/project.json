@@ -1,0 +1,37 @@
+{
+  "name": "playwright-flake-linter",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/playwright-flake-linter/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/playwright-flake-linter"],
+      "options": {
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/playwright-flake-linter/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "packages/playwright-flake-linter/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR node --import tsx scripts/prepareTsgoPackage.mts packages/playwright-flake-linter"
+      }
+    }
+  }
+}

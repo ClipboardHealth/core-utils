@@ -1,0 +1,11 @@
+await retry(async (bail) => {
+  try {
+    await createWorker();
+  } catch (error) {
+    if (!isRetryableReadinessError(error)) {
+      return bail(error);
+    }
+
+    throw error;
+  }
+});

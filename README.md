@@ -36,6 +36,7 @@
 - [nx-plugin](./packages/nx-plugin/README.md): An Nx plugin with generators to manage libraries and applications.
 - [oxlint-config](./packages/oxlint-config/README.md): Shared Oxlint configuration for Clipboard Health repositories.
 - [phone-number](./packages/phone-number/README.md): Phone number utility functions.
+- [playwright-flake-linter](./packages/playwright-flake-linter/README.md): Shared configurable checks for Playwright flake anti-patterns.
 - [playwright-reporter-llm](./packages/playwright-reporter-llm/README.md): Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.
 - [rules-engine](./packages/rules-engine/README.md): A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 - [testing-core](./packages/testing-core/README.md): TypeScript-friendly testing utilities.
