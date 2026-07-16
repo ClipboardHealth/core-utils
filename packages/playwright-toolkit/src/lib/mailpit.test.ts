@@ -1,5 +1,7 @@
 import {
   createMailpitClient,
+  extractEmailOtpCodeFromMailpitMessage,
+  extractMagicLinkFromMailpitMessage,
   fetchEmailOtpCodeFromMailpit,
   fetchMagicLinkFromMailpit,
   type MailpitClient,
@@ -125,6 +127,62 @@ describe("Mailpit polling", () => {
     await expect(client.searchMessages({ query: "to:user@example.test" })).resolves.toEqual([
       searchSummary,
     ]);
+  });
+
+  it("does not retry malformed Mailpit response schemas", async () => {
+    let currentTimeMs = 0;
+    const mockFetch = vi.fn<typeof fetch>(
+      async () =>
+        new Response(JSON.stringify({ messages: "malformed" }), {
+          status: 200,
+        }),
+    );
+    const client = createMailpitClient({
+      baseUrl: "https://mailpit.example.test/api/v1",
+      password: "secret",
+      fetchImplementation: mockFetch,
+    });
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client,
+      email: "user@example.test",
+      timeoutMs: 1000,
+      pollIntervalMs: 100,
+      nowImplementation: () => currentTimeMs,
+      sleepImplementation: async ({ durationMs }) => {
+        currentTimeMs += durationMs;
+      },
+    });
+
+    await expect(actualPromise).rejects.toMatchObject({
+      attempts: 1,
+      reason: "non-transient",
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("searches HTML for a magic link when the text body has no link", () => {
+    const actual = extractMagicLinkFromMailpitMessage({
+      message: createMessage({
+        id: "magic-link",
+        text: "Open the HTML version to continue.",
+        html: '<a href="https://app.test/v2/email-login-link?payload=html">Sign in</a>',
+      }),
+    });
+
+    expect(actual).toBe("https://app.test/v2/email-login-link?payload=html");
+  });
+
+  it("searches HTML for an OTP when the text body has no code", () => {
+    const actual = extractEmailOtpCodeFromMailpitMessage({
+      message: createMessage({
+        id: "otp",
+        text: "Open the HTML version to see your code.",
+        html: "<div>8102 <span>7033</span></div>",
+      }),
+    });
+
+    expect(actual).toBe("81027033");
   });
 
   it("polls again when no matching message is ready", async () => {

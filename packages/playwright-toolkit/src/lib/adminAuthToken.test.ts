@@ -71,6 +71,29 @@ describe("getOrCreateAdminAuthToken", () => {
     });
   });
 
+  it("keeps cache entries distinct when environment names sanitize identically", async () => {
+    const commonInput = {
+      adminEmail: "e2e@clipboardhealth.com",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+    };
+
+    const slashEnvironment = await getOrCreateAdminAuthToken({
+      ...commonInput,
+      apiEnvironmentName: "pr/123",
+      createToken: async () => "Bearer slash-environment",
+    });
+    const underscoreEnvironment = await getOrCreateAdminAuthToken({
+      ...commonInput,
+      apiEnvironmentName: "pr_123",
+      createToken: async () => "Bearer underscore-environment",
+    });
+
+    expect(slashEnvironment.authToken).toBe("Bearer slash-environment");
+    expect(underscoreEnvironment.authToken).toBe("Bearer underscore-environment");
+    await expect(readdir(cacheDirectory)).resolves.toHaveLength(2);
+  });
+
   it("rejects malformed generated tokens without caching them", async () => {
     const input = {
       adminEmail: "e2e@clipboardhealth.com",

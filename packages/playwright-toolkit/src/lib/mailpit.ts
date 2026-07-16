@@ -79,16 +79,19 @@ interface MailpitRequestErrorParams {
   message: string;
   status?: number | undefined;
   cause?: unknown;
+  isTransient?: boolean | undefined;
 }
 
 export class MailpitRequestError extends Error {
   public override readonly cause: unknown;
+  public readonly isTransient: boolean;
   public readonly status: number | undefined;
 
   public constructor(params: MailpitRequestErrorParams) {
     super(params.message, { cause: params.cause });
     this.name = "MailpitRequestError";
     this.cause = params.cause;
+    this.isTransient = params.isTransient ?? false;
     this.status = params.status;
   }
 }
@@ -233,22 +236,34 @@ export async function fetchEmailOtpCodeFromMailpit(
 export function extractMagicLinkFromMailpitMessage(params: {
   message: MailpitMessage;
 }): string | undefined {
-  const content = params.message.Text || params.message.HTML;
-  const matches = /https?:\/\/[^\s]+\/v2\/email-login-link\?[^\s<"')]*/i.exec(content);
+  for (const content of [params.message.Text, params.message.HTML]) {
+    const match = /https?:\/\/[^\s]+\/v2\/email-login-link\?[^\s<"')]*/i.exec(content);
 
-  return matches?.[0];
+    if (match !== null) {
+      return match[0];
+    }
+  }
+
+  return undefined;
 }
 
 export function extractEmailOtpCodeFromMailpitMessage(params: {
   message: MailpitMessage;
 }): string | undefined {
-  const source =
-    params.message.Text.trim().length > 0
-      ? params.message.Text
-      : params.message.HTML.replaceAll(/<(style|script)[^>]*>[\s\S]*?<\/\1>/gi, "").replaceAll(
-          /<[^>]+>/g,
-          " ",
-        );
+  const textCode = extractEmailOtpCodeFromContent(params.message.Text);
+  if (textCode !== undefined) {
+    return textCode;
+  }
+
+  const htmlText = params.message.HTML.replaceAll(
+    /<(style|script)[^>]*>[\s\S]*?<\/\1>/gi,
+    "",
+  ).replaceAll(/<[^>]+>/g, " ");
+
+  return extractEmailOtpCodeFromContent(htmlText);
+}
+
+function extractEmailOtpCodeFromContent(source: string): string | undefined {
   const eightDigits = /(?<!\d)\d{8}(?!\d)/.exec(source);
 
   if (eightDigits !== null) {
@@ -266,7 +281,7 @@ export function isTransientMailpitError(params: { error: unknown }): boolean {
   }
 
   const { status } = params.error;
-  return status === undefined || status === 404 || isRetryableHttpStatus({ status });
+  return params.error.isTransient || status === 404 || isRetryableHttpStatus({ status });
 }
 
 async function requestMailpitJson(params: {
@@ -292,6 +307,7 @@ async function requestMailpitJson(params: {
       throw new MailpitRequestError({
         message: `Mailpit request failed: ${getErrorMessage(error)}`,
         cause: error,
+        isTransient: true,
       });
     }
 

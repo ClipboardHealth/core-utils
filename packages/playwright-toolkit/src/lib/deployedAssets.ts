@@ -44,9 +44,11 @@ export interface DeployedAssetAttempt {
   url: string;
 }
 
+export type DeployedAssetReportCheck = Omit<DeployedAssetCheck, "headers" | "validateResponse">;
+
 export interface DeployedAssetResult {
   attempts: DeployedAssetAttempt[];
-  check: DeployedAssetCheck;
+  check: DeployedAssetReportCheck;
   contentType?: string | undefined;
   errorMessage?: string | undefined;
   isSuccess: boolean;
@@ -229,6 +231,7 @@ async function verifyDeployedAsset(params: {
 }): Promise<DeployedAssetResult> {
   const attempts: DeployedAssetAttempt[] = [];
   const maxAttempts = params.options.retry?.maxAttempts ?? DEFAULT_RETRY_ATTEMPTS;
+  const reportCheck = toDeployedAssetReportCheck(params.check);
 
   try {
     const result = await runWithRetry<DeployedAssetAttempt>({
@@ -265,7 +268,7 @@ async function verifyDeployedAsset(params: {
 
     return {
       attempts,
-      check: params.check,
+      check: reportCheck,
       ...(finalAttempt.contentType === undefined ? {} : { contentType: finalAttempt.contentType }),
       isSuccess: true,
       ...(finalAttempt.status === undefined ? {} : { status: finalAttempt.status }),
@@ -276,7 +279,7 @@ async function verifyDeployedAsset(params: {
 
     return {
       attempts,
-      check: params.check,
+      check: reportCheck,
       ...(finalAttempt?.contentType === undefined ? {} : { contentType: finalAttempt.contentType }),
       errorMessage: failure?.message ?? getErrorMessage(error),
       isSuccess: false,
@@ -361,7 +364,18 @@ async function checkAssetOnce(params: {
     }
 
     if (params.check.validateResponse !== undefined) {
-      const validation = await params.check.validateResponse({ response });
+      let validation: DeployedAssetValidationResult;
+
+      try {
+        validation = await params.check.validateResponse({ response });
+      } catch (error: unknown) {
+        const message = getErrorMessage(error);
+        throw new AssetAttemptFailure({
+          attempt: { ...attempt, errorMessage: message },
+          isTransient: isTransientFetchError({ error }),
+          message,
+        });
+      }
 
       if (!validation.isValid) {
         const message = validation.message ?? "custom deployed asset validation failed";
@@ -456,19 +470,31 @@ function isExpectedContentType(params: {
 function getEquivalentContentTypes(contentType: string): string[] {
   const normalized = normalizeContentType(contentType);
 
-  if (normalized === "application/javascript") {
+  if (normalized === "application/javascript" || normalized === "text/javascript") {
     return ["application/javascript", "text/javascript"];
   }
 
-  if (normalized === "application/json") {
+  if (normalized === "application/json" || normalized === "application/manifest+json") {
     return ["application/json", "application/manifest+json"];
   }
 
-  if (normalized === "image/x-icon") {
+  if (normalized === "image/x-icon" || normalized === "image/vnd.microsoft.icon") {
     return ["image/x-icon", "image/vnd.microsoft.icon"];
   }
 
   return [normalized];
+}
+
+function toDeployedAssetReportCheck(check: DeployedAssetCheck): DeployedAssetReportCheck {
+  return {
+    path: check.path,
+    url: check.url,
+    ...(check.method === undefined ? {} : { method: check.method }),
+    ...(check.cacheMode === undefined ? {} : { cacheMode: check.cacheMode }),
+    ...(check.expectedContentTypes === undefined
+      ? {}
+      : { expectedContentTypes: check.expectedContentTypes }),
+  };
 }
 
 function normalizeContentType(contentType: string): string {

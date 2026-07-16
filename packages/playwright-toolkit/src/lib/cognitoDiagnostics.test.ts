@@ -93,11 +93,41 @@ describe("Cognito diagnostics", () => {
       expect.objectContaining({ contentType: "image/png" }),
     );
   });
+
+  it("redacts the final redirect error, URL path, and retained cause", async () => {
+    const sensitiveEmail = "sensitive-user@example.test";
+    const mockPage = createMockPage({
+      url: `https://app.example.test/login/${sensitiveEmail}?token=secret-token`,
+      waitForUrl: async () => {
+        throw new Error(`redirect failed for ${sensitiveEmail} with code 123456`);
+      },
+    });
+    let actualError: unknown;
+
+    try {
+      await fillOtpAndWaitForCognitoRedirect({
+        expectedUrl: `https://app.example.test/dashboard/${sensitiveEmail}`,
+        otp: "123456",
+        page: mockPage,
+        expectedUrlTimeoutMs: 10,
+      });
+    } catch (error: unknown) {
+      actualError = error;
+    }
+
+    expect(actualError).toBeInstanceOf(Error);
+    expect(String(actualError)).not.toContain(sensitiveEmail);
+    expect(String(actualError)).not.toContain("123456");
+    expect(actualError).toMatchObject({ cause: expect.any(Error) });
+    expect(String((actualError as Error).cause)).not.toContain(sensitiveEmail);
+    expect(String((actualError as Error).cause)).not.toContain("123456");
+  });
 });
 
 function createMockPage(params: {
   fill?: (value: string) => Promise<void> | void;
   listeners?: Map<string, (value: Request | Response) => Promise<void> | void>;
+  url?: string;
   waitForUrl: () => Promise<void>;
 }): Page {
   const listeners = params.listeners ?? new Map();
@@ -125,7 +155,7 @@ function createMockPage(params: {
     screenshot: vi.fn<() => Promise<Buffer>>(
       async () => await Promise.resolve(Buffer.from("screenshot")),
     ),
-    url: vi.fn<() => string>(() => "https://app.example.test/dashboard"),
+    url: vi.fn<() => string>(() => params.url ?? "https://app.example.test/dashboard"),
     waitForURL: vi.fn<() => Promise<void>>(params.waitForUrl),
   } as unknown as Page;
 }

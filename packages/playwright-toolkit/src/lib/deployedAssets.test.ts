@@ -147,6 +147,75 @@ describe("deployed asset verification", () => {
     expect(actual.summary.failureCount).toBe(0);
     expect(requestedUrls[0]).toContain("cbhAssetVerifier=");
   });
+
+  it("omits request headers and validator functions from reports", async () => {
+    const actual = await verifyDeployedAssets({
+      checks: [
+        {
+          headers: { authorization: "Bearer secret-token" },
+          path: "private.json",
+          url: "https://example.test/private.json",
+          validateResponse: () => ({ isValid: true }),
+        },
+      ],
+      fetchImplementation: vi.fn<typeof fetch>(async () => new Response("{}", { status: 200 })),
+    });
+
+    expect(actual.results[0]?.check).not.toHaveProperty("headers");
+    expect(actual.results[0]?.check).not.toHaveProperty("validateResponse");
+  });
+
+  it("records and retries transient validator exceptions", async () => {
+    const mockValidator = vi
+      .fn<
+        NonNullable<
+          Parameters<typeof verifyDeployedAssets>[0]["checks"][number]["validateResponse"]
+        >
+      >()
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
+      .mockResolvedValueOnce({ isValid: true });
+
+    const actual = await verifyDeployedAssets({
+      checks: [
+        {
+          path: "build-info.json",
+          url: "https://example.test/build-info.json",
+          validateResponse: mockValidator,
+        },
+      ],
+      fetchImplementation: vi.fn<typeof fetch>(async () => new Response("{}", { status: 200 })),
+      retry: { maxAttempts: 2, delayMs: 0 },
+    });
+
+    expect(actual.summary.failureCount).toBe(0);
+    expect(actual.results[0]?.attempts).toHaveLength(2);
+    expect(actual.results[0]?.attempts[0]?.errorMessage).toBe("fetch failed");
+  });
+
+  it.each([
+    ["text/javascript", "application/javascript"],
+    ["application/manifest+json", "application/json"],
+    ["image/vnd.microsoft.icon", "image/x-icon"],
+  ])("treats expected %s as equivalent to actual %s", async (expected, actualContentType) => {
+    const actual = await verifyDeployedAssets({
+      checks: [
+        {
+          expectedContentTypes: [expected],
+          path: "asset",
+          url: "https://example.test/asset",
+        },
+      ],
+      fetchImplementation: vi.fn<typeof fetch>(
+        async () =>
+          new Response(undefined, {
+            status: 200,
+            headers: { "content-type": actualContentType },
+          }),
+      ),
+    });
+
+    expect(actual.summary.failureCount).toBe(0);
+  });
 });
 
 function formatFetchInput(input: string | URL | Request): string {

@@ -127,4 +127,109 @@ describe("runWithRetry", () => {
       vi.useRealTimers();
     }
   });
+
+  it.each([
+    {
+      mode: { kind: "poll" as const, timeoutMs: 100, intervalsMs: [] },
+      message: "intervalsMs must not be empty",
+    },
+    {
+      mode: { kind: "poll" as const, timeoutMs: 100, intervalsMs: [Number.NaN] },
+      message: "intervalsMs must be finite and non-negative",
+    },
+    {
+      mode: {
+        kind: "classified" as const,
+        maxAttempts: 2,
+        delayMs: Number.POSITIVE_INFINITY,
+        isTransient: () => true,
+      },
+      message: "delayMs must be finite and non-negative",
+    },
+  ])("rejects invalid retry schedules: $message", async ({ mode, message }) => {
+    await expect(
+      runWithRetry({
+        operationName: "invalid retry",
+        operation: async () => await Promise.reject(new Error("not ready")),
+        mode,
+      }),
+    ).rejects.toThrow(message);
+  });
+
+  it("rejects invalid delays returned by classified retry functions", async () => {
+    await expect(
+      runWithRetry({
+        operationName: "invalid retry delay",
+        operation: async () => await Promise.reject(new Error("not ready")),
+        mode: {
+          kind: "classified",
+          maxAttempts: 2,
+          delayMs: () => Number.NaN,
+          isTransient: () => true,
+        },
+      }),
+    ).rejects.toThrow("Retry delay must be finite and non-negative");
+  });
+
+  it("keeps a pending failure hook inside the poll deadline", async () => {
+    vi.useFakeTimers();
+
+    try {
+      const pendingPromise = new Promise<void>(() => {
+        // Intentionally pending to exercise the hard poll deadline.
+      });
+      const actualPromise = runWithRetry({
+        operationName: "wait for pending failure hook",
+        operation: async () => await Promise.reject(new Error("not ready")),
+        mode: {
+          kind: "poll",
+          timeoutMs: 100,
+        },
+        onFailedAttempt: async () => {
+          await pendingPromise;
+        },
+      });
+
+      await Promise.all([
+        expect(actualPromise).rejects.toMatchObject({
+          reason: "timeout",
+          attempts: 1,
+        }),
+        vi.advanceTimersByTimeAsync(100),
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps a pending sleep inside the poll deadline", async () => {
+    vi.useFakeTimers();
+
+    try {
+      const pendingPromise = new Promise<void>(() => {
+        // Intentionally pending to exercise the hard poll deadline.
+      });
+      const actualPromise = runWithRetry({
+        operationName: "wait for pending sleep",
+        operation: async () => await Promise.reject(new Error("not ready")),
+        mode: {
+          kind: "poll",
+          timeoutMs: 100,
+        },
+        sleepImplementation: async () => {
+          await pendingPromise;
+        },
+      });
+
+      await Promise.all([
+        expect(actualPromise).rejects.toMatchObject({
+          reason: "timeout",
+          attempts: 1,
+        }),
+        vi.advanceTimersByTimeAsync(100),
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

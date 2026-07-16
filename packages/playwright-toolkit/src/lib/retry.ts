@@ -141,8 +141,32 @@ export async function runWithRetry<T>(params: RunWithRetryParams<T>): Promise<Re
         error,
         signal: abortController.signal,
       };
-      // eslint-disable-next-line no-await-in-loop -- Attempt reporting is intentionally sequential.
-      await params.onFailedAttempt?.(failureContext);
+
+      try {
+        // eslint-disable-next-line no-await-in-loop -- Attempt reporting is intentionally sequential.
+        await runWithinRetryBudget({
+          abortController,
+          elapsedMs: failureContext.elapsedMs,
+          mode: params.mode,
+          promise: Promise.resolve(params.onFailedAttempt?.(failureContext)),
+        });
+      } catch (hookError: unknown) {
+        if (hookError instanceof PollAttemptTimeoutError) {
+          throw createPollTimeoutError({
+            attempts: attemptNumber,
+            cause: error,
+            elapsedMs: getElapsedMs({ nowImplementation, startedAtMs }),
+            operationName: params.operationName,
+          });
+        }
+
+        throw hookError;
+      }
+
+      failureContext.elapsedMs = getElapsedMs({
+        nowImplementation,
+        startedAtMs,
+      });
 
       const terminalReason = getTerminalReason({
         context: failureContext,
@@ -162,8 +186,27 @@ export async function runWithRetry<T>(params: RunWithRetryParams<T>): Promise<Re
         context: failureContext,
         mode: params.mode,
       });
-      // eslint-disable-next-line no-await-in-loop -- Retry attempts are intentionally sequential.
-      await sleepImplementation({ durationMs });
+
+      try {
+        // eslint-disable-next-line no-await-in-loop -- Retry attempts are intentionally sequential.
+        await runWithinRetryBudget({
+          abortController,
+          elapsedMs: failureContext.elapsedMs,
+          mode: params.mode,
+          promise: sleepImplementation({ durationMs }),
+        });
+      } catch (sleepError: unknown) {
+        if (sleepError instanceof PollAttemptTimeoutError) {
+          throw createPollTimeoutError({
+            attempts: attemptNumber,
+            cause: error,
+            elapsedMs: getElapsedMs({ nowImplementation, startedAtMs }),
+            operationName: params.operationName,
+          });
+        }
+
+        throw sleepError;
+      }
     }
   }
 }
@@ -174,8 +217,8 @@ function validateRetryMode(mode: RetryMode): void {
       throw new Error("Classified retry maxAttempts must be a positive integer");
     }
 
-    if (typeof mode.delayMs === "number" && mode.delayMs < 0) {
-      throw new Error("Classified retry delayMs must be non-negative");
+    if (typeof mode.delayMs === "number" && (!Number.isFinite(mode.delayMs) || mode.delayMs < 0)) {
+      throw new Error("Classified retry delayMs must be finite and non-negative");
     }
 
     return;
@@ -185,8 +228,14 @@ function validateRetryMode(mode: RetryMode): void {
     throw new Error("Poll retry timeoutMs must be positive");
   }
 
-  if (mode.intervalsMs?.some((intervalMs) => intervalMs < 0) === true) {
-    throw new Error("Poll retry intervalsMs must be non-negative");
+  if (mode.intervalsMs?.length === 0) {
+    throw new Error("Poll retry intervalsMs must not be empty");
+  }
+
+  if (
+    mode.intervalsMs?.some((intervalMs) => !Number.isFinite(intervalMs) || intervalMs < 0) === true
+  ) {
+    throw new Error("Poll retry intervalsMs must be finite and non-negative");
   }
 }
 
@@ -223,16 +272,30 @@ async function runAttempt<T>(params: {
 }): Promise<T> {
   const operationPromise = params.operation(params.context);
 
+  return await runWithinRetryBudget({
+    abortController: params.abortController,
+    elapsedMs: params.context.elapsedMs,
+    mode: params.mode,
+    promise: operationPromise,
+  });
+}
+
+async function runWithinRetryBudget<T>(params: {
+  abortController: AbortController;
+  elapsedMs: number;
+  mode: RetryMode;
+  promise: Promise<T>;
+}): Promise<T> {
   if (params.mode.kind === "classified") {
-    return await operationPromise;
+    return await params.promise;
   }
 
-  const remainingTimeoutMs = Math.max(params.mode.timeoutMs - params.context.elapsedMs, 0);
+  const remainingTimeoutMs = Math.max(params.mode.timeoutMs - params.elapsedMs, 0);
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
   try {
     return await Promise.race([
-      operationPromise,
+      params.promise,
       new Promise<T>((_resolve, reject) => {
         timeout = setTimeout(() => {
           params.abortController.abort();
@@ -248,18 +311,27 @@ async function runAttempt<T>(params: {
 }
 
 function getRetryDelayMs(params: { context: RetryFailureContext; mode: RetryMode }): number {
+  let durationMs: number;
+
   if (params.mode.kind === "classified") {
-    return typeof params.mode.delayMs === "function"
-      ? params.mode.delayMs(params.context)
-      : (params.mode.delayMs ?? 0);
+    durationMs =
+      typeof params.mode.delayMs === "function"
+        ? params.mode.delayMs(params.context)
+        : (params.mode.delayMs ?? 0);
+  } else {
+    const intervalsMs = params.mode.intervalsMs ?? [100, 250, 500, 1000];
+    const intervalIndex = Math.min(params.context.attemptNumber - 1, intervalsMs.length - 1);
+    const configuredDelayMs = intervalsMs[intervalIndex] ?? 0;
+    const remainingMs = Math.max(params.mode.timeoutMs - params.context.elapsedMs, 0);
+
+    durationMs = Math.min(configuredDelayMs, remainingMs);
   }
 
-  const intervalsMs = params.mode.intervalsMs ?? [100, 250, 500, 1000];
-  const intervalIndex = Math.min(params.context.attemptNumber - 1, intervalsMs.length - 1);
-  const configuredDelayMs = intervalsMs[intervalIndex] ?? 0;
-  const remainingMs = Math.max(params.mode.timeoutMs - params.context.elapsedMs, 0);
+  if (!Number.isFinite(durationMs) || durationMs < 0) {
+    throw new Error("Retry delay must be finite and non-negative");
+  }
 
-  return Math.min(configuredDelayMs, remainingMs);
+  return durationMs;
 }
 
 function getElapsedMs(params: { nowImplementation: () => number; startedAtMs: number }): number {
@@ -279,4 +351,16 @@ function formatRetryErrorMessage(params: RetryErrorParams): string {
     `(${params.elapsedMs}ms, reason: ${params.reason}). ` +
     `Last error: ${getErrorMessage(params.cause)}`
   );
+}
+
+function createPollTimeoutError(params: {
+  attempts: number;
+  cause: unknown;
+  elapsedMs: number;
+  operationName: string;
+}): RetryError {
+  return new RetryError({
+    ...params,
+    reason: "timeout",
+  });
 }

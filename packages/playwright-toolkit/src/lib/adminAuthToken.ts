@@ -294,8 +294,10 @@ function getCachePaths(params: GetOrCreateAdminAuthTokenParams): AdminAuthTokenC
   const cacheDirectoryPath =
     params.cacheDirectory ?? path.join(tmpdir(), DEFAULT_CACHE_DIRECTORY_NAME);
   const environmentSegment = params.apiEnvironmentName.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
-  const emailHash = createDeterministicHash(params.adminEmail).slice(0, 16);
-  const cacheFileName = `admin-auth-token-${environmentSegment}-${emailHash}.json`;
+  const cacheKeyHash = createDeterministicHash(
+    `${params.apiEnvironmentName}\0${params.adminEmail}`,
+  ).slice(0, 16);
+  const cacheFileName = `admin-auth-token-${environmentSegment}-${cacheKeyHash}.json`;
 
   return {
     cacheDirectoryPath,

@@ -91,11 +91,15 @@ export async function fillOtpAndWaitForCognitoRedirect(
       page: params.page,
       testInfo: params.testInfo,
     });
+    const finalErrorMessage = sanitizeCognitoDiagnosticText({
+      text: getErrorMessage(error),
+    });
 
+    // oxlint-disable-next-line preserve-caught-error -- Raw Playwright errors may contain OTPs or account PII.
     throw new Error(
       `Post-OTP redirect did not reach ${formatExpectedUrl(params.expectedUrl)} ` +
-        `within ${timeoutMs}ms. ${diagnostics} Last error: ${getErrorMessage(error)}`,
-      { cause: error },
+        `within ${timeoutMs}ms. ${diagnostics} Last error: ${finalErrorMessage}`,
+      { cause: new Error(finalErrorMessage) },
     );
   }
 }
@@ -415,7 +419,7 @@ function sanitizeUrl(params: { rawUrl: string }): string {
     const url = new URL(params.rawUrl);
     return [
       url.origin,
-      url.pathname,
+      url.pathname === "/" ? "/" : "/[redacted-path]",
       url.search.length === 0 ? "" : "?[redacted-query]",
       url.hash.length === 0 ? "" : "#[redacted-hash]",
     ].join("");
@@ -432,7 +436,7 @@ function formatExpectedUrl(expectedUrl: ExpectedUrl): string {
   }
 
   if (expectedUrl instanceof RegExp) {
-    return expectedUrl.toString();
+    return sanitizeCognitoDiagnosticText({ text: expectedUrl.toString() });
   }
 
   return "[URL predicate]";
