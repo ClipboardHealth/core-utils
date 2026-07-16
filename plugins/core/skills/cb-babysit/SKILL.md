@@ -19,9 +19,9 @@ Resolve bundled "./scripts" paths relative to SKILL.md.
 
 The skill uses two sentinels with visible footer lines.
 
-**Addressed sentinel**: `<sub>🤖 <code>cb-babysit:addressed v1 core@3.18.1</code></sub>`. Appended on its own line at the end of every reply the skill posts so re-runs know which threads and review-body comments are already handled. Dedupe also recognizes the legacy `babysit-pr:addressed v1` prefix from before this skill was renamed.
+**Addressed sentinel**: `<sub>🤖 <code>cb-babysit:addressed v1 core@3.19.0</code></sub>`. Appended on its own line at the end of every reply the skill posts so re-runs know which threads and review-body comments are already handled. Dedupe also recognizes the legacy `babysit-pr:addressed v1` prefix from before this skill was renamed.
 
-**Follow-up sentinel**: `<sub>🤖 <code>cb-babysit:followup v1 core@3.18.1</code></sub>`. Attached to replies that defer an out-of-scope comment as a tracked follow-up. The sentinel is additive: the post-reply scripts still append the `addressed` sentinel at the end.
+**Follow-up sentinel**: `<sub>🤖 <code>cb-babysit:followup v1 core@3.19.0</code></sub>`. Attached to replies that defer an out-of-scope comment as a tracked follow-up. The sentinel is additive: the post-reply scripts still append the `addressed` sentinel at the end.
 
 **Sentinel recency rules.** The script emits a per-thread `activityState` with three values. Step 6a owns the handling rules for each state.
 
@@ -247,7 +247,7 @@ Body templates (the script appends the `addressed` sentinel if missing):
 - **Agree**: `Addressed in <commit-url>. <one-line what-changed>.`
 - **Disagree**: `Leaving current behavior. <reasoning>.`
 - **Already fixed**: `Already handled by <commit-url-or-file:line>. <brief pointer>.`
-- **Defer**: `Out of scope for this PR; this looks like follow-up work rather than something introduced or required by this change. <one-line rationale or pointer if useful>.\n\n<sub>🤖 <code>cb-babysit:followup v1 core@3.18.1</code></sub>`
+- **Defer**: `Out of scope for this PR; this looks like follow-up work rather than something introduced or required by this change. <one-line rationale or pointer if useful>.\n\n<sub>🤖 <code>cb-babysit:followup v1 core@3.19.0</code></sub>`
 
 For Defer replies, include the follow-up sentinel on its own line as shown. The script will append the `addressed` sentinel after it on its own line, so the final body ends with the follow-up sentinel followed by a blank line followed by the `addressed` sentinel. `grep cb-babysit:followup` finds the deferral and `grep cb-babysit:addressed` still marks the thread handled for dedupe.
 
@@ -263,7 +263,7 @@ The PR-level summary should:
 
 - Group by source. Use `## Review-body findings` for step-7 work and `## Conversation-tab comments` for step-6b work. Omit a section if its list is empty.
 - Inside each section, group verdicts under **Agree / Disagree / Already fixed / Deferred (out of scope)** subheadings. Omit a subheading if its list is empty.
-- Under **Deferred (out of scope)**, list each deferred item as a bullet, followed on its own line by `<sub>🤖 <code>cb-babysit:followup v1 core@3.18.1</code></sub>` so grep catches them individually.
+- Under **Deferred (out of scope)**, list each deferred item as a bullet, followed on its own line by `<sub>🤖 <code>cb-babysit:followup v1 core@3.19.0</code></sub>` so grep catches them individually.
 - Include the commit URL for fixes.
 - End with a fenced fingerprint block listing every current fingerprint (addressed and deferred) one per line. Include both `reviewBodyComments[].fingerprint` (whole-body, one per automated review) and `activeIssueComments[].fingerprint` (per Conversation-tab comment). Future runs dedupe by matching these against `priorBabysitSentinels`.
 
