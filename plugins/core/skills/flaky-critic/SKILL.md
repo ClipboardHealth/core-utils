@@ -72,7 +72,12 @@ End with: tickets reviewed, verdicts by type with rule-ID counts, agreement even
 
 Monitor the first 14 days after both rules are live: **starting 2026-07-16 and ending before 2026-07-30**. During the window, query Groundcrew `flaky-implementation` tickets updated on or after 2026-07-16 across all states and read their full comments; list results and the current queue are not a cumulative data source. Recompute the window from `mode=enforce` critic markers so the result survives separate sessions.
 
-On or after 2026-07-30, first read STAFF-1818's comments. If `<!-- flaky-critic: b8-prior-monitoring-finalized -->` is present, omit this monitoring block. Otherwise run the final aggregation and complete any threshold or amendment action below, then post the final digest with that marker to STAFF-1818. Write the marker only after all required PR/ticket links are present, so separate recurring sessions cannot duplicate finalization work.
+On or after 2026-07-30, coordinate finalization on STAFF-1818 with deterministic run key `2026-07-16--2026-07-30`:
+
+1. If `<!-- flaky-critic: b8-prior-monitoring-finalized run=2026-07-16--2026-07-30 -->` is present, omit this monitoring block.
+2. Otherwise post `<!-- flaky-critic: b8-prior-monitoring-claim run=2026-07-16--2026-07-30 claimed-at=<ISO timestamp> -->`, then re-read all comments. The earliest non-stale claim wins; later claimants stop. A claim is stale after 60 minutes when no action or finalized marker exists, allowing a later run to take over.
+3. Before creating side effects, search STAFF-1818 comments, Linear tickets, and GitHub PRs for `<!-- flaky-critic: b8-prior-monitoring-action run=2026-07-16--2026-07-30 -->`. Reuse the linked action when present. Any new threshold-fix PR or fallback ticket must carry that marker, an exact `STAFF-1818 monitoring` title suffix, and the deterministic run key so retries converge on one action.
+4. Run the final aggregation and complete any threshold or amendment action below. Post the final digest and all action links to STAFF-1818 with the finalized marker. Write it only after required actions exist.
 
 - **Denominator — gated plans:** one verdict marker per unique ticket content-state in the window, including approve, reject, and needs-human. Exclude shadow/backtest verdicts, PR-checkpoint comments, and already-current skips. The one-verdict-per-content-state rule makes each marker one denominator event.
 - **Numerator — statement-missing bounces:** gated plans whose marker has `disposition=amend-and-resubmit` and names `B8` or `B5-prior-attempts` in `statement-missing`. Count a plan once in the headline numerator even when both rules fired; also report per-rule attribution, where one plan may count under both.

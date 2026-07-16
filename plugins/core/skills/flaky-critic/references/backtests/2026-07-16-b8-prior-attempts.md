@@ -8,6 +8,7 @@
 - **Coverage:** browser E2E, mobile E2E, service tests, product races, auth/setup, retry classification, third-party bootstrap, clock boundaries, locators, and CI/deployment guards.
 - **Label caveat:** only one reject had a strong contemporaneous requested-change judgment. Five rejects were stale, superseded, or closed without a final public quality rationale. All 14 approves were integrated; 13 also carried the frontend repositories' release marker.
 - **Blinding:** an outcome-aware assembler fixed and sanitized the cohort. A separate judge read only the current flaky-critic skill, rubric, and 20 opaque case files. Required outcome-leak and identifier scans returned zero matches. The judge returned exactly one well-formed verdict per case.
+- **Audit bundle:** the [cohort notes](./2026-07-16-b8-prior-attempts/cohort.md), [answer key and source manifest](./2026-07-16-b8-prior-attempts/answer-key.json), [input hashes](./2026-07-16-b8-prior-attempts/input-hashes.txt), [structured blind verdicts](./2026-07-16-b8-prior-attempts/verdicts.jsonl), and sanitized `inputs/` are frozen beside this report. The manifest records the exact plan-comment permalink, capture time, pre-outcome check, and SHA-256 for every case.
 - **Correlations:** three cases shared a Cognito identity family, two shared worker-creation collision mechanics, and four touched Home Health through distinct immediate mechanisms. Results are therefore not 20 fully independent mechanisms.
 
 ## Raw confusion matrix
