@@ -64,6 +64,9 @@
     },
     {
       "path": "./packages/clearance"
+    },
+    {
+      "path": "./packages/playwright-toolkit"
     }
   ]
 }
