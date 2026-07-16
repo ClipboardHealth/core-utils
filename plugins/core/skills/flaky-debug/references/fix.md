@@ -90,6 +90,44 @@ Skip this step when the fix is **specific to one test's logic** -- for example a
 
 Run the plan's **Validation plan** commands — including the previously-flaky test, repeated enough times to give reasonable confidence the flake is gone. Lint and type-check touched files as the floor; do not stop there.
 
+## Required Knowledge-Base Close-Out After Merge
+
+After the target fix merges, close out the root-cause knowledge base in `references/root-cause-kb/`. This is required even when the plan matched an existing entry. A merged fix is new evidence about the mechanism and must not remain only in a target-repository PR.
+
+1. In a core-utils checkout, reopen the plan's **KB match** and the [KB symptom index](./root-cause-kb/README.md). Read the matched entry, or identify the proposed entry path when the plan established a novel mechanism.
+2. Print a dry-run statement before editing:
+
+   ```text
+   KB close-out dry run
+   Entry: <existing path or proposed new path>
+   Symptom signature: <signature being added or confirmed>
+   Mechanism: <causal mechanism>
+   Update type: <new evidence | new repository/surface | failed fix | new entry>
+   Sections: <entry sections and index rows to change>
+   Evidence: <merged PR, ticket, recurrence, trace, or fault-injection links>
+   ```
+
+3. Update the existing entry when the causal mechanism is the same:
+   - Add or refine symptom signatures only when the new evidence makes them more discriminating.
+   - Add a newly implicated repository or surface.
+   - Add the merged fix and its validation under **What fixed it** and **Evidence**.
+   - Add a failed or partial fix under **What failed and why**, including the recurrence evidence that falsified it.
+   - Refresh **Current status** and `Last reviewed`.
+4. Add a new entry only when the causal terminus proves a genuinely novel mechanism. Use the seven required sections from the KB index, index it by symptom signature and mechanism cue, and link evidence. A new test name, repository, or failure site is not by itself a new mechanism.
+5. Run the core-utils sync and verification commands, open a focused core-utils PR for the KB change, and link that PR from the flaky implementation ticket or target fix PR. The close-out is not complete until the KB PR link is recorded.
+
+Use the same statement discipline as the diagnosis plan. The final close-out must state:
+
+```text
+Knowledge-base close-out: <entry link>
+Update: <new evidence | new repository/surface | failed fix | new entry>
+Mechanism: <mechanism>
+Evidence: <merged fix and recurrence/validation links>
+KB PR: <link>
+```
+
+If the target fix has not merged, write `Knowledge-base close-out: pending — <target PR> is not merged` and leave the close-out open. Do not use `no KB update needed`. The checked-in [workplace-review sheet dry run](./root-cause-kb/dry-run-workplace-review-sheet.md) demonstrates the lookup, cited plan, and post-merge entry update without external writes.
+
 ## Output Format
 
 When opening a PR for a flaky test fix, include `--label flaky-test-fix` in the `gh pr create` command so other agents can find it during Phase 1b deduplication.
@@ -101,6 +139,7 @@ When documenting the fix in a PR or issue, use this structure. Carry **Confidenc
 - **Confidence:** score (1-5) with brief justification
 - **Failure surface:** where the failure first surfaced and why the fix belongs there
 - **Current main status:** whether the failure path still existed when the fix was made
+- **KB match:** the cited entry and matched symptom signature, or `None` plus the index lookup performed
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)
@@ -109,3 +148,4 @@ When documenting the fix in a PR or issue, use this structure. Carry **Confidenc
 - **Sibling-repo check:** sibling repository and current `main` commit searched; exact helper names or grep-able code patterns; commands, scope, and matches; linked mirror implementation ticket URL when created, or the explicit pending post-merge deliverable before then; or `N/A` with the reason the mechanism was not plausibly shared
 - **Validation:** commands and suites run
 - **Residual risk:** what could still be flaky
+- **Knowledge-base close-out:** the entry update and KB PR link after merge, or the explicit pending statement before merge

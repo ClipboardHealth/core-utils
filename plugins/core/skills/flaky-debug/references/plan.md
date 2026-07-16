@@ -94,6 +94,7 @@ Produce the plan with these fields:
 - **Confidence:** score (1-5) with brief justification
 - **Failure surface:** CI/job setup, test setup/auth/data, app bootstrap, user action no-op, backend request, post-success render, assertion/locator, or mixed
 - **Current main status:** whether the failing commit's code path still exists on current `main`, has already been fixed, or has changed enough that the plan must be adjusted
+- **KB match:** cite the matching entry, matched symptom signature, mechanism hypothesis, and known failed fixes to avoid. If none matched, write `None` and list the symptom signatures/fingerprint checked against the index.
 - **Prior attempts:** list each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. Use a table with `Prior ticket/PR`, `What it blamed`, `What it changed`, and `Recurrence evidence` columns. If the dossier search found no prior implementation tickets, write `None found` and include the fingerprint-family and exact-test-title searches run.
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
