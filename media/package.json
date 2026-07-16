@@ -25,7 +25,6 @@
     "plugin:version:check": "node scripts/embedPluginVersion.mts --check",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
-    "spell:check": "cspell --no-summary --no-progress --no-must-find-files",
     "sync-ai-rules": "node scripts/embedPluginVersion.mts && nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"
@@ -51,7 +50,6 @@
     "@types/node": "24.13.3",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
-    "cspell": "10.0.1",
     "dependency-cruiser": "18.0.0",
     "eslint": "8.57.1",
     "eslint-plugin-promise": "7.3.0",
