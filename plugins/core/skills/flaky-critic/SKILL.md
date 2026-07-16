@@ -47,9 +47,15 @@ VERDICT: reject — B2, B6
 - B2: "increase the navigation timeout to 30s" — timeout inflation without a root-cause statement of why the operation is legitimately slow.
 - B6: plan states confidence 3/5 but has no observability-to-reach-5/5 section.
 Fix class claimed: A1 (readiness gate). Missing required evidence: polled signal is not shown to be the one the failing UI path uses.
-<!-- flaky-critic: verdict=reject mode=enforce -->
+<!-- flaky-critic: verdict=reject mode=enforce disposition=substantive-reject statement-missing=B6 substantive=B2 -->
 ```
 
+- Every verdict marker must record `disposition`, `statement-missing`, and `substantive`. Use comma-separated rule tokens and `none` when a bucket is empty. Distinguish B5's checks as `B5-dedup` and `B5-prior-attempts`; use the normal rule ID for every other rule. Use these dispositions:
+  - approve: `verdict=approve disposition=release statement-missing=none substantive=none`;
+  - statement-only reject: `verdict=reject disposition=amend-and-resubmit`;
+  - any demonstrated violation: `verdict=reject disposition=substantive-reject`;
+  - low-confidence or out-of-taxonomy escalation: `verdict=needs-human disposition=needs-human`;
+  - second reject on revised content: `verdict=needs-human disposition=second-reject`.
 - **enforce**: approve → move the ticket to Todo and assign it to the Linear API user. Reject → comment and leave in Triage; the investigating flow gets one bounce. A second reject on the same ticket → comment `needs-human` and stop touching it.
 - **shadow**: comment only, prefixed `[shadow]`, marker `mode=shadow`.
 - **needs-human**: comment with what the rubric cannot answer; never move the ticket.
@@ -60,7 +66,27 @@ When you encounter a ticket where a human's action contradicts your prior verdic
 
 ## Phase 5: Digest
 
-End with: tickets reviewed, verdicts by type with rule-ID counts, agreement events observed (human actions vs prior verdicts), amendment proposals drafted, and tickets skipped as already-current. When run as a recurring task, this digest is the run's final message.
+End with: tickets reviewed, verdicts by type with rule-ID counts, agreement events observed (human actions vs prior verdicts), amendment proposals drafted, tickets skipped as already-current, and the monitoring block below. When run as a recurring task, this digest is the run's final message.
+
+### B8 and Prior-attempts monitoring
+
+Monitor the first 14 days after both rules are live: **starting 2026-07-16 and ending before 2026-07-30**. During the window and on the first recurring run after it closes, query Groundcrew `flaky-implementation` tickets updated on or after 2026-07-16 across all states and read their full comments; list results and the current queue are not a cumulative data source. Recompute the window from `mode=enforce` critic markers so the result survives separate sessions. Mark the first post-close digest as final; later recurring runs omit this monitoring block instead of rescanning an immutable window.
+
+- **Denominator — gated plans:** one verdict marker per unique ticket content-state in the window, including approve, reject, and needs-human. Exclude shadow/backtest verdicts, PR-checkpoint comments, and already-current skips. The one-verdict-per-content-state rule makes each marker one denominator event.
+- **Numerator — statement-missing bounces:** gated plans whose marker has `disposition=amend-and-resubmit` and names `B8` or `B5-prior-attempts` in `statement-missing`. Count a plan once in the headline numerator even when both rules fired; also report per-rule attribution, where one plan may count under both.
+- **Substantive rejects:** report `B8` and `B5-prior-attempts` substantive counts separately. When a human later releases one, compare the cases by mechanism. Any systematic substantive false-reject pattern, regardless of rate, requires a concrete rubric amendment proposal for Rocky's approval using `<!-- flaky-critic: amendment-proposal -->`; never edit or weaken the rubric silently.
+- **Threshold:** report the cumulative statement-missing numerator, denominator, percentage, and per-rule attribution as provisional during the window. At the window close, **more than 25%** triggers a fix-forward change in the narrowest flaky-debug plan-producing source: normally `references/plan.md` for a missing output field, or `SKILL.md` when the investigation flow failed to collect the required evidence. `plan-e2e.md` and `plan-fast-path.md` already converge on the shared output template; do not duplicate requirements across them. Name the observed omission and the exact template change. Do not change B8 or the Prior-attempts gate to reduce the rate.
+
+Use this digest shape:
+
+```text
+New-rule monitoring (2026-07-16..<2026-07-30):
+- gated plans: N
+- statement-missing amend-and-resubmit: N (P%) — B8: N, B5-prior-attempts: N
+- substantive rejects — B8: N, B5-prior-attempts: N
+- threshold: provisional | pass | breached — <fix-forward action or "none">
+- substantive false-reject patterns: <amendment proposal links or "none observed">
+```
 
 ## PR checkpoint (when the task description asks for it)
 

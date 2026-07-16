@@ -10,6 +10,8 @@ Findings from automated reviewers (Mendral, CodeRabbit, etc.) are **advisory inp
 
 **Statement-missing vs substance-missing (backtest amendment, 2026-06-11):** B5/B6/B7/B8 and C6 each require an explicit statement in the plan (dedup-check results, Prior attempts section when applicable, confidence score plus observability section, current-main status, causal-chain section, sibling-repo check when applicable). When the _statement_ is absent but the violation is not demonstrated — no actual duplicate found, no actual prior implementation tickets for the fingerprint family, no actual low-confidence code fix, no actual staleness, no demonstrably symptom-terminated diagnosis, no confirmed sibling-repo match — the verdict is reject with disposition **amend-and-resubmit**: one bounce asking for exactly the missing sections, never escalation. A demonstrated violation (a real duplicate, a mechanism already tried by a prior merged fix, a real ≤2/5 code fix, a diagnosis that demonstrably stops at a symptom, a confirmed sibling-repo match with no linked mirror implementation ticket deliverable) is a substantive reject. The 2026-06-11 backtest showed 6 of 7 false rejections were statement-missing on plans predating these conventions; live plans carry the sections by template, but the distinction stays load-bearing for the agreement metric.
 
+The [2026-07-16 B8 and Prior-attempts blind backtest](./backtests/2026-07-16-b8-prior-attempts.md) records the current-rule results, error decomposition, amendment proposals, and ratified live-monitoring handoff.
+
 ## 2. Banned patterns
 
 ### B1 — Naked retry (retry without failure classification)
