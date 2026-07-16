@@ -12,9 +12,9 @@ Before editing, verify the plan is still current:
 - The proposed fix targets the diagnosed failure surface, not only the final assertion.
 - Any retry/wait change is safe and idempotent; it must not repeat one-time credentials, duplicate writes, destructive actions, or rate-limited setup calls.
 
-## Check the Sibling Frontend Repository
+## Validate the Sibling Frontend Check
 
-During Phase 2, after the proposed fix is designed and before the plan is finalized, use this recipe to complete the plan's **Sibling-repo check** when the current repository is `cbh-admin-frontend` or `cbh-mobile-app`. During the fix preflight, confirm that the recorded sibling `main` commit is still current; rerun the search only when it changed or the plan omitted the field.
+During Phase 2, after the proposed fix is designed and before the plan is finalized, use this recipe to complete the plan's **Sibling-repo check** when the current repository is `cbh-admin-frontend` or `cbh-mobile-app`. During the fix preflight, consume that result by confirming that the recorded sibling `main` commit is still current; rerun the search only when it changed or the plan omitted the field.
 
 For a mechanism plausibly shared between `cbh-admin-frontend` and `cbh-mobile-app`, state the sibling repository, current `main` commit searched, exact helper names or grep-able code patterns, commands and scope, and matches found (or `None found`). A mechanism is plausibly shared when the proposed fix touches the test harness, authentication/session/bootstrap, cache, API client, or a copied capability, helper, or convention. If the same mechanism is present, state that the fix deliverable will include a linked mirror implementation ticket following the Groundcrew ticket conventions, linked to the source implementation ticket and referencing the landed source fix as the pattern to adopt. If the mechanism is not plausibly shared, state `N/A` and why.
 
@@ -94,7 +94,7 @@ Run the plan's **Validation plan** commands — including the previously-flaky t
 
 When opening a PR for a flaky test fix, include `--label flaky-test-fix` in the `gh pr create` command so other agents can find it during Phase 1b deduplication.
 
-When documenting the fix in a PR or issue, use this structure. Carry **Confidence**, **Symptom**, **Root cause**, **Evidence**, **Sibling-repo check**, and **Residual risk** straight over from the plan. Three plan fields rename: **Proposed fix** → **Fix**, **Sibling candidates** → **Siblings fixed**, **Validation plan** → **Validation**. Add the linked mirror ticket URL to **Sibling-repo check** when the same mechanism was present. Drop **Open questions** (resolved by fix time):
+When documenting the fix in a PR or issue, use this structure. Carry **Confidence**, **Symptom**, **Root cause**, **Evidence**, **Sibling-repo check**, and **Residual risk** straight over from the plan. Three plan fields rename: **Proposed fix** → **Fix**, **Sibling candidates** → **Siblings fixed**, **Validation plan** → **Validation**. Add the linked mirror ticket URL to **Sibling-repo check** once the source fix lands and the ticket exists. Before then, record `Pending: create linked mirror implementation ticket after <source-PR> lands`; replace that status with the ticket URL when created. Drop **Open questions** (resolved by fix time):
 
 - **Test ID:** if provided in prompt
 - **Agent session ID:** your running session ID to resume if needed
@@ -106,6 +106,6 @@ When documenting the fix in a PR or issue, use this structure. Carry **Confidenc
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)
 - **Fix:** test-only, product-only, or both
 - **Siblings fixed:** list of other files where the same anti-pattern was or should be corrected (or "N/A -- fix was test-specific")
-- **Sibling-repo check:** sibling repository and current `main` commit searched; exact helper names or grep-able code patterns; commands, scope, and matches; linked mirror implementation ticket when the same mechanism was present; or `N/A` with the reason the mechanism was not plausibly shared
+- **Sibling-repo check:** sibling repository and current `main` commit searched; exact helper names or grep-able code patterns; commands, scope, and matches; linked mirror implementation ticket URL when created, or the explicit pending post-merge deliverable before then; or `N/A` with the reason the mechanism was not plausibly shared
 - **Validation:** commands and suites run
 - **Residual risk:** what could still be flaky
