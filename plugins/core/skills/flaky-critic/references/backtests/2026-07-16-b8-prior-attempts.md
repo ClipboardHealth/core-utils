@@ -3,10 +3,10 @@
 ## Cohort
 
 - **Window:** 2026-06-01 through 2026-07-16.
-- **Size and balance:** 20 flaky-fix plan proxies: 14 human approves and 6 human rejects.
-- **Source:** contemporaneous GitHub change bodies were used as plan proxies because the Linear plan snapshots were not available through the execution surface. These bodies preserve the diagnosis, evidence, confidence, proposed fix, and validation claims, but can be more complete than the original pre-implementation plan.
+- **Size and balance:** 20 historical flaky-fix plans: 14 human approves and 6 human rejects.
+- **Source:** each input is the Linear implementation-ticket description captured in the timestamped GitHub `linear-code` linkback comment when the ticket was linked to its change, before later human review or closing context. All 20 snapshots were present and non-truncated.
 - **Coverage:** browser E2E, mobile E2E, service tests, product races, auth/setup, retry classification, third-party bootstrap, clock boundaries, locators, and CI/deployment guards.
-- **Label caveat:** only one reject had a strong contemporaneous requested-change judgment. Five rejects were stale, superseded, or closed without a final public quality rationale. All 14 approves were integrated; 12 also carried the frontend repositories' release marker.
+- **Label caveat:** only one reject had a strong contemporaneous requested-change judgment. Five rejects were stale, superseded, or closed without a final public quality rationale. All 14 approves were integrated; 13 also carried the frontend repositories' release marker.
 - **Blinding:** an outcome-aware assembler fixed and sanitized the cohort. A separate judge read only the current flaky-critic skill, rubric, and 20 opaque case files. Required outcome-leak and identifier scans returned zero matches. The judge returned exactly one well-formed verdict per case.
 - **Correlations:** three cases shared a Cognito identity family, two shared worker-creation collision mechanics, and four touched Home Health through distinct immediate mechanisms. Results are therefore not 20 fully independent mechanisms.
 
@@ -32,11 +32,13 @@ One plan may be attributed to both rules, so per-rule counts are not additive.
 
 | New rule                | Any bounce | Statement-missing | Substantive |
 | ----------------------- | ---------: | ----------------: | ----------: |
-| B8 causal chain         |  20 (100%) |          12 (60%) |     8 (40%) |
-| B5 Prior-attempts       |    2 (10%) |           2 (10%) |      0 (0%) |
-| Either new rule, unique |  20 (100%) |          12 (60%) |     8 (40%) |
+| B8 causal chain         |   19 (95%) |           8 (40%) |    11 (55%) |
+| B5 Prior-attempts       |    7 (35%) |           2 (10%) |     5 (25%) |
+| Either new rule, unique |  20 (100%) |           7 (35%) |    13 (65%) |
 
-The two Prior-attempts bounces were both human-approved plans that referred to earlier related implementation work without the required table. No case supplied evidence that the current plan re-proposed an already-failed mechanism, so the backtest found no substantive Prior-attempts false-reject pattern and no Prior-attempts rubric amendment is proposed.
+The unique row uses the final disposition: seven plans had only statement-missing new-rule findings, while 13 had at least one substantive B8 or Prior-attempts finding. Per-rule columns overlap.
+
+The two statement-missing Prior-attempts bounces omitted the required table after referring to prior implementation work. Five plans received substantive Prior-attempts rejects; four were human-approved. That systematic disagreement is addressed by Proposal 3 below.
 
 ## Decomposed and adjusted view
 
@@ -44,14 +46,16 @@ The two Prior-attempts bounces were both human-approved plans that referred to e
 
 All cases predated one or both 2026-07-15/16 plan conventions. The dominant artifacts were:
 
-1. **Missing explicit sections:** 12/20 lacked the exact `Causal chain` heading, and 2/20 established prior implementation work without a `Prior attempts` table. This is the same statement-vs-substance distinction recorded in the 2026-06-11 backtest.
-2. **Pre-ceiling 5/5 claims:** three plans claimed 5/5 from artifact correlation without inducing the blamed cause. Two were human-approved and one was human-rejected. The current B8 ceiling correctly treats this as substantive, but the historical authors did not have that convention.
-3. **Legacy rubric fields:** even after ignoring statement-missing B8 and Prior-attempts findings, the full rubric still rejected every case because the proxies also predated B5 dedup, B6 observability, B7 current-main, or C6 sibling-repo statements.
+1. **Missing explicit sections:** 8/20 lacked the exact `Causal chain` heading without a demonstrated broken chain, and 2/20 established prior implementation work without a `Prior attempts` table. This is the same statement-vs-substance distinction recorded in the 2026-06-11 backtest.
+2. **Pre-ceiling 5/5 claims:** four plans claimed 5/5 from artifact correlation without inducing the blamed cause. Three were human-approved and one was human-rejected. The current B8 ceiling correctly treats this as substantive, but the historical authors did not have that convention.
+3. **Legacy rubric fields:** even after ignoring statement-missing B8 and Prior-attempts findings, the full rubric still rejected every case because the plans also predated B5 dedup, B6 observability, B7 current-main, or C6 sibling-repo statements.
+4. **Pre-chronic-routing approvals:** five plans carried substantive Prior-attempts findings under the current rule, including families with multiple prior stabilizations. Four were human-approved before the chronic route and mechanism-comparison convention existed.
 
 Two adjusted views make the assumptions explicit:
 
-- **New rules only, ignoring their statement-missing era artifacts:** 12/20 agreement (**60%**). Eight substantive B8 rejects remain; three match human rejects and five reject human-approved plans.
-- **Also treating pre-rule 5/5 overclaims as an era artifact:** 13/20 agreement (**65%**). Five symptom-terminated or unresolved harness/backend diagnoses remain substantive B8 rejects.
+- **Full rubric, ignoring only new-rule statement omissions:** 5/20 exact agreement (**25%**) plus one safe needs-human non-match. Legacy statement requirements and substantive findings still reject the other cases.
+- **New-rule attribution only, treating statement-only bounces as passes:** 7/20 agreement (**35%**). Thirteen substantive new-rule rejects remain; three match human rejects and ten reject human-approved plans.
+- **Also treating pre-rule 5/5 overclaims as an era artifact:** 10/20 agreement (**50%**). The remaining disagreements concentrate in unresolved harness/backend diagnoses and mechanism-insensitive Prior-attempts counting.
 
 These adjusted scores are diagnostic, not replacements for the 30% raw score.
 
@@ -67,13 +71,14 @@ They remain in the fixed cohort and raw matrix, but should not be used to claim 
 
 ### Substantive disagreement
 
-Five human-approved plans received substantive B8 rejects:
+Ten human-approved plans received at least one substantive new-rule reject:
 
-- two exact threshold/timing diagnoses claimed 5/5 without induced reproduction;
-- two local harness fixes named a concrete remount/actionability mechanism but left the deeper trigger partly inferred;
-- one classified authentication retry stopped at the 401 failure class rather than its owning cause.
+- three deterministic threshold/collision/timing diagnoses claimed 5/5 without induced reproduction;
+- four local harness fixes named a remount, actionability, or classified-auth mechanism but left the deeper trigger partly inferred;
+- four plans were rejected under Prior-attempts because the family had multiple earlier stabilizations or the plan extended an existing mechanism;
+- some plans appear in more than one pattern.
 
-That is 5/20 of the corpus and 5/14 human-approved cases, so it exceeds the task's approximate 10% proposal threshold. The evidence is historical and pre-convention, so the proposals below are drafted for approval and were **not** applied.
+That is 10/20 of the corpus and 10/14 human-approved cases, so it exceeds the task's approximate 10% proposal threshold. The evidence is historical and pre-convention, so the proposals below are drafted for approval and were **not** applied.
 
 ## Rubric amendment proposals
 
@@ -97,28 +102,38 @@ This would distinguish a proven harness control-flow defect from a generic sympt
 
 <!-- flaky-critic: amendment-proposal -->
 
+### Proposal 3 — mechanism-aware Prior-attempts counting
+
+Proposed replacement for the substantive-reject and chronic-counting sentences in B5's Prior-attempts amendment:
+
+> **Mechanism-aware prior attempts:** count a merged fix as failed for the ≥2 chronic threshold only when recurrence evidence falsifies the same terminal-cause hypothesis or shows that the same mechanism did not hold. A recurrence in the same fingerprint family after a materially different fix remains required context but does not automatically increment the failed-fix count. Reusing or extending an earlier helper is not a substantive reject when the plan identifies a new, previously unhandled failure signature, shows that the earlier signature remains fixed, and states the exact mechanism delta. Repeating the same causal claim or broadening the same mechanism without new falsifying evidence remains a substantive reject.
+
+This would prevent family-level recurrence alone from making distinct mechanisms look like repeated failed diagnoses, while preserving rejection of unchanged attempts.
+
+<!-- flaky-critic: amendment-proposal -->
+
 ## Borderline cases for human review
 
-- **Case 05 — approved worker-collision retry:** supplied text established a prior implementation, but it was ambiguous whether the retry's existing shared budget and diagnostics satisfied C1.
-- **Case 07 — weak reject CI/deploy guard:** the plan described the unverified-deployment mechanism but lacked a run-level artifact; the human outcome was supersession rather than a quality judgment.
-- **Case 11 — approved URL-state product fix:** evidence showed the user-visible panel opened while URL state was lost, but the judge found the A5 user-facing failure statement too implicit.
+- **Case 09 — approved clock-in boundary fix:** the boundary evidence was specific, but the plan lacked the newly required explicit causal-chain section.
+- **Case 13 — weak reject broad retry investigation:** Prior-attempts was statement-missing, while the supplied snapshot did not contain a classifiable implementation plan; without the new rule the result was needs-human.
 - **Case 15 — approved Cognito replacement:** the plan clearly superseded an earlier alias-lookup approach, making Prior-attempts applicable, but its replacement nature also makes the missing table an era artifact rather than evidence of repeated diagnosis.
 
 ## Monitoring decision
 
-The historical statement-missing rate for the new rules was 12/20 (**60%**), above the ratified 25% threshold. It does **not** trigger a historical rubric change: the cases predate the conventions, and flaky-debug's current `references/plan.md` already requires both `Causal chain` and `Prior attempts`.
+The historical statement-only amend-and-resubmit rate for the new rules was 7/20 (**35%**), above the ratified 25% threshold. It does **not** trigger a historical rubric change: the cases predate the conventions, and flaky-debug's current `references/plan.md` already requires both `Causal chain` and `Prior attempts`.
 
 Live enforce-mode monitoring is implemented in the flaky-critic skill for the 14-day window starting 2026-07-16 and ending before 2026-07-30:
 
 - denominator: unique gated ticket content-states;
 - numerator: amend-and-resubmit markers naming statement-missing B8 or B5 Prior-attempts;
 - headline plans are deduplicated when both rules fire, with per-rule attribution retained;
-- more than 25% at window close triggers a fix-forward change to flaky-debug's plan-producing instructions/templates, never a weaker gate;
+- more than 25% at window close invokes `cb-work` for the narrowest flaky-debug plan-producing source, with a linked implementation ticket as fallback, never a weaker gate;
 - any systematic substantive false-reject pattern triggers a Rocky-approved rubric amendment proposal regardless of rate.
+- the final digest and action links are persisted on STAFF-1818 with `<!-- flaky-critic: b8-prior-monitoring-finalized -->` so later runs do not repeat finalization.
 
 ## What this establishes
 
-The run confirms that both new rules are mechanically checkable and that the statement-vs-substance split is essential. It also shows that the recent historical corpus is a poor raw agreement benchmark for the current full rubric: the plan proxies predate several required fields, and most negative outcomes are weak labels.
+The run confirms that both new rules are mechanically checkable and that the statement-vs-substance split is essential. It also shows that the recent historical corpus is a poor raw agreement benchmark for the current full rubric: the plans predate several required fields, and most negative outcomes are weak labels.
 
 It does not establish that B8 or Prior-attempts should be weakened, nor does it validate the live bounce rate. The ratified two-week enforce-mode monitoring window is the relevant evidence for planner-template propagation and live substantive false rejects.
 
@@ -128,21 +143,21 @@ It does not establish that B8 or Prior-attempts should be weakened, nor does it 
 | ---- | -------------------------------------------------------------------------------- | ------- | ------ | ------ | ----------- | -------------- |
 | 01   | [admin #7373](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7373)   | reject  | strong | reject | statement   | none           |
 | 02   | [backend #26392](https://github.com/ClipboardHealth/clipboard-health/pull/26392) | approve | strong | reject | substantive | none           |
-| 03   | [admin #7559](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7559)   | approve | strong | reject | statement   | none           |
-| 04   | [mobile #12521](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12521)    | reject  | weak   | reject | substantive | none           |
-| 05   | [admin #7282](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7282)   | approve | strong | reject | statement   | statement      |
+| 03   | [admin #7559](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7559)   | approve | strong | reject | statement   | substantive    |
+| 04   | [mobile #12521](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12521)    | reject  | weak   | reject | substantive | substantive    |
+| 05   | [admin #7282](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7282)   | approve | strong | reject | substantive | none           |
 | 06   | [mobile #12635](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12635)    | approve | strong | reject | statement   | none           |
 | 07   | [admin #6824](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/6824)   | reject  | weak   | reject | statement   | none           |
-| 08   | [admin #7390](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7390)   | approve | strong | reject | statement   | none           |
-| 09   | [backend #26528](https://github.com/ClipboardHealth/clipboard-health/pull/26528) | approve | strong | reject | statement   | none           |
-| 10   | [admin #7380](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7380)   | reject  | weak   | reject | statement   | none           |
-| 11   | [admin #7336](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7336)   | approve | strong | reject | statement   | none           |
+| 08   | [admin #7390](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7390)   | approve | strong | reject | substantive | none           |
+| 09   | [mobile #12496](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12496)    | approve | strong | reject | statement   | none           |
+| 10   | [admin #7380](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7380)   | reject  | weak   | reject | substantive | none           |
+| 11   | [admin #7336](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7336)   | approve | strong | reject | substantive | substantive    |
 | 12   | [mobile #12633](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12633)    | approve | strong | reject | statement   | none           |
-| 13   | [admin #6974](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/6974)   | reject  | weak   | reject | substantive | none           |
+| 13   | [admin #6974](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/6974)   | reject  | weak   | reject | none        | statement      |
 | 14   | [admin #7374](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7374)   | approve | strong | reject | substantive | none           |
 | 15   | [admin #7596](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7596)   | approve | strong | reject | statement   | statement      |
 | 16   | [mobile #12270](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12270)    | reject  | weak   | reject | substantive | none           |
 | 17   | [admin #7250](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7250)   | approve | strong | reject | substantive | none           |
-| 18   | [admin #7370](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7370)   | approve | strong | reject | substantive | none           |
+| 18   | [admin #7370](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7370)   | approve | strong | reject | substantive | substantive    |
 | 19   | [admin #7320](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7320)   | approve | strong | reject | substantive | none           |
-| 20   | [admin #7386](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7386)   | approve | strong | reject | statement   | none           |
+| 20   | [admin #7386](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7386)   | approve | strong | reject | statement   | substantive    |
