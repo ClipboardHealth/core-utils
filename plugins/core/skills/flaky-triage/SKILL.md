@@ -68,11 +68,13 @@ Do not merge clusters merely because failures share a run. Same-run failures can
 4. **Multi-ticket cluster** — pick the canonical (richest evidence: most failures, clearest artifacts). Comment the cluster manifest on it: member IDs, shared mechanism, evidence tier from Phase 3, and the marker `<!-- flaky-triage: cluster=<short-slug> -->`. Close the other members as Duplicate of the canonical (D2 format). Release the canonical.
 5. **Singleton or uncertain** — release as-is with a brief `<!-- flaky-triage: singleton -->` comment.
 
+Before any action above releases a canonical ticket, search Linear for the fingerprint family with the `flaky-implementation` label across all states and without a date-window restriction, then count unique prior implementation ticket IDs. At **≥3 prior implementation tickets**, do not release the canonical for normal dispatch and leave it in `Triage` unassigned. Create the Linear `chronic` label first if it does not exist. Apply the `chronic` label and hold the ticket for the deep-dive track (a dedicated dossier-first investigation stage; until it exists, chronic tickets stay held with the label for human routing). Add an idempotent ticket comment with the marker `<!-- flaky-triage: chronic -->` and dossier pointers listing every prior implementation ticket ID.
+
 **Release** = set state to `Todo` and assign to the Linear API user (the viewer). Before release, ensure the ticket satisfies the Groundcrew eligibility contract from `../create-groundcrew-ticket/SKILL.md`: repository text in the description, exactly one `agent-*` label, leaf issue, and no non-terminal blockers unless intentionally blocked. Assignment + Todo is what makes groundcrew dispatch it; it also serves as the lease — released tickets never re-enter the queue.
 
 ## Phase 5: Digest
 
-End with a compact report: queue size, cluster count with members and evidence tiers, released / duplicated / canceled counts, in-flight matches found, and risks (possible false merges, missing evidence). When run as a recurring task, follow any re-arm instructions in the task description after the digest.
+End with a compact report: queue size, cluster count with members and evidence tiers, released / duplicated / canceled / chronic-held counts, in-flight matches found, chronic detections with each canonical ticket and its prior implementation ticket IDs, and risks (possible false merges, missing evidence). When run as a recurring task, follow any re-arm instructions in the task description after the digest.
 
 ## Dry-run and backtest
 

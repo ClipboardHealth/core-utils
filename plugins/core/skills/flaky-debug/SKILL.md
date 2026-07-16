@@ -58,15 +58,28 @@ If the type is ambiguous, check the test file extension and imports to confirm.
 
 If the type is E2E, also classify where the failure surfaced in the lifecycle -- see [Classify the E2E Failure Surface](./references/plan-e2e.md#classify-the-e2e-failure-surface) in `plan-e2e.md`. The failure surface dictates how broadly to investigate before reading or editing the test.
 
-## Phase 1b: Check for Existing Fixes
+## Phase 1b: Build the Dossier and Check for Existing Fixes
 
-Before investigating, check whether someone (or another agent) has already fixed this flake.
+Before diagnosing, build the fingerprint family's dossier, then check whether someone (or another agent) has already fixed this flake. Do not limit the dossier to the failing file or recent activity.
 
-1. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
+1. **Search Linear for the fingerprint family and exact test title.** Derive the fingerprint family from the ticket title or Flake details and the full test title from `testName`. Run these four `list_issues` queries, then union and deduplicate the results by ticket ID:
+
+   ```text
+   project: "Groundcrew", label: "flaky-investigation", query: "<fingerprint-family>"
+   project: "Groundcrew", label: "flaky-investigation", query: "<exact full test title>"
+   project: "Groundcrew", label: "flaky-implementation", query: "<fingerprint-family>"
+   project: "Groundcrew", label: "flaky-implementation", query: "<exact full test title>"
+   ```
+
+   For all four queries, omit the state filter so every state, including terminal states, is searched. Omit created/updated date filters; there is no 14-day restriction. The `query` field must search issue titles and descriptions, not the file name alone.
+   - Fetch every matching issue with `get_issue`, then read its relations, comments, and linked PRs so closed and merged attempts are not lost to truncated list results
+
+2. **Build the `Prior attempts` table before diagnosis.** Add one row for each prior implementation ticket and linked PR found through either query. The table columns are `Prior ticket/PR`, `What it blamed`, `What it changed`, and `Recurrence evidence`. The table must list each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. Use later investigation sightings and post-merge failures as recurrence evidence; do not infer failure merely because an attempt is old. If there are no prior implementation tickets, record `None found` plus the fingerprint and test-title searches run.
+3. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
    - Search PRs labeled `flaky-test-fix` for the test file name or test directory
    - Review the PR's changes to assess whether they address the same flake pattern with reasonable confidence — if so, stop and report it to the user rather than opening a duplicate fix
    - If the PR only partially addresses the flake or targets a different root cause, note it and proceed with investigation
-2. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
+4. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
    - `git log --oneline -20 origin/main -- <test-file-path>` and also check the parent directory or related source files
    - Read the commit messages — if one clearly fixes the same flake pattern, stop and report it to the user
 
@@ -75,6 +88,7 @@ If an existing fix is found, report:
 - The PR number/URL or commit hash
 - A brief summary of what it addresses
 - Whether it fully covers the current flake or only partially
+- The `Prior attempts` table, including recurrence evidence for any failed prior diagnosis
 
 If no existing fix is found, proceed to Phase 2.
 

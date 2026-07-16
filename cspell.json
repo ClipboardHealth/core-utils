@@ -245,6 +245,7 @@
     "uuidv",
     "VARCHAR",
     "vitest",
+    "Workstream",
     "workstreams",
     "worktree",
     "worktrees",
