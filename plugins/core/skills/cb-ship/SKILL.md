@@ -28,9 +28,22 @@ Resolve bundled "./references" paths relative to SKILL.md.
 7. Output:
 
    ```plaintext
+   - PR: [Complete url] (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`)
+
+   [One concise sentence describing what was implemented and shipped.]
+
+   [Optional bullets for the most important user-facing outcomes. Omit when the sentence is sufficient.]
+
+   Additional information:
+
    - Directory: [Absolute path]
    - Branch: [Branch name]
    - Review: [N findings — M applied, K dismissed with a one-line reason each] (omit if step 4 skipped or found nothing)
    - Session: [Resume command from 6a] (omit if none)
-   - PR: [Complete url] (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`)
+   - Existing changes: [Uncommitted changes that remain outside the shipped scope] (omit if none)
    ```
+
+   Keep the PR as the first bullet and visually separate it from everything
+   else with a blank line. Use the middle section only for meaningful behavior
+   or outcome details. Put lower-priority handoff metadata and caveats under
+   `Additional information`.
