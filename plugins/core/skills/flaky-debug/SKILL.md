@@ -58,7 +58,7 @@ If the type is ambiguous, check the test file extension and imports to confirm.
 
 If the type is E2E, also classify where the failure surfaced in the lifecycle -- see [Classify the E2E Failure Surface](./references/plan-e2e.md#classify-the-e2e-failure-surface) in `plan-e2e.md`. The failure surface dictates how broadly to investigate before reading or editing the test.
 
-## Phase 1b: Build the Dossier and Check for Existing Fixes
+## Phase 1b: Build the Dossier, Consult the Knowledge Base, and Check for Existing Fixes
 
 Before diagnosing, build the fingerprint family's dossier, then check whether someone (or another agent) has already fixed this flake. Do not limit the dossier to the failing file or recent activity.
 
@@ -74,12 +74,22 @@ Before diagnosing, build the fingerprint family's dossier, then check whether so
    For all four queries, omit the state filter so every state, including terminal states, is searched. Omit created/updated date filters; there is no 14-day restriction. The `query` field must search issue titles and descriptions, not the file name alone.
    - Fetch every matching issue with `get_issue`, then read its relations, comments, and linked PRs so closed and merged attempts are not lost to truncated list results
 
-2. **Build the `Prior attempts` table before diagnosis.** Add one row for each prior implementation ticket and linked PR found through either query. The table columns are `Prior ticket/PR`, `What it blamed`, `What it changed`, and `Recurrence evidence`. The table must list each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. Use later investigation sightings and post-merge failures as recurrence evidence; do not infer failure merely because an attempt is old. If there are no prior implementation tickets, record `None found` plus the fingerprint and test-title searches run.
-3. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
+2. **Consult the root-cause knowledge base alongside the Linear search.** Open [`references/root-cause-kb/README.md`](./references/root-cause-kb/README.md), compare the observed fingerprint, error text, failure surface, and causal evidence with its symptom index, and read every plausible entry in full.
+   - A matching symptom signature seeds the diagnosis with the entry's known mechanism; it does not prove the mechanism. Confirm or falsify it against the current artifacts and causal chain.
+   - Read the entry's **What failed and why** section before proposing a fix. Carry those failed-fix patterns into the dossier even when the current Linear family has no prior implementation ticket.
+   - Record one of these statements before diagnosis:
+     - `KB match: <entry link> — <matched symptom signature>; mechanism hypothesis: <mechanism>; failed fixes to avoid: <summary>.`
+     - `KB match: none — checked <symptom signatures/fingerprint> against the index.`
+   - If more than one entry is plausible, cite each candidate and state the evidence that selects or falsifies it. Create a new entry only when the causal terminus establishes a genuinely novel mechanism.
+
+   See the checked-in [KB lookup and close-out dry run](./references/root-cause-kb/dry-run-workplace-review-sheet.md) for one full cycle.
+
+3. **Build the `Prior attempts` table before diagnosis.** Add one row for each prior implementation ticket and linked PR found through either query. The table columns are `Prior ticket/PR`, `What it blamed`, `What it changed`, and `Recurrence evidence`. The table must list each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. Use later investigation sightings and post-merge failures as recurrence evidence; do not infer failure merely because an attempt is old. If there are no prior implementation tickets, record `None found` plus the fingerprint and test-title searches run. Keep KB-derived failed-fix history in the separate `KB match` statement unless the entry links a ticket or PR to this fingerprint family; do not manufacture family-specific prior attempts from a mechanism-level entry.
+4. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
    - Search PRs labeled `flaky-test-fix` for the test file name or test directory
    - Review the PR's changes to assess whether they address the same flake pattern with reasonable confidence — if so, stop and report it to the user rather than opening a duplicate fix
    - If the PR only partially addresses the flake or targets a different root cause, note it and proceed with investigation
-4. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
+5. **Check recent commits on `main`** that touch the failing test file or its surrounding code:
    - `git log --oneline -20 origin/main -- <test-file-path>` and also check the parent directory or related source files
    - Read the commit messages — if one clearly fixes the same flake pattern, stop and report it to the user
 
@@ -89,6 +99,7 @@ If an existing fix is found, report:
 - A brief summary of what it addresses
 - Whether it fully covers the current flake or only partially
 - The `Prior attempts` table, including recurrence evidence for any failed prior diagnosis
+- The `KB match` statement, including the cited entry and failed-fix history when matched
 
 If no existing fix is found, proceed to Phase 2.
 
@@ -101,3 +112,5 @@ If you are in plan mode, present the plan and stop here.
 ## Phase 3: Apply the plan (fix mode only)
 
 Follow [`references/fix.md`](./references/fix.md). It takes the plan from Phase 2, validates the recorded sibling frontend check and reruns it when stale or missing, applies the proposed fix, searches for same-repo sibling anti-patterns, and verifies. PR creation is out of scope -- if the user later opens one (or invokes a PR-shipping skill), label it `flaky-test-fix`.
+
+After that fix merges, the knowledge-base close-out in `fix.md` is required. Update the matched entry with the new evidence, repository/surface, fix result, and any newly established failed-fix history, or add a new mechanism-indexed entry when the causal terminus was genuinely novel.

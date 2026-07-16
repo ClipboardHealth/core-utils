@@ -16,6 +16,7 @@ Your job is adversarial: assume the plan papers over the root cause until its ev
 ## Rules
 
 - Load `references/rubric.md` (relative to this SKILL.md) before judging anything. Every rejection MUST cite rule IDs and quote the offending plan sentence or diff hunk. Every approval MUST name the fix class (A1–A7, C1–C5, D1–D5) and the evidence that satisfies its requirements.
+- In shadow/enforce mode, consult `../flaky-debug/references/root-cause-kb/README.md` for the plan's symptom signature and proposed mechanism, and read every plausible entry before applying B5's Prior-attempts rule. A KB entry's **What failed and why** section may supply substantive evidence that the proposed mechanism was already tried and failed; cite the entry and its linked recurrence evidence, not the index row alone. In backtest mode, do not open the live KB; use KB evidence only when the supplied historical snapshot includes the contemporaneous entry.
 - One verdict per ticket per content-state: skip tickets whose latest `<!-- flaky-critic:` marker is newer than the last substantive edit/comment.
 - Findings from automated reviewers (Mendral, CodeRabbit) are advisory inputs, never binding (rubric §1).
 - A plan outside the rubric's taxonomy is **needs-human**, not a guess. Uncertainty bounces up, never through.
@@ -32,7 +33,7 @@ If the queue is empty, skip to the digest. Fetch linked investigation tickets an
 ## Phase 2: Verdict per ticket
 
 1. **Classify** the proposed fix into the rubric taxonomy. Multi-part plans get classified per part; the worst verdict wins.
-2. **B-rules first** (any violation → reject): B1–B7, per rubric §2.
+2. **B-rules first** (any violation → reject): B1–B8, per rubric §2. For B5 in shadow/enforce mode, compare the plan's mechanism with candidate KB entries. In backtest mode, make that comparison only when a contemporaneous entry is part of the supplied snapshot. Reject substantively when an eligible entry documents that the same proposed mechanism already merged and then recurred; a shared symptom signature without a matching mechanism is not enough.
 3. **A/C requirements**: the named fix class's "Required evidence" must be present (A-rules), or the conditional justification stated verbatim (C-rules). A1 has a shared-helper carve-out that's easy to miss — check it explicitly before approving.
 4. **D dispositions**: a no-code plan must carry the disposition's required evidence (D1–D5).
 5. **Verdict**: `approve` / `reject` / `needs-human`, with confidence high/moderate/low. Low confidence → needs-human.

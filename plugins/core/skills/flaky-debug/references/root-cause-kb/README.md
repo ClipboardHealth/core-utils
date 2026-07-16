@@ -42,3 +42,7 @@ When adding an entry, keep the same sections used by the seeded entries:
 - Read the candidate entry's failed-attempt section before proposing a fix.
 - If the evidence contradicts the entry, continue the investigation and add a new mechanism only when the causal terminus is genuinely different.
 - Update an existing entry when a new repository or test exposes the same mechanism.
+
+## Demonstrated cycle
+
+The [workplace-review sheet dry run](./dry-run-workplace-review-sheet.md) demonstrates one complete, write-free cycle: a diagnosis matches symptom signatures to an entry, the plan cites the mechanism and failed-fix history, and the merged fix close-out identifies the exact entry sections updated.
