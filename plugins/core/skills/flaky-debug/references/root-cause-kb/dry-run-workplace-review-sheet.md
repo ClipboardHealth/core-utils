@@ -71,11 +71,11 @@ Resulting entry: [Query-driven list dialog teardown](./query-driven-list-dialog-
 Final close-out statement:
 
 ```text
-Knowledge-base close-out: Query-driven list dialog teardown
+Knowledge-base close-out: [Query-driven list dialog teardown](./query-driven-list-dialog-teardown.md)
 Update: new repository/surface and new fix evidence
 Mechanism: overlay lifecycle coupled to a replaceable query-driven mapped row
-Evidence: cbh-mobile-app#12860
-KB PR: ClipboardHealth/core-utils#785
+Evidence: [cbh-mobile-app#12860](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12860)
+KB PR: [ClipboardHealth/core-utils#785](https://github.com/ClipboardHealth/core-utils/pull/785)
 ```
 
 The retrospective KB publication is [core-utils#785](https://github.com/ClipboardHealth/core-utils/pull/785). This is an entry update, not a new entry: the repository and sheet names are new evidence for the same mechanism, not a genuinely novel causal terminus.

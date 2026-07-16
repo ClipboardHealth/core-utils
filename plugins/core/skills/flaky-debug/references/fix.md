@@ -139,7 +139,7 @@ When documenting the fix in a PR or issue, use this structure. Carry **Confidenc
 - **Confidence:** score (1-5) with brief justification
 - **Failure surface:** where the failure first surfaced and why the fix belongs there
 - **Current main status:** whether the failure path still existed when the fix was made
-- **KB match:** the cited entry and matched symptom signature, or `None` plus the index lookup performed
+- **KB match:** the cited entry, matched symptom signature, mechanism hypothesis, and failed fixes to avoid; or `None` plus the fingerprints and symptom signatures checked against the index
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
 - **Evidence:** artifacts supporting the diagnosis (traces, network, error messages, screenshots as applicable)
