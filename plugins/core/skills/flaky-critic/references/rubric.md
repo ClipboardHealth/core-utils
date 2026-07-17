@@ -90,7 +90,7 @@ Proposing a code fix from a diagnosis that stops at the failure symptom — "the
 
 1. **Terminated:** the chain ends at a cause. A status code, timeout, or throttle is a link, never a terminus.
 2. **Explicitly broken:** the chain names the link where evidence ran out and the observability that would extend it; confidence is capped at 2/5 and B6 applies — the deliverable is the instrumentation, not a code fix.
-3. **Harness-contract terminus:** for a C1/C2 test-harness change, the chain may terminate at a specific violated harness contract in named code when artifacts prove the user action or downstream request never began, and the fix is bounded, idempotent, and diagnostic. If a product, service, or identity-provider cause may still exist, cap confidence at 3/5 and require owning-surface observability or a linked handoff. A generic timeout, detach, 401, or retry success without the named contract and evidence remains a symptom, not a terminus.
+3. **Harness-contract terminus (amendment, 2026-07-17):** for a C1/C2 test-harness change, the chain may terminate at a specific violated harness contract in named code when artifacts prove the user action or downstream request never began, and the fix is bounded, idempotent, and diagnostic. If a product, service, or identity-provider cause may still exist, cap confidence at 3/5 and require owning-surface observability or a linked handoff. A generic timeout, detach, 401, or retry success without the named contract and evidence remains a symptom, not a terminus.
 
 **Confidence ceiling:** 5/5 additionally requires reproduction by inducing the blamed cause — fault injection in the harness (delay or fail the specific response, disable the seed step) or a focused lower-level test that deterministically reproduces the race. Without reproduction, the ceiling is 4/5. One inferred _intermediate_ link with an evidenced terminus is still a terminated chain (≤4/5); an unevidenced terminus is a broken chain (cap 2/5).
 
@@ -229,6 +229,8 @@ The STAFF-1818 blind-backtest proposals were reviewed per the standing per-PR am
 1. **Deterministic-boundary reproduction — approved:** exact evaluation of a named pure expression at captured inputs is deterministic reproduction when the plan shows before/after values.
 2. **Harness-contract terminus — approved with live monitoring:** the exception is limited by the artifact, confidence, and observability guardrails in B8. The 14-day monitor specifically watches for generic detach, timeout, 401, or retry-success symptoms being laundered as a harness contract.
 3. **Mechanism-aware Prior-attempts counting — rejected:** agent-claimed novelty does not reduce the failed-fix count. The ≥2 route remains family-level, and the dossier-backed deep dive adjudicates mechanism identity first.
+
+**Live follow-up (Rocky, 2026-07-17):** the backtest's case 1865 analog and the live false-positive rejection on STAFF-1865 established the harness-contract terminus amendment. No additional Proposal 1 change was approved because the live run produced no applicable case; that follow-up is deferred pending live evidence. Proposal 3 remains rejected because the dossier-backed deep dive, not agent self-certification, adjudicates mechanism novelty.
 
 ## 8. Appendix: corpus stats
 
