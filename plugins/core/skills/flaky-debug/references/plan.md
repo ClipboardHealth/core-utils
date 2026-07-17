@@ -51,9 +51,11 @@ Before proposing any retry, timeout, or wait change, pass the idempotency check:
 - Is the retried operation safe to repeat?
 - Does retrying preserve the same test scenario?
 - Could retrying amplify the root cause, such as rate limits, one-time credentials, duplicate writes, or destructive mutations?
+- Does the retry predicate name the exact transient failure signatures it matches (opaque 5xx yes; 4xx validation no; 429 only with a cap)?
+- For a rate-limited or quota-limited dependency such as Cognito, a 429-emitting API, token minting, one-time credentials, or seed creation, does the plan state a concurrency cap or call-volume bound?
 - Is there a deterministic signal to wait on instead of a longer timeout?
 
-If the answer is no or unclear, do not add a retry/wait as the fix. Propose a root-cause fix or instrumentation instead.
+If the answer is no or unclear, do not add a retry/wait as the fix. Propose a root-cause fix or instrumentation instead. When a rate-limited or quota-limited dependency has no safe cap, choose A7-style serialization or caching to de-stress it. An uncapped retry against such a dependency is retry amplification and will be rejected under B1.
 
 Common valid fix types:
 
