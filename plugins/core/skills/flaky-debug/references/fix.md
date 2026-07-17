@@ -10,7 +10,10 @@ Before editing, verify the plan is still current:
 
 - The failing commit's code path still exists on current `main`, or the plan has been adjusted for the current code.
 - The proposed fix targets the diagnosed failure surface, not only the final assertion.
-- Any retry/wait change is safe and idempotent; it must not repeat one-time credentials, duplicate writes, destructive actions, or rate-limited setup calls.
+- Any retry/wait change is safe and idempotent; it must not repeat one-time credentials, duplicate writes, or destructive actions.
+- The retry predicate names the exact transient failure signatures it matches: opaque 5xx yes; 4xx validation no; 429 only with a cap.
+- The retry has a finite attempt or total-call bound, and exhaustion reports the attempts plus the last stdout/stderr/status/body.
+- A retry against a rate-limited or quota-limited dependency such as Cognito, a 429-emitting API, token minting, one-time credential provisioning, or seed creation states its concurrency cap or call-volume bound. Without one, return to the plan and choose A7-style serialization or caching to de-stress the dependency. An uncapped retry is retry amplification and will be rejected under B1; a cap does not make a non-idempotent operation safe.
 
 ## Validate the Sibling Frontend Check
 
