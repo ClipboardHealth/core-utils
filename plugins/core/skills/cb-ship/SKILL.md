@@ -40,10 +40,11 @@ Resolve bundled "./references" paths relative to SKILL.md.
    - Session: [Resume command from 6a] (omit if none)
    - Existing changes: [Uncommitted changes that remain outside the shipped scope] (omit if none)
 
-   🚀 [Complete url] (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`) 🚀
+   🚀 [Complete url] 🚀
    ```
 
-   Keep the PR as the final line and visually separate it from everything else
-   with a blank line. Use the middle section only for meaningful behavior or
-   outcome details. Put lower-priority handoff metadata and caveats under
-   `Details`.
+   Keep the PR as the final line using a complete URL, for example,
+   `https://github.com/clipboardhealth/core-utils/pull/123`. Visually separate
+   it from everything else with a blank line. Use the middle section only for
+   meaningful behavior or outcome details. Put lower-priority handoff metadata
+   and caveats under `Details`.
