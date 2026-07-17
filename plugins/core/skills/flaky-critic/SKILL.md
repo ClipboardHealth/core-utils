@@ -93,7 +93,7 @@ Use this digest shape:
 ```text
 New-rule monitoring (2026-07-16..<2026-07-30):
 - gated plans: N
-- statement-missing amend-and-resubmit: N (P%) — B8: N, B5-prior-attempts: N
+- statement-missing amend-and-resubmit: N — rate: P% | not evaluable (when gated plans=0) — B8: N, B5-prior-attempts: N
 - substantive rejects — B8: N, B5-prior-attempts: N
 - threshold: provisional | pass | breached — <fix-forward action or "none">
 - substantive false-reject patterns: <amendment proposal links or "none observed">
