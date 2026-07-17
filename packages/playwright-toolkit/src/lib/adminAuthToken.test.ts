@@ -3,10 +3,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
+  type AdminAuthTokenCacheEvent,
   type AdminAuthTokenCommandRunner,
   generateAdminAuthToken,
   getOrCreateAdminAuthToken,
   invalidateAdminAuthToken,
+  invalidateGeneratedAdminAuthToken,
 } from "../index";
 
 describe("getOrCreateAdminAuthToken", () => {
@@ -460,6 +462,74 @@ describe("getOrCreateAdminAuthToken", () => {
     expect(mockCreateToken).toHaveBeenCalledTimes(3);
   });
 
+  it("shares one replacement across concurrent forced refreshes", async () => {
+    let resolveReplacement: ((value: string) => void) | undefined;
+    const replacementPromise = new Promise<string>((resolve) => {
+      resolveReplacement = resolve;
+    });
+    const mockCreateToken = vi
+      .fn<() => Promise<string>>()
+      .mockResolvedValueOnce("Bearer rejected-token")
+      .mockImplementationOnce(async () => await replacementPromise);
+    const input = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+      createToken: mockCreateToken,
+      forceRefresh: true,
+      lockRetryDelayMs: 1,
+      lockRetryJitterMs: 0,
+    };
+    await getOrCreateAdminAuthToken({
+      ...input,
+      forceRefresh: false,
+    });
+
+    const firstRefreshPromise = getOrCreateAdminAuthToken(input);
+    const secondRefreshPromise = getOrCreateAdminAuthToken(input);
+    await vi.waitFor(() => {
+      expect(mockCreateToken).toHaveBeenCalledTimes(2);
+    });
+    resolveReplacement?.("Bearer replacement-token");
+    const [firstRefresh, secondRefresh] = await Promise.all([
+      firstRefreshPromise,
+      secondRefreshPromise,
+    ]);
+
+    expect(firstRefresh.authToken).toBe("Bearer replacement-token");
+    expect(secondRefresh.authToken).toBe("Bearer replacement-token");
+    expect(mockCreateToken).toHaveBeenCalledTimes(2);
+  });
+
+  it("reuses a newer replacement when a late caller reports the same rejected token", async () => {
+    const mockCreateToken = vi
+      .fn<() => Promise<string>>()
+      .mockResolvedValueOnce("Bearer rejected-token")
+      .mockResolvedValueOnce("Bearer replacement-token");
+    const input = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+      createToken: mockCreateToken,
+    };
+    const rejectedEntry = await getOrCreateAdminAuthToken(input);
+
+    const firstRefresh = await getOrCreateAdminAuthToken({
+      ...input,
+      forceRefresh: { rejectedAuthToken: rejectedEntry.authToken },
+    });
+    const lateRefresh = await getOrCreateAdminAuthToken({
+      ...input,
+      forceRefresh: { rejectedAuthToken: rejectedEntry.authToken },
+    });
+
+    expect(firstRefresh.authToken).toBe("Bearer replacement-token");
+    expect(lateRefresh.authToken).toBe("Bearer replacement-token");
+    expect(mockCreateToken).toHaveBeenCalledTimes(2);
+  });
+
   it("does not retain the previous token when forced refresh fails", async () => {
     const mockCreateToken = vi
       .fn<() => Promise<string>>()
@@ -488,27 +558,61 @@ describe("getOrCreateAdminAuthToken", () => {
   });
 
   it("emits cache diagnostics without the token or admin email", async () => {
-    const cacheEvents: unknown[] = [];
+    let nowMs = 1_000_000;
+    const cacheEvents: AdminAuthTokenCacheEvent[] = [];
+    const mockCreateToken = vi
+      .fn<() => Promise<string>>()
+      .mockResolvedValueOnce("Bearer first-token")
+      .mockResolvedValueOnce("Bearer replacement-token");
     const input = {
       adminEmail: "e2e@clipboardhealth.com",
       apiEnvironmentName: "staging",
+      cacheIdentity: {
+        namespace: "cbh-admin-frontend",
+        tokenKind: "access",
+        audience: "monolith-api",
+      },
       cacheDirectory,
       cacheDurationMs: 60_000,
-      createToken: async () => "Bearer generated-token",
-      onCacheEvent: (event: unknown) => {
+      createToken: mockCreateToken,
+      nowImplementation: () => nowMs,
+      onCacheEvent: (event: AdminAuthTokenCacheEvent) => {
         cacheEvents.push(event);
       },
     };
 
     await getOrCreateAdminAuthToken(input);
     await getOrCreateAdminAuthToken(input);
+    nowMs += 1;
+    await getOrCreateAdminAuthToken({
+      ...input,
+      forceRefresh: true,
+    });
 
-    expect(cacheEvents).toEqual([
-      expect.objectContaining({ kind: "miss" }),
-      expect.objectContaining({ kind: "created" }),
-      expect.objectContaining({ kind: "hit" }),
-    ]);
-    expect(JSON.stringify(cacheEvents)).not.toContain("generated-token");
+    const createdEvents = cacheEvents.filter((event) => event.kind === "created");
+    const hitEvent = cacheEvents.find((event) => event.kind === "hit");
+    expect(createdEvents).toHaveLength(2);
+    expect(createdEvents[0]).toEqual(
+      expect.objectContaining({
+        audience: "monolith-api",
+        credentialFingerprint: expect.stringMatching(/^[a-f0-9]{16}$/),
+        mintedAtMs: 1_000_000,
+      }),
+    );
+    expect(createdEvents[1]).toEqual(
+      expect.objectContaining({
+        audience: "monolith-api",
+        credentialFingerprint: expect.stringMatching(/^[a-f0-9]{16}$/),
+        mintedAtMs: 1_000_001,
+      }),
+    );
+    expect(createdEvents[0]?.credentialFingerprint).not.toBe(
+      createdEvents[1]?.credentialFingerprint,
+    );
+    expect(hitEvent?.credentialFingerprint).toBe(createdEvents[0]?.credentialFingerprint);
+    expect(cacheEvents.every((event) => event.audience === "monolith-api")).toBe(true);
+    expect(JSON.stringify(cacheEvents)).not.toContain("first-token");
+    expect(JSON.stringify(cacheEvents)).not.toContain("replacement-token");
     expect(JSON.stringify(cacheEvents)).not.toContain("e2e@clipboardhealth.com");
   });
 
@@ -548,6 +652,19 @@ describe("getOrCreateAdminAuthToken", () => {
     await expect(getOrCreateAdminAuthToken(input)).resolves.toMatchObject({
       authToken: "Bearer recovered-token",
     });
+  });
+
+  it("rejects a malformed conditional refresh credential", async () => {
+    await expect(
+      getOrCreateAdminAuthToken({
+        adminEmail: "e2e@clipboardhealth.com",
+        apiEnvironmentName: "staging",
+        cacheDirectory,
+        cacheDurationMs: 60_000,
+        createToken: async () => "Bearer generated-token",
+        forceRefresh: { rejectedAuthToken: "invalid-token" },
+      }),
+    ).rejects.toThrow("forceRefresh.rejectedAuthToken must be a valid bearer token");
   });
 
   it("retries approved transient CLI failures and caches the generated token", async () => {
@@ -602,6 +719,31 @@ describe("getOrCreateAdminAuthToken", () => {
 
     expect(mobileToken.authToken).toBe("Bearer mobile-token");
     expect(adminToken.authToken).toBe("Bearer admin-token");
+    expect(mockCommandRunner).toHaveBeenCalledTimes(2);
+  });
+
+  it("invalidates generated tokens that use the default cache identity", async () => {
+    const mockCommandRunner = vi
+      .fn<AdminAuthTokenCommandRunner>()
+      .mockResolvedValueOnce({ stdout: "first-token\n", stderr: "" })
+      .mockResolvedValueOnce({ stdout: "replacement-token\n", stderr: "" });
+    const input = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+      commandRunner: mockCommandRunner,
+    };
+    await generateAdminAuthToken(input);
+
+    await invalidateGeneratedAdminAuthToken({
+      adminEmail: input.adminEmail,
+      apiEnvironmentName: input.apiEnvironmentName,
+      cacheDirectory,
+    });
+    const actual = await generateAdminAuthToken(input);
+
+    expect(actual.authToken).toBe("Bearer replacement-token");
     expect(mockCommandRunner).toHaveBeenCalledTimes(2);
   });
 

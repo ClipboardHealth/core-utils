@@ -48,9 +48,12 @@ export type AdminAuthTokenCacheEventKind =
 
 export interface AdminAuthTokenCacheEvent {
   kind: AdminAuthTokenCacheEventKind;
+  audience?: string | undefined;
   cacheKeyFingerprint: string;
+  credentialFingerprint?: string | undefined;
   expiresAtMs?: number | undefined;
   jwtExpiresAtMs?: number | undefined;
+  mintedAtMs?: number | undefined;
   validatedAtMs?: number | undefined;
   validationPolicyFingerprint?: string | undefined;
 }
@@ -79,10 +82,14 @@ export interface AdminAuthTokenCacheParams {
   sleepImplementation?: ((params: { durationMs: number }) => Promise<void>) | undefined;
 }
 
+export interface AdminAuthTokenRefreshOptions {
+  rejectedAuthToken: string;
+}
+
 export interface GetOrCreateAdminAuthTokenParams extends AdminAuthTokenCacheParams {
   cacheDurationMs: number;
   createToken: () => Promise<string>;
-  forceRefresh?: boolean | undefined;
+  forceRefresh?: boolean | AdminAuthTokenRefreshOptions | undefined;
   jwtExpirationSafetySkewMs?: number | undefined;
   validationPolicy?: string | undefined;
   validationTimeoutMs?: number | undefined;
@@ -90,6 +97,10 @@ export interface GetOrCreateAdminAuthTokenParams extends AdminAuthTokenCachePara
 }
 
 export type InvalidateAdminAuthTokenParams = AdminAuthTokenCacheParams;
+
+export interface InvalidateGeneratedAdminAuthTokenParams extends AdminAuthTokenCacheParams {
+  clientName?: string | undefined;
+}
 
 export interface AdminAuthTokenCommandResult {
   stdout: string;
@@ -122,11 +133,13 @@ export interface GenerateAdminAuthTokenParams extends Omit<
 interface StoredAdminAuthTokenCacheEntry {
   authToken: string;
   expiresAtMs: number;
+  mintedAtMs?: number | undefined;
   validatedAtMs?: number | undefined;
   validationPolicyFingerprint?: string | undefined;
 }
 
 interface AdminAuthTokenCachePaths {
+  audience: string | undefined;
   cacheDirectoryPath: string;
   cacheFilePath: string;
   cacheKeyFingerprint: string;
@@ -157,12 +170,15 @@ export async function getOrCreateAdminAuthToken(
 
   await mkdir(cachePaths.cacheDirectoryPath, { recursive: true });
 
-  if (params.forceRefresh !== true) {
-    const cachedEntry = await readCachedEntry({
-      cacheFilePath: cachePaths.cacheFilePath,
-      jwtExpirationSafetySkewMs,
-      nowImplementation,
-    });
+  const cachedEntry =
+    typeof params.forceRefresh === "object"
+      ? undefined
+      : await readCachedEntry({
+          cacheFilePath: cachePaths.cacheFilePath,
+          jwtExpirationSafetySkewMs,
+          nowImplementation,
+        });
+  if (!isForceRefreshRequested(params)) {
     const needsValidation =
       isDefined(params.validateToken) &&
       cachedEntry?.validationPolicyFingerprint !== validationPolicyFingerprint;
@@ -171,6 +187,7 @@ export async function getOrCreateAdminAuthToken(
         cachePaths,
         event: {
           kind: "hit",
+          ...getCredentialEventMetadata({ storedEntry: cachedEntry }),
           expiresAtMs: cachedEntry.expiresAtMs,
           jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
           validatedAtMs: cachedEntry.validatedAtMs,
@@ -187,6 +204,10 @@ export async function getOrCreateAdminAuthToken(
     cachePaths,
     jwtExpirationSafetySkewMs,
     nowImplementation,
+    forceRefreshTargetCredentialFingerprint: getForceRefreshTargetCredentialFingerprint({
+      cachedEntry,
+      forceRefresh: params.forceRefresh,
+    }),
     validationPolicyFingerprint,
     validationTimeoutMs,
   });
@@ -208,13 +229,34 @@ export async function invalidateAdminAuthToken(
     ...params,
     cachePaths,
     operation: async () => {
+      const cachedEntry = await readCachedEntry({
+        cacheFilePath: cachePaths.cacheFilePath,
+        jwtExpirationSafetySkewMs: DEFAULT_JWT_EXPIRATION_SAFETY_SKEW_MS,
+        nowImplementation: params.nowImplementation ?? Date.now,
+      });
       await rm(cachePaths.cacheFilePath, { force: true });
       emitCacheEvent({
         cachePaths,
-        event: { kind: "invalidated" },
+        event: {
+          kind: "invalidated",
+          ...getCredentialEventMetadata({ storedEntry: cachedEntry }),
+        },
         onCacheEvent: params.onCacheEvent,
       });
     },
+  });
+}
+
+/**
+ * Invalidates a token created by generateAdminAuthToken using the same default
+ * cache identity normalization as generation.
+ */
+export async function invalidateGeneratedAdminAuthToken(
+  params: InvalidateGeneratedAdminAuthTokenParams,
+): Promise<void> {
+  await invalidateAdminAuthToken({
+    ...params,
+    cacheIdentity: getGeneratedAdminAuthTokenCacheIdentity(params),
   });
 }
 
@@ -227,13 +269,7 @@ export async function generateAdminAuthToken(
 ): Promise<AdminAuthTokenCacheEntry> {
   return await getOrCreateAdminAuthToken({
     ...params,
-    cacheIdentity: {
-      namespace: params.cacheIdentity?.namespace ?? "generateAdminAuthToken",
-      tokenKind: params.cacheIdentity?.tokenKind ?? "admin-user",
-      audience: params.cacheIdentity?.audience,
-      clientName: params.clientName ?? params.cacheIdentity?.clientName,
-      issuer: params.cacheIdentity?.issuer,
-    },
+    cacheIdentity: getGeneratedAdminAuthTokenCacheIdentity(params),
     createToken: async () => {
       const result = await runWithRetry({
         operationName: "generate admin auth token",
@@ -321,6 +357,7 @@ async function getOrCreateWithLock(
     cachePaths: AdminAuthTokenCachePaths;
     jwtExpirationSafetySkewMs: number;
     nowImplementation: () => number;
+    forceRefreshTargetCredentialFingerprint: string | undefined;
     validationPolicyFingerprint: string | undefined;
     validationTimeoutMs: number;
   },
@@ -328,75 +365,84 @@ async function getOrCreateWithLock(
   return await runWithAdminAuthTokenLock({
     ...params,
     operation: async () => {
-      if (params.forceRefresh === true) {
+      const cachedEntry = await readCachedEntry({
+        cacheFilePath: params.cachePaths.cacheFilePath,
+        jwtExpirationSafetySkewMs: params.jwtExpirationSafetySkewMs,
+        nowImplementation: params.nowImplementation,
+      });
+      const refreshesCurrentEntry =
+        isForceRefreshRequested(params) &&
+        (isDefined(cachedEntry)
+          ? getCredentialFingerprint({ authToken: cachedEntry.authToken }) ===
+            params.forceRefreshTargetCredentialFingerprint
+          : isNil(params.forceRefreshTargetCredentialFingerprint));
+      if (refreshesCurrentEntry) {
         await rm(params.cachePaths.cacheFilePath, { force: true });
         emitCacheEvent({
           cachePaths: params.cachePaths,
-          event: { kind: "refresh" },
+          event: {
+            kind: "refresh",
+            ...getCredentialEventMetadata({ storedEntry: cachedEntry }),
+          },
           onCacheEvent: params.onCacheEvent,
         });
-      } else {
-        const cachedEntry = await readCachedEntry({
-          cacheFilePath: params.cachePaths.cacheFilePath,
-          jwtExpirationSafetySkewMs: params.jwtExpirationSafetySkewMs,
-          nowImplementation: params.nowImplementation,
-        });
-        if (isDefined(cachedEntry)) {
-          const needsValidation =
-            isDefined(params.validateToken) &&
-            cachedEntry.validationPolicyFingerprint !== params.validationPolicyFingerprint;
-          const isAccepted = needsValidation
-            ? await validateAdminAuthToken({
-                authToken: cachedEntry.authToken,
-                validationTimeoutMs: params.validationTimeoutMs,
-                validateToken: params.validateToken,
-              })
-            : true;
-          if (isAccepted) {
-            const acceptedEntry = needsValidation
-              ? {
-                  ...cachedEntry,
-                  validatedAtMs: params.nowImplementation(),
-                  validationPolicyFingerprint: params.validationPolicyFingerprint,
-                }
-              : cachedEntry;
-            const expiredDuringValidation = isAdminAuthTokenExpired({
-              cacheEntry: acceptedEntry,
-              nowMs: params.nowImplementation(),
+      } else if (isDefined(cachedEntry)) {
+        const needsValidation =
+          isDefined(params.validateToken) &&
+          cachedEntry.validationPolicyFingerprint !== params.validationPolicyFingerprint;
+        const isAccepted = needsValidation
+          ? await validateAdminAuthToken({
+              authToken: cachedEntry.authToken,
+              validationTimeoutMs: params.validationTimeoutMs,
+              validateToken: params.validateToken,
+            })
+          : true;
+        if (isAccepted) {
+          const acceptedEntry = needsValidation
+            ? {
+                ...cachedEntry,
+                validatedAtMs: params.nowImplementation(),
+                validationPolicyFingerprint: params.validationPolicyFingerprint,
+              }
+            : cachedEntry;
+          const expiredDuringValidation = isAdminAuthTokenExpired({
+            cacheEntry: acceptedEntry,
+            nowMs: params.nowImplementation(),
+          });
+          if (!expiredDuringValidation) {
+            await persistCachedValidation({
+              cacheFilePath: params.cachePaths.cacheFilePath,
+              needsValidation,
+              storedEntry: acceptedEntry,
             });
-            if (!expiredDuringValidation) {
-              await persistCachedValidation({
-                cacheFilePath: params.cachePaths.cacheFilePath,
-                needsValidation,
-                storedEntry: acceptedEntry,
-              });
-              emitCacheEvent({
-                cachePaths: params.cachePaths,
-                event: {
-                  kind: "hit",
-                  expiresAtMs: acceptedEntry.expiresAtMs,
-                  jwtExpiresAtMs: getJwtExpirationMs({ authToken: acceptedEntry.authToken }),
-                  validatedAtMs: acceptedEntry.validatedAtMs,
-                  validationPolicyFingerprint: acceptedEntry.validationPolicyFingerprint,
-                },
-                onCacheEvent: params.onCacheEvent,
-              });
-              return getPublicCacheEntry({ storedEntry: acceptedEntry });
-            }
-
-            await rm(params.cachePaths.cacheFilePath, { force: true });
-          } else {
-            await rm(params.cachePaths.cacheFilePath, { force: true });
             emitCacheEvent({
               cachePaths: params.cachePaths,
               event: {
-                kind: "validation-rejected",
-                expiresAtMs: cachedEntry.expiresAtMs,
-                jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
+                kind: "hit",
+                ...getCredentialEventMetadata({ storedEntry: acceptedEntry }),
+                expiresAtMs: acceptedEntry.expiresAtMs,
+                jwtExpiresAtMs: getJwtExpirationMs({ authToken: acceptedEntry.authToken }),
+                validatedAtMs: acceptedEntry.validatedAtMs,
+                validationPolicyFingerprint: acceptedEntry.validationPolicyFingerprint,
               },
               onCacheEvent: params.onCacheEvent,
             });
+            return getPublicCacheEntry({ storedEntry: acceptedEntry });
           }
+
+          await rm(params.cachePaths.cacheFilePath, { force: true });
+        } else {
+          await rm(params.cachePaths.cacheFilePath, { force: true });
+          emitCacheEvent({
+            cachePaths: params.cachePaths,
+            event: {
+              kind: "validation-rejected",
+              ...getCredentialEventMetadata({ storedEntry: cachedEntry }),
+              expiresAtMs: cachedEntry.expiresAtMs,
+              jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
+            },
+            onCacheEvent: params.onCacheEvent,
+          });
         }
       }
 
@@ -410,6 +456,8 @@ async function getOrCreateWithLock(
       if (!isValidBearerToken(authToken)) {
         throw new Error("Generated admin auth token is malformed");
       }
+      const mintedAtMs = params.nowImplementation();
+      const credentialFingerprint = getCredentialFingerprint({ authToken });
 
       const isAccepted = await validateAdminAuthToken({
         authToken,
@@ -421,7 +469,9 @@ async function getOrCreateWithLock(
           cachePaths: params.cachePaths,
           event: {
             kind: "validation-rejected",
+            credentialFingerprint,
             jwtExpiresAtMs: getJwtExpirationMs({ authToken }),
+            mintedAtMs,
           },
           onCacheEvent: params.onCacheEvent,
         });
@@ -442,6 +492,7 @@ async function getOrCreateWithLock(
       const storedEntry = {
         authToken,
         expiresAtMs: expiration.expiresAtMs,
+        mintedAtMs,
         validatedAtMs: isDefined(params.validateToken) ? nowMs : undefined,
         validationPolicyFingerprint: params.validationPolicyFingerprint,
       };
@@ -453,6 +504,7 @@ async function getOrCreateWithLock(
         cachePaths: params.cachePaths,
         event: {
           kind: "created",
+          ...getCredentialEventMetadata({ storedEntry }),
           expiresAtMs: storedEntry.expiresAtMs,
           jwtExpiresAtMs: expiration.jwtExpiresAtMs,
           validatedAtMs: storedEntry.validatedAtMs,
@@ -493,6 +545,13 @@ function validateParams(params: GetOrCreateAdminAuthTokenParams): void {
   ) {
     throw new Error("validationTimeoutMs must be positive");
   }
+
+  if (
+    typeof params.forceRefresh === "object" &&
+    !isValidBearerToken(params.forceRefresh.rejectedAuthToken)
+  ) {
+    throw new Error("forceRefresh.rejectedAuthToken must be a valid bearer token");
+  }
 }
 
 function validateCacheLocationParams(params: {
@@ -515,6 +574,42 @@ function validateCacheLocationParams(params: {
   if (params.cacheIdentity?.tokenKind.trim().length === 0) {
     throw new Error("cacheIdentity.tokenKind must not be empty");
   }
+}
+
+function getGeneratedAdminAuthTokenCacheIdentity(params: {
+  cacheIdentity?: AdminAuthTokenCacheIdentity | undefined;
+  clientName?: string | undefined;
+}): AdminAuthTokenCacheIdentity {
+  return {
+    namespace: params.cacheIdentity?.namespace ?? "generateAdminAuthToken",
+    tokenKind: params.cacheIdentity?.tokenKind ?? "admin-user",
+    audience: params.cacheIdentity?.audience,
+    clientName: params.clientName ?? params.cacheIdentity?.clientName,
+    issuer: params.cacheIdentity?.issuer,
+  };
+}
+
+function isForceRefreshRequested(
+  params: Pick<GetOrCreateAdminAuthTokenParams, "forceRefresh">,
+): boolean {
+  return isDefined(params.forceRefresh) && params.forceRefresh !== false;
+}
+
+function getForceRefreshTargetCredentialFingerprint(params: {
+  cachedEntry: StoredAdminAuthTokenCacheEntry | undefined;
+  forceRefresh: GetOrCreateAdminAuthTokenParams["forceRefresh"];
+}): string | undefined {
+  if (!isForceRefreshRequested(params)) {
+    return undefined;
+  }
+
+  if (typeof params.forceRefresh === "object") {
+    return getCredentialFingerprint({ authToken: params.forceRefresh.rejectedAuthToken });
+  }
+
+  return isDefined(params.cachedEntry)
+    ? getCredentialFingerprint({ authToken: params.cachedEntry.authToken })
+    : undefined;
 }
 
 function getCachePaths(params: {
@@ -544,10 +639,28 @@ function getCachePaths(params: {
   const cacheFileName = `admin-auth-token-${environmentSegment}-${cacheKeyFingerprint}.json`;
 
   return {
+    audience: params.cacheIdentity?.audience,
     cacheDirectoryPath,
     cacheFilePath: path.join(cacheDirectoryPath, cacheFileName),
     cacheKeyFingerprint,
     lockFilePath: path.join(cacheDirectoryPath, `${cacheFileName}.lock`),
+  };
+}
+
+function getCredentialFingerprint(params: { authToken: string }): string {
+  return createDeterministicHash(params.authToken).slice(0, 16);
+}
+
+function getCredentialEventMetadata(params: {
+  storedEntry: StoredAdminAuthTokenCacheEntry | undefined;
+}): Pick<AdminAuthTokenCacheEvent, "credentialFingerprint" | "mintedAtMs"> {
+  if (isNil(params.storedEntry)) {
+    return {};
+  }
+
+  return {
+    credentialFingerprint: getCredentialFingerprint({ authToken: params.storedEntry.authToken }),
+    mintedAtMs: params.storedEntry.mintedAtMs,
   };
 }
 
@@ -595,6 +708,8 @@ function isStoredCacheEntry(value: unknown): value is StoredAdminAuthTokenCacheE
     isValidBearerToken(value["authToken"]) &&
     typeof value["expiresAtMs"] === "number" &&
     Number.isFinite(value["expiresAtMs"]) &&
+    (isNil(value["mintedAtMs"]) ||
+      (typeof value["mintedAtMs"] === "number" && Number.isFinite(value["mintedAtMs"]))) &&
     (isNil(value["validatedAtMs"]) ||
       (typeof value["validatedAtMs"] === "number" && Number.isFinite(value["validatedAtMs"]))) &&
     (isNil(value["validationPolicyFingerprint"]) ||
@@ -892,12 +1007,13 @@ function getJwtExpirationMs(params: { authToken: string }): number | undefined {
 
 function emitCacheEvent(params: {
   cachePaths: AdminAuthTokenCachePaths;
-  event: Omit<AdminAuthTokenCacheEvent, "cacheKeyFingerprint">;
+  event: Omit<AdminAuthTokenCacheEvent, "audience" | "cacheKeyFingerprint">;
   onCacheEvent?: AdminAuthTokenCacheEventHandler | undefined;
 }): void {
   try {
     const callbackResult = params.onCacheEvent?.({
       ...params.event,
+      audience: params.cachePaths.audience,
       cacheKeyFingerprint: params.cachePaths.cacheKeyFingerprint,
     });
     if (callbackResult instanceof Promise) {

@@ -168,29 +168,38 @@ const tokenEntry = await getOrCreateAdminAuthToken({
 });
 ```
 
-Use `forceRefresh: true` for a one-time recovery after a consumer rejects a token, or invalidate it explicitly:
+After a consumer rejects a token, pass that credential to `forceRefresh`. Callers reporting the same rejected credential share one replacement, including callers that arrive after another worker has already refreshed the cache:
 
 ```typescript
-import {
-  getOrCreateAdminAuthToken,
-  invalidateAdminAuthToken,
-} from "@clipboard-health/playwright-toolkit";
-
-await invalidateAdminAuthToken({
-  adminEmail,
-  apiEnvironmentName,
-  cacheIdentity,
-});
+import { getOrCreateAdminAuthToken } from "@clipboard-health/playwright-toolkit";
 
 const freshTokenEntry = await getOrCreateAdminAuthToken({
   ...tokenParams,
-  forceRefresh: true,
+  forceRefresh: {
+    rejectedAuthToken,
+  },
 });
 ```
 
+Keep `forceRefresh: true` for deliberate unconditional rotation when no rejected credential is available.
+
+Alternatively, invalidate a generated token explicitly with the API that applies the same default identity as `generateAdminAuthToken`:
+
+```typescript
+import { invalidateGeneratedAdminAuthToken } from "@clipboard-health/playwright-toolkit";
+
+await invalidateGeneratedAdminAuthToken({
+  adminEmail,
+  apiEnvironmentName,
+  clientName: "admin-app",
+});
+```
+
+Use `invalidateAdminAuthToken` for `getOrCreateAdminAuthToken` entries, passing the same `cacheIdentity` used to create the entry.
+
 Only retry a request automatically when it is read-only or otherwise safe to repeat. The toolkit does not replay consumer requests because it cannot determine whether a failed mutation had side effects.
 
-Use `onCacheEvent` for safe diagnostics. Events expose only `kind`, a cache-key fingerprint, and expiration/validation timestamps; they never include the token, email, or raw identity fields.
+Use `onCacheEvent` for safe diagnostics. Events expose `kind`, cache-key and credential fingerprints, the optional audience, and mint/expiration/validation timestamps. Fingerprints distinguish successive credentials without exposing the token, email, or raw cache identity.
 
 ## Deployed assets
 
