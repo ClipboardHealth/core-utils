@@ -32,7 +32,7 @@ Resolve bundled "./references" paths relative to SKILL.md.
 
    [Optional bullets for the most important user-facing outcomes. Omit when the sentence is sufficient.]
 
-   Additional information:
+   Details:
 
    - Directory: [Absolute path]
    - Branch: [Branch name]
@@ -46,4 +46,4 @@ Resolve bundled "./references" paths relative to SKILL.md.
    Keep the PR as the final line and visually separate it from everything else
    with a blank line. Use the middle section only for meaningful behavior or
    outcome details. Put lower-priority handoff metadata and caveats under
-   `Additional information`.
+   `Details`.
