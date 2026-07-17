@@ -732,6 +732,7 @@ describe("getOrCreateAdminAuthToken", () => {
       apiEnvironmentName: "staging",
       cacheDirectory,
       cacheDurationMs: 60_000,
+      clientName: "admin-app",
       commandRunner: mockCommandRunner,
     };
     await generateAdminAuthToken(input);
@@ -740,6 +741,7 @@ describe("getOrCreateAdminAuthToken", () => {
       adminEmail: input.adminEmail,
       apiEnvironmentName: input.apiEnvironmentName,
       cacheDirectory,
+      clientName: input.clientName,
     });
     const actual = await generateAdminAuthToken(input);
 
