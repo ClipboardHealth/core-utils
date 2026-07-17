@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
+import { setTimeout as setTimeoutPromise } from "node:timers/promises";
 
 import { createDeterministicHash, isDefined, isNil, isRecord } from "@clipboard-health/util-ts";
 
@@ -20,6 +22,7 @@ const DEFAULT_GENERATION_MAX_ATTEMPTS = 4;
 const DEFAULT_GENERATION_RETRY_DELAY_MS = 2000;
 const DEFAULT_GENERATION_RETRY_JITTER_MS = 1000;
 const DEFAULT_JWT_EXPIRATION_SAFETY_SKEW_MS = 60_000;
+const DEFAULT_VALIDATION_TIMEOUT_MS = 30_000;
 const REDACTED_USER_LABEL = "[redacted-user]";
 
 export interface AdminAuthTokenCacheEntry {
@@ -49,10 +52,12 @@ export interface AdminAuthTokenCacheEvent {
   expiresAtMs?: number | undefined;
   jwtExpiresAtMs?: number | undefined;
   validatedAtMs?: number | undefined;
+  validationPolicyFingerprint?: string | undefined;
 }
 
 export interface ValidateAdminAuthTokenParams {
   authToken: string;
+  signal: AbortSignal;
 }
 
 export type AdminAuthTokenCacheEventHandler = (
@@ -79,6 +84,8 @@ export interface GetOrCreateAdminAuthTokenParams extends AdminAuthTokenCachePara
   createToken: () => Promise<string>;
   forceRefresh?: boolean | undefined;
   jwtExpirationSafetySkewMs?: number | undefined;
+  validationPolicy?: string | undefined;
+  validationTimeoutMs?: number | undefined;
   validateToken?: ((params: ValidateAdminAuthTokenParams) => Promise<boolean>) | undefined;
 }
 
@@ -116,6 +123,7 @@ interface StoredAdminAuthTokenCacheEntry {
   authToken: string;
   expiresAtMs: number;
   validatedAtMs?: number | undefined;
+  validationPolicyFingerprint?: string | undefined;
 }
 
 interface AdminAuthTokenCachePaths {
@@ -144,6 +152,8 @@ export async function getOrCreateAdminAuthToken(
   const nowImplementation = params.nowImplementation ?? Date.now;
   const jwtExpirationSafetySkewMs =
     params.jwtExpirationSafetySkewMs ?? DEFAULT_JWT_EXPIRATION_SAFETY_SKEW_MS;
+  const validationPolicyFingerprint = getValidationPolicyFingerprint(params);
+  const validationTimeoutMs = getValidationTimeoutMs(params);
 
   await mkdir(cachePaths.cacheDirectoryPath, { recursive: true });
 
@@ -153,7 +163,9 @@ export async function getOrCreateAdminAuthToken(
       jwtExpirationSafetySkewMs,
       nowImplementation,
     });
-    const needsValidation = isDefined(params.validateToken) && isNil(cachedEntry?.validatedAtMs);
+    const needsValidation =
+      isDefined(params.validateToken) &&
+      cachedEntry?.validationPolicyFingerprint !== validationPolicyFingerprint;
     if (isDefined(cachedEntry) && !needsValidation) {
       emitCacheEvent({
         cachePaths,
@@ -162,6 +174,7 @@ export async function getOrCreateAdminAuthToken(
           expiresAtMs: cachedEntry.expiresAtMs,
           jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
           validatedAtMs: cachedEntry.validatedAtMs,
+          validationPolicyFingerprint: cachedEntry.validationPolicyFingerprint,
         },
         onCacheEvent: params.onCacheEvent,
       });
@@ -174,6 +187,8 @@ export async function getOrCreateAdminAuthToken(
     cachePaths,
     jwtExpirationSafetySkewMs,
     nowImplementation,
+    validationPolicyFingerprint,
+    validationTimeoutMs,
   });
 }
 
@@ -187,13 +202,11 @@ export async function invalidateAdminAuthToken(
   validateCacheLocationParams(params);
 
   const cachePaths = getCachePaths(params);
-  const nowImplementation = params.nowImplementation ?? Date.now;
 
   await mkdir(cachePaths.cacheDirectoryPath, { recursive: true });
   await runWithAdminAuthTokenLock({
     ...params,
     cachePaths,
-    nowImplementation,
     operation: async () => {
       await rm(cachePaths.cacheFilePath, { force: true });
       emitCacheEvent({
@@ -308,6 +321,8 @@ async function getOrCreateWithLock(
     cachePaths: AdminAuthTokenCachePaths;
     jwtExpirationSafetySkewMs: number;
     nowImplementation: () => number;
+    validationPolicyFingerprint: string | undefined;
+    validationTimeoutMs: number;
   },
 ): Promise<AdminAuthTokenCacheEntry> {
   return await runWithAdminAuthTokenLock({
@@ -328,10 +343,12 @@ async function getOrCreateWithLock(
         });
         if (isDefined(cachedEntry)) {
           const needsValidation =
-            isDefined(params.validateToken) && isNil(cachedEntry.validatedAtMs);
+            isDefined(params.validateToken) &&
+            cachedEntry.validationPolicyFingerprint !== params.validationPolicyFingerprint;
           const isAccepted = needsValidation
             ? await validateAdminAuthToken({
                 authToken: cachedEntry.authToken,
+                validationTimeoutMs: params.validationTimeoutMs,
                 validateToken: params.validateToken,
               })
             : true;
@@ -340,6 +357,7 @@ async function getOrCreateWithLock(
               ? {
                   ...cachedEntry,
                   validatedAtMs: params.nowImplementation(),
+                  validationPolicyFingerprint: params.validationPolicyFingerprint,
                 }
               : cachedEntry;
             if (needsValidation) {
@@ -355,6 +373,7 @@ async function getOrCreateWithLock(
                 expiresAtMs: acceptedEntry.expiresAtMs,
                 jwtExpiresAtMs: getJwtExpirationMs({ authToken: acceptedEntry.authToken }),
                 validatedAtMs: acceptedEntry.validatedAtMs,
+                validationPolicyFingerprint: acceptedEntry.validationPolicyFingerprint,
               },
               onCacheEvent: params.onCacheEvent,
             });
@@ -387,6 +406,7 @@ async function getOrCreateWithLock(
 
       const isAccepted = await validateAdminAuthToken({
         authToken,
+        validationTimeoutMs: params.validationTimeoutMs,
         validateToken: params.validateToken,
       });
       if (!isAccepted) {
@@ -416,6 +436,7 @@ async function getOrCreateWithLock(
         authToken,
         expiresAtMs: expiration.expiresAtMs,
         validatedAtMs: isDefined(params.validateToken) ? nowMs : undefined,
+        validationPolicyFingerprint: params.validationPolicyFingerprint,
       };
       await writeCachedEntry({
         cacheFilePath: params.cachePaths.cacheFilePath,
@@ -428,6 +449,7 @@ async function getOrCreateWithLock(
           expiresAtMs: storedEntry.expiresAtMs,
           jwtExpiresAtMs: expiration.jwtExpiresAtMs,
           validatedAtMs: storedEntry.validatedAtMs,
+          validationPolicyFingerprint: storedEntry.validationPolicyFingerprint,
         },
         onCacheEvent: params.onCacheEvent,
       });
@@ -449,6 +471,20 @@ function validateParams(params: GetOrCreateAdminAuthTokenParams): void {
     (!Number.isFinite(params.jwtExpirationSafetySkewMs) || params.jwtExpirationSafetySkewMs < 0)
   ) {
     throw new Error("jwtExpirationSafetySkewMs must be finite and non-negative");
+  }
+
+  if (
+    isDefined(params.validateToken) &&
+    (isNil(params.validationPolicy) || params.validationPolicy.trim().length === 0)
+  ) {
+    throw new Error("validationPolicy must be provided when validateToken is configured");
+  }
+
+  if (
+    isDefined(params.validationTimeoutMs) &&
+    (!Number.isFinite(params.validationTimeoutMs) || params.validationTimeoutMs <= 0)
+  ) {
+    throw new Error("validationTimeoutMs must be positive");
   }
 }
 
@@ -553,7 +589,9 @@ function isStoredCacheEntry(value: unknown): value is StoredAdminAuthTokenCacheE
     typeof value["expiresAtMs"] === "number" &&
     Number.isFinite(value["expiresAtMs"]) &&
     (isNil(value["validatedAtMs"]) ||
-      (typeof value["validatedAtMs"] === "number" && Number.isFinite(value["validatedAtMs"])))
+      (typeof value["validatedAtMs"] === "number" && Number.isFinite(value["validatedAtMs"]))) &&
+    (isNil(value["validationPolicyFingerprint"]) ||
+      typeof value["validationPolicyFingerprint"] === "string")
   );
 }
 
@@ -589,20 +627,18 @@ async function runWithAdminAuthTokenLock<Result>(params: {
   lockWaitTimeoutMs?: number | undefined;
   lockRetryDelayMs?: number | undefined;
   lockRetryJitterMs?: number | undefined;
-  nowImplementation: () => number;
   operation: () => Promise<Result>;
   randomImplementation?: (() => number) | undefined;
   sleepImplementation?: ((params: { durationMs: number }) => Promise<void>) | undefined;
 }): Promise<Result> {
-  const waitStartedAtMs = params.nowImplementation();
+  const waitStartedAtMs = performance.now();
   const lockWaitTimeoutMs = params.lockWaitTimeoutMs ?? DEFAULT_LOCK_WAIT_TIMEOUT_MS;
   const sleepImplementation = params.sleepImplementation ?? sleep;
 
   /* eslint-disable no-await-in-loop -- Lock acquisition and ownership checks are sequential. */
-  while (params.nowImplementation() - waitStartedAtMs < lockWaitTimeoutMs) {
+  while (performance.now() - waitStartedAtMs < lockWaitTimeoutMs) {
     const lock = await tryAcquireLock({
       lockFilePath: params.cachePaths.lockFilePath,
-      nowImplementation: params.nowImplementation,
     });
 
     if (isDefined(lock)) {
@@ -619,7 +655,6 @@ async function runWithAdminAuthTokenLock<Result>(params: {
     await removeStaleLock({
       lockFilePath: params.cachePaths.lockFilePath,
       lockStaleAfterMs: params.lockStaleAfterMs ?? DEFAULT_LOCK_STALE_AFTER_MS,
-      nowImplementation: params.nowImplementation,
     });
     const retryDelayMs =
       (params.lockRetryDelayMs ?? DEFAULT_LOCK_RETRY_DELAY_MS) +
@@ -638,11 +673,10 @@ async function runWithAdminAuthTokenLock<Result>(params: {
 
 async function tryAcquireLock(params: {
   lockFilePath: string;
-  nowImplementation: () => number;
 }): Promise<AdminAuthTokenLock | undefined> {
   const lock = {
     ownerId: `${process.pid}-${randomUUID()}`,
-    createdAtMs: params.nowImplementation(),
+    createdAtMs: Date.now(),
     pid: process.pid,
   };
 
@@ -665,14 +699,13 @@ async function tryAcquireLock(params: {
 async function removeStaleLock(params: {
   lockFilePath: string;
   lockStaleAfterMs: number;
-  nowImplementation: () => number;
 }): Promise<void> {
   try {
     const lock = await readLock(params.lockFilePath);
     const lockFileStats = await stat(params.lockFilePath);
     const lockCreatedAtMs = lock?.createdAtMs ?? lockFileStats.mtimeMs;
 
-    if (params.nowImplementation() - lockCreatedAtMs < params.lockStaleAfterMs) {
+    if (Date.now() - lockCreatedAtMs < params.lockStaleAfterMs) {
       return;
     }
 
@@ -736,11 +769,58 @@ function isValidBearerToken(authToken: string): boolean {
 
 async function validateAdminAuthToken(params: {
   authToken: string;
+  validationTimeoutMs: number;
   validateToken?: ((params: ValidateAdminAuthTokenParams) => Promise<boolean>) | undefined;
 }): Promise<boolean> {
-  return isNil(params.validateToken)
-    ? true
-    : await params.validateToken({ authToken: params.authToken });
+  if (isNil(params.validateToken)) {
+    return true;
+  }
+
+  const abortController = new AbortController();
+  const timeoutAbortController = new AbortController();
+
+  try {
+    return await Promise.race([
+      params.validateToken({
+        authToken: params.authToken,
+        signal: abortController.signal,
+      }),
+      throwAfterAdminAuthTokenValidationTimeout({
+        signal: timeoutAbortController.signal,
+        timeoutMs: params.validationTimeoutMs,
+      }),
+    ]);
+  } finally {
+    abortController.abort();
+    timeoutAbortController.abort();
+  }
+}
+
+async function throwAfterAdminAuthTokenValidationTimeout(params: {
+  signal: AbortSignal;
+  timeoutMs: number;
+}): Promise<never> {
+  await setTimeoutPromise(params.timeoutMs, undefined, { signal: params.signal });
+  throw new Error(`Admin auth token validation timed out after ${params.timeoutMs}ms`);
+}
+
+function getValidationPolicyFingerprint(
+  params: Pick<GetOrCreateAdminAuthTokenParams, "validateToken" | "validationPolicy">,
+): string | undefined {
+  return isDefined(params.validateToken) && isDefined(params.validationPolicy)
+    ? createDeterministicHash(params.validationPolicy).slice(0, 16)
+    : undefined;
+}
+
+function getValidationTimeoutMs(
+  params: Pick<GetOrCreateAdminAuthTokenParams, "lockStaleAfterMs" | "validationTimeoutMs">,
+): number {
+  const lockStaleAfterMs = params.lockStaleAfterMs ?? DEFAULT_LOCK_STALE_AFTER_MS;
+
+  return Math.min(
+    params.validationTimeoutMs ?? DEFAULT_VALIDATION_TIMEOUT_MS,
+    Math.max(1, Math.floor(lockStaleAfterMs / 2)),
+  );
 }
 
 function getAdminAuthTokenExpiration(params: {

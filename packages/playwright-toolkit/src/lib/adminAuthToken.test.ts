@@ -174,8 +174,18 @@ describe("getOrCreateAdminAuthToken", () => {
       jwtExpirationSafetySkewMs: 60_000,
       nowImplementation: () => nowMs,
     });
+    const cached = await getOrCreateAdminAuthToken({
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 10 * 60_000,
+      createToken: async () => authToken,
+      jwtExpirationSafetySkewMs: 60_000,
+      nowImplementation: () => nowMs,
+    });
 
     expect(actual.expiresAtMs).toBe(jwtExpiresAtMs - 60_000);
+    expect(cached.expiresAtMs).toBe(actual.expiresAtMs);
   });
 
   it("evicts a rejected cached token before sharing one fresh replacement", async () => {
@@ -198,14 +208,18 @@ describe("getOrCreateAdminAuthToken", () => {
 
     const actual = await getOrCreateAdminAuthToken({
       ...commonInput,
+      validationPolicy: "admin-session-v1",
       validateToken: mockValidateToken,
     });
 
     expect(actual.authToken).toBe("Bearer accepted-token");
     expect(mockCreateToken).toHaveBeenCalledTimes(2);
-    expect(mockValidateToken).toHaveBeenNthCalledWith(1, {
-      authToken: "Bearer rejected-token",
-    });
+    expect(mockValidateToken).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        authToken: "Bearer rejected-token",
+      }),
+    );
   });
 
   it("shares one replacement when concurrent callers reject the cached token", async () => {
@@ -230,10 +244,12 @@ describe("getOrCreateAdminAuthToken", () => {
     const [first, second] = await Promise.all([
       getOrCreateAdminAuthToken({
         ...commonInput,
+        validationPolicy: "admin-session-v1",
         validateToken: mockValidateToken,
       }),
       getOrCreateAdminAuthToken({
         ...commonInput,
+        validationPolicy: "admin-session-v1",
         validateToken: mockValidateToken,
       }),
     ]);
@@ -252,6 +268,7 @@ describe("getOrCreateAdminAuthToken", () => {
       cacheDirectory,
       cacheDurationMs: 60_000,
       createToken: async () => "Bearer validated-token",
+      validationPolicy: "admin-session-v1",
       validateToken: mockValidateToken,
     };
 
@@ -278,6 +295,7 @@ describe("getOrCreateAdminAuthToken", () => {
     await expect(
       getOrCreateAdminAuthToken({
         ...input,
+        validationPolicy: "admin-session-v1",
         validateToken: async () => {
           throw new Error("Validation endpoint unavailable");
         },
@@ -287,6 +305,98 @@ describe("getOrCreateAdminAuthToken", () => {
 
     expect(actual.authToken).toBe("Bearer cached-token");
     expect(mockCreateToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("revalidates when the validation policy changes", async () => {
+    const firstPolicyValidator = vi.fn<() => Promise<boolean>>(async () => true);
+    const secondPolicyValidator = vi.fn<() => Promise<boolean>>(async () => true);
+    const commonInput = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+      createToken: async () => "Bearer validated-token",
+    };
+    await getOrCreateAdminAuthToken({
+      ...commonInput,
+      validationPolicy: "admin-session-v1",
+      validateToken: firstPolicyValidator,
+    });
+
+    const actual = await getOrCreateAdminAuthToken({
+      ...commonInput,
+      validationPolicy: "admin-session-v2",
+      validateToken: secondPolicyValidator,
+    });
+
+    expect(actual.authToken).toBe("Bearer validated-token");
+    expect(firstPolicyValidator).toHaveBeenCalledTimes(1);
+    expect(secondPolicyValidator).toHaveBeenCalledTimes(1);
+  });
+
+  it("requires an explicit policy and bounds token validation time", async () => {
+    const commonInput = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+      createToken: async () => "Bearer generated-token",
+    };
+
+    await expect(
+      getOrCreateAdminAuthToken({
+        ...commonInput,
+        validateToken: async () => true,
+      }),
+    ).rejects.toThrow("validationPolicy must be provided");
+    await expect(
+      getOrCreateAdminAuthToken({
+        ...commonInput,
+        validationPolicy: "admin-session-v1",
+        validationTimeoutMs: 5,
+        validateToken: async ({ signal }) =>
+          await new Promise<boolean>((_resolve, reject) => {
+            signal.addEventListener(
+              "abort",
+              () => {
+                reject(new Error("Validation aborted"));
+              },
+              { once: true },
+            );
+          }),
+      }),
+    ).rejects.toThrow("Admin auth token validation timed out after 5ms");
+  });
+
+  it("times out lock contention even when token time is fixed", async () => {
+    let resolveToken: ((value: string) => void) | undefined;
+    const tokenPromise = new Promise<string>((resolve) => {
+      resolveToken = resolve;
+    });
+    const mockCreateToken = vi.fn<() => Promise<string>>(async () => await tokenPromise);
+    const commonInput = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 60_000,
+      createToken: mockCreateToken,
+      lockRetryDelayMs: 1,
+      lockRetryJitterMs: 0,
+      nowImplementation: () => 1_000_000,
+    };
+    const firstPromise = getOrCreateAdminAuthToken(commonInput);
+    await vi.waitFor(() => {
+      expect(mockCreateToken).toHaveBeenCalledTimes(1);
+    });
+
+    await expect(
+      getOrCreateAdminAuthToken({
+        ...commonInput,
+        lockWaitTimeoutMs: 25,
+      }),
+    ).rejects.toThrow("Timed out waiting for admin auth token cache lock");
+    resolveToken?.("Bearer generated-token");
+    await firstPromise;
   });
 
   it("supports explicit invalidation and forced refresh", async () => {

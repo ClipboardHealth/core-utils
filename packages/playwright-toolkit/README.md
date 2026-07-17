@@ -119,9 +119,11 @@ const tokenEntry = await generateAdminAuthToken({
   },
   clientName: "admin-app",
   cacheDurationMs: 10 * 60 * 1000,
-  validateToken: async ({ authToken }) => {
+  validationPolicy: "admin-session-v1",
+  validateToken: async ({ authToken, signal }) => {
     const response = await fetch(`${adminApiUrl}/auth/session`, {
       headers: { Authorization: authToken },
+      signal,
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -143,9 +145,11 @@ The cache key contains the environment, a SHA-256 digest of the email, and the o
 
 JWT cache freshness is bounded to the earlier of `cacheDurationMs` and the token's `exp` claim minus a 60-second safety skew. Opaque bearer tokens continue to use `cacheDurationMs`. Set `jwtExpirationSafetySkewMs` when a suite needs a different skew.
 
-When `validateToken` is provided, the toolkit runs the read-only probe while holding the cache lock and records successful validation in the cache entry, so waiting Playwright workers share one probe. Return `false` only when the consumer rejects the credential, such as HTTP `401` or `403`; throw for timeouts, `5xx` responses, and other validation infrastructure failures. A rejected cached token is evicted and replaced once for all waiting workers and shards. A rejected generated token is not cached. The probe should verify the same audience and permission boundary the suite needs without mutating application state.
+When `validateToken` is provided, the toolkit runs the read-only probe while holding the cache lock and records successful validation in the cache entry, so waiting Playwright workers share one probe. Give the probe an explicit `validationPolicy` and increment it whenever the validation contract becomes stricter or otherwise changes; a policy change forces revalidation. The toolkit aborts validation after 30 seconds by default, bounded below the lock's stale lease. Pass the provided `signal` to network requests, and set `validationTimeoutMs` when the endpoint needs a shorter deadline.
 
-The cache and lock files use mode `0600`. A process that acquires the lock re-reads the cache before generating, which prevents duplicate token mints across Playwright workers, shards, and local processes.
+Return `false` only when the consumer rejects the credential, such as HTTP `401` or `403`; throw for `5xx` responses and other validation infrastructure failures. A rejected cached token is evicted and replaced once for all waiting workers and shards sharing the cache filesystem. A rejected generated token is not cached. The probe should verify the same audience and permission boundary the suite needs without mutating application state.
+
+The cache and lock files use mode `0600`. A process that acquires the lock re-reads the cache before generating, which prevents duplicate token mints across Playwright workers, shards, and local processes that share `cacheDirectory`. Separate CI hosts or containers with independent filesystems may still mint independently.
 
 Use `getOrCreateAdminAuthToken` when the repository needs a different token command:
 
