@@ -279,6 +279,40 @@ describe("getOrCreateAdminAuthToken", () => {
     expect(mockValidateToken).toHaveBeenCalledTimes(1);
   });
 
+  it("replaces a cached token that expires during validation", async () => {
+    let nowMs = 1_000_000;
+    const cacheEvents: string[] = [];
+    const mockCreateToken = vi
+      .fn<() => Promise<string>>()
+      .mockResolvedValueOnce("Bearer expiring-token")
+      .mockResolvedValueOnce("Bearer replacement-token");
+    const commonInput = {
+      adminEmail: "e2e@clipboardhealth.com",
+      apiEnvironmentName: "staging",
+      cacheDirectory,
+      cacheDurationMs: 10,
+      createToken: mockCreateToken,
+      nowImplementation: () => nowMs,
+      onCacheEvent: (event: { kind: string }) => {
+        cacheEvents.push(event.kind);
+      },
+    };
+    await getOrCreateAdminAuthToken(commonInput);
+
+    const actual = await getOrCreateAdminAuthToken({
+      ...commonInput,
+      validationPolicy: "admin-session-v1",
+      validateToken: async () => {
+        nowMs += 10;
+        return true;
+      },
+    });
+
+    expect(actual.authToken).toBe("Bearer replacement-token");
+    expect(mockCreateToken).toHaveBeenCalledTimes(2);
+    expect(cacheEvents).not.toContain("validation-rejected");
+  });
+
   it("keeps the cached token when validation infrastructure fails", async () => {
     const mockCreateToken = vi
       .fn<() => Promise<string>>()

@@ -360,36 +360,43 @@ async function getOrCreateWithLock(
                   validationPolicyFingerprint: params.validationPolicyFingerprint,
                 }
               : cachedEntry;
-            if (needsValidation) {
-              await writeCachedEntry({
+            const expiredDuringValidation = isAdminAuthTokenExpired({
+              cacheEntry: acceptedEntry,
+              nowMs: params.nowImplementation(),
+            });
+            if (!expiredDuringValidation) {
+              await persistCachedValidation({
                 cacheFilePath: params.cachePaths.cacheFilePath,
+                needsValidation,
                 storedEntry: acceptedEntry,
               });
+              emitCacheEvent({
+                cachePaths: params.cachePaths,
+                event: {
+                  kind: "hit",
+                  expiresAtMs: acceptedEntry.expiresAtMs,
+                  jwtExpiresAtMs: getJwtExpirationMs({ authToken: acceptedEntry.authToken }),
+                  validatedAtMs: acceptedEntry.validatedAtMs,
+                  validationPolicyFingerprint: acceptedEntry.validationPolicyFingerprint,
+                },
+                onCacheEvent: params.onCacheEvent,
+              });
+              return getPublicCacheEntry({ storedEntry: acceptedEntry });
             }
+
+            await rm(params.cachePaths.cacheFilePath, { force: true });
+          } else {
+            await rm(params.cachePaths.cacheFilePath, { force: true });
             emitCacheEvent({
               cachePaths: params.cachePaths,
               event: {
-                kind: "hit",
-                expiresAtMs: acceptedEntry.expiresAtMs,
-                jwtExpiresAtMs: getJwtExpirationMs({ authToken: acceptedEntry.authToken }),
-                validatedAtMs: acceptedEntry.validatedAtMs,
-                validationPolicyFingerprint: acceptedEntry.validationPolicyFingerprint,
+                kind: "validation-rejected",
+                expiresAtMs: cachedEntry.expiresAtMs,
+                jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
               },
               onCacheEvent: params.onCacheEvent,
             });
-            return getPublicCacheEntry({ storedEntry: acceptedEntry });
           }
-
-          await rm(params.cachePaths.cacheFilePath, { force: true });
-          emitCacheEvent({
-            cachePaths: params.cachePaths,
-            event: {
-              kind: "validation-rejected",
-              expiresAtMs: cachedEntry.expiresAtMs,
-              jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
-            },
-            onCacheEvent: params.onCacheEvent,
-          });
         }
       }
 
@@ -619,6 +626,21 @@ async function writeCachedEntry(params: {
   } finally {
     await rm(temporaryFilePath, { force: true });
   }
+}
+
+async function persistCachedValidation(params: {
+  cacheFilePath: string;
+  needsValidation: boolean;
+  storedEntry: StoredAdminAuthTokenCacheEntry;
+}): Promise<void> {
+  if (!params.needsValidation) {
+    return;
+  }
+
+  await writeCachedEntry({
+    cacheFilePath: params.cacheFilePath,
+    storedEntry: params.storedEntry,
+  });
 }
 
 async function runWithAdminAuthTokenLock<Result>(params: {
