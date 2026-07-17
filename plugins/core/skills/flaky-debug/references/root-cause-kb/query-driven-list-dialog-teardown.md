@@ -61,5 +61,6 @@ Fixed for the known query-row surfaces covered by [STAFF-1789](https://linear.ap
 - [cbh-admin-frontend#7574](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7574): hoisted host and deletion of the temporary guard.
 - [cbh-mobile-app#12857](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12857): mobile sheet hoists and architecture guard.
 - [cbh-mobile-app#12860](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12860): indirect workplace-review descendants hoisted after the syntactic guard could not detect them.
+- [STAFF-1846](https://linear.app/clipboardhealth/issue/STAFF-1846): source deep dive and prior-attempt dossier for the provider-topology fix.
 - [STAFF-1856](https://linear.app/clipboardhealth/issue/STAFF-1856): provider-topology recurrence, route lifecycle telemetry, and the failed scope of the dialog-only hoist.
 - [cbh-admin-frontend#7608](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7608): stable application composition plus delayed-token and fault-injection regression coverage.
