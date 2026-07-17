@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/playwright-toolkit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Shared anti-flake primitives for Clipboard Health Playwright suites.",
   "keywords": [
     "cognito",
