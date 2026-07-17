@@ -52,6 +52,7 @@ Before proposing any retry, timeout, or wait change, pass the idempotency check:
 - Does retrying preserve the same test scenario?
 - Could retrying amplify the root cause, such as rate limits, one-time credentials, duplicate writes, or destructive mutations?
 - Does the retry predicate name the exact transient failure signatures it matches (opaque 5xx yes; 4xx validation no; 429 only with a cap)?
+- Does the plan set a finite attempt or total-call bound, with exhaustion reporting the attempts and last stdout/stderr/status/body?
 - For a rate-limited or quota-limited dependency such as Cognito, a 429-emitting API, token minting, one-time credentials, or seed creation, does the plan state a concurrency cap or call-volume bound?
 - Is there a deterministic signal to wait on instead of a longer timeout?
 
