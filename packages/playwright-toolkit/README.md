@@ -111,14 +111,45 @@ The auto fixture creates one non-zero W3C `traceparent`, preserves project-level
 const tokenEntry = await generateAdminAuthToken({
   adminEmail: adminUser.email,
   apiEnvironmentName: "staging",
+  cacheIdentity: {
+    namespace: "cbh-admin-frontend",
+    clientName: "admin-app",
+    issuer: "clipboard-health-staging",
+    tokenKind: "access",
+  },
   clientName: "admin-app",
   cacheDurationMs: 10 * 60 * 1000,
+  validationPolicy: "admin-session-v1",
+  validateToken: async ({ authToken, signal }) => {
+    const response = await fetch(`${adminApiUrl}/auth/session`, {
+      headers: { Authorization: authToken },
+      signal,
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      return false;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Admin token validation failed with HTTP ${response.status}`);
+    }
+
+    return true;
+  },
 });
 
 const adminAuthToken = tokenEntry.authToken;
 ```
 
-The cache key contains the environment and a SHA-256 email digest, not the email. The cache and lock files use mode `0600`. A process that acquires the lock re-reads the cache before generating, which prevents duplicate token mints across Playwright workers and shards.
+The cache key contains the environment, a SHA-256 digest of the email, and the optional explicit cache identity; it never contains the email itself. Give each repository a stable `namespace`, and distinguish credentials by token kind, client, audience, and issuer when those values differ. `generateAdminAuthToken` automatically distinguishes different `clientName` values even when `cacheIdentity` is omitted.
+
+JWT cache freshness is bounded to the earlier of `cacheDurationMs` and the token's `exp` claim minus a 60-second safety skew. Opaque bearer tokens continue to use `cacheDurationMs`. Set `jwtExpirationSafetySkewMs` when a suite needs a different skew.
+
+When `validateToken` is provided, the toolkit runs the read-only probe while holding the cache lock and records successful validation in the cache entry, so waiting Playwright workers share one probe. Give the probe an explicit `validationPolicy` and increment it whenever the validation contract becomes stricter or otherwise changes; a policy change forces revalidation. The toolkit aborts validation after 30 seconds by default, bounded below the lock's stale lease. Pass the provided `signal` to network requests, and set `validationTimeoutMs` when the endpoint needs a shorter deadline.
+
+Return `false` only when the consumer rejects the credential, such as HTTP `401` or `403`; throw for `5xx` responses and other validation infrastructure failures. A rejected cached token is evicted and replaced once for all waiting workers and shards sharing the cache filesystem. A rejected generated token is not cached. The probe should verify the same audience and permission boundary the suite needs without mutating application state.
+
+The cache and lock files use mode `0600`. A process that acquires the lock re-reads the cache before generating, which prevents duplicate token mints across Playwright workers, shards, and local processes that share `cacheDirectory`. Separate CI hosts or containers with independent filesystems may still mint independently.
 
 Use `getOrCreateAdminAuthToken` when the repository needs a different token command:
 
@@ -126,10 +157,49 @@ Use `getOrCreateAdminAuthToken` when the repository needs a different token comm
 const tokenEntry = await getOrCreateAdminAuthToken({
   adminEmail,
   apiEnvironmentName,
+  cacheIdentity: {
+    namespace: "cbh-mobile-app",
+    audience: "monolith-api",
+    clientName: "mobile-app",
+    tokenKind: "access",
+  },
   cacheDurationMs: 10 * 60 * 1000,
   createToken: async () => await generateTokenWithRepositoryCli(),
 });
 ```
+
+After a consumer rejects a token, pass that credential to `forceRefresh`. Callers reporting the same rejected credential share one replacement, including callers that arrive after another worker has already refreshed the cache:
+
+```typescript
+import { getOrCreateAdminAuthToken } from "@clipboard-health/playwright-toolkit";
+
+const freshTokenEntry = await getOrCreateAdminAuthToken({
+  ...tokenParams,
+  forceRefresh: {
+    rejectedAuthToken,
+  },
+});
+```
+
+Keep `forceRefresh: true` for deliberate unconditional rotation when no rejected credential is available.
+
+Alternatively, invalidate a generated token explicitly with the API that applies the same default identity as `generateAdminAuthToken`:
+
+```typescript
+import { invalidateGeneratedAdminAuthToken } from "@clipboard-health/playwright-toolkit";
+
+await invalidateGeneratedAdminAuthToken({
+  adminEmail,
+  apiEnvironmentName,
+  clientName: "admin-app",
+});
+```
+
+Use `invalidateAdminAuthToken` for `getOrCreateAdminAuthToken` entries, passing the same `cacheIdentity` used to create the entry.
+
+Only retry a request automatically when it is read-only or otherwise safe to repeat. The toolkit does not replay consumer requests because it cannot determine whether a failed mutation had side effects.
+
+Use `onCacheEvent` for safe diagnostics. Events expose `kind`, cache-key and credential fingerprints, the optional audience, and mint/expiration/validation timestamps. Fingerprints distinguish successive credentials without exposing the token, email, or raw cache identity.
 
 ## Deployed assets
 
