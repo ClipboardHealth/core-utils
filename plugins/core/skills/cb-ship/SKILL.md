@@ -40,7 +40,7 @@ Resolve bundled "./references" paths relative to SKILL.md.
    - Session: [Resume command from 6a] (omit if none)
    - Existing changes: [Uncommitted changes that remain outside the shipped scope] (omit if none)
 
-   🚀 PR: [Complete url] (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`) 🚀
+   🚀 [Complete url] (e.g., `https://github.com/clipboardhealth/core-utils/pull/123`) 🚀
    ```
 
    Keep the PR as the final line and visually separate it from everything else
