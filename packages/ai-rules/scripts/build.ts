@@ -75,6 +75,7 @@ async function build(): Promise<void> {
 }
 
 function isTestFile(source: string): boolean {
+  // Consumers install the bundle without test dependencies, so omit test files from publication.
   return /\.(?<type>spec|test)\.ts$/.test(source);
 }
 
