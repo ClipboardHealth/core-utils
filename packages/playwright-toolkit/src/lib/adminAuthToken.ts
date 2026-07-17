@@ -4,7 +4,7 @@ import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { createDeterministicHash, isRecord } from "@clipboard-health/util-ts";
+import { createDeterministicHash, isDefined, isNil, isRecord } from "@clipboard-health/util-ts";
 
 import { runWithRetry } from "./retry";
 
@@ -19,6 +19,7 @@ const DEFAULT_COMMAND_TIMEOUT_MS = 30_000;
 const DEFAULT_GENERATION_MAX_ATTEMPTS = 4;
 const DEFAULT_GENERATION_RETRY_DELAY_MS = 2000;
 const DEFAULT_GENERATION_RETRY_JITTER_MS = 1000;
+const DEFAULT_JWT_EXPIRATION_SAFETY_SKEW_MS = 60_000;
 const REDACTED_USER_LABEL = "[redacted-user]";
 
 export interface AdminAuthTokenCacheEntry {
@@ -26,20 +27,62 @@ export interface AdminAuthTokenCacheEntry {
   expiresAtMs: number;
 }
 
-export interface GetOrCreateAdminAuthTokenParams {
+export interface AdminAuthTokenCacheIdentity {
+  namespace: string;
+  tokenKind: string;
+  audience?: string | undefined;
+  clientName?: string | undefined;
+  issuer?: string | undefined;
+}
+
+export type AdminAuthTokenCacheEventKind =
+  | "created"
+  | "hit"
+  | "invalidated"
+  | "miss"
+  | "refresh"
+  | "validation-rejected";
+
+export interface AdminAuthTokenCacheEvent {
+  kind: AdminAuthTokenCacheEventKind;
+  cacheKeyFingerprint: string;
+  expiresAtMs?: number | undefined;
+  jwtExpiresAtMs?: number | undefined;
+  validatedAtMs?: number | undefined;
+}
+
+export interface ValidateAdminAuthTokenParams {
+  authToken: string;
+}
+
+export type AdminAuthTokenCacheEventHandler = (
+  event: AdminAuthTokenCacheEvent,
+) => Promise<void> | void;
+
+export interface AdminAuthTokenCacheParams {
   adminEmail: string;
   apiEnvironmentName: string;
-  cacheDurationMs: number;
-  createToken: () => Promise<string>;
+  cacheIdentity?: AdminAuthTokenCacheIdentity | undefined;
   cacheDirectory?: string | undefined;
   lockStaleAfterMs?: number | undefined;
   lockWaitTimeoutMs?: number | undefined;
   lockRetryDelayMs?: number | undefined;
   lockRetryJitterMs?: number | undefined;
   nowImplementation?: (() => number) | undefined;
+  onCacheEvent?: AdminAuthTokenCacheEventHandler | undefined;
   randomImplementation?: (() => number) | undefined;
   sleepImplementation?: ((params: { durationMs: number }) => Promise<void>) | undefined;
 }
+
+export interface GetOrCreateAdminAuthTokenParams extends AdminAuthTokenCacheParams {
+  cacheDurationMs: number;
+  createToken: () => Promise<string>;
+  forceRefresh?: boolean | undefined;
+  jwtExpirationSafetySkewMs?: number | undefined;
+  validateToken?: ((params: ValidateAdminAuthTokenParams) => Promise<boolean>) | undefined;
+}
+
+export type InvalidateAdminAuthTokenParams = AdminAuthTokenCacheParams;
 
 export interface AdminAuthTokenCommandResult {
   stdout: string;
@@ -72,11 +115,13 @@ export interface GenerateAdminAuthTokenParams extends Omit<
 interface StoredAdminAuthTokenCacheEntry {
   authToken: string;
   expiresAtMs: number;
+  validatedAtMs?: number | undefined;
 }
 
 interface AdminAuthTokenCachePaths {
   cacheDirectoryPath: string;
   cacheFilePath: string;
+  cacheKeyFingerprint: string;
   lockFilePath: string;
 }
 
@@ -97,21 +142,66 @@ export async function getOrCreateAdminAuthToken(
 
   const cachePaths = getCachePaths(params);
   const nowImplementation = params.nowImplementation ?? Date.now;
+  const jwtExpirationSafetySkewMs =
+    params.jwtExpirationSafetySkewMs ?? DEFAULT_JWT_EXPIRATION_SAFETY_SKEW_MS;
 
   await mkdir(cachePaths.cacheDirectoryPath, { recursive: true });
 
-  const cachedEntry = await readCachedEntry({
-    cacheFilePath: cachePaths.cacheFilePath,
-    nowImplementation,
-  });
-  if (cachedEntry !== undefined) {
-    return cachedEntry;
+  if (params.forceRefresh !== true) {
+    const cachedEntry = await readCachedEntry({
+      cacheFilePath: cachePaths.cacheFilePath,
+      jwtExpirationSafetySkewMs,
+      nowImplementation,
+    });
+    const needsValidation = isDefined(params.validateToken) && isNil(cachedEntry?.validatedAtMs);
+    if (isDefined(cachedEntry) && !needsValidation) {
+      emitCacheEvent({
+        cachePaths,
+        event: {
+          kind: "hit",
+          expiresAtMs: cachedEntry.expiresAtMs,
+          jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
+          validatedAtMs: cachedEntry.validatedAtMs,
+        },
+        onCacheEvent: params.onCacheEvent,
+      });
+      return getPublicCacheEntry({ storedEntry: cachedEntry });
+    }
   }
 
   return await getOrCreateWithLock({
     ...params,
     cachePaths,
+    jwtExpirationSafetySkewMs,
     nowImplementation,
+  });
+}
+
+/**
+ * Invalidates one explicitly identified cached token while holding the same
+ * cross-process lock used by token readers and writers.
+ */
+export async function invalidateAdminAuthToken(
+  params: InvalidateAdminAuthTokenParams,
+): Promise<void> {
+  validateCacheLocationParams(params);
+
+  const cachePaths = getCachePaths(params);
+  const nowImplementation = params.nowImplementation ?? Date.now;
+
+  await mkdir(cachePaths.cacheDirectoryPath, { recursive: true });
+  await runWithAdminAuthTokenLock({
+    ...params,
+    cachePaths,
+    nowImplementation,
+    operation: async () => {
+      await rm(cachePaths.cacheFilePath, { force: true });
+      emitCacheEvent({
+        cachePaths,
+        event: { kind: "invalidated" },
+        onCacheEvent: params.onCacheEvent,
+      });
+    },
   });
 }
 
@@ -124,6 +214,13 @@ export async function generateAdminAuthToken(
 ): Promise<AdminAuthTokenCacheEntry> {
   return await getOrCreateAdminAuthToken({
     ...params,
+    cacheIdentity: {
+      namespace: params.cacheIdentity?.namespace ?? "generateAdminAuthToken",
+      tokenKind: params.cacheIdentity?.tokenKind ?? "admin-user",
+      audience: params.cacheIdentity?.audience,
+      clientName: params.clientName ?? params.cacheIdentity?.clientName,
+      issuer: params.cacheIdentity?.issuer,
+    },
     createToken: async () => {
       const result = await runWithRetry({
         operationName: "generate admin auth token",
@@ -136,7 +233,7 @@ export async function generateAdminAuthToken(
             });
             const rawToken = commandResult.stdout.split("\n")[0]?.trim();
 
-            if (rawToken === undefined || rawToken.length === 0) {
+            if (isNil(rawToken) || rawToken.length === 0) {
               throw new Error("Token generation returned an empty token");
             }
 
@@ -209,9 +306,294 @@ export function isAdminAuthTokenExpired(params: {
 async function getOrCreateWithLock(
   params: GetOrCreateAdminAuthTokenParams & {
     cachePaths: AdminAuthTokenCachePaths;
+    jwtExpirationSafetySkewMs: number;
     nowImplementation: () => number;
   },
 ): Promise<AdminAuthTokenCacheEntry> {
+  return await runWithAdminAuthTokenLock({
+    ...params,
+    operation: async () => {
+      if (params.forceRefresh === true) {
+        await rm(params.cachePaths.cacheFilePath, { force: true });
+        emitCacheEvent({
+          cachePaths: params.cachePaths,
+          event: { kind: "refresh" },
+          onCacheEvent: params.onCacheEvent,
+        });
+      } else {
+        const cachedEntry = await readCachedEntry({
+          cacheFilePath: params.cachePaths.cacheFilePath,
+          jwtExpirationSafetySkewMs: params.jwtExpirationSafetySkewMs,
+          nowImplementation: params.nowImplementation,
+        });
+        if (isDefined(cachedEntry)) {
+          const needsValidation =
+            isDefined(params.validateToken) && isNil(cachedEntry.validatedAtMs);
+          const isAccepted = needsValidation
+            ? await validateAdminAuthToken({
+                authToken: cachedEntry.authToken,
+                validateToken: params.validateToken,
+              })
+            : true;
+          if (isAccepted) {
+            const acceptedEntry = needsValidation
+              ? {
+                  ...cachedEntry,
+                  validatedAtMs: params.nowImplementation(),
+                }
+              : cachedEntry;
+            if (needsValidation) {
+              await writeCachedEntry({
+                cacheFilePath: params.cachePaths.cacheFilePath,
+                storedEntry: acceptedEntry,
+              });
+            }
+            emitCacheEvent({
+              cachePaths: params.cachePaths,
+              event: {
+                kind: "hit",
+                expiresAtMs: acceptedEntry.expiresAtMs,
+                jwtExpiresAtMs: getJwtExpirationMs({ authToken: acceptedEntry.authToken }),
+                validatedAtMs: acceptedEntry.validatedAtMs,
+              },
+              onCacheEvent: params.onCacheEvent,
+            });
+            return getPublicCacheEntry({ storedEntry: acceptedEntry });
+          }
+
+          await rm(params.cachePaths.cacheFilePath, { force: true });
+          emitCacheEvent({
+            cachePaths: params.cachePaths,
+            event: {
+              kind: "validation-rejected",
+              expiresAtMs: cachedEntry.expiresAtMs,
+              jwtExpiresAtMs: getJwtExpirationMs({ authToken: cachedEntry.authToken }),
+            },
+            onCacheEvent: params.onCacheEvent,
+          });
+        }
+      }
+
+      emitCacheEvent({
+        cachePaths: params.cachePaths,
+        event: { kind: "miss" },
+        onCacheEvent: params.onCacheEvent,
+      });
+
+      const authToken = await params.createToken();
+      if (!isValidBearerToken(authToken)) {
+        throw new Error("Generated admin auth token is malformed");
+      }
+
+      const isAccepted = await validateAdminAuthToken({
+        authToken,
+        validateToken: params.validateToken,
+      });
+      if (!isAccepted) {
+        emitCacheEvent({
+          cachePaths: params.cachePaths,
+          event: {
+            kind: "validation-rejected",
+            jwtExpiresAtMs: getJwtExpirationMs({ authToken }),
+          },
+          onCacheEvent: params.onCacheEvent,
+        });
+        throw new Error("Generated admin auth token was rejected by validation");
+      }
+
+      const nowMs = params.nowImplementation();
+      const expiration = getAdminAuthTokenExpiration({
+        authToken,
+        cacheDurationMs: params.cacheDurationMs,
+        jwtExpirationSafetySkewMs: params.jwtExpirationSafetySkewMs,
+        nowMs,
+      });
+      if (expiration.expiresAtMs <= nowMs) {
+        throw new Error("Generated admin auth token expires within the configured safety skew");
+      }
+
+      const storedEntry = {
+        authToken,
+        expiresAtMs: expiration.expiresAtMs,
+        validatedAtMs: isDefined(params.validateToken) ? nowMs : undefined,
+      };
+      await writeCachedEntry({
+        cacheFilePath: params.cachePaths.cacheFilePath,
+        storedEntry,
+      });
+      emitCacheEvent({
+        cachePaths: params.cachePaths,
+        event: {
+          kind: "created",
+          expiresAtMs: storedEntry.expiresAtMs,
+          jwtExpiresAtMs: expiration.jwtExpiresAtMs,
+          validatedAtMs: storedEntry.validatedAtMs,
+        },
+        onCacheEvent: params.onCacheEvent,
+      });
+
+      return getPublicCacheEntry({ storedEntry });
+    },
+  });
+}
+
+function validateParams(params: GetOrCreateAdminAuthTokenParams): void {
+  validateCacheLocationParams(params);
+
+  if (!Number.isFinite(params.cacheDurationMs) || params.cacheDurationMs <= 0) {
+    throw new Error("cacheDurationMs must be positive");
+  }
+
+  if (
+    isDefined(params.jwtExpirationSafetySkewMs) &&
+    (!Number.isFinite(params.jwtExpirationSafetySkewMs) || params.jwtExpirationSafetySkewMs < 0)
+  ) {
+    throw new Error("jwtExpirationSafetySkewMs must be finite and non-negative");
+  }
+}
+
+function validateCacheLocationParams(params: {
+  adminEmail: string;
+  apiEnvironmentName: string;
+  cacheIdentity?: AdminAuthTokenCacheIdentity | undefined;
+}): void {
+  if (params.adminEmail.trim().length === 0) {
+    throw new Error("adminEmail must not be empty");
+  }
+
+  if (params.apiEnvironmentName.trim().length === 0) {
+    throw new Error("apiEnvironmentName must not be empty");
+  }
+
+  if (params.cacheIdentity?.namespace.trim().length === 0) {
+    throw new Error("cacheIdentity.namespace must not be empty");
+  }
+
+  if (params.cacheIdentity?.tokenKind.trim().length === 0) {
+    throw new Error("cacheIdentity.tokenKind must not be empty");
+  }
+}
+
+function getCachePaths(params: {
+  adminEmail: string;
+  apiEnvironmentName: string;
+  cacheIdentity?: AdminAuthTokenCacheIdentity | undefined;
+  cacheDirectory?: string | undefined;
+}): AdminAuthTokenCachePaths {
+  const cacheDirectoryPath =
+    params.cacheDirectory ?? path.join(tmpdir(), DEFAULT_CACHE_DIRECTORY_NAME);
+  const environmentSegment = params.apiEnvironmentName.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
+  const cacheKeyFingerprint = createDeterministicHash(
+    JSON.stringify({
+      adminEmail: params.adminEmail,
+      apiEnvironmentName: params.apiEnvironmentName,
+      cacheIdentity: isNil(params.cacheIdentity)
+        ? undefined
+        : {
+            namespace: params.cacheIdentity.namespace,
+            tokenKind: params.cacheIdentity.tokenKind,
+            audience: params.cacheIdentity.audience,
+            clientName: params.cacheIdentity.clientName,
+            issuer: params.cacheIdentity.issuer,
+          },
+    }),
+  ).slice(0, 16);
+  const cacheFileName = `admin-auth-token-${environmentSegment}-${cacheKeyFingerprint}.json`;
+
+  return {
+    cacheDirectoryPath,
+    cacheFilePath: path.join(cacheDirectoryPath, cacheFileName),
+    cacheKeyFingerprint,
+    lockFilePath: path.join(cacheDirectoryPath, `${cacheFileName}.lock`),
+  };
+}
+
+async function readCachedEntry(params: {
+  cacheFilePath: string;
+  jwtExpirationSafetySkewMs: number;
+  nowImplementation: () => number;
+}): Promise<StoredAdminAuthTokenCacheEntry | undefined> {
+  try {
+    const contents = await readFile(params.cacheFilePath, "utf8");
+    const parsed: unknown = JSON.parse(contents);
+
+    if (!isStoredCacheEntry(parsed)) {
+      return undefined;
+    }
+
+    const nowMs = params.nowImplementation();
+    const expiration = getAdminAuthTokenExpiration({
+      authToken: parsed.authToken,
+      cacheDurationMs: parsed.expiresAtMs - nowMs,
+      jwtExpirationSafetySkewMs: params.jwtExpirationSafetySkewMs,
+      nowMs,
+    });
+    if (nowMs >= expiration.expiresAtMs) {
+      return undefined;
+    }
+
+    return {
+      ...parsed,
+      expiresAtMs: Math.min(parsed.expiresAtMs, expiration.expiresAtMs),
+    };
+  } catch (error: unknown) {
+    if (isNodeErrorWithCode({ error, code: "ENOENT" }) || error instanceof SyntaxError) {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
+function isStoredCacheEntry(value: unknown): value is StoredAdminAuthTokenCacheEntry {
+  return (
+    isRecord(value) &&
+    typeof value["authToken"] === "string" &&
+    isValidBearerToken(value["authToken"]) &&
+    typeof value["expiresAtMs"] === "number" &&
+    Number.isFinite(value["expiresAtMs"]) &&
+    (isNil(value["validatedAtMs"]) ||
+      (typeof value["validatedAtMs"] === "number" && Number.isFinite(value["validatedAtMs"])))
+  );
+}
+
+function getPublicCacheEntry(params: {
+  storedEntry: StoredAdminAuthTokenCacheEntry;
+}): AdminAuthTokenCacheEntry {
+  return {
+    authToken: params.storedEntry.authToken,
+    expiresAtMs: params.storedEntry.expiresAtMs,
+  };
+}
+
+async function writeCachedEntry(params: {
+  cacheFilePath: string;
+  storedEntry: StoredAdminAuthTokenCacheEntry;
+}): Promise<void> {
+  const temporaryFilePath = `${params.cacheFilePath}.${process.pid}.${randomUUID()}.tmp`;
+
+  try {
+    await writeFile(temporaryFilePath, JSON.stringify(params.storedEntry), {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    await rename(temporaryFilePath, params.cacheFilePath);
+  } finally {
+    await rm(temporaryFilePath, { force: true });
+  }
+}
+
+async function runWithAdminAuthTokenLock<Result>(params: {
+  cachePaths: AdminAuthTokenCachePaths;
+  lockStaleAfterMs?: number | undefined;
+  lockWaitTimeoutMs?: number | undefined;
+  lockRetryDelayMs?: number | undefined;
+  lockRetryJitterMs?: number | undefined;
+  nowImplementation: () => number;
+  operation: () => Promise<Result>;
+  randomImplementation?: (() => number) | undefined;
+  sleepImplementation?: ((params: { durationMs: number }) => Promise<void>) | undefined;
+}): Promise<Result> {
   const waitStartedAtMs = params.nowImplementation();
   const lockWaitTimeoutMs = params.lockWaitTimeoutMs ?? DEFAULT_LOCK_WAIT_TIMEOUT_MS;
   const sleepImplementation = params.sleepImplementation ?? sleep;
@@ -223,31 +605,9 @@ async function getOrCreateWithLock(
       nowImplementation: params.nowImplementation,
     });
 
-    if (lock !== undefined) {
+    if (isDefined(lock)) {
       try {
-        const cachedEntry = await readCachedEntry({
-          cacheFilePath: params.cachePaths.cacheFilePath,
-          nowImplementation: params.nowImplementation,
-        });
-        if (cachedEntry !== undefined) {
-          return cachedEntry;
-        }
-
-        const authToken = await params.createToken();
-        if (!isValidBearerToken(authToken)) {
-          throw new Error("Generated admin auth token is malformed");
-        }
-
-        const storedEntry = {
-          authToken,
-          expiresAtMs: params.nowImplementation() + params.cacheDurationMs,
-        };
-        await writeCachedEntry({
-          cacheFilePath: params.cachePaths.cacheFilePath,
-          storedEntry,
-        });
-
-        return storedEntry;
+        return await params.operation();
       } finally {
         await releaseLock({
           lockFilePath: params.cachePaths.lockFilePath,
@@ -274,89 +634,6 @@ async function getOrCreateWithLock(
   throw new Error(
     `Timed out waiting for admin auth token cache lock: ${params.cachePaths.lockFilePath}`,
   );
-}
-
-function validateParams(params: GetOrCreateAdminAuthTokenParams): void {
-  if (params.adminEmail.trim().length === 0) {
-    throw new Error("adminEmail must not be empty");
-  }
-
-  if (params.apiEnvironmentName.trim().length === 0) {
-    throw new Error("apiEnvironmentName must not be empty");
-  }
-
-  if (!Number.isFinite(params.cacheDurationMs) || params.cacheDurationMs <= 0) {
-    throw new Error("cacheDurationMs must be positive");
-  }
-}
-
-function getCachePaths(params: GetOrCreateAdminAuthTokenParams): AdminAuthTokenCachePaths {
-  const cacheDirectoryPath =
-    params.cacheDirectory ?? path.join(tmpdir(), DEFAULT_CACHE_DIRECTORY_NAME);
-  const environmentSegment = params.apiEnvironmentName.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
-  const cacheKeyHash = createDeterministicHash(
-    `${params.apiEnvironmentName}\0${params.adminEmail}`,
-  ).slice(0, 16);
-  const cacheFileName = `admin-auth-token-${environmentSegment}-${cacheKeyHash}.json`;
-
-  return {
-    cacheDirectoryPath,
-    cacheFilePath: path.join(cacheDirectoryPath, cacheFileName),
-    lockFilePath: path.join(cacheDirectoryPath, `${cacheFileName}.lock`),
-  };
-}
-
-async function readCachedEntry(params: {
-  cacheFilePath: string;
-  nowImplementation: () => number;
-}): Promise<StoredAdminAuthTokenCacheEntry | undefined> {
-  try {
-    const contents = await readFile(params.cacheFilePath, "utf8");
-    const parsed: unknown = JSON.parse(contents);
-
-    if (!isStoredCacheEntry(parsed)) {
-      return undefined;
-    }
-
-    if (params.nowImplementation() >= parsed.expiresAtMs) {
-      return undefined;
-    }
-
-    return parsed;
-  } catch (error: unknown) {
-    if (isNodeErrorWithCode({ error, code: "ENOENT" }) || error instanceof SyntaxError) {
-      return undefined;
-    }
-
-    throw error;
-  }
-}
-
-function isStoredCacheEntry(value: unknown): value is StoredAdminAuthTokenCacheEntry {
-  return (
-    isRecord(value) &&
-    typeof value["authToken"] === "string" &&
-    isValidBearerToken(value["authToken"]) &&
-    typeof value["expiresAtMs"] === "number" &&
-    Number.isFinite(value["expiresAtMs"])
-  );
-}
-
-async function writeCachedEntry(params: {
-  cacheFilePath: string;
-  storedEntry: StoredAdminAuthTokenCacheEntry;
-}): Promise<void> {
-  const temporaryFilePath = `${params.cacheFilePath}.${process.pid}.${randomUUID()}.tmp`;
-
-  try {
-    await writeFile(temporaryFilePath, JSON.stringify(params.storedEntry), {
-      encoding: "utf8",
-      mode: 0o600,
-    });
-    await rename(temporaryFilePath, params.cacheFilePath);
-  } finally {
-    await rm(temporaryFilePath, { force: true });
-  }
 }
 
 async function tryAcquireLock(params: {
@@ -399,7 +676,7 @@ async function removeStaleLock(params: {
       return;
     }
 
-    if (lock === undefined) {
+    if (isNil(lock)) {
       await rm(params.lockFilePath, { force: true });
       return;
     }
@@ -457,6 +734,88 @@ function isValidBearerToken(authToken: string): boolean {
   );
 }
 
+async function validateAdminAuthToken(params: {
+  authToken: string;
+  validateToken?: ((params: ValidateAdminAuthTokenParams) => Promise<boolean>) | undefined;
+}): Promise<boolean> {
+  return isNil(params.validateToken)
+    ? true
+    : await params.validateToken({ authToken: params.authToken });
+}
+
+function getAdminAuthTokenExpiration(params: {
+  authToken: string;
+  cacheDurationMs: number;
+  jwtExpirationSafetySkewMs: number;
+  nowMs: number;
+}): {
+  expiresAtMs: number;
+  jwtExpiresAtMs: number | undefined;
+} {
+  const jwtExpiresAtMs = getJwtExpirationMs({ authToken: params.authToken });
+  const configuredExpiresAtMs = params.nowMs + params.cacheDurationMs;
+  const jwtCacheExpiresAtMs = isNil(jwtExpiresAtMs)
+    ? Number.POSITIVE_INFINITY
+    : jwtExpiresAtMs - params.jwtExpirationSafetySkewMs;
+
+  return {
+    expiresAtMs: Math.min(configuredExpiresAtMs, jwtCacheExpiresAtMs),
+    jwtExpiresAtMs,
+  };
+}
+
+function getJwtExpirationMs(params: { authToken: string }): number | undefined {
+  const rawToken = params.authToken.slice(BEARER_TOKEN_PREFIX.length);
+  const tokenSegments = rawToken.split(".");
+  if (tokenSegments.length !== 3) {
+    return undefined;
+  }
+
+  const [, encodedPayload] = tokenSegments;
+  if (isNil(encodedPayload)) {
+    return undefined;
+  }
+
+  try {
+    const payload: unknown = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
+    const expirationSeconds = isRecord(payload) ? payload["exp"] : undefined;
+
+    return typeof expirationSeconds === "number" && Number.isFinite(expirationSeconds)
+      ? expirationSeconds * 1000
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function emitCacheEvent(params: {
+  cachePaths: AdminAuthTokenCachePaths;
+  event: Omit<AdminAuthTokenCacheEvent, "cacheKeyFingerprint">;
+  onCacheEvent?: AdminAuthTokenCacheEventHandler | undefined;
+}): void {
+  try {
+    const callbackResult = params.onCacheEvent?.({
+      ...params.event,
+      cacheKeyFingerprint: params.cachePaths.cacheKeyFingerprint,
+    });
+    if (callbackResult instanceof Promise) {
+      void ignoreRejectedCacheEventCallback({ callbackResult });
+    }
+  } catch {
+    // Diagnostics must never block token creation or cache access.
+  }
+}
+
+async function ignoreRejectedCacheEventCallback(params: {
+  callbackResult: Promise<void>;
+}): Promise<void> {
+  try {
+    await params.callbackResult;
+  } catch {
+    // Diagnostics must never block token creation or cache access.
+  }
+}
+
 function isNodeErrorWithCode(params: { error: unknown; code: string }): boolean {
   return isRecord(params.error) && params.error["code"] === params.code;
 }
@@ -477,7 +836,7 @@ function getTokenCommandArguments(params: GenerateAdminAuthTokenParams): string[
     "--quiet",
   ];
 
-  if (params.clientName !== undefined) {
+  if (isDefined(params.clientName)) {
     argumentsList.push("-n", params.clientName);
   }
 

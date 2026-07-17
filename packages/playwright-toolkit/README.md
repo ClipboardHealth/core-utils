@@ -111,14 +111,41 @@ The auto fixture creates one non-zero W3C `traceparent`, preserves project-level
 const tokenEntry = await generateAdminAuthToken({
   adminEmail: adminUser.email,
   apiEnvironmentName: "staging",
+  cacheIdentity: {
+    namespace: "cbh-admin-frontend",
+    clientName: "admin-app",
+    issuer: "clipboard-health-staging",
+    tokenKind: "access",
+  },
   clientName: "admin-app",
   cacheDurationMs: 10 * 60 * 1000,
+  validateToken: async ({ authToken }) => {
+    const response = await fetch(`${adminApiUrl}/auth/session`, {
+      headers: { Authorization: authToken },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      return false;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Admin token validation failed with HTTP ${response.status}`);
+    }
+
+    return true;
+  },
 });
 
 const adminAuthToken = tokenEntry.authToken;
 ```
 
-The cache key contains the environment and a SHA-256 email digest, not the email. The cache and lock files use mode `0600`. A process that acquires the lock re-reads the cache before generating, which prevents duplicate token mints across Playwright workers and shards.
+The cache key contains the environment, a SHA-256 digest of the email, and the optional explicit cache identity; it never contains the email itself. Give each repository a stable `namespace`, and distinguish credentials by token kind, client, audience, and issuer when those values differ. `generateAdminAuthToken` automatically distinguishes different `clientName` values even when `cacheIdentity` is omitted.
+
+JWT cache freshness is bounded to the earlier of `cacheDurationMs` and the token's `exp` claim minus a 60-second safety skew. Opaque bearer tokens continue to use `cacheDurationMs`. Set `jwtExpirationSafetySkewMs` when a suite needs a different skew.
+
+When `validateToken` is provided, the toolkit runs the read-only probe while holding the cache lock and records successful validation in the cache entry, so waiting Playwright workers share one probe. Return `false` only when the consumer rejects the credential, such as HTTP `401` or `403`; throw for timeouts, `5xx` responses, and other validation infrastructure failures. A rejected cached token is evicted and replaced once for all waiting workers and shards. A rejected generated token is not cached. The probe should verify the same audience and permission boundary the suite needs without mutating application state.
+
+The cache and lock files use mode `0600`. A process that acquires the lock re-reads the cache before generating, which prevents duplicate token mints across Playwright workers, shards, and local processes.
 
 Use `getOrCreateAdminAuthToken` when the repository needs a different token command:
 
@@ -126,10 +153,40 @@ Use `getOrCreateAdminAuthToken` when the repository needs a different token comm
 const tokenEntry = await getOrCreateAdminAuthToken({
   adminEmail,
   apiEnvironmentName,
+  cacheIdentity: {
+    namespace: "cbh-mobile-app",
+    audience: "monolith-api",
+    clientName: "mobile-app",
+    tokenKind: "access",
+  },
   cacheDurationMs: 10 * 60 * 1000,
   createToken: async () => await generateTokenWithRepositoryCli(),
 });
 ```
+
+Use `forceRefresh: true` for a one-time recovery after a consumer rejects a token, or invalidate it explicitly:
+
+```typescript
+import {
+  getOrCreateAdminAuthToken,
+  invalidateAdminAuthToken,
+} from "@clipboard-health/playwright-toolkit";
+
+await invalidateAdminAuthToken({
+  adminEmail,
+  apiEnvironmentName,
+  cacheIdentity,
+});
+
+const freshTokenEntry = await getOrCreateAdminAuthToken({
+  ...tokenParams,
+  forceRefresh: true,
+});
+```
+
+Only retry a request automatically when it is read-only or otherwise safe to repeat. The toolkit does not replay consumer requests because it cannot determine whether a failed mutation had side effects.
+
+Use `onCacheEvent` for safe diagnostics. Events expose only `kind`, a cache-key fingerprint, and expiration/validation timestamps; they never include the token, email, or raw identity fields.
 
 ## Deployed assets
 
