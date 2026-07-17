@@ -1,27 +1,27 @@
 ---
 name: flaky-triage
-description: Scheduled triage stage between flake-intake and agent dispatch. Clusters flaky-investigation tickets by shared root cause, closes duplicates and infra blips, and releases one canonical ticket per cluster for dispatch. Use when running the recurring flaky-triage task, when asked to triage the flaky queue, or to backtest clustering against historical tickets.
+description: Scheduled triage stage between flake-intake and agent dispatch. Clusters flaky-investigation tickets by shared root cause, closes duplicates and infra blips, and releases one repository-owned canonical ticket per cluster for dispatch. Use when running the recurring flaky-triage task, when asked to triage the flaky queue, or to backtest clustering against historical tickets.
 ---
 
 <!-- cspell:words backtest backtesting deflake dispatchable groundcrew -->
 
-The pipeline stage between flake-intake (deterministic, string-level collapse: bursts and storms) and per-ticket dispatch. Intake creates investigation tickets in the **Triage** state, where groundcrew ignores them. This skill clusters them semantically — same root cause, even when error text differs — then performs ticket surgery and releases exactly one dispatchable ticket per root cause.
+The pipeline stage between flake-intake (deterministic, string-level collapse: bursts and storms) and per-ticket dispatch. Intake creates investigation tickets in the **Triage** state, where groundcrew ignores them. This skill clusters them semantically — same root cause, even when error text differs — then performs ticket surgery and releases exactly one dispatchable ticket per root cause and implementation repository.
 
 This skill routes and classifies known mechanisms from existing ticket evidence; it never performs a new source-level diagnosis. Do not propose fixes, read test source files, or run flaky-debug. Diagnosis happens later, on the released ticket, through the normal dispatch flow.
 
 ## Rules
 
-- One canonical ticket per root cause, never one per sighting (rubric B5).
+- One repository-owned canonical ticket per root cause, never one per sighting within an implementation repository (rubric B5).
 - One implementation ticket per mechanism cluster per repository. A cross-repo mechanism match coordinates repository-owned fixes; it never consolidates them across repositories.
 - Never hold a ticket hostage: anything you cannot confidently cluster is released as a singleton. The worst case must equal the no-triage baseline.
 - Load `../flaky-critic/references/rubric.md` before citing close-out rules. Cite rubric rule IDs (B5, D1, D2, D3) in every close-out comment.
 - Decide the full cluster picture before writing anything to Linear.
 - Keep bulky data in local scratch files; keep only the manifest and decisions in context.
-- All Linear writes are idempotent: skip any action whose marker comment already exists.
+- All Linear writes are idempotent. Use exact markers only to deduplicate comments. Before state, label, or relation writes, read the current value and skip only when the desired state, label, or relation already exists.
 
 **Rubric IDs** (cite the matching ID in every close-out comment):
 
-- **B5** — one canonical ticket per root cause, never one per sighting.
+- **B5** — one repository-owned canonical ticket per root cause, never one per sighting within an implementation repository.
 - **D1** — infra/environment incident: cancel with incident window + correlation evidence + why no code fix applies + re-arm note.
 - **D2** — duplicate of canonical: matching evidence + no new implementation ticket needed beyond the canonical.
 - **D3** — already-fixed: matches an investigation/implementation ticket closed in the last 14 days.
@@ -83,7 +83,7 @@ When several members are in the same repository, apply the existing root-cause a
 1. **Matches in-flight work** — within the same repository, the error family or root cause matches an open implementation ticket or open PR: close every member as Duplicate linked to that canonical, comment citing B5/D2 with the match evidence. Release nothing. A shared KB mechanism alone is not D2 evidence, especially across repositories; handle it through mechanism coordination below.
 2. **Matches an open storm/burst ticket** — normalized error matches its signature or contained fingerprints: close members as Duplicate of the storm/burst ticket so late stragglers join the existing event.
 3. **Infra blip / environment incident** — an incident cluster (evidence tier 7): use the Phase 3 threshold above. In production runs, corroborate via Phase 2 (Datadog monitor history / error spike through `pup` when available; passed-on-retry signals). Default action: close all members as Canceled with a D1 comment. If the incident exposes a hardening gap (e.g., seed path lacks diagnostics), release ONE canonical for that hardening and dup the rest to it — never one per helper.
-4. **Multi-ticket cluster** — pick the canonical (richest evidence: most failures, clearest artifacts). Comment the cluster manifest on it: member IDs, shared mechanism, evidence tier from Phase 3, and the marker `<!-- flaky-triage: cluster=<short-slug> -->`. Close the other members as Duplicate of the canonical (D2 format). Release the canonical.
+4. **Same-repository multi-ticket cluster** — within each implementation repository, pick the canonical (richest evidence: most failures, clearest artifacts). Comment the cluster manifest on it: member IDs, shared mechanism, evidence tier from Phase 3, and the marker `<!-- flaky-triage: cluster=<short-slug> -->`. Close only the same-repository members as Duplicate of the canonical (D2 format). Release the canonical. When a non-incident root cause spans repositories, retain one repository-owned canonical per repository and coordinate them as mechanism-cluster peers; never close one repository's ticket as a duplicate of another repository's canonical.
 5. **Singleton or uncertain** — release as-is with a brief `<!-- flaky-triage: singleton -->` comment.
 
 After every cluster has an intended action, apply the chronic screen described below. Before releasing any remaining canonical, act on each knowledge-base mechanism cluster:
@@ -112,6 +112,6 @@ End with a compact report: queue size, cluster count with members and evidence t
 
 ## Dry-run and backtest
 
-When invoked with `--dry-run`, when the task description says dry run, or when backtesting: perform Phases 1–4 fully but **write nothing to Linear**. Print each proposed close/release action, each `relatedTo` link, the exact scope-boundary comment for every mechanism-cluster member, and the mechanism-cluster digest line. Print likely mechanism clusters that lack a shared KB entry as `KB gap` findings, including their members and repositories, but do not count them as production mechanism clusters. For grading, also render the candidate `relatedTo` links and scope-boundary comments that the missing entry prevents, clearly prefixed `not production-eligible: KB gap`.
+When invoked with `--dry-run`, when the task description says dry run, or when backtesting: perform Phases 1–4 fully but **write nothing to Linear**. Print each proposed close/release action, chronic-label creation or application, each `relatedTo` link, the exact scope-boundary comment for every mechanism-cluster member, and the mechanism-cluster digest line. Print likely mechanism clusters that lack a shared KB entry as `KB gap` findings, including their members and repositories, but do not count them as production mechanism clusters. For grading, also render the candidate `relatedTo` links and scope-boundary comments that the missing entry prevents, clearly prefixed `not production-eligible: KB gap`.
 
 For a backtest, run blind against the historical tickets you are given. Use only content that existed before the coordination decision; do not read later ticket states, PR outcomes, relations, or human coordination comments until after stating the proposed clusters and actions. Join the result to the human action afterward and report whether member selection, repository ownership, mirror-step removal, and reference-implementation choice agree.
