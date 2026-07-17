@@ -86,6 +86,7 @@ Only honor coordination markers authored by the configured Linear API user that 
 - **Denominator — gated plans:** one verdict marker per unique ticket content-state in the window, including approve, reject, and needs-human. Exclude shadow/backtest verdicts, PR-checkpoint comments, and already-current skips. The one-verdict-per-content-state rule makes each marker one denominator event.
 - **Numerator — statement-missing bounces:** gated plans whose marker has `disposition=amend-and-resubmit` and names `B8` or `B5-prior-attempts` in `statement-missing`. Count a plan once in the headline numerator even when both rules fired; also report per-rule attribution, where one plan may count under both.
 - **Substantive rejects:** report `B8` and `B5-prior-attempts` substantive counts separately. When a human later releases one, compare the cases by mechanism. Any systematic substantive false-reject pattern, regardless of rate, requires a concrete rubric amendment proposal for Rocky's approval using `<!-- flaky-critic: amendment-proposal -->`; never edit or weaken the rubric silently.
+- **Harness-contract watch:** record every plan that invokes B8's harness-contract terminus, including whether the critic accepted an evidenced contract or rejected a generic detach, timeout, 401, or retry-success symptom as laundering. Compare later human outcomes for both accepted and rejected cases. Report any repeated stretch pattern in the substantive-pattern finding; do not broaden the exception from monitoring evidence without Rocky's per-PR approval.
 - **Threshold:** report the cumulative statement-missing numerator, denominator, percentage, and per-rule attribution as provisional during the window. When the denominator is zero, report `N=0`, omit the percentage as not evaluable, and do not trigger a breach. At the window close, **more than 25%** triggers a fix-forward change in the narrowest flaky-debug plan-producing source: normally `references/plan.md` for a missing output field, or `SKILL.md` when the investigation flow failed to collect the required evidence. `plan-e2e.md` and `plan-fast-path.md` already converge on the shared output template; do not duplicate requirements across them. Invoke `core:cb-work`/`cb-work` against `ClipboardHealth/core-utils` with the observed omission and required template change; if that workflow is unavailable, create a linked Groundcrew implementation ticket only through the atomic uniqueness path above. Include the resulting PR or ticket link in the final digest before writing the finalization marker. Do not change B8 or the Prior-attempts gate to reduce the rate.
 
 Use this digest shape:
@@ -95,6 +96,7 @@ New-rule monitoring (2026-07-16..<2026-07-30):
 - gated plans: N
 - statement-missing amend-and-resubmit: N — rate: P% | not evaluable (when gated plans=0) — B8: N, B5-prior-attempts: N
 - substantive rejects — B8: N, B5-prior-attempts: N
+- harness-contract terminus watch: N invoked — accepted: N, laundering rejects: N, human reversals: N
 - threshold: provisional | pass | breached — <fix-forward action or "none">
 - substantive false-reject patterns: <amendment proposal links or "none observed">
 ```

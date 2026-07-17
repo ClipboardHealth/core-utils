@@ -79,39 +79,43 @@ Ten human-approved plans received at least one substantive new-rule reject:
 - four plans were rejected under Prior-attempts because the family had multiple earlier stabilizations or the plan extended an existing mechanism;
 - some plans appear in more than one pattern.
 
-That is 10/20 of the corpus and 10/14 human-approved cases, so it exceeds the task's approximate 10% proposal threshold. The evidence is historical and pre-convention, so the proposals below are drafted for approval and were **not** applied.
+That is 10/20 of the corpus and 10/14 human-approved cases, so it exceeds the task's approximate 10% proposal threshold. The evidence is historical and pre-convention. Rocky reviewed the proposals on 2026-07-16: Proposals 1 and 2 were approved and applied; Proposal 3 was rejected and replaced with the deep-dive adjudication rule below.
 
 ## Rubric amendment proposals
 
-### Proposal 1 — deterministic-boundary reproduction equivalence
+### Proposal 1 — deterministic-boundary reproduction equivalence — approved
 
-Proposed addition under B8's confidence ceiling:
+Approved addition under B8's confidence ceiling:
 
-> **Deterministic-boundary equivalence:** for a pure clock, calendar, configuration, or literal-threshold defect, a failing artifact plus an exact evaluation of the named code expression at the captured inputs may count as the focused lower-level reproduction required for 5/5. The plan must show the before/after values and why the result is deterministic. Timestamp correlation or a plausible boundary narrative without that evaluation remains capped at 4/5.
+> **Deterministic-boundary equivalence:** for a pure clock, calendar, configuration, or literal-threshold defect, a failing artifact plus an exact evaluation of the named code expression at the captured inputs counts as the focused lower-level reproduction required for 5/5. The plan must show the before/after values and why the result is deterministic. Timestamp correlation or a plausible boundary narrative without that evaluation remains capped at 4/5.
 
-This is intended to cover deterministic non-E2E failures without treating production-style fault injection as the only form of reproduction.
+This covers deterministic non-E2E failures without treating production-style fault injection as the only form of reproduction. Rocky approved it because evaluating the named pure expression at captured inputs is the deterministic reproduction; the before/after-values requirement prevents narrative-only claims. Applied to B8's confidence ceiling.
 
-<!-- flaky-critic: amendment-proposal -->
+<!-- flaky-critic: amendment-decision status=approved proposal=P1 date=2026-07-16 -->
 
-### Proposal 2 — named harness-contract terminus
+### Proposal 2 — named harness-contract terminus — approved with live watch
 
-Proposed addition under B8's valid terminal states:
+Approved addition under B8's valid terminal states:
 
 > **Harness-contract terminus:** for a C1/C2 test-harness change, the chain may terminate at a specific violated harness contract in named code when artifacts prove the user action or downstream request never began, and the fix is bounded, idempotent, and diagnostic. If a product, service, or identity-provider cause may still exist, cap confidence at 3/5 and require owning-surface observability or a linked handoff. A generic timeout, detach, 401, or retry success without the named contract and evidence remains a symptom, not a terminus.
 
-This would distinguish a proven harness control-flow defect from a generic symptom patch while preserving the cross-boundary requirement for unresolved product/backend causes.
+The audit's 45% frontend-local finding supports the premise that the causal chain can genuinely terminate at the harness boundary. Rocky approved the exception with the guardrails intact and directed the 14-day monitor to watch specifically for agents laundering generic detach, timeout, 401, or retry-success symptoms as a harness contract. Applied as B8's third valid terminal state.
 
-<!-- flaky-critic: amendment-proposal -->
+<!-- flaky-critic: amendment-decision status=approved proposal=P2 date=2026-07-16 -->
 
-### Proposal 3 — mechanism-aware Prior-attempts counting
+### Proposal 3 — mechanism-aware Prior-attempts counting — rejected
 
-Proposed replacement for the substantive-reject and chronic-counting sentences in B5's Prior-attempts amendment:
+Rejected replacement for the substantive-reject and chronic-counting sentences in B5's Prior-attempts amendment:
 
 > **Mechanism-aware prior attempts:** count a merged fix as failed for the ≥2 chronic threshold only when recurrence evidence falsifies the same terminal-cause hypothesis or shows that the same mechanism did not hold. A recurrence in the same fingerprint family after a materially different fix remains required context but does not automatically increment the failed-fix count. Reusing or extending an earlier helper is not a substantive reject when the plan identifies a new, previously unhandled failure signature, shows that the earlier signature remains fixed, and states the exact mechanism delta. Repeating the same causal claim or broadening the same mechanism without new falsifying evidence remains a substantive reject.
 
-This would prevent family-level recurrence alone from making distinct mechanisms look like repeated failed diagnoses, while preserving rejection of unchanged attempts.
+Rocky rejected this exemption because agent-self-certified mechanism novelty is the historical failure mode that B5 closes: each of the 12 fullLifecycle fixes could name a different step and error shape while remaining one mechanism. The family key is coarse, but the designed relief valve is the dossier-backed deep-dive track, not a counting exemption.
 
-<!-- flaky-critic: amendment-proposal -->
+Replacement applied to B5:
+
+> A claimed mechanism delta does not decrement the ≥2 failed-merged-fix count or return the family to the normal path; preserve the claim in the dossier and make mechanism identity the deep dive's first question.
+
+<!-- flaky-critic: amendment-decision status=rejected proposal=P3 replacement=deep-dive date=2026-07-16 -->
 
 ## Borderline cases for human review
 
@@ -130,6 +134,7 @@ Live enforce-mode monitoring is implemented in the flaky-critic skill for the 14
 - headline plans are deduplicated when both rules fire, with per-rule attribution retained;
 - more than 25% at window close invokes `cb-work` for the narrowest flaky-debug plan-producing source, with a linked implementation ticket as fallback, never a weaker gate;
 - any systematic substantive false-reject pattern triggers a Rocky-approved rubric amendment proposal regardless of rate.
+- the named harness-contract terminus is a specific live-watch category: record every invocation, distinguish evidenced contracts from generic detach/timeout/401/retry-success laundering, and compare later human outcomes;
 - claim and action leases plus a pre-creation ownership recheck prevent overlapping finalizers from creating duplicate work;
 - the final digest and action links are persisted on STAFF-1818 with `<!-- flaky-critic: b8-prior-monitoring-finalized -->` so later runs do not repeat finalization.
 
