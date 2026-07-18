@@ -50,7 +50,7 @@
     "@types/node": "24.13.3",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
-    "dependency-cruiser": "18.0.0",
+    "dependency-cruiser": "18.1.0",
     "eslint": "8.57.1",
     "eslint-plugin-promise": "7.3.0",
     "husky": "9.1.7",
