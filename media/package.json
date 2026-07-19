@@ -33,7 +33,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-agent-sdk": "0.3.210",
+    "@anthropic-ai/claude-agent-sdk": "0.3.211",
     "@commitlint/cli": "21.2.1",
     "@commitlint/config-conventional": "21.2.0",
     "@nx/devkit": "22.7.6",
