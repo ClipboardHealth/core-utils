@@ -65,6 +65,50 @@ export interface NetworkTimingBreakdown {
   sslMs?: number;
 }
 
+export type ClientLifecycleClassification =
+  | "no_response_headers"
+  | "headers_without_body_completion"
+  | "network_failure"
+  | "completed";
+
+export interface ClientLifecycle {
+  method: string;
+  origin: string;
+  pathTemplate: string;
+  requestStartedAt?: string;
+  requestStartedMonotonicMs?: number;
+  responseHeadersAt?: string;
+  responseHeadersMonotonicMs?: number;
+  completedAt?: string;
+  completedMonotonicMs?: number;
+  failedAt?: string;
+  failedMonotonicMs?: number;
+  requestStarted?: boolean;
+  responseHeadersReceived?: boolean;
+  loadingFinished?: boolean;
+  loadingFailed?: boolean;
+  pendingAtTimeout?: boolean;
+  playwrightRequestKey?: string;
+  cdpRequestId?: string;
+  loaderId?: string;
+  traceId?: string;
+  spanId?: string;
+  apiGatewayRequestId?: string;
+  protocol?: string;
+  connectionId?: number;
+  connectionReused?: boolean;
+  remoteIPAddress?: string;
+  remotePort?: number;
+  responseEncodedDataLength?: number;
+  completedEncodedDataLength?: number;
+  errorText?: string;
+  canceled?: boolean;
+  blockedReason?: string;
+  corsErrorStatus?: string;
+  classification?: ClientLifecycleClassification;
+  truncated?: boolean;
+}
+
 export interface NetworkInstance {
   id: string;
   groupId: string;
@@ -82,6 +126,7 @@ export interface NetworkInstance {
   responseBodyRef?: string;
   redirectFromId?: string;
   redirectToId?: string;
+  clientLifecycle?: ClientLifecycle;
 }
 
 export interface NetworkGroup {

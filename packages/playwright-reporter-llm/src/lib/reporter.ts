@@ -14,6 +14,7 @@ import type {
 
 import type { ActionRecord } from "./internal/actionDiagnostics";
 import { buildAttemptResult } from "./internal/attemptBuilder";
+import { attachClientLifecycles } from "./internal/clientLifecycle";
 import {
   buildFullTitle,
   buildTestError,
@@ -117,6 +118,23 @@ export default class LlmReporter implements Reporter {
       network = emptyNetworkReport();
       consoleMessages = [];
       failingAction = undefined;
+    }
+
+    try {
+      attachClientLifecycles({
+        attachments: result.attachments,
+        network,
+        attemptStartTimeMs,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const globalError: GlobalError = {
+        message: `LlmReporter: client lifecycle processing failed for test ${test.id}: ${message}`,
+      };
+      if (error instanceof Error && error.stack) {
+        globalError.stack = error.stack;
+      }
+      this.globalErrors.push(globalError);
     }
 
     const attemptResult = buildAttemptResult({

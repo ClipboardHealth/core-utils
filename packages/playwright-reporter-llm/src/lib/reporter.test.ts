@@ -11,11 +11,33 @@ import type {
   TestStep,
 } from "@playwright/test/reporter";
 
+import * as clientLifecycle from "./internal/clientLifecycle";
 import { GROUPS_CAP, INSTANCES_CAP } from "./internal/constants";
 import { writeTraceZipFixture } from "./internal/testHelpers";
 import * as traceDiagnostics from "./internal/traceDiagnostics";
 import LlmReporter from "./reporter";
-import type { AttemptResult, LlmTestEntry, LlmTestReport } from "./types";
+import type { AttemptResult, ClientLifecycle, LlmTestEntry, LlmTestReport } from "./types";
+
+interface LifecycleRecordFixture extends Partial<Omit<ClientLifecycle, "classification">> {
+  [key: string]: unknown;
+  classification?: string;
+}
+
+interface CreateLifecycleAttachmentInput {
+  records: LifecycleRecordFixture[];
+  truncated?: boolean;
+}
+
+function createLifecycleAttachment({
+  records,
+  truncated = false,
+}: CreateLifecycleAttachmentInput): TestResult["attachments"][number] {
+  return {
+    name: "browser-network-lifecycle",
+    contentType: "application/json",
+    body: Buffer.from(JSON.stringify({ schemaVersion: 1, truncated, records })),
+  };
+}
 
 function createMockConfig(overrides: Partial<FullConfig> = {}): FullConfig {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -401,6 +423,313 @@ describe(LlmReporter, () => {
       [attempt!.network.instances[0]!.requestBodyRef!]: { content: '{"request":"hello"}' },
     });
     expect(entry.network).toStrictEqual(attempt?.network);
+  });
+
+  it.each([
+    {
+      classification: "no_response_headers",
+      fields: {
+        requestStarted: true,
+        responseHeadersReceived: false,
+        loadingFinished: false,
+        loadingFailed: false,
+        pendingAtTimeout: true,
+      },
+    },
+    {
+      classification: "headers_without_body_completion",
+      fields: {
+        requestStarted: true,
+        responseHeadersReceived: true,
+        loadingFinished: false,
+        loadingFailed: false,
+        pendingAtTimeout: true,
+        responseHeadersAt: "2026-01-01T00:00:00.150Z",
+        responseHeadersMonotonicMs: 10_150,
+      },
+    },
+    {
+      classification: "network_failure",
+      fields: {
+        requestStarted: true,
+        responseHeadersReceived: false,
+        loadingFinished: false,
+        loadingFailed: true,
+        pendingAtTimeout: false,
+        failedAt: "2026-01-01T00:00:00.175Z",
+        failedMonotonicMs: 10_175,
+        errorText: "net::ERR_CONNECTION_RESET",
+        canceled: false,
+        blockedReason: "other",
+        corsErrorStatus: "InvalidResponse",
+      },
+    },
+    {
+      classification: "completed",
+      fields: {
+        requestStarted: true,
+        responseHeadersReceived: true,
+        loadingFinished: true,
+        loadingFailed: false,
+        pendingAtTimeout: false,
+        responseHeadersAt: "2026-01-01T00:00:00.150Z",
+        responseHeadersMonotonicMs: 10_150,
+        completedAt: "2026-01-01T00:00:00.200Z",
+        completedMonotonicMs: 10_200,
+      },
+    },
+  ])("joins $classification browser lifecycle to the matching network instance", (input) => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-lifecycle.zip", {
+      requestBody: "",
+      responseBody: "",
+      contextOptions: { wallTimeMs: attemptStart.getTime(), monotonicTimeMs: 10_000 },
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _monotonicTime: 10_010,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/v1/workplaces/workplace-456/cases",
+            },
+            response: { status: -1 },
+            timings: { send: -1, wait: -1, receive: -1 },
+          },
+        },
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _monotonicTime: 10_100,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/v1/workplaces/workplace-123/cases?workerId=secret",
+            },
+            response: { status: -1 },
+            timings: { send: -1, wait: -1, receive: -1 },
+          },
+        },
+      ],
+    });
+    const lifecycleAttachment = createLifecycleAttachment({
+      records: [
+        {
+          method: "GET",
+          origin: "https://api.example.com",
+          pathTemplate: "/v1/workplaces/:workplaceId/cases",
+          requestStartedAt: "2026-01-01T00:00:00.100Z",
+          requestStartedMonotonicMs: 10_100,
+          playwrightRequestKey: "pw-request-1",
+          cdpRequestId: "1234.56",
+          loaderId: "loader-1",
+          traceId: "0123456789abcdef0123456789abcdef",
+          spanId: "0123456789abcdef",
+          apiGatewayRequestId: "gateway-request-id=",
+          protocol: "h2",
+          connectionId: 17,
+          connectionReused: true,
+          remoteIPAddress: "10.0.0.12",
+          remotePort: 443,
+          responseEncodedDataLength: 256,
+          completedEncodedDataLength: 677,
+          classification: input.classification,
+          ...input.fields,
+        },
+      ],
+    });
+    const result = createMockResult({
+      startTime: attemptStart,
+      status: "timedOut",
+      attachments: [
+        { name: "trace", contentType: "application/zip", path: tracePath },
+        lifecycleAttachment,
+      ],
+    });
+
+    reporter.onTestEnd(createMockTestCase({}, { outputDirectory }), result);
+    reporter.onEnd({ status: "timedout" } as FullResult);
+
+    const networkInstances = firstAttempt(readReport(outputFile)).network.instances;
+    const clientLifecycle = networkInstances.find(
+      (instance) => instance.offsetMs === 100,
+    )?.clientLifecycle;
+
+    expect(clientLifecycle).toMatchObject({
+      method: "GET",
+      origin: "https://api.example.com",
+      pathTemplate: "/v1/workplaces/:workplaceId/cases",
+      requestStartedAt: "2026-01-01T00:00:00.100Z",
+      requestStartedMonotonicMs: 10_100,
+      playwrightRequestKey: "pw-request-1",
+      cdpRequestId: "1234.56",
+      loaderId: "loader-1",
+      traceId: "0123456789abcdef0123456789abcdef",
+      spanId: "0123456789abcdef",
+      apiGatewayRequestId: "gateway-request-id=",
+      protocol: "h2",
+      connectionId: 17,
+      connectionReused: true,
+      remoteIPAddress: "10.0.0.12",
+      remotePort: 443,
+      responseEncodedDataLength: 256,
+      completedEncodedDataLength: 677,
+      classification: input.classification,
+      ...input.fields,
+    });
+    expect(
+      networkInstances.find((instance) => instance.offsetMs === 10)?.clientLifecycle,
+    ).toBeUndefined();
+  });
+
+  it("leaves network instances unchanged when the lifecycle attachment is missing", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-without-lifecycle.zip", {
+      requestBody: "",
+      responseBody: "",
+    });
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    expect(
+      firstAttempt(readReport(outputFile)).network.instances[0]?.clientLifecycle,
+    ).toBeUndefined();
+  });
+
+  it("bounds lifecycle attachments and preserves their truncation signal", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const networkEvents = Array.from({ length: 120 }, (_, index) => ({
+      type: "resource-snapshot",
+      snapshot: {
+        _monotonicTime: 10_000 + index,
+        _resourceType: "fetch",
+        request: {
+          method: "GET",
+          url: `https://api.example.com/v1/orders/${index}`,
+        },
+        response: { status: 200 },
+        timings: { send: 0, wait: 1, receive: 1 },
+      },
+    }));
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-many-lifecycles.zip", {
+      requestBody: "",
+      responseBody: "",
+      contextOptions: { wallTimeMs: attemptStart.getTime(), monotonicTimeMs: 10_000 },
+      networkEvents,
+    });
+    const records = Array.from({ length: 120 }, (_, index) => ({
+      method: "GET",
+      origin: "https://api.example.com",
+      pathTemplate: `/v1/orders/${index}`,
+      requestStartedAt: new Date(attemptStart.getTime() + index).toISOString(),
+      requestStartedMonotonicMs: 10_000 + index,
+      requestStarted: true,
+      responseHeadersReceived: true,
+      loadingFinished: true,
+      loadingFailed: false,
+      pendingAtTimeout: false,
+      classification: "completed",
+    }));
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        startTime: attemptStart,
+        attachments: [
+          { name: "trace", contentType: "application/zip", path: tracePath },
+          createLifecycleAttachment({ records, truncated: true }),
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const retainedLifecycles = firstAttempt(readReport(outputFile)).network.instances.filter(
+      (instance) => instance.clientLifecycle !== undefined,
+    );
+    expect(retainedLifecycles).toHaveLength(100);
+    expect(retainedLifecycles.every((instance) => instance.clientLifecycle?.truncated)).toBe(true);
+  });
+
+  it("retains only approved sanitized lifecycle fields", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-sensitive-lifecycle.zip", {
+      requestBody: "",
+      responseBody: "",
+      contextOptions: { wallTimeMs: attemptStart.getTime(), monotonicTimeMs: 10_000 },
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _monotonicTime: 10_100,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/v1/orders/123",
+            },
+            response: { status: 200 },
+            timings: { send: 0, wait: 1, receive: 1 },
+          },
+        },
+      ],
+    });
+    const lifecycleAttachment = createLifecycleAttachment({
+      records: [
+        {
+          method: "GET",
+          origin: "https://user:password@api.example.com",
+          pathTemplate: "/v1/orders/:orderId?token=attachment-secret",
+          requestStartedAt: "2026-01-01T00:00:00.100Z",
+          requestStartedMonotonicMs: 10_100,
+          requestStarted: true,
+          responseHeadersReceived: true,
+          loadingFinished: true,
+          loadingFailed: false,
+          pendingAtTimeout: false,
+          classification: "completed",
+          headers: { authorization: "Bearer header-secret", cookie: "session=cookie-secret" },
+          requestBody: { patientEmail: "patient@example.com" },
+          queryParameters: { token: "query-secret" },
+          authorization: "Bearer auth-secret",
+          cookies: "cookie-secret",
+          errorText: "https://api.example.com/v1/orders/123?token=error-secret",
+        },
+      ],
+    });
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        startTime: attemptStart,
+        attachments: [
+          { name: "trace", contentType: "application/zip", path: tracePath },
+          lifecycleAttachment,
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const serializedReport = JSON.stringify(readReport(outputFile));
+    expect(serializedReport).not.toContain("secret");
+    expect(serializedReport).not.toContain("patient@example.com");
+    expect(serializedReport).not.toContain("authorization");
+    expect(serializedReport).not.toContain("cookie");
+    expect(serializedReport).not.toContain("queryParameters");
+    expect(serializedReport).not.toContain("user:password");
   });
 
   it("returns an empty NetworkReport when no trace attachment exists", () => {
@@ -813,6 +1142,36 @@ describe(LlmReporter, () => {
     expect(attempt.network.summary.observedInstances).toBe(0);
     expect(report.globalErrors.length).toBeGreaterThan(0);
     expect(report.globalErrors[0]?.message).toContain("invariant violation: test-triggered");
+  });
+
+  it("preserves trace diagnostics when client lifecycle processing throws", () => {
+    vi.spyOn(clientLifecycle, "attachClientLifecycles").mockImplementationOnce(() => {
+      throw new Error("lifecycle invariant violation: test-triggered");
+    });
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-lifecycle-invariant.zip", {
+      requestBody: JSON.stringify({ request: "x" }),
+      responseBody: JSON.stringify({ response: "y" }),
+    });
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network.instances).not.toStrictEqual([]);
+    expect(report.globalErrors).toHaveLength(1);
+    expect(report.globalErrors[0]?.message).toContain("client lifecycle processing failed");
+    expect(report.globalErrors[0]?.message).toContain(
+      "lifecycle invariant violation: test-triggered",
+    );
   });
 
   it("keeps improving console signal after network cap is reached", () => {

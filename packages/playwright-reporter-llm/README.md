@@ -51,18 +51,18 @@ Report: test-results/llm-report.json
 
 ### What to read, by task
 
-| Task                         | Fields                                                                                                                                                            |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pass/fail overview           | `summary`                                                                                                                                                         |
-| Triage failures              | Filter `tests[]` by `status === "failed"`, then read `errors[0].{message,diff,location,snippet}`                                                                  |
-| Diagnose locator detach      | `tests[].errors[0].{apiName,selector,actionLog}` or failed `tests[].attempts[].error.{apiName,selector,actionLog}` for the failing action's resolved locator logs |
-| Identify flakes              | Filter `tests[]` by `flaky === true`; compare `attempts[]` statuses                                                                                               |
-| Reconstruct failure timeline | Pick an attempt where `status !== "passed"` (for flakes this is NOT the last attempt), then read `.timeline[]` (steps + network + console, sorted by `offsetMs`)  |
-| Inspect failing requests     | `tests[].attempts[].network.instances[]` — filter by `status >= 400`, or join `groups[groupId].{failureText,wasAborted}`                                          |
-| Look up request body         | `tests[].attempts[].network.bodies[instance.requestBodyRef \| instance.responseBodyRef]`                                                                          |
-| Correlate with backend trace | `tests[].attempts[].network.instances[].traceId` / `.spanId` / `.requestId` / `.correlationId`                                                                    |
-| Debug uncaught page errors   | `tests[].attempts[].consoleMessages[]` — filter by `type` in `"error" \| "pageerror" \| "page-crashed"`                                                           |
-| Visual debugging             | `tests[].attempts[].failureArtifacts.{screenshotBase64,videoPath}`                                                                                                |
+| Task                                    | Fields                                                                                                                                                            |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pass/fail overview                      | `summary`                                                                                                                                                         |
+| Triage failures                         | Filter `tests[]` by `status === "failed"`, then read `errors[0].{message,diff,location,snippet}`                                                                  |
+| Diagnose locator detach                 | `tests[].errors[0].{apiName,selector,actionLog}` or failed `tests[].attempts[].error.{apiName,selector,actionLog}` for the failing action's resolved locator logs |
+| Identify flakes                         | Filter `tests[]` by `flaky === true`; compare `attempts[]` statuses                                                                                               |
+| Reconstruct failure timeline            | Pick an attempt where `status !== "passed"` (for flakes this is NOT the last attempt), then read `.timeline[]` (steps + network + console, sorted by `offsetMs`)  |
+| Inspect failing requests                | `tests[].attempts[].network.instances[]` — filter by `status >= 400`, or join `groups[groupId].{failureText,wasAborted}`                                          |
+| Look up request body                    | `tests[].attempts[].network.bodies[instance.requestBodyRef \| instance.responseBodyRef]`                                                                          |
+| Correlate browser and backend lifecycle | `tests[].attempts[].network.instances[].clientLifecycle` plus `.traceId` / `.spanId` / `.requestId` / `.correlationId`                                            |
+| Debug uncaught page errors              | `tests[].attempts[].consoleMessages[]` — filter by `type` in `"error" \| "pageerror" \| "page-crashed"`                                                           |
+| Visual debugging                        | `tests[].attempts[].failureArtifacts.{screenshotBase64,videoPath}`                                                                                                |
 
 ### Minimal failure example
 
@@ -254,10 +254,56 @@ See [`docs/example-report.json`](./docs/example-report.json) for a complete repo
   - `network.summary` gives end-to-end accounting: `observedInstances === retainedInstances + instancesDroppedByFilter + instancesDroppedByGroupCap + instancesDroppedByInstanceCap + instancesSuppressedAsDuplicate + instancesEvictedAfterAdmission`. For every group, `occurrenceCount === retainedInstanceCount + suppressedInstanceCount + evictedInstanceCount`
 - **Retention policy** -- instances capped at 500, groups at 200, bodies at 100 per attempt. Low-signal static assets (script/stylesheet/image/font/media with 2xx and no failure) are dropped at the filter. Duplicates of the same shape are sampled: first 3 always admit, then 1-in-10. Under pressure, eviction is by priority tier (5xx > actionable connect/DNS/TLS failure > 4xx > successful xhr/fetch > plain aborted > unknown > other known > static asset) with strict `<` — ties reject rather than churn.
 - **`tests[].attempts[].network.instances[].{traceId,spanId,requestId,correlationId}`** -- `traceId` and `spanId` come from the response W3C [`traceparent`](https://www.w3.org/TR/trace-context/) when available. If the response is unreadable, Datadog request headers (`x-datadog-trace-id` / `x-datadog-parent-id`) take precedence over a conflicting request `traceparent` and are normalized from unsigned decimal to zero-padded hexadecimal. `requestId` and `correlationId` come from `x-request-id` / `x-correlation-id`. Malformed and all-zero trace identifiers are rejected.
+- **`tests[].attempts[].network.instances[].clientLifecycle`** -- additive schema-v3 browser lifecycle diagnostics from a `browser-network-lifecycle` JSON attachment. The reporter joins records by method, origin, sanitized path template, and nearest request-start time. The lifecycle distinguishes `no_response_headers`, `headers_without_body_completion`, `network_failure`, and `completed`, and can retain supplied request/response/completion/failure times, pending-at-timeout state, opaque correlation identifiers, protocol/connection metadata, and encoded byte counts.
 - **Redirects** -- `instance.redirectFromId` / `instance.redirectToId` reference sibling instance ids; walk the graph to reconstruct chains.
 - **`tests[].attempts[].failureArtifacts`** -- for failing/timed-out/interrupted attempts: `screenshotBase64` (base64-encoded screenshot, max 512KB), `videoPath` (first video attachment path). Omitted entirely when neither screenshot nor video is available
 - **`tests[].attachments[].path`** -- relative to Playwright outputDir
 - **`tests[].stdout` / `tests[].stderr`** -- capped at 4KB with `[truncated]` marker
+
+### Browser lifecycle attachment contract
+
+Fixtures can attach `browser-network-lifecycle` or `browser-network-lifecycle.json` with content type `application/json` and this versioned shape:
+
+```json
+{
+  "schemaVersion": 1,
+  "truncated": false,
+  "records": [
+    {
+      "method": "GET",
+      "origin": "https://api.example.com",
+      "pathTemplate": "/api/v1/:workplaceId/cases",
+      "requestStartedAt": "2026-07-20T18:35:43.100Z",
+      "requestStartedMonotonicMs": 12345.1,
+      "responseHeadersAt": "2026-07-20T18:35:43.168Z",
+      "responseHeadersMonotonicMs": 12413.1,
+      "completedAt": "2026-07-20T18:35:43.170Z",
+      "completedMonotonicMs": 12415.1,
+      "requestStarted": true,
+      "responseHeadersReceived": true,
+      "loadingFinished": true,
+      "loadingFailed": false,
+      "pendingAtTimeout": false,
+      "playwrightRequestKey": "request-17",
+      "cdpRequestId": "1234.56",
+      "loaderId": "loader-1",
+      "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+      "spanId": "00f067aa0ba902b7",
+      "apiGatewayRequestId": "A0XEghTXPHcEScg=",
+      "protocol": "h2",
+      "connectionId": 17,
+      "connectionReused": true,
+      "remoteIPAddress": "10.0.0.12",
+      "remotePort": 443,
+      "responseEncodedDataLength": 256,
+      "completedEncodedDataLength": 677,
+      "classification": "completed"
+    }
+  ]
+}
+```
+
+For a failure, the same record can supply `failedAt`, `failedMonotonicMs`, `errorText` (restricted to Chromium `net::ERR_*` values), `canceled`, `blockedReason`, and `corsErrorStatus`. Unknown fields are discarded. Origins are reduced to scheme/host/port, query and fragment text is removed from `pathTemplate`, identifiers are format/length checked, and only the documented allowlist is emitted. The reporter reads at most 64 KiB and retains at most 100 records per attempt; `clientLifecycle.truncated` marks producer- or reporter-side record truncation. It does not mutate the original Playwright attachment, so other configured reporters such as Playwright HTML continue to render the sanitized attachment.
 
 ## Why not Playwright's built-in JSON reporter?
 
