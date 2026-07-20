@@ -22,10 +22,17 @@ export const SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES = [
   "CMUX_AGENT_LAUNCH_CWD",
   "CMUX_AGENT_LAUNCH_EXECUTABLE",
   "CMUX_AGENT_LAUNCH_KIND",
+  // Settings-merge names: shell locals plus env set inline on the wrapper's
+  // own `node` merge child. None cross the sandbox boundary as ambient env.
+  "CMUX_BASE_SETTINGS",
   "CMUX_CLAUDE_HOOK_CMUX_BIN",
   "CMUX_CLAUDE_PID",
+  "CMUX_FILTERED_ARGS",
+  "CMUX_MERGED_SETTINGS",
   "CMUX_ORIGINAL_NODE_OPTIONS",
   "CMUX_ORIGINAL_NODE_OPTIONS_PRESENT",
+  "CMUX_USER_SETTINGS",
+  "CMUX_USER_SETTINGS_B64",
 ] as const;
 
 export const SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE = [
