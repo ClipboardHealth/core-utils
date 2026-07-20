@@ -14,6 +14,7 @@ import type {
 
 import type { ActionRecord } from "./internal/actionDiagnostics";
 import { buildAttemptResult } from "./internal/attemptBuilder";
+import { attachClientLifecycles } from "./internal/clientLifecycle";
 import {
   buildFullTitle,
   buildTestError,
@@ -105,6 +106,11 @@ export default class LlmReporter implements Reporter {
         attemptStartTimeMs,
       );
       ({ network, consoleMessages, failingAction } = traceDiagnostics);
+      attachClientLifecycles({
+        attachments: result.attachments,
+        network,
+        attemptStartTimeMs,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const globalError: GlobalError = {

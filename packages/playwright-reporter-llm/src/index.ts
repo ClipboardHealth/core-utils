@@ -1,6 +1,8 @@
 export { default } from "./lib/reporter";
 export type {
   AttemptResult,
+  ClientLifecycle,
+  ClientLifecycleClassification,
   ConsoleEntry,
   FailureArtifacts,
   FlatStep,
