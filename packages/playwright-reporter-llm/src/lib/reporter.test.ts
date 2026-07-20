@@ -11,6 +11,7 @@ import type {
   TestStep,
 } from "@playwright/test/reporter";
 
+import * as clientLifecycle from "./internal/clientLifecycle";
 import { GROUPS_CAP, INSTANCES_CAP } from "./internal/constants";
 import { writeTraceZipFixture } from "./internal/testHelpers";
 import * as traceDiagnostics from "./internal/traceDiagnostics";
@@ -1141,6 +1142,36 @@ describe(LlmReporter, () => {
     expect(attempt.network.summary.observedInstances).toBe(0);
     expect(report.globalErrors.length).toBeGreaterThan(0);
     expect(report.globalErrors[0]?.message).toContain("invariant violation: test-triggered");
+  });
+
+  it("preserves trace diagnostics when client lifecycle processing throws", () => {
+    vi.spyOn(clientLifecycle, "attachClientLifecycles").mockImplementationOnce(() => {
+      throw new Error("lifecycle invariant violation: test-triggered");
+    });
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-lifecycle-invariant.zip", {
+      requestBody: JSON.stringify({ request: "x" }),
+      responseBody: JSON.stringify({ response: "y" }),
+    });
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        attachments: [{ name: "trace", contentType: "application/zip", path: tracePath }],
+      }),
+    );
+    reporter.onEnd({ status: "passed" } as FullResult);
+
+    const report = readReport(outputFile);
+    const attempt = firstAttempt(report);
+
+    expect(attempt.network.instances).not.toStrictEqual([]);
+    expect(report.globalErrors).toHaveLength(1);
+    expect(report.globalErrors[0]?.message).toContain("client lifecycle processing failed");
+    expect(report.globalErrors[0]?.message).toContain(
+      "lifecycle invariant violation: test-triggered",
+    );
   });
 
   it("keeps improving console signal after network cap is reached", () => {
