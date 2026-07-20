@@ -104,6 +104,24 @@ describe(resolveSafehouseCmuxIntegration, () => {
     expect(actual.unreviewedEnvNames).toStrictEqual(["CMUX_NEW_REQUIRED_SETTING"]);
   });
 
+  it("treats the cmux settings-merge wrapper names as reviewed", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: {
+        CMUX_BUNDLED_CLI_PATH: "/tmp/cmux/bin/cmux",
+      },
+      readFile: () =>
+        [
+          "CMUX_BASE_SETTINGS",
+          "CMUX_FILTERED_ARGS",
+          "CMUX_MERGED_SETTINGS",
+          "CMUX_USER_SETTINGS",
+          "CMUX_USER_SETTINGS_B64",
+        ].join("\n"),
+    });
+
+    expect(actual.unreviewedEnvNames).toStrictEqual([]);
+  });
+
   it("reads the bundled cmux wrapper source with the default file reader", () => {
     const tempDir = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-test-"));
     try {
