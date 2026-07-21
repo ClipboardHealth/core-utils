@@ -27,14 +27,16 @@ Clipboard's core development tools.
 
 ### Codex
 
-Clone this repository, then point Codex at the repository root:
+Register the GitHub repository as a Codex marketplace and install the plugin:
 
 ```bash
-codex plugin marketplace add /absolute/path/to/core-utils
+codex plugin marketplace add ClipboardHealth/core-utils@main
 codex plugin add core@clipboard
+codex plugin list
 ```
 
-Start a new Codex task after installation so the skills are loaded.
+Codex fetches and caches the marketplace automatically. No manual clone is required. Start a new
+Codex task after installation so the skills are loaded.
 
 ### Claude Code
 
