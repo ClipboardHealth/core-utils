@@ -82,7 +82,6 @@ Fix the shared workplace magic-link Playwright sign-in harness so successful but
 
 - `npm run lint:fast -- playwright/helpers/workplaceSignIn.ts playwright/helpers/scheduleSeed.ts playwright/e2e/auth.spec.ts playwright/e2e/cognito/cognitoEmailOtpAuth.spec.ts`
 - `npx oxfmt --check playwright/helpers/workplaceSignIn.ts playwright/helpers/scheduleSeed.ts playwright/e2e/auth.spec.ts playwright/e2e/cognito/cognitoEmailOtpAuth.spec.ts`
-- `npx cspell --no-must-find-files playwright/helpers/workplaceSignIn.ts playwright/helpers/scheduleSeed.ts playwright/e2e/auth.spec.ts playwright/e2e/cognito/cognitoEmailOtpAuth.spec.ts`
 - `npm run typecheck`
 - With staging E2E credentials available: `npx playwright test playwright/e2e/reporting.spec.ts --project="Desktop Chrome" --grep "page chrome and all four KPI cards render on landing"`
 - Prefer also running the desktop auth magic-link test if credentials are available: `npx playwright test playwright/e2e/auth.spec.ts --project="Desktop Chrome" --grep "clicking the emailed verification link signs the user in"`

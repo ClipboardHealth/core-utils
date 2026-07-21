@@ -1,5 +1,3 @@
-// cspell:ignore viewmode
-
 interface GradingResult {
   pass: boolean;
   score: number;

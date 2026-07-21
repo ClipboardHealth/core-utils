@@ -9,7 +9,6 @@ describe(stringifyQuery, () => {
   it("encodes", () => {
     const actual = stringifyQuery({ fields: { user: "age" } });
 
-    // cspell:disable-next-line
     expect(actual).toBe("fields%5Buser%5D=age");
   });
 

@@ -3,8 +3,6 @@ name: flaky-closeout
 description: Sweep the flaky-test pipeline after fixes merge by closing out the root-cause KB, closing clearly superseded tickets as Done under D3, and re-dispatching critic-rejected plans for amendment. Use for the recurring flaky close-out task, a post-merge flaky-fix sweep, or a dry-run/backtest of close-out decisions.
 ---
 
-<!-- cspell:ignore backtest backtesting groundcrew redispatch worktree -->
-
 # Flaky Closeout
 
 Run three post-merge sweeps in one read-first, write-later pass. This stage

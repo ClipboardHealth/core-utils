@@ -10,7 +10,7 @@ import {
 
 describe(stripAnsi, () => {
   it("removes ANSI escape codes from text", () => {
-    const ansiRed = `\u001B[31mred text\u001B[39m`; // cspell:disable-line
+    const ansiRed = `\u001B[31mred text\u001B[39m`;
 
     expect(stripAnsi(ansiRed)).toBe("red text");
   });
@@ -95,7 +95,7 @@ describe(extractFirstLine, () => {
   });
 
   it("strips ANSI from the first line", () => {
-    const ansiInput = `\u001B[31mcolored\u001B[39m\nrest`; // cspell:disable-line
+    const ansiInput = `\u001B[31mcolored\u001B[39m\nrest`;
 
     expect(extractFirstLine(ansiInput)).toBe("colored");
   });
