@@ -37,8 +37,8 @@ When removing a usage of a function, constant, type, or other symbol, check whet
 
 In TypeScript code that has access to `@clipboard-health/util-ts`, prefer the named helpers over raw null/undefined comparisons:
 
-- Replace `x === undefined`, `x === null`, or `!x` (when used as a presence check) with `isNil(x)`.
-- Replace `x !== undefined`, `x !== null`, or `x` (as a truthy presence check) with `isDefined(x)`.
+- Replace `x === undefined`, `x === null`, `!isDefined(x)`, or `!x` (when used as a presence check) with `isNil(x)`.
+- Replace `x !== undefined`, `x !== null`, `!isNil(x)`, or `x` (as a truthy presence check) with `isDefined(x)`.
 
 Import from `@clipboard-health/util-ts`.
 
