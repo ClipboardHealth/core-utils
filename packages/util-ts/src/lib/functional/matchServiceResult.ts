@@ -22,12 +22,36 @@ type ExactErrorHandlers<
   Handlers extends ServiceResultErrorHandlers<E>,
 > = Handlers & Record<Exclude<keyof Handlers, E["_tag"]>, never>;
 
-type LiteralErrorTagConstraint<E extends TaggedServiceError> = string extends E["_tag"]
-  ? never
-  : unknown;
+type IsUnion<Value, Whole = Value> = Value extends unknown
+  ? [Whole] extends [Value]
+    ? false
+    : true
+  : never;
+
+type IsSingleLiteralTag<Tag extends string> = [Tag] extends [never]
+  ? false
+  : string extends Tag
+    ? false
+    : IsUnion<Tag> extends true
+      ? false
+      : true;
+
+type InvalidLiteralTagMember<E extends TaggedServiceError> = E extends unknown
+  ? IsSingleLiteralTag<E["_tag"]> extends true
+    ? never
+    : E
+  : never;
+
+type LiteralErrorTagConstraint<E extends TaggedServiceError> = [
+  InvalidLiteralTagMember<E>,
+] extends [never]
+  ? unknown
+  : never;
 
 /**
  * Exhaustively maps a ServiceResult with tagged errors to a single output value.
+ *
+ * Each member of the error union must expose exactly one literal `_tag`.
  *
  * Adding a member to the error union requires adding its `_tag` handler before
  * the call will compile.
@@ -118,7 +142,8 @@ export function matchServiceResult<
   // TypeScript cannot correlate an indexed handler with the matching member of
   // a discriminated union. ExactErrorHandlers guarantees this relationship.
   const handlers = options.onError as ServiceResultErrorHandlers<E>;
-  const handler = handlers[result.error._tag as E["_tag"]] as
+  const tag = result.error._tag as E["_tag"];
+  const handler = (Object.hasOwn(handlers, tag) ? handlers[tag] : undefined) as
     | ((error: E) => ErrorHandlerOutput<Handlers>)
     | undefined;
 

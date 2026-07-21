@@ -16,6 +16,16 @@ class BroadTagTestServiceError extends ServiceError {
   }
 }
 
+class UnionTagTestServiceError extends ServiceError {
+  public get _tag(): "FirstUnionTag" | "SecondUnionTag" {
+    return "FirstUnionTag";
+  }
+}
+
+class ToStringTagTestServiceError extends ServiceError {
+  public readonly _tag = "toString" as const;
+}
+
 type TestServiceError = FirstTestServiceError | SecondTestServiceError;
 
 type MatchOutput =
@@ -105,6 +115,24 @@ describe(matchServiceResult, () => {
     expect(actual).toBe("success");
   });
 
+  it("rejects a union-valued tag on one error type", () => {
+    const result: ServiceResult<number, UnionTagTestServiceError> = success(42);
+
+    const actual = matchServiceResult(
+      // @ts-expect-error: each error type must have exactly one literal tag
+      result,
+      {
+        onSuccess: () => "success",
+        onError: {
+          FirstUnionTag: () => "first",
+          SecondUnionTag: () => "second",
+        },
+      },
+    );
+
+    expect(actual).toBe("success");
+  });
+
   it("rejects a failure whose handler is missing at runtime", () => {
     const input = new SecondTestServiceError("second failure");
     const result = createFailureResult(input);
@@ -121,6 +149,20 @@ describe(matchServiceResult, () => {
       });
 
     expect(actual).toThrow("Missing ServiceResult error handler for SecondTestServiceError");
+  });
+
+  it("rejects an inherited handler property", () => {
+    const result = failure(new ToStringTagTestServiceError("test failure"));
+    const onError = { toString: () => "handled" };
+    Reflect.deleteProperty(onError, "toString");
+
+    const actual = () =>
+      matchServiceResult(result, {
+        onSuccess: () => "success",
+        onError,
+      });
+
+    expect(actual).toThrow("Missing ServiceResult error handler for toString");
   });
 });
 
