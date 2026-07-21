@@ -1,4 +1,3 @@
-// cspell:ignore requestfailed
 import { isRecord, toErrorMessage as getErrorMessage } from "@clipboard-health/util-ts";
 import type { Page, Request, Response, TestInfo } from "@playwright/test";
 

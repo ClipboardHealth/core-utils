@@ -1,5 +1,3 @@
-<!-- cspell:ignore redispatch -->
-
 # Flaky Closeout Comment Templates
 
 Fill every placeholder from fetched evidence. Do not post a state-changing

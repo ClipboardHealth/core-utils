@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# cspell:ignore dockerless
 set -euo pipefail
 
 usage() {

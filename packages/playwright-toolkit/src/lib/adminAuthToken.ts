@@ -10,7 +10,6 @@ import { createDeterministicHash, isDefined, isNil, isRecord } from "@clipboard-
 
 import { runWithRetry } from "./retry";
 
-// cspell:ignore defineauthchallenge getparameters maketesttoken
 const DEFAULT_CACHE_DIRECTORY_NAME = "clipboard-health-playwright-admin-auth";
 const DEFAULT_LOCK_STALE_AFTER_MS = 5 * 60 * 1000;
 const DEFAULT_LOCK_WAIT_TIMEOUT_MS = 6 * 60 * 1000;

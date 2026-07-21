@@ -1,5 +1,3 @@
-<!-- cspell:ignore backtest -->
-
 # 2026-07-17 Acceptance Report
 
 This is a targeted, write-free acceptance check for the handoff examples. It is

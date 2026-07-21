@@ -78,8 +78,6 @@ gh workflow run "Generate Seed Data" \
 
 ## Scenario Lookup Table
 
-<!-- cspell:ignore usecase -->
-
 > **Note:** Scenario numbers 13 and 18 do not exist. If a user references them, let them know and present the full list below.
 
 | Key                                                                  | Description                                                                  | Keyword Hints                                                           |
