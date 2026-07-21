@@ -9,6 +9,10 @@ Run a diagnosis-and-design investigation for a chronic fingerprint family. Produ
 
 Read the bundled [Home Health dry run](references/dry-run-home-health-full-lifecycle.md) for the expected dossier and causal narrative depth. Its structure is distilled from Rocky's `hh-full-lifecycle.md` and `staging-seed-reliability.md` reference deep dives; the Phase 6 checklist remains binding where the historical artifact records an evidence limitation.
 
+Read and apply the shared
+[`deployment-aware-recurrence.md`](../flaky-debug/references/deployment-aware-recurrence.md)
+contract before classifying any deployed-service attempt as a failed fix.
+
 ## Phase 0: Enforce credential preconditions
 
 Run the preflight before reading source code or diagnosing:
@@ -53,7 +57,9 @@ The chronic track adds these requirements for every implementation attempt retur
 1. Read the ticket and investigation plan.
 2. Read the complete PR diff, review discussion, merge state, and fix commit through `gh`.
 3. Record what the attempt blamed and exactly what it changed.
-4. Find a later post-merge sighting that proves recurrence. Do not infer failure merely from age.
+4. Find a later sighting with the same normalized failure signature and causal
+   mechanism, then classify it through the deployment-aware recurrence contract.
+   A post-merge timestamp alone does not prove recurrence.
 5. Check current `main` in every repository the attempt touched.
 
 Create a `Prior attempts` table with these columns:
@@ -100,6 +106,15 @@ Use all applicable evidence sources:
 
 Preserve exact commands, absolute time windows, trace/request IDs, run URLs, commit SHAs, and zero-result limitations in the evidence appendix.
 
+When a deployed service is implicated, retain the exact failure's service,
+Datadog version, ECS task definition, and runtime source SHA. Resolve each linked
+implementation PR's fix SHA, run and retain the ancestry check against the
+failure runtime, then find the first successful deployment in that environment
+whose runtime contains the fix. If runtime version/SHA is missing, the attempt
+is `observability-blocked`: perform the provenance lookup and do not fall back to
+merge time. Treat a different signature under the same test title as a new
+mechanism.
+
 ## Phase 4: Terminate the causal chain
 
 Apply the causal-chain and confidence rules in `../flaky-debug/references/plan.md` without changing their score meanings or valid terminal states.
@@ -134,5 +149,10 @@ Write Markdown to the user-specified path, or `/tmp/flaky-deep-dive-<fingerprint
 7. Designed fix, or `Observability design` when the chain is broken.
 8. Fault-injection reproduction and validation plan.
 9. Evidence appendix with links, commands, IDs, timestamps, and citations.
+
+For each deployed-service prior attempt or recurrence, include the complete
+deployment-provenance attachment from the shared contract. Preserve chronic
+routing when the same mechanism is proven on a fix-containing runtime; do not
+count stale runtimes or different mechanisms as failed fixes.
 
 End with the document path/link and a one-sentence review request. Never open a direct fix PR.

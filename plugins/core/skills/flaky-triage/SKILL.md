@@ -13,6 +13,9 @@ This skill routes and classifies known mechanisms from existing ticket evidence;
 - One implementation ticket per mechanism cluster per repository. A cross-repo mechanism match coordinates repository-owned fixes; it never consolidates them across repositories.
 - Never hold a ticket hostage: anything you cannot confidently cluster is released as a singleton. The worst case must equal the no-triage baseline.
 - Load `../flaky-critic/references/rubric.md` before citing close-out rules. Cite rubric rule IDs (B5, D1, D2, D3) in every close-out comment.
+- Load and apply
+  `../flaky-debug/references/deployment-aware-recurrence.md` before any D3,
+  prior-fix, or recurrence decision involving a deployed service.
 - Decide the full cluster picture before writing anything to Linear.
 - Keep bulky data in local scratch files; keep only the manifest and decisions in context.
 - All Linear writes are idempotent. Use exact markers only to deduplicate comments. Immediately before state, label, relation, or marker-comment writes, re-read the current value and skip only when the desired state, label, relation, or exact marker already exists.
@@ -23,7 +26,9 @@ This skill routes and classifies known mechanisms from existing ticket evidence;
 - **B5** — one repository-owned canonical ticket per root cause, never one per sighting within an implementation repository.
 - **D1** — infra/environment incident: cancel with incident window + correlation evidence + why no code fix applies + re-arm note.
 - **D2** — duplicate of canonical: matching evidence + no new implementation ticket needed beyond the canonical.
-- **D3** — already-fixed: matches an investigation/implementation ticket closed in the last 14 days.
+- **D3** — already-fixed: matches an investigation/implementation ticket
+  closed in the last 14 days and, for a deployed service, the exact sighting
+  classifies `pre-deployment/stale-runtime` under the shared contract.
 
 ## Phase 1: Queue
 
@@ -31,7 +36,15 @@ Fetch candidate tickets from Linear: project `Groundcrew`, label `flaky-investig
 
 Use `list_issues` only to enumerate the queue; fetch each candidate with `get_issue` — list results truncate descriptions and will silently drop the Flake details JSON. Fetch candidate details in parallel when the available tooling supports it.
 
-Build one manifest row per ticket from its Flake details JSON: `issueId`, `repo`, `framework`, `testFile`, `testName`, `suite` (top-level describe / file basename family), `firstErrorLine`, `firstProjectStackFrame`, `pipelineUrl`, `commit`, `timestamps`, `priorTickets` (from the Prior Related Tickets section). Storm (`[storm:`) and burst (`[burst:`) tickets are pre-clustered by intake: treat each as a single-member cluster and release it; never merge them into other clusters.
+Build one manifest row per ticket from its Flake details JSON: `issueId`, `repo`,
+`framework`, `testFile`, `testName`, `suite` (top-level describe / file basename
+family), `firstErrorLine`, `firstProjectStackFrame`, `pipelineUrl`, `commit`,
+`timestamps`, `priorTickets` (from the Prior Related Tickets section). When the
+exact failure implicates a deployed service, also retain `service`, Datadog
+`version`, ECS task definition, runtime source SHA, and the evidence link for
+each value; record missing fields explicitly. Storm (`[storm:`) and burst
+(`[burst:`) tickets are pre-clustered by intake: treat each as a single-member
+cluster and release it; never merge them into other clusters.
 
 Phase 1 is done when every non-skipped candidate has a manifest row — don't carry a partial manifest into Phase 2.
 
@@ -42,7 +55,10 @@ Fetch what is already being worked, to catch duplicates before they spawn plans.
 - Open Linear tickets labeled `flaky-implementation` (any state but terminal). Collect plausible IDs first, then fetch each with `get_issue` and read its comments in parallel when the available tooling supports it; list results truncate the plan, `KB match:` statement, critic approval, and PR context needed for mechanism coordination.
 - PRs: search `flaky-test-fix` in both `open` and `closed` states; treat closed-unmerged siblings as duplicate signals, not already-fixed proof. Also try title keywords `flaky`/`deflake`.
 - Open `[storm:` / `[burst:` tickets and their contained fingerprints.
-- Investigation/implementation tickets closed in the last 14 days, for already-fixed matches only after confirming the merged fix is on main and the sighting predates it (D3).
+- Investigation/implementation tickets closed in the last 14 days. For a
+  deployed-service match, resolve the fix SHA and classify the exact sighting
+  through the deployment-aware recurrence contract; do not compare only the
+  sighting and merge timestamps (D3).
 
 Check all four sources before Phase 3 — a cluster decided against partial in-flight context can't be trusted.
 
@@ -61,6 +77,11 @@ Cluster by strongest shared evidence first:
 7. **Same environment incident:** multiple otherwise-distinct clusters whose failures all reduce to backend 5xx in seed/setup/readiness helpers within the same few minutes, across ≥2 repos or ≥3 pipelines. Different helpers and error text do not separate them — one staging outage surfaces through every helper that touches it. Merge them into one incident cluster (backtest lesson: 2026-06-09's 13 tickets were four helper-level clusters but one incident).
 
 Do not merge clusters merely because failures share a run. Same-run failures can have different root causes.
+
+A shared test title is likewise insufficient recurrence evidence. When a
+candidate prior fix exists, compare the normalized signature and causal
+mechanism first. Route a different signature as a new mechanism even when the
+runtime contains the prior fix.
 
 ### Knowledge-base mechanism coordination
 
@@ -103,7 +124,7 @@ Scope: STAFF-X owns <repo-a>. Skip this ticket's sibling-repo step that would cr
 <!-- flaky-triage: mechanism-cluster=<entry-slug> members=STAFF-X,STAFF-Y -->
 ```
 
-For every planned canonical release, search Linear for the fingerprint family with the `flaky-implementation` label across all states and without a date-window restriction, then count unique prior implementation ticket IDs. At **≥3 prior implementation tickets**, remove the planned normal release and leave the canonical in `Triage` unassigned. Create the Linear `chronic` label first if it does not exist. Apply the `chronic` label and route the family to the credential-checked, dossier-first `flaky-deep-dive` skill. Add a ticket comment with the marker `<!-- flaky-triage: chronic -->` and dossier pointers listing every prior implementation ticket ID — but first search the ticket's existing comments for that exact marker and skip posting when it is already present; that absence check is what makes the comment idempotent across retries and re-runs. This ≥3-ticket count is a cheap screen staged before any diagnosis exists; the critic separately applies a sharper **≥2 failed merged fixes** test (see the flaky-critic rubric's Prior-attempts amendment) with the same chronic routing. The thresholds differ by design — by the evidence available at each stage — not by accident.
+For every planned canonical release, search Linear for the fingerprint family with the `flaky-implementation` label across all states and without a date-window restriction, then count unique prior implementation ticket IDs. At **≥3 prior implementation tickets**, remove the planned normal release and leave the canonical in `Triage` unassigned. Create the Linear `chronic` label first if it does not exist. Apply the `chronic` label and route the family to the credential-checked, dossier-first `flaky-deep-dive` skill. Add a ticket comment with the marker `<!-- flaky-triage: chronic -->` and dossier pointers listing every prior implementation ticket ID — but first search the ticket's existing comments for that exact marker and skip posting when it is already present; that absence check is what makes the comment idempotent across retries and re-runs. This ≥3-ticket count is a cheap screen staged before any diagnosis exists; the critic separately applies a sharper **≥2 failed merged fixes** test (see the flaky-critic rubric's Prior-attempts amendment) with the same chronic routing. The thresholds differ by design — by the evidence available at each stage — not by accident. Preserve this chronic-family route when the dossier proves the same mechanism recurred on a runtime containing the fix. A stale runtime is not failed-fix evidence, and a different signature remains a new mechanism for recurrence judgment.
 
 **Release** = set state to `Todo` and assign to the Linear API user (the viewer). Before release, ensure the ticket satisfies the Groundcrew eligibility contract from `../create-groundcrew-ticket/SKILL.md`: repository text in the description, exactly one `agent-*` label, leaf issue, and no non-terminal blockers unless intentionally blocked. Assignment + Todo is what makes groundcrew dispatch it; it also serves as the lease — released tickets never re-enter the queue.
 

@@ -56,7 +56,7 @@ Opening one plan/PR per failing test when the failures share one mechanism (same
 
 **Prior-sibling signal (backtest amendment, 2026-06-11):** sibling PRs for the same mechanism that were closed _unmerged_ are a strong reject signal, not mere context. A plan citing closed-unmerged siblings must explain what is materially different this time — narrower scope alone is not an answer (the backtest's one genuine false approval cited prior wontfix siblings and explained them away).
 
-**Prior attempts (amendment, 2026-07-16):** when a fingerprint family has prior implementation tickets, the plan MUST contain a **Prior attempts** section listing each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. A missing section is statement-missing and gets amend-and-resubmit per §1. A plan that re-proposes a mechanism a prior merged fix already tried is a substantive reject. A family with **≥2 failed merged fixes** — merged fixes followed by recurrence — is disqualified from the normal fix path: verdict = reject and escalate as needs-human. Apply the `chronic` label and route the family to the credential-checked, dossier-first `flaky-deep-dive` skill. The ≥2 threshold is intentionally different from flaky-triage's ≥3-prior-implementation-tickets screen: triage counts tickets cheaply before any diagnosis exists, while the critic can see merge and recurrence outcomes and applies the sharper failed-merged-fix test. Either stage flagging chronic routes the same way; the counts are staged by the evidence available at each stage, not a contradiction.
+**Prior attempts (amendment, 2026-07-16; deployment amendment, 2026-07-20):** when a fingerprint family has prior implementation tickets, the plan MUST contain a **Prior attempts** section listing each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. A missing section is statement-missing and gets amend-and-resubmit per §1. A plan that re-proposes a mechanism a prior merged fix already tried is a substantive reject. For a deployed service, recurrence evidence counts only when the exact failure runtime contains the fix commit according to `git merge-base --is-ancestor`; apply the shared [deployment-aware recurrence contract](../../flaky-debug/references/deployment-aware-recurrence.md). A same-mechanism sighting on a runtime that does not contain the fix is `pre-deployment/stale-runtime`, not a failed fix. Missing runtime version/SHA is `observability-blocked` and requires provenance lookup. A different signature under the same test title is a new mechanism. A family with **≥2 failed merged fixes** — fixes followed by proven same-mechanism recurrence on fix-containing runtimes — is disqualified from the normal fix path: verdict = reject and escalate as needs-human. Apply the `chronic` label and route the family to the credential-checked, dossier-first `flaky-deep-dive` skill. Preserve that route whenever the same-mechanism recurrence is proven on a fix-containing runtime. The ≥2 threshold is intentionally different from flaky-triage's ≥3-prior-implementation-tickets screen: triage counts tickets cheaply before any diagnosis exists, while the critic can see merge and deployment-proven recurrence outcomes and applies the sharper failed-merged-fix test. Either stage flagging chronic routes the same way; the counts are staged by the evidence available at each stage, not a contradiction.
 
 A claimed mechanism delta does not decrement the ≥2 failed-merged-fix count or return the family to the normal path; preserve the claim in the dossier and make mechanism identity the deep dive's first question.
 
@@ -200,7 +200,17 @@ Required evidence: fingerprint/test/file plus error shape matches an existing in
 
 ### D3 — Already fixed / stale
 
-Required evidence: the merged PR/commit on main that covers the flake (e.g., "covered by merged PR #6697"), and confirmation the failing sighting predates the fix. Recurrences after the fix go to the canonical ticket ("Still failing in CI; flake-intake deduplicated this sighting to the canonical fix ticket"), not a new one.
+Required evidence: the merged PR/commit on main that covers the flake and
+confirmation the failing sighting predates the fix. When a deployed service is
+implicated, "predates the fix" means the exact runtime classifies
+`pre-deployment/stale-runtime`; apply the shared
+[deployment-aware recurrence contract](../../flaky-debug/references/deployment-aware-recurrence.md).
+Attach the runtime SHA, fix SHA, deployment run, ancestry result, and first
+fix-containing deployment boundary. Missing runtime version/SHA, the observed
+runtime's deployment run, or the first fix-containing deployment boundary is
+`observability-blocked`, so D3 must wait for provenance lookup. Same-mechanism
+recurrences on a fix-containing runtime go to the canonical ticket; a different
+signature under the same test title routes as a new mechanism.
 
 ### D4 — Burst with no shared cause identified
 
