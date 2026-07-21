@@ -8,6 +8,7 @@ TypeScript utilities.
 - [Usage](#usage)
   - [ServiceError](#serviceerror)
   - [ServiceResult](#serviceresult)
+    - [`matchServiceResult`](#matchserviceresult)
     - [`tryCatchAsync`](#trycatchasync)
     - [`tryCatch`](#trycatch)
     - [`fromSafeParseReturnType`](#fromsafeparsereturntype)
@@ -117,6 +118,10 @@ try {
 
 ### ServiceResult
 
+`ServiceResult<A, E>` represents either a successful `A` value or a `ServiceError` subtype `E`.
+The error type defaults to `ServiceError` for compatibility with existing callers. Pass an explicit
+union when callers need to branch on the errors an operation can return.
+
 <embedex source="packages/util-ts/examples/serviceResult.ts">
 
 ```ts
@@ -148,6 +153,77 @@ function validateUser(params: { email: string; phone: string }): ServiceResult<{
 
 ok(isFailure(validateUser({ email: "invalidEmail", phone: "invalidPhoneNumber" })));
 ok(isSuccess(validateUser({ email: "user@example.com", phone: "555-555-5555" })));
+```
+
+</embedex>
+
+#### `matchServiceResult`
+
+`matchServiceResult` maps a typed `ServiceResult` to one output while requiring a handler for every
+literal `_tag` in its error union. Adding or removing an error type therefore updates every exhaustive
+match at compile time. Callers that do not need exhaustive handling can continue using `isFailure` and
+`isSuccess`.
+
+<embedex source="packages/util-ts/examples/matchServiceResult.ts">
+
+```ts
+import { strictEqual } from "node:assert/strict";
+
+import {
+  failure,
+  matchServiceResult,
+  ServiceError,
+  type ServiceResult,
+  success,
+} from "@clipboard-health/util-ts";
+
+interface User {
+  id: string;
+  name: string;
+}
+
+class InvalidUserIdError extends ServiceError {
+  public readonly _tag = "InvalidUserIdError" as const;
+
+  public constructor() {
+    super("User ID is required");
+  }
+}
+
+class UserNotFoundError extends ServiceError {
+  public readonly _tag = "UserNotFoundError" as const;
+
+  public readonly userId: string;
+
+  public constructor({ userId }: { userId: string }) {
+    super(`User ${userId} was not found`);
+    this.userId = userId;
+  }
+}
+
+type FindUserError = InvalidUserIdError | UserNotFoundError;
+
+function findUser({ userId }: { userId: string }): ServiceResult<User, FindUserError> {
+  if (userId.length === 0) {
+    return failure(new InvalidUserIdError());
+  }
+
+  if (userId === "missing") {
+    return failure(new UserNotFoundError({ userId }));
+  }
+
+  return success({ id: userId, name: "Ada" });
+}
+
+const message = matchServiceResult(findUser({ userId: "missing" }), {
+  onSuccess: (user) => `Found ${user.name}`,
+  onError: {
+    InvalidUserIdError: (error) => error.message,
+    UserNotFoundError: (error) => `User ${error.userId} was not found`,
+  },
+});
+
+strictEqual(message, "User missing was not found");
 ```
 
 </embedex>
