@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "2.9.1",
-    "libphonenumber-js": "1.13.8"
+    "libphonenumber-js": "1.13.9"
   },
   "peerDependencies": {
     "libphonenumber-js": "^1.12"
