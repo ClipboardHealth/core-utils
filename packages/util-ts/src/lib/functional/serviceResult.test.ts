@@ -5,6 +5,7 @@ import { isLeft, isRight, type Left, type Right } from "./either";
 import {
   type Failure,
   failure,
+  type FailureResult,
   fromSafeParseReturnType,
   isFailure,
   isSuccess,
@@ -15,6 +16,16 @@ import {
   tryCatch,
   tryCatchAsync,
 } from "./serviceResult";
+
+class FirstTestServiceError extends ServiceError {
+  public readonly _tag = "FirstTestServiceError" as const;
+}
+
+class SecondTestServiceError extends ServiceError {
+  public readonly _tag = "SecondTestServiceError" as const;
+}
+
+type TestServiceError = FirstTestServiceError | SecondTestServiceError;
 
 function getServiceErrorMessage(error: ServiceError): string {
   return error.issues[0]?.message ?? "no message";
@@ -27,6 +38,7 @@ describe("ServiceResult", () => {
 
       const actual = success(input);
 
+      expectTypeOf(actual).toEqualTypeOf<ServiceResult<{ data: string }>>();
       expect(isSuccess(actual)).toBe(true);
       expect(isFailure(actual)).toBe(false);
       expect(actual.isSuccess).toBe(true);
@@ -39,6 +51,13 @@ describe("ServiceResult", () => {
 
       expect(isSuccess(actual)).toBe(true);
       expect(actual.isSuccess).toBe(true);
+      expect((actual as Success<void>).value).toBeUndefined();
+    });
+
+    it("can be used with a specific error channel", () => {
+      const actual: ServiceResult<void, TestServiceError> = success();
+
+      expect(isSuccess(actual)).toBe(true);
       expect((actual as Success<void>).value).toBeUndefined();
     });
   });
@@ -75,6 +94,38 @@ describe("ServiceResult", () => {
       expect(error.issues).toStrictEqual([
         { code: ERROR_CODES.internal, title: "Internal server error", message: "test error" },
       ]);
+    });
+
+    it("preserves a ServiceError subtype", () => {
+      const input = new FirstTestServiceError("test error");
+
+      const actual = failure(input);
+
+      expectTypeOf(actual).toEqualTypeOf<FailureResult<FirstTestServiceError>>();
+      expect(actual.error).toBe(input);
+    });
+  });
+
+  describe("typed error channels", () => {
+    it("preserves an error union through the failure guard", () => {
+      const input = new FirstTestServiceError("test error");
+      const result = createTypedFailure(input);
+
+      const actual = isFailure(result);
+      const error = getTypedFailureError(result);
+
+      expect(actual).toBe(true);
+      expectTypeOf(error).toEqualTypeOf<TestServiceError>();
+      expect(error).toBe(input);
+    });
+
+    it("provides the typed error to mapFailure", () => {
+      const input = createTypedFailure(new SecondTestServiceError("test error"));
+      const transformError = mapFailure((error: TestServiceError) => error._tag);
+
+      const actual = transformError(input);
+
+      expect(actual).toStrictEqual({ isRight: false, left: "SecondTestServiceError" });
     });
   });
 
@@ -334,4 +385,16 @@ describe("ServiceResult", () => {
 
 function faultyOnError(): never {
   throw new Error("onError function failed");
+}
+
+function createTypedFailure(error: TestServiceError): ServiceResult<string, TestServiceError> {
+  return failure(error);
+}
+
+function getTypedFailureError(result: ServiceResult<string, TestServiceError>): TestServiceError {
+  if (isSuccess(result)) {
+    throw new Error("Expected failure");
+  }
+
+  return result.error;
 }
