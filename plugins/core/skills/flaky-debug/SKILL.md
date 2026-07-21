@@ -85,6 +85,10 @@ Before diagnosing, build the fingerprint family's dossier, then check whether so
    See the checked-in [KB lookup and close-out dry run](./references/root-cause-kb/dry-run-workplace-review-sheet.md) for one full cycle.
 
 3. **Build the `Prior attempts` table before diagnosis.** Add one row for each prior implementation ticket and linked PR found through either query. The table columns are `Prior ticket/PR`, `What it blamed`, `What it changed`, and `Recurrence evidence`. The table must list each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. Use later investigation sightings and post-merge failures as recurrence evidence; do not infer failure merely because an attempt is old. If there are no prior implementation tickets, record `None found` plus the fingerprint and test-title searches run. Keep KB-derived failed-fix history in the separate `KB match` statement unless the entry links a ticket or PR to this fingerprint family; do not manufacture family-specific prior attempts from a mechanism-level entry.
+   When a prior fix implicates a deployed service, read and apply
+   [`references/deployment-aware-recurrence.md`](./references/deployment-aware-recurrence.md):
+   a post-merge timestamp is insufficient, and the plan must retain the exact
+   failure's deployment-provenance attachment.
 4. **Search open PRs with the `flaky-test-fix` label** that touch the failing test file or its surrounding code. Use GitHub search scoped to the repo:
    - Search PRs labeled `flaky-test-fix` for the test file name or test directory
    - Review the PR's changes to assess whether they address the same flake pattern with reasonable confidence — if so, stop and report it to the user rather than opening a duplicate fix

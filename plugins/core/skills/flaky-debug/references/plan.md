@@ -99,6 +99,11 @@ Produce the plan with these fields:
 - **Current main status:** whether the failing commit's code path still exists on current `main`, has already been fixed, or has changed enough that the plan must be adjusted
 - **KB match:** cite the matching entry, matched symptom signature, mechanism hypothesis, and known failed fixes to avoid. If none matched, write `None` and list the symptom signatures/fingerprint checked against the index.
 - **Prior attempts:** list each prior ticket/PR, what it blamed, what it changed, and the recurrence evidence showing its diagnosis was wrong or incomplete. Use a table with `Prior ticket/PR`, `What it blamed`, `What it changed`, and `Recurrence evidence` columns. If the dossier search found no prior implementation tickets, write `None found` and include the fingerprint-family and exact-test-title searches run.
+- **Deployment provenance:** when a prior fix or current failure implicates a
+  deployed service, include the complete attachment from
+  [`deployment-aware-recurrence.md`](./deployment-aware-recurrence.md) for each
+  recurrence decision. Do not use merge time when runtime version/SHA is
+  missing.
 - **Symptom:** what failed and where
 - **Root cause:** concise technical explanation
 - **Causal chain:** each link from failing assertion to terminal cause with its evidence, or the explicit break point and the observability that would extend it (see [Causal Chain](#causal-chain))

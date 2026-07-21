@@ -14,6 +14,8 @@ Read these files before deciding or writing:
 - `../flaky-debug/references/fix.md` for the KB close-out contract.
 - `../flaky-debug/references/root-cause-kb/README.md` and every plausible KB
   entry.
+- `../flaky-debug/references/deployment-aware-recurrence.md` for deployed-service
+  D3 and recurrence decisions.
 - `../flaky-critic/SKILL.md` and its rubric for D3, marker, and second-reject
   semantics.
 - `../create-groundcrew-ticket/SKILL.md` for dispatch eligibility.
@@ -28,6 +30,9 @@ Read these files before deciding or writing:
   supersession.
 - Require a clear mechanism match before D3 closure: the same KB entry or
   causal mechanism **and** the same failure-signature class.
+- For a deployed service, use the first fix-containing deployment boundary,
+  never PR merge time, and attach the complete deployment-provenance record to
+  every D3 or recurrence decision.
 - Decide the complete action ledger before any external write.
 - Search existing comments for the exact marker before every write. A marker is
   a lease for that action, not a substitute for checking current state.
@@ -98,6 +103,14 @@ evidence, and every flake sighting timestamp.
 
 If a PR lacks a source ticket ID, report it as unresolved and take no close-out
 action for it.
+
+For an actionable PR involving a deployed service, resolve its fix-bearing
+commit separately from its merge timestamp. For every candidate exact failure,
+retain the service, Datadog version, ECS task definition, runtime source SHA,
+runtime deployment run, ancestry result, and first fix-containing deployment
+boundary. Missing runtime version/SHA makes the decision
+`observability-blocked`; leave state unchanged while provenance lookup is
+pending.
 
 ### Bounce manifest
 
@@ -199,17 +212,36 @@ Use the KB mechanism as the cross-family join key:
    symptom.
 3. Confirm the signature class matches, such as provider-topology remount,
    query-row overlay teardown, Cognito alias lookup, or CDC readiness.
-4. Parse the candidate's earliest relevant sighting timestamp and prove it is
-   earlier than the PR merge timestamp. If no reliable sighting time exists, do
-   not close.
-5. Check that the ticket has no post-merge recurrence for that mechanism.
+4. Parse the candidate's earliest relevant sighting timestamp. If a deployed
+   service is implicated, build the exact runtime-provenance record and run the
+   fix-to-runtime ancestry check. Otherwise retain the existing comparison to
+   the fix commit.
+5. For a deployed service, find the first successful deployment in the same
+   environment whose runtime contains the fix and use its runtime-activation
+   time as the D3 boundary. Check for same-mechanism recurrence on or after that
+   boundary and prove each candidate runtime contains the fix. During rolling
+   deployment, exact runtime ancestry overrides wall-clock ordering. Never
+   substitute PR merge time.
+6. Compare signatures before titles. A different signature under the same test
+   title is a new mechanism, not recurrence or supersession evidence for this
+   fix.
 
 Classify the candidate:
 
 - **Clear match:** stage the D3 comment from
   [comment templates](./references/comment-templates.md), then set the ticket to
-  Done. Include the PR, mechanism, sighting and merge timestamps, 21-day
+  Done. Include the PR, mechanism, sighting, complete deployment-provenance
+  attachment when applicable, first fix-containing deployment boundary, 21-day
   verifying window, and recurrence-loop reopen safety net.
+- **Pre-deployment/stale runtime:** do not count the sighting as a failed merged
+  fix. It may be a clear D3 match only when the mechanism/signature match and no
+  proven recurrence exists on a fix-containing runtime.
+- **Genuine post-fix recurrence:** do not close under D3. Count it as failed-fix
+  evidence on the canonical family and preserve chronic-family routing.
+- **Observability-blocked:** require runtime provenance lookup and leave state
+  unchanged; do not post a possible-supersession guess based on merge time.
+- **New mechanism:** route by the new signature and take no D3 or failed-fix
+  action against this fix.
 - **Ambiguous:** stage one possible-supersession comment tagging Rocky and leave
   state unchanged.
 - **No match:** take no action.
