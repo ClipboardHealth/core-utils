@@ -17,5 +17,5 @@ Concisely explain the user intent from session history and the meaningful behavi
 
 Optional, don't fabricate: ticket links, rollout plan, residual risk, or specific areas for reviewers to focus.
 
-<sub>🤖 <code>cb-ship:created v1 core@3.22.6</code></sub>
+<sub>🤖 <code>cb-ship:created v1 core@3.23.0</code></sub>
 ```
