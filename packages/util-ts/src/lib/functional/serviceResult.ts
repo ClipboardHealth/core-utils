@@ -64,7 +64,7 @@ export function failure(params: ServiceErrorParams | ServiceError): FailureResul
 /**
  * Type guard for failure results.
  */
-export function isFailure<A, E extends ServiceError>(
+export function isFailure<A, E extends ServiceError = ServiceError>(
   result: ServiceResult<A, E>,
 ): result is FailureResult<E> {
   return !result.isSuccess;
@@ -73,7 +73,7 @@ export function isFailure<A, E extends ServiceError>(
 /**
  * Type guard for success results.
  */
-export function isSuccess<A, E extends ServiceError>(
+export function isSuccess<A, E extends ServiceError = ServiceError>(
   result: ServiceResult<A, E>,
 ): result is SuccessResult<A> {
   return result.isSuccess;
@@ -83,7 +83,7 @@ export function isSuccess<A, E extends ServiceError>(
  * Alias for {@link mapLeft}.
  * Note: returns an {@link Either}, not a ServiceResult.
  */
-export function mapFailure<E extends ServiceError, G>(
+export function mapFailure<G, E extends ServiceError = ServiceError>(
   f: (left: E) => G,
 ): <A>(result: ServiceResult<A, E>) => Either<G, A> {
   return mapLeft(f);

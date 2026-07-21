@@ -8,6 +8,14 @@ class TestServiceError extends ServiceError {
 }
 
 describe("ServiceResult expectations", () => {
+  it("preserves the existing explicit generic arguments", () => {
+    const failureResult: ServiceResult<string> = failure(new ServiceError("test error"));
+    const successResult: ServiceResult<string> = success("value");
+
+    expectToBeFailure<string>(failureResult);
+    expectToBeSuccess<string>(successResult);
+  });
+
   it("preserves the typed error when expecting a failure", () => {
     const input = createFailure(new TestServiceError("test error"));
 

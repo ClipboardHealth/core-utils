@@ -107,6 +107,19 @@ describe("ServiceResult", () => {
   });
 
   describe("typed error channels", () => {
+    it("preserves the existing explicit generic arguments", () => {
+      const successfulResult: ServiceResult<string> = success("value");
+      const failedResult: ServiceResult<string> = failure(new ServiceError("test error"));
+      const getErrorMessage = mapFailure<string>((error) => getServiceErrorMessage(error));
+
+      expect(isSuccess<string>(successfulResult)).toBe(true);
+      expect(isFailure<string>(failedResult)).toBe(true);
+      expect(getErrorMessage(failedResult)).toStrictEqual({
+        isRight: false,
+        left: "test error",
+      });
+    });
+
     it("preserves an error union through the failure guard", () => {
       const input = new FirstTestServiceError("test error");
       const result = createTypedFailure(input);

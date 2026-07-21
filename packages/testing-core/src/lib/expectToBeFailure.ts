@@ -13,7 +13,7 @@ import { expectToBeLeft } from "./expectToBeLeft";
 /**
  * Alias for {@link expectToBeLeft}
  */
-export function expectToBeFailure<A, ErrorType extends ServiceError>(
+export function expectToBeFailure<A, ErrorType extends ServiceError = ServiceError>(
   value: ServiceResult<A, ErrorType> | undefined,
 ): asserts value is E.Left<ErrorType> & Failure<ErrorType> {
   expectToBeLeft(value);

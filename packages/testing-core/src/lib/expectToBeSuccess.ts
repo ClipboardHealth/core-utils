@@ -13,7 +13,7 @@ import { expectToBeRight } from "./expectToBeRight";
 /**
  * Alias for {@link expectToBeRight}
  */
-export function expectToBeSuccess<A, ErrorType extends ServiceError>(
+export function expectToBeSuccess<A, ErrorType extends ServiceError = ServiceError>(
   value: ServiceResult<A, ErrorType> | undefined,
 ): asserts value is E.Right<A> & Success<A> {
   expectToBeRight(value);
