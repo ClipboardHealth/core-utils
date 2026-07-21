@@ -22,11 +22,17 @@ type ExactErrorHandlers<
   Handlers extends ServiceResultErrorHandlers<E>,
 > = Handlers & Record<Exclude<keyof Handlers, E["_tag"]>, never>;
 
+type LiteralErrorTagConstraint<E extends TaggedServiceError> = string extends E["_tag"]
+  ? never
+  : unknown;
+
 /**
  * Exhaustively maps a ServiceResult with tagged errors to a single output value.
  *
  * Adding a member to the error union requires adding its `_tag` handler before
  * the call will compile.
+ *
+ * @throws {TypeError} If a runtime caller omits the handler for a failure's tag.
  */
 export function matchServiceResult<
   A,
@@ -34,7 +40,7 @@ export function matchServiceResult<
   SuccessOutput,
   const Handlers extends ServiceResultErrorHandlers<E>,
 >(
-  result: ServiceResult<A, E>,
+  result: ServiceResult<A, E> & LiteralErrorTagConstraint<E>,
   options: {
     readonly onSuccess: (value: A) => SuccessOutput;
     readonly onError: ExactErrorHandlers<E, Handlers>;

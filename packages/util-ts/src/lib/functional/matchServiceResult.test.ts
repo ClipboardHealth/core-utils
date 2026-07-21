@@ -10,6 +10,12 @@ class SecondTestServiceError extends ServiceError {
   public readonly _tag = "SecondTestServiceError" as const;
 }
 
+class BroadTagTestServiceError extends ServiceError {
+  public get _tag(): string {
+    return "BroadTagTestServiceError";
+  }
+}
+
 type TestServiceError = FirstTestServiceError | SecondTestServiceError;
 
 type MatchOutput =
@@ -82,6 +88,39 @@ describe(matchServiceResult, () => {
     });
 
     expect(actual).toBe("success");
+  });
+
+  it("requires literal error tags", () => {
+    const result: ServiceResult<number, BroadTagTestServiceError> = success(42);
+
+    const actual = matchServiceResult(
+      // @ts-expect-error: a broad string tag cannot be matched exhaustively
+      result,
+      {
+        onSuccess: () => "success",
+        onError: {},
+      },
+    );
+
+    expect(actual).toBe("success");
+  });
+
+  it("rejects a failure whose handler is missing at runtime", () => {
+    const input = new SecondTestServiceError("second failure");
+    const result = createFailureResult(input);
+    const onError = {
+      FirstTestServiceError: () => "first",
+      SecondTestServiceError: () => "second",
+    };
+    Reflect.deleteProperty(onError, "SecondTestServiceError");
+
+    const actual = () =>
+      matchServiceResult(result, {
+        onSuccess: () => "success",
+        onError,
+      });
+
+    expect(actual).toThrow("Missing ServiceResult error handler for SecondTestServiceError");
   });
 });
 
