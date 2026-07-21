@@ -108,7 +108,8 @@ For an actionable PR involving a deployed service, resolve its fix-bearing
 commit separately from its merge timestamp. For every candidate exact failure,
 retain the service, Datadog version, ECS task definition, runtime source SHA,
 runtime deployment run, ancestry result, and first fix-containing deployment
-boundary. Missing runtime version/SHA makes the decision
+boundary. Missing runtime version/SHA, the observed runtime's deployment run, or
+the first fix-containing deployment boundary makes the decision
 `observability-blocked`; leave state unchanged while provenance lookup is
 pending.
 

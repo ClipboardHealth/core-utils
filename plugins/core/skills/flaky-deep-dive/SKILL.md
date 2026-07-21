@@ -57,9 +57,9 @@ The chronic track adds these requirements for every implementation attempt retur
 1. Read the ticket and investigation plan.
 2. Read the complete PR diff, review discussion, merge state, and fix commit through `gh`.
 3. Record what the attempt blamed and exactly what it changed.
-4. Find a later same-mechanism sighting and classify it through the
-   deployment-aware recurrence contract. A post-merge timestamp alone does not
-   prove recurrence.
+4. Find a later sighting with the same normalized failure signature and causal
+   mechanism, then classify it through the deployment-aware recurrence contract.
+   A post-merge timestamp alone does not prove recurrence.
 5. Check current `main` in every repository the attempt touched.
 
 Create a `Prior attempts` table with these columns:

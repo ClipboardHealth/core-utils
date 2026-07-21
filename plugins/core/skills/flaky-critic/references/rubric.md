@@ -206,7 +206,8 @@ implicated, "predates the fix" means the exact runtime classifies
 `pre-deployment/stale-runtime`; apply the shared
 [deployment-aware recurrence contract](../../flaky-debug/references/deployment-aware-recurrence.md).
 Attach the runtime SHA, fix SHA, deployment run, ancestry result, and first
-fix-containing deployment boundary. Missing runtime version/SHA is
+fix-containing deployment boundary. Missing runtime version/SHA, the observed
+runtime's deployment run, or the first fix-containing deployment boundary is
 `observability-blocked`, so D3 must wait for provenance lookup. Same-mechanism
 recurrences on a fix-containing runtime go to the canonical ticket; a different
 signature under the same test title routes as a new mechanism.

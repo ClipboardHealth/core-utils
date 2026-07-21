@@ -4,8 +4,9 @@ Fill every placeholder from fetched evidence. Do not post a state-changing
 template with an unknown timestamp, mechanism, PR, or required runtime
 provenance. A possible-supersession comment may use its explicit
 missing-timestamp statement because it leaves state unchanged. Missing runtime
-version/SHA for a deployed service is instead `observability-blocked` and
-requires provenance lookup, not a possible-supersession guess.
+version/SHA, the observed runtime's deployment run, or the first fix-containing
+deployment boundary for a deployed service is instead `observability-blocked`
+and requires provenance lookup, not a possible-supersession guess.
 
 ## KB close-out
 
