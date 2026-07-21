@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/playwright-flake-linter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shared configurable checks for Playwright flake anti-patterns.",
   "keywords": [
     "flaky-tests",
