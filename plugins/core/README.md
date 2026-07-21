@@ -25,6 +25,19 @@ Clipboard's core development tools.
 
 ## Installation
 
+### Codex
+
+Clone this repository, then point Codex at the repository root:
+
+```bash
+codex plugin marketplace add /absolute/path/to/core-utils
+codex plugin add core@clipboard
+```
+
+Start a new Codex task after installation so the skills are loaded.
+
+### Claude Code
+
 ```bash
 # Add the marketplace
 /plugin marketplace add ClipboardHealth/core-utils

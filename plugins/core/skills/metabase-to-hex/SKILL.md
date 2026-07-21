@@ -31,7 +31,7 @@ Most of this skill is about working around quirks of the Hex CLI and YAML import
    6c. **YAML round-trip — appLayout** — only after 6b, export, build the real `appLayout`, re-import. Hex now treats the import as an _update_ to an initialized canvas and applies it.
 6. **Verify** — `hex project run`, then UI review (CLI does not surface per-cell errors)
 
-Work in a dedicated directory like `/home/alex/pii-migrations/dashboard_<id>/` with subfolders `queries/`, `hex_cells/`, `artifacts/`. Save intermediate JSON/YAML so you can resume after errors.
+Work in a dedicated temporary or user-selected directory with subfolders `queries/`, `hex_cells/`, and `artifacts/`. Save intermediate JSON/YAML so you can resume after errors.
 
 ## Phase 1 — Inventory the source dashboard
 
@@ -94,7 +94,7 @@ When there's no core fact/dim, fall back to the newer `DBT_PRODUCTION.STG_APP__*
 
 Before pushing, **verify column existence in Snowflake** via `INFORMATION_SCHEMA.COLUMNS` — the Metabase MCP doesn't surface dbt column changes, so guessed columns will break silently. See `references/cbh_stack.md` for the schemas list and connection IDs.
 
-**Reuse SQL across migrations.** If a previous migration (e.g. WOPs Tool at `/home/alex/wops_migration/hex_cells_v3/`) already has a rewritten version of the same card, copy it — but audit its Jinja variables against the new project's inputs before reusing (see gotcha 1 below).
+**Reuse SQL across migrations.** If a previous migration, such as WOPs Tool in Hex project `019e08cb-79c0-7000-84c7-003f187d2669`, already has a rewritten version of the same card, retrieve it into the current workspace and audit its Jinja variables against the new project's inputs before reusing it (see gotcha 1 below).
 
 ## Phase 4 — Scaffold the Hex project
 
@@ -433,13 +433,3 @@ For deep dives — read these only when you hit the relevant phase or gotcha:
 - `references/gotchas.md` — extended gotcha catalog with the incident that produced each one
 - `references/yaml_schemas.md` — exact cell shapes (INPUT, SQL, MARKDOWN), appLayout, and the meta block
 - `references/cbh_stack.md` — Clipboard Health Snowflake schemas, Hex workspace/connection IDs, table-swap cheatsheet
-
-## External memory pointers
-
-If you need richer context (or this skill is being used by an agent without conversation history), these memory files capture the migrations this skill is distilled from:
-
-- `/home/alex/.claude/projects/-home-alex/memory/feedback_hex_app_layout.md` — YAML round-trip pattern and gotchas
-- `/home/alex/.claude/projects/-home-alex/memory/reference_data_stack.md` — Hex/Metabase/Snowflake host info and MCP gotchas
-- `/home/alex/.claude/projects/-home-alex/memory/project_wops_tool.md` — WOPs Tool migration log (dashboard 1898)
-- `/home/alex/.claude/projects/-home-alex/memory/project_payments_dashboard.md` — Payments Team migration log (dashboard 1242)
-- `/home/alex/.claude/projects/-home-alex-pii-migrations/memory/feedback_hex_app_layout_via_yaml.md` — App canvas bootstrap requirement (dashboard 2769 incident, 2026-05-15)

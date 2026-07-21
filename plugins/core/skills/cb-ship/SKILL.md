@@ -1,7 +1,6 @@
 ---
 name: cb-ship
 description: Ship changes. Simplify the diff, commit, review, push, and open or update a PR. Use when the user says 'ship it', 'commit and push', or wants a PR created or updated.
-argument-hint: "[--draft] [--spec-context <path-or-reference-or-text>]"
 ---
 
 ## Setup

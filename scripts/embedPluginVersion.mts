@@ -1,6 +1,6 @@
 /**
  * Syncs the plugins/core version from its package.json into the plugin
- * manifest and skill sentinels.
+ * manifests and skill sentinels.
  *
  * `plugins/core/package.json` is the source of truth that `nx release` bumps
  * (it is private, so it is never published to npm).
@@ -19,7 +19,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // oxlint-disable-next-line unicorn/prefer-import-meta-properties
 const REPO_ROOT = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const PACKAGE_JSON = path.join(REPO_ROOT, "plugins/core/package.json");
-const PLUGIN_JSON = path.join(REPO_ROOT, "plugins/core/.claude-plugin/plugin.json");
+const PLUGIN_MANIFESTS = [
+  path.join(REPO_ROOT, "plugins/core/.claude-plugin/plugin.json"),
+  path.join(REPO_ROOT, "plugins/core/.codex-plugin/plugin.json"),
+];
 const SKILLS_ROOT = path.join(REPO_ROOT, "plugins/core/skills");
 const SENTINEL_PATTERN = /core@\d+\.\d+\.\d+/g;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
@@ -66,15 +69,17 @@ export function syncPluginVersion(options: { check?: boolean; version?: string }
   // Every file this sync owns, whether or not it changed this run. Callers stage
   // these so a version already written out-of-band (e.g. by the postinstall that
   // npm runs mid-release) still lands in the commit even when changedFiles is empty.
-  const managedFiles: string[] = [PLUGIN_JSON];
+  const managedFiles: string[] = [...PLUGIN_MANIFESTS];
 
-  const manifest = JSON.parse(readFileSync(PLUGIN_JSON, "utf8")) as { version?: string };
-  if (manifest.version !== version) {
-    if (!check) {
-      manifest.version = version;
-      writeFileSync(PLUGIN_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
+  for (const pluginManifest of PLUGIN_MANIFESTS) {
+    const manifest = JSON.parse(readFileSync(pluginManifest, "utf8")) as { version?: string };
+    if (manifest.version !== version) {
+      if (!check) {
+        manifest.version = version;
+        writeFileSync(pluginManifest, `${JSON.stringify(manifest, null, 2)}\n`);
+      }
+      changedFiles.push(pluginManifest);
     }
-    changedFiles.push(PLUGIN_JSON);
   }
 
   const target = `core@${version}`;

@@ -1,7 +1,6 @@
 ---
 name: cb-work
 description: Implement a plan file or direct request end-to-end, validate, and ship via cb-ship. Use when the user says 'implement the plan' or clearly wants a change implemented and shipped.
-argument-hint: "[--draft] [plan path or implementation request]"
 ---
 
 ## Setup

@@ -109,7 +109,7 @@ ORDER BY TABLE_SCHEMA, TABLE_NAME;
 ## Past migrations (for reference / SQL reuse)
 
 - **WOPs Tool dashboard 1898** → Hex `019e08cb-79c0-7000-84c7-003f187d2669`.
-  Local v3 SQL at `/home/alex/wops_migration/hex_cells_v3/`. 47 SQL cells
+  Retrieve reusable SQL by project ID into the current workspace. The project has 47 SQL cells
   covering DNR, GWG, Lateness/LEPs, Favorites, Shift Logs, Pay Rate Changes,
   Worker/Workplace Details, Urgent Shift, Shift Radar, Worker↔Workplace
   Messages, Referrals, PSST, Notification Settings, ETP Change Logs, Payment
@@ -118,6 +118,6 @@ ORDER BY TABLE_SCHEMA, TABLE_NAME;
 - **Payments Team dashboard 1242** → Hex `019e275f-50bf-7000-8043-ad906145f55c`.
   20 SQL cells. Heavy overlap with WOPs Tool — 13 of 20 reused v3 SQL.
 
-If the new migration includes any of those topics, check the v3 SQL folder first
-before writing new SQL. Audit reused SQL for stale variable references (see
+If the new migration includes any of those topics, inspect the referenced Hex project before
+writing new SQL. Audit reused SQL for stale variable references (see
 gotcha 2).

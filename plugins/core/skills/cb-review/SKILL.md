@@ -1,7 +1,6 @@
 ---
 name: cb-review
-description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket/spec/PRD, or runs /cb-review [pr-number-or-url] [--effort low|high] [--report] [--spec-context <path-or-reference-or-text>].
-argument-hint: "[pr-number-or-url] [--effort low|high] [--report] [--spec-context <path-or-reference-or-text>]"
+description: Code review of a diff, branch, or PR, with findings posted as anchored PR comments. Use when the user asks to review a diff, branch, or PR, asks to check a change against its ticket, specification, or PRD, or runs /cb-review with an optional PR number, URL, effort, report mode, or specification context.
 ---
 
 # CB Review

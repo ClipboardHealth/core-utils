@@ -1,0 +1,24 @@
+{
+  "name": "core",
+  "version": "3.23.0",
+  "description": "Clipboard's core development tools.",
+  "author": {
+    "name": "Clipboard",
+    "url": "https://github.com/ClipboardHealth"
+  },
+  "repository": "https://github.com/ClipboardHealth/core-utils",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Clipboard Core",
+    "shortDescription": "Clipboard development workflows for Codex.",
+    "longDescription": "Reusable Clipboard engineering workflows for implementation, review, testing, investigation, and delivery.",
+    "developerName": "Clipboard",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "Use Clipboard Core to implement and ship this change.",
+      "Use Clipboard Core to review this pull request."
+    ]
+  }
+}

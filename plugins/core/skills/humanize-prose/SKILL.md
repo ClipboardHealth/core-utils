@@ -1,6 +1,6 @@
 ---
 name: humanize-prose
-description: Strip AI writing tells from prose you draft or clean: PR descriptions, Slack messages, docs, emails, commit messages. Use whenever the user asks to "humanize" or "deslop" text, or runs /humanize-prose. Also applies implicitly: any prose you draft for the user must already satisfy these rules.
+description: 'Strip AI writing tells from prose you draft or clean: PR descriptions, Slack messages, docs, emails, commit messages. Use whenever the user asks to "humanize" or "deslop" text, or runs /humanize-prose. Also applies implicitly: any prose you draft for the user must already satisfy these rules.'
 ---
 
 Strip AI writing tells out of prose, whether cleaning existing text or generating it. Edit in place, change as little as possible, preserve meaning. When a change would alter meaning, leave it and flag it.

@@ -1,7 +1,6 @@
 ---
 name: cb-babysit
-description: Watch a PR through CI and review feedback. Auto-fix high-confidence failures and address review comments. Use when the user says 'babysit <PR>' or 'respond to PR comments'.
-argument-hint: "[pr-number-or-url]"
+description: Watch a PR through CI and review feedback. Auto-fix high-confidence failures and address review comments. Use when the user says 'babysit PR 123', 'watch this PR', or 'respond to PR comments'.
 ---
 
 ## Setup
