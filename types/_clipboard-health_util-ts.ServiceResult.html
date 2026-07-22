@@ -10,8 +10,8 @@
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="../modules/_clipboard-health_util-ts.html">@clipboard-health/util-ts</a></li>
 <li><a href="" aria-current="page">ServiceResult</a></li></ul>
-<h1>Type Alias ServiceResult&lt;A&gt;</h1></div>
-<div class="tsd-signature"><span class="tsd-kind-type-alias">ServiceResult</span><span class="tsd-signature-symbol">:</span> <a href="_clipboard-health_util-ts.SuccessResult.html" class="tsd-signature-type tsd-kind-type-alias">SuccessResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#a">A</a><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">|</span> <a href="_clipboard-health_util-ts.FailureResult.html" class="tsd-signature-type tsd-kind-type-alias">FailureResult</a></div>
+<h1>Type Alias ServiceResult&lt;A, E&gt;</h1></div>
+<div class="tsd-signature"><span class="tsd-kind-type-alias">ServiceResult</span><span class="tsd-signature-symbol">:</span> <a href="_clipboard-health_util-ts.SuccessResult.html" class="tsd-signature-type tsd-kind-type-alias">SuccessResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#a">A</a><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">|</span> <a href="_clipboard-health_util-ts.FailureResult.html" class="tsd-signature-type tsd-kind-type-alias">FailureResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#e">E</a><span class="tsd-signature-symbol">&gt;</span></div>
 <div class="tsd-comment tsd-typography"><p>Represents the result of a service operation that may fail.</p>
 <p>The type is also an <a href="_clipboard-health_util-ts.either.Either.html" class="tsd-kind-type-alias">Either</a>, allowing functions built for <a href="_clipboard-health_util-ts.either.Either.html" class="tsd-kind-type-alias">Either</a>.</p>
 </div>
@@ -20,9 +20,12 @@
 <ul class="tsd-type-parameter-list">
 <li><span id="a"><span class="tsd-kind-type-parameter">A</span></span>
 <div class="tsd-comment tsd-typography"><p>The type of the successful result value</p>
+</div></li>
+<li><span id="e"><span class="tsd-kind-type-parameter">E</span> <span class="tsd-signature-keyword">extends</span> <a href="../classes/_clipboard-health_util-ts.ServiceError.html" class="tsd-signature-type tsd-kind-class">ServiceError</a> = <a href="../classes/_clipboard-health_util-ts.ServiceError.html" class="tsd-signature-type tsd-kind-class">ServiceError</a></span>
+<div class="tsd-comment tsd-typography"><p>The type of the failed result error</p>
 </div></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/9f0e2fd4353a8b26098a49e98440cd2b956bb6e9/packages/util-ts/src/lib/functional/serviceResult.ts#L26">packages/util-ts/src/lib/functional/serviceResult.ts:26</a></li></ul></aside></div>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/5986d1fcadbdcbfb4b04ad16751311a6721af387/packages/util-ts/src/lib/functional/serviceResult.ts#L27">packages/util-ts/src/lib/functional/serviceResult.ts:27</a></li></ul></aside></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
