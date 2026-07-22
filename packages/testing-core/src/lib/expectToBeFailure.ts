@@ -13,9 +13,9 @@ import { expectToBeLeft } from "./expectToBeLeft";
 /**
  * Alias for {@link expectToBeLeft}
  */
-export function expectToBeFailure<A>(
-  value: ServiceResult<A> | undefined,
-): asserts value is E.Left<ServiceError> & Failure<ServiceError> {
+export function expectToBeFailure<A, ErrorType extends ServiceError = ServiceError>(
+  value: ServiceResult<A, ErrorType> | undefined,
+): asserts value is E.Left<ErrorType> & Failure<ErrorType> {
   expectToBeLeft(value);
   ok(isFailure(value), "Expected Failure, got Success");
 }

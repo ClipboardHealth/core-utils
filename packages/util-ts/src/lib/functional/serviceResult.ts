@@ -14,7 +14,7 @@ export interface Failure<E> {
 }
 
 export type SuccessResult<A> = Right<A> & Success<A>;
-export type FailureResult = Left<ServiceError> & Failure<ServiceError>;
+export type FailureResult<E extends ServiceError = ServiceError> = Left<E> & Failure<E>;
 
 /**
  * Represents the result of a service operation that may fail.
@@ -22,17 +22,22 @@ export type FailureResult = Left<ServiceError> & Failure<ServiceError>;
  * The type is also an {@link Either}, allowing functions built for {@link Either}.
  *
  * @template A The type of the successful result value
+ * @template E The type of the failed result error
  */
-export type ServiceResult<A> = SuccessResult<A> | FailureResult;
+export type ServiceResult<A, E extends ServiceError = ServiceError> =
+  | SuccessResult<A>
+  | FailureResult<E>;
 
 /**
  * Creates a successful ServiceResult.
  *
  * Call with no argument for a `ServiceResult<void>`; the value is `undefined`.
  */
-export function success(): ServiceResult<void>;
-export function success<A>(value: A): ServiceResult<A>;
-export function success<A>(value?: A): ServiceResult<A | void> {
+export function success<E extends ServiceError = ServiceError>(): ServiceResult<void, E>;
+export function success<A, E extends ServiceError = ServiceError>(value: A): ServiceResult<A, E>;
+export function success<A, E extends ServiceError = ServiceError>(
+  value?: A,
+): ServiceResult<A | void, E> {
   return Object.freeze({
     isRight: true,
     isSuccess: true,
@@ -44,6 +49,8 @@ export function success<A>(value?: A): ServiceResult<A | void> {
 /**
  * Creates a failed ServiceResult.
  */
+export function failure<E extends ServiceError>(error: E): FailureResult<E>;
+export function failure(params: ServiceErrorParams): FailureResult;
 export function failure(params: ServiceErrorParams | ServiceError): FailureResult {
   const error = params instanceof ServiceError ? params : new ServiceError(params);
   return Object.freeze({
@@ -57,16 +64,18 @@ export function failure(params: ServiceErrorParams | ServiceError): FailureResul
 /**
  * Type guard for failure results.
  */
-export function isFailure<A>(
-  result: ServiceResult<A>,
-): result is Left<ServiceError> & Failure<ServiceError> {
+export function isFailure<A, E extends ServiceError = ServiceError>(
+  result: ServiceResult<A, E>,
+): result is FailureResult<E> {
   return !result.isSuccess;
 }
 
 /**
  * Type guard for success results.
  */
-export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Success<A> {
+export function isSuccess<A, E extends ServiceError = ServiceError>(
+  result: ServiceResult<A, E>,
+): result is SuccessResult<A> {
   return result.isSuccess;
 }
 
@@ -74,9 +83,9 @@ export function isSuccess<A>(result: ServiceResult<A>): result is Right<A> & Suc
  * Alias for {@link mapLeft}.
  * Note: returns an {@link Either}, not a ServiceResult.
  */
-export function mapFailure<G>(
-  f: (left: ServiceError) => G,
-): <A>(result: ServiceResult<A>) => Either<G, A> {
+export function mapFailure<G, E extends ServiceError = ServiceError>(
+  f: (left: E) => G,
+): <A>(result: ServiceResult<A, E>) => Either<G, A> {
   return mapLeft(f);
 }
 

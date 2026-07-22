@@ -2,6 +2,7 @@ import {
   type ErrorCode,
   type FailureResult,
   isSuccess,
+  type ServiceError,
   type ServiceResult,
 } from "@clipboard-health/util-ts";
 
@@ -13,10 +14,10 @@ import type { TriggerResponse } from "./types";
  * @param result - ServiceResult containing an error or T.
  * @param errorCodes - Array of error codes to check for. If empty, any error will match.
  */
-export function errorsInResult<T = TriggerResponse>(
-  result: ServiceResult<T>,
+export function errorsInResult<T = TriggerResponse, ErrorType extends ServiceError = ServiceError>(
+  result: ServiceResult<T, ErrorType>,
   errorCodes: ErrorCode[] = [],
-): result is FailureResult {
+): result is FailureResult<ErrorType> {
   if (isSuccess(result)) {
     return false;
   }
