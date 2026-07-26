@@ -56,6 +56,12 @@
       }
     },
     {
+      "files": ["**/bin/**/*.js"],
+      "rules": {
+        "node/no-top-level-await": "off"
+      }
+    },
+    {
       "files": ["packages/nx-plugin/src/index.ts"],
       "rules": {
         "unicorn/no-empty-file": "off"
