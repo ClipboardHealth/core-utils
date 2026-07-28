@@ -10,6 +10,10 @@ Focus on integration tests—test how components work together as users experien
 
 **Priority:** Static (TS/ESLint) → Integration → Unit (pure utilities only) → E2E (critical flows only)
 
+## Page-Level Tests
+
+Page-level frontend tests must use real hooks and mock only the lowest-level API/network boundary unless isolation is explicitly required.
+
 ## Queries
 
 Prefer user-centric queries in priority order: `getByRole`, `getByLabelText`, `getByText`; use `getByTestId` only as a last resort.
