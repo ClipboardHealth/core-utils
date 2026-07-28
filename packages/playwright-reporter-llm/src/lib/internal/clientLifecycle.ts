@@ -2,32 +2,30 @@ import { closeSync, openSync, readSync, statSync } from "node:fs";
 
 import type { TestResult } from "@playwright/test/reporter";
 
-import type {
-  ClientLifecycle,
-  ClientLifecycleClassification,
-  NetworkInstance,
-  NetworkReport,
-} from "../types";
 import {
-  CLIENT_LIFECYCLE_ATTACHMENT_BYTES_CAP,
-  CLIENT_LIFECYCLE_IDENTIFIER_CAP,
-  CLIENT_LIFECYCLE_PATH_CAP,
-  CLIENT_LIFECYCLE_RECORDS_CAP,
-} from "./constants";
-import { stripAnsi } from "./textProcessing";
+  BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA,
+  type BrowserLifecycleEvent,
+  type BrowserLifecycleFailureEvent,
+  type BrowserLifecycleRecord,
+  parseBrowserLifecycleAttachment,
+} from "../clientLifecycleContract";
+import type { ClientLifecycle, NetworkInstance, NetworkReport } from "../types";
+import {
+  sanitizeLifecycleClassification,
+  sanitizeLifecycleIdentifier,
+  sanitizeLifecycleIpAddress,
+  sanitizeLifecycleMethod,
+  sanitizeLifecycleNetworkError,
+  sanitizeLifecycleNonNegativeNumber,
+  sanitizeLifecycleOrigin,
+  sanitizeLifecyclePathTemplate,
+  sanitizeLifecycleProtocol,
+  sanitizeLifecycleSpanId,
+  sanitizeLifecycleTraceId,
+} from "./clientLifecycleSanitization";
 import { asBoolean, asNumber, asRecord, asString } from "./typeGuards";
 
 const ATTACHMENT_NAMES = new Set(["browser-network-lifecycle", "browser-network-lifecycle.json"]);
-const CLASSIFICATIONS: Record<ClientLifecycleClassification, true> = {
-  no_response_headers: true,
-  headers_without_body_completion: true,
-  network_failure: true,
-  completed: true,
-};
-const SAFE_IDENTIFIER_PATTERN = /^[A-Za-z0-9_:=./+-]+$/;
-const SAFE_PROTOCOL_PATTERN = /^[A-Za-z0-9./_-]+$/;
-const SAFE_NETWORK_ERROR_PATTERN = /^net::[A-Z0-9_]+$/;
-const SAFE_IP_ADDRESS_PATTERN = /^[A-Fa-f0-9:.]+$/;
 
 interface ParsedClientLifecycle {
   lifecycle: ClientLifecycle;
@@ -68,7 +66,7 @@ export function attachClientLifecycles({
 
     truncated ||= parsedAttachment.truncated;
     for (const record of parsedAttachment.records) {
-      if (parsedRecords.length >= CLIENT_LIFECYCLE_RECORDS_CAP) {
+      if (parsedRecords.length >= BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.maximumRecords) {
         truncated = true;
         break;
       }
@@ -99,6 +97,23 @@ function parseAttachment({
   content,
   attemptStartTimeMs,
 }: ParseAttachmentInput): ParsedAttachment | undefined {
+  const sharedAttachment = parseBrowserLifecycleAttachment({ content });
+  if (sharedAttachment) {
+    return {
+      records: sharedAttachment.records.map((record) =>
+        parseSharedLifecycleRecord({ record, attemptStartTimeMs }),
+      ),
+      truncated: sharedAttachment.truncated,
+    };
+  }
+
+  return parseLegacyAttachment({ content, attemptStartTimeMs });
+}
+
+function parseLegacyAttachment({
+  content,
+  attemptStartTimeMs,
+}: ParseAttachmentInput): ParsedAttachment | undefined {
   let parsedValue: unknown;
   try {
     parsedValue = JSON.parse(Buffer.from(content).toString("utf8"));
@@ -117,7 +132,10 @@ function parseAttachment({
   }
 
   const records: ParsedClientLifecycle[] = [];
-  for (const recordValue of lifecycleRecords.slice(0, CLIENT_LIFECYCLE_RECORDS_CAP)) {
+  for (const recordValue of lifecycleRecords.slice(
+    0,
+    BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.maximumRecords,
+  )) {
     const parsedRecord = parseLifecycleRecord({
       value: recordValue,
       attemptStartTimeMs,
@@ -131,7 +149,7 @@ function parseAttachment({
     records,
     truncated:
       asBoolean(attachmentRecord["truncated"]) === true ||
-      lifecycleRecords.length > CLIENT_LIFECYCLE_RECORDS_CAP,
+      lifecycleRecords.length > BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.maximumRecords,
   };
 }
 
@@ -139,7 +157,7 @@ function readBoundedAttachment(
   attachment: TestResult["attachments"][number],
 ): Uint8Array | undefined {
   if (attachment.body) {
-    if (attachment.body.length > CLIENT_LIFECYCLE_ATTACHMENT_BYTES_CAP) {
+    if (attachment.body.length > BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.maximumBytes) {
       return undefined;
     }
     return attachment.body;
@@ -152,7 +170,7 @@ function readBoundedAttachment(
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     const attachmentSize = statSync(attachment.path).size;
-    if (attachmentSize > CLIENT_LIFECYCLE_ATTACHMENT_BYTES_CAP) {
+    if (attachmentSize > BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.maximumBytes) {
       return undefined;
     }
 
@@ -167,6 +185,174 @@ function readBoundedAttachment(
     }
   } catch {
     return undefined;
+  }
+}
+
+interface ParseSharedLifecycleRecordInput {
+  record: BrowserLifecycleRecord;
+  attemptStartTimeMs: number;
+}
+
+function parseSharedLifecycleRecord({
+  record,
+  attemptStartTimeMs,
+}: ParseSharedLifecycleRecordInput): ParsedClientLifecycle {
+  const lifecycle: ClientLifecycle = {
+    method: record.method,
+    origin: record.origin,
+    pathTemplate: record.pathTemplate,
+    classification: record.classification,
+    requestStarted: record.requestStarted !== undefined,
+    responseHeadersReceived: record.responseReceived !== undefined,
+    loadingFinished: record.loadingFinished !== undefined,
+    loadingFailed: record.loadingFailed !== undefined,
+    pendingAtTimeout:
+      record.classification === "no_response_headers" ||
+      record.classification === "headers_without_body_completion",
+  };
+  copySharedEvent({
+    event: record.requestStarted,
+    target: lifecycle,
+    timestampField: "requestStartedAt",
+    monotonicField: "requestStartedMonotonicMs",
+  });
+  copySharedEvent({
+    event: record.responseReceived,
+    target: lifecycle,
+    timestampField: "responseHeadersAt",
+    monotonicField: "responseHeadersMonotonicMs",
+  });
+  copySharedEvent({
+    event: record.loadingFinished,
+    target: lifecycle,
+    timestampField: "completedAt",
+    monotonicField: "completedMonotonicMs",
+  });
+  copySharedEvent({
+    event: record.loadingFailed,
+    target: lifecycle,
+    timestampField: "failedAt",
+    monotonicField: "failedMonotonicMs",
+  });
+  copySharedIdentifiers({ record, target: lifecycle });
+  copySharedConnection({ record, target: lifecycle });
+  copySharedEncodedBytes({ record, target: lifecycle });
+  copySharedFailure({ record, target: lifecycle });
+
+  return {
+    lifecycle,
+    ...(lifecycle.requestStartedAt !== undefined && {
+      requestOffsetMs: Date.parse(lifecycle.requestStartedAt) - attemptStartTimeMs,
+    }),
+  };
+}
+
+interface CopySharedEventInput {
+  event: BrowserLifecycleEvent | BrowserLifecycleFailureEvent | undefined;
+  target: ClientLifecycle;
+  timestampField: "requestStartedAt" | "responseHeadersAt" | "completedAt" | "failedAt";
+  monotonicField:
+    | "requestStartedMonotonicMs"
+    | "responseHeadersMonotonicMs"
+    | "completedMonotonicMs"
+    | "failedMonotonicMs";
+}
+
+function copySharedEvent({
+  event,
+  target,
+  timestampField,
+  monotonicField,
+}: CopySharedEventInput): void {
+  const timestamp = event?.cdp ?? event?.playwright;
+  if (!timestamp) {
+    return;
+  }
+  target[timestampField] = timestamp.utc;
+  if (timestamp.monotonicMilliseconds !== undefined) {
+    target[monotonicField] = timestamp.monotonicMilliseconds;
+  }
+}
+
+interface CopySharedRecordInput {
+  record: BrowserLifecycleRecord;
+  target: ClientLifecycle;
+}
+
+function copySharedIdentifiers({ record, target }: CopySharedRecordInput): void {
+  if (record.playwrightRequestKey !== undefined) {
+    target.playwrightRequestKey = record.playwrightRequestKey;
+  }
+  if (record.cdpRequestId !== undefined) {
+    target.cdpRequestId = record.cdpRequestId;
+  }
+  if (record.loaderId !== undefined) {
+    target.loaderId = record.loaderId;
+  }
+  if (record.traceId !== undefined) {
+    target.traceId = record.traceId;
+  }
+  if (record.spanId !== undefined) {
+    target.spanId = record.spanId;
+  }
+  if (record.apiGatewayRequestId !== undefined) {
+    target.apiGatewayRequestId = record.apiGatewayRequestId;
+  }
+  if (record.protocol !== undefined) {
+    target.protocol = record.protocol;
+  }
+}
+
+function copySharedConnection({ record, target }: CopySharedRecordInput): void {
+  const connectionId = record.connection?.id;
+  if (connectionId !== undefined) {
+    target.connectionId = connectionId;
+  }
+  const connectionReused = record.connection?.reused;
+  if (connectionReused !== undefined) {
+    target.connectionReused = connectionReused;
+  }
+  const remoteIPAddress = record.connection?.remoteEndpoint?.ipAddress;
+  if (remoteIPAddress !== undefined) {
+    target.remoteIPAddress = remoteIPAddress;
+  }
+  const remotePort = record.connection?.remoteEndpoint?.port;
+  if (remotePort !== undefined) {
+    target.remotePort = remotePort;
+  }
+}
+
+function copySharedEncodedBytes({ record, target }: CopySharedRecordInput): void {
+  const dataEncodedDataLength = record.encodedBytes?.data;
+  if (dataEncodedDataLength !== undefined) {
+    target.dataEncodedDataLength = dataEncodedDataLength;
+  }
+  const responseEncodedDataLength = record.encodedBytes?.responseHeaders;
+  if (responseEncodedDataLength !== undefined) {
+    target.responseEncodedDataLength = responseEncodedDataLength;
+  }
+  const completedEncodedDataLength = record.encodedBytes?.total;
+  if (completedEncodedDataLength !== undefined) {
+    target.completedEncodedDataLength = completedEncodedDataLength;
+  }
+}
+
+function copySharedFailure({ record, target }: CopySharedRecordInput): void {
+  const errorText = record.loadingFailed?.errorText;
+  if (errorText !== undefined) {
+    target.errorText = errorText;
+  }
+  const canceled = record.loadingFailed?.canceled;
+  if (canceled !== undefined) {
+    target.canceled = canceled;
+  }
+  const blockedReason = record.loadingFailed?.blockedReason;
+  if (blockedReason !== undefined) {
+    target.blockedReason = blockedReason;
+  }
+  const corsErrorStatus = record.loadingFailed?.corsErrorStatus;
+  if (corsErrorStatus !== undefined) {
+    target.corsErrorStatus = corsErrorStatus;
   }
 }
 
@@ -189,9 +375,9 @@ function parseLifecycleRecord({
     return undefined;
   }
 
-  const method = sanitizeMethod(record["method"]);
-  const origin = sanitizeOrigin(record["origin"]);
-  const pathTemplate = sanitizePathTemplate(record["pathTemplate"]);
+  const method = sanitizeLifecycleMethod(record["method"]);
+  const origin = sanitizeLifecycleOrigin(record["origin"]);
+  const pathTemplate = sanitizeLifecyclePathTemplate(record["pathTemplate"]);
   if (!method || !origin || !pathTemplate) {
     return undefined;
   }
@@ -202,8 +388,8 @@ function parseLifecycleRecord({
   copyLifecycleCorrelationFields({ source: record, target: lifecycle });
   copyLifecycleFailureFields({ source: record, target: lifecycle });
 
-  const classification = asString(record["classification"]);
-  if (classification && isClientLifecycleClassification(classification)) {
+  const classification = sanitizeLifecycleClassification(record["classification"]);
+  if (classification) {
     lifecycle.classification = classification;
   }
 
@@ -257,20 +443,12 @@ function copyLifecycleConnectionFields({ source, target }: CopyFieldInput): void
   });
   copyBoolean({ source, target, field: "connectionReused" });
 
-  const protocol = asString(source["protocol"]);
-  if (
-    protocol &&
-    protocol.length <= CLIENT_LIFECYCLE_IDENTIFIER_CAP &&
-    SAFE_PROTOCOL_PATTERN.test(protocol)
-  ) {
+  const protocol = sanitizeLifecycleProtocol(source["protocol"]);
+  if (protocol) {
     target.protocol = protocol;
   }
-  const remoteIPAddress = asString(source["remoteIPAddress"]);
-  if (
-    remoteIPAddress &&
-    remoteIPAddress.length <= CLIENT_LIFECYCLE_IDENTIFIER_CAP &&
-    SAFE_IP_ADDRESS_PATTERN.test(remoteIPAddress)
-  ) {
+  const remoteIPAddress = sanitizeLifecycleIpAddress(source["remoteIPAddress"]);
+  if (remoteIPAddress) {
     target.remoteIPAddress = remoteIPAddress;
   }
 }
@@ -281,12 +459,12 @@ function copyLifecycleCorrelationFields({ source, target }: CopyFieldInput): voi
   copySafeIdentifier({ source, target, field: "loaderId" });
   copySafeIdentifier({ source, target, field: "apiGatewayRequestId" });
 
-  const traceId = asString(source["traceId"])?.toLowerCase();
-  if (traceId && /^[a-f0-9]{32}$/.test(traceId) && !/^0+$/.test(traceId)) {
+  const traceId = sanitizeLifecycleTraceId(source["traceId"]);
+  if (traceId) {
     target.traceId = traceId;
   }
-  const spanId = asString(source["spanId"])?.toLowerCase();
-  if (spanId && /^[a-f0-9]{16}$/.test(spanId) && !/^0+$/.test(spanId)) {
+  const spanId = sanitizeLifecycleSpanId(source["spanId"]);
+  if (spanId) {
     target.spanId = spanId;
   }
 }
@@ -296,18 +474,10 @@ function copyLifecycleFailureFields({ source, target }: CopyFieldInput): void {
   copySafeIdentifier({ source, target, field: "blockedReason" });
   copySafeIdentifier({ source, target, field: "corsErrorStatus" });
 
-  const errorText = asString(source["errorText"]);
-  if (!errorText) {
-    return;
+  const errorText = sanitizeLifecycleNetworkError(source["errorText"]);
+  if (errorText) {
+    target.errorText = errorText;
   }
-  const sanitizedErrorText = stripAnsi(errorText).trim();
-  if (SAFE_NETWORK_ERROR_PATTERN.test(sanitizedErrorText)) {
-    target.errorText = sanitizedErrorText;
-  }
-}
-
-function isClientLifecycleClassification(value: string): value is ClientLifecycleClassification {
-  return Object.hasOwn(CLASSIFICATIONS, value);
 }
 
 interface CopyTimestampInput extends CopyFieldInput {
@@ -339,11 +509,10 @@ interface CopyNonNegativeNumberInput extends CopyFieldInput {
 }
 
 function copyNonNegativeNumber({ source, target, field }: CopyNonNegativeNumberInput): void {
-  const value = asNumber(source[field]);
-  if (value === undefined || value < 0 || value > Number.MAX_SAFE_INTEGER) {
-    return;
+  const value = sanitizeLifecycleNonNegativeNumber(source[field]);
+  if (value !== undefined) {
+    target[field] = value;
   }
-  target[field] = value;
 }
 
 interface CopyBooleanInput extends CopyFieldInput {
@@ -375,54 +544,10 @@ interface CopySafeIdentifierInput extends CopyFieldInput {
 }
 
 function copySafeIdentifier({ source, target, field }: CopySafeIdentifierInput): void {
-  const value = asString(source[field]);
-  if (
-    value &&
-    value.length <= CLIENT_LIFECYCLE_IDENTIFIER_CAP &&
-    SAFE_IDENTIFIER_PATTERN.test(value)
-  ) {
+  const value = sanitizeLifecycleIdentifier(source[field]);
+  if (value) {
     target[field] = value;
   }
-}
-
-function sanitizeMethod(value: unknown): string | undefined {
-  const method = asString(value)?.trim().toUpperCase();
-  if (!method || method.length > 16 || !/^[A-Z]+$/.test(method)) {
-    return undefined;
-  }
-  return method;
-}
-
-function sanitizeOrigin(value: unknown): string | undefined {
-  const originText = asString(value);
-  if (!originText || originText.length > CLIENT_LIFECYCLE_IDENTIFIER_CAP) {
-    return undefined;
-  }
-  try {
-    const url = new URL(originText);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return undefined;
-    }
-    return url.origin;
-  } catch {
-    return undefined;
-  }
-}
-
-function sanitizePathTemplate(value: unknown): string | undefined {
-  const pathText = asString(value);
-  if (!pathText) {
-    return undefined;
-  }
-  const [withoutQuery] = pathText.split(/[?#]/, 1);
-  if (
-    !withoutQuery ||
-    !withoutQuery.startsWith("/") ||
-    withoutQuery.length > CLIENT_LIFECYCLE_PATH_CAP
-  ) {
-    return undefined;
-  }
-  return withoutQuery;
 }
 
 interface JoinClientLifecyclesInput {

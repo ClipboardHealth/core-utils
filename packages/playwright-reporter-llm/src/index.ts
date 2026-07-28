@@ -1,3 +1,21 @@
+export type {
+  BrowserLifecycleAttachment,
+  BrowserLifecycleClassification,
+  BrowserLifecycleConnection,
+  BrowserLifecycleEncodedBytes,
+  BrowserLifecycleEvent,
+  BrowserLifecycleFailureEvent,
+  BrowserLifecycleRecord,
+  BrowserLifecycleTimestamp,
+  EncodeBrowserLifecycleAttachmentInput,
+  EncodedBrowserLifecycleAttachment,
+  ParseBrowserLifecycleAttachmentInput,
+} from "./lib/clientLifecycleContract";
+export {
+  BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA,
+  encodeBrowserLifecycleAttachment,
+  parseBrowserLifecycleAttachment,
+} from "./lib/clientLifecycleContract";
 export { default } from "./lib/reporter";
 export type {
   AttemptResult,

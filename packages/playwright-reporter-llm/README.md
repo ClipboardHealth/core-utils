@@ -262,48 +262,83 @@ See [`docs/example-report.json`](./docs/example-report.json) for a complete repo
 
 ### Browser lifecycle attachment contract
 
-Fixtures can attach `browser-network-lifecycle` or `browser-network-lifecycle.json` with content type `application/json` and this versioned shape:
+Producers should import `encodeBrowserLifecycleAttachment` instead of defining their own schema or size limit. The encoder sanitizes records, orders `no_response_headers`, `headers_without_body_completion`, and `network_failure` records before routine `completed` records, and returns a body guaranteed not to exceed the shared 64 KiB limit:
+
+```typescript
+import {
+  encodeBrowserLifecycleAttachment,
+  type BrowserLifecycleRecord,
+} from "@clipboard-health/playwright-reporter-llm";
+
+const records: BrowserLifecycleRecord[] = [];
+const encoded = encodeBrowserLifecycleAttachment({ records });
+
+await testInfo.attach("browser-network-lifecycle", {
+  body: encoded.body,
+  contentType: "application/json",
+});
+```
+
+`BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA` exposes the version, maximum bytes, and maximum records. `encoded.attachment.truncated` is set when the caller reports earlier truncation or the encoder drops invalid or over-limit records; the result also reports observed, included, and dropped record counts.
+
+The encoder emits schema version 2. Each version identifies one wire shape; version 2 uses the producer's nested lifecycle events:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "truncated": false,
   "records": [
     {
       "method": "GET",
       "origin": "https://api.example.com",
       "pathTemplate": "/api/v1/:workplaceId/cases",
-      "requestStartedAt": "2026-07-20T18:35:43.100Z",
-      "requestStartedMonotonicMs": 12345.1,
-      "responseHeadersAt": "2026-07-20T18:35:43.168Z",
-      "responseHeadersMonotonicMs": 12413.1,
-      "completedAt": "2026-07-20T18:35:43.170Z",
-      "completedMonotonicMs": 12415.1,
-      "requestStarted": true,
-      "responseHeadersReceived": true,
-      "loadingFinished": true,
-      "loadingFailed": false,
-      "pendingAtTimeout": false,
       "playwrightRequestKey": "request-17",
       "cdpRequestId": "1234.56",
       "loaderId": "loader-1",
       "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
       "spanId": "00f067aa0ba902b7",
       "apiGatewayRequestId": "A0XEghTXPHcEScg=",
+      "requestStarted": {
+        "cdp": {
+          "utc": "2026-07-20T18:35:43.100Z",
+          "monotonicMilliseconds": 12345.1
+        }
+      },
+      "responseReceived": {
+        "cdp": {
+          "utc": "2026-07-20T18:35:43.168Z",
+          "monotonicMilliseconds": 12413.1
+        }
+      },
+      "loadingFinished": {
+        "cdp": {
+          "utc": "2026-07-20T18:35:43.170Z",
+          "monotonicMilliseconds": 12415.1
+        }
+      },
       "protocol": "h2",
-      "connectionId": 17,
-      "connectionReused": true,
-      "remoteIPAddress": "10.0.0.12",
-      "remotePort": 443,
-      "responseEncodedDataLength": 256,
-      "completedEncodedDataLength": 677,
+      "connection": {
+        "id": 17,
+        "reused": true,
+        "remoteEndpoint": {
+          "ipAddress": "10.0.0.12",
+          "port": 443
+        }
+      },
+      "encodedBytes": {
+        "data": 421,
+        "responseHeaders": 256,
+        "total": 677
+      },
       "classification": "completed"
     }
   ]
 }
 ```
 
-For a failure, the same record can supply `failedAt`, `failedMonotonicMs`, `errorText` (restricted to Chromium `net::ERR_*` values), `canceled`, `blockedReason`, and `corsErrorStatus`. Unknown fields are discarded. Origins are reduced to scheme/host/port, query and fragment text is removed from `pathTemplate`, identifiers are format/length checked, and only the documented allowlist is emitted. The reporter reads at most 64 KiB and retains at most 100 records per attempt; `clientLifecycle.truncated` marks producer- or reporter-side record truncation. It does not mutate the original Playwright attachment, so other configured reporters such as Playwright HTML continue to render the sanitized attachment.
+For a failure, `loadingFailed` can supply a nested CDP or Playwright timestamp plus `errorText` (restricted to Chromium `net::ERR_*` values), `canceled`, `blockedReason`, and `corsErrorStatus`. The reporter prefers the CDP timestamp and falls back to Playwright. Unknown fields are discarded. Origins are reduced to scheme/host/port, query and fragment text is removed from `pathTemplate`, identifiers are format/length checked, and only the documented allowlist is emitted.
+
+Fixtures can attach the encoded body as `browser-network-lifecycle` or `browser-network-lifecycle.json` with content type `application/json`, either directly in `body` or through `path`. The reporter independently enforces the same byte and record limits; `clientLifecycle.truncated` marks producer- or reporter-side truncation. The legacy flat version-1 reader remains for existing attachments, but new producers should only emit version 2 through the shared encoder.
 
 ## Why not Playwright's built-in JSON reporter?
 

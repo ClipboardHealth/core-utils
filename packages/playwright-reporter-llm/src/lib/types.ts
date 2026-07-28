@@ -1,3 +1,5 @@
+import type { BrowserLifecycleClassification } from "./clientLifecycleContract";
+
 export interface TestSummary {
   total: number;
   passed: number;
@@ -65,11 +67,7 @@ export interface NetworkTimingBreakdown {
   sslMs?: number;
 }
 
-export type ClientLifecycleClassification =
-  | "no_response_headers"
-  | "headers_without_body_completion"
-  | "network_failure"
-  | "completed";
+export type ClientLifecycleClassification = BrowserLifecycleClassification;
 
 export interface ClientLifecycle {
   method: string;
@@ -99,6 +97,7 @@ export interface ClientLifecycle {
   connectionReused?: boolean;
   remoteIPAddress?: string;
   remotePort?: number;
+  dataEncodedDataLength?: number;
   responseEncodedDataLength?: number;
   completedEncodedDataLength?: number;
   errorText?: string;
