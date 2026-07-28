@@ -70,6 +70,9 @@
     },
     {
       "path": "./packages/playwright-toolkit"
+    },
+    {
+      "path": "./packages/usa-states"
     }
   ]
 }
