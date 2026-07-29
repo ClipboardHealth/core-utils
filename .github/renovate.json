@@ -6,6 +6,11 @@
       "enabled": false,
       "matchManagers": ["npm"],
       "matchPackageNames": ["decamelize", "tslib"]
+    },
+    {
+      "allowedVersions": "<7",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"]
     }
   ]
 }
