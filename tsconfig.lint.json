@@ -1,5 +1,5 @@
 {
-  "extends": ["@tsconfig/node24", "@tsconfig/strictest"],
+  "extends": ["@tsconfig/node24/tsconfig.json", "@tsconfig/strictest/tsconfig.json"],
   "compilerOptions": {
     "declaration": false,
     "emitDecoratorMetadata": true,
