@@ -1,6 +1,6 @@
 import { isRecord, toErrorMessage as getErrorMessage } from "@clipboard-health/util-ts";
 
-import { runWithRetry } from "./retry";
+import { RetryError, type RetrySuccess, runWithRetry, type RunWithRetryParams } from "./retry";
 import { isRetryableHttpStatus } from "./setupRetry";
 
 const DEFAULT_MAILPIT_BASE_URL = "https://mailpit.tools.cbh.rocks/api/v1";
@@ -22,7 +22,7 @@ export interface MailpitMessageHeaders {
 }
 
 export interface MailpitMessageSummary extends MailpitMessageHeaders {
-  Created: string;
+  Created?: string | undefined;
 }
 
 export interface MailpitMessage extends MailpitMessageHeaders {
@@ -80,6 +80,19 @@ interface MailpitRequestErrorParams {
   status?: number | undefined;
   cause?: unknown;
   isTransient?: boolean | undefined;
+}
+
+interface MailpitPollingSnapshot {
+  searchAttempts: number;
+  rawResultCount: number;
+  postSentAfterCandidateCount: number;
+  invalidOrMissingTimestampCount: number;
+  fetchedMessageCount: number;
+  extractionMissCount: number;
+  excludedValueCount: number;
+  transientRequestErrorCount: number;
+  transientRequestErrorStatuses: Set<string>;
+  newestCandidateTimestampMs: number | undefined;
 }
 
 export class MailpitRequestError extends Error {
@@ -153,14 +166,48 @@ export async function fetchMailpitValue(
 ): Promise<FetchMailpitValueResult> {
   const excludedValues = new Set(params.excludedValues ?? []);
   const valuesByMessageId = new Map<string, string | undefined>();
-  const result = await runWithRetry({
-    operationName: `wait for Mailpit ${params.valueLabel}`,
+  const pollingSnapshot = createMailpitPollingSnapshot();
+  const nowImplementation = params.nowImplementation ?? Date.now;
+  const operationName = `wait for Mailpit ${params.valueLabel}`;
+  const retryParams: RunWithRetryParams<FetchMailpitValueResult> = {
+    operationName,
     operation: async () => {
-      const messages = await params.client.searchMessages({
-        query: `to:${params.email}`,
+      pollingSnapshot.searchAttempts += 1;
+      let messages: MailpitMessageSummary[];
+
+      try {
+        messages = await params.client.searchMessages({
+          query: `to:${params.email}`,
+        });
+      } catch (error: unknown) {
+        if (!isTransientMailpitError({ error })) {
+          throw error;
+        }
+
+        recordTransientRequestError({ error, pollingSnapshot });
+        throw createMailpitValueNotFoundError({
+          cause: error,
+          nowMs: nowImplementation(),
+          pollingSnapshot,
+          valueLabel: params.valueLabel,
+        });
+      }
+
+      pollingSnapshot.rawResultCount += messages.length;
+      pollingSnapshot.invalidOrMissingTimestampCount += messages.filter(
+        (message) => getMailpitMessageTimestampMs({ message }) === undefined,
+      ).length;
+
+      const postSentAfterCandidates = messages.filter((message) =>
+        isMessageSentAfter({ message, sentAfter: params.sentAfter }),
+      );
+      pollingSnapshot.postSentAfterCandidateCount += postSentAfterCandidates.length;
+      recordNewestCandidateTimestamp({
+        candidates: postSentAfterCandidates,
+        pollingSnapshot,
       });
-      const candidates = messages
-        .filter((message) => isMessageSentAfter({ message, sentAfter: params.sentAfter }))
+
+      const candidates = postSentAfterCandidates
         .toSorted(compareMailpitMessagesNewestFirst)
         .slice(0, MAX_MESSAGES_TO_FETCH);
 
@@ -180,22 +227,31 @@ export async function fetchMailpitValue(
           const fullMessage = await params.client.getMessage({
             messageId: message.ID,
           });
+          pollingSnapshot.fetchedMessageCount += 1;
           const value = params.extractValue({ message: fullMessage });
           valuesByMessageId.set(message.ID, value);
 
-          if (value !== undefined && !excludedValues.has(value)) {
+          if (value === undefined) {
+            pollingSnapshot.extractionMissCount += 1;
+          } else if (excludedValues.has(value)) {
+            pollingSnapshot.excludedValueCount += 1;
+          } else {
             return { value, messageId: message.ID };
           }
         } catch (error: unknown) {
           if (!isTransientMailpitError({ error })) {
             throw error;
           }
+
+          recordTransientRequestError({ error, pollingSnapshot });
         }
       }
 
-      throw new MailpitValueNotFoundError(
-        `No matching Mailpit ${params.valueLabel} is available yet`,
-      );
+      throw createMailpitValueNotFoundError({
+        nowMs: nowImplementation(),
+        pollingSnapshot,
+        valueLabel: params.valueLabel,
+      });
     },
     mode: {
       kind: "poll",
@@ -205,8 +261,34 @@ export async function fetchMailpitValue(
         error instanceof MailpitValueNotFoundError || isTransientMailpitError({ error }),
     },
     sleepImplementation: params.sleepImplementation,
-    nowImplementation: params.nowImplementation,
-  });
+    nowImplementation,
+  };
+  let result: RetrySuccess<FetchMailpitValueResult>;
+
+  try {
+    result = await runWithRetry(retryParams);
+  } catch (error: unknown) {
+    if (
+      error instanceof RetryError &&
+      error.reason === "timeout" &&
+      !(error.cause instanceof MailpitValueNotFoundError)
+    ) {
+      throw new RetryError({
+        operationName,
+        attempts: error.attempts,
+        elapsedMs: error.elapsedMs,
+        reason: error.reason,
+        cause: createMailpitValueNotFoundError({
+          cause: error.cause,
+          nowMs: nowImplementation(),
+          pollingSnapshot,
+          valueLabel: params.valueLabel,
+        }),
+      });
+    }
+
+    throw error;
+  }
 
   return result.value;
 }
@@ -343,26 +425,26 @@ function isMessageSentAfter(params: {
     return true;
   }
 
-  const messageTimestamp = Date.parse(params.message.Created);
-  if (!Number.isFinite(messageTimestamp)) {
+  const messageTimestampMs = getMailpitMessageTimestampMs({ message: params.message });
+  if (messageTimestampMs === undefined) {
     return true;
   }
 
-  return messageTimestamp >= params.sentAfter.getTime() - SENT_AFTER_TOLERANCE_MS;
+  return messageTimestampMs >= params.sentAfter.getTime() - SENT_AFTER_TOLERANCE_MS;
 }
 
 function compareMailpitMessagesNewestFirst(
   first: MailpitMessageSummary,
   second: MailpitMessageSummary,
 ): number {
-  const firstTimestamp = Date.parse(first.Created);
-  const secondTimestamp = Date.parse(second.Created);
+  const firstTimestamp = getMailpitMessageTimestampMs({ message: first });
+  const secondTimestamp = getMailpitMessageTimestampMs({ message: second });
 
-  if (!Number.isFinite(firstTimestamp)) {
-    return Number.isFinite(secondTimestamp) ? 1 : 0;
+  if (firstTimestamp === undefined) {
+    return secondTimestamp === undefined ? 0 : 1;
   }
 
-  if (!Number.isFinite(secondTimestamp)) {
+  if (secondTimestamp === undefined) {
     return -1;
   }
 
@@ -380,7 +462,11 @@ function isMailpitMessage(value: unknown): value is MailpitMessage {
 }
 
 function isMailpitMessageSummary(value: unknown): value is MailpitMessageSummary {
-  return isRecord(value) && hasMailpitMessageHeaders(value) && typeof value["Created"] === "string";
+  return (
+    isRecord(value) &&
+    hasMailpitMessageHeaders(value) &&
+    (value["Created"] === undefined || typeof value["Created"] === "string")
+  );
 }
 
 function hasMailpitMessageHeaders(value: Record<string, unknown>): boolean {
@@ -397,4 +483,103 @@ function isMailpitAddress(value: unknown): value is MailpitAddress {
   return (
     isRecord(value) && typeof value["Address"] === "string" && typeof value["Name"] === "string"
   );
+}
+
+function createMailpitPollingSnapshot(): MailpitPollingSnapshot {
+  return {
+    searchAttempts: 0,
+    rawResultCount: 0,
+    postSentAfterCandidateCount: 0,
+    invalidOrMissingTimestampCount: 0,
+    fetchedMessageCount: 0,
+    extractionMissCount: 0,
+    excludedValueCount: 0,
+    transientRequestErrorCount: 0,
+    transientRequestErrorStatuses: new Set(),
+    newestCandidateTimestampMs: undefined,
+  };
+}
+
+function createMailpitValueNotFoundError(params: {
+  cause?: unknown;
+  nowMs: number;
+  pollingSnapshot: MailpitPollingSnapshot;
+  valueLabel: string;
+}): MailpitValueNotFoundError {
+  return new MailpitValueNotFoundError(
+    `No matching Mailpit ${params.valueLabel} is available yet. ` +
+      formatMailpitPollingSnapshot({
+        nowMs: params.nowMs,
+        pollingSnapshot: params.pollingSnapshot,
+      }),
+    { cause: params.cause },
+  );
+}
+
+function formatMailpitPollingSnapshot(params: {
+  nowMs: number;
+  pollingSnapshot: MailpitPollingSnapshot;
+}): string {
+  const newestCandidateAgeMs =
+    params.pollingSnapshot.newestCandidateTimestampMs === undefined
+      ? "unavailable"
+      : String(params.nowMs - params.pollingSnapshot.newestCandidateTimestampMs);
+  const transientRequestErrorStatuses = [
+    ...params.pollingSnapshot.transientRequestErrorStatuses,
+  ].join(",");
+
+  return (
+    `Polling snapshot: searchAttempts=${params.pollingSnapshot.searchAttempts}, ` +
+    `rawResultCount=${params.pollingSnapshot.rawResultCount}, ` +
+    `postSentAfterCandidateCount=${params.pollingSnapshot.postSentAfterCandidateCount}, ` +
+    `invalidOrMissingTimestampCount=${params.pollingSnapshot.invalidOrMissingTimestampCount}, ` +
+    `fetchedMessageCount=${params.pollingSnapshot.fetchedMessageCount}, ` +
+    `extractionMissCount=${params.pollingSnapshot.extractionMissCount}, ` +
+    `excludedValueCount=${params.pollingSnapshot.excludedValueCount}, ` +
+    `transientRequestErrorCount=${params.pollingSnapshot.transientRequestErrorCount}, ` +
+    `transientRequestErrorStatuses=[${transientRequestErrorStatuses}], ` +
+    `newestCandidateAgeMs=${newestCandidateAgeMs}`
+  );
+}
+
+function getMailpitMessageTimestampMs(params: {
+  message: MailpitMessageSummary;
+}): number | undefined {
+  if (params.message.Created === undefined) {
+    return undefined;
+  }
+
+  const timestampMs = Date.parse(params.message.Created);
+  return Number.isFinite(timestampMs) ? timestampMs : undefined;
+}
+
+function recordNewestCandidateTimestamp(params: {
+  candidates: readonly MailpitMessageSummary[];
+  pollingSnapshot: MailpitPollingSnapshot;
+}): void {
+  const candidateTimestampsMs = params.candidates
+    .map((message) => getMailpitMessageTimestampMs({ message }))
+    .filter((timestampMs) => timestampMs !== undefined);
+
+  if (candidateTimestampsMs.length === 0) {
+    return;
+  }
+
+  params.pollingSnapshot.newestCandidateTimestampMs = Math.max(
+    params.pollingSnapshot.newestCandidateTimestampMs ?? Number.NEGATIVE_INFINITY,
+    ...candidateTimestampsMs,
+  );
+}
+
+function recordTransientRequestError(params: {
+  error: unknown;
+  pollingSnapshot: MailpitPollingSnapshot;
+}): void {
+  params.pollingSnapshot.transientRequestErrorCount += 1;
+
+  if (params.error instanceof MailpitRequestError) {
+    params.pollingSnapshot.transientRequestErrorStatuses.add(
+      params.error.status?.toString() ?? "unavailable",
+    );
+  }
 }
