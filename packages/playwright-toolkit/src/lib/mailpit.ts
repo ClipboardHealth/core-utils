@@ -1,4 +1,4 @@
-import { isRecord, toErrorMessage as getErrorMessage } from "@clipboard-health/util-ts";
+import { isNil, isRecord, toErrorMessage as getErrorMessage } from "@clipboard-health/util-ts";
 
 import { RetryError, type RetrySuccess, runWithRetry, type RunWithRetryParams } from "./retry";
 import { isRetryableHttpStatus } from "./setupRetry";
@@ -22,7 +22,7 @@ export interface MailpitMessageHeaders {
 }
 
 export interface MailpitMessageSummary extends MailpitMessageHeaders {
-  Created?: string | undefined;
+  Created?: string | null | undefined;
 }
 
 export interface MailpitMessage extends MailpitMessageHeaders {
@@ -186,7 +186,6 @@ export async function fetchMailpitValue(
 
         recordTransientRequestError({ error, pollingSnapshot });
         throw createMailpitValueNotFoundError({
-          cause: error,
           nowMs: nowImplementation(),
           pollingSnapshot,
           valueLabel: params.valueLabel,
@@ -427,6 +426,7 @@ function isMessageSentAfter(params: {
 
   const messageTimestampMs = getMailpitMessageTimestampMs({ message: params.message });
   if (messageTimestampMs === undefined) {
+    // Unparseable timestamps stay eligible so metadata gaps cannot hide a delivered message.
     return true;
   }
 
@@ -465,7 +465,7 @@ function isMailpitMessageSummary(value: unknown): value is MailpitMessageSummary
   return (
     isRecord(value) &&
     hasMailpitMessageHeaders(value) &&
-    (value["Created"] === undefined || typeof value["Created"] === "string")
+    (isNil(value["Created"]) || typeof value["Created"] === "string")
   );
 }
 
@@ -545,7 +545,7 @@ function formatMailpitPollingSnapshot(params: {
 function getMailpitMessageTimestampMs(params: {
   message: MailpitMessageSummary;
 }): number | undefined {
-  if (params.message.Created === undefined) {
+  if (isNil(params.message.Created)) {
     return undefined;
   }
 

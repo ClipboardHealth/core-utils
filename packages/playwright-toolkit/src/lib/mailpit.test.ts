@@ -130,6 +130,30 @@ describe("Mailpit polling", () => {
     ]);
   });
 
+  it("keeps Mailpit search summaries with a null creation timestamp", async () => {
+    const searchSummary = {
+      ID: "message-1",
+      Created: null,
+      From: { Address: "noreply@example.test", Name: "Clipboard" },
+      To: [{ Address: "user@example.test", Name: "User" }],
+      Subject: "Sign in",
+    };
+    const client = createMailpitClient({
+      baseUrl: "https://mailpit.example.test/api/v1",
+      password: "secret",
+      fetchImplementation: vi.fn<typeof fetch>(
+        async () =>
+          new Response(JSON.stringify({ messages: [searchSummary] }), {
+            status: 200,
+          }),
+      ),
+    });
+
+    await expect(client.searchMessages({ query: "to:user@example.test" })).resolves.toEqual([
+      searchSummary,
+    ]);
+  });
+
   it("does not retry malformed Mailpit response schemas", async () => {
     let currentTimeMs = 0;
     const mockFetch = vi.fn<typeof fetch>(
@@ -432,18 +456,75 @@ describe("Mailpit polling", () => {
       ...createImmediateTimeout(),
     });
 
-    await expect(actualPromise).rejects.toThrow(
+    const actualError = await captureError({ promise: actualPromise });
+    const actualErrorChain = getErrorChainMessage({ error: actualError });
+
+    expect(actualError.message).toContain(
       "Polling snapshot: searchAttempts=1, rawResultCount=1, " +
         "postSentAfterCandidateCount=1, invalidOrMissingTimestampCount=0, " +
         "fetchedMessageCount=1, extractionMissCount=0, excludedValueCount=1, " +
         "transientRequestErrorCount=0, transientRequestErrorStatuses=[], " +
         "newestCandidateAgeMs=1000",
     );
-    await expect(actualPromise).rejects.not.toThrow(email);
-    await expect(actualPromise).rejects.not.toThrow(excludedCode);
-    await expect(actualPromise).rejects.not.toThrow(sensitiveLink);
+    expect(actualErrorChain).not.toContain(email);
+    expect(actualErrorChain).not.toContain(excludedCode);
+    expect(actualErrorChain).not.toContain(sensitiveLink);
+  });
+
+  it("does not retain sensitive details from transient Mailpit request errors", async () => {
+    const email = "sensitive-user@example.test";
+    const secret = "sensitive-upstream-detail";
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => {
+        throw new MailpitRequestError({
+          message: `Mailpit request failed for ${email}`,
+          status: 503,
+          cause: new Error(secret),
+        });
+      }),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email,
+      ...createImmediateTimeout(),
+    });
+
+    const actualError = await captureError({ promise: actualPromise });
+    const actualErrorChain = getErrorChainMessage({ error: actualError });
+
+    expect(actualError.message).toContain(
+      "transientRequestErrorCount=1, transientRequestErrorStatuses=[503]",
+    );
+    expect(actualErrorChain).not.toContain(email);
+    expect(actualErrorChain).not.toContain(secret);
   });
 });
+
+async function captureError(params: { promise: Promise<unknown> }): Promise<Error> {
+  try {
+    await params.promise;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return error;
+    }
+  }
+
+  throw new Error("Expected promise to reject with an Error");
+}
+
+function getErrorChainMessage(params: { error: Error }): string {
+  const messages: string[] = [];
+  let currentError: unknown = params.error;
+
+  while (currentError instanceof Error) {
+    messages.push(currentError.message);
+    currentError = currentError.cause;
+  }
+
+  return messages.join(" | ");
+}
 
 function createImmediateTimeout(): {
   timeoutMs: number;
