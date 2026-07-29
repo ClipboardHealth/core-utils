@@ -26,7 +26,7 @@ async function build(): Promise<void> {
     }),
     cp(skillsSource, path.join(outputDirectory, "skills"), {
       recursive: true,
-      filter: (source) => !isExcludedFromPublication(source),
+      filter: (source) => !isTestFile(source),
     }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
@@ -71,15 +71,9 @@ async function build(): Promise<void> {
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
 }
 
-const UNPUBLISHED_SKILL_PATTERNS = [
-  // Consumers install the bundle without test dependencies, so omit test files.
-  /\.(?:spec|test)\.ts$/,
-  // Backtest fixtures are this repo's calibration history, not content consumers retrieve.
-  /[/\\]references[/\\]backtests(?:[/\\]|$)/,
-];
-
-function isExcludedFromPublication(source: string): boolean {
-  return UNPUBLISHED_SKILL_PATTERNS.some((pattern) => pattern.test(source));
+function isTestFile(source: string): boolean {
+  // Consumers install the bundle without test dependencies, so omit test files from publication.
+  return /\.(?:spec|test)\.ts$/.test(source);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
