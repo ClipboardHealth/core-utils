@@ -11,9 +11,16 @@ import type {
   TestStep,
 } from "@playwright/test/reporter";
 
+import {
+  type BrowserLifecycleRecord,
+  encodeBrowserLifecycleAttachment,
+} from "./clientLifecycleContract";
 import * as clientLifecycle from "./internal/clientLifecycle";
 import { GROUPS_CAP, INSTANCES_CAP } from "./internal/constants";
-import { writeTraceZipFixture } from "./internal/testHelpers";
+import {
+  createBrowserLifecycle48RecordFixture,
+  writeTraceZipFixture,
+} from "./internal/testHelpers";
 import * as traceDiagnostics from "./internal/traceDiagnostics";
 import LlmReporter from "./reporter";
 import type { AttemptResult, ClientLifecycle, LlmTestEntry, LlmTestReport } from "./types";
@@ -36,6 +43,22 @@ function createLifecycleAttachment({
     name: "browser-network-lifecycle",
     contentType: "application/json",
     body: Buffer.from(JSON.stringify({ schemaVersion: 1, truncated, records })),
+  };
+}
+
+function createSharedLifecycleAttachment({
+  records,
+  truncated = false,
+}: {
+  records: BrowserLifecycleRecord[];
+  truncated?: boolean;
+}): TestResult["attachments"][number] & { body: Buffer } {
+  const encoded = encodeBrowserLifecycleAttachment({ records, truncated });
+
+  return {
+    name: "browser-network-lifecycle",
+    contentType: "application/json",
+    body: encoded.body,
   };
 }
 
@@ -605,6 +628,137 @@ describe(LlmReporter, () => {
     expect(
       firstAttempt(readReport(outputFile)).network.instances[0]?.clientLifecycle,
     ).toBeUndefined();
+  });
+
+  it("joins request 43 from the shared nested attachment contract", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-07-28T16:08:40.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-shared-lifecycle.zip", {
+      requestBody: "",
+      responseBody: "",
+      contextOptions: { wallTimeMs: attemptStart.getTime(), monotonicTimeMs: 10_000 },
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _monotonicTime: 22_453,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://apigateway.staging.clipboardhealth.org/home-health-api/api/v1/123/cases",
+            },
+            response: { status: -1 },
+            timings: { send: -1, wait: -1, receive: -1 },
+          },
+        },
+      ],
+    });
+    const records = createBrowserLifecycle48RecordFixture();
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        startTime: attemptStart,
+        status: "timedOut",
+        attachments: [
+          { name: "trace", contentType: "application/zip", path: tracePath },
+          createSharedLifecycleAttachment({ records }),
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "timedout" } as FullResult);
+
+    expect(firstAttempt(readReport(outputFile)).network.instances[0]?.clientLifecycle).toEqual({
+      method: "GET",
+      origin: "https://apigateway.staging.clipboardhealth.org",
+      pathTemplate: "/home-health-api/api/v1/:id/cases",
+      requestStartedAt: "2026-07-28T16:08:52.453Z",
+      requestStartedMonotonicMs: 13_041.814_252,
+      requestStarted: true,
+      responseHeadersReceived: false,
+      loadingFinished: false,
+      loadingFailed: false,
+      pendingAtTimeout: true,
+      playwrightRequestKey: "request-43",
+      cdpRequestId: "79540.2856",
+      loaderId: "F552CA195D976C31D2F826922E2C790E",
+      protocol: "h2",
+      connectionId: 2743,
+      connectionReused: true,
+      remoteIPAddress: "34.208.216.128",
+      remotePort: 443,
+      dataEncodedDataLength: 0,
+      classification: "no_response_headers",
+    });
+  });
+
+  it("reads a truncated shared lifecycle attachment from a path", () => {
+    const reporter = new LlmReporter({ outputFile });
+    reporter.onBegin(createMockConfig(), createMockSuite());
+
+    const attemptStart = new Date("2026-01-01T00:00:00.000Z");
+    const tracePath = writeTraceZipFixture(outputDirectory, "trace-with-path-lifecycle.zip", {
+      requestBody: "",
+      responseBody: "",
+      contextOptions: { wallTimeMs: attemptStart.getTime(), monotonicTimeMs: 10_000 },
+      networkEvents: [
+        {
+          type: "resource-snapshot",
+          snapshot: {
+            _monotonicTime: 10_100,
+            _resourceType: "fetch",
+            request: {
+              method: "GET",
+              url: "https://api.example.com/v1/orders/123",
+            },
+            response: { status: -1 },
+            timings: { send: -1, wait: -1, receive: -1 },
+          },
+        },
+      ],
+    });
+    const lifecycleAttachment = createSharedLifecycleAttachment({
+      records: [
+        {
+          method: "GET",
+          origin: "https://api.example.com",
+          pathTemplate: "/v1/orders/:id",
+          requestStarted: {
+            cdp: {
+              utc: "2026-01-01T00:00:00.100Z",
+              monotonicMilliseconds: 10_100,
+            },
+          },
+          classification: "no_response_headers",
+        },
+      ],
+      truncated: true,
+    });
+    const lifecyclePath = path.join(outputDirectory, "browser-network-lifecycle.json");
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    writeFileSync(lifecyclePath, lifecycleAttachment.body);
+
+    reporter.onTestEnd(
+      createMockTestCase({}, { outputDirectory }),
+      createMockResult({
+        startTime: attemptStart,
+        status: "timedOut",
+        attachments: [
+          { name: "trace", contentType: "application/zip", path: tracePath },
+          {
+            name: "browser-network-lifecycle.json",
+            contentType: "application/json",
+            path: lifecyclePath,
+          },
+        ],
+      }),
+    );
+    reporter.onEnd({ status: "timedout" } as FullResult);
+
+    expect(
+      firstAttempt(readReport(outputFile)).network.instances[0]?.clientLifecycle?.truncated,
+    ).toBe(true);
   });
 
   it("bounds lifecycle attachments and preserves their truncation signal", () => {
