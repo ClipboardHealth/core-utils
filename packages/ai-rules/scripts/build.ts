@@ -5,7 +5,7 @@ import path from "node:path";
 import { PATHS } from "./constants";
 import { execAndLog } from "./execAndLog";
 
-const { packageRoot, outputDirectory, skillsSource } = PATHS;
+const { packageRoot, outputDirectory } = PATHS;
 
 const params = {
   timeout: 60_000,
@@ -24,16 +24,12 @@ async function build(): Promise<void> {
     cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), {
       recursive: true,
     }),
-    cp(skillsSource, path.join(outputDirectory, "skills"), {
-      recursive: true,
-      filter: (source) => !isTestFile(source),
-    }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
     copyFile(path.join(packageRoot, "package.json"), path.join(outputDirectory, "package.json")),
   ]);
 
-  console.log(`📦 Copied rules/ and skills/ to dist`);
+  console.log(`📦 Copied rules/ to dist`);
 
   await Promise.all([
     execAndLog({
@@ -69,11 +65,6 @@ async function build(): Promise<void> {
   ]);
 
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
-}
-
-function isTestFile(source: string): boolean {
-  // Consumers install the bundle without test dependencies, so omit test files from publication.
-  return /\.(?:spec|test)\.ts$/.test(source);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

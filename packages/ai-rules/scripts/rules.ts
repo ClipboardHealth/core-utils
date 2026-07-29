@@ -17,10 +17,7 @@ const HEADING_PATTERN = /^#\s+(?<heading>.+)$/m;
 // is applied, so the pattern stays anchored and bounded.
 const BLOCK_SCALAR_PATTERN = /^[>|][+-]?\d?[+-]?$/;
 
-/**
- * Reads the frontmatter `description` from a Markdown file. Shared with the `SKILL.md` files under
- * `plugins/core/skills`, which follow the same convention.
- */
+/** Reads the frontmatter `description` from a Markdown file. */
 export function parseFrontmatterDescription(content: string): string | undefined {
   const frontmatter = FRONTMATTER_PATTERN.exec(content)?.groups?.["frontmatter"];
   const raw = frontmatter
@@ -156,11 +153,6 @@ export function generateAgentsIndex(rules: RuleMetadata[]): string {
     "| Rule | File | When to Read |",
     "|------|------|-------------|",
     ...rows,
-    "",
-    "## Agent Skills",
-    "",
-    "Agent skills are linked from `node_modules/@clipboard-health/ai-rules` into `.agents/`.",
-    "If a referenced skill is missing or unreadable, run `npm ci` from the repository root and retry.",
     "",
   ].join("\n");
 }

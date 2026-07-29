@@ -172,6 +172,7 @@ describe(generateAgentsIndex, () => {
       "Read the rule files relevant to the code you're changing or reviewing.",
     );
     expect(actual).not.toContain("IMPORTANT: You MUST read");
+    expect(actual).not.toContain("## Agent Skills");
     expect(actual).toContain("| A | .rules/common/a.md | When doing A |");
   });
 });
