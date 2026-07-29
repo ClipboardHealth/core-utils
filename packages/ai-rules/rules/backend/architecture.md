@@ -31,58 +31,22 @@ All NestJS microservices follow a three-tier layered architecture:
 - Use dependency-cruiser to enforce tiered architecture constraints
 - When joining across DB tables, do not join on tables owned by another module — fetch via the owning module's service instead
 
-**`ts-rest` contracts:**
+**`ts-rest` contracts** live in `packages/contract-<service>/src/lib/`, with `constants.ts` at that level and one directory per resource under `contracts/`:
 
 ```text
-packages/contract-<service>/src/
+contracts/
+├── contract.ts            # Root router composing every resource contract
+├── health.contract.ts     # Every service has one
 ├── index.ts
-└── lib
-    ├── constants.ts
-    └── contracts
-        ├── contract.ts
-        ├── health.contract.ts
-        ├── index.ts
-        └── user
-            ├── index.ts
-            ├── user.contract.ts
-            └── shared.ts
+└── user/
+    ├── index.ts
+    ├── user.contract.ts
+    └── shared.ts          # Schemas shared within this resource
 ```
 
-**NestJS microservice modules:**
+**NestJS modules** live at `src/modules/<domain>/`, containing `<domain>.module.ts` plus `entrypoints/`, `logic/`, and `data/`; background jobs go under `logic/jobs/`.
 
-```text
- src/modules/user
- ├── user.module.ts
- ├── data
- │   ├── user.dao.mapper.ts
- │   └── user.repo.ts
- ├── entrypoints
- │   ├── user.controller.ts
- │   ├── user.dto.mapper.ts
- │   └── userCreated.consumer.ts
- └── logic
-     ├── user.do.ts
-     ├── user.service.ts
-     ├── userCreated.service.ts
-     └── jobs
-         ├── user.job.mapper.ts
-         ├── userCreated.job.spec.ts
-         └── userCreated.job.ts
-```
-
-**File Patterns:**
-
-```text
-*.controller.ts  - HTTP controllers (entrypoints)
-*.consumer.ts    - Message consumers (entrypoints)
-*.service.ts     - Business logic (logic)
-*.job.ts         - Background jobs (logic)
-*.repo.ts        - Database access (data)
-*.gateway.ts     - External services (data)
-*.do.ts          - Domain objects
-*.dto.mapper.ts  - DTO transformation
-*.dao.mapper.ts  - DAO transformation
-```
+**File suffixes:** `*.controller.ts` and `*.consumer.ts` are entrypoints; `*.service.ts` and `*.job.ts` are logic; `*.repo.ts` and `*.gateway.ts` are data. `*.do.ts` is a domain object; `*.dto.mapper.ts`, `*.dao.mapper.ts`, and `*.job.mapper.ts` are the translations at each boundary. Backend tests use the `.spec.ts` suffix and sit next to the file they cover.
 
 ## Repository Naming
 

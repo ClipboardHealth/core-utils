@@ -152,7 +152,10 @@ describe(generateAgentsIndex, () => {
 
     const actual = generateAgentsIndex(rules);
 
-    expect(actual).toContain("IMPORTANT: You MUST read the relevant rule files");
+    expect(actual).toContain(
+      "Read the rule files relevant to the code you're changing or reviewing.",
+    );
+    expect(actual).not.toContain("IMPORTANT: You MUST read");
     expect(actual).toContain("| A | .rules/common/a.md | When doing A |");
   });
 });

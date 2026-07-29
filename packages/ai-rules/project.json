@@ -12,7 +12,8 @@
         "{projectRoot}/**/*",
         "{workspaceRoot}/plugins/core/skills/**/*",
         "sharedGlobals",
-        "!{workspaceRoot}/package-lock.json"
+        "!{workspaceRoot}/package-lock.json",
+        "!{workspaceRoot}/plugins/core/skills/**/references/backtests/**"
       ],
       "options": {
         "command": "tsx scripts/build.ts",

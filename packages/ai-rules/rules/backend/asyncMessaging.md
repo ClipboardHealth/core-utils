@@ -16,50 +16,14 @@ description: "Working with queues, async messaging, or background jobs"
 
 ## Background Jobs
 
-**Creation with Transaction:**
-
-```typescript
-async function createLicense() {
-  await db.transaction(async (tx) => {
-    const license = await tx.license.create({ data });
-    await jobs.enqueue(VerificationJob, { licenseId: license.id }, { transaction: tx });
-  });
-}
-```
-
-**Handler Pattern:**
-
-```typescript
-class ShiftReminderJob implements Handler<ShiftReminderPayload> {
-  static queueName = "shift.reminder";
-
-  async perform(payload: ShiftReminderPayload, job: Job): Promise<string> {
-    const { shiftId } = payload;
-
-    // Fetch fresh data—don't trust stale payload
-    const shift = await this.shiftRepo.findById({ id: shiftId });
-
-    if (!shift || shift.isCancelled) {
-      return `Skipping: shift ${shiftId} not found or cancelled`;
-    }
-
-    try {
-      await this.notificationService.performSideEffect(shift);
-      return `Reminder sent for shift ${shiftId}`;
-    } catch (error) {
-      if (error instanceof KnownRecoverableError) throw error; // Retry
-      return `Skipping: ${error.message}`; // No retry
-    }
-  }
-}
-```
+Enqueue inside the same transaction as the write that triggers it, passing the transaction through (`{ transaction: tx }`), so the job is never visible without its data. A handler implements `Handler<Payload>` with a static `queueName` and a `perform` method returning a status string.
 
 **Key Practices:**
 
 - Pass minimal, serializable arguments (IDs, not objects); take care with Dates and classes since arguments are written to a database and read back out
 - Fetch fresh data in handler
 - Implement idempotency (use an idempotency/unique key when duplication must be prevented)
-- Check state before action; return a descriptive skip-reason string for non-retryable conditions; throw only for retryable errors
+- Check state before action; return a descriptive skip-reason string for non-retryable conditions; rethrow only retryable errors (`error instanceof KnownRecoverableError`)
 - Use Expand/Contract for job code updates
 - Keep jobs short-lived (under 15 minutes for Postgres, under 10 minutes for Mongo); split longer work into multiple jobs
 
@@ -68,18 +32,7 @@ class ShiftReminderJob implements Handler<ShiftReminderPayload> {
 - Name job handler files `<class-name>.job.ts` and place them near their owning module (not centralized into `src/jobs`)
 - Migration jobs must live in `src/migrations/jobs`, be registered in `src/backgroundJobs/registerJobs`, keep batch sizes small, and be retry-safe
 
-**Avoid Circular Dependencies:**
-
-```typescript
-// Shared types file
-export const NOTIFICATION_JOB = "shift-notification";
-export interface NotificationJobPayload {
-  shiftId: string;
-}
-
-// Enqueue by string name
-await jobs.enqueue<NotificationJobPayload>(NOTIFICATION_JOB, { shiftId });
-```
+**Avoid Circular Dependencies:** put the queue-name constant and payload interface in a shared types file and enqueue by string name (`jobs.enqueue<NotificationJobPayload>(NOTIFICATION_JOB, { shiftId })`) rather than importing the handler class.
 
 ## SQS/EventBridge
 

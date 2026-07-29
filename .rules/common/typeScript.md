@@ -21,6 +21,7 @@ description: "Writing ANY TypeScript code"
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
+- Use `const` objects instead of `enum`s; enums are a non-type-level extension to JavaScript and require explicit mapping
 - Files read top-to-bottom: exports first, internal helpers below
 - Use immutable array methods (`toSorted`, `toReversed`) instead of mutating methods (`sort`, `reverse`)
 - Return Prisma decimal values as strings in API responses to avoid floating-point precision issues
@@ -41,33 +42,3 @@ In TypeScript code that has access to `@clipboard-health/util-ts`, prefer the na
 - Replace `x !== undefined`, `x !== null`, `!isNil(x)`, or `x` (as a truthy presence check) with `isDefined(x)`.
 
 Import from `@clipboard-health/util-ts`.
-
-## Error Handling
-
-- **Expected errors** (not found, validation failures): return `ServiceResult` (Either type) from `@clipboard-health/util-ts` instead of `try/catch`
-- **Unexpected/unrecoverable errors**: throw `ServiceError` from `@clipboard-health/util-ts`
-- Use `toError(maybeError)` from `@clipboard-health/util-ts` over hardcoded strings or type casting (`as Error`)
-- Use `ERROR_CODES` from `@clipboard-health/util-ts`, not `HttpStatus` from NestJS
-
-```typescript
-import { ServiceError, ERROR_CODES } from "@clipboard-health/util-ts";
-
-// Unexpected/unrecoverable — throw
-throw new ServiceError({
-  code: "SHIFT_NOT_FOUND",
-  message: `Shift ${shiftId} not found`,
-  httpStatus: ERROR_CODES.notFound,
-});
-```
-
-## Date & Time
-
-- Use `@clipboard-health/date-time` for all user-facing date formatting and all timezone-dependent operations (start-of-day-in-timezone, business hours, `setHours`, etc.) with an explicit `timeZone` parameter
-- Use `date-fns` only for timezone-agnostic timestamp math and parsing
-- Use `date-fns` comparison functions (`isBefore`, `isAfter`, `isEqual`, `isSameDay`, `compareAsc`, `compareDesc`) for all date comparisons — never use raw JS comparison operators (`>`, `<`, `===`, `>=`, `<=`) or `.getTime()` for equality/inequality checks
-- Never import `date-fns-tz`, `@date-fns/tz`, `moment`, or `moment-timezone`
-
-## Rules Engine
-
-- Do not mutate instance or static variables inside `@clipboard-health/rules-engine` rule functions
-- Do not perform side effects (DB writes, variable mutation) inside rules — pull side effects up to the caller

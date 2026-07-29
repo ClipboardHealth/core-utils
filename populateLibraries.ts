@@ -29,11 +29,6 @@ const FILES: FileUpdate[] = [
     formatLine: (entry) =>
       `- [${entry.name}](./packages/${entry.name}/README.md): ${entry.description}`,
   },
-  {
-    path: path.join(__dirname, "packages", "ai-rules", "rules", "common", "coreLibraries.md"),
-    label: "ai-rules coreLibraries.md",
-    formatLine: (entry) => `- **${entry.name}**: ${entry.description}`,
-  },
 ];
 
 async function getLibraryEntries(): Promise<LibraryEntry[]> {

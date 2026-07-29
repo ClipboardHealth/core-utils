@@ -1,6 +1,6 @@
 ---
 name: cognito-user-analysis
-description: Use when looking up Cognito user details by sub UUID, finding duplicate accounts sharing phone or email, analyzing which duplicates to keep vs delete, or fixing orphaned UNCONFIRMED signups. Symptoms include 403 Forbidden on login, multiple accounts for same phone, backend sync issues.
+description: "Look up Cognito users by sub UUID, triage duplicate accounts sharing a phone or email, fix orphaned UNCONFIRMED signups. Symptoms: 403 on login, backend sync failures."
 ---
 
 # Cognito User Analysis

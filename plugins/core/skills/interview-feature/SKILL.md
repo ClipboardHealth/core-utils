@@ -1,6 +1,6 @@
 ---
 name: interview-feature
-description: Use when clarifying requirements for a feature ticket. Iteratively researches and interviews the user until the problem is well-understood, then produces a structured problem brief. Dispatched by write-feature-ticket when context is insufficient.
+description: "Clarify thin feature requirements by researching and interviewing the user, producing a structured problem brief. Dispatched by write-feature-ticket."
 ---
 
 # Interview Feature

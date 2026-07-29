@@ -58,12 +58,7 @@ useMutation({
 
 ## Query Keys
 
-Include URL and params for predictable cache invalidation:
-
-```typescript
-queryKey: ["users", userId];
-queryKey: ["users", userId, "posts"];
-```
+Include the URL and params so cache invalidation is predictable: `["users", userId, "posts"]`.
 
 ## `parsedApi.ts` vs `api.ts`
 

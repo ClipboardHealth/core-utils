@@ -1,15 +1,6 @@
 ---
 name: metabase-to-hex
-description: >
-  Migrate a Metabase dashboard or single card/question to a Hex app at Clipboard Health — extract
-  the source structure via the Metabase MCP, rewrite SQL onto core dbt models, scaffold the Hex
-  project with the CLI, and finish the Input cells / markdown / appLayout via a YAML round-trip.
-  Use this whenever the user asks to migrate, port, rebuild, or recreate a Metabase dashboard or
-  card in Hex, asks to make a Hex version of a Metabase question, mentions a Metabase dashboard
-  or `/question/` URL alongside Hex, wants to recreate Metabase parameter filtering as Hex Input
-  cells, or wants to generalize multiple migrated cards into one parametrized app. Also use when
-  the user references a previous migration ("like the WOPs Tool one", "same pattern as the
-  Payments Dashboard") and wants the playbook applied to a new dashboard or card.
+description: "Migrate a Metabase dashboard or card to a Hex app: extract via Metabase MCP, rewrite SQL onto core dbt models, scaffold with the Hex CLI, finish via YAML round-trip."
 allowed-tools: Bash, Read, Edit, Write
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: frontend-ui-verification
-description: Use when a Clipboard frontend task involves a new UI idea, Figma/design URL, screenshot, redesign UI, design-to-code implementation, Storybook visual validation, Playwright/browser screenshot, animation/motion visual proof, or preventing design-system and visual-fidelity drift in admin or mobile UI work.
+description: "Verify Clipboard frontend UI against its design: Figma URLs, screenshots, Storybook checks, Playwright visual proof, and design-system drift in admin/mobile work."
 ---
 
 # Frontend UI Verification

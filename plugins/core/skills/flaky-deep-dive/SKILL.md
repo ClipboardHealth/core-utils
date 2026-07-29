@@ -1,6 +1,6 @@
 ---
 name: flaky-deep-dive
-description: Investigate chronic flaky-test fingerprint families with a credential-checked, dossier-first, cross-repository causal-chain method and produce a designed fix or observability design for human review. Use when flaky-triage routes a family with at least three prior implementation tickets, flaky-critic routes a family with at least two failed merged fixes, or a user asks for the chronic flake deep-dive track.
+description: "Chronic flaky-test families: dossier-first, cross-repository causal-chain investigation producing a designed fix or observability plan. Entered when triage or critic routes a family."
 ---
 
 # Flaky Deep Dive

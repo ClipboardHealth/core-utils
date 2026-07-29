@@ -1,6 +1,6 @@
 ---
 name: flaky-triage
-description: Scheduled triage stage between flake-intake and agent dispatch. Clusters flaky-investigation tickets by shared root cause, closes duplicates and infra blips, and releases one repository-owned canonical ticket per cluster for dispatch. Use when running the recurring flaky-triage task, when asked to triage the flaky queue, or to backtest clustering against historical tickets.
+description: "Triage stage between flake intake and dispatch: cluster flaky tickets by root cause, close duplicates and infra blips, release one canonical ticket per cluster."
 ---
 
 The pipeline stage between flake-intake (deterministic, string-level collapse: bursts and storms) and per-ticket dispatch. Intake creates investigation tickets in the **Triage** state, where groundcrew ignores them. This skill clusters them semantically — same root cause, even when error text differs — then performs ticket surgery and releases exactly one dispatchable ticket per root cause and implementation repository.

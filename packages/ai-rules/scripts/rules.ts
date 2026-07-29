@@ -14,6 +14,19 @@ const DESCRIPTION_PATTERN = /^description:\s*(?<description>.+)$/m;
 const HEADING_PATTERN = /^#\s+(?<heading>.+)$/m;
 
 /**
+ * Reads the frontmatter `description` from a Markdown file. Shared with the `SKILL.md` files under
+ * `plugins/core/skills`, which follow the same convention.
+ */
+export function parseFrontmatterDescription(content: string): string | undefined {
+  const frontmatter = FRONTMATTER_PATTERN.exec(content)?.groups?.["frontmatter"];
+  const raw = frontmatter
+    ? DESCRIPTION_PATTERN.exec(frontmatter)?.groups?.["description"]
+    : undefined;
+
+  return raw === undefined ? undefined : stripQuotes(raw.trim());
+}
+
+/**
  * Parses a rule file's frontmatter `description` (the "When to Read" text) and its H1 heading.
  * The frontmatter is the single source of truth for rule metadata; throws when it's missing so
  * tests catch unregistered descriptions before publishing.
@@ -24,15 +37,11 @@ export function parseRuleFile(params: { content: string; filePath: string }): {
 } {
   const { content, filePath } = params;
 
-  const frontmatter = FRONTMATTER_PATTERN.exec(content)?.groups?.["frontmatter"];
-  const rawDescription = frontmatter
-    ? DESCRIPTION_PATTERN.exec(frontmatter)?.groups?.["description"]
-    : undefined;
-  if (!rawDescription) {
+  const description = parseFrontmatterDescription(content);
+  if (!description) {
     throw new Error(`Rule file ${filePath} is missing a frontmatter 'description'`);
   }
 
-  const description = stripQuotes(rawDescription.trim());
   const heading =
     HEADING_PATTERN.exec(content)?.groups?.["heading"] ?? path.basename(filePath, ".md");
 
@@ -127,7 +136,7 @@ export function generateAgentsIndex(rules: RuleMetadata[]): string {
     "",
     "# Coding Rules",
     "",
-    "IMPORTANT: You MUST read the relevant rule files below before writing or reviewing code.",
+    "Read the rule files relevant to the code you're changing or reviewing.",
     "",
     "| Rule | File | When to Read |",
     "|------|------|-------------|",

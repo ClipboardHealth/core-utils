@@ -12,16 +12,4 @@ description: "Creating React custom hooks: naming, shared state with constate"
 
 ## Shared State with Constate
 
-```typescript
-import constate from "constate";
-
-function useFilters() {
-  const [filters, setFilters] = useState<Filters>({});
-  return { filters, setFilters };
-}
-
-export const [FiltersProvider, useFiltersContext] = constate(useFilters);
-```
-
-Use constate for: sharing state between siblings, feature-level state.
-Don't use for: server state (use React Query), simple parent-child (use props).
+Wrap a hook with `constate` to get a provider/hook pair, named `<Feature>Provider` and `use<Feature>Context`. Use it for sharing state between siblings and for feature-level state; not for server state (use React Query) or simple parent-child passing (use props).

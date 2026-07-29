@@ -1,6 +1,6 @@
 ---
 name: write-bug-ticket
-description: Use when creating a Linear bug report ticket from conversation context, investigation findings, or user-provided evidence — when evidence already exists and needs structuring, not investigating.
+description: "Create a Linear bug ticket from evidence that already exists — conversation context, investigation findings, or user-provided detail. Not for investigating."
 ---
 
 # Write Bug Ticket

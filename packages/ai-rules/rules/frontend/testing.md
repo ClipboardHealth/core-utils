@@ -4,6 +4,8 @@ description: "Writing frontend tests: React Testing Library, component tests"
 
 # Testing
 
+Vitest and `@testing-library/react`, with MSW for API mocking. Test files use the `.test.ts`/`.test.tsx` suffix and sit next to the code they cover.
+
 ## Philosophy
 
 Focus on integration tests—test how components work together as users experience them.
@@ -25,13 +27,4 @@ Prefer user-centric queries in priority order: `getByRole`, `getByLabelText`, `g
 
 ## MSW Handlers
 
-Export factory functions, not static handlers:
-
-```typescript
-// ✅ Good—flexible per test
-export const createUserHandler = (userData: User) =>
-  rest.get("/api/user", (req, res, ctx) => res(ctx.json(userData)));
-
-// Usage
-mockServer.use(createUserHandler(customData));
-```
+Export `create<Thing>Handler` factory functions that take the mock data as an argument, not static handlers — each test needs to vary the response. Register them per test with `mockServer.use(...)`.

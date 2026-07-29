@@ -1,6 +1,6 @@
 ---
 name: clipboard-design-engineering
-description: Use when a Clipboard frontend task involves UI polish, motion or animation decisions, interaction feel, small interaction details, visual hierarchy, component craft, or reviewing whether admin/mobile UI feels consistent with Clipboard's product and design-system standards.
+description: "Clipboard frontend UI polish: motion, interaction feel, visual hierarchy, component craft, and whether admin/mobile UI matches the design system."
 ---
 
 # Clipboard Design Engineering

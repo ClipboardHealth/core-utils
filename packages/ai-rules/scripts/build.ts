@@ -5,10 +5,7 @@ import path from "node:path";
 import { PATHS } from "./constants";
 import { execAndLog } from "./execAndLog";
 
-const { packageRoot, outputDirectory } = PATHS;
-
-const PLUGIN_ROOT = path.join(packageRoot, "..", "..", "plugins", "core");
-const SKILLS_SOURCE = path.join(PLUGIN_ROOT, "skills");
+const { packageRoot, outputDirectory, skillsSource } = PATHS;
 
 const params = {
   timeout: 60_000,
@@ -27,9 +24,9 @@ async function build(): Promise<void> {
     cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), {
       recursive: true,
     }),
-    cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), {
+    cp(skillsSource, path.join(outputDirectory, "skills"), {
       recursive: true,
-      filter: (source) => !isTestFile(source),
+      filter: (source) => !isExcludedFromPublication(source),
     }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
@@ -74,9 +71,15 @@ async function build(): Promise<void> {
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
 }
 
-function isTestFile(source: string): boolean {
-  // Consumers install the bundle without test dependencies, so omit test files from publication.
-  return /\.(?<type>spec|test)\.ts$/.test(source);
+const UNPUBLISHED_SKILL_PATTERNS = [
+  // Consumers install the bundle without test dependencies, so omit test files.
+  /\.(?:spec|test)\.ts$/,
+  // Backtest fixtures are this repo's calibration history, not content consumers retrieve.
+  /[/\\]references[/\\]backtests(?:[/\\]|$)/,
+];
+
+function isExcludedFromPublication(source: string): boolean {
+  return UNPUBLISHED_SKILL_PATTERNS.some((pattern) => pattern.test(source));
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
