@@ -1,7 +1,6 @@
-import { asBoolean, asNumber, asRecord, asString } from "./internal/typeGuards";
 import {
-  CLIENT_LIFECYCLE_CLASSIFICATION_PRIORITY,
   type BrowserLifecycleClassification,
+  CLIENT_LIFECYCLE_CLASSIFICATION_PRIORITY,
   sanitizeLifecycleClassification,
   sanitizeLifecycleIdentifier,
   sanitizeLifecycleIpAddress,
@@ -14,6 +13,7 @@ import {
   sanitizeLifecycleSpanId,
   sanitizeLifecycleTraceId,
 } from "./internal/clientLifecycleSanitization";
+import { asBoolean, asNumber, asRecord, asString } from "./internal/typeGuards";
 
 export type { BrowserLifecycleClassification } from "./internal/clientLifecycleSanitization";
 
@@ -185,9 +185,12 @@ export function parseBrowserLifecycleAttachment({
   for (const record of records.slice(0, MAXIMUM_RECORDS)) {
     const sanitizedRecord = sanitizeRecord(record);
     if (!sanitizedRecord) {
-      return undefined;
+      continue;
     }
     sanitizedRecords.push(sanitizedRecord);
+  }
+  if (records.length > 0 && sanitizedRecords.length === 0) {
+    return undefined;
   }
 
   return {

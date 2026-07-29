@@ -137,12 +137,7 @@ function sanitizeLifecycleHexIdentifier({
   length: number;
 }): string | undefined {
   const identifier = asString(value)?.toLowerCase();
-  if (
-    identifier &&
-    identifier.length === length &&
-    /^[a-f0-9]+$/.test(identifier) &&
-    !/^0+$/.test(identifier)
-  ) {
+  if (identifier?.length === length && /^[a-f0-9]+$/.test(identifier) && !/^0+$/.test(identifier)) {
     return identifier;
   }
   return undefined;

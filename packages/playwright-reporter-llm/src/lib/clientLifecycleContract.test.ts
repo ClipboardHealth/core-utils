@@ -81,6 +81,25 @@ describe("browser lifecycle attachment contract", () => {
     expect(actual).toBeUndefined();
   });
 
+  it("retains valid records when another record is malformed", () => {
+    const validRecord = createBrowserLifecycleCompletedFixture({ requestNumber: 1 });
+    const input = Buffer.from(
+      JSON.stringify({
+        schemaVersion: BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.version,
+        truncated: false,
+        records: [validRecord, { classification: "completed" }],
+      }),
+    );
+
+    const actual = parseBrowserLifecycleAttachment({ content: input });
+
+    expect(actual).toEqual({
+      schemaVersion: BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.version,
+      truncated: true,
+      records: [validRecord],
+    });
+  });
+
   it.each([
     Buffer.from("{"),
     Buffer.from(JSON.stringify({ schemaVersion: 2, records: [] })),
