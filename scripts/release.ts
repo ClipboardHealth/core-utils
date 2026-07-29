@@ -13,8 +13,6 @@ import { parseArgs } from "node:util";
 
 import { releaseChangelog, releaseVersion } from "nx/release";
 
-import { syncPluginVersion } from "./embedPluginVersion.mts";
-
 const MAX_RETRY_COUNT = 3;
 const INITIAL_BACKOFF_MILLISECONDS = 1000;
 const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
@@ -189,41 +187,6 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
   }
 }
 
-type ProjectsVersionData = Awaited<ReturnType<typeof releaseVersion>>["projectsVersionData"];
-
-/**
- * Nx bumps plugins/core/package.json; plugin.json and the skill sentinels derive
- * from it. Propagate the bump into them after versioning and before the release
- * commit, so they land in the same commit. No-op when the plugin was not part of
- * this release.
- */
-function syncCorePluginVersion(projectsVersionData: ProjectsVersionData, dryRun: boolean): void {
-  const pluginVersion = projectsVersionData["core-plugin"]?.newVersion;
-  if (typeof pluginVersion !== "string") {
-    return;
-  }
-
-  if (dryRun) {
-    log(`  [dry-run] Would sync plugin manifest and sentinels to ${pluginVersion}`);
-    return;
-  }
-
-  // Pass the version Nx just computed rather than re-reading package.json:
-  // Nx stages the bump without the working-tree read reflecting it yet, so a
-  // disk read here would see the old version and silently skip the sync.
-  const { changedFiles, managedFiles } = syncPluginVersion({ version: pluginVersion });
-
-  // Stage the manifest and sentinels unconditionally. The postinstall npm runs
-  // mid-release may have already written the new version to these files but left
-  // them unstaged, so changedFiles is empty here even though they must land in
-  // the release commit. Staging an unchanged file is a no-op.
-  execFileSync("git", ["add", "--", ...managedFiles], { stdio: "inherit" });
-
-  log(
-    `  Synced plugin manifest and sentinels to ${pluginVersion} (${changedFiles.length} changed, ${managedFiles.length} staged)`,
-  );
-}
-
 async function main(): Promise<void> {
   // Phase 1: Version bumping
   log("Phase 1: Bumping versions...");
@@ -248,8 +211,6 @@ async function main(): Promise<void> {
   for (const [name, data] of changedProjects) {
     verbose(`    ${name}: ${data.currentVersion} -> ${data.newVersion}`);
   }
-
-  syncCorePluginVersion(projectsVersionData, isDryRun);
 
   // Phase 2: Changelog generation
   log("Phase 2: Generating changelogs...");

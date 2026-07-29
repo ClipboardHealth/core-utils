@@ -1,11 +1,5 @@
 {
   "extraKnownMarketplaces": {
-    "clipboard": {
-      "source": {
-        "source": "github",
-        "repo": "ClipboardHealth/core-utils"
-      }
-    },
     "nx-claude-plugins": {
       "source": {
         "source": "github",
@@ -14,7 +8,6 @@
     }
   },
   "enabledPlugins": {
-    "core@clipboard": true,
     "nx@nx-claude-plugins": true
   },
   "hooks": {
