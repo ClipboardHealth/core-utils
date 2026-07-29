@@ -24,19 +24,19 @@ async function readSkillDescriptions(): Promise<Array<{ description: string; nam
   );
 }
 
-const skillDescriptions = readSkillDescriptions();
-
 describe("skill descriptions", () => {
-  it("are discoverable for every skill", async () => {
-    const actual = await skillDescriptions;
+  let skills: Array<{ description: string; name: string }>;
 
-    expect(actual.length).toBeGreaterThan(0);
-    expect(actual.filter((skill) => skill.description === "")).toStrictEqual([]);
+  beforeAll(async () => {
+    skills = await readSkillDescriptions();
   });
 
-  it(`stay within ${MAX_DESCRIPTION_LENGTH} characters`, async () => {
-    const skills = await skillDescriptions;
+  it("are discoverable for every skill", () => {
+    expect(skills.length).toBeGreaterThan(0);
+    expect(skills.filter((skill) => skill.description === "")).toStrictEqual([]);
+  });
 
+  it(`stay within ${MAX_DESCRIPTION_LENGTH} characters`, () => {
     const actual = skills
       .filter((skill) => skill.description.length > MAX_DESCRIPTION_LENGTH)
       .map((skill) => `${skill.name} (${skill.description.length})`);
