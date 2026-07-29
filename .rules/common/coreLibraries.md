@@ -23,8 +23,12 @@ gh api repos/ClipboardHealth/cbh-core/contents/packages --jq '.[] | select(.type
 
 ## Reading a library's documentation
 
-- Installed: `node_modules/@clipboard-health/{LIBRARY_NAME}/README.md`
-- Not installed: `gh api -H "Accept: application/vnd.github.raw" repos/ClipboardHealth/{core-utils OR cbh-core}/contents/packages/{LIBRARY_NAME}/README.md`
+For an installed package, read `node_modules/@clipboard-health/{LIBRARY_NAME}/README.md`. Otherwise fetch it from whichever repository owns it:
+
+```bash
+gh api -H "Accept: application/vnd.github.raw" repos/ClipboardHealth/core-utils/contents/packages/{LIBRARY_NAME}/README.md
+gh api -H "Accept: application/vnd.github.raw" repos/ClipboardHealth/cbh-core/contents/packages/{LIBRARY_NAME}/README.md
+```
 
 ## Debugging
 
