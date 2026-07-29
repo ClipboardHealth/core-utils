@@ -18,7 +18,7 @@ interface ParsedArguments {
   excludes: string[];
 }
 
-type AgentDirectoryName = "skills" | "lib";
+type AgentDirectoryName = "lib";
 type AgentDirectorySyncResult = "missing" | "linked" | "copied";
 
 async function sync() {
@@ -43,16 +43,13 @@ async function sync() {
 
     const rulesOutput = path.join(PATHS.projectRoot, ".rules");
     const agentsOutput = path.join(PATHS.projectRoot, ".agents");
-    const skillsOutput = path.join(agentsOutput, "skills");
     const libraryOutput = path.join(agentsOutput, "lib");
     await Promise.all([
       rm(rulesOutput, { recursive: true, force: true }),
-      rm(skillsOutput, { recursive: true, force: true }),
       rm(libraryOutput, { recursive: true, force: true }),
     ]);
-    const [, skillsSyncResult, librarySyncResult] = await Promise.all([
+    const [, librarySyncResult] = await Promise.all([
       copyRuleFiles(rules, rulesOutput),
-      syncAgentDirectory("skills", skillsOutput),
       syncAgentDirectory("lib", libraryOutput),
       copySetupScript(),
       mergeSessionStartHook(),
@@ -68,7 +65,6 @@ async function sync() {
 
     await appendOverlay(PATHS.projectRoot);
     await formatOutputFiles(PATHS.projectRoot, {
-      skillsCopied: skillsSyncResult === "copied",
       libCopied: librarySyncResult === "copied",
     });
   } catch (error) {
@@ -349,7 +345,6 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
 }
 
 interface FormatOptions {
-  skillsCopied: boolean;
   libCopied: boolean;
 }
 
@@ -362,10 +357,6 @@ async function formatOutputFiles(projectRoot: string, options: FormatOptions): P
   }
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
-
-  if (options.skillsCopied) {
-    filesToFormat.push(path.join(projectRoot, ".agents", "skills"));
-  }
 
   if (options.libCopied) {
     filesToFormat.push(path.join(projectRoot, ".agents", "lib"));

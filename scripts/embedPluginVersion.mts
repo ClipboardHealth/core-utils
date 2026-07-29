@@ -1,6 +1,5 @@
 /**
- * Syncs the plugins/core version from its package.json into the plugin
- * manifest and skill sentinels.
+ * Syncs the plugins/core version from its package.json into the plugin manifest.
  *
  * `plugins/core/package.json` is the source of truth that `nx release` bumps
  * (it is private, so it is never published to npm).
@@ -9,7 +8,7 @@
  * `--check` to report drift without writing (exits non-zero when any file is
  * out of sync); `verify` runs it that way so managed files can't drift.
  */
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -20,22 +19,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const REPO_ROOT = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const PACKAGE_JSON = path.join(REPO_ROOT, "plugins/core/package.json");
 const PLUGIN_JSON = path.join(REPO_ROOT, "plugins/core/.claude-plugin/plugin.json");
-const SKILLS_ROOT = path.join(REPO_ROOT, "plugins/core/skills");
-const SENTINEL_PATTERN = /core@\d+\.\d+\.\d+/g;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
-
-function walk(directory: string): string[] {
-  const result: string[] = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    const full = path.join(directory, entry.name);
-    if (entry.isDirectory()) {
-      result.push(...walk(full));
-    } else if (entry.isFile() && (full.endsWith(".md") || full.endsWith(".sh"))) {
-      result.push(full);
-    }
-  }
-  return result;
-}
 
 function readPackageJsonVersion(): string {
   const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as { version: unknown };
@@ -43,7 +27,7 @@ function readPackageJsonVersion(): string {
 }
 
 /**
- * Propagates a version into the plugin manifest and skill sentinels.
+ * Propagates a version into the plugin manifest.
  *
  * Pass `version` to use an explicit version (the release flow passes the version
  * Nx just computed, so the sync does not depend on when Nx flushes package.json
@@ -75,22 +59,6 @@ export function syncPluginVersion(options: { check?: boolean; version?: string }
       writeFileSync(PLUGIN_JSON, `${JSON.stringify(manifest, null, 2)}\n`);
     }
     changedFiles.push(PLUGIN_JSON);
-  }
-
-  const target = `core@${version}`;
-  for (const file of walk(SKILLS_ROOT)) {
-    const content = readFileSync(file, "utf8");
-    if (!content.includes("core@")) {
-      continue;
-    }
-    managedFiles.push(file);
-    const replaced = content.replaceAll(SENTINEL_PATTERN, target);
-    if (replaced !== content) {
-      if (!check) {
-        writeFileSync(file, replaced);
-      }
-      changedFiles.push(file);
-    }
   }
 
   return { version, changedFiles, managedFiles };

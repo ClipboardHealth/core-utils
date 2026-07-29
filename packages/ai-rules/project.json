@@ -8,12 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": [
-        "{projectRoot}/**/*",
-        "{workspaceRoot}/plugins/core/skills/**/*",
-        "sharedGlobals",
-        "!{workspaceRoot}/package-lock.json"
-      ],
+      "inputs": ["{projectRoot}/**/*", "sharedGlobals", "!{workspaceRoot}/package-lock.json"],
       "options": {
         "command": "tsx scripts/build.ts",
         "cwd": "{projectRoot}",
@@ -36,9 +31,7 @@
         "sharedGlobals",
         "^production",
         "{workspaceRoot}/vitest.preset.ts",
-        "{workspaceRoot}/plugins/core/skills/**/*",
-        "!{workspaceRoot}/package-lock.json",
-        "!{workspaceRoot}/plugins/core/skills/**/references/backtests/**"
+        "!{workspaceRoot}/package-lock.json"
       ],
       "options": {
         "configFile": "packages/ai-rules/vitest.config.ts"
