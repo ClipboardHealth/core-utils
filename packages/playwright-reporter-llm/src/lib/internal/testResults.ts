@@ -106,8 +106,13 @@ export function statusIndicator(status: TestStatus): string {
 }
 
 export function collectStdio(result: TestResult, channel: "stdout" | "stderr"): string {
-  const text = result[channel]
-    .map((chunk) => (typeof chunk === "string" ? chunk : chunk.toString("utf8")))
+  const text = (result[channel] as unknown as Array<{ text: string } | { buffer: string }>)
+    .map((chunk) => {
+      if ("text" in chunk) {
+        return chunk.text;
+      }
+      return Buffer.from(chunk.buffer, "base64").toString("utf8");
+    })
     .join("");
   return capOutput(stripAnsi(text));
 }

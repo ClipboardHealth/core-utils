@@ -98,7 +98,7 @@ describe(statusIndicator, () => {
 describe(collectStdio, () => {
   it("concatenates string and buffer chunks with ANSI stripping and capping", () => {
     const result = {
-      stdout: ["hello ", Buffer.from("world")],
+      stdout: [{ text: "hello " }, { buffer: Buffer.from("world").toString("base64") }],
       stderr: [],
     } as unknown as TestResult;
 
@@ -107,7 +107,7 @@ describe(collectStdio, () => {
 
   it("caps at 4KB", () => {
     const result = {
-      stdout: ["x".repeat(5000)],
+      stdout: [{ text: "x".repeat(5000) }],
       stderr: [],
     } as unknown as TestResult;
 
