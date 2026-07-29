@@ -12,7 +12,10 @@ export interface RuleMetadata {
 const FRONTMATTER_PATTERN = /^---\r?\n(?<frontmatter>[\s\S]*?)\r?\n---/;
 const DESCRIPTION_PATTERN = /^description:\s*(?<description>.+)$/m;
 const HEADING_PATTERN = /^#\s+(?<heading>.+)$/m;
-const BLOCK_SCALAR_PATTERN = /^[>|][+-]?\d*$/;
+// Every block-scalar header YAML accepts: `>` or `|`, a chomping indicator and a single-digit
+// indentation indicator in either order (`>-2`, `>2-`). A trailing comment is dropped before this
+// is applied, so the pattern stays anchored and bounded.
+const BLOCK_SCALAR_PATTERN = /^[>|][+-]?\d?[+-]?$/;
 
 /**
  * Reads the frontmatter `description` from a Markdown file. Shared with the `SKILL.md` files under
@@ -28,10 +31,14 @@ export function parseFrontmatterDescription(content: string): string | undefined
   // pattern can't see it. Report it as missing so callers fail loudly rather than accepting the
   // indicator itself as a one-character description.
   const trimmed = raw?.trim();
+  if (trimmed === undefined) {
+    return undefined;
+  }
 
-  return trimmed === undefined || BLOCK_SCALAR_PATTERN.test(trimmed)
-    ? undefined
-    : stripQuotes(trimmed);
+  // A YAML comment must follow whitespace, so the first token is the whole header when this is one.
+  const [header = ""] = trimmed.split(/\s/);
+
+  return BLOCK_SCALAR_PATTERN.test(header) ? undefined : stripQuotes(trimmed);
 }
 
 /**

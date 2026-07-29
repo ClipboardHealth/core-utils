@@ -21,7 +21,7 @@ description: "Writing ANY TypeScript code"
 - Avoid type assertions (`as`, `!`) unless absolutely necessary
 - Use `function` keyword for declarations, not `const`
 - Prefer `undefined` over `null`
-- Use `const` objects instead of `enum`s; enums are a non-type-level extension to JavaScript and require explicit mapping
+- Use `const` objects instead of `enum`s; enums are one of the few TypeScript features that emit runtime code rather than erasing to types
 - Files read top-to-bottom: exports first, internal helpers below
 - Use immutable array methods (`toSorted`, `toReversed`) instead of mutating methods (`sort`, `reverse`)
 - Return Prisma decimal values as strings in API responses to avoid floating-point precision issues
