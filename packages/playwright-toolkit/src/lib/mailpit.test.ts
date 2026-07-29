@@ -7,6 +7,7 @@ import {
   type MailpitClient,
   type MailpitMessage,
   type MailpitMessageSummary,
+  MailpitRequestError,
 } from "../index";
 
 describe("Mailpit polling", () => {
@@ -109,6 +110,30 @@ describe("Mailpit polling", () => {
     const searchSummary = {
       ID: "message-1",
       Created: "2026-07-16T12:00:00.000Z",
+      From: { Address: "noreply@example.test", Name: "Clipboard" },
+      To: [{ Address: "user@example.test", Name: "User" }],
+      Subject: "Sign in",
+    };
+    const client = createMailpitClient({
+      baseUrl: "https://mailpit.example.test/api/v1",
+      password: "secret",
+      fetchImplementation: vi.fn<typeof fetch>(
+        async () =>
+          new Response(JSON.stringify({ messages: [searchSummary] }), {
+            status: 200,
+          }),
+      ),
+    });
+
+    await expect(client.searchMessages({ query: "to:user@example.test" })).resolves.toEqual([
+      searchSummary,
+    ]);
+  });
+
+  it("keeps Mailpit search summaries with a null creation timestamp", async () => {
+    const searchSummary = {
+      ID: "message-1",
+      Created: null,
       From: { Address: "noreply@example.test", Name: "Clipboard" },
       To: [{ Address: "user@example.test", Name: "User" }],
       Subject: "Sign in",
@@ -277,7 +302,247 @@ describe("Mailpit polling", () => {
 
     await expect(actualPromise).rejects.not.toThrow(email);
   });
+
+  it("reports when Mailpit searches return no messages", async () => {
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => []),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+      ...createImmediateTimeout(),
+    });
+
+    await expect(actualPromise).rejects.toThrow(
+      "Polling snapshot: searchAttempts=1, rawResultCount=0, " +
+        "postSentAfterCandidateCount=0, invalidOrMissingTimestampCount=0, " +
+        "fetchedMessageCount=0, extractionMissCount=0, excludedValueCount=0, " +
+        "transientRequestErrorCount=0, transientRequestErrorStatuses=[], " +
+        "newestCandidateAgeMs=unavailable",
+    );
+  });
+
+  it("reports the polling snapshot when a Mailpit request consumes the timeout budget", async () => {
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(
+        async () =>
+          await new Promise<MailpitMessageSummary[]>(() => {
+            // The request remains pending until the polling deadline.
+          }),
+      ),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+      timeoutMs: 5,
+    });
+
+    await expect(actualPromise).rejects.toThrow(
+      "Polling snapshot: searchAttempts=1, rawResultCount=0, " +
+        "postSentAfterCandidateCount=0, invalidOrMissingTimestampCount=0, " +
+        "fetchedMessageCount=0, extractionMissCount=0, excludedValueCount=0, " +
+        "transientRequestErrorCount=0, transientRequestErrorStatuses=[], " +
+        "newestCandidateAgeMs=unavailable",
+    );
+  });
+
+  it("reports when sentAfter filters every Mailpit search result", async () => {
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({
+          id: "too-old",
+          created: "2026-07-16T11:00:00.000Z",
+        }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+      sentAfter: new Date("2026-07-16T12:00:00.000Z"),
+      ...createImmediateTimeout(),
+    });
+
+    await expect(actualPromise).rejects.toThrow(
+      "Polling snapshot: searchAttempts=1, rawResultCount=1, " +
+        "postSentAfterCandidateCount=0, invalidOrMissingTimestampCount=0, " +
+        "fetchedMessageCount=0, extractionMissCount=0, excludedValueCount=0, " +
+        "transientRequestErrorCount=0, transientRequestErrorStatuses=[], " +
+        "newestCandidateAgeMs=unavailable",
+    );
+  });
+
+  it("reports transient Mailpit message fetch failures and statuses", async () => {
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({ id: "unavailable" }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () => {
+        throw new MailpitRequestError({
+          message: "upstream unavailable",
+          status: 503,
+        });
+      }),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+      ...createImmediateTimeout(),
+    });
+
+    await expect(actualPromise).rejects.toThrow(
+      "Polling snapshot: searchAttempts=1, rawResultCount=1, " +
+        "postSentAfterCandidateCount=1, invalidOrMissingTimestampCount=0, " +
+        "fetchedMessageCount=0, extractionMissCount=0, excludedValueCount=0, " +
+        "transientRequestErrorCount=1, transientRequestErrorStatuses=[503], " +
+        "newestCandidateAgeMs=1000",
+    );
+  });
+
+  it("reports messages that do not contain an extractable value", async () => {
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummaryWithoutTimestamp({ id: "no-value" }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+        createMessage({
+          id: "no-value",
+          text: "The expected value is absent.",
+        }),
+      ),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+      ...createImmediateTimeout(),
+    });
+
+    await expect(actualPromise).rejects.toThrow(
+      "Polling snapshot: searchAttempts=1, rawResultCount=1, " +
+        "postSentAfterCandidateCount=1, invalidOrMissingTimestampCount=1, " +
+        "fetchedMessageCount=1, extractionMissCount=1, excludedValueCount=0, " +
+        "transientRequestErrorCount=0, transientRequestErrorStatuses=[], " +
+        "newestCandidateAgeMs=unavailable",
+    );
+  });
+
+  it("reports excluded values without exposing recipient PII or extracted secrets", async () => {
+    const email = "sensitive-user@example.test";
+    const excludedCode = "81027033";
+    const sensitiveLink = "https://app.test/v2/email-login-link?credential=sensitive";
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({ id: "excluded" }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+        createMessage({
+          id: "excluded",
+          text: `${excludedCode} ${sensitiveLink}`,
+        }),
+      ),
+    };
+
+    const actualPromise = fetchEmailOtpCodeFromMailpit({
+      client: mockClient,
+      email,
+      excludeCodes: [excludedCode],
+      ...createImmediateTimeout(),
+    });
+
+    const actualError = await captureError({ promise: actualPromise });
+    const actualErrorChain = getErrorChainMessage({ error: actualError });
+
+    expect(actualError.message).toContain(
+      "Polling snapshot: searchAttempts=1, rawResultCount=1, " +
+        "postSentAfterCandidateCount=1, invalidOrMissingTimestampCount=0, " +
+        "fetchedMessageCount=1, extractionMissCount=0, excludedValueCount=1, " +
+        "transientRequestErrorCount=0, transientRequestErrorStatuses=[], " +
+        "newestCandidateAgeMs=1000",
+    );
+    expect(actualErrorChain).not.toContain(email);
+    expect(actualErrorChain).not.toContain(excludedCode);
+    expect(actualErrorChain).not.toContain(sensitiveLink);
+  });
+
+  it("does not retain sensitive details from transient Mailpit request errors", async () => {
+    const email = "sensitive-user@example.test";
+    const secret = "sensitive-upstream-detail";
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => {
+        throw new MailpitRequestError({
+          message: `Mailpit request failed for ${email}`,
+          status: 503,
+          cause: new Error(secret),
+        });
+      }),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(),
+    };
+
+    const actualPromise = fetchMagicLinkFromMailpit({
+      client: mockClient,
+      email,
+      ...createImmediateTimeout(),
+    });
+
+    const actualError = await captureError({ promise: actualPromise });
+    const actualErrorChain = getErrorChainMessage({ error: actualError });
+
+    expect(actualError.message).toContain(
+      "transientRequestErrorCount=1, transientRequestErrorStatuses=[503]",
+    );
+    expect(actualErrorChain).not.toContain(email);
+    expect(actualErrorChain).not.toContain(secret);
+  });
 });
+
+async function captureError(params: { promise: Promise<unknown> }): Promise<Error> {
+  try {
+    await params.promise;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return error;
+    }
+  }
+
+  throw new Error("Expected promise to reject with an Error");
+}
+
+function getErrorChainMessage(params: { error: Error }): string {
+  const messages: string[] = [];
+  let currentError: unknown = params.error;
+
+  while (currentError instanceof Error) {
+    messages.push(currentError.message);
+    currentError = currentError.cause;
+  }
+
+  return messages.join(" | ");
+}
+
+function createImmediateTimeout(): {
+  timeoutMs: number;
+  pollIntervalMs: number;
+  nowImplementation: () => number;
+  sleepImplementation: (params: { durationMs: number }) => Promise<void>;
+} {
+  let currentTimeMs = Date.parse("2026-07-16T12:00:01.000Z");
+
+  return {
+    timeoutMs: 100,
+    pollIntervalMs: 100,
+    nowImplementation: () => currentTimeMs,
+    sleepImplementation: async ({ durationMs }) => {
+      currentTimeMs += durationMs;
+    },
+  };
+}
 
 function createMessage(params: {
   id: string;
@@ -300,6 +565,15 @@ function createSearchSummary(params: { id: string; created?: string }): MailpitM
   return {
     ID: params.id,
     Created: params.created ?? "2026-07-16T12:00:00.000Z",
+    From: { Address: "noreply@example.test", Name: "Clipboard" },
+    To: [{ Address: "user@example.test", Name: "User" }],
+    Subject: "Sign in",
+  };
+}
+
+function createSearchSummaryWithoutTimestamp(params: { id: string }): MailpitMessageSummary {
+  return {
+    ID: params.id,
     From: { Address: "noreply@example.test", Name: "Clipboard" },
     To: [{ Address: "user@example.test", Name: "User" }],
     Subject: "Sign in",
