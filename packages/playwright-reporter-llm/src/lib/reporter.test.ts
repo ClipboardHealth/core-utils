@@ -295,7 +295,7 @@ describe(LlmReporter, () => {
         retry: 1,
         startTime: new Date("2026-02-25T10:00:01.000Z"),
         duration: 222,
-        stdout: ["final stdout"],
+        stdout: [{ text: "final stdout" }] as unknown as TestResult["stdout"],
       }),
     );
     reporter.onEnd({ status: "passed" } as FullResult);
@@ -365,8 +365,8 @@ describe(LlmReporter, () => {
 
     const longOutput = "x".repeat(5000);
     const result = createMockResult({
-      stdout: [longOutput],
-      stderr: [longOutput],
+      stdout: [{ text: longOutput }] as unknown as TestResult["stdout"],
+      stderr: [{ text: longOutput }] as unknown as TestResult["stdout"],
     });
 
     reporter.onTestEnd(createMockTestCase(), result);
