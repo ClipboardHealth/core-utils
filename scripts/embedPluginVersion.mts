@@ -1,6 +1,5 @@
 /**
- * Syncs the plugins/core version from its package.json into the plugin
- * manifest and skill sentinels.
+ * Syncs the plugins/core version from its package.json into the plugin manifest.
  *
  * `plugins/core/package.json` is the source of truth that `nx release` bumps
  * (it is private, so it is never published to npm).

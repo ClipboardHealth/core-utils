@@ -46,7 +46,6 @@ async function sync() {
     const libraryOutput = path.join(agentsOutput, "lib");
     await Promise.all([
       rm(rulesOutput, { recursive: true, force: true }),
-      rm(path.join(agentsOutput, "skills"), { recursive: true, force: true }),
       rm(libraryOutput, { recursive: true, force: true }),
     ]);
     const [, librarySyncResult] = await Promise.all([
