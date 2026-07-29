@@ -120,6 +120,8 @@ query($owner: String!, $repo: String!, $pr: Int!) {
               line
               originalLine
               createdAt
+              publishedAt
+              state
               author {
                 login
                 __typename
@@ -260,7 +262,9 @@ main() {
   local threads_json
   threads_json="$(printf '%s' "$response" | jq --arg sentinel_prefix "$SENTINEL_PREFIX" --arg legacy_sentinel_prefix "$LEGACY_SENTINEL_PREFIX" --argjson bots "$BOTS_JSON" '
     def is_bot: ((.author.__typename // "") == "Bot") or ((.author.login // "") | IN($bots[]));
-    def is_sentinel: ((.body // "") | contains($sentinel_prefix) or contains($legacy_sentinel_prefix));
+    def is_sentinel:
+      .state == "SUBMITTED"
+      and ((.body // "") | contains($sentinel_prefix) or contains($legacy_sentinel_prefix));
     [
       .data.repository.pullRequest.reviewThreads.nodes[]
       | select(.isResolved == false)
@@ -281,6 +285,8 @@ main() {
               authorType: (.author.__typename // null),
               body,
               createdAt,
+              publishedAt,
+              publicationState: .state,
               file: .path,
               line: (.line // .originalLine),
               isBabysitSentinel: is_sentinel,

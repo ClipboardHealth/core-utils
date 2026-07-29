@@ -1,0 +1,111 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "title": "Verify published replies",
+        "url": "https://github.com/ClipboardHealth/core-utils/pull/42",
+        "reviewThreads": {
+          "pageInfo": {
+            "hasNextPage": false
+          },
+          "nodes": [
+            {
+              "id": "pending-thread",
+              "isResolved": false,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "pending-top-level",
+                    "databaseId": 100,
+                    "body": "Please fix this.",
+                    "path": "src/pending.ts",
+                    "line": 10,
+                    "originalLine": 10,
+                    "createdAt": "2026-07-29T10:00:00Z",
+                    "publishedAt": "2026-07-29T10:00:00Z",
+                    "state": "SUBMITTED",
+                    "author": {
+                      "login": "reviewer",
+                      "__typename": "User"
+                    }
+                  },
+                  {
+                    "id": "pending-sentinel",
+                    "databaseId": 101,
+                    "body": "Addressed.\n\n<sub>🤖 <code>cb-babysit:addressed v1 core@3.23.2</code></sub>",
+                    "path": "src/pending.ts",
+                    "line": 10,
+                    "originalLine": 10,
+                    "createdAt": "2026-07-29T10:05:00Z",
+                    "publishedAt": null,
+                    "state": "PENDING",
+                    "author": {
+                      "login": "worker",
+                      "__typename": "User"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "submitted-thread",
+              "isResolved": false,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "submitted-top-level",
+                    "databaseId": 200,
+                    "body": "Please fix this too.",
+                    "path": "src/submitted.ts",
+                    "line": 20,
+                    "originalLine": 20,
+                    "createdAt": "2026-07-29T11:00:00Z",
+                    "publishedAt": "2026-07-29T11:00:00Z",
+                    "state": "SUBMITTED",
+                    "author": {
+                      "login": "reviewer",
+                      "__typename": "User"
+                    }
+                  },
+                  {
+                    "id": "submitted-sentinel",
+                    "databaseId": 201,
+                    "body": "Addressed.\n\n<sub>🤖 <code>cb-babysit:addressed v1 core@3.23.2</code></sub>",
+                    "path": "src/submitted.ts",
+                    "line": 20,
+                    "originalLine": 20,
+                    "createdAt": "2026-07-29T11:05:00Z",
+                    "publishedAt": "2026-07-29T11:05:00Z",
+                    "state": "SUBMITTED",
+                    "author": {
+                      "login": "worker",
+                      "__typename": "User"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "reviews": {
+          "pageInfo": {
+            "hasNextPage": false
+          },
+          "nodes": []
+        },
+        "comments": {
+          "pageInfo": {
+            "hasNextPage": false
+          },
+          "nodes": []
+        }
+      }
+    }
+  }
+}

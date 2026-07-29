@@ -23,7 +23,7 @@ The skill uses two sentinels with visible footer lines.
 
 **Follow-up sentinel**: `<sub>🤖 <code>cb-babysit:followup v1 core@3.23.2</code></sub>`. Attached to replies that defer an out-of-scope comment as a tracked follow-up. The sentinel is additive: the post-reply scripts still append the `addressed` sentinel at the end.
 
-**Sentinel recency rules.** The script emits a per-thread `activityState` with three values. Step 6a owns the handling rules for each state.
+**Sentinel recency rules.** Only sentinel comments whose GraphQL `state` is `SUBMITTED` count. A `PENDING` sentinel remains unverified, is exposed with `isBabysitSentinel: false`, and leaves its thread active. The script emits a per-thread `activityState` with three values. Step 6a owns the handling rules for each state.
 
 - **`active`**: no sentinel yet, OR at least one human commented after the last sentinel.
 - **`uncertain`**: a sentinel exists AND one or more bot comments appeared after it. The thread carries a `postSentinelBotComments` array listing EVERY such comment.
@@ -98,7 +98,8 @@ bash scripts/unresolvedPrComments.sh
 
 The output JSON has:
 
-- `threads`: every unresolved review thread, with `threadId`, `replyToCommentDatabaseId`, `comments[]`, `lastBabysitSentinelAt`, `lastHumanCommentAt`, `lastBotCommentAt`, `postSentinelBotComments[]`, `postSentinelHumanComments[]`, and `activityState` (`"active"` / `"uncertain"` / `"addressed"`).
+- `owner`, `repo`, and `prNumber`: repository coordinates to pass to the thread-reply helper.
+- `threads`: every unresolved review thread, with `threadId`, `replyToCommentDatabaseId` (the top-level review-comment database ID), `comments[]` (including each comment's `publicationState`), `lastBabysitSentinelAt`, `lastHumanCommentAt`, `lastBotCommentAt`, `postSentinelBotComments[]`, `postSentinelHumanComments[]`, and `activityState` (`"active"` / `"uncertain"` / `"addressed"`).
 - `activeThreads`: threads where `activityState != "addressed"`; these need attention this pass (active AND uncertain).
 - `uncertainThreads`: just the uncertain subset. For each, read EVERY entry in `postSentinelBotComments` before deciding.
 - `reviewBodyComments`: every review from a known automated reviewer (CodeRabbit, Mendral, Dependabot, etc.), with the raw body and a stable per-review `fingerprint`. The agent reads each body directly to extract findings.
@@ -237,7 +238,12 @@ Capture the `url=` line for the reply templates in step 9.
 For every thread assessed in step 6a that was NOT marked **Skip-reply** (i.e., one of Agree / Disagree / Already fixed / Defer):
 
 ```bash
-bash scripts/postSentinelReply.sh "$THREAD_ID" "$BODY"
+bash scripts/postSentinelReply.sh \
+  "$OWNER" \
+  "$REPO" \
+  "$PR_NUMBER" \
+  "$REPLY_TO_COMMENT_DATABASE_ID" \
+  "$BODY"
 ```
 
 Skip-reply threads are left alone as the existing sentinel already covers them.
@@ -251,7 +257,7 @@ Body templates (the script appends the `addressed` sentinel if missing):
 
 For Defer replies, include the follow-up sentinel on its own line as shown. The script will append the `addressed` sentinel after it on its own line, so the final body ends with the follow-up sentinel followed by a blank line followed by the `addressed` sentinel. `grep cb-babysit:followup` finds the deferral and `grep cb-babysit:addressed` still marks the thread handled for dedupe.
 
-The script uses the `addPullRequestReviewThreadReply` GraphQL mutation. It does NOT resolve the thread.
+The script uses GitHub's REST "Create a reply for a review comment" endpoint, then reads back the created comment and its associated review. It reports success only when GitHub confirms the comment belongs to the expected thread and the review is submitted rather than `PENDING`. A non-zero exit means the reply is unverified and does **not** count as addressed; leave the thread active and report the failure. The script does not resolve the thread, submit reviews, or publish any existing pending review comments.
 
 If any automated review bodies were assessed in step 7 OR any active issue comments were assessed in step 6b, post ONE top-level PR comment summarizing all of them:
 
@@ -293,7 +299,7 @@ Do not rely only on `gh pr view --json comments,reviews`. That view can miss inl
 
 After the single pass completes, pick exactly one outcome:
 
-- **Exit clean**: all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6a's inspection or has already received a fresh sentinel reply in this pass (Agree / Disagree / Already-fixed / **Defer** all count. A Defer reply is a sentinel reply), AND every entry in `activeIssueComments` is covered by this pass's PR-level summary, AND every current review-body fingerprint is covered by an existing sentinel comment (deferred review-body and conversation-comment fingerprints count; they're in the summary's fenced block). Do not use raw `totalActiveThreads` / `totalActiveIssueComments` from the script output. They're pre-inspection and will stay non-zero for Skip-reply or post-summary cases. A PR with Deferred items is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
+- **Exit clean**: all CI checks passed AND every thread in `activeThreads` was either marked Skip-reply during step 6a's inspection or has already received a fresh sentinel reply that `postSentinelReply.sh` verified as published in this pass (Agree / Disagree / Already-fixed / **Defer** all count only after verified publication. A verified Defer reply is a sentinel reply), AND every entry in `activeIssueComments` is covered by this pass's PR-level summary, AND every current review-body fingerprint is covered by an existing sentinel comment (deferred review-body and conversation-comment fingerprints count; they're in the summary's fenced block). An unverified or pending reply leaves its thread active and can never satisfy this condition. Do not use raw `totalActiveThreads` / `totalActiveIssueComments` from the script output. They're pre-inspection and will stay non-zero for Skip-reply or post-summary cases. A PR with Deferred items is still clean from babysit's perspective: the skill has done what it can without widening scope. Report success and stop.
 - **Exit progressing**: pass made commits, posted new replies, or both, and the PR is not yet clean (CI is still pending, a new CI run was triggered by this pass's commits, or more work remains). There is real work still in flight that another run would pick up. Report what was done and what is pending, and tell the user to re-run `/cb-babysit` once CI settles, or to wrap the call with `/loop <cadence> /cb-babysit` (or a shell `while true; do ...; done`) for automatic re-runs.
 - **Exit stuck**: pass made no commits and posted no new replies, and the PR is still not clean. Nothing actionable happened this pass. Use this whenever progress is blocked on something outside the skill's scope, including:
   - Merge conflict in step 2 that exceeded the high-confidence resolution bar.
