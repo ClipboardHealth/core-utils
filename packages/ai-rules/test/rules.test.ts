@@ -60,6 +60,19 @@ describe(parseRuleFile, () => {
     expect(() => parseRuleFile({ content: input, filePath: "a/b.md" })).toThrow(/a\/b\.md/);
   });
 
+  it("throws for a block-scalar description rather than reading it as the indicator", () => {
+    const input = [
+      "---",
+      "description: >",
+      "  Text held on a following line, which the single-line pattern cannot see.",
+      "---",
+      "",
+      "# Heading",
+    ].join("\n");
+
+    expect(() => parseRuleFile({ content: input, filePath: "a/b.md" })).toThrow(/a\/b\.md/);
+  });
+
   it("defaults heading to filename when H1 is missing", () => {
     const input = ["---", "description: Some description", "---", "", "Body without heading"].join(
       "\n",

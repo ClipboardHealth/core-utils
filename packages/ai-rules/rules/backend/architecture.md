@@ -46,7 +46,7 @@ contracts/
 
 **NestJS modules** live at `src/modules/<domain>/`, containing `<domain>.module.ts` plus `entrypoints/`, `logic/`, and `data/`; background jobs go under `logic/jobs/`.
 
-**File suffixes:** `*.controller.ts` and `*.consumer.ts` are entrypoints; `*.service.ts` and `*.job.ts` are logic; `*.repo.ts` and `*.gateway.ts` are data. `*.do.ts` is a domain object; `*.dto.mapper.ts`, `*.dao.mapper.ts`, and `*.job.mapper.ts` are the translations at each boundary. Backend tests use the `.spec.ts` suffix and sit next to the file they cover.
+**File suffixes:** `*.controller.ts` and `*.consumer.ts` are entrypoints; `*.service.ts` and `*.job.ts` are logic; `*.repo.ts` and `*.gateway.ts` are data. `*.do.ts` is a domain object; `*.dto.mapper.ts`, `*.dao.mapper.ts`, and `*.job.mapper.ts` are the translations at each boundary.
 
 ## Repository Naming
 

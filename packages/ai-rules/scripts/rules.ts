@@ -12,6 +12,7 @@ export interface RuleMetadata {
 const FRONTMATTER_PATTERN = /^---\r?\n(?<frontmatter>[\s\S]*?)\r?\n---/;
 const DESCRIPTION_PATTERN = /^description:\s*(?<description>.+)$/m;
 const HEADING_PATTERN = /^#\s+(?<heading>.+)$/m;
+const BLOCK_SCALAR_PATTERN = /^[>|][+-]?\d*$/;
 
 /**
  * Reads the frontmatter `description` from a Markdown file. Shared with the `SKILL.md` files under
@@ -23,7 +24,14 @@ export function parseFrontmatterDescription(content: string): string | undefined
     ? DESCRIPTION_PATTERN.exec(frontmatter)?.groups?.["description"]
     : undefined;
 
-  return raw === undefined ? undefined : stripQuotes(raw.trim());
+  // A block scalar (`description: >`) holds its text on the following lines, where this single-line
+  // pattern can't see it. Report it as missing so callers fail loudly rather than accepting the
+  // indicator itself as a one-character description.
+  const trimmed = raw?.trim();
+
+  return trimmed === undefined || BLOCK_SCALAR_PATTERN.test(trimmed)
+    ? undefined
+    : stripQuotes(trimmed);
 }
 
 /**

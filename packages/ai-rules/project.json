@@ -32,6 +32,15 @@
     },
     "test": {
       "executor": "@nx/vitest:test",
+      "inputs": [
+        "{projectRoot}/**/*",
+        "sharedGlobals",
+        "^production",
+        "{workspaceRoot}/vitest.preset.ts",
+        "{workspaceRoot}/plugins/core/skills/**/*",
+        "!{workspaceRoot}/package-lock.json",
+        "!{workspaceRoot}/plugins/core/skills/**/references/backtests/**"
+      ],
       "options": {
         "configFile": "packages/ai-rules/vitest.config.ts"
       }

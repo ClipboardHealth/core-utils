@@ -6,7 +6,9 @@ description: "Writing service tests: test data, background jobs, bug handling, m
 
 Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (LaunchDarkly, Firebase, Stripe, Zendesk) and other microservices with fakes; fake the event bus.
 
-Tests drive a `TestContext` (`tc`): `tc.auth` to create authenticated users, `tc.fixtures` for setup, `tc.http` to call endpoints, `tc.jobs` to drain queues, and `tc.fakes` to assert calls to faked externals. Read responses off `response.parsedBody` (JSON:API-shaped, so payloads sit under `.data`), not `response.body`.
+Backend test files use the `.spec.ts` suffix (not `.test.ts`) and sit next to the file they cover.
+
+Tests drive a `TestContext` (`tc`): `tc.auth` to create authenticated users, `tc.fixtures` for setup, `tc.http` to call endpoints, `tc.jobs` to drain queues, and `tc.fakes` to assert calls to faked externals. Read responses off `response.parsedBody`, not `response.body`; for JSON:API endpoints the payload sits under `.data`.
 
 Nest a `describe` per resource, then a `describe` per endpoint (`"GET /documents"`), then one `it` per behavior.
 
