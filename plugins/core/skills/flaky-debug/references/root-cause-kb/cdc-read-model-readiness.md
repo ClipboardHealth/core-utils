@@ -1,6 +1,6 @@
 # CDC and Read-Model Readiness
 
-Last reviewed: 2026-07-20.
+Last reviewed: 2026-07-29.
 
 ## Symptom signatures
 
@@ -9,17 +9,19 @@ Last reviewed: 2026-07-20.
 - A fixed sleep usually works but fails during load or an environment incident.
 - An outer retry re-creates fresh entities on every attempt and never lets one entity finish propagating.
 - A wrapped setup error exposes the HTTP status but hides the response message from the retry classifier, so the intended same-entity readiness poll bails after one request.
+- A shift projection reaches window creation before its workplace projection, and the background job completes without creating the window.
 
 ## Mechanism
 
-The test creates data in a source-of-truth service and immediately exercises a UI path backed by another service or read model. CDC, event ingestion, or asynchronous projection has not made the new entity visible to the exact consuming path yet.
+One producer makes an entity visible before a dependent CDC event, ingestion step, or asynchronous projection reaches the exact consumer. The consumer may be a test-driven UI/API path or a production job reacting to another projection; in either case, it observes a valid intermediate state whose dependency is not ready yet.
 
-Readiness must be defined by the API/state the UI will consume. A successful producer response, an arbitrary sleep, or readiness in a different store does not prove the user path is ready.
+Readiness must be defined at the actual consuming boundary. A successful producer response, an arbitrary sleep, or readiness in a different store does not prove that a UI path or background job can safely continue. Consumers must classify the missing dependency and enter a bounded retry instead of acknowledging incomplete work as terminal.
 
 ## Affected repositories and surfaces
 
 - `cbh-admin-frontend`: fresh shift offers, rate negotiation, Daily View, and other seeded E2E flows.
 - `clipboard-health` and downstream services such as curated shifts: producer-to-read-model ingestion boundaries.
+- `open-shifts`: curated-shifts window creation when shift and workplace projections arrive out of order.
 - Any test helper that creates cross-service data and then navigates immediately to a consumer.
 
 ## What fixed it
@@ -35,18 +37,22 @@ Readiness must be defined by the API/state the UI will consume. A successful pro
 
 [cbh-admin-frontend#7641](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7641) repaired the existing shift-offer readiness gate after [STAFF-1867](https://linear.app/clipboardhealth/issue/STAFF-1867) proved that `E2eSetupStepError` preserved the Axios body only in normalized diagnostics. Classification now consumes those wrapper-aware diagnostics; the bounded retry loop keeps the current worker across attempts and logs each classification decision.
 
+[open-shifts#5575](https://github.com/ClipboardHealth/open-shifts/pull/5575) fixed the projection-order variant from [STAFF-1951](https://linear.app/clipboardhealth/issue/STAFF-1951). The workplace lookup now throws a typed `WorkplaceNotFoundError`; the window job rethrows only that dependency failure so pg-boss applies the existing ten-retry, five-second bounded policy with the same idempotency key. Unrelated errors remain non-retryable, and exhaustion records the final attempt and dependency outcome.
+
 ## What failed and why
 
 - Increasing the fixed CDC sleep encoded a latency guess and provided no useful exhaustion evidence.
 - The outer HCF retry created a new workplace/worker/shift each time; every retry restarted ingestion instead of waiting for the first entity.
 - Matching only a detailed readiness message failed when the downstream service logged the specific cause but returned an opaque `500` to the client.
 - Reading only top-level Axios `response.data` failed after `runE2eSetupStep` wrapped the error. The status remained visible through a wrapper-aware helper, but the worker-specific message did not, so the inner poll failed fast and the outer HCF retry repeatedly created fresh workers.
+- Returning `"FAIL"` from the window job for a missing workplace made pg-boss record the attempt as completed. The workplace could arrive later, but no retry remained to build the missing window.
+- Extending the E2E readiness budget would not repair a projection job that had already acknowledged its work as terminal.
 - Retrying all `422` responses in [cbh-admin-frontend#6974](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/6974) would have made real validation errors wait 90 seconds. Review narrowed the implementation so opaque `500`s retry while unrelated `422`s still fail fast.
 - Adding a new per-spec readiness loop duplicates policy and lets timeout/classification behavior drift. Extend the shared helper instead.
 
 ## Current status
 
-Known recurring mechanism with a documented A1 shared-helper rule in the flaky-fix rubric. The mechanism is not globally “fixed” because new producer/consumer boundaries continue to appear; the reusable resolution is a consuming-path readiness gate with classified failures and shared ownership.
+Known recurring mechanism with a documented A1 shared-helper rule in the flaky-fix rubric. The mechanism is not globally “fixed” because new producer/consumer boundaries continue to appear. Consumer-side readiness must use the consuming path, while asynchronous jobs must preserve retryable dependency failures instead of acknowledging incomplete projections as terminal.
 
 ## Evidence
 
@@ -56,3 +62,5 @@ Known recurring mechanism with a documented A1 shared-helper rule in the flaky-f
 - [cbh-admin-frontend#6974](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/6974): opaque `500` classification and reviewer-enforced `422` fast-fail behavior.
 - [STAFF-1867](https://linear.app/clipboardhealth/issue/STAFF-1867): wrapped-error recurrence that exposed the classifier mismatch.
 - [cbh-admin-frontend#7641](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7641): wrapper-aware classification, same-entity retries, focused regression coverage, and structured exhaustion evidence.
+- [STAFF-1951](https://linear.app/clipboardhealth/issue/STAFF-1951): out-of-order workplace/shift projection diagnosis and job-level retry plan.
+- [open-shifts#5575](https://github.com/ClipboardHealth/open-shifts/pull/5575): typed dependency classification, bounded pg-boss retries, idempotency coverage, service-test recovery, and exhaustion evidence.

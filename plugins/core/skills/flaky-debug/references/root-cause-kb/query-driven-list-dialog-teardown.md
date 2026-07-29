@@ -1,6 +1,6 @@
 # Query-Driven List Dialog Teardown
 
-Last reviewed: 2026-07-20.
+Last reviewed: 2026-07-29.
 
 ## Symptom signatures
 
@@ -14,6 +14,7 @@ Last reviewed: 2026-07-20.
 - A valid restored form draft remains visible after a remount, but its submit action is disabled because the restored values became the new pristine baseline.
 - A qualification picker or inline posting form opens, then disappears when its query-backed card is reconciled or replaced.
 - A disclosure changes from open to closed without a second user action, unmounting the nested content or action a caller was about to use.
+- A boost/edit dialog detaches when shift-details selection or the schedule owner is replaced.
 - Known families: `33deef731a10` and `2d93cd67b48a`.
 
 ## Mechanism
@@ -32,7 +33,7 @@ The same ownership test applies to non-overlay interaction state. If replacing a
 
 ## Affected repositories and surfaces
 
-- `cbh-admin-frontend`: Home Health case and visit action dialogs and case-visit disclosure; Team Members add/edit forms; Daily View qualification pickers and inline posting forms; other query-driven list dialogs found by the repository sweep; authenticated route state beneath the Knock bootstrap boundary.
+- `cbh-admin-frontend`: Home Health case and visit action dialogs and case-visit disclosure; Team Members add/edit forms; Daily View qualification pickers and inline posting forms; Daily/Monthly View shift-details boost dialogs; other query-driven list dialogs found by the repository sweep; authenticated route state beneath the Knock bootstrap boundary.
 - `cbh-mobile-app`: placement sign-on-bonus and badge-history sheets; workplace-review comment and reply action sheets; document-upload state beneath the Knock bootstrap boundary.
 - Any React surface that owns interaction state or eligibility beneath a query-backed `.map()` descendant or another replaceable ancestor.
 
@@ -51,6 +52,7 @@ The durable Home Health fix is [cbh-admin-frontend#7574](https://github.com/Clip
 - [cbh-admin-frontend#7636](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7636) moved Daily View picker and selected-qualification state into the stable `PostingFormProvider`.
 - [cbh-admin-frontend#7644](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7644) completed the Team Members recurrence by treating a schema-valid restored add-member draft as submit-eligible.
 - [cbh-admin-frontend#7654](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7654) mitigated the remaining Home Health disclosure race at the harness boundary by re-establishing the expected nested surface before a safe pre-confirmation action and never retrying the mutation. It did not lift disclosure ownership out of the replaceable card.
+- [cbh-admin-frontend#7645](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7645) moved boost-dialog targets and modal state into a stable shift-details host shared by Daily and Monthly View. Selection replacement can remove the details panel without destroying the already-open, entity-keyed dialog.
 
 ## What failed and why
 
@@ -60,13 +62,14 @@ The durable Home Health fix is [cbh-admin-frontend#7574](https://github.com/Clip
 - Keeping Daily View posting state inside `NewRolePostingCard` let query/context reconciliation discard the open picker and selected qualification. A later response wait or action retry could not reconstruct that state; ownership had to move to the stable posting-form provider.
 - Stronger document-upload handoff and transition waits correctly committed and observed the selected file, but a later Knock provider-topology transition still recreated `FileUploaderProvider` with an empty queue. Local state hardening below the replacing ancestor could not preserve the route subtree.
 - A one-shot `Show Case Visits` click followed only by a `Hide Case Visits` assertion accepted disclosure state that disappeared about 50 ms later. Dialog hoisting did not protect the separate case-card expansion state before or after the dialog lifecycle, and retrying a destructive visit mutation would not preserve the scenario.
+- Keeping boost-dialog state inside `ShiftDetailsContainer` preserved it only until selection or schedule reconciliation replaced that container. Tests that retried the click would still lose the product interaction.
 - Pausing backing-list observers and deferring invalidations in [cbh-admin-frontend#7559](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7559) reduced the race window but was explicitly an interim mitigation: another ancestor update could still remove the row. The hoisted host later deleted that workaround.
 - Hoisting Home Health dialogs in [cbh-admin-frontend#7574](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7574) correctly removed their query-row ownership, but it could not preserve the earlier action menu or the route when the delayed Knock token replaced a higher provider boundary. [STAFF-1856](https://linear.app/clipboardhealth/issue/STAFF-1856) established that failed scope with route lifecycle telemetry and immediate post-remount Knock requests.
 - Splitting the E2E test alone would reduce blast radius and improve fingerprints, but it would not fix the user-facing overlay teardown.
 
 ## Current status
 
-Fixed for the known query-row and replaceable-owner surfaces covered by [STAFF-1789](https://linear.app/clipboardhealth/issue/STAFF-1789), [STAFF-1790](https://linear.app/clipboardhealth/issue/STAFF-1790), [STAFF-1796](https://linear.app/clipboardhealth/issue/STAFF-1796), [STAFF-1797](https://linear.app/clipboardhealth/issue/STAFF-1797), [STAFF-1806](https://linear.app/clipboardhealth/issue/STAFF-1806), [STAFF-1863](https://linear.app/clipboardhealth/issue/STAFF-1863), and [STAFF-1875](https://linear.app/clipboardhealth/issue/STAFF-1875). The Knock provider-topology variant is fixed in both frontend repositories by [cbh-admin-frontend#7608](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7608) and [cbh-mobile-app#12935](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12935). The known Home Health disclosure paths are bounded at the harness layer by [cbh-admin-frontend#7654](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7654); if users continue to see the disclosure collapse, lift that state above the replaceable card. Treat future instances as the same mechanism when interaction ownership remains below any replaceable ancestor; make the ancestor composition stable or move interaction ownership above that boundary rather than adding per-test waits.
+Fixed for the known query-row and replaceable-owner surfaces covered by [STAFF-1789](https://linear.app/clipboardhealth/issue/STAFF-1789), [STAFF-1790](https://linear.app/clipboardhealth/issue/STAFF-1790), [STAFF-1796](https://linear.app/clipboardhealth/issue/STAFF-1796), [STAFF-1797](https://linear.app/clipboardhealth/issue/STAFF-1797), [STAFF-1806](https://linear.app/clipboardhealth/issue/STAFF-1806), [STAFF-1863](https://linear.app/clipboardhealth/issue/STAFF-1863), [STAFF-1864](https://linear.app/clipboardhealth/issue/STAFF-1864), and [STAFF-1875](https://linear.app/clipboardhealth/issue/STAFF-1875). The Knock provider-topology variant is fixed in both frontend repositories by [cbh-admin-frontend#7608](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7608) and [cbh-mobile-app#12935](https://github.com/ClipboardHealth/cbh-mobile-app/pull/12935). The known Home Health disclosure paths are bounded at the harness layer by [cbh-admin-frontend#7654](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7654); if users continue to see the disclosure collapse, lift that state above the replaceable card. Treat future instances as the same mechanism when interaction ownership remains below any replaceable ancestor; make the ancestor composition stable or move interaction ownership above that boundary rather than adding per-test waits.
 
 ## Evidence
 
@@ -83,3 +86,4 @@ Fixed for the known query-row and replaceable-owner surfaces covered by [STAFF-1
 - [STAFF-1875](https://linear.app/clipboardhealth/issue/STAFF-1875) and [cbh-admin-frontend#7636](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7636): Daily View picker and posting-form state hoisted above replaceable cards with remount regressions.
 - [STAFF-1863](https://linear.app/clipboardhealth/issue/STAFF-1863) and [cbh-admin-frontend#7644](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7644): Team Members restored-draft eligibility recurrence and completed fix.
 - [STAFF-1859](https://linear.app/clipboardhealth/issue/STAFF-1859) and [cbh-admin-frontend#7654](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7654): Home Health case-visit disclosure remount, expected-surface recovery, and destructive-boundary diagnostics.
+- [STAFF-1864](https://linear.app/clipboardhealth/issue/STAFF-1864) and [cbh-admin-frontend#7645](https://github.com/ClipboardHealth/cbh-admin-frontend/pull/7645): shift-details boost-dialog teardown and stable entity-keyed dialog ownership.
