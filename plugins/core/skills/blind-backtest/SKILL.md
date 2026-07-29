@@ -1,6 +1,6 @@
 ---
 name: blind-backtest
-description: Backtest an automated judgment stage (clustering, verdicts, routing, gating) against historical decisions with known outcomes. Use before any judgment skill goes live or into shadow operation, or when asked to grade an agent's decisions against a human's.
+description: "Backtest an automated judgment stage (clustering, verdicts, routing, gating) against historical decisions with known outcomes, or grade an agent's decisions against a human's."
 ---
 
 # Blind Backtest

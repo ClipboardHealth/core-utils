@@ -6,25 +6,11 @@ description: "Writing service tests: test data, background jobs, bug handling, m
 
 Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (LaunchDarkly, Firebase, Stripe, Zendesk) and other microservices with fakes; fake the event bus.
 
-```typescript
-describe("Documents", () => {
-  let tc: TestContext;
+Backend test files use the `.spec.ts` suffix (not `.test.ts`) and sit next to the file they cover.
 
-  describe("GET /documents", () => {
-    it("returns existing documents for authenticated user", async () => {
-      const authToken = await tc.auth.createUser({ role: "employee" });
-      await tc.fixtures.createDocument({ name: "doc-1" });
+Tests drive a `TestContext` (`tc`): `tc.auth` to create authenticated users, `tc.fixtures` for setup, `tc.http` to call endpoints, `tc.jobs` to drain queues, and `tc.fakes` to assert calls to faked externals. Read responses off `response.parsedBody`, not `response.body`; for JSON:API endpoints the payload sits under `.data`.
 
-      const response = await tc.http.get("/documents", {
-        headers: { authorization: authToken },
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.parsedBody.data).toHaveLength(1);
-    });
-  });
-});
-```
+Nest a `describe` per resource, then a `describe` per endpoint (`"GET /documents"`), then one `it` per behavior.
 
 **Qualities:** One behavior per test, no shared setup, no mocking, <1 second, parallelizable.
 
@@ -42,18 +28,4 @@ Migration files that need NestJS providers must use `getFromContainer(SomeServic
 
 **Testing Background Jobs:**
 
-Don't spy on job enqueuing. Instead, run the job and assert side effects:
-
-```typescript
-// Run the job
-await tc.jobs.drainQueues("shift.reminder");
-
-// Assert side effects
-const shift = await tc.http.get(`/shifts/${shiftId}`);
-expect(shift.reminderSent).toBe(true);
-
-// Or check fakes for external calls
-expect(tc.fakes.notifications.requests).toHaveLength(1);
-```
-
-Side effects to assert: database changes, published messages, external HTTP requests.
+Don't spy on job enqueuing. Run the job with `tc.jobs.drainQueues("<queue.name>")`, then assert its side effects: database changes, published messages, and external HTTP requests (via `tc.fakes`).

@@ -1,6 +1,6 @@
 ---
 name: investigate-ticket
-description: Use when investigating a bug, incident, or issue before implementation. Researches codebase, queries Datadog, and presents structured findings with handoff options. Also use when asked to "look into" or "investigate" something.
+description: "Investigate a bug, incident, or issue before implementation: research the codebase, query Datadog, present findings with handoff options. Also on 'look into'."
 ---
 
 # Investigate Ticket

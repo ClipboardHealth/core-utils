@@ -1,6 +1,6 @@
 ---
 name: local-package
-description: Use Clipboard's internal CLI to link and unlink @clipboard-health packages across repositories for local development. Use when testing local package changes, linking @clipboard-health packages between repos, or using the cbh CLI local-package command.
+description: "Link and unlink @clipboard-health packages across repositories for local development via the cbh CLI local-package command."
 ---
 
 # Local Package Development

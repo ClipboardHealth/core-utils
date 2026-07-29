@@ -18,11 +18,11 @@ Use the dbt-mcp server to:
 
 - When you need to answer data-related questions or obtain analytics by querying the Snowflake data warehouse, use the `snowflake` MCP tool.
 - Set the database context properly in queries: use fully qualified table names or set the database context to avoid connection errors.
-- As of mid-2026, the `describe_object` tool in the Snowflake MCP has a bug where it misinterprets the target_object structure, treating the table name as a database name and causing 404 "database does not exist" errors. Use `run_snowflake_query` with "DESCRIBE TABLE" instead to get table schema information.
+- The Snowflake MCP's `describe_object` misreads `target_object`, treating the table name as a database name and returning 404 "database does not exist". Use `run_snowflake_query` with `DESCRIBE TABLE` instead. (Workaround observed 2026-07; retest `describe_object` and delete this bullet once it works.)
 
 ## Guidelines when using this knowledge
 
-- Read all of the docs.yml files to learn about the analytics schema.
+- Learn the schema from the `docs.yml` files covering the models you're querying — search by model or column name rather than reading every `docs.yml` in the repo.
 - When in doubt, read the code in the data-modeling repo to learn how each column is calculated and where the data is coming from
 - Strongly prefer mart models (defined inside the mart folder, those that don't have an int- or stg- prefix) before int- and stg- models
 - Strongly prefer to query tables under the analytics schema, before querying any other schemas like airbyte_db/hevo_database

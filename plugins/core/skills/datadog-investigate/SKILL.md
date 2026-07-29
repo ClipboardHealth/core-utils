@@ -1,6 +1,6 @@
 ---
 name: datadog-investigate
-description: Investigate production issues by querying Datadog logs, metrics, and APM traces, then correlating findings with the codebase. Use this skill whenever the user mentions production errors, Datadog, observability, log investigation, latency spikes, error rate increases, 500s, trace IDs, monitor alerts, or wants to debug any service issue in a deployed environment.
+description: "Investigate production issues via Datadog logs, metrics, and APM traces correlated with the codebase. For errors, 500s, latency spikes, trace IDs, and monitor alerts."
 ---
 
 # Datadog Investigation Skill

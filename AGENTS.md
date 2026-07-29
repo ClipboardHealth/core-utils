@@ -2,15 +2,18 @@
 
 # Coding Rules
 
-IMPORTANT: You MUST read the relevant rule files below before writing or reviewing code.
+Read the rule files relevant to the code you're changing or reviewing.
 
 | Rule                    | File                                  | When to Read                                                                                                          |
 | ----------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
 | Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
+| Date & Time             | .rules/common/dateTime.md             | Working with dates, times, timezones, or date comparisons                                                             |
+| Error Handling          | .rules/common/errorHandling.md        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
 | Git Workflow            | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests                                                        |
 | Library Authoring       | .rules/common/libraryAuthoring.md     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib) |
 | Logging & Observability | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                  |
+| Rules Engine            | .rules/common/rulesEngine.md          | Writing or modifying @clipboard-health/rules-engine rule functions                                                    |
 | Testing                 | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                                    |
 | TypeScript              | .rules/common/typeScript.md           | Writing ANY TypeScript code                                                                                           |
 

@@ -5,10 +5,7 @@ import path from "node:path";
 import { PATHS } from "./constants";
 import { execAndLog } from "./execAndLog";
 
-const { packageRoot, outputDirectory } = PATHS;
-
-const PLUGIN_ROOT = path.join(packageRoot, "..", "..", "plugins", "core");
-const SKILLS_SOURCE = path.join(PLUGIN_ROOT, "skills");
+const { packageRoot, outputDirectory, skillsSource } = PATHS;
 
 const params = {
   timeout: 60_000,
@@ -27,7 +24,7 @@ async function build(): Promise<void> {
     cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), {
       recursive: true,
     }),
-    cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), {
+    cp(skillsSource, path.join(outputDirectory, "skills"), {
       recursive: true,
       filter: (source) => !isTestFile(source),
     }),
@@ -76,7 +73,7 @@ async function build(): Promise<void> {
 
 function isTestFile(source: string): boolean {
   // Consumers install the bundle without test dependencies, so omit test files from publication.
-  return /\.(?<type>spec|test)\.ts$/.test(source);
+  return /\.(?:spec|test)\.ts$/.test(source);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

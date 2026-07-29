@@ -60,6 +60,22 @@ describe(parseRuleFile, () => {
     expect(() => parseRuleFile({ content: input, filePath: "a/b.md" })).toThrow(/a\/b\.md/);
   });
 
+  it.each([">", ">-", "|", "|-", ">2", ">-2", ">2-", "> # note"])(
+    "throws for a `%s` block-scalar description rather than reading the indicator as the text",
+    (indicator) => {
+      const input = [
+        "---",
+        `description: ${indicator}`,
+        "  Text held on a following line, which the single-line pattern cannot see.",
+        "---",
+        "",
+        "# Heading",
+      ].join("\n");
+
+      expect(() => parseRuleFile({ content: input, filePath: "a/b.md" })).toThrow(/a\/b\.md/);
+    },
+  );
+
   it("defaults heading to filename when H1 is missing", () => {
     const input = ["---", "description: Some description", "---", "", "Body without heading"].join(
       "\n",
@@ -152,7 +168,10 @@ describe(generateAgentsIndex, () => {
 
     const actual = generateAgentsIndex(rules);
 
-    expect(actual).toContain("IMPORTANT: You MUST read the relevant rule files");
+    expect(actual).toContain(
+      "Read the rule files relevant to the code you're changing or reviewing.",
+    );
+    expect(actual).not.toContain("IMPORTANT: You MUST read");
     expect(actual).toContain("| A | .rules/common/a.md | When doing A |");
   });
 });

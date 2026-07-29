@@ -1,6 +1,6 @@
 ---
 name: create-groundcrew-ticket
-description: "Create Linear tickets that Groundcrew can pick up: assigned to the current Linear user, labeled with agent-*, tied to an implementation repository in the description, optionally linked to parent and blocker tickets, and written to use the core:cb-work implementation workflow."
+description: "Create a Linear ticket Groundcrew can pick up: assigned to the current user, agent-* label, implementation repo in the description, cb-work workflow."
 ---
 
 # Create Groundcrew Ticket
