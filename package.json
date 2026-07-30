@@ -22,10 +22,9 @@
     "knip": "NX_DAEMON=false knip --no-config-hints",
     "lint": "oxlint",
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
-    "plugin:version:check": "node scripts/embedPluginVersion.mts --check",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
-    "sync-ai-rules": "node scripts/embedPluginVersion.mts && nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
+    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"
   },
