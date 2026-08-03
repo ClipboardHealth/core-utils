@@ -55,7 +55,7 @@
     "husky": "9.1.7",
     "jscpd": "5.0.14",
     "jsonc-eslint-parser": "3.1.0",
-    "knip": "6.27.0",
+    "knip": "6.29.0",
     "lint-staged": "17.2.0",
     "markdownlint-cli2": "0.23.2",
     "nx": "22.7.7",
