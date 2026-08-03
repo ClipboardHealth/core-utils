@@ -68,7 +68,7 @@
     "tsx": "4.23.1",
     "typedoc": "0.28.20",
     "typescript": "5.9.3",
-    "vite": "8.1.5",
+    "vite": "8.2.0",
     "vitest": "4.1.10"
   },
   "overrides": {
