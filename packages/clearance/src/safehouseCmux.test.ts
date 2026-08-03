@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -58,6 +58,40 @@ describe(resolveSafehouseCmuxIntegration, () => {
     ]);
   });
 
+  it("includes cmux-owned Codex hook scripts when their directory exists", () => {
+    const tempHome = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-home-"));
+    const hooksDir = path.join(tempHome, ".cmux", "hooks");
+    try {
+      mkdirSync(hooksDir, { recursive: true });
+
+      const actual = resolveSafehouseCmuxIntegration({
+        env: { HOME: tempHome },
+        readFile: () => "",
+      });
+
+      expect(actual.addDirsReadOnly).toContain(hooksDir);
+    } finally {
+      rmSync(tempHome, { force: true, recursive: true });
+    }
+  });
+
+  it("includes the existing Sentry cache as a writable cmux directory", () => {
+    const tempHome = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-home-"));
+    const sentryCacheDir = path.join(tempHome, "Library", "Caches", "io.sentry");
+    try {
+      mkdirSync(sentryCacheDir, { recursive: true });
+
+      const actual = resolveSafehouseCmuxIntegration({
+        env: { HOME: tempHome },
+        readFile: () => "",
+      });
+
+      expect(actual.addDirs).toStrictEqual([sentryCacheDir]);
+    } finally {
+      rmSync(tempHome, { force: true, recursive: true });
+    }
+  });
+
   it("prefers XDG_STATE_HOME and dedupes the socket directory", () => {
     const actual = resolveSafehouseCmuxIntegration({
       env: {
@@ -82,6 +116,7 @@ describe(resolveSafehouseCmuxIntegration, () => {
     });
 
     expect(actual.addDirsReadOnly).toStrictEqual(["/Applications/cmux.app"]);
+    expect(actual.addDirs).toStrictEqual([]);
   });
 
   it("reports cmux wrapper env names that have not been reviewed", () => {

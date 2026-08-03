@@ -158,8 +158,10 @@ alias claude-proxy="$SAFEHOUSE/safehouse-claude-proxy"
 `safehouse-claude-proxy` runs Claude through Safehouse with
 `--permission-mode auto`. When launched from a cmux terminal, it preserves
 cmux's Claude shim by forwarding the cmux session environment and granting
-read-only access to the cmux app/socket state. It also points the shim at the
-real Claude binary so the shim does not recurse through itself.
+read-only access to the cmux app/socket state and generated Codex hooks. The
+integration also grants cmux's existing Sentry cache write access so diagnostics
+cannot corrupt hook JSON output. It points the shim at the real Claude binary so
+the shim does not recurse through itself.
 
 The cmux environment pass-through is an explicit reviewed allowlist. If a cmux
 update adds new `CMUX_*` variables to its Claude wrapper contract,
