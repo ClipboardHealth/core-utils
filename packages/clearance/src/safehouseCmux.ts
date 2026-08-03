@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 export const SAFEHOUSE_CMUX_ENV_PASS = [
@@ -102,15 +102,22 @@ function resolveCmuxReadOnlyDirs(input: { env: NodeJS.ProcessEnv }): readonly st
   const xdgStateHome = normalizeAbsolutePath({ value: input.env["XDG_STATE_HOME"] });
   const stateDir =
     xdgStateHome === undefined ? homeStateDir({ env: input.env }) : path.join(xdgStateHome, "cmux");
+  const hooksDir = homeHooksDir({ env: input.env });
   const socketPath = normalizeAbsolutePath({ value: input.env["CMUX_SOCKET_PATH"] });
 
   return [
     ...new Set([
       "/Applications/cmux.app",
       ...(stateDir === undefined ? [] : [stateDir]),
+      ...(hooksDir === undefined || !existsSync(hooksDir) ? [] : [hooksDir]),
       ...(socketPath === undefined ? [] : [path.dirname(socketPath)]),
     ]),
   ];
+}
+
+function homeHooksDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
+  const home = normalizeAbsolutePath({ value: input.env["HOME"] });
+  return home === undefined ? undefined : path.join(home, ".cmux", "hooks");
 }
 
 function homeStateDir(input: { env: NodeJS.ProcessEnv }): string | undefined {

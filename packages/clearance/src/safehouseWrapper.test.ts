@@ -266,19 +266,22 @@ describe("safehouse-claude-proxy wrapper", () => {
 
   it("keeps the cmux claude shim active while pointing it at the real claude binary", async () => {
     const shimRoot = path.join(tempDir, "cmux-cli-shims", "surface-1");
+    const hooksDir = path.join(tempDir, ".cmux", "hooks");
+    mkdirSync(hooksDir, { recursive: true });
     const paths = await runClaudeProxy({
       args: ["--version"],
       env: {
         CMUX_CLAUDE_WRAPPER_SHIM: path.join(shimRoot, "claude"),
         CMUX_CLAUDE_WRAPPER_SHIM_ROOT: shimRoot,
         CMUX_SOCKET_PATH: path.join(tempDir, "cmux.sock"),
+        HOME: tempDir,
       },
       tempDir,
     });
 
     expect(readLines(paths.safehouseArgsPath)).toContain(EXPECTED_CMUX_ENV_PASS_FLAG);
     expect(readLines(paths.safehouseArgsPath)).toContain(
-      `--add-dirs-ro=/Applications/cmux.app:${paths.effectiveHome}/.local/state/cmux:${tempDir}`,
+      `--add-dirs-ro=/Applications/cmux.app:${paths.effectiveHome}/.local/state/cmux:${hooksDir}:${tempDir}`,
     );
     expect(readLines(paths.shimTracePath)).toStrictEqual(["shim"]);
     expect(readLines(paths.claudeCustomPathPath)).toStrictEqual([

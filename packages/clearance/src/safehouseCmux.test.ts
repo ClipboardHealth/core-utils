@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -56,6 +56,23 @@ describe(resolveSafehouseCmuxIntegration, () => {
       "/Users/dev/.local/state/cmux",
       "/tmp/cmux-state",
     ]);
+  });
+
+  it("includes cmux-owned Codex hook scripts when their directory exists", () => {
+    const tempHome = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-home-"));
+    const hooksDir = path.join(tempHome, ".cmux", "hooks");
+    try {
+      mkdirSync(hooksDir, { recursive: true });
+
+      const actual = resolveSafehouseCmuxIntegration({
+        env: { HOME: tempHome },
+        readFile: () => "",
+      });
+
+      expect(actual.addDirsReadOnly).toContain(hooksDir);
+    } finally {
+      rmSync(tempHome, { force: true, recursive: true });
+    }
   });
 
   it("prefers XDG_STATE_HOME and dedupes the socket directory", () => {
