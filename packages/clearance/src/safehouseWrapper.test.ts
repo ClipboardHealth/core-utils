@@ -267,7 +267,9 @@ describe("safehouse-claude-proxy wrapper", () => {
   it("keeps the cmux claude shim active while pointing it at the real claude binary", async () => {
     const shimRoot = path.join(tempDir, "cmux-cli-shims", "surface-1");
     const hooksDir = path.join(tempDir, ".cmux", "hooks");
+    const sentryCacheDir = path.join(tempDir, "Library", "Caches", "io.sentry");
     mkdirSync(hooksDir, { recursive: true });
+    mkdirSync(sentryCacheDir, { recursive: true });
     const paths = await runClaudeProxy({
       args: ["--version"],
       env: {
@@ -280,6 +282,7 @@ describe("safehouse-claude-proxy wrapper", () => {
     });
 
     expect(readLines(paths.safehouseArgsPath)).toContain(EXPECTED_CMUX_ENV_PASS_FLAG);
+    expect(readLines(paths.safehouseArgsPath)).toContain(`--add-dirs=${sentryCacheDir}`);
     expect(readLines(paths.safehouseArgsPath)).toContain(
       `--add-dirs-ro=/Applications/cmux.app:${paths.effectiveHome}/.local/state/cmux:${hooksDir}:${tempDir}`,
     );
@@ -338,6 +341,9 @@ describe("safehouse-claude-proxy wrapper", () => {
     );
     expect(readLines(paths.safehouseArgsPath)).not.toContain(
       expect.stringContaining("--add-dirs-ro=/Applications/cmux.app"),
+    );
+    expect(readLines(paths.safehouseArgsPath)).not.toContain(
+      expect.stringContaining("--add-dirs="),
     );
     expect(readLines(paths.claudeOutputPath)).toStrictEqual([
       "--permission-mode",

@@ -51,6 +51,7 @@ export interface ResolveSafehouseCmuxIntegrationInput {
 }
 
 export interface SafehouseCmuxIntegration {
+  addDirs: readonly string[];
   addDirsReadOnly: readonly string[];
   claudeCommandPrelude: string;
   envPass: readonly string[];
@@ -69,12 +70,18 @@ export function resolveSafehouseCmuxIntegration(
   const readFile = input.readFile ?? defaultReadFile;
 
   return {
+    addDirs: resolveCmuxWritableDirs({ env }),
     addDirsReadOnly: resolveCmuxReadOnlyDirs({ env }),
     claudeCommandPrelude: SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
     envPass: SAFEHOUSE_CMUX_ENV_PASS,
     isActive: isSafehouseCmuxIntegrationActive({ env }),
     unreviewedEnvNames: resolveUnreviewedCmuxEnvNames({ env, readFile }),
   };
+}
+
+function resolveCmuxWritableDirs(input: { env: NodeJS.ProcessEnv }): readonly string[] {
+  const sentryCacheDir = homeSentryCacheDir({ env: input.env });
+  return sentryCacheDir === undefined || !existsSync(sentryCacheDir) ? [] : [sentryCacheDir];
 }
 
 export function safehouseCmuxIntegrationWarningLines(input: {
@@ -118,6 +125,11 @@ function resolveCmuxReadOnlyDirs(input: { env: NodeJS.ProcessEnv }): readonly st
 function homeHooksDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
   const home = normalizeAbsolutePath({ value: input.env["HOME"] });
   return home === undefined ? undefined : path.join(home, ".cmux", "hooks");
+}
+
+function homeSentryCacheDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
+  const home = normalizeAbsolutePath({ value: input.env["HOME"] });
+  return home === undefined ? undefined : path.join(home, "Library", "Caches", "io.sentry");
 }
 
 function homeStateDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
