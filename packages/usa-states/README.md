@@ -1,6 +1,6 @@
 # @clipboard-health/usa-states <!-- omit from toc -->
 
-Canonical US state and territory list and `StateCode` type.
+Canonical US state and territory list, `StateCode` and `StateName` types, and name/code normalizers.
 
 ## Table of contents <!-- omit from toc -->
 
@@ -52,10 +52,21 @@ toStateName({ value: "ca" });
 toStateName({ value: "Atlantis" });
 // => undefined
 
-function formatState(name: StateName): string {
-  return `The great state of ${name}`;
+interface LabelInput {
+  name: StateName;
+}
+
+function toLabel(input: LabelInput): string {
+  const { name } = input;
+
+  return `Licensed in ${name}`;
 }
 ```
+
+Prefer storing `StateCode` and resolving to `StateName` only for display; codes are the stable
+representation to compare across services. Both normalizers return `undefined` for unrecognized
+input — treat that as a validation failure rather than falling back to the raw value, otherwise
+unnormalized input reaches storage.
 
 ## Local development commands
 
