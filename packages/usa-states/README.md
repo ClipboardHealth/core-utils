@@ -33,13 +33,13 @@ function parseStateCode(value: string): StateCode | undefined {
 }
 
 // Normalize a state name or code (case- and whitespace-insensitive) to a `StateCode`.
-toStateCode("  california ");
+toStateCode({ value: "  california " });
 // => "CA"
-toStateCode("Atlantis");
+toStateCode({ value: "Atlantis" });
 // => undefined
 
 // Normalize a list of names or codes to a `Set<StateCode>`, dropping unknown values.
-toStateCodeSet(["California", "ny", "Atlantis"]);
+toStateCodeSet({ values: ["California", "ny", "Atlantis"] });
 // => Set { "CA", "NY" }
 ```
 
