@@ -28,13 +28,19 @@ npm install --save-dev @clipboard-health/ai-rules
 
 2. Choose the profile that matches your project type:
 
-   | Profile        | Includes                    | Use For                                |
-   | -------------- | --------------------------- | -------------------------------------- |
-   | `common`       | common                      | TypeScript libraries, generic projects |
-   | `frontend`     | common + frontend           | React apps, web apps                   |
-   | `backend`      | common + backend            | NestJS services, APIs                  |
-   | `fullstack`    | common + frontend + backend | Monorepos, fullstack apps              |
-   | `datamodeling` | datamodeling                | DBT data modeling                      |
+   | Profile          | Includes                                                | Use For                                       |
+   | ---------------- | ------------------------------------------------------- | --------------------------------------------- |
+   | `common`         | common + commonTs                                       | TypeScript libraries, generic projects        |
+   | `frontend`       | common + commonTs + frontend                            | React apps, web apps                          |
+   | `backend`        | common + commonTs + backend + infrastructure            | NestJS services, APIs                         |
+   | `fullstack`      | common + commonTs + frontend + backend + infrastructure | Monorepos, fullstack apps                     |
+   | `datamodeling`   | datamodeling                                            | DBT data modeling                             |
+   | `infrastructure` | common + infrastructure                                 | Terraform estates, GitHub Actions, CI tooling |
+
+   The `common` category holds rules that apply to any repository (commit conventions, configuration
+   and secrets, logging, testing). `commonTs` holds the rules that only apply where application code
+   lives (TypeScript, error handling, library authoring, rules engine). Repositories with no
+   application code should use `infrastructure`, which takes the former without the latter.
 
 3. Add it to your `package.json`:
 
@@ -120,7 +126,6 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | ------------------------ | ----------------------------------------------------------------------------------------- |
 | `backend/architecture`   | Structuring NestJS modules, services, repos: three-tier, microservices, ts-rest contracts |
 | `backend/asyncMessaging` | Working with queues, async messaging, or background jobs                                  |
-| `backend/infrastructure` | Provisioning infrastructure: Terraform, Docker, ECS, DNS                                  |
 | `backend/mongodb`        | Working with MongoDB/Mongoose: schemas, indexes, queries, transactions, migrations        |
 | `backend/notifications`  | Implementing notifications via Knock: push notifications, deep links, workflow design     |
 | `backend/postgres`       | Working with Postgres: column types, schema changes, query patterns, Prisma TypedSQL      |
@@ -129,19 +134,24 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 ### common
 
-| Rule ID                       | When to Read                                                                                                          |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
-| `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
-| `common/dateTime`             | Working with dates, times, timezones, or date comparisons                                                             |
-| `common/errorHandling`        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
-| `common/featureFlags`         | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                         |
-| `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                                                        |
-| `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib) |
-| `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                  |
-| `common/rulesEngine`          | Writing or modifying @clipboard-health/rules-engine rule functions                                                    |
-| `common/testing`              | Writing unit tests: conventions, naming, structure                                                                    |
-| `common/typeScript`           | Writing ANY TypeScript code                                                                                           |
+| Rule ID                       | When to Read                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages |
+| `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                           |
+| `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog     |
+| `common/testing`              | Writing unit tests: conventions, naming, structure                                       |
+
+### commonTs
+
+| Rule ID                     | When to Read                                                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `commonTs/coreLibraries`    | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
+| `commonTs/dateTime`         | Working with dates, times, timezones, or date comparisons                                                             |
+| `commonTs/errorHandling`    | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
+| `commonTs/featureFlags`     | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                         |
+| `commonTs/libraryAuthoring` | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib) |
+| `commonTs/rulesEngine`      | Writing or modifying @clipboard-health/rules-engine rule functions                                                    |
+| `commonTs/typeScript`       | Writing ANY TypeScript code                                                                                           |
 
 ### datamodeling
 
@@ -163,6 +173,12 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook |
 | `frontend/styling`         | Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS                                      |
 | `frontend/testing`         | Writing frontend tests: React Testing Library, component tests                                               |
+
+### infrastructure
+
+| Rule ID                         | When to Read                                             |
+| ------------------------------- | -------------------------------------------------------- |
+| `infrastructure/infrastructure` | Provisioning infrastructure: Terraform, Docker, ECS, DNS |
 
 <!-- END: Auto-generated by ./scripts/populateReadme.ts -->
 

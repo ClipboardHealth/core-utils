@@ -93,7 +93,14 @@ describe(discoverRules, () => {
 
     const uniqueCategories = [...new Set(actual.map((rule) => rule.category))];
     const categories = uniqueCategories.toSorted();
-    expect(categories).toStrictEqual(["backend", "common", "datamodeling", "frontend"]);
+    expect(categories).toStrictEqual([
+      "backend",
+      "common",
+      "commonTs",
+      "datamodeling",
+      "frontend",
+      "infrastructure",
+    ]);
   });
 
   it("returns every rule with a non-empty single-line description", async () => {
@@ -109,11 +116,11 @@ describe(discoverRules, () => {
   it("includes known rules with expected metadata", async () => {
     const actual = await discoveredRules;
 
-    const typeScript = actual.find((rule) => rule.id === "common/typeScript");
+    const typeScript = actual.find((rule) => rule.id === "commonTs/typeScript");
     expect(typeScript).toMatchObject({
-      category: "common",
+      category: "commonTs",
       heading: "TypeScript",
-      relativePath: path.join("common", "typeScript.md"),
+      relativePath: path.join("commonTs", "typeScript.md"),
     });
   });
 });
@@ -199,6 +206,18 @@ describe("README", () => {
 });
 
 describe("profiles", () => {
+  async function resolveProfile(profile: keyof typeof PROFILES): Promise<string[]> {
+    const rules = await discoveredRules;
+    const resolved = resolveRules({
+      rules,
+      profileCategories: PROFILES[profile].include,
+      includes: [],
+      excludes: [],
+    });
+
+    return resolved.rules.map((rule) => rule.id).toSorted();
+  }
+
   it("references only categories that exist on disk", async () => {
     const rules = await discoveredRules;
     const categories = new Set(rules.map((rule) => rule.category));
@@ -206,5 +225,48 @@ describe("profiles", () => {
     const profileCategories = Object.values(PROFILES).flatMap((profile) => profile.include);
     const missing = profileCategories.filter((category) => !categories.has(category));
     expect(missing).toStrictEqual([]);
+  });
+
+  it("offers an infrastructure profile for repositories with no application code", async () => {
+    const actual = await resolveProfile("infrastructure");
+
+    expect(actual).toStrictEqual([
+      "common/configuration",
+      "common/gitWorkflow",
+      "common/loggingObservability",
+      "common/testing",
+      "infrastructure/infrastructure",
+    ]);
+  });
+
+  it("keeps TypeScript-specific guidance out of the infrastructure profile", async () => {
+    const actual = await resolveProfile("infrastructure");
+
+    expect(actual).not.toContain("commonTs/typeScript");
+    expect(actual).not.toContain("commonTs/errorHandling");
+    expect(actual).not.toContain("commonTs/libraryAuthoring");
+    expect(actual).not.toContain("commonTs/rulesEngine");
+  });
+
+  it("reaches infrastructure guidance without opting into a service profile", async () => {
+    const actual = await resolveProfile("infrastructure");
+
+    expect(actual).toContain("infrastructure/infrastructure");
+    expect(actual.filter((id) => id.startsWith("backend/"))).toStrictEqual([]);
+  });
+
+  it.each(["common", "frontend", "backend", "fullstack"] as const)(
+    "keeps TypeScript guidance in the %s profile",
+    async (profile) => {
+      const actual = await resolveProfile(profile);
+
+      expect(actual).toContain("commonTs/typeScript");
+      expect(actual).toContain("common/gitWorkflow");
+    },
+  );
+
+  it("keeps infrastructure guidance in the backend and fullstack profiles", async () => {
+    expect(await resolveProfile("backend")).toContain("infrastructure/infrastructure");
+    expect(await resolveProfile("fullstack")).toContain("infrastructure/infrastructure");
   });
 });

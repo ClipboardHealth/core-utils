@@ -24,7 +24,7 @@
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
-    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude common/featureFlags",
+    "sync-ai-rules": "nx build ai-rules && node ./dist/packages/ai-rules/scripts/sync.js common --exclude commonTs/featureFlags",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"
   },
