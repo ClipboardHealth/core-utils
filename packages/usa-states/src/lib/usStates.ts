@@ -67,6 +67,8 @@ export const US_STATES = deepFreeze(RAW_US_STATES);
 
 export type StateCode = (typeof US_STATES)[number]["code"];
 
+export type StateName = (typeof US_STATES)[number]["name"];
+
 export interface UsState {
   name: string;
   code: StateCode;
