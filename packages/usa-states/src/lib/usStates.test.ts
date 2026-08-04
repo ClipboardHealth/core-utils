@@ -37,6 +37,12 @@ describe("US_STATES", () => {
     expect(actual).toContainEqual({ name: "District of Columbia", code: "DC" });
   });
 
+  it('spells Micronesia with a lowercase "of"', () => {
+    const actual = US_STATES;
+
+    expect(actual).toContainEqual({ name: "Federated States of Micronesia", code: "FM" });
+  });
+
   it.each(TERRITORY_CODES)("includes the territory with code %s", (code) => {
     const actual = US_STATES.some((state) => state.code === code);
 

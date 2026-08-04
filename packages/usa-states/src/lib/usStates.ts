@@ -11,7 +11,9 @@ const RAW_US_STATES = [
   { name: "Connecticut", code: "CT" },
   { name: "Delaware", code: "DE" },
   { name: "District of Columbia", code: "DC" },
-  // Lowercase "of" matches cbh-mobile-app and documents-service-backend; don't "correct" to cbh-admin-frontend's capitalized variant, which is the outlier.
+  // Lowercase "of" is the official English spelling and is consistent with "District of Columbia"
+  // above. Some consumers still hold a capitalized "Of" variant; match names through `toStateCode`
+  // or `toStateName` rather than by exact string.
   { name: "Federated States of Micronesia", code: "FM" },
   { name: "Florida", code: "FL" },
   { name: "Georgia", code: "GA" },
