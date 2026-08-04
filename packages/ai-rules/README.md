@@ -112,7 +112,23 @@ git add .rules/ .agents/ AGENTS.md CLAUDE.md
 git commit -m "chore: update AI coding rules"
 ```
 
-Rules are occasionally split so each one carries a narrower retrieval trigger. If you pin individual rule ids with `--include` rather than taking a whole category, check the diff for new ids after upgrading: a stale `--include` keeps resolving, so you lose the split-out rules without a warning.
+Rules are occasionally split or moved between categories so each one carries a narrower retrieval trigger. If you pin individual rule ids with `--include` or `--exclude` rather than taking a whole category, check the diff for renamed ids after upgrading. Neither direction fails loudly:
+
+- A stale `--include` keeps resolving, so you lose the split-out rules.
+- A stale `--exclude` stops matching, so a rule you deliberately suppressed is added back.
+
+This release split the `common` category into `common` and `commonTs`, and moved `backend/infrastructure` to `infrastructure/infrastructure`. Renamed ids:
+
+| Old id                    | New id                          |
+| ------------------------- | ------------------------------- |
+| `common/coreLibraries`    | `commonTs/coreLibraries`        |
+| `common/dateTime`         | `commonTs/dateTime`             |
+| `common/errorHandling`    | `commonTs/errorHandling`        |
+| `common/featureFlags`     | `commonTs/featureFlags`         |
+| `common/libraryAuthoring` | `commonTs/libraryAuthoring`     |
+| `common/rulesEngine`      | `commonTs/rulesEngine`          |
+| `common/typeScript`       | `commonTs/typeScript`           |
+| `backend/infrastructure`  | `infrastructure/infrastructure` |
 
 ## Available Rules
 

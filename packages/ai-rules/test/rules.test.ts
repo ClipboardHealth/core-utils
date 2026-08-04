@@ -269,4 +269,26 @@ describe("profiles", () => {
     expect(await resolveProfile("backend")).toContain("infrastructure/infrastructure");
     expect(await resolveProfile("fullstack")).toContain("infrastructure/infrastructure");
   });
+
+  // Pins what every profile resolves to. Update deliberately: a change here changes the rules
+  // consuming repositories receive on their next upgrade.
+  it.each([
+    ["common", ["common", "commonTs"]],
+    ["frontend", ["common", "commonTs", "frontend"]],
+    ["backend", ["common", "commonTs", "backend", "infrastructure"]],
+    ["fullstack", ["common", "commonTs", "frontend", "backend", "infrastructure"]],
+    ["datamodeling", ["datamodeling"]],
+    ["infrastructure", ["common", "infrastructure"]],
+  ] as const)(
+    "resolves the %s profile to exactly its declared categories",
+    async (profile, categories) => {
+      const rules = await discoveredRules;
+      const expected = rules
+        .filter((rule) => (categories as readonly string[]).includes(rule.category))
+        .map((rule) => rule.id)
+        .toSorted();
+
+      expect(await resolveProfile(profile)).toStrictEqual(expected);
+    },
+  );
 });
