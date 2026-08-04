@@ -20,8 +20,10 @@ npm install @clipboard-health/usa-states
 import {
   isStateCode,
   type StateCode,
+  type StateName,
   toStateCode,
   toStateCodeSet,
+  toStateName,
   US_STATES,
 } from "@clipboard-health/usa-states";
 
@@ -41,6 +43,18 @@ toStateCode({ value: "Atlantis" });
 // Normalize a list of names or codes to a `Set<StateCode>`, dropping unknown values.
 toStateCodeSet({ values: ["California", "ny", "Atlantis"] });
 // => Set { "CA", "NY" }
+
+// Normalize a state name or code (case- and whitespace-insensitive) to a canonical `StateName`.
+toStateName({ value: "  california " });
+// => "California"
+toStateName({ value: "ca" });
+// => "California"
+toStateName({ value: "Atlantis" });
+// => undefined
+
+function formatState(name: StateName): string {
+  return `The great state of ${name}`;
+}
 ```
 
 ## Local development commands

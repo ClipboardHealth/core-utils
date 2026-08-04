@@ -1,4 +1,4 @@
-import { type StateCode, US_STATES } from "./usStates";
+import { type StateCode, type StateName, US_STATES } from "./usStates";
 
 const TERRITORY_CODES = ["AS", "FM", "GU", "MH", "MP", "PR", "PW", "VI"] as const;
 
@@ -47,6 +47,14 @@ describe("US_STATES", () => {
     const code: StateCode = "CA";
 
     const actual = US_STATES.some((state) => state.code === code);
+
+    expect(actual).toBe(true);
+  });
+
+  it("derives a StateName literal type from the name field", () => {
+    const name: StateName = "California";
+
+    const actual = US_STATES.some((state) => state.name === name);
 
     expect(actual).toBe(true);
   });
