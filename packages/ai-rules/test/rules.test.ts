@@ -15,6 +15,18 @@ const PACKAGE_ROOT = path.join(__dirname, "..");
 const RULES_ROOT = path.join(PACKAGE_ROOT, "rules");
 const discoveredRules = discoverRules(RULES_ROOT);
 
+async function resolveProfile(profile: keyof typeof PROFILES): Promise<string[]> {
+  const rules = await discoveredRules;
+  const resolved = resolveRules({
+    rules,
+    profileCategories: PROFILES[profile].include,
+    includes: [],
+    excludes: [],
+  });
+
+  return resolved.rules.map((rule) => rule.id).toSorted();
+}
+
 function buildRule(overrides: Partial<RuleMetadata> & { id: string }): RuleMetadata {
   const [category = "", name = ""] = overrides.id.split("/");
   return {
@@ -206,18 +218,6 @@ describe("README", () => {
 });
 
 describe("profiles", () => {
-  async function resolveProfile(profile: keyof typeof PROFILES): Promise<string[]> {
-    const rules = await discoveredRules;
-    const resolved = resolveRules({
-      rules,
-      profileCategories: PROFILES[profile].include,
-      includes: [],
-      excludes: [],
-    });
-
-    return resolved.rules.map((rule) => rule.id).toSorted();
-  }
-
   it("references only categories that exist on disk", async () => {
     const rules = await discoveredRules;
     const categories = new Set(rules.map((rule) => rule.category));
