@@ -11,9 +11,9 @@
 <li><a href="../modules/_clipboard-health_playwright-toolkit.html">@clipboard-health/playwright-toolkit</a></li>
 <li><a href="" aria-current="page">FetchMailpitValueResult</a></li></ul>
 <h1>Interface FetchMailpitValueResult</h1></div>
-<div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">FetchMailpitValueResult</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#messageid">messageId</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#value">value</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">FetchMailpitValueResult</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#messagecreatedat">messageCreatedAt</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#messageid">messageId</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#pollingdiagnostics">pollingDiagnostics</a><span class="tsd-signature-symbol">:</span> <a href="_clipboard-health_playwright-toolkit.MailpitPollingDiagnostics.html" class="tsd-signature-type tsd-kind-interface">MailpitPollingDiagnostics</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#value">value</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/47adc94c78946f463130a0f039dc2838f6d30e53/packages/playwright-toolkit/src/lib/mailpit.ts#L47">packages/playwright-toolkit/src/lib/mailpit.ts:47</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/4f04fae8a9619bfd2a23a3d1acce1cbe79a1ede7/packages/playwright-toolkit/src/lib/mailpit.ts#L60">packages/playwright-toolkit/src/lib/mailpit.ts:60</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -21,22 +21,34 @@
 <div class="tsd-accordion-details">
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-index-list"><a href="#messageid" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>message<wbr/>Id</span></a>
+<div class="tsd-index-list"><a href="#messagecreatedat" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>message<wbr/>Created<wbr/>At</span></a>
+<a href="#messageid" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>message<wbr/>Id</span></a>
+<a href="#pollingdiagnostics" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>polling<wbr/>Diagnostics</span></a>
 <a href="#value" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>value</span></a>
 </div></section></div></details></section></section>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
 <section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="messagecreatedat"><span>message<wbr/>Created<wbr/>At</span><a href="#messagecreatedat" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">messageCreatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/4f04fae8a9619bfd2a23a3d1acce1cbe79a1ede7/packages/playwright-toolkit/src/lib/mailpit.ts#L63">packages/playwright-toolkit/src/lib/mailpit.ts:63</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="messageid"><span>message<wbr/>Id</span><a href="#messageid" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">messageId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/47adc94c78946f463130a0f039dc2838f6d30e53/packages/playwright-toolkit/src/lib/mailpit.ts#L49">packages/playwright-toolkit/src/lib/mailpit.ts:49</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/4f04fae8a9619bfd2a23a3d1acce1cbe79a1ede7/packages/playwright-toolkit/src/lib/mailpit.ts#L62">packages/playwright-toolkit/src/lib/mailpit.ts:62</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="pollingdiagnostics"><span>polling<wbr/>Diagnostics</span><a href="#pollingdiagnostics" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">pollingDiagnostics</span><span class="tsd-signature-symbol">:</span> <a href="_clipboard-health_playwright-toolkit.MailpitPollingDiagnostics.html" class="tsd-signature-type tsd-kind-interface">MailpitPollingDiagnostics</a></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/4f04fae8a9619bfd2a23a3d1acce1cbe79a1ede7/packages/playwright-toolkit/src/lib/mailpit.ts#L64">packages/playwright-toolkit/src/lib/mailpit.ts:64</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="value"><span>value</span><a href="#value" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/47adc94c78946f463130a0f039dc2838f6d30e53/packages/playwright-toolkit/src/lib/mailpit.ts#L48">packages/playwright-toolkit/src/lib/mailpit.ts:48</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/4f04fae8a9619bfd2a23a3d1acce1cbe79a1ede7/packages/playwright-toolkit/src/lib/mailpit.ts#L61">packages/playwright-toolkit/src/lib/mailpit.ts:61</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -53,7 +65,7 @@
 <h3>On This Page</h3></summary>
 <div class="tsd-accordion-details">
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
-<div><a href="#messageid"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>message<wbr/>Id</span></a><a href="#value"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>value</span></a></div></details></div></details></div>
+<div><a href="#messagecreatedat"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>message<wbr/>Created<wbr/>At</span></a><a href="#messageid"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>message<wbr/>Id</span></a><a href="#pollingdiagnostics"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>polling<wbr/>Diagnostics</span></a><a href="#value"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>value</span></a></div></details></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="../modules.html">core-utils</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
