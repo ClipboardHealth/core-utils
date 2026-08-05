@@ -36,6 +36,19 @@ describe("Mailpit polling", () => {
     expect(actual).toEqual({
       value: "https://app.test/v2/email-login-link?payload=old",
       messageId: "old",
+      messageCreatedAt: "2026-07-16T11:00:00.000Z",
+      pollingDiagnostics: {
+        searchAttempts: 1,
+        rawResultCount: 2,
+        postSentAfterCandidateCount: 2,
+        invalidOrMissingTimestampCount: 0,
+        fetchedMessageCount: 2,
+        extractionMissCount: 0,
+        excludedValueCount: 1,
+        transientRequestErrorCount: 0,
+        transientRequestErrorStatuses: [],
+        newestCandidateTimestamp: "2026-07-16T12:00:00.000Z",
+      },
     });
   });
 
@@ -58,7 +71,23 @@ describe("Mailpit polling", () => {
       timeoutMs: 1000,
     });
 
-    expect(actual).toEqual({ value: "81027033", messageId: "otp" });
+    expect(actual).toEqual({
+      value: "81027033",
+      messageId: "otp",
+      messageCreatedAt: "2026-07-16T12:00:00.000Z",
+      pollingDiagnostics: {
+        searchAttempts: 1,
+        rawResultCount: 1,
+        postSentAfterCandidateCount: 1,
+        invalidOrMissingTimestampCount: 0,
+        fetchedMessageCount: 1,
+        extractionMissCount: 0,
+        excludedValueCount: 0,
+        transientRequestErrorCount: 0,
+        transientRequestErrorStatuses: [],
+        newestCandidateTimestamp: "2026-07-16T12:00:00.000Z",
+      },
+    });
   });
 
   it("uses authenticated Mailpit HTTP search and message endpoints", async () => {
