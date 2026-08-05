@@ -81,6 +81,7 @@ describe("Cognito diagnostics", () => {
     });
 
     await getListener({ eventName: "response", listeners })(mockResponse);
+    await expectPromiseToRemainPending({ promise: actualPromise });
     redirect.resolve();
 
     await expect(actualPromise).resolves.toEqual({
@@ -128,6 +129,7 @@ describe("Cognito diagnostics", () => {
 
   it("fails without waiting for the redirect after a terminal Cognito response", async () => {
     const listeners = new Map<string, (value: Request | Response) => Promise<void> | void>();
+    const redirect = createDeferredPromise();
     const mockRequest = createMockPlaywrightRequest();
     const mockResponse = {
       request: () => mockRequest,
@@ -138,7 +140,7 @@ describe("Cognito diagnostics", () => {
     const mockPage = createMockPage({
       listeners,
       waitForUrl: async () => {
-        await createNeverSettlingPromise();
+        await redirect.promise;
       },
     });
 
@@ -154,10 +156,12 @@ describe("Cognito diagnostics", () => {
 
     const actualError = await actualErrorPromise;
     expect(actualError.message).toContain("status=400 Bad Request");
+    redirect.resolve();
   });
 
   it("fails without waiting for the redirect after a Cognito request failure", async () => {
     const listeners = new Map<string, (value: Request | Response) => Promise<void> | void>();
+    const redirect = createDeferredPromise();
     const sensitiveEmail = "sensitive-user@example.test";
     const sensitiveOtp = "12345678";
     const mockRequest = createMockPlaywrightRequest({
@@ -166,7 +170,7 @@ describe("Cognito diagnostics", () => {
     const mockPage = createMockPage({
       listeners,
       waitForUrl: async () => {
-        await createNeverSettlingPromise();
+        await redirect.promise;
       },
     });
 
@@ -184,6 +188,7 @@ describe("Cognito diagnostics", () => {
     expect(actualError.message).toContain('failureText="request failed for [redacted-email]');
     expect(actualError.message).not.toContain(sensitiveEmail);
     expect(actualError.message).not.toContain(sensitiveOtp);
+    redirect.resolve();
   });
 
   it("redacts the final redirect error, URL path, and retained cause", async () => {
@@ -300,12 +305,6 @@ function createDeferredPromise(): { promise: Promise<void>; resolve(): void } {
   };
 }
 
-async function createNeverSettlingPromise(): Promise<never> {
-  return await new Promise<never>((resolve) => {
-    void resolve;
-  });
-}
-
 async function captureError(params: { promise: Promise<unknown> }): Promise<Error> {
   try {
     await params.promise;
@@ -314,4 +313,16 @@ async function captureError(params: { promise: Promise<unknown> }): Promise<Erro
   }
 
   throw new Error("Expected promise to reject");
+}
+
+async function expectPromiseToRemainPending(params: { promise: Promise<unknown> }): Promise<void> {
+  const state = await Promise.race([
+    params.promise.then(
+      () => "resolved" as const,
+      () => "rejected" as const,
+    ),
+    Promise.resolve("pending" as const),
+  ]);
+
+  expect(state).toBe("pending");
 }
