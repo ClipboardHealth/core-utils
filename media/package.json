@@ -62,7 +62,7 @@
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
-    "promptfoo": "0.121.19",
+    "promptfoo": "0.121.20",
     "syncpack": "15.3.2",
     "ts-node": "11.0.0-beta.1",
     "tsx": "4.23.1",
