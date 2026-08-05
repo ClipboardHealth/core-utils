@@ -317,6 +317,7 @@ async function captureError(params: { promise: Promise<unknown> }): Promise<Erro
 
 async function expectPromiseToRemainPending(params: { promise: Promise<unknown> }): Promise<void> {
   const state = await Promise.race([
+    // eslint-disable-next-line promise/prefer-await-to-then -- Observing settlement without awaiting is the behavior under test.
     params.promise.then(
       () => "resolved" as const,
       () => "rejected" as const,
