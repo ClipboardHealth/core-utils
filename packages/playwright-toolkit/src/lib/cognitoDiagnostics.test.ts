@@ -1,3 +1,4 @@
+import { isNil, toError } from "@clipboard-health/util-ts";
 import type { Page, Request, Response, TestInfo } from "@playwright/test";
 
 import {
@@ -56,6 +57,37 @@ describe("Cognito diagnostics", () => {
     expect(mockFill).toHaveBeenCalledWith("123456");
   });
 
+  it("continues waiting for the redirect after a successful Cognito response", async () => {
+    const listeners = new Map<string, (value: Request | Response) => Promise<void> | void>();
+    const redirect = createDeferredPromise();
+    const mockRequest = createMockPlaywrightRequest();
+    const mockResponse = {
+      request: () => mockRequest,
+      status: () => 200,
+      statusText: () => "OK",
+      text: async () => await Promise.resolve('{"AuthenticationResult":"secret-token"}'),
+    } as unknown as Response;
+    const mockPage = createMockPage({
+      listeners,
+      waitForUrl: async () => {
+        await redirect.promise;
+      },
+    });
+
+    const actualPromise = fillOtpAndWaitForCognitoRedirect({
+      expectedUrl: /dashboard/,
+      otp: "123456",
+      page: mockPage,
+    });
+
+    await getListener({ eventName: "response", listeners })(mockResponse);
+    redirect.resolve();
+
+    await expect(actualPromise).resolves.toEqual({
+      redirectUrl: "https://app.example.test/dashboard",
+    });
+  });
+
   it("attaches sanitized Cognito response diagnostics when redirect fails", async () => {
     const listeners = new Map<string, (value: Request | Response) => Promise<void> | void>();
     const mockRequest = createMockPlaywrightRequest();
@@ -92,6 +124,66 @@ describe("Cognito diagnostics", () => {
       "cognito-otp-diagnostics",
       expect.objectContaining({ contentType: "image/png" }),
     );
+  });
+
+  it("fails without waiting for the redirect after a terminal Cognito response", async () => {
+    const listeners = new Map<string, (value: Request | Response) => Promise<void> | void>();
+    const mockRequest = createMockPlaywrightRequest();
+    const mockResponse = {
+      request: () => mockRequest,
+      status: () => 400,
+      statusText: () => "Bad Request",
+      text: async () => await Promise.resolve('{"message":"CodeMismatchException"}'),
+    } as unknown as Response;
+    const mockPage = createMockPage({
+      listeners,
+      waitForUrl: async () => {
+        await createNeverSettlingPromise();
+      },
+    });
+
+    const actualPromise = fillOtpAndWaitForCognitoRedirect({
+      expectedUrl: /dashboard/,
+      otp: "123456",
+      page: mockPage,
+      expectedUrlTimeoutMs: 10,
+    });
+    const actualErrorPromise = captureError({ promise: actualPromise });
+
+    await getListener({ eventName: "response", listeners })(mockResponse);
+
+    const actualError = await actualErrorPromise;
+    expect(actualError.message).toContain("status=400 Bad Request");
+  });
+
+  it("fails without waiting for the redirect after a Cognito request failure", async () => {
+    const listeners = new Map<string, (value: Request | Response) => Promise<void> | void>();
+    const sensitiveEmail = "sensitive-user@example.test";
+    const sensitiveOtp = "12345678";
+    const mockRequest = createMockPlaywrightRequest({
+      failureText: `request failed for ${sensitiveEmail} with code=${sensitiveOtp}`,
+    });
+    const mockPage = createMockPage({
+      listeners,
+      waitForUrl: async () => {
+        await createNeverSettlingPromise();
+      },
+    });
+
+    const actualPromise = fillOtpAndWaitForCognitoRedirect({
+      expectedUrl: /dashboard/,
+      otp: sensitiveOtp,
+      page: mockPage,
+      expectedUrlTimeoutMs: 10,
+    });
+    const actualErrorPromise = captureError({ promise: actualPromise });
+
+    await getListener({ eventName: "requestfailed", listeners })(mockRequest);
+
+    const actualError = await actualErrorPromise;
+    expect(actualError.message).toContain('failureText="request failed for [redacted-email]');
+    expect(actualError.message).not.toContain(sensitiveEmail);
+    expect(actualError.message).not.toContain(sensitiveOtp);
   });
 
   it("redacts the final redirect error, URL path, and retained cause", async () => {
@@ -160,9 +252,11 @@ function createMockPage(params: {
   } as unknown as Page;
 }
 
-function createMockPlaywrightRequest(): Request {
+function createMockPlaywrightRequest(params: { failureText?: string } = {}): Request {
   return {
-    failure: vi.fn<() => null>(() => null),
+    failure: vi.fn<() => { errorText: string } | null>(() =>
+      params.failureText === undefined ? null : { errorText: params.failureText },
+    ),
     headers: vi.fn<() => Record<string, string>>(() => ({
       "x-amz-target": "AWSCognitoIdentityProviderService.RespondToAuthChallenge",
     })),
@@ -186,4 +280,38 @@ function getListener(params: {
   }
 
   return listener;
+}
+
+function createDeferredPromise(): { promise: Promise<void>; resolve(): void } {
+  let resolvePromise: (() => void) | undefined;
+  const promise = new Promise<void>((resolve) => {
+    resolvePromise = resolve;
+  });
+
+  return {
+    promise,
+    resolve() {
+      if (isNil(resolvePromise)) {
+        throw new Error("Deferred promise was not initialized");
+      }
+
+      resolvePromise();
+    },
+  };
+}
+
+async function createNeverSettlingPromise(): Promise<never> {
+  return await new Promise<never>((resolve) => {
+    void resolve;
+  });
+}
+
+async function captureError(params: { promise: Promise<unknown> }): Promise<Error> {
+  try {
+    await params.promise;
+  } catch (error: unknown) {
+    return toError(error);
+  }
+
+  throw new Error("Expected promise to reject");
 }

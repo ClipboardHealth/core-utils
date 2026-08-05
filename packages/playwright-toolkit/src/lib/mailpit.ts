@@ -44,9 +44,24 @@ export interface CreateMailpitClientParams {
   requestTimeoutMs?: number | undefined;
 }
 
+export interface MailpitPollingDiagnostics {
+  searchAttempts: number;
+  rawResultCount: number;
+  postSentAfterCandidateCount: number;
+  invalidOrMissingTimestampCount: number;
+  fetchedMessageCount: number;
+  extractionMissCount: number;
+  excludedValueCount: number;
+  transientRequestErrorCount: number;
+  transientRequestErrorStatuses: string[];
+  newestCandidateTimestamp: string | undefined;
+}
+
 export interface FetchMailpitValueResult {
   value: string;
   messageId: string;
+  messageCreatedAt: string | undefined;
+  pollingDiagnostics: MailpitPollingDiagnostics;
 }
 
 export interface FetchMailpitValueParams {
@@ -215,7 +230,11 @@ export async function fetchMailpitValue(
           const cachedValue = valuesByMessageId.get(message.ID);
 
           if (cachedValue !== undefined && !excludedValues.has(cachedValue)) {
-            return { value: cachedValue, messageId: message.ID };
+            return createFetchMailpitValueResult({
+              message,
+              pollingSnapshot,
+              value: cachedValue,
+            });
           }
 
           continue;
@@ -235,7 +254,7 @@ export async function fetchMailpitValue(
           } else if (excludedValues.has(value)) {
             pollingSnapshot.excludedValueCount += 1;
           } else {
-            return { value, messageId: message.ID };
+            return createFetchMailpitValueResult({ message, pollingSnapshot, value });
           }
         } catch (error: unknown) {
           if (!isTransientMailpitError({ error })) {
@@ -497,6 +516,37 @@ function createMailpitPollingSnapshot(): MailpitPollingSnapshot {
     transientRequestErrorCount: 0,
     transientRequestErrorStatuses: new Set(),
     newestCandidateTimestampMs: undefined,
+  };
+}
+
+function createFetchMailpitValueResult(params: {
+  message: MailpitMessageSummary;
+  pollingSnapshot: MailpitPollingSnapshot;
+  value: string;
+}): FetchMailpitValueResult {
+  const messageTimestampMs = getMailpitMessageTimestampMs({ message: params.message });
+  const newestCandidateTimestampMs = params.pollingSnapshot.newestCandidateTimestampMs;
+
+  return {
+    value: params.value,
+    messageId: params.message.ID,
+    messageCreatedAt:
+      messageTimestampMs === undefined ? undefined : new Date(messageTimestampMs).toISOString(),
+    pollingDiagnostics: {
+      searchAttempts: params.pollingSnapshot.searchAttempts,
+      rawResultCount: params.pollingSnapshot.rawResultCount,
+      postSentAfterCandidateCount: params.pollingSnapshot.postSentAfterCandidateCount,
+      invalidOrMissingTimestampCount: params.pollingSnapshot.invalidOrMissingTimestampCount,
+      fetchedMessageCount: params.pollingSnapshot.fetchedMessageCount,
+      extractionMissCount: params.pollingSnapshot.extractionMissCount,
+      excludedValueCount: params.pollingSnapshot.excludedValueCount,
+      transientRequestErrorCount: params.pollingSnapshot.transientRequestErrorCount,
+      transientRequestErrorStatuses: [...params.pollingSnapshot.transientRequestErrorStatuses],
+      newestCandidateTimestamp:
+        newestCandidateTimestampMs === undefined
+          ? undefined
+          : new Date(newestCandidateTimestampMs).toISOString(),
+    },
   };
 }
 

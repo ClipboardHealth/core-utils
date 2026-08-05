@@ -81,7 +81,10 @@ export async function fillOtpAndWaitForCognitoRedirect(
   }
 
   try {
-    await params.page.waitForURL(params.expectedUrl, { timeout: timeoutMs });
+    await Promise.race([
+      params.page.waitForURL(params.expectedUrl, { timeout: timeoutMs }),
+      waitForTerminalCognitoChallengeFailure({ attemptPromise: monitor.result }),
+    ]);
     monitor.dispose();
     return { redirectUrl: params.page.url() };
   } catch (error: unknown) {
@@ -154,6 +157,23 @@ export function sanitizeCognitoDiagnosticText(params: { text: string }): string 
     .replaceAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted-email]")
     .replaceAll(/\+?\d[\d\s().-]{5,}\d/g, "[redacted-number]")
     .replaceAll(/\b\d{4,}\b/g, "[redacted-number]");
+}
+
+async function waitForTerminalCognitoChallengeFailure(params: {
+  attemptPromise: Promise<CognitoChallengeAttempt>;
+}): Promise<never> {
+  const attempt = await params.attemptPromise;
+
+  if (
+    attempt.type === "not-observed" ||
+    (attempt.type === "response" && attempt.status >= 200 && attempt.status < 300)
+  ) {
+    return await new Promise<never>((resolve) => {
+      void resolve;
+    });
+  }
+
+  throw new Error(`Terminal Cognito OTP challenge failure: ${formatAttempt(attempt)}`);
 }
 
 function createCognitoChallengeMonitor(params: {
