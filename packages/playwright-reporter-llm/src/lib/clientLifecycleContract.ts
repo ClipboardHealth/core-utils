@@ -80,6 +80,7 @@ export interface BrowserLifecycleRecord {
   traceId?: string;
   spanId?: string;
   apiGatewayRequestId?: string;
+  httpStatus?: number;
   protocol?: string;
   connection?: BrowserLifecycleConnection;
   encodedBytes?: BrowserLifecycleEncodedBytes;
@@ -233,6 +234,11 @@ function sanitizeRecord(value: unknown): BrowserLifecycleRecord | undefined {
   copyTraceIdentifiers({ source: record, target: sanitized });
   copyConnection({ source: record, target: sanitized });
   copyEncodedBytes({ source: record, target: sanitized });
+
+  const httpStatus = sanitizeLifecycleNonNegativeNumber(record["httpStatus"]);
+  if (httpStatus !== undefined) {
+    sanitized.httpStatus = httpStatus;
+  }
 
   const protocol = sanitizeLifecycleProtocol(record["protocol"]);
   if (protocol) {
