@@ -15,6 +15,18 @@ const PACKAGE_ROOT = path.join(__dirname, "..");
 const RULES_ROOT = path.join(PACKAGE_ROOT, "rules");
 const discoveredRules = discoverRules(RULES_ROOT);
 
+async function resolveProfile(profile: keyof typeof PROFILES): Promise<string[]> {
+  const rules = await discoveredRules;
+  const resolved = resolveRules({
+    rules,
+    profileCategories: PROFILES[profile].include,
+    includes: [],
+    excludes: [],
+  });
+
+  return resolved.rules.map((rule) => rule.id).toSorted();
+}
+
 function buildRule(overrides: Partial<RuleMetadata> & { id: string }): RuleMetadata {
   const [category = "", name = ""] = overrides.id.split("/");
   return {
@@ -93,7 +105,14 @@ describe(discoverRules, () => {
 
     const uniqueCategories = [...new Set(actual.map((rule) => rule.category))];
     const categories = uniqueCategories.toSorted();
-    expect(categories).toStrictEqual(["backend", "common", "datamodeling", "frontend"]);
+    expect(categories).toStrictEqual([
+      "backend",
+      "common",
+      "commonTs",
+      "datamodeling",
+      "frontend",
+      "infrastructure",
+    ]);
   });
 
   it("returns every rule with a non-empty single-line description", async () => {
@@ -109,11 +128,11 @@ describe(discoverRules, () => {
   it("includes known rules with expected metadata", async () => {
     const actual = await discoveredRules;
 
-    const typeScript = actual.find((rule) => rule.id === "common/typeScript");
+    const typeScript = actual.find((rule) => rule.id === "commonTs/typeScript");
     expect(typeScript).toMatchObject({
-      category: "common",
+      category: "commonTs",
       heading: "TypeScript",
-      relativePath: path.join("common", "typeScript.md"),
+      relativePath: path.join("commonTs", "typeScript.md"),
     });
   });
 });
@@ -207,4 +226,69 @@ describe("profiles", () => {
     const missing = profileCategories.filter((category) => !categories.has(category));
     expect(missing).toStrictEqual([]);
   });
+
+  it("offers an infrastructure profile for repositories with no application code", async () => {
+    const actual = await resolveProfile("infrastructure");
+
+    expect(actual).toStrictEqual([
+      "common/configuration",
+      "common/gitWorkflow",
+      "common/loggingObservability",
+      "common/testing",
+      "infrastructure/infrastructure",
+    ]);
+  });
+
+  it("keeps TypeScript-specific guidance out of the infrastructure profile", async () => {
+    const actual = await resolveProfile("infrastructure");
+
+    expect(actual).not.toContain("commonTs/typeScript");
+    expect(actual).not.toContain("commonTs/errorHandling");
+    expect(actual).not.toContain("commonTs/libraryAuthoring");
+    expect(actual).not.toContain("commonTs/rulesEngine");
+  });
+
+  it("reaches infrastructure guidance without opting into a service profile", async () => {
+    const actual = await resolveProfile("infrastructure");
+
+    expect(actual).toContain("infrastructure/infrastructure");
+    expect(actual.filter((id) => id.startsWith("backend/"))).toStrictEqual([]);
+  });
+
+  it.each(["common", "frontend", "backend", "fullstack"] as const)(
+    "keeps TypeScript guidance in the %s profile",
+    async (profile) => {
+      const actual = await resolveProfile(profile);
+
+      expect(actual).toContain("commonTs/typeScript");
+      expect(actual).toContain("common/gitWorkflow");
+    },
+  );
+
+  it("keeps infrastructure guidance in the backend and fullstack profiles", async () => {
+    expect(await resolveProfile("backend")).toContain("infrastructure/infrastructure");
+    expect(await resolveProfile("fullstack")).toContain("infrastructure/infrastructure");
+  });
+
+  // Pins what every profile resolves to. Update deliberately: a change here changes the rules
+  // consuming repositories receive on their next upgrade.
+  it.each([
+    ["common", ["common", "commonTs"]],
+    ["frontend", ["common", "commonTs", "frontend"]],
+    ["backend", ["common", "commonTs", "backend", "infrastructure"]],
+    ["fullstack", ["common", "commonTs", "frontend", "backend", "infrastructure"]],
+    ["datamodeling", ["datamodeling"]],
+    ["infrastructure", ["common", "infrastructure"]],
+  ] as const)(
+    "resolves the %s profile to exactly its declared categories",
+    async (profile, categories) => {
+      const rules = await discoveredRules;
+      const expected = rules
+        .filter((rule) => (categories as readonly string[]).includes(rule.category))
+        .map((rule) => rule.id)
+        .toSorted();
+
+      expect(await resolveProfile(profile)).toStrictEqual(expected);
+    },
+  );
 });
