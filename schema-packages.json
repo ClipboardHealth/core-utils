@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Update Clipboard schema packages only, with non-major releases automerged after CI passes.",
+  "extends": ["config:best-practices", ":preserveSemverRanges"],
+  "enabledManagers": ["npm"],
+  "npmToken": "{{ secrets.NPM_TOKEN }}",
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "packageRules": [
+    {
+      "description": "Disable npm updates by default so this preset manages schema packages only.",
+      "matchManagers": ["npm"],
+      "enabled": false
+    },
+    {
+      "description": "Create schema package PRs on the next Renovate run after publication.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@clipboard-health\\/(contract|flag|message)-/"],
+      "enabled": true,
+      "minimumReleaseAge": "0 days",
+      "schedule": ["at any time"],
+      "prCreation": "immediate"
+    },
+    {
+      "description": "Automerge minor and patch schema package PRs only after Renovate observes passing checks.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@clipboard-health\\/(contract|flag|message)-/"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": false
+    },
+    {
+      "description": "Leave major schema package PRs for human review.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@clipboard-health\\/(contract|flag|message)-/"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ],
+  "prConcurrentLimit": 20,
+  "prHourlyLimit": 0
+}

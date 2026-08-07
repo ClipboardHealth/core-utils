@@ -11,6 +11,7 @@
 - [Libraries](#libraries)
 - [Moved libraries](#moved-libraries)
 - [Local development commands](#local-development-commands)
+- [Shared Renovate presets](#shared-renovate-presets)
 - [Adding or porting libraries](#adding-or-porting-libraries)
 - [Contributing](#contributing)
 
@@ -77,6 +78,25 @@ npx nx migrate latest && \
   npm install && \
   npx nx migrate --runMigrations --ifExists
 ```
+
+## Shared Renovate presets
+
+Clipboard repositories can extend the default shared configuration with
+`github>ClipboardHealth/core-utils`.
+
+Repositories that should use Renovate only for published schema packages can instead extend the
+opt-in `schema-packages` preset:
+
+```json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>ClipboardHealth/core-utils:schema-packages"]
+}
+```
+
+The preset manages `@clipboard-health/contract-*`, `@clipboard-health/flag-*`, and
+`@clipboard-health/message-*`. It opens pull requests for new releases, automerges minor and patch
+updates after checks pass, and leaves major updates for human review.
 
 ## Adding or porting libraries
 
