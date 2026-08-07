@@ -31,17 +31,14 @@ describe("browser lifecycle attachment contract", () => {
   it("prioritizes anomalies when valid records exceed the shared byte cap", () => {
     const longIdentifier = "a".repeat(256);
     const longPathTemplate = `/${"a".repeat(511)}`;
-    const completedRecords = Array.from(
-      { length: 100 },
-      (_, index): BrowserLifecycleRecord => ({
-        ...createBrowserLifecycleCompletedFixture({ requestNumber: index + 1 }),
-        pathTemplate: longPathTemplate,
-        playwrightRequestKey: `request-${index + 1}-${longIdentifier}`,
-        cdpRequestId: longIdentifier,
-        loaderId: longIdentifier,
-        apiGatewayRequestId: longIdentifier,
-      }),
-    );
+    const completedRecords = Array.from({ length: 100 }, (_, index): BrowserLifecycleRecord => ({
+      ...createBrowserLifecycleCompletedFixture({ requestNumber: index + 1 }),
+      pathTemplate: longPathTemplate,
+      playwrightRequestKey: `request-${index + 1}-${longIdentifier}`,
+      cdpRequestId: longIdentifier,
+      loaderId: longIdentifier,
+      apiGatewayRequestId: longIdentifier,
+    }));
     const input = [...completedRecords, createBrowserLifecycleRequest43Fixture()];
 
     const actual = encodeBrowserLifecycleAttachment({ records: input });
