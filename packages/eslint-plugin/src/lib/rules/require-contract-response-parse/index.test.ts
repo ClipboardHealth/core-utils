@@ -60,6 +60,15 @@ ruleTester.run("require-contract-response-parse", rule, {
       `,
     },
     {
+      name: "contract schema can parse an inline awaited response body",
+      code: `
+        import { ExampleResponseSchema } from "@clipboard-health/contract-example";
+        it("parses an inline response", async () => {
+          ExampleResponseSchema.parse((await getResponse()).parsedBody);
+        });
+      `,
+    },
+    {
       name: "status-only assertion does not inspect response shape",
       code: `
         it("only checks status", () => {
@@ -263,6 +272,23 @@ ruleTester.run("require-contract-response-parse", rule, {
         const LooseResponseSchema = z.array(z.any());
       `,
       errors: [{ messageId: "inlineAnySchema", data: { method: "any" } }],
+    },
+    {
+      name: "default-imported z.any schema is not a contract oracle",
+      code: `
+        import z from "zod";
+        const LooseResponseSchema = z.array(z.any());
+      `,
+      errors: [{ messageId: "inlineAnySchema", data: { method: "any" } }],
+    },
+    {
+      name: "inline awaited response shape requires a contract parse",
+      code: `
+        it("asserts an inline response", async () => {
+          expect((await getResponse()).parsedBody).toEqual({});
+        });
+      `,
+      errors: [{ messageId: "missingContractParse" }],
     },
   ],
 });

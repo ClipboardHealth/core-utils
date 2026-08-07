@@ -164,6 +164,7 @@ const rule = createRule({
     const zodBindings = new Set<TSESLint.Scope.Variable>();
     const functionStates = new Map<FunctionNode, FunctionState>();
     const topLevelState: FunctionState = { parses: new Map(), writes: new Map() };
+    const validatedParsedBodyAccesses = new WeakSet<TSESTree.MemberExpression>();
     const controlFlowTypes = new Set<TSESTree.Node["type"]>([
       AST_NODE_TYPES.CatchClause,
       AST_NODE_TYPES.ConditionalExpression,
@@ -344,6 +345,7 @@ const rule = createRule({
         return;
       }
 
+      validatedParsedBodyAccesses.add(access);
       const key = responseKey(access.object);
       if (key !== undefined) {
         addEvidence(stateFor(node).parses, key, node);
@@ -351,12 +353,12 @@ const rule = createRule({
     }
 
     function checkParsedBodyAccess(node: TSESTree.MemberExpression): void {
-      if (memberPropertyName(node) !== "parsedBody") {
+      if (memberPropertyName(node) !== "parsedBody" || validatedParsedBodyAccesses.has(node)) {
         return;
       }
 
       const key = responseKey(node.object);
-      if (key !== undefined && !hasContractParse(node, key)) {
+      if (key === undefined || !hasContractParse(node, key)) {
         context.report({ node, messageId: "missingContractParse" });
       }
     }
@@ -466,11 +468,12 @@ const rule = createRule({
         if (node.source.value === "zod") {
           for (const specifier of node.specifiers) {
             const importsZodNamespace = specifier.type === AST_NODE_TYPES.ImportNamespaceSpecifier;
+            const importsZodDefault = specifier.type === AST_NODE_TYPES.ImportDefaultSpecifier;
             const importsZodBinding =
               specifier.type === AST_NODE_TYPES.ImportSpecifier &&
               specifier.imported.type === AST_NODE_TYPES.Identifier &&
               specifier.imported.name === "z";
-            if (!importsZodNamespace && !importsZodBinding) {
+            if (!importsZodNamespace && !importsZodDefault && !importsZodBinding) {
               continue;
             }
 

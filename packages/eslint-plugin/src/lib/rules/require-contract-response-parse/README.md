@@ -5,7 +5,7 @@ an `@clipboard-health/contract-*` package. It accepts either of these forms befo
 
 ```ts
 const body = parseBody(response, ExampleResponseSchema);
-const body = ExampleResponseSchema.parse(response.parsedBody);
+// or: const body = ExampleResponseSchema.parse(response.parsedBody);
 ```
 
 The rule also reports inline permissive schemas built with `z.any()` or `z.unknown()`. Those schemas
