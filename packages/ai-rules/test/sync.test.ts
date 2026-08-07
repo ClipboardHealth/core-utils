@@ -44,6 +44,7 @@ describe("sync script", () => {
       verbose: false,
     });
 
+    await expect(access(path.join(consumerRoot, "AGENTS.md"))).resolves.toBeUndefined();
     const actual = await readFile(settingsPath, "utf8");
     expect(actual).toBe(expected);
     await expect(access(path.join(claudeDirectory, "setup.sh"))).rejects.toMatchObject({
