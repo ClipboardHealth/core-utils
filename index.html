@@ -20,6 +20,7 @@
 <li><a href="#libraries">Libraries</a></li>
 <li><a href="#moved-libraries">Moved libraries</a></li>
 <li><a href="#local-development-commands">Local development commands</a></li>
+<li><a href="#shared-renovate-presets">Shared Renovate presets</a></li>
 <li><a href="#adding-or-porting-libraries">Adding or porting libraries</a></li>
 <li><a href="#contributing">Contributing</a></li>
 </ul>
@@ -62,6 +63,17 @@
 <pre><code class="bash"><span class="hl-0"># Install dependencies</span><br/><span class="hl-1">npm</span><span class="hl-2"> </span><span class="hl-3">clean-install</span><br/><br/><span class="hl-0"># Build, lint, and test only changed files from `main`, helpful prior to opening PRs</span><br/><span class="hl-1">node</span><span class="hl-2"> </span><span class="hl-4">--run</span><span class="hl-2"> </span><span class="hl-3">affected</span><br/><br/><span class="hl-0"># For the paranoid: build, lint, and test everything</span><br/><span class="hl-1">node</span><span class="hl-2"> </span><span class="hl-4">--run</span><span class="hl-2"> </span><span class="hl-3">verify</span><br/><br/><span class="hl-0"># Install a dependency in a specific package</span><br/><span class="hl-1">npm</span><span class="hl-2"> </span><span class="hl-3">install</span><span class="hl-2"> </span><span class="hl-4">--workspace</span><span class="hl-2"> </span><span class="hl-3">packages/[PROJECT_NAME]</span><span class="hl-2"> [DEPENDENCY]</span><br/><br/><span class="hl-0"># Run specific commands against a specific packages</span><br/><span class="hl-1">npx</span><span class="hl-2"> </span><span class="hl-3">nx</span><span class="hl-2"> </span><span class="hl-3">run</span><span class="hl-2"> [PROJECT_NAME]:[COMMAND]</span><br/><br/><span class="hl-0"># Upgrade Nx</span><br/><span class="hl-1">npx</span><span class="hl-2"> </span><span class="hl-3">nx</span><span class="hl-2"> </span><span class="hl-3">migrate</span><span class="hl-2"> </span><span class="hl-3">latest</span><span class="hl-2"> &amp;&amp; </span><span class="hl-5">\</span><br/><span class="hl-2">  </span><span class="hl-1">npx</span><span class="hl-2"> </span><span class="hl-3">syncpack</span><span class="hl-2"> </span><span class="hl-3">fix</span><span class="hl-2"> &amp;&amp; </span><span class="hl-5">\</span><br/><span class="hl-2">  </span><span class="hl-1">npm</span><span class="hl-2"> </span><span class="hl-3">install</span><span class="hl-2"> &amp;&amp; </span><span class="hl-5">\</span><br/><span class="hl-2">  </span><span class="hl-1">npx</span><span class="hl-2"> </span><span class="hl-3">nx</span><span class="hl-2"> </span><span class="hl-3">migrate</span><span class="hl-2"> </span><span class="hl-4">--runMigrations</span><span class="hl-2"> </span><span class="hl-4">--ifExists</span>
 </code><button type="button">Copy</button></pre>
 
+<h2 id="shared-renovate-presets" class="tsd-anchor-link">Shared Renovate presets<a href="#shared-renovate-presets" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Clipboard repositories can extend the default shared configuration with
+<code>github&gt;ClipboardHealth/core-utils</code>.</p>
+<p>Repositories that should use Renovate only for published schema packages can instead extend the
+opt-in <code>schema-packages</code> preset:</p>
+<pre><code class="json"><span class="hl-2">{</span><br/><span class="hl-2">  </span><span class="hl-6">&quot;$schema&quot;</span><span class="hl-2">: </span><span class="hl-3">&quot;https://docs.renovatebot.com/renovate-schema.json&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-6">&quot;extends&quot;</span><span class="hl-2">: [</span><span class="hl-3">&quot;github&gt;ClipboardHealth/core-utils:schema-packages&quot;</span><span class="hl-2">]</span><br/><span class="hl-2">}</span>
+</code><button type="button">Copy</button></pre>
+
+<p>The preset manages <code>@clipboard-health/contract-*</code>, <code>@clipboard-health/flag-*</code>, and
+<code>@clipboard-health/message-*</code>. It opens pull requests for new releases, automerges minor and patch
+updates after checks pass, and leaves major updates for human review.</p>
 <h2 id="adding-or-porting-libraries" class="tsd-anchor-link">Adding or porting libraries<a href="#adding-or-porting-libraries" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>See our <a href="https://github.com/ClipboardHealth/core-utils/tree/main/packages/nx-plugin">Nx generator plugin</a>.</p>
 <h2 id="contributing" class="tsd-anchor-link">Contributing<a href="#contributing" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -81,7 +93,7 @@
 <div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
 <details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
 <h3>On This Page</h3></summary>
-<div class="tsd-accordion-details"><a href="#table-of-contents"><span>Table of contents </span></a><a href="#libraries"><span>Libraries</span></a><a href="#moved-libraries"><span>Moved libraries</span></a><a href="#local-development-commands"><span>Local development commands</span></a><a href="#adding-or-porting-libraries"><span>Adding or porting libraries</span></a><a href="#contributing"><span>Contributing</span></a></div></details></div>
+<div class="tsd-accordion-details"><a href="#table-of-contents"><span>Table of contents </span></a><a href="#libraries"><span>Libraries</span></a><a href="#moved-libraries"><span>Moved libraries</span></a><a href="#local-development-commands"><span>Local development commands</span></a><a href="#shared-renovate-presets"><span>Shared <wbr/>Renovate presets</span></a><a href="#adding-or-porting-libraries"><span>Adding or porting libraries</span></a><a href="#contributing"><span>Contributing</span></a></div></details></div>
 <div class="site-menu">
 <nav class="tsd-navigation"><a href="modules.html">core-utils</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
