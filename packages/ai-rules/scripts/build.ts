@@ -61,7 +61,6 @@ async function build(): Promise<void> {
         "--skipLibCheck",
       ],
     }),
-    copyFile(path.join(packageRoot, "scripts", "setup.sh"), path.join(scriptsOutput, "setup.sh")),
   ]);
 
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
