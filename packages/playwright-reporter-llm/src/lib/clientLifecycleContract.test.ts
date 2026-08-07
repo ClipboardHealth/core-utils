@@ -11,6 +11,28 @@ import {
 } from "./internal/testHelpers";
 
 describe("browser lifecycle attachment contract", () => {
+  it("round trips an HTTP response status when present", () => {
+    const input = {
+      ...createBrowserLifecycleCompletedFixture({ requestNumber: 1 }),
+      httpStatus: 503,
+    };
+
+    const encoded = encodeBrowserLifecycleAttachment({ records: [input] });
+    const actual = parseBrowserLifecycleAttachment({ content: encoded.body });
+
+    expect(actual?.records[0]).toMatchObject({ httpStatus: 503 });
+  });
+
+  it("keeps the HTTP response status absent when omitted", () => {
+    const input = createBrowserLifecycleCompletedFixture({ requestNumber: 1 });
+
+    const encoded = encodeBrowserLifecycleAttachment({ records: [input] });
+    const actual = parseBrowserLifecycleAttachment({ content: encoded.body });
+
+    expect(encoded.attachment.records[0]).not.toHaveProperty("httpStatus");
+    expect(actual?.records[0]).not.toHaveProperty("httpStatus");
+  });
+
   it("round trips the 48-record failing shape within the shared byte cap", () => {
     const input = createBrowserLifecycle48RecordFixture();
 
