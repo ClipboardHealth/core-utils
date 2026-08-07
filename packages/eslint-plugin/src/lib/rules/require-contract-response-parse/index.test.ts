@@ -39,6 +39,17 @@ ruleTester.run("require-contract-response-parse", rule, {
       `,
     },
     {
+      name: "async contract schema parses parsedBody directly",
+      code: `
+        import { ExampleResponseSchema } from "@clipboard-health/contract-example";
+        it("parses asynchronously", async () => {
+          const response = getResponse();
+          const body = await ExampleResponseSchema.parseAsync(response.parsedBody);
+          expect(response.parsedBody.data).toEqual(body.data);
+        });
+      `,
+    },
+    {
       name: "contract response map supplies the schema",
       code: `
         import { exampleContract } from "@clipboard-health/contract-example";
@@ -65,6 +76,30 @@ ruleTester.run("require-contract-response-parse", rule, {
         import { ExampleResponseSchema } from "@clipboard-health/contract-example";
         it("parses an inline response", async () => {
           ExampleResponseSchema.parse((await getResponse()).parsedBody);
+        });
+      `,
+    },
+    {
+      name: "satisfies wrapper preserves contract parse evidence",
+      code: `
+        import { ExampleResponseSchema } from "@clipboard-health/contract-example";
+        it("parses a response with a satisfies wrapper", () => {
+          const response = getResponse();
+          parseBody(response, ExampleResponseSchema);
+          expect((response satisfies Response).parsedBody).toEqual({});
+        });
+      `,
+    },
+    {
+      name: "parse and assertion in the same control-flow branch",
+      code: `
+        import { ExampleResponseSchema } from "@clipboard-health/contract-example";
+        it("parses inside the branch", () => {
+          const response = getResponse();
+          if (shouldParse) {
+            parseBody(response, ExampleResponseSchema);
+            expect(response.parsedBody).toEqual({});
+          }
         });
       `,
     },
@@ -132,7 +167,7 @@ ruleTester.run("require-contract-response-parse", rule, {
           expect(body).toMatchObject({ data: [] });
         });
       `,
-      errors: [{ messageId: "missingContractParse" }],
+      errors: [{ messageId: "nonContractSchema" }],
     },
     {
       name: "parse evidence does not cross test functions",
@@ -159,7 +194,7 @@ ruleTester.run("require-contract-response-parse", rule, {
           expect(response.parsedBody).toEqual({});
         });
       `,
-      errors: [{ messageId: "missingContractParse" }, { messageId: "missingContractParse" }],
+      errors: [{ messageId: "nonContractSchema" }, { messageId: "missingContractParse" }],
     },
     {
       name: "conditional parse does not dominate a later assertion",
@@ -206,6 +241,26 @@ ruleTester.run("require-contract-response-parse", rule, {
         it("asserts the whole response", () => {
           const response = getResponse();
           expect(response).toMatchObject({ statusCode: 200, parsedBody: { data: [] } });
+        });
+      `,
+      errors: [{ messageId: "missingContractParse" }],
+    },
+    {
+      name: "negated whole-response shape assertion includes parsedBody",
+      code: `
+        it("asserts the whole response with not", () => {
+          const response = getResponse();
+          expect(response).not.toMatchObject({ parsedBody: { data: [] } });
+        });
+      `,
+      errors: [{ messageId: "missingContractParse" }],
+    },
+    {
+      name: "resolved whole-response shape assertion includes parsedBody",
+      code: `
+        it("asserts a resolved response", async () => {
+          const responsePromise = getResponse();
+          await expect(responsePromise).resolves.toMatchObject({ parsedBody: { data: [] } });
         });
       `,
       errors: [{ messageId: "missingContractParse" }],

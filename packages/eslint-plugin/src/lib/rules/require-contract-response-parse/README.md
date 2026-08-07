@@ -1,15 +1,17 @@
 # require-contract-response-parse
 
-Requires response-shape assertions to validate the response body with a Zod schema imported from
-an `@clipboard-health/contract-*` package. It accepts either of these forms before the assertion:
+Requires response bodies to be validated with a Zod schema imported from an
+`@clipboard-health/contract-*` package. The rule reports every unparsed `parsedBody` member access
+and `{ parsedBody }` destructuring, including reads outside assertions, unless a contract parse
+dominates the access. It accepts either of these forms before reading the body:
 
 ```ts
 const body = parseBody(response, ExampleResponseSchema);
 // or: const body = ExampleResponseSchema.parse(response.parsedBody);
 ```
 
-The rule also reports inline permissive schemas built with `z.any()` or `z.unknown()`. Those schemas
-cannot prove that a response matches its published contract.
+The rule also reports every `z.any()` or `z.unknown()` call in a linted file, even outside response
+schemas. Those permissive schemas cannot prove that a response matches its published contract.
 
 ## Migration
 

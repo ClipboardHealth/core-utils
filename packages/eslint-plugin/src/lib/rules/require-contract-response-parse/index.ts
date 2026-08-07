@@ -16,12 +16,28 @@
  * `--quiet`, making every error-level directory a blocking ratchet. Once the full scope is migrated,
  * replace the overrides with one error-level setting and restore the zero-warning budget.
  */
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from "@typescript-eslint/utils";
 
 import { createRule } from "../../createRule";
 
 const CONTRACT_PACKAGE_PREFIX = "@clipboard-health/contract-";
 const ANY_SCHEMA_METHODS = new Set(["any", "unknown"]);
+const SCHEMA_PARSE_METHODS = new Set(["parse", "parseAsync"]);
+const MATCHER_MODIFIERS = new Set(["not", "rejects", "resolves"]);
+const CONTROL_FLOW_TYPES = new Set<TSESTree.Node["type"]>([
+  AST_NODE_TYPES.CatchClause,
+  AST_NODE_TYPES.ConditionalExpression,
+  AST_NODE_TYPES.DoWhileStatement,
+  AST_NODE_TYPES.ForInStatement,
+  AST_NODE_TYPES.ForOfStatement,
+  AST_NODE_TYPES.ForStatement,
+  AST_NODE_TYPES.IfStatement,
+  AST_NODE_TYPES.LogicalExpression,
+  AST_NODE_TYPES.SwitchCase,
+  AST_NODE_TYPES.SwitchStatement,
+  AST_NODE_TYPES.TryStatement,
+  AST_NODE_TYPES.WhileStatement,
+]);
 
 type FunctionNode =
   | TSESTree.ArrowFunctionExpression
@@ -42,6 +58,7 @@ function unwrap(node: TSESTree.Node | undefined): TSESTree.Node | undefined {
     current?.type === AST_NODE_TYPES.TSAsExpression ||
     current?.type === AST_NODE_TYPES.TSInstantiationExpression ||
     current?.type === AST_NODE_TYPES.TSNonNullExpression ||
+    current?.type === AST_NODE_TYPES.TSSatisfiesExpression ||
     current?.type === AST_NODE_TYPES.TSTypeAssertion
   ) {
     current = current.expression;
@@ -156,6 +173,8 @@ const rule = createRule({
         "Inline z.{{method}}() schemas are not contract oracles. Use the endpoint response schema from a @clipboard-health/contract-* package.",
       missingContractParse:
         "Parse this response body with its @clipboard-health/contract-* response schema before asserting its shape.",
+      nonContractSchema:
+        "This schema is not a contract oracle. Use the endpoint response schema from a @clipboard-health/contract-* package.",
     },
   },
 
@@ -165,20 +184,6 @@ const rule = createRule({
     const functionStates = new Map<FunctionNode, FunctionState>();
     const topLevelState: FunctionState = { parses: new Map(), writes: new Map() };
     const validatedParsedBodyAccesses = new WeakSet<TSESTree.MemberExpression>();
-    const controlFlowTypes = new Set<TSESTree.Node["type"]>([
-      AST_NODE_TYPES.CatchClause,
-      AST_NODE_TYPES.ConditionalExpression,
-      AST_NODE_TYPES.DoWhileStatement,
-      AST_NODE_TYPES.ForInStatement,
-      AST_NODE_TYPES.ForOfStatement,
-      AST_NODE_TYPES.ForStatement,
-      AST_NODE_TYPES.IfStatement,
-      AST_NODE_TYPES.LogicalExpression,
-      AST_NODE_TYPES.SwitchCase,
-      AST_NODE_TYPES.SwitchStatement,
-      AST_NODE_TYPES.TryStatement,
-      AST_NODE_TYPES.WhileStatement,
-    ]);
 
     function rootIdentifier(node: TSESTree.Node | undefined): TSESTree.Identifier | undefined {
       let current = unwrap(node);
@@ -207,17 +212,7 @@ const rule = createRule({
     }
 
     function findVariable(node: TSESTree.Identifier): TSESLint.Scope.Variable | undefined {
-      let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
-
-      while (scope) {
-        const variable = scope.set.get(node.name);
-        if (variable) {
-          return variable;
-        }
-        scope = scope.upper;
-      }
-
-      return undefined;
+      return ASTUtils.findVariable(context.sourceCode.getScope(node), node) ?? undefined;
     }
 
     function responseKey(node: TSESTree.Node | undefined): ResponseKey | undefined {
@@ -275,7 +270,7 @@ const rule = createRule({
       const functionNode = containingFunction(parseNode);
       while (current && current !== functionNode) {
         if (
-          controlFlowTypes.has(current.type) &&
+          CONTROL_FLOW_TYPES.has(current.type) &&
           (!isAncestor(current, assertionNode) ||
             directChild(current, parseNode) !== directChild(current, assertionNode))
         ) {
@@ -320,7 +315,7 @@ const rule = createRule({
       }
 
       if (!isContractSchema(schema)) {
-        context.report({ node: schema, messageId: "missingContractParse" });
+        context.report({ node: schema, messageId: "nonContractSchema" });
         return;
       }
 
@@ -333,7 +328,7 @@ const rule = createRule({
     function checkSchemaParse(node: TSESTree.CallExpression): void {
       if (
         node.callee.type !== AST_NODE_TYPES.MemberExpression ||
-        memberPropertyName(node.callee) !== "parse" ||
+        !SCHEMA_PARSE_METHODS.has(memberPropertyName(node.callee) ?? "") ||
         !isContractSchema(node.callee.object)
       ) {
         return;
@@ -369,9 +364,9 @@ const rule = createRule({
       }
 
       let matcherTarget = node.callee.object;
-      if (
+      while (
         matcherTarget.type === AST_NODE_TYPES.MemberExpression &&
-        memberPropertyName(matcherTarget) === "not"
+        MATCHER_MODIFIERS.has(memberPropertyName(matcherTarget) ?? "")
       ) {
         matcherTarget = matcherTarget.object;
       }
