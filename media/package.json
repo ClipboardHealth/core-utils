@@ -86,6 +86,9 @@
   "knip": {
     "ignoreBinaries": [
       "op"
+    ],
+    "ignoreFiles": [
+      "packages/playwright-reporter-llm/test/e2e/blobMerge/**"
     ]
   }
 }
