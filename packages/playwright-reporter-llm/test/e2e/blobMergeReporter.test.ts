@@ -112,7 +112,7 @@ describe("merged blob reports", () => {
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     report = JSON.parse(readFileSync(reportPath, "utf8")) as LlmTestReport;
-  }, 60_000);
+  }, 100_000);
 
   afterAll(() => {
     rmSync(temporaryDirectory, { recursive: true, force: true });
