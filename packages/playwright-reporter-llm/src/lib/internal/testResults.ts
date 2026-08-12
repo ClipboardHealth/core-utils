@@ -9,6 +9,8 @@ import type {
 import type { FlatStep, TestError, TestStatus } from "../types";
 import { capOutput, extractFirstLine, stripAnsi } from "./textProcessing";
 
+type StdioChunk = string | Buffer | { text: string } | { buffer: string };
+
 export function buildFullTitle(test: TestCase): string {
   const parts: string[] = [];
   let current: Suite | undefined = test.parent;
@@ -106,14 +108,8 @@ export function statusIndicator(status: TestStatus): string {
 }
 
 export function collectStdio(result: TestResult, channel: "stdout" | "stderr"): string {
-  const text = (result[channel] as unknown as Array<{ text: string } | { buffer: string }>)
-    .map((chunk) => {
-      if ("text" in chunk) {
-        return chunk.text;
-      }
-      return Buffer.from(chunk.buffer, "base64").toString("utf8");
-    })
-    .join("");
+  const chunks = result[channel] as unknown as StdioChunk[];
+  const text = chunks.map(stdioChunkToString).join("");
   return capOutput(stripAnsi(text));
 }
 
@@ -142,4 +138,17 @@ export function flattenSteps(
   }
 
   return flattenedSteps;
+}
+
+function stdioChunkToString(chunk: StdioChunk): string {
+  if (typeof chunk === "string") {
+    return chunk;
+  }
+  if (Buffer.isBuffer(chunk)) {
+    return chunk.toString("utf8");
+  }
+  if ("text" in chunk) {
+    return chunk.text;
+  }
+  return Buffer.from(chunk.buffer, "base64").toString("utf8");
 }
