@@ -21,13 +21,13 @@ const MERGE_CONFIG = path.resolve(__dirname, "blobMerge/merge.config.ts");
 interface RunPlaywrightOptions {
   arguments_: string[];
   environment: NodeJS.ProcessEnv;
-  expectedOutputFile?: string;
+  expectedOutputPath?: string;
 }
 
 function runPlaywright({
   arguments_,
   environment,
-  expectedOutputFile,
+  expectedOutputPath,
 }: RunPlaywrightOptions): void {
   try {
     execFileSync(PLAYWRIGHT_CLI, arguments_, {
@@ -38,7 +38,7 @@ function runPlaywright({
     });
   } catch (error) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    if (!expectedOutputFile || !existsSync(expectedOutputFile)) {
+    if (!expectedOutputPath || !existsSync(expectedOutputPath)) {
       throw error;
     }
   }
@@ -83,6 +83,7 @@ describe("merged blob reports", () => {
         PLAYWRIGHT_BLOB_OUTPUT_DIR: firstBlobDirectory,
         PLAYWRIGHT_TEST_OUTPUT_DIRECTORY: path.join(temporaryDirectory, "results-1"),
       },
+      expectedOutputPath: firstBlobDirectory,
     });
     runPlaywright({
       arguments_: ["test", "--config", SHARD_CONFIG, "--shard=2/2"],
@@ -106,7 +107,7 @@ describe("merged blob reports", () => {
         ...environment,
         PLAYWRIGHT_LLM_OUTPUT_FILE: reportPath,
       },
-      expectedOutputFile: reportPath,
+      expectedOutputPath: reportPath,
     });
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -121,6 +122,9 @@ describe("merged blob reports", () => {
     const flakyTest = report.tests.find((entry) =>
       entry.title.includes("retains stdout from every flaky attempt"),
     );
+    const failedTest = report.tests.find((entry) =>
+      entry.title.includes("retains stdout from every failed attempt"),
+    );
 
     expect({
       summary: report.summary,
@@ -131,22 +135,34 @@ describe("merged blob reports", () => {
         attemptStatuses: flakyTest?.attempts.map((attempt) => attempt.status),
         attemptStdout: flakyTest?.attempts.map((attempt) => attempt.stdout),
       },
+      failedTest: {
+        status: failedTest?.status,
+        flaky: failedTest?.flaky,
+        attemptStatuses: failedTest?.attempts.map((attempt) => attempt.status),
+        attemptStdout: failedTest?.attempts.map((attempt) => attempt.stdout),
+      },
     }).toStrictEqual({
       summary: {
-        total: 3,
+        total: 4,
         passed: 2,
-        failed: 0,
+        failed: 1,
         flaky: 1,
         skipped: 0,
         timedOut: 0,
         interrupted: 0,
       },
-      testCount: 3,
+      testCount: 4,
       flakyTest: {
         status: "passed",
         flaky: true,
         attemptStatuses: ["failed", "passed"],
         attemptStdout: ["flaky stdout from retry 0\n", "flaky stdout from retry 1\n"],
+      },
+      failedTest: {
+        status: "failed",
+        flaky: false,
+        attemptStatuses: ["failed", "failed"],
+        attemptStdout: ["failed stdout from retry 0\n", "failed stdout from retry 1\n"],
       },
     });
   });

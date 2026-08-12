@@ -12,3 +12,9 @@ test("retains stdout from every flaky attempt", () => {
   console.log(`flaky stdout from retry ${retry}`);
   expect(retry).toBe(1);
 });
+
+test("retains stdout from every failed attempt", () => {
+  // eslint-disable-next-line no-console
+  console.log(`failed stdout from retry ${test.info().retry}`);
+  expect(true).toBe(false);
+});
