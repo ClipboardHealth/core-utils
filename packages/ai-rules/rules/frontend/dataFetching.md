@@ -72,3 +72,31 @@ Use `parsedApi.ts` for all new API calls. However, `parsedApi.ts` means invalid 
 ## Test Utilities
 
 Co-locate MSW handlers and mock data in adjacent `testUtils/` folders alongside data-fetching hooks.
+
+### Contract-Derived Response Fixtures
+
+Construct every API response fixture through its published, producer-owned contract schema before
+passing it to MSW or Playwright. This makes contract drift fail when the fixture is constructed
+instead of later in a test or in production.
+
+```typescript
+import { featureContract } from "@clipboard-health/contract-feature-service";
+
+const featureResponseSchema = featureContract.getFeature.responses[200];
+
+export const mockFeatureResponse = featureResponseSchema.parse({
+  data: { id: "feature-id", name: "Example" },
+});
+```
+
+A repository-local fixture helper that wraps `schema.parse` is also valid. Use a one-shot helper for
+responses assembled inline, or a schema-derived builder when fixtures need many shallow variants.
+The helper's fixture input, parsed output, defaults, and overrides must be inferred from the schema,
+and every result must be parsed when it is constructed.
+
+A TypeScript annotation or `satisfies` check is not sufficient because neither validates the fixture
+at runtime. Do not replace the producer-owned schema with an app-local schema copy.
+
+Contract-fixture lint should report legacy violations as warnings and block violations in migrated
+directories. Add a directory to the repository's error-level configuration only after its response
+fixtures are migrated; do not suppress violations or downgrade a migrated directory to warning.
