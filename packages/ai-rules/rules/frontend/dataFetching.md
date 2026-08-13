@@ -1,5 +1,5 @@
 ---
-description: "Implementing data fetching and error handling: React Query, API calls, caching, parsedApi"
+description: "Implementing data fetching, API response fixtures, and error handling: React Query, MSW, Playwright, caching, parsedApi"
 ---
 
 # Data Fetching
