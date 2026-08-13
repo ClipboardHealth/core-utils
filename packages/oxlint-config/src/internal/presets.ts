@@ -66,6 +66,27 @@ export const jest: OxlintPreset = {
   rules: JEST_RULES,
 };
 export const vitest: OxlintPreset = createVitestPreset();
+export const contractFixtures: OxlintPreset = {
+  jsPlugins: [
+    {
+      name: "contract-fixtures",
+      specifier: "@clipboard-health/eslint-plugin",
+    },
+  ],
+  overrides: [
+    {
+      files: [
+        "**/{testUtils,test-utils}/{handlers,mocks}*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+        "**/testHandlers.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+        "**/*.{spec,test}.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+        "playwright/**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+      ],
+      rules: {
+        "contract-fixtures/require-contract-fixture-construction": "warn",
+      },
+    },
+  ],
+};
 
 function createBasePreset(): OxlintPreset {
   const parsedBaseJson = loadBaseJson();

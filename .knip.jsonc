@@ -56,6 +56,9 @@
     "packages/notifications": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
+    "packages/oxlint-config": {
+      "ignoreDependencies": ["@clipboard-health/eslint-plugin"],
+    },
     "packages/rules-engine": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },

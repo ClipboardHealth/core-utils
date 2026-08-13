@@ -1,5 +1,6 @@
 import {
   base,
+  contractFixtures,
   createOxlintConfig,
   jest as jestPreset,
   type OxlintPreset,
@@ -69,6 +70,28 @@ describe("oxlint-config", () => {
     });
 
     it("exports additive plugin presets", () => {
+      expect(contractFixtures).toStrictEqual({
+        jsPlugins: [
+          {
+            name: "contract-fixtures",
+            specifier: "@clipboard-health/eslint-plugin",
+          },
+        ],
+        overrides: [
+          {
+            files: [
+              "**/{testUtils,test-utils}/{handlers,mocks}*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+              "**/testHandlers.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+              "**/*.{spec,test}.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+              "playwright/**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}",
+            ],
+            rules: {
+              "contract-fixtures/require-contract-fixture-construction": "warn",
+            },
+          },
+        ],
+      });
+
       expect(react).toStrictEqual({
         plugins: ["react"],
       });
