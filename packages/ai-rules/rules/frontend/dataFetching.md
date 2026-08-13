@@ -75,33 +75,40 @@ Co-locate MSW handlers and mock data in adjacent `testUtils/` folders alongside 
 
 ### Contract-Derived Response Fixtures
 
-Define every API response fixture as the producer-owned contract schema's input and validate it
-through that schema before passing it to MSW or Playwright. This makes contract drift fail when the
-fixture is constructed instead of later in a test or in production while preserving its wire shape.
+Construct every API response fixture through the producer-owned contract response schema before
+passing it to MSW or Playwright. This makes contract drift fail when the fixture is constructed
+instead of later in a test or in production.
 
 ```typescript
-import { z } from "zod";
 import { featureContract } from "@clipboard-health/contract-feature-service";
 
 const featureResponseSchema = featureContract.getFeature.responses[200];
 
-export const mockFeatureResponse = {
+export const mockFeatureResponse = featureResponseSchema.parse({
   data: { id: "feature-id", name: "Example" },
-} satisfies z.input<typeof featureResponseSchema>;
-
-featureResponseSchema.parse(mockFeatureResponse);
+});
 ```
 
-Do not send the value returned by `schema.parse`: it is `z.output` and transforms such as
-`dateTimeSchema()` or enum fallbacks can change the response. A repository-local fixture helper that
-calls `schema.parse` for validation and returns the unchanged `z.input` is valid. Use a one-shot
-helper for responses assembled inline, or a schema-derived builder when fixtures need many shallow
-variants. The helper's fixture, returned value, defaults, and overrides must be inferred from the
-schema's input, and every result must be validated when it is constructed.
+For fixtures that need many shallow variants, use `createContractFixtureBuilder` from
+`@clipboard-health/testing-core`. Its defaults and overrides are inferred from the schema input, and
+every result is parsed at construction.
+
+```typescript
+import { createContractFixtureBuilder } from "@clipboard-health/testing-core";
+
+const buildFeatureResponse = createContractFixtureBuilder({
+  schema: featureResponseSchema,
+  defaults: { data: { id: "feature-id", name: "Default" } },
+});
+
+export const mockRenamedFeatureResponse = buildFeatureResponse({
+  data: { id: "feature-id", name: "Renamed" },
+});
+```
 
 A TypeScript annotation or `satisfies` check is not sufficient because neither validates the fixture
 at runtime. Do not replace the producer-owned schema with an app-local schema copy.
 
-Contract-fixture lint should report legacy violations as warnings and block violations in migrated
-directories. Add a directory to the repository's error-level configuration only after its response
-fixtures are migrated; do not suppress violations or downgrade a migrated directory to warning.
+The shared `contractFixtures` Oxlint preset reports legacy violations as warnings and local
+overrides block violations in migrated directories. Ratchet whole directories only after their
+response fixtures are migrated; do not suppress violations or downgrade a migrated directory.
