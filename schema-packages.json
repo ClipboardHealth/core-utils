@@ -23,13 +23,13 @@
       "prCreation": "immediate"
     },
     {
-      "description": "Automerge minor and patch schema package PRs only after Renovate observes passing checks.",
+      "description": "Automerge minor and patch schema package PRs via platform-native auto-merge after required checks pass.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@clipboard-health\\/(contract|flag|message)-/"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "automergeType": "pr",
-      "platformAutomerge": false
+      "platformAutomerge": true
     },
     {
       "description": "Leave major schema package PRs for human review.",
