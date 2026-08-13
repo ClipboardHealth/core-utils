@@ -66,6 +66,7 @@ export default defineConfig(
 Available presets:
 
 - `base`
+- `contractFixtures`
 - `react`
 - `jest`
 - `vitest`

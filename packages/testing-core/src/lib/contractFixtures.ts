@@ -5,7 +5,7 @@ interface BuildContractFixtureRequest<Input, Output> {
   schema: z.ZodType<Output, z.ZodTypeDef, Input>;
 }
 
-interface CreateContractFixtureBuilderRequest<Input, Output> {
+interface CreateContractFixtureBuilderRequest<Input extends object, Output> {
   defaults: Input;
   schema: z.ZodType<Output, z.ZodTypeDef, Input>;
 }
@@ -17,7 +17,7 @@ export function buildContractFixture<Input, Output>({
   return schema.parse(fixture);
 }
 
-export function createContractFixtureBuilder<Input, Output>({
+export function createContractFixtureBuilder<Input extends object, Output>({
   defaults,
   schema,
 }: CreateContractFixtureBuilderRequest<Input, Output>): (overrides?: Partial<Input>) => Output {

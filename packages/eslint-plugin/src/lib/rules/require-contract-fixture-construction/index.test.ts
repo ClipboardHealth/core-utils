@@ -137,6 +137,20 @@ ruleTester.run("require-contract-fixture-construction", rule, {
       errors: [{ messageId: "parsePayload" }],
     },
     {
+      name: "rejects direct and indirect exports mutated later in the module",
+      filename: mocksFile,
+      code: `
+        import { FeatureResponseSchema } from "@clipboard-health/contract-feature";
+        export const mockDirect = FeatureResponseSchema.parse({ items: [] });
+        mockDirect.items.push({ id: "drift" });
+
+        const mockIndirect = FeatureResponseSchema.parse({ items: [] });
+        export { mockIndirect };
+        mockIndirect.items.push({ id: "drift" });
+      `,
+      errors: [{ messageId: "parseMock" }, { messageId: "parseMock" }],
+    },
+    {
       name: "propagates mutation through aliases",
       filename: handlersFile,
       code: `

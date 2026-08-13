@@ -460,7 +460,10 @@ const rule = createRule({
 
     function addDirectFixture(node: TSESTree.Node | null | undefined): void {
       if (isExpression(node)) {
-        directFixtureCandidates.push({ node, observationPosition: node.range[0] });
+        directFixtureCandidates.push({
+          node,
+          observationPosition: Number.MAX_SAFE_INTEGER,
+        });
       }
     }
 
@@ -534,7 +537,7 @@ const rule = createRule({
           }
         } else if (
           isFixtureValue(exportedName, initializer) &&
-          !isContractConstructed(initializer, initializer?.range[0] ?? local.range[0])
+          !isContractConstructed(local, Number.MAX_SAFE_INTEGER)
         ) {
           context.report({ node: initializer ?? local, messageId: "parseMock" });
         }
@@ -680,7 +683,7 @@ const rule = createRule({
           ) {
             exportedFunctions.add(initializer);
           } else if (isFixtureValue(declaration.id.name, declaration.init)) {
-            addDirectFixture(declaration.init);
+            addDirectFixture(declaration.id);
           }
         }
       },
