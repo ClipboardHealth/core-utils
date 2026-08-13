@@ -75,24 +75,29 @@ Co-locate MSW handlers and mock data in adjacent `testUtils/` folders alongside 
 
 ### Contract-Derived Response Fixtures
 
-Construct every API response fixture through its published, producer-owned contract schema before
-passing it to MSW or Playwright. This makes contract drift fail when the fixture is constructed
-instead of later in a test or in production.
+Define every API response fixture as the producer-owned contract schema's input and validate it
+through that schema before passing it to MSW or Playwright. This makes contract drift fail when the
+fixture is constructed instead of later in a test or in production while preserving its wire shape.
 
 ```typescript
+import { z } from "zod";
 import { featureContract } from "@clipboard-health/contract-feature-service";
 
 const featureResponseSchema = featureContract.getFeature.responses[200];
 
-export const mockFeatureResponse = featureResponseSchema.parse({
+export const mockFeatureResponse = {
   data: { id: "feature-id", name: "Example" },
-});
+} satisfies z.input<typeof featureResponseSchema>;
+
+featureResponseSchema.parse(mockFeatureResponse);
 ```
 
-A repository-local fixture helper that wraps `schema.parse` is also valid. Use a one-shot helper for
-responses assembled inline, or a schema-derived builder when fixtures need many shallow variants.
-The helper's fixture input, parsed output, defaults, and overrides must be inferred from the schema,
-and every result must be parsed when it is constructed.
+Do not send the value returned by `schema.parse`: it is `z.output` and transforms such as
+`dateTimeSchema()` or enum fallbacks can change the response. A repository-local fixture helper that
+calls `schema.parse` for validation and returns the unchanged `z.input` is valid. Use a one-shot
+helper for responses assembled inline, or a schema-derived builder when fixtures need many shallow
+variants. The helper's fixture, returned value, defaults, and overrides must be inferred from the
+schema's input, and every result must be validated when it is constructed.
 
 A TypeScript annotation or `satisfies` check is not sufficient because neither validates the fixture
 at runtime. Do not replace the producer-owned schema with an app-local schema copy.
