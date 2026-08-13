@@ -112,3 +112,8 @@ at runtime. Do not replace the producer-owned schema with an app-local schema co
 The shared `contractFixtures` Oxlint preset reports legacy violations as warnings and local
 overrides block violations in migrated directories. Ratchet whole directories only after their
 response fixtures are migrated; do not suppress violations or downgrade a migrated directory.
+
+The source of truth for this rule is
+`packages/ai-rules/rules/frontend/dataFetching.md` in the `core-utils` repository. Do not edit
+generated `.rules` copies in consumer repositories directly; upgrade
+`@clipboard-health/ai-rules` and run `node --run sync-ai-rules` instead.
