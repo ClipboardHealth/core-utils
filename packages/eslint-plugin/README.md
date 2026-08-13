@@ -5,6 +5,7 @@ Clipboard's [ESLint](https://eslint.org/) plugin.
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)
+- [Contract fixture construction](#contract-fixture-construction)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -33,6 +34,17 @@ module.exports = {
   root: true,
 };
 ```
+
+## Contract fixture construction
+
+`require-contract-fixture-construction` requires MSW and Playwright response fixtures to be
+constructed through response schemas imported from `@clipboard-health/contract-*` packages. It
+also checks exported fixtures in `testUtils/mocks` modules and rejects fixtures mutated after they
+were parsed.
+
+Prefer the `contractFixtures` preset from `@clipboard-health/oxlint-config`. Repositories migrating
+an existing fixture backlog should enable the preset's warning baseline, then add local error-level
+overrides for each migrated directory.
 
 ## Local development commands
 

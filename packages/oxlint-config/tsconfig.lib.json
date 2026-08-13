@@ -11,5 +11,10 @@
     "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/oxlint-config/tsconfig.lib.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json"],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../eslint-plugin/tsconfig.lib.json"
+    }
+  ]
 }

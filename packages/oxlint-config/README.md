@@ -151,6 +151,8 @@ The package includes:
 - **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
+- **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
+  fixtures are parsed by producer-owned contract response schemas
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
 ## Intentionally disabled rules

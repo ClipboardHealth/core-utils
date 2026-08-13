@@ -19,6 +19,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "@clipboard-health/eslint-plugin": "2.8.0"
+  },
   "peerDependencies": {
     "oxlint": ">=1.68.0",
     "oxlint-tsgolint": ">=0.21.1"
