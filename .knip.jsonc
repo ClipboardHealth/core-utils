@@ -57,7 +57,7 @@
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
     "packages/oxlint-config": {
-      "ignoreDependencies": ["@clipboard-health/eslint-plugin"],
+      "ignoreDependencies": ["@clipboard-health/eslint-plugin", "eslint"],
     },
     "packages/rules-engine": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
