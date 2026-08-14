@@ -1,3 +1,5 @@
+import type { Rule } from "@oxlint/plugins";
+
 import enforceTsRestInControllers from "./lib/rules/enforce-ts-rest-in-controllers";
 import noCrossContractImports from "./lib/rules/no-cross-contract-imports";
 import requireContractFixtureConstruction from "./lib/rules/require-contract-fixture-construction";
@@ -14,4 +16,4 @@ export const rules = {
   "require-http-module-factory": requireHttpModuleFactory,
   "require-run-validators-with-upsert": requireRunValidatorsWithUpsert,
   "require-zod-import-in-contracts": requireZodImportInContracts,
-};
+} satisfies Record<string, Rule>;
