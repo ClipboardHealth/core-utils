@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/oxlint-plugin",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Clipboard's Oxlint plugin.",
   "keywords": [
     "oxlint",
