@@ -73,6 +73,9 @@
     },
     {
       "path": "./packages/usa-states"
+    },
+    {
+      "path": "./packages/oxlint-plugin"
     }
   ]
 }

@@ -26,6 +26,7 @@
       "@clipboard-health/notifications": ["./packages/notifications/src/index.ts"],
       "@clipboard-health/nx-plugin": ["./packages/nx-plugin/src/index.ts"],
       "@clipboard-health/oxlint-config": ["./packages/oxlint-config/src/index.ts"],
+      "@clipboard-health/oxlint-plugin": ["./packages/oxlint-plugin/src/index.ts"],
       "@clipboard-health/phone-number": ["./packages/phone-number/src/index.ts"],
       "@clipboard-health/playwright-reporter-llm": [
         "./packages/playwright-reporter-llm/src/index.ts"

@@ -14,7 +14,7 @@ const ruleTester = new TSESLint.RuleTester({
 });
 
 // oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
-ruleTester.run("require-contract-response-parse", rule, {
+ruleTester.run("require-contract-response-parse", rule as never, {
   valid: [
     {
       name: "contract schema parses the response before a shape assertion",

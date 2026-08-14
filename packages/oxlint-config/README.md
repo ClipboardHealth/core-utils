@@ -13,7 +13,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 ## Install
 
 ```bash
-npm install @clipboard-health/oxlint-config
+npm install @clipboard-health/oxlint-config @clipboard-health/oxlint-plugin
 ```
 
 Requires `oxlint >= 1.68.0`: the config references rules that older oxlint versions do not register, which fails config parsing outright.
@@ -27,7 +27,7 @@ Use the package's TypeScript helper when a repo needs additive composition. Oxli
 Create an `oxlint.config.ts` in your repo root:
 
 ```ts
-import { base, createOxlintConfig, vitest } from "@clipboard-health/oxlint-config";
+import { base, createOxlintConfig, customRules, vitest } from "@clipboard-health/oxlint-config";
 import { defineConfig } from "oxlint";
 
 export default defineConfig(
@@ -58,7 +58,7 @@ export default defineConfig(
         },
       },
     },
-    presets: [base, vitest],
+    presets: [base, customRules, vitest],
   }),
 );
 ```
@@ -67,6 +67,7 @@ Available presets:
 
 - `base`
 - `contractFixtures`
+- `customRules`
 - `react`
 - `jest`
 - `vitest`
@@ -154,6 +155,8 @@ The package includes:
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
   fixtures are parsed by producer-owned contract response schemas
+- **`customRules` preset**: registers the ESLint-independent Clipboard plugin and reproduces the
+  shared controller, module, contract, and cross-contract-import enforcement scopes
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
 ## Intentionally disabled rules

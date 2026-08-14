@@ -14,7 +14,7 @@
   "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.test.tsx"],
   "references": [
     {
-      "path": "../eslint-plugin/tsconfig.lib.json"
+      "path": "../oxlint-plugin/tsconfig.lib.json"
     }
   ]
 }

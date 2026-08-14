@@ -1,0 +1,29 @@
+{
+  "name": "@clipboard-health/oxlint-plugin",
+  "version": "0.0.0",
+  "description": "Clipboard's Oxlint plugin.",
+  "keywords": [
+    "oxlint",
+    "plugin"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/oxlint-plugin"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "1.77.0",
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "oxlint": "1.77.0"
+  }
+}

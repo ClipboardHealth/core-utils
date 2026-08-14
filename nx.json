@@ -49,6 +49,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
+      "exclude": ["packages/oxlint-plugin/test/negative/**"],
       "options": {
         "targetName": "lint"
       }

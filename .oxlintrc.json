@@ -1,7 +1,14 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/vitest.json"],
-  "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
+  "ignorePatterns": [
+    ".agents/",
+    ".rules/",
+    "coverage/",
+    "dist/",
+    "node_modules/",
+    "packages/oxlint-plugin/test/negative/"
+  ],
   "options": {
     "denyWarnings": true,
     "reportUnusedDisableDirectives": "off",
