@@ -14,7 +14,7 @@ const ruleTester = new TSESLint.RuleTester({
 });
 
 // oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
-ruleTester.run("require-http-module-factory", rule, {
+ruleTester.run("require-http-module-factory", rule as never, {
   valid: [
     {
       name: "HttpModule with registerAsync factory",

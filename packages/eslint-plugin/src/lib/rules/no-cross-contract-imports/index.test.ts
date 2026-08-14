@@ -32,7 +32,7 @@ const inNestedNamelessDirectory = path.join(
 const inConsumerApp = path.join(__dirname, "fixtures", "consumer-app", "src", "worker.ts");
 
 // oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
-ruleTester.run("no-cross-contract-imports", rule, {
+ruleTester.run("no-cross-contract-imports", rule as never, {
   valid: [
     {
       name: "contract-core import is the allowed shared dependency",

@@ -20,8 +20,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/eslint-plugin": "2.9.1",
-    "eslint": "8.57.1"
+    "@clipboard-health/oxlint-plugin": "0.0.0"
   },
   "peerDependencies": {
     "oxlint": ">=1.68.0",

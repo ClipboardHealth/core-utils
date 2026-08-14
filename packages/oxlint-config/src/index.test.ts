@@ -2,6 +2,7 @@ import {
   base,
   contractFixtures,
   createOxlintConfig,
+  customRules,
   jest as jestPreset,
   type OxlintPreset,
   react,
@@ -70,11 +71,46 @@ describe("oxlint-config", () => {
     });
 
     it("exports additive plugin presets", () => {
+      expect(customRules).toStrictEqual({
+        jsPlugins: [
+          {
+            name: "@clipboard-health",
+            specifier: "@clipboard-health/oxlint-plugin",
+          },
+        ],
+        overrides: [
+          {
+            files: ["**/*.controller.ts", "**/*.controllers.ts"],
+            rules: {
+              "@clipboard-health/enforce-ts-rest-in-controllers": "error",
+            },
+          },
+          {
+            files: ["**/*.module.ts"],
+            rules: {
+              "@clipboard-health/require-http-module-factory": "error",
+            },
+          },
+          {
+            files: ["**/*.contract.ts"],
+            rules: {
+              "@clipboard-health/require-zod-import-in-contracts": "error",
+            },
+          },
+          {
+            files: ["**/*.ts", "**/*.tsx"],
+            rules: {
+              "@clipboard-health/no-cross-contract-imports": "error",
+            },
+          },
+        ],
+      });
+
       expect(contractFixtures).toStrictEqual({
         jsPlugins: [
           {
             name: "contract-fixtures",
-            specifier: "@clipboard-health/eslint-plugin",
+            specifier: "@clipboard-health/oxlint-plugin",
           },
         ],
         overrides: [

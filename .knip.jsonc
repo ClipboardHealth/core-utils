@@ -57,7 +57,11 @@
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
     "packages/oxlint-config": {
-      "ignoreDependencies": ["@clipboard-health/eslint-plugin", "eslint"],
+      "ignoreDependencies": ["@clipboard-health/oxlint-plugin"],
+    },
+    "packages/oxlint-plugin": {
+      "entry": ["scripts/verifyNegativeFixtures.mjs"],
+      "ignore": ["test/negative/**/*.ts"],
     },
     "packages/rules-engine": {
       "entry": ["examples/**/*.ts", "src/index.ts"],

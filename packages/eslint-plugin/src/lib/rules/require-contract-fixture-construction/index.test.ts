@@ -15,7 +15,7 @@ const handlersFile = "/repo/src/app/Feature/api/test-utils/handlers.ts";
 const playwrightFile = "/repo/playwright/e2e/feature.spec.ts";
 
 // oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
-ruleTester.run("require-contract-fixture-construction", rule, {
+ruleTester.run("require-contract-fixture-construction", rule as never, {
   valid: [
     {
       name: "accepts an exported fixture parsed by an imported response schema",

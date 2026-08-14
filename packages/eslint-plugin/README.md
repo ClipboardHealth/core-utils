@@ -2,6 +2,10 @@
 
 Clipboard's [ESLint](https://eslint.org/) plugin.
 
+The rule implementations are shared with `@clipboard-health/oxlint-plugin`, so ESLint and Oxlint
+consumers execute the same behavior. This compatibility package remains available for repositories
+that have not migrated to Oxlint yet.
+
 ## Table of contents <!-- omit from toc -->
 
 - [Install](#install)

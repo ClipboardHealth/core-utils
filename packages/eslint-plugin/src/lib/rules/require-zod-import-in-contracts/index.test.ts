@@ -14,7 +14,7 @@ const ruleTester = new TSESLint.RuleTester({
 });
 
 // oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
-ruleTester.run("require-zod-import-in-contracts", rule, {
+ruleTester.run("require-zod-import-in-contracts", rule as never, {
   valid: [
     {
       name: "named zod import used at source level",

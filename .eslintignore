@@ -2,6 +2,7 @@
 coverage/
 dist/
 node_modules/
+packages/oxlint-plugin/test/negative/
 
 # Alphabetical files
 packages/eslint-config/src/index.js
