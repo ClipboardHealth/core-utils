@@ -1,5 +1,8 @@
 {
   "extends": ["../../typedoc.base.json"],
   "entryPoints": ["src/index.ts"],
-  "tsconfig": "tsconfig.lib.json"
+  "tsconfig": "tsconfig.lib.json",
+  "compilerOptions": {
+    "module": "preserve"
+  }
 }
