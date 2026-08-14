@@ -63,7 +63,7 @@
     "oxlint": "1.77.0",
     "oxlint-tsgolint": "7.0.2001",
     "promptfoo": "0.122.0",
-    "syncpack": "15.3.2",
+    "syncpack": "15.3.3",
     "ts-node": "11.0.0-beta.1",
     "tsx": "4.23.9",
     "typedoc": "0.28.20",
