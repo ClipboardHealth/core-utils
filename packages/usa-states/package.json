@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/usa-states",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Canonical US state and territory list, StateCode and StateName types, and name/code normalizers.",
   "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
@@ -17,7 +17,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/util-ts": "5.16.0",
+    "@clipboard-health/util-ts": "5.16.1",
     "tslib": "2.8.1"
   }
 }
