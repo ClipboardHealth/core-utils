@@ -6,6 +6,7 @@ Read the rule files relevant to the code you're changing or reviewing.
 
 | Rule                    | File                                  | When to Read                                                                                                          |
 | ----------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| AI Rules                | .rules/common/aiRules.md              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                  |
 | Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
 | Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
 | Date & Time             | .rules/common/dateTime.md             | Working with dates, times, timezones, or date comparisons                                                             |
