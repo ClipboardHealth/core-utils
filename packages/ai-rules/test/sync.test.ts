@@ -41,6 +41,8 @@ describe("sync script", () => {
       verbose: false,
     });
 
+    await expect(access(path.join(consumerRoot, ".rules"))).resolves.toBeUndefined();
+    await expect(access(path.join(consumerRoot, "AGENTS.md"))).resolves.toBeUndefined();
     await expect(access(path.join(consumerRoot, ".agents"))).rejects.toMatchObject({
       code: "ENOENT",
     });
