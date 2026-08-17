@@ -51,7 +51,7 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot);
+    await formatOutputFiles({ projectRoot: PATHS.projectRoot });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -191,7 +191,12 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-async function formatOutputFiles(projectRoot: string): Promise<void> {
+interface FormatOutputFilesArguments {
+  projectRoot: string;
+}
+
+async function formatOutputFiles(arguments_: FormatOutputFilesArguments): Promise<void> {
+  const { projectRoot } = arguments_;
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
