@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { access, cp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { FILES, type ProfileName, PROFILES } from "./constants";
@@ -17,9 +17,6 @@ interface ParsedArguments {
   extraIncludes: string[];
   excludes: string[];
 }
-
-type AgentDirectoryName = "lib";
-type AgentDirectorySyncResult = "missing" | "linked" | "copied";
 
 async function sync() {
   try {
@@ -42,16 +39,8 @@ async function sync() {
     }
 
     const rulesOutput = path.join(PATHS.projectRoot, ".rules");
-    const agentsOutput = path.join(PATHS.projectRoot, ".agents");
-    const libraryOutput = path.join(agentsOutput, "lib");
-    await Promise.all([
-      rm(rulesOutput, { recursive: true, force: true }),
-      rm(libraryOutput, { recursive: true, force: true }),
-    ]);
-    const [, librarySyncResult] = await Promise.all([
-      copyRuleFiles(rules, rulesOutput),
-      syncAgentDirectory("lib", libraryOutput),
-    ]);
+    await rm(rulesOutput, { recursive: true, force: true });
+    await copyRuleFiles(rules, rulesOutput);
 
     const agentsContent = generateAgentsIndex(rules);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
@@ -62,9 +51,7 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot, {
-      libCopied: librarySyncResult === "copied",
-    });
+    await formatOutputFiles({ projectRoot: PATHS.projectRoot });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -129,58 +116,6 @@ async function copyRuleFiles(rules: RuleMetadata[], rulesOutput: string): Promis
       await cp(path.join(PATHS.packageRoot, "rules", rule.relativePath), destination);
     }),
   );
-}
-
-async function syncAgentDirectory(
-  directoryName: AgentDirectoryName,
-  destination: string,
-): Promise<AgentDirectorySyncResult> {
-  const source = await resolveAgentDirectorySource(directoryName);
-
-  if (!source) {
-    return "missing";
-  }
-
-  await mkdir(path.dirname(destination), { recursive: true });
-
-  const relativeSource = path.relative(path.dirname(destination), source);
-  try {
-    await symlink(relativeSource, destination, "dir");
-    console.log(`📋 Linked ${directoryName} to .agents/${directoryName}/`);
-    return "linked";
-  } catch (error) {
-    console.warn(
-      `⚠️ Could not symlink ${directoryName}; copying instead: ${toErrorMessage(error)}`,
-    );
-    await cp(source, destination, { recursive: true });
-    console.log(`📋 Synced ${directoryName} to .agents/${directoryName}/`);
-    return "copied";
-  }
-}
-
-async function resolveAgentDirectorySource(
-  directoryName: AgentDirectoryName,
-): Promise<string | undefined> {
-  const packageSource = path.join(PATHS.packageRoot, directoryName);
-  const sourceTreeSource = path.join(PATHS.projectRoot, "plugins", "core", directoryName);
-
-  // This repo runs the built sync script from dist/, but checked-in links should
-  // target source assets rather than ignored build output.
-  if (isSourceBuildPackage() && (await fileExists(sourceTreeSource))) {
-    return sourceTreeSource;
-  }
-
-  if (await fileExists(packageSource)) {
-    return packageSource;
-  }
-
-  return undefined;
-}
-
-function isSourceBuildPackage(): boolean {
-  return path
-    .normalize(PATHS.packageRoot)
-    .endsWith(path.normalize(path.join("dist", "packages", "ai-rules")));
 }
 
 async function appendOverlay(projectRoot: string): Promise<void> {
@@ -256,11 +191,12 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-interface FormatOptions {
-  libCopied: boolean;
+interface FormatOutputFilesArguments {
+  projectRoot: string;
 }
 
-async function formatOutputFiles(projectRoot: string, options: FormatOptions): Promise<void> {
+async function formatOutputFiles(arguments_: FormatOutputFilesArguments): Promise<void> {
+  const { projectRoot } = arguments_;
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
@@ -269,10 +205,6 @@ async function formatOutputFiles(projectRoot: string, options: FormatOptions): P
   }
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
-
-  if (options.libCopied) {
-    filesToFormat.push(path.join(projectRoot, ".agents", "lib"));
-  }
 
   const command =
     formatter === "oxfmt"
