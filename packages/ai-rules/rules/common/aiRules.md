@@ -1,5 +1,5 @@
 ---
-description: "Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files"
+description: "Updating Clipboard AI rules or modifying generated .rules, .agents/, AGENTS.md, CLAUDE.md, or OVERLAY.md files"
 ---
 
 # AI Rules
