@@ -1,6 +1,6 @@
 # @clipboard-health/ai-rules
 
-Pre-built AI agent rules for consistent coding standards. Uses a retrieval-based approach: generates a compressed index in `AGENTS.md` pointing to copied `.rules/` files that agents read on demand, with `.agents/` linked to package-provided agent assets.
+Pre-built AI agent rules for consistent coding standards. Uses a retrieval-based approach: generates a compressed index in `AGENTS.md` pointing to copied `.rules/` files that agents read on demand.
 
 ## Table of contents
 
@@ -56,7 +56,7 @@ npm install --save-dev @clipboard-health/ai-rules
 5. Commit the generated files:
 
    ```bash
-   git add .rules/ .agents/ AGENTS.md CLAUDE.md
+   git add .rules/ AGENTS.md CLAUDE.md
    git commit -m "feat: add AI coding rules"
    ```
 
@@ -99,10 +99,10 @@ npm update @clipboard-health/ai-rules
 npm install
 
 # Review the changes
-git diff .rules/ .agents/ AGENTS.md
+git diff .rules/ AGENTS.md
 
 # Commit the updates
-git add .rules/ .agents/ AGENTS.md CLAUDE.md
+git add .rules/ AGENTS.md CLAUDE.md
 git commit -m "chore: update AI coding rules"
 ```
 
@@ -131,7 +131,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 | Rule ID                       | When to Read                                                                                                          |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `common/aiRules`              | Updating Clipboard AI rules or modifying generated .rules, .agents/, AGENTS.md, CLAUDE.md, or OVERLAY.md files        |
+| `common/aiRules`              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                  |
 | `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
 | `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
 | `common/dateTime`             | Working with dates, times, timezones, or date comparisons                                                             |
@@ -193,10 +193,10 @@ v2 replaces the monolithic `AGENTS.md` with a retrieval-based approach. Rule fil
    npm install
    ```
 
-3. Add `.rules/` and `.agents/` to git and commit:
+3. Add `.rules/` to git and commit:
 
    ```bash
-   git add .rules/ .agents/ AGENTS.md CLAUDE.md
+   git add .rules/ AGENTS.md CLAUDE.md
    git commit -m "feat!: update ai-rules to v2 retrieval-based approach"
    ```
 

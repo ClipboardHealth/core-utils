@@ -17,6 +17,35 @@ afterEach(async () => {
 });
 
 describe("sync script", () => {
+  it("does not create a consumer .agents directory", async () => {
+    const consumerRoot = await createConsumerProject();
+    const installedPackageRoot = path.join(
+      consumerRoot,
+      "node_modules",
+      "@clipboard-health",
+      "ai-rules",
+    );
+    const legacyLibraryPath = path.join(installedPackageRoot, "lib");
+    await mkdir(legacyLibraryPath, { recursive: true });
+    await writeFile(path.join(legacyLibraryPath, "unused.ts"), "export {};\n", "utf8");
+
+    await execAndLog({
+      command: [
+        process.execPath,
+        "--import",
+        "tsx",
+        path.join(installedPackageRoot, "scripts", "sync.ts"),
+        "common",
+      ],
+      cwd: WORKSPACE_ROOT,
+      verbose: false,
+    });
+
+    await expect(access(path.join(consumerRoot, ".agents"))).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  });
+
   it("leaves consumer Claude configuration untouched", async () => {
     const consumerRoot = await createConsumerProject();
     const claudeDirectory = path.join(consumerRoot, ".claude");
