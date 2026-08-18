@@ -8,9 +8,11 @@ Vitest and `@testing-library/react`, with MSW for API mocking. Test files use th
 
 ## Philosophy
 
-Focus on integration tests—test how components work together as users experience them.
+Most tests must be unit, component, or contract tests. Test components together as users experience them; isolate pure logic only when that is the clearest public seam.
 
-**Priority:** Static (TS/ESLint) → Integration → Unit (pure utilities only) → E2E (critical flows only)
+**Priority:** Static (TS/ESLint) → Unit, component, and contract → E2E (registered critical flows only)
+
+Contract tests and API-backed component tests use the producer-owned `@clipboard-health/contract-*` package published by the backend repository. Build responses through its schemas as specified in [Contract-Derived Response Fixtures](dataFetching.md#contract-derived-response-fixtures).
 
 ## Page-Level Tests
 

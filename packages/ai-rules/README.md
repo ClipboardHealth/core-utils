@@ -160,7 +160,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | `frontend/architecture`    | Frontend architecture: feature-based file organization, where business logic lives                                      |
 | `frontend/customHooks`     | Creating React custom hooks: naming, shared state with constate                                                         |
 | `frontend/dataFetching`    | Implementing data fetching, API response fixtures, and error handling: React Query, MSW, Playwright, caching, parsedApi |
-| `frontend/e2eTesting`      | Writing E2E tests with Playwright                                                                                       |
+| `frontend/e2eTesting`      | Choosing and writing Playwright E2E tests for registered critical flows                                                 |
 | `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook            |
 | `frontend/styling`         | Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS                                                 |
 | `frontend/testing`         | Writing frontend tests: React Testing Library, component tests                                                          |
