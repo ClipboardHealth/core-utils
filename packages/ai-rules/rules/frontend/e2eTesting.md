@@ -7,8 +7,7 @@ description: "Choosing and writing Playwright E2E tests for registered critical 
 ## Core Rules
 
 - Keep the E2E suite Pareto-optimal: the smallest set of tests that protects the most critical user and business risk
-- Map every test to a flow in [`criticalFlows.json`](https://github.com/ClipboardHealth/groundtruth/blob/main/registry/criticalFlows.json); record its `id` in the test title or an adjacent comment
-- Cover one representative path per distinct cross-system risk; put variants and edge cases at a lower test seam
+- Record the mapped critical flow's `id` in the test title or an adjacent comment
 - Each test sets up its own data (no shared state between tests)
 - Mock feature flags and third-party services
 - Use user-centric locators in priority order: `getByRole`, `getByLabel`, `getByPlaceholder`, `getByText`; use `getByTestId` only as a last resort—avoid CSS/XPath selectors
