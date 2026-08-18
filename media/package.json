@@ -53,7 +53,7 @@
     "eslint": "8.57.1",
     "eslint-plugin-promise": "7.3.0",
     "husky": "9.1.7",
-    "jscpd": "5.0.14",
+    "jscpd": "5.0.15",
     "jsonc-eslint-parser": "3.3.0",
     "knip": "6.31.0",
     "lint-staged": "17.3.0",
