@@ -26,7 +26,7 @@ await expect(page.getByText("Submit")).toBeAttached();
 
 Before adding an E2E test:
 
-1. Identify the exact `criticalFlows.json` entry for the behavior. A flow absent from the registry belongs at a lower test seam.
+1. Identify the exact [`criticalFlows.json`](https://github.com/ClipboardHealth/groundtruth/blob/main/registry/criticalFlows.json) entry for the behavior. A flow absent from the registry belongs at a lower test seam.
 2. Identify the distinct browser-to-service failure this test detects beyond existing E2E coverage. Multi-page navigation alone is insufficient.
 3. Use the lowest seam that can detect the failure: unit tests for logic and variants, component tests for user-visible behavior, and contract tests for API compatibility.
 4. Add the E2E test only when all three checks pass and coverage requires the end-to-end system. Otherwise follow the [frontend testing priority](testing.md#philosophy).
