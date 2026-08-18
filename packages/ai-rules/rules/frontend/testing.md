@@ -8,9 +8,9 @@ Vitest and `@testing-library/react`, with MSW for API mocking. Test files use th
 
 ## Philosophy
 
-Most tests must be unit, component, or contract tests. Test components together as users experience them; isolate pure logic only when that is the clearest public seam.
+Test components together as users experience them; isolate pure logic only when that is the clearest public seam.
 
-**Priority:** Static (TS/ESLint) → Unit, component, and contract → E2E (registered critical flows only)
+**Priority:** Static (TS/ESLint) → Unit, component, and contract (most tests) → E2E (registered critical flows only)
 
 For contract tests and API-backed component tests, follow [Contract-Derived Response Fixtures](dataFetching.md#contract-derived-response-fixtures).
 
