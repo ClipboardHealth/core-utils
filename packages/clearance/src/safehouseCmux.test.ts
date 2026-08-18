@@ -157,6 +157,23 @@ describe(resolveSafehouseCmuxIntegration, () => {
     expect(actual.unreviewedEnvNames).toStrictEqual([]);
   });
 
+  it("treats the cmux wrapper launch markers as reviewed", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: {
+        CMUX_BUNDLED_CLI_PATH: "/tmp/cmux/bin/cmux",
+      },
+      readFile: () =>
+        [
+          "CMUX_AGENT_RESTORE_LAUNCH",
+          "CMUX_AGENT_RESUME_LAUNCH",
+          "CMUX_CLAUDE_TEAMS_CMUX_BIN",
+          "CMUX_CLAUDE_TEAMS_WRAPPER_LAUNCH",
+        ].join("\n"),
+    });
+
+    expect(actual.unreviewedEnvNames).toStrictEqual([]);
+  });
+
   it("reads the bundled cmux wrapper source with the default file reader", () => {
     const tempDir = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-test-"));
     try {

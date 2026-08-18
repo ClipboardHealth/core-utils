@@ -22,11 +22,22 @@ export const SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES = [
   "CMUX_AGENT_LAUNCH_CWD",
   "CMUX_AGENT_LAUNCH_EXECUTABLE",
   "CMUX_AGENT_LAUNCH_KIND",
+  // App-minted one-shot token authorizing a cmux-owned session restore. A
+  // safehouse launch is never one, and the wrapper consumes it and re-issues it
+  // across its own shim hops, so passing it in only hands over stale authority.
+  "CMUX_AGENT_RESTORE_LAUNCH",
+  // The wrapper derives this from the `--resume` id in its own argv.
+  "CMUX_AGENT_RESUME_LAUNCH",
   // Settings-merge names: shell locals plus env set inline on the wrapper's
   // own `node` merge child. None cross the sandbox boundary as ambient env.
   "CMUX_BASE_SETTINGS",
   "CMUX_CLAUDE_HOOK_CMUX_BIN",
   "CMUX_CLAUDE_PID",
+  // Marker pair `cmux claude-teams` sets when it re-enters the wrapper to bind
+  // a lead session. Forwarding it would suppress the ordinary Claude launch
+  // capture that a safehouse agent depends on.
+  "CMUX_CLAUDE_TEAMS_CMUX_BIN",
+  "CMUX_CLAUDE_TEAMS_WRAPPER_LAUNCH",
   "CMUX_FILTERED_ARGS",
   "CMUX_MERGED_SETTINGS",
   "CMUX_ORIGINAL_NODE_OPTIONS",
