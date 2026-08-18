@@ -12,7 +12,7 @@ Most tests must be unit, component, or contract tests. Test components together 
 
 **Priority:** Static (TS/ESLint) → Unit, component, and contract → E2E (registered critical flows only)
 
-Contract tests and API-backed component tests use the producer-owned `@clipboard-health/contract-*` package published by the backend repository. Build responses through its schemas as specified in [Contract-Derived Response Fixtures](dataFetching.md#contract-derived-response-fixtures).
+For contract tests and API-backed component tests, follow [Contract-Derived Response Fixtures](dataFetching.md#contract-derived-response-fixtures).
 
 ## Page-Level Tests
 
