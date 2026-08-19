@@ -1,5 +1,6 @@
 /**
  * @fileoverview Rule to disallow calling Boolean without an argument
+ * @see https://github.com/ClipboardHealth/clipboard-health/blob/a27b273938694a31897274b2baa0899783b6299f/scripts/oxlint-plugin/rules/no-restricted-syntax.mjs
  */
 import { defineRule } from "@oxlint/plugins";
 
