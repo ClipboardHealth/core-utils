@@ -3,6 +3,7 @@ import {
   contractFixtures,
   createOxlintConfig,
   customRules,
+  frontend,
   jest as jestPreset,
   type OxlintPreset,
   react,
@@ -130,6 +131,42 @@ describe("oxlint-config", () => {
 
       expect(react).toStrictEqual({
         plugins: ["react"],
+      });
+
+      expect(frontend).toStrictEqual({
+        plugins: ["react", "jsx-a11y"],
+        rules: {
+          "jsx-a11y/anchor-has-content": "error",
+          "jsx-a11y/aria-props": "error",
+          "jsx-a11y/aria-proptypes": "error",
+          "jsx-a11y/aria-role": "error",
+          "jsx-a11y/aria-unsupported-elements": "error",
+          "jsx-a11y/control-has-associated-label": "error",
+          "jsx-a11y/heading-has-content": "error",
+          "jsx-a11y/iframe-has-title": "error",
+          "jsx-a11y/img-redundant-alt": "error",
+          "jsx-a11y/interactive-supports-focus": "error",
+          "jsx-a11y/no-access-key": "error",
+          "jsx-a11y/no-distracting-elements": "error",
+          "jsx-a11y/no-redundant-roles": "error",
+          "jsx-a11y/prefer-tag-over-role": "off",
+          "jsx-a11y/role-has-required-aria-props": "error",
+          "jsx-a11y/role-supports-aria-props": "error",
+          "jsx-a11y/scope": "error",
+          "react/exhaustive-deps": "warn",
+          "react/jsx-filename-extension": ["warn", { extensions: [".tsx", ".jsx"] }],
+          "react/jsx-no-comment-textnodes": "error",
+          "react/jsx-no-duplicate-props": "error",
+          "react/jsx-no-undef": "error",
+          "react/jsx-pascal-case": ["error", { allowAllCaps: true }],
+          "react/no-danger-with-children": "error",
+          "react/no-did-update-set-state": "error",
+          "react/no-direct-mutation-state": "error",
+          "react/no-is-mounted": "error",
+          "react/require-render-return": "error",
+          "react/rules-of-hooks": "error",
+          "react/style-prop-object": "error",
+        },
       });
 
       expect(jestPreset).toStrictEqual({
