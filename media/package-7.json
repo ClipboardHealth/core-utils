@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/eslint-plugin",
-  "version": "2.10.4",
+  "version": "2.11.0",
   "description": "Clipboard's ESLint Plugin",
   "keywords": [
     "eslint",
@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/oxlint-plugin": "1.0.4",
+    "@clipboard-health/oxlint-plugin": "1.1.0",
     "@oxlint/plugins": "1.78.0",
     "tslib": "2.8.1"
   },
