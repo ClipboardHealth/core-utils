@@ -68,6 +68,7 @@ Available presets:
 - `base`
 - `contractFixtures`
 - `customRules`
+- `frontend`
 - `react`
 - `jest`
 - `vitest`
@@ -77,6 +78,33 @@ Merge behavior:
 - `plugins`, `jsPlugins`, `overrides`, and `ignorePatterns` append in order
 - `rules`, `settings`, `options`, `categories`, `env`, and `globals` merge left-to-right
 - `localConfig` always wins over preset values when keys conflict
+
+For React applications, compose `frontend` with the shared base and the repository's test runner:
+
+```ts
+import { base, createOxlintConfig, frontend, vitest } from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+export default defineConfig(
+  createOxlintConfig({
+    localConfig: {
+      ignorePatterns: ["coverage/"],
+      overrides: [
+        {
+          files: ["src/**"],
+          rules: {
+            "no-console": "error",
+          },
+        },
+      ],
+    },
+    presets: [base, frontend, vitest],
+  }),
+);
+```
+
+Keep repository architecture rules, import restrictions, and additional JavaScript plugins in
+`localConfig`.
 
 ### JSON config
 
@@ -152,6 +180,7 @@ The package includes:
 - **`base.json`**: the backwards-compatible JSON preset for simple `extends` usage
 - **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
+- **`frontend` preset**: shared React and JSX accessibility plugins and rules
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
   fixtures are parsed by producer-owned contract response schemas
