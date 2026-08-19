@@ -10,6 +10,7 @@ ESLint.
 ## Rules
 
 - `enforce-ts-rest-in-controllers`
+- `no-empty-boolean-call`
 - `no-cross-contract-imports`
 - `require-contract-fixture-construction`
 - `require-contract-response-parse`
@@ -23,5 +24,6 @@ Use the `customRules` preset from `@clipboard-health/oxlint-config` to register 
 apply the shared controller, module, contract, and cross-contract-import scopes. The
 `contractFixtures` preset enables fixture-construction checks in tests.
 
-`require-contract-response-parse` and `require-run-validators-with-upsert` are opt-in because their
-safe adoption scope is repository-specific.
+`no-empty-boolean-call`, `require-contract-response-parse`, and
+`require-run-validators-with-upsert` are opt-in because their safe adoption scope is
+repository-specific.
