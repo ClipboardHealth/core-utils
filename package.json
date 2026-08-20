@@ -44,7 +44,7 @@
     "@swc-node/register": "1.12.1",
     "@swc/core": "1.16.0",
     "@swc/helpers": "0.5.23",
-    "@tsconfig/node24": "24.0.4",
+    "@tsconfig/node24": "24.0.5",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "24.13.3",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
