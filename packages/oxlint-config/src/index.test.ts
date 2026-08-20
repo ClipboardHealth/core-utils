@@ -111,9 +111,6 @@ describe("oxlint-config", () => {
       });
 
       expect(contractFixtures).toStrictEqual({
-        categories: {
-          correctness: "off",
-        },
         jsPlugins: [
           {
             name: "contract-fixtures",

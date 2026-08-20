@@ -135,8 +135,7 @@ export default defineConfig(
 `frontendApplication` contains shared JavaScript correctness rules, the import plugin, and the
 common Playwright override. `typeAware` contains rules that require Oxlint's `--type-aware` mode.
 `vitestSafety` contains the Vitest rules that are safe to adopt independently of the full `vitest`
-preset. `contractFixtures` disables the default correctness category so its dedicated audit remains
-a one-rule, incrementally adoptable check.
+preset.
 
 ### JSON config
 

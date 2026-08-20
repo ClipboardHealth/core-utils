@@ -227,9 +227,6 @@ export const customRules: OxlintPreset = {
   ],
 };
 export const contractFixtures: OxlintPreset = {
-  categories: {
-    correctness: "off",
-  },
   jsPlugins: [
     {
       name: "contract-fixtures",
