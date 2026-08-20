@@ -13,8 +13,11 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 ## Install
 
 ```bash
-npm install @clipboard-health/oxlint-config @clipboard-health/oxlint-plugin
+npm install @clipboard-health/oxlint-config
 ```
+
+The config package includes `@clipboard-health/oxlint-plugin` for presets that use Clipboard Health
+custom rules.
 
 Requires `oxlint >= 1.68.0`: the config references rules that older oxlint versions do not register, which fails config parsing outright.
 
@@ -69,9 +72,12 @@ Available presets:
 - `contractFixtures`
 - `customRules`
 - `frontend`
+- `frontendApplication`
 - `react`
 - `jest`
+- `typeAware`
 - `vitest`
+- `vitestSafety`
 
 Merge behavior:
 
@@ -105,6 +111,32 @@ export default defineConfig(
 
 Keep repository architecture rules, import restrictions, and additional JavaScript plugins in
 `localConfig`.
+
+Frontend repositories that cannot adopt the complete `base` and `vitest` policies without changing
+existing diagnostics can compose the narrower parity-safe presets:
+
+```ts
+import {
+  createOxlintConfig,
+  frontend,
+  frontendApplication,
+  typeAware,
+  vitestSafety,
+} from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+export default defineConfig(
+  createOxlintConfig({
+    presets: [frontend, frontendApplication, typeAware, vitestSafety],
+  }),
+);
+```
+
+`frontendApplication` contains shared JavaScript correctness rules, the import plugin, and the
+common Playwright override. `typeAware` contains rules that require Oxlint's `--type-aware` mode.
+`vitestSafety` contains the Vitest rules that are safe to adopt independently of the full `vitest`
+preset. `contractFixtures` disables the default correctness category so its dedicated audit remains
+a one-rule, incrementally adoptable check.
 
 ### JSON config
 

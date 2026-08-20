@@ -4,10 +4,13 @@ import {
   createOxlintConfig,
   customRules,
   frontend,
+  frontendApplication,
   jest as jestPreset,
   type OxlintPreset,
   react,
+  typeAware,
   vitest,
+  vitestSafety,
 } from "./index";
 
 describe("oxlint-config", () => {
@@ -108,6 +111,9 @@ describe("oxlint-config", () => {
       });
 
       expect(contractFixtures).toStrictEqual({
+        categories: {
+          correctness: "off",
+        },
         jsPlugins: [
           {
             name: "contract-fixtures",
@@ -166,6 +172,92 @@ describe("oxlint-config", () => {
           "react/require-render-return": "error",
           "react/rules-of-hooks": "error",
           "react/style-prop-object": "error",
+        },
+      });
+
+      expect(frontendApplication).toStrictEqual({
+        ignorePatterns: [".agents/"],
+        plugins: ["import"],
+        rules: {
+          curly: ["error", "all"],
+          eqeqeq: ["error", "always"],
+          "getter-return": "error",
+          "no-array-constructor": "error",
+          "no-caller": "error",
+          "no-cond-assign": ["error", "except-parens"],
+          "no-const-assign": "error",
+          "no-control-regex": "error",
+          "no-debugger": "error",
+          "no-delete-var": "error",
+          "no-dupe-keys": "error",
+          "no-duplicate-case": "error",
+          "no-empty": "error",
+          "no-empty-character-class": "error",
+          "no-empty-pattern": "error",
+          "no-eval": "error",
+          "no-ex-assign": "error",
+          "no-extra-bind": "error",
+          "no-fallthrough": "error",
+          "no-func-assign": "error",
+          "no-implied-eval": "error",
+          "no-invalid-regexp": "error",
+          "no-irregular-whitespace": "error",
+          "no-labels": ["error", { allowLoop: true, allowSwitch: false }],
+          "no-new-func": "error",
+          "no-new-wrappers": "error",
+          "no-obj-calls": "error",
+          "no-redeclare": "error",
+          "no-regex-spaces": "error",
+          "no-self-assign": "error",
+          "no-self-compare": "error",
+          "no-shadow-restricted-names": "error",
+          "no-sparse-arrays": "error",
+          "no-template-curly-in-string": "error",
+          "no-this-before-super": "error",
+          "no-throw-literal": "error",
+          "no-unexpected-multiline": "error",
+          "no-unreachable": "error",
+          "no-unused-labels": "error",
+          "no-useless-escape": "error",
+          "no-warning-comments": "off",
+          "no-with": "error",
+          "require-yield": "error",
+          "unicode-bom": ["error", "never"],
+          "use-isnan": "error",
+          "valid-typeof": "error",
+        },
+        overrides: [
+          {
+            files: ["playwright/**"],
+            rules: {
+              "no-console": "off",
+              "react-hooks/rules-of-hooks": "off",
+            },
+          },
+        ],
+      });
+
+      expect(typeAware).toStrictEqual({
+        rules: {
+          "typescript/await-thenable": "error",
+          "typescript/no-base-to-string": "error",
+          "typescript/no-floating-promises": "error",
+          "typescript/no-misused-spread": "error",
+          "typescript/no-redundant-type-constituents": "error",
+          "typescript/restrict-template-expressions": "error",
+          "typescript/unbound-method": "error",
+        },
+      });
+
+      expect(vitestSafety).toStrictEqual({
+        plugins: ["vitest"],
+        rules: {
+          "vitest/no-conditional-expect": "off",
+          "vitest/no-disabled-tests": "error",
+          "vitest/no-focused-tests": "error",
+          "vitest/require-mock-type-parameters": "off",
+          "vitest/require-to-throw-message": "error",
+          "vitest/valid-expect": "error",
         },
       });
 
