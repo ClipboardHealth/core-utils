@@ -122,9 +122,10 @@ export default defineConfig(
 Keep repository architecture rules, import restrictions, and additional JavaScript plugins in
 `localConfig`.
 
-`base` is the organization-wide JavaScript and TypeScript policy. `frontend` adds only React and
-accessibility policy. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and
-`vitest` adds the complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
+`base` is the organization-wide JavaScript and TypeScript policy. `frontend` adds the common
+frontend application baseline, including React, accessibility, and browser-facing JavaScript
+rules. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and `vitest` adds the
+complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
 
 ### JSON config
 
@@ -200,7 +201,7 @@ The package includes:
 - **`base.json`**: the backwards-compatible JSON preset for simple `extends` usage
 - **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
-- **`frontend` preset**: shared React and JSX accessibility plugins and rules
+- **`frontend` preset**: shared frontend JavaScript, React, and JSX accessibility policy
 - **`typeAware` preset**: rules that require Oxlint's type-aware execution mode
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock

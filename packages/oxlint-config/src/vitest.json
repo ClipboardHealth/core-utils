@@ -6,7 +6,7 @@
     "vitest/consistent-test-filename": ["error", { "pattern": ".*\\.(test|spec)\\.[tj]sx?$" }],
     "vitest/expect-expect": [
       "error",
-      { "assertFunctionNames": ["expect", "expect*", "expectTypeOf", "assert", "assertType"] }
+      { "assertFunctionNames": ["expect", "expect*", "expectTypeOf", "assert", "assert*"] }
     ],
     "vitest/max-expects": "off",
     "vitest/max-nested-describe": "off",
