@@ -10,6 +10,9 @@
     ],
     "vitest/max-expects": "off",
     "vitest/max-nested-describe": "off",
+    "vitest/no-conditional-expect": "off",
+    "vitest/no-disabled-tests": "error",
+    "vitest/no-focused-tests": "error",
     "vitest/no-hooks": "off",
     "vitest/prefer-expect-assertions": "off",
     "vitest/prefer-importing-vitest-globals": "off",
@@ -19,7 +22,10 @@
     "vitest/prefer-to-be-falsy": "off",
     "vitest/prefer-to-be-truthy": "off",
     "vitest/require-hook": "off",
+    "vitest/require-mock-type-parameters": "off",
     "vitest/require-test-timeout": "off",
+    "vitest/require-to-throw-message": "error",
+    "vitest/valid-expect": "error",
     "vitest/valid-title": ["error", { "ignoreTypeOfDescribeName": true }]
   }
 }

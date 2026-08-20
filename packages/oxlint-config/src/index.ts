@@ -8,6 +8,5 @@ export {
   react,
   typeAware,
   vitest,
-  vitestSafety,
 } from "./internal/presets";
 export type { CreateOxlintConfigRequest, OxlintPreset } from "./internal/types";

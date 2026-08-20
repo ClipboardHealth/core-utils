@@ -30,7 +30,13 @@ Use the package's TypeScript helper when a repo needs additive composition. Oxli
 Create an `oxlint.config.ts` in your repo root:
 
 ```ts
-import { base, createOxlintConfig, customRules, vitest } from "@clipboard-health/oxlint-config";
+import {
+  base,
+  createOxlintConfig,
+  customRules,
+  typeAware,
+  vitest,
+} from "@clipboard-health/oxlint-config";
 import { defineConfig } from "oxlint";
 
 export default defineConfig(
@@ -61,7 +67,7 @@ export default defineConfig(
         },
       },
     },
-    presets: [base, customRules, vitest],
+    presets: [base, customRules, typeAware, vitest],
   }),
 );
 ```
@@ -76,7 +82,6 @@ Available presets:
 - `jest`
 - `typeAware`
 - `vitest`
-- `vitestSafety`
 
 Merge behavior:
 
@@ -87,7 +92,13 @@ Merge behavior:
 For React applications, compose `frontend` with the shared base and the repository's test runner:
 
 ```ts
-import { base, createOxlintConfig, frontend, vitest } from "@clipboard-health/oxlint-config";
+import {
+  base,
+  createOxlintConfig,
+  frontend,
+  typeAware,
+  vitest,
+} from "@clipboard-health/oxlint-config";
 import { defineConfig } from "oxlint";
 
 export default defineConfig(
@@ -103,7 +114,7 @@ export default defineConfig(
         },
       ],
     },
-    presets: [base, frontend, vitest],
+    presets: [base, frontend, typeAware, vitest],
   }),
 );
 ```
@@ -111,28 +122,9 @@ export default defineConfig(
 Keep repository architecture rules, import restrictions, and additional JavaScript plugins in
 `localConfig`.
 
-Frontend repositories that cannot adopt the complete `base` and `vitest` policies without changing
-existing diagnostics can compose the narrower parity-safe presets:
-
-```ts
-import {
-  createOxlintConfig,
-  frontend,
-  typeAware,
-  vitestSafety,
-} from "@clipboard-health/oxlint-config";
-import { defineConfig } from "oxlint";
-
-export default defineConfig(
-  createOxlintConfig({
-    presets: [frontend, typeAware, vitestSafety],
-  }),
-);
-```
-
-`frontend` contains shared React, accessibility, JavaScript correctness, and import policy.
-`typeAware` contains rules that require Oxlint's `--type-aware` mode. `vitestSafety` contains the
-Vitest rules that are safe to adopt independently of the full `vitest` preset.
+`base` is the organization-wide JavaScript and TypeScript policy. `frontend` adds only React and
+accessibility policy. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and
+`vitest` adds the complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
 
 ### JSON config
 
@@ -209,6 +201,7 @@ The package includes:
 - **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
 - **`frontend` preset**: shared React and JSX accessibility plugins and rules
+- **`typeAware` preset**: rules that require Oxlint's type-aware execution mode
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
   fixtures are parsed by producer-owned contract response schemas

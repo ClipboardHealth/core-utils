@@ -54,55 +54,6 @@ const FRONTEND_RULES: DummyRuleMap = {
   "react/style-prop-object": "error",
 } as const;
 
-const FRONTEND_JAVASCRIPT_RULES: DummyRuleMap = {
-  curly: ["error", "all"],
-  eqeqeq: ["error", "always"],
-  "getter-return": "error",
-  "no-array-constructor": "error",
-  "no-caller": "error",
-  "no-cond-assign": ["error", "except-parens"],
-  "no-const-assign": "error",
-  "no-control-regex": "error",
-  "no-debugger": "error",
-  "no-delete-var": "error",
-  "no-dupe-keys": "error",
-  "no-duplicate-case": "error",
-  "no-empty": "error",
-  "no-empty-character-class": "error",
-  "no-empty-pattern": "error",
-  "no-eval": "error",
-  "no-ex-assign": "error",
-  "no-extra-bind": "error",
-  "no-fallthrough": "error",
-  "no-func-assign": "error",
-  "no-implied-eval": "error",
-  "no-invalid-regexp": "error",
-  "no-irregular-whitespace": "error",
-  "no-labels": ["error", { allowLoop: true, allowSwitch: false }],
-  "no-new-func": "error",
-  "no-new-wrappers": "error",
-  "no-obj-calls": "error",
-  "no-redeclare": "error",
-  "no-regex-spaces": "error",
-  "no-self-assign": "error",
-  "no-self-compare": "error",
-  "no-shadow-restricted-names": "error",
-  "no-sparse-arrays": "error",
-  "no-template-curly-in-string": "error",
-  "no-this-before-super": "error",
-  "no-throw-literal": "error",
-  "no-unexpected-multiline": "error",
-  "no-unreachable": "error",
-  "no-unused-labels": "error",
-  "no-useless-escape": "error",
-  "no-warning-comments": "off",
-  "no-with": "error",
-  "require-yield": "error",
-  "unicode-bom": ["error", "never"],
-  "use-isnan": "error",
-  "valid-typeof": "error",
-} as const;
-
 const TYPE_AWARE_RULES: DummyRuleMap = {
   "typescript/await-thenable": "error",
   "typescript/no-base-to-string": "error",
@@ -111,15 +62,6 @@ const TYPE_AWARE_RULES: DummyRuleMap = {
   "typescript/no-redundant-type-constituents": "error",
   "typescript/restrict-template-expressions": "error",
   "typescript/unbound-method": "error",
-} as const;
-
-const VITEST_SAFETY_RULES: DummyRuleMap = {
-  "vitest/no-conditional-expect": "off",
-  "vitest/no-disabled-tests": "error",
-  "vitest/no-focused-tests": "error",
-  "vitest/require-mock-type-parameters": "off",
-  "vitest/require-to-throw-message": "error",
-  "vitest/valid-expect": "error",
 } as const;
 
 // See https://oxc.rs/docs/guide/usage/linter/plugins.html#supported-plugins
@@ -163,11 +105,8 @@ export const react: OxlintPreset = {
   plugins: ["react"],
 };
 export const frontend: OxlintPreset = {
-  plugins: ["react", "jsx-a11y", "import"],
-  rules: {
-    ...FRONTEND_RULES,
-    ...FRONTEND_JAVASCRIPT_RULES,
-  },
+  plugins: ["react", "jsx-a11y"],
+  rules: FRONTEND_RULES,
 };
 export const jest: OxlintPreset = {
   plugins: ["jest"],
@@ -177,10 +116,6 @@ export const typeAware: OxlintPreset = {
   rules: TYPE_AWARE_RULES,
 };
 export const vitest: OxlintPreset = createVitestPreset();
-export const vitestSafety: OxlintPreset = {
-  plugins: ["vitest"],
-  rules: VITEST_SAFETY_RULES,
-};
 export const customRules: OxlintPreset = {
   jsPlugins: [
     {
