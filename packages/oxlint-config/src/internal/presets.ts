@@ -21,7 +21,7 @@ const JEST_RULES: DummyRuleMap = {
   "jest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
 } as const;
 
-const FRONTEND_RULES = defineRuleMap({
+const FRONTEND_RULES: DummyRuleMap = {
   "array-callback-return": "error",
   curly: ["error", "all"],
   eqeqeq: ["error", "always"],
@@ -59,7 +59,7 @@ const FRONTEND_RULES = defineRuleMap({
   "no-ex-assign": "error",
   "no-extend-native": "error",
   "no-extra-bind": "error",
-  "no-extra-boolean-cast": ["error", { enforceForLogicalOperands: true }],
+  "no-extra-boolean-cast": "error",
   "no-extra-label": "error",
   "no-fallthrough": "error",
   "no-func-assign": "error",
@@ -195,7 +195,7 @@ const FRONTEND_RULES = defineRuleMap({
   "unicode-bom": ["error", "never"],
   "use-isnan": "error",
   "valid-typeof": "error",
-});
+} as const;
 
 const TYPE_AWARE_RULES: DummyRuleMap = {
   "typescript/await-thenable": "error",
@@ -446,14 +446,6 @@ function isRuleMap(value: unknown): value is NonNullable<OxlintPreset["rules"]> 
   }
 
   return Object.values(value).every(isDummyRule);
-}
-
-function defineRuleMap(value: Record<string, unknown>): DummyRuleMap {
-  if (!isRuleMap(value)) {
-    throw new Error("The preset contains an invalid oxlint rule configuration.");
-  }
-
-  return value;
 }
 
 function isDummyRule(value: unknown): value is DummyRule {
