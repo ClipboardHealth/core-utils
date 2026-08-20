@@ -6,7 +6,6 @@ import type { AllowWarnDeny, DummyRule, DummyRuleMap, OxlintConfig, OxlintOverri
 import type { OxlintPreset } from "./types";
 
 const JEST_RULES: DummyRuleMap = {
-  "max-lines": ["error", { max: 2000 }],
   "jest/max-expects": "off",
   "jest/max-nested-describe": "off",
   // False-positive explosion: flags spec files that contain no setTimeout call at all

@@ -70,6 +70,7 @@ describe("oxlint-config", () => {
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
+      expect(base.rules).toHaveProperty("max-lines", "off");
     });
 
     it("exports additive plugin presets", () => {
@@ -185,7 +186,6 @@ describe("oxlint-config", () => {
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
         rules: {
-          "max-lines": ["error", { max: 2000 }],
           "jest/max-expects": "off",
           "jest/max-nested-describe": "off",
           "jest/no-confusing-set-timeout": "off",
@@ -201,7 +201,6 @@ describe("oxlint-config", () => {
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
         rules: {
-          "max-lines": ["error", { max: 2000 }],
           "vitest/consistent-test-filename": [
             "error",
             { pattern: String.raw`.*\.(test|spec)\.[tj]sx?$` },

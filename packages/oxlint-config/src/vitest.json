@@ -2,7 +2,6 @@
   "extends": ["./base.json"],
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise", "vitest"],
   "rules": {
-    "max-lines": ["error", { "max": 2000 }],
     "vitest/consistent-test-filename": ["error", { "pattern": ".*\\.(test|spec)\\.[tj]sx?$" }],
     "vitest/expect-expect": [
       "error",
