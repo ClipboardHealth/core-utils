@@ -21,7 +21,6 @@
     }
   },
   "rules": {
-    "max-lines": ["error", { "max": 2000 }],
     "oxc/no-barrel-file": "off",
 
     // Temporarily disabled globally until issue gets fixed, should then move to test-only disable
@@ -36,6 +35,18 @@
     "typescript/unbound-method": "off"
   },
   "overrides": [
+    {
+      "files": [
+        "packages/embedex/src/lib/embed.test.ts",
+        "packages/notifications/src/lib/notificationClient.test.ts",
+        "packages/playwright-flake-linter/src/lib/playwrightFlakeLinter.ts",
+        "packages/playwright-reporter-llm/src/lib/reporter.test.ts",
+        "packages/playwright-toolkit/src/lib/adminAuthToken.ts"
+      ],
+      "rules": {
+        "max-lines": ["error", { "max": 2000 }]
+      }
+    },
     {
       "files": [
         "**/bin/**/*.ts",
