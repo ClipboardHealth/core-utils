@@ -72,7 +72,6 @@ Available presets:
 - `contractFixtures`
 - `customRules`
 - `frontend`
-- `frontendApplication`
 - `react`
 - `jest`
 - `typeAware`
@@ -119,7 +118,6 @@ existing diagnostics can compose the narrower parity-safe presets:
 import {
   createOxlintConfig,
   frontend,
-  frontendApplication,
   typeAware,
   vitestSafety,
 } from "@clipboard-health/oxlint-config";
@@ -127,15 +125,14 @@ import { defineConfig } from "oxlint";
 
 export default defineConfig(
   createOxlintConfig({
-    presets: [frontend, frontendApplication, typeAware, vitestSafety],
+    presets: [frontend, typeAware, vitestSafety],
   }),
 );
 ```
 
-`frontendApplication` contains shared JavaScript correctness rules, the import plugin, and the
-common Playwright override. `typeAware` contains rules that require Oxlint's `--type-aware` mode.
-`vitestSafety` contains the Vitest rules that are safe to adopt independently of the full `vitest`
-preset.
+`frontend` contains shared React, accessibility, JavaScript correctness, and import policy.
+`typeAware` contains rules that require Oxlint's `--type-aware` mode. `vitestSafety` contains the
+Vitest rules that are safe to adopt independently of the full `vitest` preset.
 
 ### JSON config
 

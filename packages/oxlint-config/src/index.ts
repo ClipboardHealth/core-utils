@@ -4,7 +4,6 @@ export {
   contractFixtures,
   customRules,
   frontend,
-  frontendApplication,
   jest,
   react,
   typeAware,

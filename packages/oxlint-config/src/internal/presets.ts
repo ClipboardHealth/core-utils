@@ -54,7 +54,7 @@ const FRONTEND_RULES: DummyRuleMap = {
   "react/style-prop-object": "error",
 } as const;
 
-const FRONTEND_APPLICATION_RULES: DummyRuleMap = {
+const FRONTEND_JAVASCRIPT_RULES: DummyRuleMap = {
   curly: ["error", "all"],
   eqeqeq: ["error", "always"],
   "getter-return": "error",
@@ -163,22 +163,11 @@ export const react: OxlintPreset = {
   plugins: ["react"],
 };
 export const frontend: OxlintPreset = {
-  plugins: ["react", "jsx-a11y"],
-  rules: FRONTEND_RULES,
-};
-export const frontendApplication: OxlintPreset = {
-  ignorePatterns: [".agents/"],
-  plugins: ["import"],
-  rules: FRONTEND_APPLICATION_RULES,
-  overrides: [
-    {
-      files: ["playwright/**"],
-      rules: {
-        "no-console": "off",
-        "react-hooks/rules-of-hooks": "off",
-      },
-    },
-  ],
+  plugins: ["react", "jsx-a11y", "import"],
+  rules: {
+    ...FRONTEND_RULES,
+    ...FRONTEND_JAVASCRIPT_RULES,
+  },
 };
 export const jest: OxlintPreset = {
   plugins: ["jest"],
