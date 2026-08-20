@@ -54,6 +54,16 @@ const FRONTEND_RULES: DummyRuleMap = {
   "react/style-prop-object": "error",
 } as const;
 
+const TYPE_AWARE_RULES: DummyRuleMap = {
+  "typescript/await-thenable": "error",
+  "typescript/no-base-to-string": "error",
+  "typescript/no-floating-promises": "error",
+  "typescript/no-misused-spread": "error",
+  "typescript/no-redundant-type-constituents": "error",
+  "typescript/restrict-template-expressions": "error",
+  "typescript/unbound-method": "error",
+} as const;
+
 // See https://oxc.rs/docs/guide/usage/linter/plugins.html#supported-plugins
 const OXLINT_PLUGIN_NAMES = {
   eslint: "eslint",
@@ -101,6 +111,9 @@ export const frontend: OxlintPreset = {
 export const jest: OxlintPreset = {
   plugins: ["jest"],
   rules: JEST_RULES,
+};
+export const typeAware: OxlintPreset = {
+  rules: TYPE_AWARE_RULES,
 };
 export const vitest: OxlintPreset = createVitestPreset();
 export const customRules: OxlintPreset = {

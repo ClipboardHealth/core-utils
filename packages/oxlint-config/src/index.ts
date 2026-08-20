@@ -6,6 +6,7 @@ export {
   frontend,
   jest,
   react,
+  typeAware,
   vitest,
 } from "./internal/presets";
 export type { CreateOxlintConfigRequest, OxlintPreset } from "./internal/types";

@@ -7,6 +7,7 @@ import {
   jest as jestPreset,
   type OxlintPreset,
   react,
+  typeAware,
   vitest,
 } from "./index";
 
@@ -169,6 +170,18 @@ describe("oxlint-config", () => {
         },
       });
 
+      expect(typeAware).toStrictEqual({
+        rules: {
+          "typescript/await-thenable": "error",
+          "typescript/no-base-to-string": "error",
+          "typescript/no-floating-promises": "error",
+          "typescript/no-misused-spread": "error",
+          "typescript/no-redundant-type-constituents": "error",
+          "typescript/restrict-template-expressions": "error",
+          "typescript/unbound-method": "error",
+        },
+      });
+
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
         rules: {
@@ -201,6 +214,9 @@ describe("oxlint-config", () => {
           ],
           "vitest/max-expects": "off",
           "vitest/max-nested-describe": "off",
+          "vitest/no-conditional-expect": "off",
+          "vitest/no-disabled-tests": "error",
+          "vitest/no-focused-tests": "error",
           "vitest/no-hooks": "off",
           "vitest/prefer-called-once": "off",
           "vitest/prefer-expect-assertions": "off",
@@ -210,7 +226,10 @@ describe("oxlint-config", () => {
           "vitest/prefer-to-be-falsy": "off",
           "vitest/prefer-to-be-truthy": "off",
           "vitest/require-hook": "off",
+          "vitest/require-mock-type-parameters": "off",
           "vitest/require-test-timeout": "off",
+          "vitest/require-to-throw-message": "error",
+          "vitest/valid-expect": "error",
           "vitest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
         },
       });
