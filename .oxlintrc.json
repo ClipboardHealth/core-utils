@@ -21,6 +21,7 @@
     }
   },
   "rules": {
+    "max-lines": ["error", { "max": 2000 }],
     "oxc/no-barrel-file": "off",
 
     // Temporarily disabled globally until issue gets fixed, should then move to test-only disable
