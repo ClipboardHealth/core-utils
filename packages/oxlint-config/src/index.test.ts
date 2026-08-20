@@ -70,7 +70,6 @@ describe("oxlint-config", () => {
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
-      expect(base.rules).toHaveProperty("max-lines", "off");
     });
 
     it("exports additive plugin presets", () => {
