@@ -4,7 +4,7 @@ description: "Writing service tests: test data, background jobs, bug handling, m
 
 # Service Tests (Primary Testing Approach)
 
-Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (LaunchDarkly, Firebase, Stripe, Zendesk) and other microservices with fakes; fake the event bus.
+Test the public contract (REST endpoints, events) with real local dependencies (Postgres, Mongo, Redis). Fake slow/external services (LaunchDarkly, Stripe, Zendesk) and other microservices with fakes; fake the event bus.
 
 Backend test files use the `.spec.ts` suffix (not `.test.ts`) and sit next to the file they cover.
 
