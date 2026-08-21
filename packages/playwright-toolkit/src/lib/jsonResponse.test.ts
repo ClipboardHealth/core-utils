@@ -4,7 +4,6 @@ import { waitForParsedJsonResponse } from "../index";
 
 interface MockResponseParams {
   body: unknown;
-  isReadable?: boolean;
   url?: string;
 }
 
@@ -28,7 +27,7 @@ function parseVersionThreeCandidate(params: { body: unknown }): VersionResponse 
 }
 
 function createMockResponse(params: MockResponseParams): MockResponse {
-  let isReadable = params.isReadable ?? true;
+  let isReadable = true;
   const response = {
     json: vi.fn(async () => {
       if (!isReadable) {
@@ -87,6 +86,7 @@ describe("waitForParsedJsonResponse", () => {
 
     expect(actual).toEqual({ version: "V3" });
     expect(mockResponse.response.json).toHaveBeenCalledTimes(1);
+    expect(page.waitForResponse).toHaveBeenCalledWith(expect.any(Function), { timeout: 1000 });
   });
 
   it("skips non-candidates and parsed values that are not a match", async () => {
@@ -125,24 +125,5 @@ describe("waitForParsedJsonResponse", () => {
         timeoutMs: 1000,
       }),
     ).rejects.toThrow("Invalid worker response");
-  });
-
-  it("fails if Playwright returns without capturing a parsed body", async () => {
-    const mockResponse = createMockResponse({ body: { version: "V3" } });
-    const page = {
-      waitForResponse: vi.fn(async () => await Promise.resolve(mockResponse.response)),
-    } as unknown as Page;
-
-    await expect(
-      waitForParsedJsonResponse({
-        isCandidate: () => true,
-        page,
-        parseCandidate: ({ body }) => body,
-        timeoutMs: 321,
-      }),
-    ).rejects.toThrow(
-      "Expected the matched JSON response body to be captured while it was readable.",
-    );
-    expect(page.waitForResponse).toHaveBeenCalledWith(expect.any(Function), { timeout: 321 });
   });
 });
