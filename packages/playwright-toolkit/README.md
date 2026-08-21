@@ -2,7 +2,7 @@
 
 Shared anti-flake primitives for Clipboard Health Playwright suites.
 
-The package owns retry policy, APM correlation, shared admin-token caching, deployed-asset checks, Mailpit polling, Cognito login diagnostics, and setup retry classification. Consuming repositories keep only configuration and domain-specific matching.
+The package owns retry policy, APM correlation, shared admin-token caching, deployed-asset checks, JSON response lifetime capture, Mailpit polling, Cognito login diagnostics, and setup retry classification. Consuming repositories keep only configuration and domain-specific matching.
 
 ## Install
 
@@ -21,6 +21,7 @@ npm install --save-dev @clipboard-health/playwright-toolkit
 | Copy-pasted traceparent page fixture    | `createTraceparentFixtures()`                                                            |
 | Admin token promise cache and file lock | `generateAdminAuthToken()` or `getOrCreateAdminAuthToken()`                              |
 | Deployed frontend/mobile asset loops    | `verifyDeployedAssets()` and `waitForDeployedAssets()`                                   |
+| Deferred Playwright JSON response reads | `waitForParsedJsonResponse()`                                                            |
 | Mailpit search/fetch loops              | `createMailpitClient()`, `fetchMagicLinkFromMailpit()`, `fetchEmailOtpCodeFromMailpit()` |
 | Cognito OTP redirect debugging          | `fillOtpAndWaitForCognitoRedirect()`                                                     |
 | Setup HTTP and identity retry checks    | `classifySetupRetry()` and `isRetryableHttpStatus()`                                     |
@@ -86,6 +87,31 @@ operation: async ({ signal }) =>
     signal,
   });
 ```
+
+## JSON response lifetime
+
+Playwright response bodies can become unreadable after a document navigation. Use
+`waitForParsedJsonResponse` when a page action both waits for a JSON response and crosses a
+navigation boundary. The helper parses each candidate inside the `waitForResponse` predicate and
+returns only the parsed value, so callers cannot accidentally retain a lazy `Response` handle.
+
+```typescript
+const workerResponsePromise = waitForParsedJsonResponse({
+  page,
+  timeoutMs: 30_000,
+  isCandidate: ({ response }) =>
+    response.ok() && new URL(response.url()).pathname === "/api/worker",
+  parseCandidate: ({ body }) => workerResponseSchema.parse(body),
+});
+
+await page.reload({ waitUntil: "domcontentloaded" });
+
+const workerResponse = await workerResponsePromise;
+```
+
+Return `undefined` from `parseCandidate` when the URL-level candidate is valid but its body is not
+the response the test needs. Parsing errors propagate immediately. Keep repository-specific URL,
+method, resource-type, and schema matching in the consumer.
 
 ## Per-test traceparent fixture
 
