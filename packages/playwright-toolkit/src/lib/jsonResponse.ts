@@ -8,6 +8,10 @@ export interface WaitForParsedJsonResponseParams<T> {
   timeoutMs: number;
 }
 
+interface ParsedCandidate<T> {
+  value: T;
+}
+
 /**
  * Waits for a matching JSON response and parses its body while Playwright's
  * document-scoped response resource is still readable. Return `undefined`
@@ -17,7 +21,7 @@ export async function waitForParsedJsonResponse<T>(
   params: WaitForParsedJsonResponseParams<T>,
 ): Promise<T> {
   const { isCandidate, page, parseCandidate, timeoutMs } = params;
-  const parsedCandidates = new WeakMap<Response, T>();
+  const parsedCandidates = new WeakMap<Response, ParsedCandidate<T>>();
 
   const response = await page.waitForResponse(
     async (candidateResponse) => {
@@ -29,11 +33,12 @@ export async function waitForParsedJsonResponse<T>(
         body: await candidateResponse.json(),
         response: candidateResponse,
       });
-      if (!isDefined(parsedCandidate)) {
+      // JSON null is a valid parsed value; only undefined means "keep waiting".
+      if (parsedCandidate === undefined) {
         return false;
       }
 
-      parsedCandidates.set(candidateResponse, parsedCandidate);
+      parsedCandidates.set(candidateResponse, { value: parsedCandidate });
       return true;
     },
     { timeout: timeoutMs },
@@ -46,5 +51,5 @@ export async function waitForParsedJsonResponse<T>(
     );
   }
 
-  return parsedResponse;
+  return parsedResponse.value;
 }

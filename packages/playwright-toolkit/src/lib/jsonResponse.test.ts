@@ -89,6 +89,19 @@ describe("waitForParsedJsonResponse", () => {
     expect(page.waitForResponse).toHaveBeenCalledWith(expect.any(Function), { timeout: 1000 });
   });
 
+  it("accepts null as a parsed JSON response", async () => {
+    const mockResponse = createMockResponse({ body: null });
+
+    const actual = await waitForParsedJsonResponse<null>({
+      isCandidate: () => true,
+      page: createMockPage({ responses: [mockResponse.response] }),
+      parseCandidate: () => null,
+      timeoutMs: 1000,
+    });
+
+    expect(actual).toBeNull();
+  });
+
   it("skips non-candidates and parsed values that are not a match", async () => {
     const unrelatedResponse = createMockResponse({
       body: VERSION_THREE_RESPONSE,
