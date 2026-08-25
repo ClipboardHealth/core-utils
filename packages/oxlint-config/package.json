@@ -24,9 +24,13 @@
   },
   "peerDependencies": {
     "oxlint": ">=1.68.0",
+    "oxlint-plugin-react-doctor": ">=0.9.12",
     "oxlint-tsgolint": ">=0.21.1"
   },
   "peerDependenciesMeta": {
+    "oxlint-plugin-react-doctor": {
+      "optional": true
+    },
     "oxlint-tsgolint": {
       "optional": true
     }

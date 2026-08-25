@@ -135,8 +135,14 @@ describe("oxlint-config", () => {
       });
 
       expect(frontend).toStrictEqual({
+        jsPlugins: [
+          {
+            name: "react-doctor",
+            specifier: "oxlint-plugin-react-doctor",
+          },
+        ],
         plugins: ["react", "jsx-a11y"],
-        rules: {
+        rules: expect.objectContaining({
           "array-callback-return": "error",
           curly: ["error", "all"],
           eqeqeq: ["error", "always"],
@@ -310,8 +316,14 @@ describe("oxlint-config", () => {
           "unicode-bom": ["error", "never"],
           "use-isnan": "error",
           "valid-typeof": "error",
-        },
+        }),
       });
+
+      const reactDoctorRules = getRulesWithPrefix(frontend.rules, "react-doctor/");
+      expect(reactDoctorRules).toHaveLength(145);
+      expect(new Set(reactDoctorRules.map(([, severity]) => severity))).toStrictEqual(
+        new Set(["error"]),
+      );
 
       expect(typeAware).toStrictEqual({
         rules: {
@@ -773,6 +785,13 @@ describe("oxlint-config", () => {
     });
   });
 });
+
+function getRulesWithPrefix(
+  rules: typeof frontend.rules,
+  prefix: string,
+): Array<[string, unknown]> {
+  return Object.entries(rules ?? {}).filter(([ruleName]) => ruleName.startsWith(prefix));
+}
 
 function getRuleOptions(rule: unknown): Record<string, unknown> {
   if (!Array.isArray(rule)) {

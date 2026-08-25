@@ -19,6 +19,8 @@ npm install @clipboard-health/oxlint-config
 The config package includes `@clipboard-health/oxlint-plugin` for presets that use Clipboard Health
 custom rules.
 
+Repositories using the `frontend` preset must also install `oxlint-plugin-react-doctor >= 0.9.12`.
+
 Requires `oxlint >= 1.68.0`: the config references rules that older oxlint versions do not register, which fails config parsing outright.
 
 ## Usage
@@ -201,7 +203,7 @@ The package includes:
 - **`base.json`**: the backwards-compatible JSON preset for simple `extends` usage
 - **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
-- **`frontend` preset**: shared frontend JavaScript, React, and JSX accessibility policy
+- **`frontend` preset**: shared frontend JavaScript, React Doctor, React, and JSX accessibility policy
 - **`typeAware` preset**: rules that require Oxlint's type-aware execution mode
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
