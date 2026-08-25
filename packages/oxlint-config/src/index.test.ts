@@ -321,7 +321,9 @@ describe("oxlint-config", () => {
 
       const reactDoctorRules = getRulesWithPrefix(frontend.rules ?? {}, "react-doctor/");
       expect(reactDoctorRules).toHaveLength(145);
-      expect(reactDoctorRules.every(([, severity]) => severity === "error")).toBe(true);
+      expect(new Set(reactDoctorRules.map(([, severity]) => severity))).toStrictEqual(
+        new Set(["error"]),
+      );
 
       expect(typeAware).toStrictEqual({
         rules: {
