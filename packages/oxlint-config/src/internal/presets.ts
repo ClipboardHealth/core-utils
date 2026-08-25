@@ -215,7 +215,7 @@ const FRONTEND_RULES: DummyRuleMap = {
   "no-ex-assign": "error",
   "no-extend-native": "error",
   "no-extra-bind": "error",
-  "no-extra-boolean-cast": ["error", { enforceForLogicalOperands: true }],
+  "no-extra-boolean-cast": "error",
   "no-extra-label": "error",
   "no-fallthrough": "error",
   "no-func-assign": "error",
