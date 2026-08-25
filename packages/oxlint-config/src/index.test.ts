@@ -319,9 +319,7 @@ describe("oxlint-config", () => {
         }),
       });
 
-      const reactDoctorRules = Object.entries(frontend.rules ?? {}).filter(([ruleName]) =>
-        ruleName.startsWith("react-doctor/"),
-      );
+      const reactDoctorRules = getRulesWithPrefix(frontend.rules ?? {}, "react-doctor/");
       expect(reactDoctorRules).toHaveLength(145);
       expect(reactDoctorRules.every(([, severity]) => severity === "error")).toBe(true);
 
@@ -785,6 +783,13 @@ describe("oxlint-config", () => {
     });
   });
 });
+
+function getRulesWithPrefix(
+  rules: NonNullable<typeof frontend.rules>,
+  prefix: string,
+): Array<[string, unknown]> {
+  return Object.entries(rules).filter(([ruleName]) => ruleName.startsWith(prefix));
+}
 
 function getRuleOptions(rule: unknown): Record<string, unknown> {
   if (!Array.isArray(rule)) {
