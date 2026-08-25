@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@clipboard-health/oxlint-config - v1.20.0 | core-utils</title><meta name="description" content="Documentation for core-utils"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@clipboard-health/oxlint-config - v1.21.0 | core-utils</title><meta name="description" content="Documentation for core-utils"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container"><a href="../index.html" class="title">core-utils</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
@@ -9,7 +9,7 @@
 <div class="tsd-page-title">
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="" aria-current="page">@clipboard-health/oxlint-config</a></li></ul>
-<h1>Module @clipboard-health/oxlint-config - v1.20.0</h1></div>
+<h1>Module @clipboard-health/oxlint-config - v1.21.0</h1></div>
 <section class="tsd-panel tsd-typography"><h1 id="clipboard-healthoxlint-config" class="tsd-anchor-link">@clipboard-health/oxlint-config <!-- omit from toc --><a href="#clipboard-healthoxlint-config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h1>
 <p>Shared <a href="https://oxc.rs/docs/guide/usage/linter">Oxlint</a> configuration for Clipboard Health repositories.</p>
 <h2 id="table-of-contents" class="tsd-anchor-link">Table of contents <!-- omit from toc --><a href="#table-of-contents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
@@ -26,6 +26,7 @@
 
 <p>The config package includes <code>@clipboard-health/oxlint-plugin</code> for presets that use Clipboard Health
 custom rules.</p>
+<p>Repositories using the <code>frontend</code> preset must also install <code>oxlint-plugin-react-doctor &gt;= 0.9.12</code>.</p>
 <p>Requires <code>oxlint &gt;= 1.68.0</code>: the config references rules that older oxlint versions do not register, which fails config parsing outright.</p>
 <h2 id="usage" class="tsd-anchor-link">Usage<a href="#usage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>Use the package's TypeScript helper when a repo needs additive composition. Oxlint's built-in <code>extends</code> is useful for simple inheritance, but it does not let a repo safely append shared <code>plugins</code>, <code>overrides</code>, and similar array fields without re-specifying the shared values.</p>
@@ -120,7 +121,7 @@ complete Vitest policy. Keep repository-specific exceptions in <code>localConfig
 <li><strong><code>base.json</code></strong>: the backwards-compatible JSON preset for simple <code>extends</code> usage</li>
 <li><strong><code>vitest.json</code></strong>: extends <code>base.json</code> with the vitest plugin and rules for JSON <code>extends</code> usage</li>
 <li><strong><code>base</code> preset</strong>: shared plugins, rules, and overrides exported for TypeScript composition</li>
-<li><strong><code>frontend</code> preset</strong>: shared frontend JavaScript, React, and JSX accessibility policy</li>
+<li><strong><code>frontend</code> preset</strong>: shared frontend JavaScript, React Doctor, React, and JSX accessibility policy</li>
 <li><strong><code>typeAware</code> preset</strong>: rules that require Oxlint's type-aware execution mode</li>
 <li><strong><code>react</code>, <code>jest</code>, <code>vitest</code> presets</strong>: additive plugin presets for common repo types</li>
 <li><strong><code>contractFixtures</code> preset</strong>: warning-level enforcement that MSW, Playwright, and exported mock
