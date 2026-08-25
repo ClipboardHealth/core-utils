@@ -319,7 +319,7 @@ describe("oxlint-config", () => {
         }),
       });
 
-      const reactDoctorRules = getRulesWithPrefix(frontend.rules ?? {}, "react-doctor/");
+      const reactDoctorRules = getRulesWithPrefix(frontend.rules, "react-doctor/");
       expect(reactDoctorRules).toHaveLength(145);
       expect(new Set(reactDoctorRules.map(([, severity]) => severity))).toStrictEqual(
         new Set(["error"]),
@@ -787,10 +787,10 @@ describe("oxlint-config", () => {
 });
 
 function getRulesWithPrefix(
-  rules: NonNullable<typeof frontend.rules>,
+  rules: typeof frontend.rules,
   prefix: string,
 ): Array<[string, unknown]> {
-  return Object.entries(rules).filter(([ruleName]) => ruleName.startsWith(prefix));
+  return Object.entries(rules ?? {}).filter(([ruleName]) => ruleName.startsWith(prefix));
 }
 
 function getRuleOptions(rule: unknown): Record<string, unknown> {
