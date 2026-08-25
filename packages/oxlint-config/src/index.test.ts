@@ -135,8 +135,14 @@ describe("oxlint-config", () => {
       });
 
       expect(frontend).toStrictEqual({
+        jsPlugins: [
+          {
+            name: "react-doctor",
+            specifier: "oxlint-plugin-react-doctor",
+          },
+        ],
         plugins: ["react", "jsx-a11y"],
-        rules: {
+        rules: expect.objectContaining({
           "array-callback-return": "error",
           curly: ["error", "all"],
           eqeqeq: ["error", "always"],
@@ -310,8 +316,14 @@ describe("oxlint-config", () => {
           "unicode-bom": ["error", "never"],
           "use-isnan": "error",
           "valid-typeof": "error",
-        },
+        }),
       });
+
+      const reactDoctorRules = Object.entries(frontend.rules ?? {}).filter(([ruleName]) =>
+        ruleName.startsWith("react-doctor/"),
+      );
+      expect(reactDoctorRules).toHaveLength(145);
+      expect(reactDoctorRules.every(([, severity]) => severity === "error")).toBe(true);
 
       expect(typeAware).toStrictEqual({
         rules: {
