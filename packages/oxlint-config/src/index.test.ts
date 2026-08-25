@@ -297,6 +297,7 @@ describe("oxlint-config", () => {
           "no-with": "error",
           "prefer-const": "error",
           "prefer-destructuring": ["error", { VariableDeclarator: { array: false, object: true } }],
+          "prefer-object-spread": "error",
           "react/exhaustive-deps": "warn",
           "react/jsx-filename-extension": ["warn", { extensions: [".tsx", ".jsx"] }],
           "react/jsx-no-target-blank": "error",
