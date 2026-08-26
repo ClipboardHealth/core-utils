@@ -89,6 +89,14 @@ ruleTester.run("no-parallel-mongo-session-ops", rule, {
       }`,
     },
     {
+      name: "a prebuilt task list whose callbacks each open their own session",
+      code: `const tasks = items.map(async (item) => {
+        const session = await mongoose.startSession();
+        await enqueue(item, { session });
+      });
+      await Promise.all(tasks);`,
+    },
+    {
       name: "same-named task lists stay distinct, so a session-free call is quiet",
       code: `async function withoutSession(items: Item[]) {
         const promises = items.map(async (item) => await handle(item));

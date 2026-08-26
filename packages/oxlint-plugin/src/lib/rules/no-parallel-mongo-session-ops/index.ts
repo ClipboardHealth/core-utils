@@ -241,7 +241,9 @@ const rule = defineRule({
             (reference) =>
               searchRanges.some((range) => isWithin(reference.range, range)) &&
               !nonReferenceRanges.has(reference.range.join(":")) &&
-              !isDeclaredWithin(reference.variable, node.range),
+              // Check every searched range, not just the call: a task list built above the call
+              // can itself declare a per-branch session inside its callbacks.
+              !searchRanges.some((range) => isDeclaredWithin(reference.variable, range)),
           );
 
           if (shared) {
