@@ -6,6 +6,7 @@ describe("oxlint plugin", () => {
       "enforce-ts-rest-in-controllers",
       "no-empty-boolean-call",
       "no-cross-contract-imports",
+      "no-parallel-mongo-session-ops",
       "require-contract-fixture-construction",
       "require-contract-response-parse",
       "require-http-module-factory",
