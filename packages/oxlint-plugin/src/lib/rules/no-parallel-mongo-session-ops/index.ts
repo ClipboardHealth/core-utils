@@ -123,6 +123,12 @@ const rule = defineRule({
     const nonReferenceRanges = new Set<string>();
     /** Keyed by resolved binding, so same-named lists in sibling scopes stay distinct. */
     const taskLists = new Map<Variable, ESTree.Node>();
+    /**
+     * Bodies of `map`/`flatMap` callbacks: the only regions that run once per branch. A session
+     * created anywhere else inside the primitive, such as in an enclosing IIFE, is created once
+     * and shared.
+     */
+    const taskCallbackRanges: Array<readonly number[]> = [];
 
     function resolve(identifier: Identifier): Variable | undefined {
       return findVariableInScope(context.sourceCode, identifier);
@@ -163,9 +169,10 @@ const rule = defineRule({
     }
 
     /**
-     * A session is per-branch only when a binding inside the range *creates* one. Declaration
-     * scope alone is not proof: a callback parameter receives whatever the caller mapped over,
-     * and an alias of an outer binding is the very same session. Both stay reportable.
+     * A session is per-branch only when a task callback *creates* one. Neither declaration scope
+     * nor creation alone is proof: a callback parameter receives whatever the caller mapped over,
+     * an alias of an outer binding is the very same session, and a session created in a scope
+     * that encloses the fan-out is shared by every branch. All three stay reportable.
      */
     function createsOwnSession(variable: Variable | undefined, range: readonly number[]): boolean {
       return (
@@ -186,6 +193,23 @@ const rule = defineRule({
         const primitive = primitiveName(node);
         if (primitive !== undefined && !isSequential(node)) {
           parallelCalls.push({ node, primitive });
+        }
+
+        const { callee } = node;
+        if (
+          callee.type === "MemberExpression" &&
+          !callee.computed &&
+          callee.property.type === "Identifier" &&
+          TASK_LIST_METHODS.has(callee.property.name)
+        ) {
+          for (const argument of node.arguments) {
+            if (
+              argument.type === "ArrowFunctionExpression" ||
+              argument.type === "FunctionExpression"
+            ) {
+              taskCallbackRanges.push(argument.range);
+            }
+          }
         }
       },
 
@@ -261,13 +285,16 @@ const rule = defineRule({
             }
           }
 
+          // Only callbacks reached by this call can create a per-branch session.
+          const perBranchRanges = taskCallbackRanges.filter((callback) =>
+            searchRanges.some((range) => isWithin(callback, range)),
+          );
+
           const shared = sessionReferences.find(
             (reference) =>
               searchRanges.some((range) => isWithin(reference.range, range)) &&
               !nonReferenceRanges.has(reference.range.join(":")) &&
-              // Check every searched range, not just the call: a task list built above the call
-              // can itself create a per-branch session inside its callbacks.
-              !searchRanges.some((range) => createsOwnSession(reference.variable, range)),
+              !perBranchRanges.some((range) => createsOwnSession(reference.variable, range)),
           );
 
           if (shared) {

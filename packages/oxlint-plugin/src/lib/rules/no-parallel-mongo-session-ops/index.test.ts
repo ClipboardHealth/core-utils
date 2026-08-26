@@ -202,6 +202,18 @@ ruleTester.run("no-parallel-mongo-session-ops", rule, {
       errors: [{ messageId: "parallelSessionOps" }],
     },
     {
+      name: "an IIFE creating one session and returning many operations is not per-branch",
+      code: `async function run(ids: string[]) {
+        await Promise.all(
+          await (async () => {
+            const session = await mongoose.startSession();
+            return ids.map((id) => write(id, { session }));
+          })(),
+        );
+      }`,
+      errors: [{ messageId: "parallelSessionOps" }],
+    },
+    {
       name: "allSettled shares a session just as all does",
       code: `async function run(session: ClientSession) {
         await Promise.allSettled(ids.map(async (id) => await write(id, { session })));
