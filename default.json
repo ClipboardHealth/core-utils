@@ -39,7 +39,7 @@
     {
       "groupName": "oxlint",
       "groupSlug": "oxlint",
-      "matchPackageNames": ["oxlint", "@clipboard-health/oxlint-config"]
+      "matchPackageNames": ["oxlint", "/^@oxlint\\//", "@clipboard-health/oxlint-config"]
     },
     {
       "groupName": "ts-rest",
