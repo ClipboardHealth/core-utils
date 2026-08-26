@@ -181,6 +181,27 @@ ruleTester.run("no-parallel-mongo-session-ops", rule, {
       errors: [{ messageId: "parallelSessionOps" }],
     },
     {
+      name: "a callback parameter can receive one shared session, so it stays reportable",
+      code: `async function run(shared: ClientSession, ids: string[]) {
+        await Promise.all(
+          [shared, shared].map(async (session) => await write(ids[0], { session })),
+        );
+      }`,
+      errors: [{ messageId: "parallelSessionOps" }],
+    },
+    {
+      name: "an alias of an outer session inside the callback is not a new session",
+      code: `async function run(outerSession: ClientSession, ids: string[]) {
+        await Promise.all(
+          ids.map(async (id) => {
+            const session = outerSession;
+            await write(id, { session });
+          }),
+        );
+      }`,
+      errors: [{ messageId: "parallelSessionOps" }],
+    },
+    {
       name: "allSettled shares a session just as all does",
       code: `async function run(session: ClientSession) {
         await Promise.allSettled(ids.map(async (id) => await write(id, { session })));

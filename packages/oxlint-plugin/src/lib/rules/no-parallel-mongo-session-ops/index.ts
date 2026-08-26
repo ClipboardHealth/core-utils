@@ -56,6 +56,16 @@ function isWithin(inner: readonly number[], outer: readonly number[]): boolean {
   return Number(inner[0]) >= Number(outer[0]) && Number(inner[1]) <= Number(outer[1]);
 }
 
+/**
+ * A call plausibly produces a fresh session; a bare identifier or member expression is an alias of
+ * something that already exists.
+ */
+function createsSession(init: ESTree.Node | null | undefined): boolean {
+  const expression = init?.type === "AwaitExpression" ? init.argument : init;
+
+  return expression?.type === "CallExpression" || expression?.type === "NewExpression";
+}
+
 /** A task list is the only initialiser worth following; anything else is unrelated data. */
 function isTaskList(init: ESTree.Node | null | undefined): boolean {
   if (!init) {
@@ -152,9 +162,23 @@ const rule = defineRule({
       return node.arguments.some((argument) => "value" in argument && argument.value === 1);
     }
 
-    /** A session is per-branch when its declaration sits inside the primitive itself. */
-    function isDeclaredWithin(variable: Variable | undefined, range: readonly number[]): boolean {
-      return variable?.identifiers.some((identifier) => isWithin(identifier.range, range)) === true;
+    /**
+     * A session is per-branch only when a binding inside the range *creates* one. Declaration
+     * scope alone is not proof: a callback parameter receives whatever the caller mapped over,
+     * and an alias of an outer binding is the very same session. Both stay reportable.
+     */
+    function createsOwnSession(variable: Variable | undefined, range: readonly number[]): boolean {
+      return (
+        variable?.defs.some((definition) => {
+          if (definition.type !== "Variable" || !isWithin(definition.name.range, range)) {
+            return false;
+          }
+
+          return (
+            definition.node.type === "VariableDeclarator" && createsSession(definition.node.init)
+          );
+        }) === true
+      );
     }
 
     return {
@@ -242,8 +266,8 @@ const rule = defineRule({
               searchRanges.some((range) => isWithin(reference.range, range)) &&
               !nonReferenceRanges.has(reference.range.join(":")) &&
               // Check every searched range, not just the call: a task list built above the call
-              // can itself declare a per-branch session inside its callbacks.
-              !searchRanges.some((range) => isDeclaredWithin(reference.variable, range)),
+              // can itself create a per-branch session inside its callbacks.
+              !searchRanges.some((range) => createsOwnSession(reference.variable, range)),
           );
 
           if (shared) {
