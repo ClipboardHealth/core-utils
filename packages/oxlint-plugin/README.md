@@ -12,6 +12,7 @@ ESLint.
 - `enforce-ts-rest-in-controllers`
 - `no-empty-boolean-call`
 - `no-cross-contract-imports`
+- `no-parallel-mongo-session-ops`
 - `require-contract-fixture-construction`
 - `require-contract-response-parse`
 - `require-http-module-factory`
@@ -27,3 +28,17 @@ apply the shared controller, module, contract, and cross-contract-import scopes.
 `no-empty-boolean-call`, `require-contract-response-parse`, and
 `require-run-validators-with-upsert` are opt-in because their safe adoption scope is
 repository-specific.
+
+`no-parallel-mongo-session-ops` is also opt-in. Out of the box it covers `Promise.all`,
+`Promise.allSettled`, `Promise.race`, and `Promise.any`. Repositories with their own
+bounded-concurrency helpers must name them, or those call sites go unchecked:
+
+```ts
+"@clipboard-health/no-parallel-mongo-session-ops": [
+  "warn",
+  { additionalPrimitives: ["batchPromiseAllWithLimit", "batchPromiseAllSettledWithLimit"] },
+],
+```
+
+Exclude tests: app-level session objects such as `session.sessionUserId` share the name but are
+unrelated to MongoDB sessions.
