@@ -141,7 +141,7 @@ describe("oxlint-config", () => {
             specifier: "oxlint-plugin-react-doctor",
           },
         ],
-        plugins: ["react", "jsx-a11y"],
+        plugins: ["react", "jsx-a11y", "import"],
         rules: expect.objectContaining({
           "array-callback-return": "error",
           curly: ["error", "all"],

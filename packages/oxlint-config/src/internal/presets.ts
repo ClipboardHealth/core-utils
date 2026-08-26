@@ -449,7 +449,7 @@ export const frontend: OxlintPreset = {
       specifier: "oxlint-plugin-react-doctor",
     },
   ],
-  plugins: ["react", "jsx-a11y"],
+  plugins: ["react", "jsx-a11y", "import"],
   rules: { ...FRONTEND_RULES, ...REACT_DOCTOR_RULES },
 };
 export const jest: OxlintPreset = {
