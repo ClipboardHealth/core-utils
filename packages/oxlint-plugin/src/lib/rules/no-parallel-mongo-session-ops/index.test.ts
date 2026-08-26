@@ -214,6 +214,18 @@ ruleTester.run("no-parallel-mongo-session-ops", rule, {
       errors: [{ messageId: "parallelSessionOps" }],
     },
     {
+      name: "a flatMap callback runs once per group, so one session there spans many operations",
+      code: `async function run(groups: Group[]) {
+        await Promise.all(
+          groups.flatMap((group) => {
+            const session = openSession();
+            return group.ids.map((id) => write(id, { session }));
+          }),
+        );
+      }`,
+      errors: [{ messageId: "parallelSessionOps" }],
+    },
+    {
       name: "allSettled shares a session just as all does",
       code: `async function run(session: ClientSession) {
         await Promise.allSettled(ids.map(async (id) => await write(id, { session })));

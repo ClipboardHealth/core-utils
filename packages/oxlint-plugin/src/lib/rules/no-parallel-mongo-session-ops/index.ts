@@ -21,6 +21,22 @@
  *
  * Repositories with their own bounded-concurrency helpers should list them in
  * `additionalPrimitives`; the defaults cover only the `Promise` combinators.
+ *
+ * The invariant is one sentence: a session is per-branch when a `map` callback creates it, and
+ * shared otherwise. Everything else follows from that — a callback parameter receives whatever was
+ * mapped over, an alias is the same session, a `flatMap` callback runs once per group rather than
+ * per task, and a session created in a scope that encloses the fan-out is shared.
+ *
+ * Known limitations. The rule is a net for the shapes people write, not a soundness proof, and
+ * cannot become one without type and dataflow information:
+ *
+ * - a session forwarded as an opaque options object through a call chain, or held on `this`, is
+ *   invisible
+ * - a session reaching the fan-out through a helper the rule does not model is invisible
+ * - recognition is by binding name, so a session under an unlisted name is missed
+ *
+ * Prefer accepting a miss over reporting safe code: a false positive gets the rule switched off,
+ * which costs more than any single missed call site.
  */
 import { defineRule, type ESTree, type Variable } from "@oxlint/plugins";
 
@@ -37,6 +53,12 @@ const SESSION_NAMES = new Set([
 const PROMISE_COMBINATORS = new Set(["all", "allSettled", "race", "any"]);
 
 const TASK_LIST_METHODS = new Set(["map", "flatMap"]);
+
+/**
+ * Only a `map` callback runs once per task. A `flatMap` callback runs once per group and can
+ * return many operations, so a session created there is shared by all of them.
+ */
+const PER_BRANCH_METHODS = new Set(["map"]);
 
 type Identifier = ESTree.BindingIdentifier | ESTree.IdentifierName | ESTree.IdentifierReference;
 
@@ -200,7 +222,7 @@ const rule = defineRule({
           callee.type === "MemberExpression" &&
           !callee.computed &&
           callee.property.type === "Identifier" &&
-          TASK_LIST_METHODS.has(callee.property.name)
+          PER_BRANCH_METHODS.has(callee.property.name)
         ) {
           for (const argument of node.arguments) {
             if (
