@@ -220,7 +220,7 @@ const FRONTEND_RULES: DummyRuleMap = {
   "no-ex-assign": "error",
   "no-extend-native": "error",
   "no-extra-bind": "error",
-  "no-extra-boolean-cast": "error",
+  "no-extra-boolean-cast": ["error", { enforceForLogicalOperands: true }],
   "no-extra-label": "error",
   "no-fallthrough": "error",
   "no-func-assign": "error",
@@ -447,6 +447,21 @@ export const frontend: OxlintPreset = {
     {
       name: "react-doctor",
       specifier: "oxlint-plugin-react-doctor",
+    },
+  ],
+  overrides: [
+    {
+      files: ["playwright/**"],
+      rules: {
+        "no-console": "off",
+        "react-hooks/rules-of-hooks": "off",
+      },
+    },
+    {
+      files: ["scripts/**", "**/*.stories.*", ".storybook/**"],
+      rules: {
+        "no-console": "off",
+      },
     },
   ],
   plugins: ["react", "jsx-a11y", "import"],

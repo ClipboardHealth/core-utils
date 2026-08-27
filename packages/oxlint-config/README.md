@@ -91,32 +91,18 @@ Merge behavior:
 - `rules`, `settings`, `options`, `categories`, `env`, and `globals` merge left-to-right
 - `localConfig` always wins over preset values when keys conflict
 
-For React applications, compose `frontend` with the shared base and the repository's test runner:
+For React applications, compose the standalone `frontend` policy with the repository's test runner:
 
 ```ts
-import {
-  base,
-  createOxlintConfig,
-  frontend,
-  typeAware,
-  vitest,
-} from "@clipboard-health/oxlint-config";
+import { createOxlintConfig, frontend, typeAware, vitest } from "@clipboard-health/oxlint-config";
 import { defineConfig } from "oxlint";
 
 export default defineConfig(
   createOxlintConfig({
     localConfig: {
       ignorePatterns: ["coverage/"],
-      overrides: [
-        {
-          files: ["src/**"],
-          rules: {
-            "no-console": "error",
-          },
-        },
-      ],
     },
-    presets: [base, frontend, typeAware, vitest],
+    presets: [frontend, typeAware, vitest],
   }),
 );
 ```
@@ -124,10 +110,12 @@ export default defineConfig(
 Keep repository architecture rules, import restrictions, and additional JavaScript plugins in
 `localConfig`.
 
-`base` is the organization-wide JavaScript and TypeScript policy. `frontend` adds the common
-frontend application baseline, including React, accessibility, and browser-facing JavaScript
-rules. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and `vitest` adds the
-complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
+`base` is the organization-wide general JavaScript and TypeScript policy. `frontend` is the
+standalone frontend application policy, including React, accessibility, and browser-facing
+JavaScript rules. It permits console output in Playwright, scripts, stories, and Storybook, and
+disables the React hooks rule in Playwright. `typeAware` contains rules that require Oxlint's
+`--type-aware` mode, and `vitest` adds the complete Vitest policy. Keep repository-specific
+exceptions in `localConfig`.
 
 ### JSON config
 
