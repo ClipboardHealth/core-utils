@@ -112,10 +112,8 @@ Keep repository architecture rules, import restrictions, and additional JavaScri
 
 `base` is the organization-wide general JavaScript and TypeScript policy. `frontend` is the
 standalone frontend application policy, including React, accessibility, and browser-facing
-JavaScript rules. It permits console output in Playwright, scripts, stories, and Storybook, and
-disables the React hooks rule in Playwright. `typeAware` contains rules that require Oxlint's
-`--type-aware` mode, and `vitest` adds the complete Vitest policy. Keep repository-specific
-exceptions in `localConfig`.
+JavaScript rules. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and `vitest`
+adds the complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
 
 ### JSON config
 

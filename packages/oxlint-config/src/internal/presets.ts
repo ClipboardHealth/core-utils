@@ -449,21 +449,6 @@ export const frontend: OxlintPreset = {
       specifier: "oxlint-plugin-react-doctor",
     },
   ],
-  overrides: [
-    {
-      files: ["playwright/**"],
-      rules: {
-        "no-console": "off",
-        "react-hooks/rules-of-hooks": "off",
-      },
-    },
-    {
-      files: ["scripts/**", "**/*.stories.*", ".storybook/**"],
-      rules: {
-        "no-console": "off",
-      },
-    },
-  ],
   plugins: ["react", "jsx-a11y", "import"],
   rules: { ...FRONTEND_RULES, ...REACT_DOCTOR_RULES },
 };

@@ -142,21 +142,6 @@ describe("oxlint-config", () => {
           },
         ],
         plugins: ["react", "jsx-a11y", "import"],
-        overrides: [
-          {
-            files: ["playwright/**"],
-            rules: {
-              "no-console": "off",
-              "react-hooks/rules-of-hooks": "off",
-            },
-          },
-          {
-            files: ["scripts/**", "**/*.stories.*", ".storybook/**"],
-            rules: {
-              "no-console": "off",
-            },
-          },
-        ],
         rules: expect.objectContaining({
           "array-callback-return": "error",
           curly: ["error", "all"],
