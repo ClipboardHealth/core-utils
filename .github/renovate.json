@@ -6,6 +6,17 @@
       "enabled": false,
       "matchManagers": ["npm"],
       "matchPackageNames": ["decamelize", "tslib"]
+    },
+    {
+      "allowedVersions": "<12",
+      "description": "Keep NestJS on v11 until @ts-rest/nest supports v12.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "@nestjs/common",
+        "@nestjs/core",
+        "@nestjs/platform-express",
+        "@nestjs/testing"
+      ]
     }
   ]
 }
