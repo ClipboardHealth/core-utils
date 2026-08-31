@@ -1,3 +1,5 @@
+import type { APIPromise } from "@knocklabs/node";
+
 /**
  * Knock returns a unique ID for every API request in this response header. Include it in logs so
  * that, given one of our log entries, you can find the matching Knock API log entry, along with
@@ -7,9 +9,8 @@
  */
 const REQUEST_ID_HEADER = "x-request-id";
 
-interface RawResponse {
-  asResponse: () => Promise<Response>;
-}
+/** Derived from Knock's SDK so an upgrade that drops `asResponse` fails the build. */
+type RawResponse = Pick<APIPromise<unknown>, "asResponse">;
 
 /**
  * Awaits a call to Knock, returning its parsed response alongside Knock's request ID.
