@@ -233,9 +233,9 @@ Send notifications through third-party providers.
 
 Log entries for Knock's responses and errors include `knockRequestId`, Knock's ID for that request.
 Filter by **Request ID** under **Observability** > **Logs** in
-[Knock's dashboard](https://dashboard.knock.app) to see Knock's own view of the request, including
-the full request and response bodies. Knock keeps 30 days of
-[API logs](https://docs.knock.app/developer-tools/api-logs).
+[Knock's dashboard](https://dashboard.knock.app) to see Knock's own view of the request and response
+bodies. Knock truncates long values in them, marking what it dropped with `__knock_truncated__` or
+`[TRUNCATED]`, and keeps 30 days of [API logs](https://docs.knock.app/developer-tools/api-logs).
 
 ## Local development commands
 
