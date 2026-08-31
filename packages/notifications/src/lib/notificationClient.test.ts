@@ -1,7 +1,7 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
-import { type LogFunction, type Logger, ServiceError } from "@clipboard-health/util-ts";
+import { isDefined, type LogFunction, type Logger, ServiceError } from "@clipboard-health/util-ts";
 import type { APIPromise, Knock } from "@knocklabs/node";
-import type { Mocked } from "vitest";
+import type { Mocked, MockInstance } from "vitest";
 
 import { ERROR_CODES } from "./errorCodes";
 import { MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecipients";
@@ -27,6 +27,8 @@ import type {
 const mockKnockRequestId = "2fVhPwXrQnUxQ9krVnP5a6Z4qXe";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
+type WorkflowTriggerResponse = Awaited<ReturnType<Knock["workflows"]["trigger"]>>;
+type TriggerSpy = MockInstance<Knock["workflows"]["trigger"]>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
 
 describe(NotificationClient, () => {
@@ -61,6 +63,13 @@ describe(NotificationClient, () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
+
+  /** Spies on Knock's trigger, resolving `response` with the raw HTTP response the SDK exposes. */
+  function mockTrigger(response: WorkflowTriggerResponse, knockRequestId?: string): TriggerSpy {
+    return vi
+      .spyOn(provider.workflows, "trigger")
+      .mockReturnValue(mockKnockCall(response, knockRequestId));
+  }
 
   describe("constructor", () => {
     it("creates Knock instance with correct configuration", () => {
@@ -101,7 +110,7 @@ describe(NotificationClient, () => {
         data: { message: "Hello world" },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -190,12 +199,7 @@ describe(NotificationClient, () => {
     });
 
     it("logs Knock's request ID from the response", async () => {
-      vi.spyOn(provider.workflows, "trigger").mockReturnValue(
-        mockApiPromise({
-          data: { workflow_run_id: mockWorkflowRunId },
-          knockRequestId: mockKnockRequestId,
-        }),
-      );
+      mockTrigger({ workflow_run_id: mockWorkflowRunId }, mockKnockRequestId);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -293,7 +297,7 @@ describe(NotificationClient, () => {
         },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -328,7 +332,7 @@ describe(NotificationClient, () => {
     it("handles undefined data in body", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -356,7 +360,7 @@ describe(NotificationClient, () => {
     it("traces workflow execution with correct tags", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
       const mockSpan = { addTags: vi.fn<Span["addTags"]>() };
       mockTracer.trace.mockImplementation((_name, _options, fun) => fun(mockSpan));
 
@@ -401,7 +405,7 @@ describe(NotificationClient, () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -432,7 +436,7 @@ describe(NotificationClient, () => {
     it("handles string recipients in trigger body", async () => {
       const mockBody = { recipients: ["user-1", "user-2"] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -452,7 +456,7 @@ describe(NotificationClient, () => {
     it("handles body with no actor or cancellation key", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -472,7 +476,7 @@ describe(NotificationClient, () => {
     it("handles recipient with minimal fields", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -506,7 +510,7 @@ describe(NotificationClient, () => {
         cancellationKey: "cancel-key",
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -617,7 +621,7 @@ describe(NotificationClient, () => {
     it("handles trigger request without keysToRedact", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: Omit<TriggerRequest, "keysToRedact"> = {
         workflowKey: mockWorkflowKey,
@@ -725,7 +729,7 @@ describe(NotificationClient, () => {
 
     it("defaults dryRun to false and calls provider", async () => {
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerRequest = {
         workflowKey: mockWorkflowKey,
@@ -756,7 +760,7 @@ describe(NotificationClient, () => {
     const mockCancellationKey = "cancel-key-123";
 
     it("cancels workflow with recipients", async () => {
-      const cancelSpy = vi.spyOn(provider.workflows, "cancel").mockResolvedValue();
+      const cancelSpy = vi.spyOn(provider.workflows, "cancel").mockReturnValue(mockKnockCall());
 
       const input: CancelRequest = {
         workflowKey: mockWorkflowKey,
@@ -773,7 +777,7 @@ describe(NotificationClient, () => {
     });
 
     it("cancels workflow without recipients", async () => {
-      const cancelSpy = vi.spyOn(provider.workflows, "cancel").mockResolvedValue();
+      const cancelSpy = vi.spyOn(provider.workflows, "cancel").mockReturnValue(mockKnockCall());
 
       const input: CancelRequest = {
         workflowKey: mockWorkflowKey,
@@ -789,7 +793,7 @@ describe(NotificationClient, () => {
 
     it("logs Knock's request ID from the response", async () => {
       vi.spyOn(provider.workflows, "cancel").mockReturnValue(
-        mockApiPromise({ data: undefined, knockRequestId: mockKnockRequestId }),
+        mockKnockCall(undefined, mockKnockRequestId),
       );
 
       const input: CancelRequest = {
@@ -878,7 +882,7 @@ describe(NotificationClient, () => {
         data: { message: "Hello world" },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -907,12 +911,7 @@ describe(NotificationClient, () => {
     });
 
     it("logs Knock's request ID for each chunk", async () => {
-      vi.spyOn(provider.workflows, "trigger").mockReturnValue(
-        mockApiPromise({
-          data: { workflow_run_id: mockWorkflowRunId },
-          knockRequestId: mockKnockRequestId,
-        }),
-      );
+      mockTrigger({ workflow_run_id: mockWorkflowRunId }, mockKnockRequestId);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -944,8 +943,8 @@ describe(NotificationClient, () => {
       const mockResponse2 = { workflow_run_id: "run-2" };
       const triggerSpy = vi
         .spyOn(provider.workflows, "trigger")
-        .mockResolvedValueOnce(mockResponse1)
-        .mockResolvedValueOnce(mockResponse2);
+        .mockReturnValueOnce(mockKnockCall(mockResponse1))
+        .mockReturnValueOnce(mockKnockCall(mockResponse2));
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1117,7 +1116,7 @@ describe(NotificationClient, () => {
     it("handles string recipients", async () => {
       const mockBody = { recipients: ["user-1", "user-2"] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1141,7 +1140,7 @@ describe(NotificationClient, () => {
     it("logs request and chunk responses", async () => {
       const mockBody = { recipients: [{ userId: "user-1" }] };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1175,7 +1174,7 @@ describe(NotificationClient, () => {
         workplaceId: "workplace-123",
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1212,7 +1211,7 @@ describe(NotificationClient, () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1249,7 +1248,7 @@ describe(NotificationClient, () => {
         },
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1289,7 +1288,7 @@ describe(NotificationClient, () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      const triggerSpy = vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      const triggerSpy = mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1333,7 +1332,7 @@ describe(NotificationClient, () => {
         ],
       };
       const mockResponse = { workflow_run_id: mockWorkflowRunId };
-      vi.spyOn(provider.workflows, "trigger").mockResolvedValue(mockResponse);
+      mockTrigger(mockResponse);
 
       const input: TriggerChunkedRequest = {
         workflowKey: mockWorkflowKey,
@@ -1371,9 +1370,11 @@ describe(NotificationClient, () => {
       const getChannelDataSpy = vi
         .spyOn(provider.users, "getChannelData")
         .mockRejectedValue(createNotFoundError());
-      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: [mockToken] },
-      } as SetChannelDataResponse);
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: { tokens: [mockToken] },
+        } as SetChannelDataResponse),
+      );
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1410,9 +1411,11 @@ describe(NotificationClient, () => {
       vi.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: { tokens: existingTokens },
       } as GetChannelDataResponse);
-      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: [...existingTokens, mockToken] },
-      } as SetChannelDataResponse);
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: { tokens: [...existingTokens, mockToken] },
+        } as SetChannelDataResponse),
+      );
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1439,9 +1442,11 @@ describe(NotificationClient, () => {
       vi.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: { tokens: existingTokens },
       } as GetChannelDataResponse);
-      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: ["existing-token-1", mockToken] },
-      } as SetChannelDataResponse);
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: { tokens: ["existing-token-1", mockToken] },
+        } as SetChannelDataResponse),
+      );
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1467,9 +1472,11 @@ describe(NotificationClient, () => {
       vi.spyOn(provider.users, "getChannelData").mockResolvedValue({
         data: {},
       } as GetChannelDataResponse);
-      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: [mockToken] },
-      } as SetChannelDataResponse);
+      const setChannelDataSpy = vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: { tokens: [mockToken] },
+        } as SetChannelDataResponse),
+      );
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1485,9 +1492,11 @@ describe(NotificationClient, () => {
 
     it("logs info when no existing channel data found", async () => {
       vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: [mockToken] },
-      } as SetChannelDataResponse);
+      vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: { tokens: [mockToken] },
+        } as SetChannelDataResponse),
+      );
 
       await client.appendPushToken({
         channelId: mockChannelId,
@@ -1552,9 +1561,11 @@ describe(NotificationClient, () => {
 
     it("does not log sensitive push token in request or response", async () => {
       vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: { tokens: [mockToken] },
-      } as SetChannelDataResponse);
+      vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: { tokens: [mockToken] },
+        } as SetChannelDataResponse),
+      );
 
       await client.appendPushToken({
         channelId: mockChannelId,
@@ -1576,9 +1587,11 @@ describe(NotificationClient, () => {
 
     it("handles response with no tokens field", async () => {
       vi.spyOn(provider.users, "getChannelData").mockRejectedValue(createNotFoundError());
-      vi.spyOn(provider.users, "setChannelData").mockResolvedValue({
-        data: {},
-      } as SetChannelDataResponse);
+      vi.spyOn(provider.users, "setChannelData").mockReturnValue(
+        mockKnockCall({
+          data: {},
+        } as SetChannelDataResponse),
+      );
 
       const result = await client.appendPushToken({
         channelId: mockChannelId,
@@ -1631,7 +1644,9 @@ describe(NotificationClient, () => {
         name: mockWorkplaceName,
         __typename: "Tenant",
       };
-      const tenantSetSpy = vi.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
+      const tenantSetSpy = vi
+        .spyOn(provider.tenants, "set")
+        .mockReturnValue(mockKnockCall(mockResponse));
 
       const input: UpsertWorkplaceRequest = {
         workplaceId: mockWorkplaceId,
@@ -1662,7 +1677,9 @@ describe(NotificationClient, () => {
         name: mockWorkplaceName,
         __typename: "Tenant",
       };
-      const tenantSetSpy = vi.spyOn(provider.tenants, "set").mockResolvedValue(mockResponse);
+      const tenantSetSpy = vi
+        .spyOn(provider.tenants, "set")
+        .mockReturnValue(mockKnockCall(mockResponse));
 
       const input: UpsertWorkplaceRequest = {
         workplaceId: mockWorkplaceId,
@@ -1897,7 +1914,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       const setPreferencesSpy = vi
         .spyOn(provider.users, "setPreferences")
-        .mockResolvedValue(mockPreferenceSet);
+        .mockReturnValue(mockKnockCall(mockPreferenceSet));
 
       const input: UpsertUserPreferencesRequest = {
         userId: mockUserId,
@@ -1967,15 +1984,16 @@ function createErrorWithRequestId(message: string, status: number): Error & { st
 }
 
 /**
- * Knock's SDK returns promises that expose the raw HTTP response; `vi.fn`'s promises don't.
+ * Stands in for the {@link APIPromise} Knock's SDK returns, which settles the parsed body and
+ * exposes the raw HTTP response the body was parsed from.
  */
 // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return the promise itself, not an async wrapper around it.
-function mockApiPromise<T>(params: { data: T; knockRequestId: string }): APIPromise<T> {
-  const { data, knockRequestId } = params;
+function mockKnockCall<T>(data?: T, knockRequestId?: string): APIPromise<T> {
   const promise = Promise.resolve(data) as unknown as APIPromise<T>;
-
   promise.asResponse = async () =>
-    new Response(undefined, { headers: { "x-request-id": knockRequestId } });
+    new Response(undefined, {
+      headers: isDefined(knockRequestId) ? { "x-request-id": knockRequestId } : {},
+    });
 
   return promise;
 }

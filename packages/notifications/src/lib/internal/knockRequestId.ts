@@ -9,26 +9,21 @@ import type { APIPromise } from "@knocklabs/node";
  */
 const REQUEST_ID_HEADER = "x-request-id";
 
-/** Derived from Knock's SDK so an upgrade that drops `asResponse` fails the build. */
-type RawResponse = Pick<APIPromise<unknown>, "asResponse">;
-
 /**
  * Awaits a call to Knock, returning its parsed response alongside Knock's request ID.
  *
- * Pass the provider's promise directly instead of wrapping it in an `async` function; the raw HTTP
- * response, and therefore the request ID, is only reachable through the promise Knock's SDK
- * returns. `knockRequestId` is `undefined` for promises that don't expose the raw HTTP response,
- * which is the case when tests mock the provider.
+ * Pass the SDK's promise directly instead of wrapping it in an `async` function, which would
+ * discard the raw HTTP response the request ID comes from. Knock sends the header on every
+ * response, so `knockRequestId` is only `undefined` if Knock stops doing so.
  */
-export async function withKnockRequestId<T>(promise: Promise<T>): Promise<{
+export async function withKnockRequestId<T>(promise: APIPromise<T>): Promise<{
   knockRequestId: string | undefined;
   response: T;
 }> {
-  if (!hasRawResponse(promise)) {
-    return { knockRequestId: undefined, response: await promise };
-  }
-
-  const [response, rawResponse] = await Promise.all([promise, promise.asResponse()]);
+  // Await the body first so a failed request throws here rather than from `asResponse`. Both read
+  // the same settled request, so this costs no extra round trip.
+  const response = await promise;
+  const rawResponse = await promise.asResponse();
 
   return { knockRequestId: toRequestId(rawResponse.headers), response };
 }
@@ -40,10 +35,6 @@ export function toKnockRequestId(error: Error): string | undefined {
   return "headers" in error && error.headers instanceof Headers
     ? toRequestId(error.headers)
     : undefined;
-}
-
-function hasRawResponse<T>(promise: Promise<T>): promise is Promise<T> & RawResponse {
-  return "asResponse" in promise && typeof promise.asResponse === "function";
 }
 
 function toRequestId(headers: Headers): string | undefined {
