@@ -54,6 +54,21 @@ describe(toNotificationError, () => {
     expect(actual.error).toBeInstanceOf(Error);
   });
 
+  it("extracts Knock's request ID from the response headers", () => {
+    const input = createErrorWithStatus("invalid params", 422) as Error & { headers: Headers };
+    input.headers = new Headers({ "x-request-id": "2fVhPwXrQnUxQ9krVnP5a6Z4qXe" });
+
+    const actual = toNotificationError(input);
+
+    expect(actual.knockRequestId).toBe("2fVhPwXrQnUxQ9krVnP5a6Z4qXe");
+  });
+
+  it("returns an undefined request ID when the error has no response headers", () => {
+    const actual = toNotificationError(new Error("boom"));
+
+    expect(actual.knockRequestId).toBeUndefined();
+  });
+
   it("ignores non-numeric status values", () => {
     const input = createErrorWithStatus("weird", "429");
 

@@ -1,6 +1,6 @@
 import { expectToBeFailure, expectToBeSuccess } from "@clipboard-health/testing-core";
 import { type LogFunction, type Logger, ServiceError } from "@clipboard-health/util-ts";
-import type { Knock } from "@knocklabs/node";
+import type { APIPromise, Knock } from "@knocklabs/node";
 import type { Mocked } from "vitest";
 
 import { ERROR_CODES } from "./errorCodes";
@@ -23,6 +23,8 @@ import type {
   UpsertUserPreferencesRequest,
   UpsertWorkplaceRequest,
 } from "./types";
+
+const mockKnockRequestId = "2fVhPwXrQnUxQ9krVnP5a6Z4qXe";
 
 type SetChannelDataResponse = Awaited<ReturnType<Knock["users"]["setChannelData"]>>;
 type GetChannelDataResponse = Awaited<ReturnType<Knock["users"]["getChannelData"]>>;
@@ -184,6 +186,56 @@ describe(NotificationClient, () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         "notifications.trigger [unknown] Knock API error",
         expect.any(Object),
+      );
+    });
+
+    it("logs Knock's request ID from the response", async () => {
+      vi.spyOn(provider.workflows, "trigger").mockReturnValue(
+        mockApiPromise({
+          data: { workflow_run_id: mockWorkflowRunId },
+          knockRequestId: mockKnockRequestId,
+        }),
+      );
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.knockRequestId).toBe(mockKnockRequestId);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.trigger response",
+        expect.objectContaining({ knockRequestId: mockKnockRequestId }),
+      );
+    });
+
+    it("logs Knock's request ID from a failed response", async () => {
+      const mockError = createErrorWithRequestId(
+        "One or more parameters supplied were invalid",
+        422,
+      );
+      vi.spyOn(provider.workflows, "trigger").mockRejectedValue(mockError);
+
+      const input: TriggerRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.trigger(input);
+
+      expectToBeFailure(actual);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "notifications.trigger [clientError] One or more parameters supplied were invalid",
+        expect.objectContaining({ knockRequestId: mockKnockRequestId }),
       );
     });
 
@@ -735,6 +787,24 @@ describe(NotificationClient, () => {
       });
     });
 
+    it("logs Knock's request ID from the response", async () => {
+      vi.spyOn(provider.workflows, "cancel").mockReturnValue(
+        mockApiPromise({ data: undefined, knockRequestId: mockKnockRequestId }),
+      );
+
+      const input: CancelRequest = {
+        workflowKey: mockWorkflowKey,
+        cancellationKey: mockCancellationKey,
+      };
+
+      await client.cancel(input);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.cancel response",
+        expect.objectContaining({ knockRequestId: mockKnockRequestId }),
+      );
+    });
+
     it("skips provider call when dryRun is true", async () => {
       const cancelSpy = vi.spyOn(provider.workflows, "cancel");
 
@@ -833,6 +903,34 @@ describe(NotificationClient, () => {
         {
           idempotencyKey: `${mockIdempotencyKey}-1`,
         },
+      );
+    });
+
+    it("logs Knock's request ID for each chunk", async () => {
+      vi.spyOn(provider.workflows, "trigger").mockReturnValue(
+        mockApiPromise({
+          data: { workflow_run_id: mockWorkflowRunId },
+          knockRequestId: mockKnockRequestId,
+        }),
+      );
+
+      const input: TriggerChunkedRequest = {
+        workflowKey: mockWorkflowKey,
+        body: { recipients: [{ userId: "user-1" }] },
+        idempotencyKey: mockIdempotencyKey,
+        expiresAt: mockExpiresAt,
+        attempt: mockAttempt,
+      };
+
+      const actual = await client.triggerChunked(input);
+
+      expectToBeSuccess(actual);
+      expect(actual.value.responses).toStrictEqual([
+        { chunkNumber: 1, id: mockWorkflowRunId, knockRequestId: mockKnockRequestId },
+      ]);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "notifications.triggerChunked chunk response",
+        expect.objectContaining({ knockRequestId: mockKnockRequestId }),
       );
     });
 
@@ -1857,4 +1955,27 @@ function createErrorWithStatus(message: string, status: number): Error & { statu
   const error = new Error(message) as Error & { status: number };
   error.status = status;
   return error;
+}
+
+function createErrorWithRequestId(message: string, status: number): Error & { status: number } {
+  const error = createErrorWithStatus(message, status) as Error & {
+    status: number;
+    headers: Headers;
+  };
+  error.headers = new Headers({ "x-request-id": mockKnockRequestId });
+  return error;
+}
+
+/**
+ * Knock's SDK returns promises that expose the raw HTTP response; `vi.fn`'s promises don't.
+ */
+// eslint-disable-next-line @typescript-eslint/promise-function-async -- must return the promise itself, not an async wrapper around it.
+function mockApiPromise<T>(params: { data: T; knockRequestId: string }): APIPromise<T> {
+  const { data, knockRequestId } = params;
+  const promise = Promise.resolve(data) as unknown as APIPromise<T>;
+
+  promise.asResponse = async () =>
+    new Response(undefined, { headers: { "x-request-id": knockRequestId } });
+
+  return promise;
 }
