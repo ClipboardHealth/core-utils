@@ -1,70 +1,63 @@
 ---
-description: "Adding or restructuring React state, context, timers, subscriptions, or list rendering: where a changing value lives, hook return stability, what stays mounted"
+description: "Adding or restructuring React state, context, hook returns, wall-clock values, hidden queries/subscriptions, or list filtering"
 ---
 
 # Render Scope
 
-Where a changing value sits in the tree decides how much of the tree re-renders when it changes.
-These are placement rules for the structure you are writing, not optimizations to apply after
-profiling. Each has a test you can answer from the diff in front of you.
+Apply every test matching the structure in the diff. Choose boundaries from required consumers and
+lifecycle, not component size.
 
-## A changing value lives at the narrowest node that reads it
+## Own changing values at the closest shared scope
 
-State hoisted above its readers and a ticker mounted above its display are the same fault: every
-node between the owner and the reader re-renders on every change, and nothing at the call site
-shows it.
+Place live state at the closest scope that reaches every consumer that must coordinate on it and
+preserves its required lifetime. That scope may be a leaf, list, route or provider. Keep draft state
+local to its editor until Apply or Submit unless another live consumer must share it.
 
-**Test:** name every node outside this one that reads the value before it is committed or
-displayed. Zero → it belongs here. For a ticking value, find the nearest common ancestor of its
-readers; if that is a route, a provider or a list container, it is too high.
+**Test:** list every reader and writer that must observe the same live value, plus the lifetime it
+must survive. The owner passes only when it is the closest shared scope that reaches the full list
+and preserves that lifetime. For every wider ancestor, name the additional consumer or lifetime
+requirement it serves; no answer means the value is scoped too high.
 
-Staged edits — a filter sheet, a multi-step form — stay local until Apply or Submit.
+## Stabilize identities at reference-sensitive boundaries
 
-## An exported hook's return value is a public API with a stability contract
+Fresh object or function identities affect rendering when the exact reference reaches a boundary
+that compares it: a context or `constate` value, a dependency-array entry (`Object.is`), or a
+memoized prop (its configured comparison). Exporting a hook alone creates no whole-return stability
+contract. Stabilize the compared value, not every wrapper.
 
-A fresh object or function identity on every render defeats every downstream `memo`, `useMemo` and
-effect dependency, whatever the consumer does. Doubly so behind context or `constate`, where the
-consumers are invisible from the hook.
+**Test:** trace every returned object and function to its consumers and name each place that
+compares that exact reference. At every named boundary, verify semantically unchanged renders
+preserve identity and changes that the boundary must observe replace it. With no such boundary,
+return the value directly.
 
-**Test:** would `Object.is(previous, next)` hold on a render where nothing changed?
+## Give wall-clock behavior an explicit cadence
 
-```ts
-// ❌ fresh object and fresh setter identity on every render
-export function useFilters() {
-  const [value, setValue] = useState(initialValue);
-  return { value, reset: () => setValue(initialValue) };
-}
+When rendered behavior must change as time passes, reading `Date.now()` computes a value but does
+not schedule another render. Drive recomputation with an explicit state update, timer or
+subscription emission, or a changing prop whose source has the required cadence.
 
-// ✅ stable across renders where nothing changed
-export function useFilters() {
-  const [value, setValue] = useState(initialValue);
-  const reset = useCallback(() => setValue(initialValue), []);
-  return useMemo(() => ({ value, reset }), [value, reset]);
-}
-```
+**Test:** state the maximum permitted staleness, remove every unrelated render source, and trace the
+explicit update that recomputes the value within that bound. No trace means the cadence is missing.
 
-## A value derived from the wall clock owns its cadence
+## Give hidden work a current beneficiary
 
-A value computed from `Date.now()` during render has no cadence of its own — it updates only when
-something else happens to re-render the component. It looks correct until an unrelated change
-removes that render source, and then it silently freezes. The failure surfaces in a component
-nobody edited.
+A covered or closed subtree can have legitimate background work: it may feed a visible consumer,
+complete an active operation, or meet an explicit freshness requirement. Otherwise pause its
+queries, timers and subscriptions or unmount it. When remaining mounted preserves UI state, pause
+unrelated work without discarding that state.
 
-**Test:** remove every other reason this component re-renders. Does the value still update? If not,
-give it its own interval, or derive it from a timestamp passed in as a prop.
+**Test:** while the subtree is hidden, enumerate every query, timer and subscription. For each, name
+its current consumer or operation, or state its freshness bound and verify the cadence matches.
+Pause or clean up every entry with no beneficiary; unmount the subtree only when its state and
+lifecycle may reset.
 
-## Not visible means not subscribing
+## Filter at the collection owner when absence is intended
 
-A closed sheet, a dismissed overlay or a list under a covering sheet stays mounted unless something
-unmounts it, and keeps polling, ticking and re-rendering for the rest of the session. Unmounting is
-the strongest form of this rule, not the only one: where the component must stay mounted to hold
-state, disable its queries, clear its intervals and drop its subscriptions while it is hidden.
+Filtering before mapping avoids mounting rejected children. A child that returns `null` remains
+mounted; moving its predicate to the parent cleans up its effects but also resets its local state
+and lifecycle.
 
-**Test:** while this is invisible, does it still fetch, tick, or re-render?
-
-## Filter before you render, not inside the child
-
-Rendering N children that each return `null` still pays for N mounts, N props objects and N
-reconciliations.
-
-**Test:** does the parent map over items the child will reject?
+**Test:** for every excluded child, inventory its local state, effects, subscriptions and re-entry
+behavior. Parent filtering passes only when cleanup and fresh state on re-entry are intended; then
+verify excluded items are absent from the mounted tree. When continuity is required, keep the child
+mounted and apply the hidden-work test.
