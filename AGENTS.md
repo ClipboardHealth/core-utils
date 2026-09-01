@@ -8,6 +8,7 @@ Read the rule files relevant to the code you're changing or reviewing.
 | ----------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | AI Rules                | .rules/common/aiRules.md              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                  |
 | Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
+| Container Registry      | .rules/common/containerRegistry.md    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                          |
 | Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
 | Date & Time             | .rules/common/dateTime.md             | Working with dates, times, timezones, or date comparisons                                                             |
 | Error Handling          | .rules/common/errorHandling.md        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
