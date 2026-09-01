@@ -133,6 +133,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `common/aiRules`              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                  |
 | `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
+| `common/containerRegistry`    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                          |
 | `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
 | `common/dateTime`             | Working with dates, times, timezones, or date comparisons                                                             |
 | `common/errorHandling`        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
