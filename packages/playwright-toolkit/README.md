@@ -94,6 +94,8 @@ Playwright response bodies can become unreadable after a document navigation. Us
 `waitForParsedJsonResponse` when a page action both waits for a JSON response and crosses a
 navigation boundary. The helper parses each candidate inside the `waitForResponse` predicate and
 returns only the parsed value, so callers cannot accidentally retain a lazy `Response` handle.
+Predicate-local parsing narrows the response-lifetime window but cannot eliminate it: Chromium can
+discard the underlying CDP resource while `response.json()` is still pending.
 
 ```typescript
 const workerResponsePromise = waitForParsedJsonResponse({
@@ -110,8 +112,14 @@ const workerResponse = await workerResponsePromise;
 ```
 
 Return `undefined` from `parseCandidate` when the URL-level candidate is valid but its body is not
-the response the test needs. Parsing errors propagate immediately. Keep repository-specific URL,
-method, resource-type, and schema matching in the consumer.
+the response the test needs. If a candidate body read fails with the exact Chromium
+`Network.getResponseBody` / `No resource with given identifier found` signature, the helper rejects
+only that candidate and continues inside the original finite waiter. It does not issue another
+request or navigation, add a retry or sleep, or widen the timeout. Invalid JSON, parsing and schema
+errors, near-match protocol errors, page or target closure, and cancellation propagate immediately.
+If the outer waiter times out after classified losses, the error preserves the original timeout as
+its cause and adds only bounded diagnostics with the loss count, method, status, and a redacted path
+template. Keep repository-specific URL, method, resource-type, and schema matching in the consumer.
 
 ## Per-test traceparent fixture
 
