@@ -129,20 +129,20 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 ### common
 
-| Rule ID                       | When to Read                                                                                                          |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `common/aiRules`              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                  |
-| `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
-| `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
-| `common/dateTime`             | Working with dates, times, timezones, or date comparisons                                                             |
-| `common/errorHandling`        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
-| `common/featureFlags`         | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                         |
-| `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                                                        |
-| `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib) |
-| `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                  |
-| `common/rulesEngine`          | Writing or modifying @clipboard-health/rules-engine rule functions                                                    |
-| `common/testing`              | Writing unit tests: conventions, naming, structure                                                                    |
-| `common/typeScript`           | Writing ANY TypeScript code                                                                                           |
+| Rule ID                       | When to Read                                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `common/aiRules`              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                   |
+| `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                               |
+| `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/\* library          |
+| `common/dateTime`             | Working with dates, times, timezones, or date comparisons                                                              |
+| `common/errorHandling`        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                        |
+| `common/featureFlags`         | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                          |
+| `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                                                         |
+| `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/\* packages or shared library modules within services (e.g., src/lib) |
+| `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                   |
+| `common/rulesEngine`          | Writing or modifying @clipboard-health/rules-engine rule functions                                                     |
+| `common/testing`              | Writing unit tests: conventions, naming, structure                                                                     |
+| `common/typeScript`           | Writing ANY TypeScript code                                                                                            |
 
 ### datamodeling
 
@@ -155,15 +155,16 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 ### frontend
 
-| Rule ID                    | When to Read                                                                                                            |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `frontend/architecture`    | Frontend architecture: feature-based file organization, where business logic lives                                      |
-| `frontend/customHooks`     | Creating React custom hooks: naming, shared state with constate                                                         |
-| `frontend/dataFetching`    | Implementing data fetching, API response fixtures, and error handling: React Query, MSW, Playwright, caching, parsedApi |
-| `frontend/e2eTesting`      | Choosing and writing Playwright E2E tests for registered critical flows                                                 |
-| `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook            |
-| `frontend/styling`         | Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS                                                 |
-| `frontend/testing`         | Writing frontend tests: React Testing Library, component tests                                                          |
+| Rule ID                    | When to Read                                                                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend/architecture`    | Frontend architecture: feature-based file organization, where business logic lives                                                                              |
+| `frontend/customHooks`     | Creating React custom hooks: naming, shared state with constate                                                                                                 |
+| `frontend/dataFetching`    | Implementing data fetching, API response fixtures, and error handling: React Query, MSW, Playwright, caching, parsedApi                                         |
+| `frontend/e2eTesting`      | Choosing and writing Playwright E2E tests for registered critical flows                                                                                         |
+| `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook                                                    |
+| `frontend/renderScope`     | Adding or restructuring React state, context, timers, subscriptions, or list rendering: where a changing value lives, hook return stability, what stays mounted |
+| `frontend/styling`         | Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS                                                                                         |
+| `frontend/testing`         | Writing frontend tests: React Testing Library, component tests                                                                                                  |
 
 <!-- END: Auto-generated by ./scripts/populateReadme.ts -->
 

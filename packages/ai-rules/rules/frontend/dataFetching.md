@@ -60,6 +60,30 @@ useMutation({
 
 Include the URL and params so cache invalidation is predictable: `["users", userId, "posts"]`.
 
+## React Query Traps
+
+Each of these is correct-looking code with a non-local effect. They are API behaviours, not
+performance advice — the default is the trap.
+
+- **A disabled query still reports `isLoading: true`.** In v4 a query with `enabled: false` sits in
+  the `loading` status forever, so any `if (!isLoading)` gate fires immediately with no data. Gate
+  on the data itself, or on `isFetching`. (v5 renames this state to `isPending` and the same trap
+  applies.)
+- **A bare `[url]` key passed to `invalidateQueries` is a prefix sweep.** The default is
+  `exact: false`, so it refetches every param variant of that URL that has a live observer, not the
+  one you meant. Pass the full key, or `{ exact: true }`.
+- **`getNextPageParam` that never returns `undefined` makes an infinite query accumulate forever.**
+  Return `undefined` when the last page is short or the cursor is absent; a page count that always
+  increments will keep appending duplicate rows.
+- **A query differing from an existing one only in fetch-shaping params is a structural cache
+  miss.** Page size, sort and include flags are part of the key, so the variant starts empty and no
+  `staleTime` or `gcTime` setting can make it hit. Shape the response after fetching, or accept the
+  second fetch deliberately.
+- **Toggling between two queries with `enabled` empties the data for a round trip.** The consuming
+  subtree sees `undefined`, unmounts, and remounts when the new data lands. Use
+  `keepPreviousData` (v5: `placeholderData: keepPreviousData`), or keep one query and vary its
+  params.
+
 ## `parsedApi.ts` vs `api.ts`
 
 Frontend repos have two API layers:
