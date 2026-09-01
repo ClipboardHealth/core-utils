@@ -300,6 +300,28 @@ describe("waitForParsedJsonResponse", () => {
     await expect(actualPromise).rejects.toBe(pageClosedError);
   });
 
+  it("propagates a candidate parser timeout after a classified body loss", async () => {
+    const candidateTimeoutError = new errors.TimeoutError("Candidate parser timed out");
+    const lostResponse = createMockResponse({
+      body: undefined,
+      bodyError: new Error(
+        "response.json: Protocol error (Network.getResponseBody): No resource with given identifier found",
+      ),
+    });
+    const freshResponse = createMockResponse({ body: VERSION_THREE_RESPONSE });
+
+    const actualPromise = waitForParsedJsonResponse({
+      isCandidate: () => true,
+      page: createMockPage({ responses: [lostResponse.response, freshResponse.response] }),
+      parseCandidate: () => {
+        throw candidateTimeoutError;
+      },
+      timeoutMs: 1000,
+    });
+
+    await expect(actualPromise).rejects.toBe(candidateTimeoutError);
+  });
+
   it("propagates the original timeout when no response body was lost", async () => {
     const timeoutError = new errors.TimeoutError("Timeout 1000ms exceeded.");
 

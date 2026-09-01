@@ -27,6 +27,7 @@ export async function waitForParsedJsonResponse<T>(
   params: WaitForParsedJsonResponseParams<T>,
 ): Promise<T> {
   const { isCandidate, page, parseCandidate, timeoutMs } = params;
+  const candidateTimeoutErrors = new WeakSet<Error>();
   const parsedCandidates = new WeakMap<Response, ParsedCandidate<T>>();
   const responseBodyLossDiagnostics = new Set<string>();
   let responseBodyLossCount = 0;
@@ -35,43 +36,55 @@ export async function waitForParsedJsonResponse<T>(
   try {
     response = await page.waitForResponse(
       async (candidateResponse) => {
-        if (!isCandidate({ response: candidateResponse })) {
-          return false;
-        }
-
-        let body: unknown;
         try {
-          body = await candidateResponse.json();
+          if (!isCandidate({ response: candidateResponse })) {
+            return false;
+          }
+
+          let body: unknown;
+          try {
+            body = await candidateResponse.json();
+          } catch (error) {
+            if (!isResponseBodyLoss({ error })) {
+              throw error;
+            }
+
+            responseBodyLossCount += 1;
+            if (responseBodyLossDiagnostics.size < MAX_RESPONSE_BODY_LOSS_DIAGNOSTICS) {
+              responseBodyLossDiagnostics.add(
+                formatResponseBodyLossDiagnostic({ response: candidateResponse }),
+              );
+            }
+            return false;
+          }
+
+          const parsedCandidate = parseCandidate({
+            body,
+            response: candidateResponse,
+          });
+          // JSON null is a valid parsed value; only undefined means "keep waiting".
+          if (parsedCandidate === undefined) {
+            return false;
+          }
+
+          parsedCandidates.set(candidateResponse, { value: parsedCandidate });
+          return true;
         } catch (error) {
-          if (!isResponseBodyLoss({ error })) {
-            throw error;
+          if (error instanceof errors.TimeoutError) {
+            candidateTimeoutErrors.add(error);
           }
 
-          responseBodyLossCount += 1;
-          if (responseBodyLossDiagnostics.size < MAX_RESPONSE_BODY_LOSS_DIAGNOSTICS) {
-            responseBodyLossDiagnostics.add(
-              formatResponseBodyLossDiagnostic({ response: candidateResponse }),
-            );
-          }
-          return false;
+          throw error;
         }
-
-        const parsedCandidate = parseCandidate({
-          body,
-          response: candidateResponse,
-        });
-        // JSON null is a valid parsed value; only undefined means "keep waiting".
-        if (parsedCandidate === undefined) {
-          return false;
-        }
-
-        parsedCandidates.set(candidateResponse, { value: parsedCandidate });
-        return true;
       },
       { timeout: timeoutMs },
     );
   } catch (error) {
-    if (!(error instanceof errors.TimeoutError) || responseBodyLossCount === 0) {
+    if (
+      !(error instanceof errors.TimeoutError) ||
+      candidateTimeoutErrors.has(error) ||
+      responseBodyLossCount === 0
+    ) {
       throw error;
     }
 
