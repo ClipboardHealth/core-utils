@@ -8,8 +8,11 @@ description: "Implementing data fetching, API response fixtures, and error handl
 
 1. Use React Query for all API calls
 2. Define Zod schemas for all request/response types
-3. Use the `enabled` option for conditional fetching: `{ enabled: isDefined(dependencyData?.id) }`
-4. Use `invalidateQueries` (not `refetch`) for disabled queries
+3. Keep conditional queries declarative: put every serializable value that identifies the fetched
+   data in `queryKey` and set `enabled` to whether all required values are ready
+4. For an intentionally manual query, set `enabled: false` and call the hook's `refetch()`;
+   `queryClient.invalidateQueries` and `queryClient.refetchQueries` do not execute disabled queries.
+   In v5, use `enabled: false` rather than `skipToken` when manual refetch is required
 
 ## Hook Pattern
 
@@ -59,6 +62,35 @@ useMutation({
 ## Query Keys
 
 Include the URL and params so cache invalidation is predictable: `["users", userId, "posts"]`.
+
+## React Query Traps
+
+Check every changed query against each applicable branch:
+
+- **Disabled state is not fetch state.** Without cached data, `enabled: false` starts at
+  `status: "loading", fetchStatus: "idle"` in v4 and
+  `status: "pending", fetchStatus: "idle"` in v5. Use v4 `isInitialLoading` or v5 `isLoading` for
+  a first fetch in flight, `isFetching` for any request in flight, and `data !== undefined` for
+  content availability; handle error presentation separately.
+- **Invalidation scope follows the key.** By default,
+  `invalidateQueries({ queryKey: ["items"] })` matches that key and every descendant. Choose a
+  family prefix when every variant is stale; choose the complete key with `exact: true` when only
+  one cache entry is stale. Check each mutation against every entry it can make stale.
+- **Pagination termination follows the API contract.** Return a next cursor or page only while the
+  API guarantees one exists; return `undefined` at the terminal page. Use an absent cursor for
+  cursor APIs and a short or empty page only when that API defines it as terminal. Verify the final
+  fixture makes `hasNextPage` false; an unconditional increment fails this check.
+- **Cache identity follows server inputs.** Include every serializable value that identifies the
+  data returned by `queryFn` in `queryKey`; equal keys must describe the same cached data. Server
+  page size, sort, include flags and filters belong in the key. An infinite query's `pageParam` is
+  managed inside that cache entry and stays out of `queryKey`. Keep view-only inputs out of the key
+  and derive them with `select` only when the underlying server response is identical.
+- **Previous data is observer-local.** Opt in only when one mounted `useQuery` observer changes its
+  `queryKey` and the previous result is valid transition content. Use v4
+  `keepPreviousData: true`/`isPreviousData` or v5
+  `placeholderData: keepPreviousData`/`isPlaceholderData`. Separate hooks toggled with `enabled`
+  do not share observer history; model compatible alternatives as one key-changing query or handle
+  the pending state explicitly.
 
 ## `parsedApi.ts` vs `api.ts`
 
