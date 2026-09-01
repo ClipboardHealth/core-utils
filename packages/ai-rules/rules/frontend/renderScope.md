@@ -4,63 +4,76 @@ description: "Adding or restructuring React state, context, timers, subscription
 
 # Render Scope
 
-Where a changing value sits in the tree decides how much of the tree re-renders when it changes.
-These are placement rules for the structure you are writing, not optimizations to apply after
-profiling. Each has a test you can answer from the diff in front of you.
+Where a changing value lives, what identity it has, what owns its updates and what stays mounted
+decide how much of the tree re-renders when it changes. Each rule has a test you can answer from the
+diff in front of you.
 
-## A changing value lives at the narrowest node that reads it
+## A changing value lives at the lowest node that encloses its readers
 
-State hoisted above its readers and a ticker mounted above its display are the same fault: every
-node between the owner and the reader re-renders on every change, and nothing at the call site
-shows it.
+One reader: the value is local to it. Several: their nearest common ancestor, and no higher. Every
+node between the owner and a reader re-renders on every change, and nothing at the call site shows
+it.
 
-**Test:** name every node outside this one that reads the value before it is committed or
-displayed. Zero → it belongs here. For a ticking value, find the nearest common ancestor of its
-readers; if that is a route, a provider or a list container, it is too high.
+**Test:** name every node outside this one that reads the value _as it changes_. Zero: it belongs
+here. A draft in a filter sheet or a multi-step form has zero outside readers until Apply or Submit;
+the rest of the page reads the committed value, so the draft stays in the sheet or form and is
+written out once. A per-item countdown has zero outside readers at all; it stays in the item.
 
-Staged edits — a filter sheet, a multi-step form — stay local until Apply or Submit.
+## Every function and object a hook returns has a stable identity
 
-## An exported hook's return value is a public API with a stability contract
+A hook cannot see its consumers. Any function or object it returns may end up in a `memo` prop, a
+`useMemo` or effect dependency, or a `constate` context, and a fresh identity on every render defeats
+all of them. Wrap returned functions in `useCallback` and returned non-primitive values in `useMemo`.
+Primitives are stable by value; memoizing them is waste. Consumers destructure, so memoizing the
+whole return object adds nothing once its fields are stable.
 
-A fresh object or function identity on every render defeats every downstream `memo`, `useMemo` and
-effect dependency, whatever the consumer does. Doubly so behind context or `constate`, where the
-consumers are invisible from the hook.
-
-**Test:** would `Object.is(previous, next)` hold on a render where nothing changed?
+**Test:** for each function or object in the return value, would `Object.is(previous, next)` hold
+on a render where nothing changed?
 
 ```ts
-// ❌ fresh object and fresh setter identity on every render
+// ❌ fresh setter and fresh derived object on every render
 export function useFilters() {
   const [value, setValue] = useState(initialValue);
-  return { value, reset: () => setValue(initialValue) };
+  return {
+    value,
+    active: Object.entries(value).filter(([, v]) => isDefined(v)),
+    reset: () => setValue(initialValue),
+  };
 }
 
-// ✅ stable across renders where nothing changed
+// ✅ each field stable across renders where nothing changed
 export function useFilters() {
   const [value, setValue] = useState(initialValue);
+  const active = useMemo(() => Object.entries(value).filter(([, v]) => isDefined(v)), [value]);
   const reset = useCallback(() => setValue(initialValue), []);
-  return useMemo(() => ({ value, reset }), [value, reset]);
+  return { value, active, reset };
 }
 ```
 
-## A value derived from the wall clock owns its cadence
+Reference: [react.dev — Optimizing a custom Hook](https://react.dev/reference/react/useCallback#optimizing-a-custom-hook)
 
-A value computed from `Date.now()` during render has no cadence of its own — it updates only when
-something else happens to re-render the component. It looks correct until an unrelated change
-removes that render source, and then it silently freezes. The failure surfaces in a component
-nobody edited.
+## A value that changes on its own has one owner
 
-**Test:** remove every other reason this component re-renders. Does the value still update? If not,
-give it its own interval, or derive it from a timestamp passed in as a prop.
+A value computed during render from a source React does not track — `Date.now()`, the viewport, a
+ref, a store read without subscribing — has no cadence of its own. It updates only when something
+else happens to re-render the component. It looks correct until an unrelated change removes that
+render source, and then it silently freezes. The failure surfaces in a component nobody edited.
 
-## Not visible means not subscribing
+**Test:** does this component compute such a value during render, rather than receive it as a
+prop? If so, is the trigger that re-renders it when the value changes — the state, interval or
+subscription — in this component? If not, give it its own interval, or derive it from a timestamp
+passed in as a prop.
+
+## Not visible to the user means not subscribing
 
 A closed sheet, a dismissed overlay or a list under a covering sheet stays mounted unless something
-unmounts it, and keeps polling, ticking and re-rendering for the rest of the session. Unmounting is
-the strongest form of this rule, not the only one: where the component must stay mounted to hold
-state, disable its queries, clear its intervals and drop its subscriptions while it is hidden.
+unmounts it, and keeps polling and ticking for the rest of the session. Unmounting is the strongest
+form of this rule, not the only one: where the component must stay mounted to hold state, disable
+its queries, clear its intervals and drop its subscriptions while it is hidden.
 
-**Test:** while this is invisible, does it still fetch, tick, or re-render?
+**Test:** for each query, interval or subscription this component owns, is it conditioned on the
+component being visible to the user? If the component exists only to be shown, render it
+conditionally so it unmounts instead.
 
 ## Filter before you render, not inside the child
 

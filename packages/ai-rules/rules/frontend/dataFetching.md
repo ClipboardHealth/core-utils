@@ -67,8 +67,8 @@ performance advice — the default is the trap.
 
 - **A disabled query still reports `isLoading: true`.** In v4 a query with `enabled: false` sits in
   the `loading` status forever, so any `if (!isLoading)` gate fires immediately with no data. Gate
-  on the data itself, or on `isFetching`. (v5 renames this state to `isPending` and the same trap
-  applies.)
+  on `isInitialLoading`, which is `isLoading && isFetching`, or on the data itself. (v5 renames
+  `isLoading` to `isPending` and `isInitialLoading` to `isLoading`; the same trap applies.)
 - **A bare `[url]` key passed to `invalidateQueries` is a prefix sweep.** The default is
   `exact: false`, so it refetches every param variant of that URL that has a live observer, not the
   one you meant. Pass the full key, or `{ exact: true }`.
