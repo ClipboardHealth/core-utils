@@ -15,8 +15,9 @@ local to its editor until Apply or Submit unless another live consumer must shar
 
 **Test:** list every reader and writer that must observe the same live value, plus the lifetime it
 must survive. The owner passes only when it is the closest shared scope that reaches the full list
-and preserves that lifetime. For every wider ancestor, name the additional consumer or lifetime
-requirement it serves; no answer means the value is scoped too high.
+and preserves that lifetime. For each level above that closest scope up to the current owner, name
+the additional consumer or lifetime requirement that forces it; no answer means the value is
+scoped too high.
 
 ## Stabilize identities at reference-sensitive boundaries
 
@@ -25,10 +26,10 @@ that compares it: a context or `constate` value, a dependency-array entry (`Obje
 memoized prop (its configured comparison). Exporting a hook alone creates no whole-return stability
 contract. Stabilize the compared value, not every wrapper.
 
-**Test:** trace every returned object and function to its consumers and name each place that
-compares that exact reference. At every named boundary, verify semantically unchanged renders
-preserve identity and changes that the boundary must observe replace it. With no such boundary,
-return the value directly.
+**Test:** trace every object and function that reaches one of these boundaries and name where that
+exact reference is compared. At every named boundary, verify semantically unchanged renders
+preserve identity and changes that the boundary must observe replace it. With no such boundary, use
+the value directly.
 
 ## Give wall-clock behavior an explicit cadence
 
