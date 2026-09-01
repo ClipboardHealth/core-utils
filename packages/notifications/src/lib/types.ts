@@ -221,6 +221,14 @@ export interface TriggerRequest {
 export interface TriggerResponse {
   /** Third-party provider's unique identifier. */
   id: string;
+
+  /**
+   * Knock's request ID, when Knock returned one. Use it to find the matching entry in Knock's
+   * dashboard under Observability > Logs.
+   *
+   * @see {@link https://docs.knock.app/developer-tools/api-logs}
+   */
+  knockRequestId?: string | undefined;
 }
 
 /**
