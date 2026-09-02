@@ -221,8 +221,8 @@ try {
 
 // Discriminated union with fallback examples
 // One declaration yields a strict `request` and a forwards-compatible `response`.
-// Omitting a variant for any value in the tuple is a compile error, so a new
-// variant can never silently read as ENUM_FALLBACK.
+// The tuple and the variant record must line up exactly, so a variant can never
+// silently read as ENUM_FALLBACK.
 const TRIGGER_TYPES = ["DNR_COUNT", "SHIFT_CANCELLATION"] as const;
 
 const trigger = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {

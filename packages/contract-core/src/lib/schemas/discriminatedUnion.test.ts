@@ -219,22 +219,24 @@ describe(discriminatedUnionWithFallback, () => {
       ).toThrow(`Discriminator values must not include "${ENUM_FALLBACK}"`);
     });
 
-    it("throws when a variant declares a literal that does not match its key", () => {
+    it("rejects a variant declaring a literal that does not match its key", () => {
       expect(() =>
         discriminatedUnionWithFallback("type", ["A", "B"], {
           A: z.object({ type: z.literal("A") }),
+          // @ts-expect-error -- the literal must match the record key.
           B: z.object({ type: z.literal("A") }),
         }),
       ).toThrow('Variant "B" must declare type: z.literal("B") in its shape.');
     });
 
-    it("throws when a variant omits the discriminator", () => {
+    it("rejects a variant omitting the discriminator", () => {
       expect(() =>
+        // @ts-expect-error -- every variant must declare the discriminator.
         discriminatedUnionWithFallback("type", ["A"], { A: z.object({ id: z.string() }) }),
       ).toThrow('Variant "A" must declare type: z.literal("A") in its shape.');
     });
 
-    it("rejects a variant record missing a value's schema", () => {
+    it("rejects a value with no variant", () => {
       expect(() =>
         discriminatedUnionWithFallback(
           "type",
@@ -243,6 +245,16 @@ describe(discriminatedUnionWithFallback, () => {
           { A: z.object({ type: z.literal("A") }) },
         ),
       ).toThrow('Missing variant schema for discriminator value "B".');
+    });
+
+    it("rejects a variant with no value", () => {
+      expect(() =>
+        discriminatedUnionWithFallback("type", ["A"], {
+          A: z.object({ type: z.literal("A") }),
+          // @ts-expect-error -- a variant outside the values would be dropped and read as fallback.
+          B: z.object({ type: z.literal("B") }),
+        }),
+      ).toThrow('Variant "B" is missing from the discriminator values.');
     });
 
     it("rejects widened string values", () => {

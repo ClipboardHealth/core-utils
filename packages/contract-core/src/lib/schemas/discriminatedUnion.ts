@@ -7,7 +7,18 @@ type NarrowValues<Values extends DiscriminatorValues> = string extends Values[nu
   ? never
   : Values;
 
-type Variants<Values extends DiscriminatorValues> = Record<Values[number], z.AnyZodObject>;
+type Variants<Key extends string, Values extends DiscriminatorValues> = {
+  [Value in Values[number]]: z.ZodObject<Record<Key, z.ZodLiteral<Value>> & z.ZodRawShape>;
+};
+
+/**
+ * Resolves to `never` for any variant whose key is absent from `values`. Such a variant would be
+ * dropped at build time and its discriminator would read as `ENUM_FALLBACK`.
+ */
+type OrphanedVariants<Schemas, Values extends DiscriminatorValues> = Record<
+  Exclude<keyof Schemas, Values[number]>,
+  never
+>;
 
 type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>;
 
@@ -25,8 +36,9 @@ type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>
  * The helper owns strictness on both sides, so an already-`.strict()` variant still yields a
  * stripping response branch. Only top-level discriminators are supported.
  *
- * Every value in `values` must have a variant, otherwise the build fails. That is the point: a new
- * value without a schema must not silently read as `ENUM_FALLBACK`.
+ * `values` and `variants` must line up exactly, and each variant must declare `z.literal` of its own
+ * key. A value with no variant, a variant with no value, and a mismatched or missing literal are all
+ * compile errors. That is the point: a variant must never silently read as `ENUM_FALLBACK`.
  *
  * ```ts
  * const { request, response } = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
@@ -40,11 +52,11 @@ type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>
 export function discriminatedUnionWithFallback<
   const Key extends string,
   const Values extends DiscriminatorValues,
-  const Schemas extends Variants<Values>,
+  const Schemas extends Variants<Key, Values>,
 >(
   discriminator: Key,
   values: NarrowValues<Values>,
-  variants: Schemas,
+  variants: Schemas & OrphanedVariants<Schemas, Values>,
 ): {
   request: z.ZodType<
     z.output<Schemas[Values[number]]>,
@@ -67,6 +79,12 @@ export function discriminatedUnionWithFallback(
     throw new Error(`Discriminator values must not include "${ENUM_FALLBACK}".`);
   }
 
+  const known = new Set<string>(values);
+  const orphaned = Object.keys(variants).find((key) => !known.has(key));
+  if (orphaned !== undefined) {
+    throw new Error(`Variant "${orphaned}" is missing from the discriminator values.`);
+  }
+
   const [firstValue, ...restValues] = values;
   const first = variantFor({ discriminator, value: firstValue, variants });
   const rest = restValues.map((value) => variantFor({ discriminator, value, variants }));
@@ -78,7 +96,7 @@ export function discriminatedUnionWithFallback(
     ]),
     response: z.union([
       first.strip(),
-      unrecognizedVariant({ discriminator, values }),
+      unrecognizedVariant({ discriminator, known }),
       ...rest.map((variant) => variant.strip()),
     ]),
   };
@@ -108,10 +126,9 @@ function variantFor(options: {
 
 function unrecognizedVariant(options: {
   discriminator: string;
-  values: DiscriminatorValues;
+  known: ReadonlySet<string>;
 }): z.AnyZodObject {
-  const { discriminator, values } = options;
-  const known = new Set<string>(values);
+  const { discriminator, known } = options;
 
   return z.object({
     [discriminator]: z

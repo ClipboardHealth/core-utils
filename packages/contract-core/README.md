@@ -59,7 +59,7 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 The helper owns strictness on both sides, so a variant composed with `.extend()` off a shared base — or one the caller already made `.strict()` — still gets a stripping response branch. The discriminator key is a parameter, and only top-level discriminators are supported.
 
-Every value in the tuple must have a variant. Adding a value without its schema fails the build rather than silently reading as `ENUM_FALLBACK`.
+The tuple and the variant record must line up exactly, and each variant must declare `z.literal` of its own key. A value with no variant, a variant with no value, and a mismatched or missing literal are all build failures, so a variant can never silently read as `ENUM_FALLBACK`.
 
 #### Enum validation helpers
 
@@ -315,8 +315,8 @@ try {
 
 // Discriminated union with fallback examples
 // One declaration yields a strict `request` and a forwards-compatible `response`.
-// Omitting a variant for any value in the tuple is a compile error, so a new
-// variant can never silently read as ENUM_FALLBACK.
+// The tuple and the variant record must line up exactly, so a variant can never
+// silently read as ENUM_FALLBACK.
 const TRIGGER_TYPES = ["DNR_COUNT", "SHIFT_CANCELLATION"] as const;
 
 const trigger = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
