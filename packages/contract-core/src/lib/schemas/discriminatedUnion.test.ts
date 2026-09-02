@@ -138,7 +138,8 @@ describe(discriminatedUnionWithFallback, () => {
         const actual = response.safeParse({ ...DNR_COUNT_TRIGGER, dnrCount: "three" });
 
         expectToBeSafeParseError(actual);
-        expect(actual.error.issues.map((issue) => issue.path)).toStrictEqual([["dnrCount"]]);
+        expect(actual.error.issues).toHaveLength(1);
+        expect(actual.error.issues[0]?.path).toStrictEqual(["dnrCount"]);
       });
     });
   });
