@@ -14,23 +14,26 @@ type Variants<Key extends string> = readonly [
 type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>;
 
 /**
- * Builds a strict `request` and a forwards-compatible `response` for a discriminated union whose
- * variant set grows over time. Takes the same arguments as `z.discriminatedUnion`.
+ * Builds a forwards-compatible response schema for a discriminated union whose variant set grows
+ * over time. Takes the same arguments as `z.discriminatedUnion`.
  *
- * `request` is the variants made `.strict()`. `response` is the variants made `.strip()` plus a
- * branch pinned to `z.literal(ENUM_FALLBACK)`, with an unknown discriminator rewritten to
- * `{ [discriminator]: ENUM_FALLBACK }` before parsing so a future variant reads as the fallback
- * instead of failing. Both still reject a known variant with a missing field or an invalid value.
+ * This is for responses only. Requests declare their own `z.discriminatedUnion`, which rejects a
+ * variant the server does not know rather than silently accepting it.
+ *
+ * The result is the variants made `.strip()` plus a branch pinned to `z.literal(ENUM_FALLBACK)`,
+ * with an unknown discriminator rewritten to `{ [discriminator]: ENUM_FALLBACK }` before parsing so
+ * a future variant reads as the fallback instead of failing. A known variant with a missing field
+ * or an invalid value is still rejected.
  *
  * A `z.union` fallback branch matches any unknown value, so a failing known variant reports an
  * opaque `invalid_union`. Discriminating first names the offending field.
  *
  * Every variant must declare `z.literal` at the discriminator. The helper owns strictness at each
- * variant's top level, so an already-`.strict()` variant still yields a stripping response branch.
- * Only top-level discriminators are supported.
+ * variant's top level, so an already-`.strict()` variant still yields a stripping branch. Only
+ * top-level discriminators are supported.
  *
  * ```ts
- * const { request, response } = discriminatedUnionWithFallback("channel", [
+ * const notificationSchema = discriminatedUnionWithFallback("channel", [
  *   z.object({ channel: z.literal("EMAIL"), emailAddress: z.string().email() }),
  * ]);
  * ```
@@ -41,10 +44,7 @@ export function discriminatedUnionWithFallback<
 >(
   discriminator: Key,
   variants: Schemas,
-): {
-  request: z.ZodType<z.output<Schemas[number]>, z.ZodTypeDef, z.input<Schemas[number]>>;
-  response: z.ZodType<z.output<Schemas[number]> | UnrecognizedVariant<Key>, z.ZodTypeDef, unknown>;
-};
+): z.ZodType<z.output<Schemas[number]> | UnrecognizedVariant<Key>, z.ZodTypeDef, unknown>;
 
 export function discriminatedUnionWithFallback(
   discriminator: string,
@@ -54,26 +54,18 @@ export function discriminatedUnionWithFallback(
     variants.map((variant, index) => discriminatorValue({ discriminator, index, variant })),
   );
 
-  const [first, ...rest] = variants;
-
   const unknownDiscriminator = z.object({
     [discriminator]: z.string().refine((value) => !known.has(value)),
   });
 
-  return {
-    request: z.discriminatedUnion(discriminator, [
-      first.strict(),
-      ...rest.map((variant) => variant.strict()),
+  return z.preprocess(
+    (value) =>
+      unknownDiscriminator.safeParse(value).success ? { [discriminator]: ENUM_FALLBACK } : value,
+    z.discriminatedUnion(discriminator, [
+      z.object({ [discriminator]: z.literal(ENUM_FALLBACK) }),
+      ...variants.map((variant) => variant.strip()),
     ]),
-    response: z.preprocess(
-      (value) =>
-        unknownDiscriminator.safeParse(value).success ? { [discriminator]: ENUM_FALLBACK } : value,
-      z.discriminatedUnion(discriminator, [
-        z.object({ [discriminator]: z.literal(ENUM_FALLBACK) }),
-        ...variants.map((variant) => variant.strip()),
-      ]),
-    ),
-  };
+  );
 }
 
 function discriminatorValue(options: {

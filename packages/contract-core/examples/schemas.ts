@@ -220,9 +220,9 @@ try {
 }
 
 // Discriminated union with fallback examples
-// Takes the same arguments as z.discriminatedUnion, and yields a strict `request`
-// plus a forwards-compatible `response` from the one declaration.
-const notification = discriminatedUnionWithFallback("channel", [
+// Takes the same arguments as z.discriminatedUnion and returns a response schema
+// that tolerates variants this consumer does not know yet.
+const notificationVariants = [
   z.object({
     channel: z.literal("EMAIL"),
     emailAddress: z.string().email(),
@@ -231,34 +231,40 @@ const notification = discriminatedUnionWithFallback("channel", [
     channel: z.literal("SMS"),
     phoneNumber: nonEmptyString,
   }),
-]);
+] as const;
 
-const emailNotification = notification.request.parse({
+const notificationResponseSchema = discriminatedUnionWithFallback("channel", notificationVariants);
+
+const emailNotification = notificationResponseSchema.parse({
   channel: "EMAIL",
   emailAddress: "worker@example.com",
 });
 // => { channel: "EMAIL", emailAddress: "worker@example.com" }
 console.log(emailNotification);
 
-try {
-  notification.request.parse({ channel: "PUSH", deviceToken: "abc123" });
-} catch (error) {
-  logError(error);
-  // => Requests are strict: Invalid discriminator value. Expected 'EMAIL' | 'SMS'
-}
-
-// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK on reads.
-const unrecognizedNotification = notification.response.parse({
+// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK.
+const unrecognizedNotification = notificationResponseSchema.parse({
   channel: "PUSH",
   deviceToken: "abc123",
 });
 // => { channel: "UNRECOGNIZED_" }
 console.log(unrecognizedNotification);
 
-// A known variant with a bad field still fails on reads, naming the field.
+// A known variant with a bad field still fails, naming the field.
 try {
-  notification.response.parse({ channel: "EMAIL", emailAddress: 3 });
+  notificationResponseSchema.parse({ channel: "EMAIL", emailAddress: 3 });
 } catch (error) {
   logError(error);
   // => Expected string, received number
+}
+
+// Requests use z.discriminatedUnion directly: an unknown variant is a client
+// error, not something to tolerate.
+const notificationRequestSchema = z.discriminatedUnion("channel", [...notificationVariants]);
+
+try {
+  notificationRequestSchema.parse({ channel: "PUSH", deviceToken: "abc123" });
+} catch (error) {
+  logError(error);
+  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }

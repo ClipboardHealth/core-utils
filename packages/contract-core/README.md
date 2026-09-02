@@ -49,13 +49,15 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 #### Discriminated union with fallback
 
-`discriminatedUnionWithFallback(discriminator, variants)` takes the same arguments as `z.discriminatedUnion` and returns a `{ request, response }` pair for a union whose variant set grows over time. Writes stay strict; reads tolerate variants this consumer does not know yet.
+`discriminatedUnionWithFallback(discriminator, variants)` takes the same arguments as `z.discriminatedUnion` and returns a response schema for a union whose variant set grows over time, so reads tolerate variants this consumer does not know yet.
 
-|                                          | `request` | `response`           |
-| ---------------------------------------- | --------- | -------------------- |
-| Unknown discriminator                    | reject    | collapse to fallback |
-| Unknown top-level key on a known variant | reject    | strip                |
-| Missing field, invalid value             | reject    | reject               |
+It is for responses only. Requests declare their own `z.discriminatedUnion` over the same variants, where an unknown variant is a client error rather than something to tolerate.
+
+|                                          | `z.discriminatedUnion` (requests) | `discriminatedUnionWithFallback` (responses) |
+| ---------------------------------------- | --------------------------------- | -------------------------------------------- |
+| Unknown discriminator                    | reject                            | collapse to fallback                         |
+| Unknown top-level key on a known variant | strip                             | strip                                        |
+| Missing field, invalid value             | reject                            | reject                                       |
 
 `z.union` cannot express this. Its fallback branch matches any unknown value, so a known variant with a bad field fails every branch and reports an opaque `invalid_union` carrying one nested error per branch. Rewriting the unknown discriminator first means the response discriminates normally and reports the issue on the offending field alone, which is what makes a rejected response diagnosable from logs.
 
@@ -312,9 +314,9 @@ try {
 }
 
 // Discriminated union with fallback examples
-// Takes the same arguments as z.discriminatedUnion, and yields a strict `request`
-// plus a forwards-compatible `response` from the one declaration.
-const notification = discriminatedUnionWithFallback("channel", [
+// Takes the same arguments as z.discriminatedUnion and returns a response schema
+// that tolerates variants this consumer does not know yet.
+const notificationVariants = [
   z.object({
     channel: z.literal("EMAIL"),
     emailAddress: z.string().email(),
@@ -323,36 +325,42 @@ const notification = discriminatedUnionWithFallback("channel", [
     channel: z.literal("SMS"),
     phoneNumber: nonEmptyString,
   }),
-]);
+] as const;
 
-const emailNotification = notification.request.parse({
+const notificationResponseSchema = discriminatedUnionWithFallback("channel", notificationVariants);
+
+const emailNotification = notificationResponseSchema.parse({
   channel: "EMAIL",
   emailAddress: "worker@example.com",
 });
 // => { channel: "EMAIL", emailAddress: "worker@example.com" }
 console.log(emailNotification);
 
-try {
-  notification.request.parse({ channel: "PUSH", deviceToken: "abc123" });
-} catch (error) {
-  logError(error);
-  // => Requests are strict: Invalid discriminator value. Expected 'EMAIL' | 'SMS'
-}
-
-// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK on reads.
-const unrecognizedNotification = notification.response.parse({
+// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK.
+const unrecognizedNotification = notificationResponseSchema.parse({
   channel: "PUSH",
   deviceToken: "abc123",
 });
 // => { channel: "UNRECOGNIZED_" }
 console.log(unrecognizedNotification);
 
-// A known variant with a bad field still fails on reads, naming the field.
+// A known variant with a bad field still fails, naming the field.
 try {
-  notification.response.parse({ channel: "EMAIL", emailAddress: 3 });
+  notificationResponseSchema.parse({ channel: "EMAIL", emailAddress: 3 });
 } catch (error) {
   logError(error);
   // => Expected string, received number
+}
+
+// Requests use z.discriminatedUnion directly: an unknown variant is a client
+// error, not something to tolerate.
+const notificationRequestSchema = z.discriminatedUnion("channel", [...notificationVariants]);
+
+try {
+  notificationRequestSchema.parse({ channel: "PUSH", deviceToken: "abc123" });
+} catch (error) {
+  logError(error);
+  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }
 ```
 
