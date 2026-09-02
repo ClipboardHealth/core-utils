@@ -47,10 +47,10 @@ type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>
  * silently read as `ENUM_FALLBACK`. Duplicate values throw at module load.
  *
  * ```ts
- * const { request, response } = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
- *   DNR_COUNT: z.object({
- *     type: z.literal("DNR_COUNT"),
- *     dnrCount: z.number().int().positive(),
+ * const { request, response } = discriminatedUnionWithFallback("channel", CHANNELS, {
+ *   EMAIL: z.object({
+ *     channel: z.literal("EMAIL"),
+ *     emailAddress: z.string().email(),
  *   }),
  * });
  * ```

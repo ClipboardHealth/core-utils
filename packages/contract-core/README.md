@@ -319,41 +319,47 @@ try {
 // One declaration yields a strict `request` and a forwards-compatible `response`.
 // The tuple and the variant record must line up exactly, so a variant can never
 // silently read as ENUM_FALLBACK.
-const TRIGGER_TYPES = ["DNR_COUNT", "SHIFT_CANCELLATION"] as const;
+const CHANNELS = ["EMAIL", "SMS"] as const;
 
-const trigger = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
-  DNR_COUNT: z.object({
-    type: z.literal("DNR_COUNT"),
-    dnrCount: z.number().int().positive(),
+const notification = discriminatedUnionWithFallback("channel", CHANNELS, {
+  EMAIL: z.object({
+    channel: z.literal("EMAIL"),
+    emailAddress: z.string().email(),
   }),
-  SHIFT_CANCELLATION: z.object({
-    type: z.literal("SHIFT_CANCELLATION"),
-    cancellationCount: z.number().int().positive(),
+  SMS: z.object({
+    channel: z.literal("SMS"),
+    phoneNumber: nonEmptyString,
   }),
 });
 
-const dnrCountTrigger = trigger.request.parse({ type: "DNR_COUNT", dnrCount: 3 });
-// => { type: "DNR_COUNT", dnrCount: 3 }
-console.log(dnrCountTrigger);
+const emailNotification = notification.request.parse({
+  channel: "EMAIL",
+  emailAddress: "worker@example.com",
+});
+// => { channel: "EMAIL", emailAddress: "worker@example.com" }
+console.log(emailNotification);
 
 try {
-  trigger.request.parse({ type: "WORKPLACE_RATING", rating: 1 });
+  notification.request.parse({ channel: "PUSH", deviceToken: "abc123" });
 } catch (error) {
   logError(error);
-  // => Invalid discriminator value. Expected 'DNR_COUNT' | 'SHIFT_CANCELLATION'
+  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }
 
 // A variant this consumer does not recognize yet collapses to ENUM_FALLBACK on reads.
-const unrecognizedTrigger = trigger.response.parse({ type: "WORKPLACE_RATING", rating: 1 });
-// => { type: "UNRECOGNIZED_" }
-console.log(unrecognizedTrigger);
+const unrecognizedNotification = notification.response.parse({
+  channel: "PUSH",
+  deviceToken: "abc123",
+});
+// => { channel: "UNRECOGNIZED_" }
+console.log(unrecognizedNotification);
 
 // A known variant with a bad field still fails on reads, naming the field.
 try {
-  trigger.response.parse({ type: "DNR_COUNT", dnrCount: "three" });
+  notification.response.parse({ channel: "EMAIL", emailAddress: 3 });
 } catch (error) {
   logError(error);
-  // => Expected number, received string
+  // => Expected string, received number
 }
 ```
 

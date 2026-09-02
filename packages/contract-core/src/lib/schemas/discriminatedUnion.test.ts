@@ -7,22 +7,26 @@ import { z } from "zod";
 import { discriminatedUnionWithFallback } from "./discriminatedUnion";
 import { ENUM_FALLBACK } from "./enum";
 
-const TRIGGER_TYPES = ["DNR_COUNT", "SHIFT_CANCELLATION"] as const;
+const CHANNELS = ["EMAIL", "SMS"] as const;
 
-const { request, response } = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
-  DNR_COUNT: z.object({
-    type: z.literal("DNR_COUNT"),
-    dnrCount: z.number().int().positive(),
-    lookbackDays: z.number().int().positive().nullable(),
+const { request, response } = discriminatedUnionWithFallback("channel", CHANNELS, {
+  EMAIL: z.object({
+    channel: z.literal("EMAIL"),
+    emailAddress: z.string().email(),
+    replyTo: z.string().email().nullable(),
   }),
-  SHIFT_CANCELLATION: z.object({
-    type: z.literal("SHIFT_CANCELLATION"),
-    cancellationCount: z.number().int().positive(),
+  SMS: z.object({
+    channel: z.literal("SMS"),
+    phoneNumber: z.string(),
   }),
 });
 
-const DNR_COUNT_TRIGGER = { type: "DNR_COUNT", dnrCount: 3, lookbackDays: 30 } as const;
-const SHIFT_CANCELLATION_TRIGGER = { type: "SHIFT_CANCELLATION", cancellationCount: 2 } as const;
+const EMAIL_NOTIFICATION = {
+  channel: "EMAIL",
+  emailAddress: "worker@example.com",
+  replyTo: "support@example.com",
+} as const;
+const SMS_NOTIFICATION = { channel: "SMS", phoneNumber: "+15555550123" } as const;
 
 describe(discriminatedUnionWithFallback, () => {
   describe("request", () => {
@@ -30,18 +34,18 @@ describe(discriminatedUnionWithFallback, () => {
       it.each<{ expected: unknown; input: unknown; name: string }>([
         {
           name: "accepts the first known variant",
-          input: DNR_COUNT_TRIGGER,
-          expected: DNR_COUNT_TRIGGER,
+          input: EMAIL_NOTIFICATION,
+          expected: EMAIL_NOTIFICATION,
         },
         {
           name: "accepts a later known variant",
-          input: SHIFT_CANCELLATION_TRIGGER,
-          expected: SHIFT_CANCELLATION_TRIGGER,
+          input: SMS_NOTIFICATION,
+          expected: SMS_NOTIFICATION,
         },
         {
           name: "accepts a nullable field set to null",
-          input: { type: "DNR_COUNT", dnrCount: 3, lookbackDays: null },
-          expected: { type: "DNR_COUNT", dnrCount: 3, lookbackDays: null },
+          input: { channel: "EMAIL", emailAddress: "worker@example.com", replyTo: null },
+          expected: { channel: "EMAIL", emailAddress: "worker@example.com", replyTo: null },
         },
       ])("$name", ({ input, expected }) => {
         const actual = request.safeParse(input);
@@ -55,22 +59,25 @@ describe(discriminatedUnionWithFallback, () => {
       it.each<{ input: unknown; name: string }>([
         {
           name: "rejects an unknown discriminator",
-          input: { type: "WORKPLACE_RATING", rating: 1 },
+          input: { channel: "PUSH", deviceToken: "abc123" },
         },
         {
           name: "rejects an unknown key on a known variant",
-          input: { ...DNR_COUNT_TRIGGER, unknownKey: "value" },
+          input: { ...EMAIL_NOTIFICATION, unknownKey: "value" },
         },
         {
           name: "rejects a missing field",
-          input: { type: "DNR_COUNT", dnrCount: 3 },
+          input: { channel: "EMAIL", emailAddress: "worker@example.com" },
         },
         {
           name: "rejects an invalid value",
-          input: { ...DNR_COUNT_TRIGGER, dnrCount: "three" },
+          input: { ...EMAIL_NOTIFICATION, emailAddress: "not-an-email" },
         },
-        { name: "rejects a missing discriminator", input: { dnrCount: 3, lookbackDays: 30 } },
-        { name: "rejects a non-object", input: "DNR_COUNT" },
+        {
+          name: "rejects a missing discriminator",
+          input: { emailAddress: "worker@example.com", replyTo: null },
+        },
+        { name: "rejects a non-object", input: "EMAIL" },
       ])("$name", ({ input }) => {
         const actual = request.safeParse(input);
 
@@ -84,28 +91,28 @@ describe(discriminatedUnionWithFallback, () => {
       it.each<{ expected: unknown; input: unknown; name: string }>([
         {
           name: "accepts the first known variant",
-          input: DNR_COUNT_TRIGGER,
-          expected: DNR_COUNT_TRIGGER,
+          input: EMAIL_NOTIFICATION,
+          expected: EMAIL_NOTIFICATION,
         },
         {
           name: "accepts a later known variant",
-          input: SHIFT_CANCELLATION_TRIGGER,
-          expected: SHIFT_CANCELLATION_TRIGGER,
+          input: SMS_NOTIFICATION,
+          expected: SMS_NOTIFICATION,
         },
         {
           name: "strips an unknown key from a known variant",
-          input: { ...DNR_COUNT_TRIGGER, unknownKey: "value" },
-          expected: DNR_COUNT_TRIGGER,
+          input: { ...EMAIL_NOTIFICATION, unknownKey: "value" },
+          expected: EMAIL_NOTIFICATION,
         },
         {
           name: "collapses an unknown discriminator to the fallback",
-          input: { type: "WORKPLACE_RATING", rating: 1 },
-          expected: { type: ENUM_FALLBACK },
+          input: { channel: "PUSH", deviceToken: "abc123" },
+          expected: { channel: ENUM_FALLBACK },
         },
         {
           name: "collapses an unknown discriminator carrying no other fields",
-          input: { type: "WORKPLACE_RATING" },
-          expected: { type: ENUM_FALLBACK },
+          input: { channel: "PUSH" },
+          expected: { channel: ENUM_FALLBACK },
         },
       ])("$name", ({ input, expected }) => {
         const actual = response.safeParse(input);
@@ -119,15 +126,18 @@ describe(discriminatedUnionWithFallback, () => {
       it.each<{ input: unknown; name: string }>([
         {
           name: "rejects a missing field on a known variant",
-          input: { type: "DNR_COUNT", dnrCount: 3 },
+          input: { channel: "EMAIL", emailAddress: "worker@example.com" },
         },
         {
           name: "rejects an invalid value on a known variant",
-          input: { ...DNR_COUNT_TRIGGER, dnrCount: "three" },
+          input: { ...EMAIL_NOTIFICATION, emailAddress: 3 },
         },
-        { name: "rejects a missing discriminator", input: { dnrCount: 3, lookbackDays: 30 } },
-        { name: "rejects a non-string discriminator", input: { type: 1 } },
-        { name: "rejects a non-object", input: "DNR_COUNT" },
+        {
+          name: "rejects a missing discriminator",
+          input: { emailAddress: "worker@example.com", replyTo: null },
+        },
+        { name: "rejects a non-string discriminator", input: { channel: 1 } },
+        { name: "rejects a non-object", input: "EMAIL" },
       ])("$name", ({ input }) => {
         const actual = response.safeParse(input);
 
@@ -135,86 +145,84 @@ describe(discriminatedUnionWithFallback, () => {
       });
 
       it("reports the offending field rather than an opaque union error", () => {
-        const actual = response.safeParse({ ...DNR_COUNT_TRIGGER, dnrCount: "three" });
+        const actual = response.safeParse({ ...EMAIL_NOTIFICATION, emailAddress: 3 });
 
         expectToBeSafeParseError(actual);
         expect(actual.error.issues).toHaveLength(1);
-        expect(actual.error.issues[0]?.path).toStrictEqual(["dnrCount"]);
+        expect(actual.error.issues[0]?.path).toStrictEqual(["emailAddress"]);
       });
     });
   });
 
   describe("variant composition", () => {
-    const base = z.object({ id: z.string() });
-    const KINDS = ["LICENSE", "CERTIFICATE"] as const;
+    const base = z.object({ messageId: z.string() });
+    const DELIVERY_STATUSES = ["SENT", "BOUNCED"] as const;
 
-    const composed = discriminatedUnionWithFallback("requirementType", KINDS, {
-      LICENSE: base.extend({
-        requirementType: z.literal("LICENSE"),
-        licenseNumber: z.string(),
+    const composed = discriminatedUnionWithFallback("status", DELIVERY_STATUSES, {
+      SENT: base.extend({
+        status: z.literal("SENT"),
+        sentAt: z.string(),
       }),
-      CERTIFICATE: base
-        .extend({ requirementType: z.literal("CERTIFICATE"), issuer: z.string() })
-        .strict(),
+      BOUNCED: base.extend({ status: z.literal("BOUNCED"), reason: z.string() }).strict(),
     });
 
     it("accepts a variant extended from a shared base", () => {
       const actual = composed.request.safeParse({
-        requirementType: "LICENSE",
-        id: "1",
-        licenseNumber: "abc",
+        status: "SENT",
+        messageId: "1",
+        sentAt: "2026-03-15T10:30:00.000Z",
       });
 
       expectToBeSafeParseSuccess(actual);
       expect(actual.data).toStrictEqual({
-        requirementType: "LICENSE",
-        id: "1",
-        licenseNumber: "abc",
+        status: "SENT",
+        messageId: "1",
+        sentAt: "2026-03-15T10:30:00.000Z",
       });
     });
 
     it("strips unknown keys on the response even when the caller passed a strict variant", () => {
       const actual = composed.response.safeParse({
-        requirementType: "CERTIFICATE",
-        id: "1",
-        issuer: "Board",
+        status: "BOUNCED",
+        messageId: "1",
+        reason: "MAILBOX_FULL",
         unknownKey: "value",
       });
 
       expectToBeSafeParseSuccess(actual);
       expect(actual.data).toStrictEqual({
-        requirementType: "CERTIFICATE",
-        id: "1",
-        issuer: "Board",
+        status: "BOUNCED",
+        messageId: "1",
+        reason: "MAILBOX_FULL",
       });
     });
 
     it("collapses an unknown discriminator under a custom discriminator key", () => {
-      const actual = composed.response.safeParse({ requirementType: "IMMUNIZATION", doses: 2 });
+      const actual = composed.response.safeParse({ status: "THROTTLED", retryAfterSeconds: 30 });
 
       expectToBeSafeParseSuccess(actual);
-      expect(actual.data).toStrictEqual({ requirementType: ENUM_FALLBACK });
+      expect(actual.data).toStrictEqual({ status: ENUM_FALLBACK });
     });
   });
 
   describe("inferred types", () => {
     it("narrows request to the known variants", () => {
-      const trigger: z.infer<typeof request> = DNR_COUNT_TRIGGER;
+      const notification: z.infer<typeof request> = EMAIL_NOTIFICATION;
       // @ts-expect-error -- requests carry no fallback variant.
-      const fallback: z.infer<typeof request> = { type: ENUM_FALLBACK };
+      const fallback: z.infer<typeof request> = { channel: ENUM_FALLBACK };
       // @ts-expect-error -- a variant's own fields stay required.
-      const partial: z.infer<typeof request> = { type: "DNR_COUNT" };
+      const partial: z.infer<typeof request> = { channel: "EMAIL" };
 
-      expect([trigger, fallback, partial]).toHaveLength(3);
+      expect([notification, fallback, partial]).toHaveLength(3);
     });
 
     it("widens response to the known variants plus the fallback", () => {
-      const trigger: z.infer<typeof response> = SHIFT_CANCELLATION_TRIGGER;
-      const fallback: z.infer<typeof response> = { type: ENUM_FALLBACK };
+      const notification: z.infer<typeof response> = SMS_NOTIFICATION;
+      const fallback: z.infer<typeof response> = { channel: ENUM_FALLBACK };
       // @ts-expect-error -- the fallback variant carries the discriminator alone.
-      const unknownVariant: z.infer<typeof response> = { type: "WORKPLACE_RATING", rating: 1 };
+      const unknownVariant: z.infer<typeof response> = { channel: "PUSH", deviceToken: "abc123" };
 
-      expect([trigger, fallback, unknownVariant]).toHaveLength(3);
+      expect([notification, fallback, unknownVariant]).toHaveLength(3);
     });
   });
 
