@@ -49,7 +49,7 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 #### Discriminated union with fallback
 
-`discriminatedUnionWithFallback(discriminator, values, variants)` returns a `{ request, response }` pair for a discriminated union whose variant set grows over time. Writes stay strict; reads tolerate variants this consumer does not know yet.
+`discriminatedUnionWithFallback(discriminator, variants)` takes the same arguments as `z.discriminatedUnion` and returns a `{ request, response }` pair for a union whose variant set grows over time. Writes stay strict; reads tolerate variants this consumer does not know yet.
 
 |                                | `request` | `response`           |
 | ------------------------------ | --------- | -------------------- |
@@ -57,11 +57,9 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 | Unknown key on a known variant | reject    | strip                |
 | Missing field, invalid value   | reject    | reject               |
 
-The helper owns strictness on both sides, so a variant composed with `.extend()` off a shared base — or one the caller already made `.strict()` — still gets a stripping response branch. The discriminator key is a parameter, and only top-level discriminators are supported.
+`z.union` cannot express this. Its fallback branch matches any unknown value, so a known variant with a bad field fails every branch and reports an opaque `invalid_union` carrying one nested error per branch. Rewriting the unknown discriminator first means the response discriminates normally and reports the issue on the offending field alone, which is what makes a rejected response diagnosable from logs.
 
-The tuple and the variant record must line up exactly, and each variant must declare `z.literal` of its own key. A value with no variant, a variant with no value, a mismatched or missing literal, and `ENUM_FALLBACK` among the values are all build failures, so a variant can never silently read as `ENUM_FALLBACK`. Values may come straight from `Object.values` of a TypeScript enum.
-
-A failing known variant reports the issue on the offending field, not as an opaque union error, so a rejected response is diagnosable from logs. Replacing a hand-rolled union nested inside a `z.union` changes the generated OpenAPI document, which flattens to one `anyOf` per variant plus the fallback branch, so regenerate the spec when migrating.
+The fallback branch carries the discriminator and nothing else, so a future variant can never fail both the known branches and the fallback.
 
 #### Enum validation helpers
 
@@ -316,21 +314,18 @@ try {
 }
 
 // Discriminated union with fallback examples
-// One declaration yields a strict `request` and a forwards-compatible `response`.
-// The tuple and the variant record must line up exactly, so a variant can never
-// silently read as ENUM_FALLBACK.
-const CHANNELS = ["EMAIL", "SMS"] as const;
-
-const notification = discriminatedUnionWithFallback("channel", CHANNELS, {
-  EMAIL: z.object({
+// Takes the same arguments as z.discriminatedUnion, and yields a strict `request`
+// plus a forwards-compatible `response` from the one declaration.
+const notification = discriminatedUnionWithFallback("channel", [
+  z.object({
     channel: z.literal("EMAIL"),
     emailAddress: z.string().email(),
   }),
-  SMS: z.object({
+  z.object({
     channel: z.literal("SMS"),
     phoneNumber: nonEmptyString,
   }),
-});
+]);
 
 const emailNotification = notification.request.parse({
   channel: "EMAIL",
@@ -343,7 +338,7 @@ try {
   notification.request.parse({ channel: "PUSH", deviceToken: "abc123" });
 } catch (error) {
   logError(error);
-  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
+  // => Requests are strict: Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }
 
 // A variant this consumer does not recognize yet collapses to ENUM_FALLBACK on reads.

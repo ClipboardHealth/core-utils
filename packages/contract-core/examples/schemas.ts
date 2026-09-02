@@ -220,21 +220,18 @@ try {
 }
 
 // Discriminated union with fallback examples
-// One declaration yields a strict `request` and a forwards-compatible `response`.
-// The tuple and the variant record must line up exactly, so a variant can never
-// silently read as ENUM_FALLBACK.
-const CHANNELS = ["EMAIL", "SMS"] as const;
-
-const notification = discriminatedUnionWithFallback("channel", CHANNELS, {
-  EMAIL: z.object({
+// Takes the same arguments as z.discriminatedUnion, and yields a strict `request`
+// plus a forwards-compatible `response` from the one declaration.
+const notification = discriminatedUnionWithFallback("channel", [
+  z.object({
     channel: z.literal("EMAIL"),
     emailAddress: z.string().email(),
   }),
-  SMS: z.object({
+  z.object({
     channel: z.literal("SMS"),
     phoneNumber: nonEmptyString,
   }),
-});
+]);
 
 const emailNotification = notification.request.parse({
   channel: "EMAIL",
@@ -247,7 +244,7 @@ try {
   notification.request.parse({ channel: "PUSH", deviceToken: "abc123" });
 } catch (error) {
   logError(error);
-  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
+  // => Requests are strict: Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }
 
 // A variant this consumer does not recognize yet collapses to ENUM_FALLBACK on reads.

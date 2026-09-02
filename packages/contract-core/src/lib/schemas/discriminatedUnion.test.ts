@@ -7,19 +7,17 @@ import { z } from "zod";
 import { discriminatedUnionWithFallback } from "./discriminatedUnion";
 import { ENUM_FALLBACK } from "./enum";
 
-const CHANNELS = ["EMAIL", "SMS"] as const;
-
-const { request, response } = discriminatedUnionWithFallback("channel", CHANNELS, {
-  EMAIL: z.object({
+const { request, response } = discriminatedUnionWithFallback("channel", [
+  z.object({
     channel: z.literal("EMAIL"),
     emailAddress: z.string().email(),
     replyTo: z.string().email().nullable(),
   }),
-  SMS: z.object({
+  z.object({
     channel: z.literal("SMS"),
     phoneNumber: z.string(),
   }),
-});
+]);
 
 const EMAIL_NOTIFICATION = {
   channel: "EMAIL",
@@ -156,15 +154,14 @@ describe(discriminatedUnionWithFallback, () => {
 
   describe("variant composition", () => {
     const base = z.object({ messageId: z.string() });
-    const DELIVERY_STATUSES = ["SENT", "BOUNCED"] as const;
 
-    const composed = discriminatedUnionWithFallback("status", DELIVERY_STATUSES, {
-      SENT: base.extend({
+    const composed = discriminatedUnionWithFallback("status", [
+      base.extend({
         status: z.literal("SENT"),
         sentAt: z.string(),
       }),
-      BOUNCED: base.extend({ status: z.literal("BOUNCED"), reason: z.string() }).strict(),
-    });
+      base.extend({ status: z.literal("BOUNCED"), reason: z.string() }).strict(),
+    ]);
 
     it("accepts a variant extended from a shared base", () => {
       const actual = composed.request.safeParse({
@@ -227,63 +224,35 @@ describe(discriminatedUnionWithFallback, () => {
   });
 
   describe("misuse", () => {
-    it("rejects values including the fallback sentinel", () => {
+    it("rejects a variant claiming the fallback sentinel", () => {
       expect(() =>
-        // @ts-expect-error -- the fallback sentinel is never a discriminator value.
-        discriminatedUnionWithFallback("type", [ENUM_FALLBACK], {
-          [ENUM_FALLBACK]: z.object({ type: z.literal(ENUM_FALLBACK) }),
-        }),
-      ).toThrow(`Discriminator values must not include "${ENUM_FALLBACK}"`);
-    });
-
-    it("rejects a variant declaring a literal that does not match its key", () => {
-      expect(() =>
-        discriminatedUnionWithFallback("type", ["A", "B"], {
-          A: z.object({ type: z.literal("A") }),
-          // @ts-expect-error -- the literal must match the record key.
-          B: z.object({ type: z.literal("A") }),
-        }),
-      ).toThrow('Variant "B" must declare type: z.literal("B") in its shape.');
+        discriminatedUnionWithFallback("channel", [
+          z.object({ channel: z.literal(ENUM_FALLBACK) }),
+        ]),
+      ).toThrow(`Variant discriminators must not include "${ENUM_FALLBACK}"`);
     });
 
     it("rejects a variant omitting the discriminator", () => {
       expect(() =>
         // @ts-expect-error -- every variant must declare the discriminator.
-        discriminatedUnionWithFallback("type", ["A"], { A: z.object({ id: z.string() }) }),
-      ).toThrow('Variant "A" must declare type: z.literal("A") in its shape.');
+        discriminatedUnionWithFallback("channel", [z.object({ emailAddress: z.string() })]),
+      ).toThrow('Variant at index 0 must declare channel: z.literal("<value>") in its shape.');
     });
 
-    it("rejects a value with no variant", () => {
+    it("rejects a non-literal discriminator", () => {
       expect(() =>
-        discriminatedUnionWithFallback(
-          "type",
-          ["A", "B"],
-          // @ts-expect-error -- every value needs a variant, otherwise it silently reads as fallback.
-          { A: z.object({ type: z.literal("A") }) },
-        ),
-      ).toThrow('Missing variant schema for discriminator value "B".');
+        // @ts-expect-error -- the discriminator must be a literal, not a plain string.
+        discriminatedUnionWithFallback("channel", [z.object({ channel: z.string() })]),
+      ).toThrow('Variant at index 0 must declare channel: z.literal("<value>") in its shape.');
     });
 
-    it("rejects a variant with no value", () => {
+    it("rejects a duplicated discriminator value", () => {
       expect(() =>
-        discriminatedUnionWithFallback("type", ["A"], {
-          A: z.object({ type: z.literal("A") }),
-          // @ts-expect-error -- a variant outside the values would be dropped and read as fallback.
-          B: z.object({ type: z.literal("B") }),
-        }),
-      ).toThrow('Variant "B" is missing from the discriminator values.');
-    });
-
-    it("rejects widened string values", () => {
-      const widened = ["A", "B"];
-
-      expect(() =>
-        // @ts-expect-error -- values must be `as const` so exhaustiveness can be checked.
-        discriminatedUnionWithFallback("type", widened, {
-          A: z.object({ type: z.literal("A") }),
-          B: z.object({ type: z.literal("B") }),
-        }),
-      ).not.toThrow();
+        discriminatedUnionWithFallback("channel", [
+          z.object({ channel: z.literal("EMAIL"), emailAddress: z.string() }),
+          z.object({ channel: z.literal("EMAIL"), replyTo: z.string() }),
+        ]),
+      ).toThrow("Discriminator property channel has duplicate value EMAIL");
     });
   });
 });
