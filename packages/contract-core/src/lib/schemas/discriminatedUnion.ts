@@ -8,41 +8,30 @@ type LiteralKeyedObject<Key extends string> = z.ZodObject<
 
 type Variants<Key extends string> = readonly [
   LiteralKeyedObject<Key>,
-  ...LiteralKeyedObject<Key>[],
+  ...Array<LiteralKeyedObject<Key>>,
 ];
 
 type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>;
 
 /**
- * Builds a request/response pair for a discriminated union whose variant set grows over time. Takes
- * the same arguments as `z.discriminatedUnion`.
+ * Builds a strict `request` and a forwards-compatible `response` for a discriminated union whose
+ * variant set grows over time. Takes the same arguments as `z.discriminatedUnion`.
  *
- * `request` is a `z.discriminatedUnion` of the variants, each made `.strict()`: an unknown
- * discriminator, an unknown key, a missing field, or an invalid value is rejected.
- *
- * `response` is a `z.discriminatedUnion` of the variants, each made `.strip()`, plus a branch pinned
- * to `z.literal(ENUM_FALLBACK)`. An unknown discriminator is rewritten to
+ * `request` is the variants made `.strict()`. `response` is the variants made `.strip()` plus a
+ * branch pinned to `z.literal(ENUM_FALLBACK)`, with an unknown discriminator rewritten to
  * `{ [discriminator]: ENUM_FALLBACK }` before parsing so a future variant reads as the fallback
- * instead of failing. `z.union` cannot do this: its fallback branch matches any unknown value, so a
- * known variant with a missing field or invalid value reports an opaque `invalid_union` carrying one
- * nested error per branch. Discriminating first reports the issue on the offending field alone.
+ * instead of failing. Both still reject a known variant with a missing field or an invalid value.
  *
- * The fallback branch carries the discriminator and nothing else, so a future variant can never fail
- * both the known branches and the fallback.
+ * A `z.union` fallback branch matches any unknown value, so a failing known variant reports an
+ * opaque `invalid_union`. Discriminating first names the offending field.
  *
- * The helper owns strictness on both sides, so an already-`.strict()` variant still yields a
- * stripping response branch. Only top-level discriminators are supported.
- *
- * Every variant must declare `z.literal` at the discriminator. That literal is the variant's
- * identity: a missing or non-literal discriminator is a compile error and throws at module load, and
- * `z.discriminatedUnion` itself rejects a duplicated value.
+ * Every variant must declare `z.literal` at the discriminator. The helper owns strictness on both
+ * sides, so an already-`.strict()` variant still yields a stripping response branch. Only top-level
+ * discriminators are supported.
  *
  * ```ts
  * const { request, response } = discriminatedUnionWithFallback("channel", [
- *   z.object({
- *     channel: z.literal("EMAIL"),
- *     emailAddress: z.string().email(),
- *   }),
+ *   z.object({ channel: z.literal("EMAIL"), emailAddress: z.string().email() }),
  * ]);
  * ```
  */
@@ -54,11 +43,7 @@ export function discriminatedUnionWithFallback<
   variants: Schemas,
 ): {
   request: z.ZodType<z.output<Schemas[number]>, z.ZodTypeDef, z.input<Schemas[number]>>;
-  response: z.ZodType<
-    z.output<Schemas[number]> | UnrecognizedVariant<Key>,
-    z.ZodTypeDef,
-    z.input<Schemas[number]>
-  >;
+  response: z.ZodType<z.output<Schemas[number]> | UnrecognizedVariant<Key>, z.ZodTypeDef, unknown>;
 };
 
 export function discriminatedUnionWithFallback(
@@ -84,9 +69,8 @@ export function discriminatedUnionWithFallback(
       (value) =>
         unknownDiscriminator.safeParse(value).success ? { [discriminator]: ENUM_FALLBACK } : value,
       z.discriminatedUnion(discriminator, [
-        first.strip(),
         z.object({ [discriminator]: z.literal(ENUM_FALLBACK) }),
-        ...rest.map((variant) => variant.strip()),
+        ...variants.map((variant) => variant.strip()),
       ]),
     ),
   };

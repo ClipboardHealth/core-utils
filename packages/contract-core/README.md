@@ -59,8 +59,6 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 `z.union` cannot express this. Its fallback branch matches any unknown value, so a known variant with a bad field fails every branch and reports an opaque `invalid_union` carrying one nested error per branch. Rewriting the unknown discriminator first means the response discriminates normally and reports the issue on the offending field alone, which is what makes a rejected response diagnosable from logs.
 
-The fallback branch carries the discriminator and nothing else, so a future variant can never fail both the known branches and the fallback.
-
 #### Enum validation helpers
 
 This package provides four enum validation helpers to cover different use cases:

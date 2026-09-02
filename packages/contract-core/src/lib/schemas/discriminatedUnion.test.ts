@@ -210,6 +210,7 @@ describe(discriminatedUnionWithFallback, () => {
       // @ts-expect-error -- a variant's own fields stay required.
       const partial: z.infer<typeof request> = { channel: "EMAIL" };
 
+      // Trivial assertion; the @ts-expect-error directives above are the test.
       expect([notification, fallback, partial]).toHaveLength(3);
     });
 
@@ -219,6 +220,7 @@ describe(discriminatedUnionWithFallback, () => {
       // @ts-expect-error -- the fallback variant carries the discriminator alone.
       const unknownVariant: z.infer<typeof response> = { channel: "PUSH", deviceToken: "abc123" };
 
+      // Trivial assertion; the @ts-expect-error directives above are the test.
       expect([notification, fallback, unknownVariant]).toHaveLength(3);
     });
   });
