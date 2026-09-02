@@ -5,7 +5,9 @@ import { ENUM_FALLBACK } from "./enum";
 type DiscriminatorValues = readonly [string, ...string[]];
 type NarrowValues<Values extends DiscriminatorValues> = string extends Values[number]
   ? never
-  : Values;
+  : typeof ENUM_FALLBACK extends `${Values[number]}`
+    ? never
+    : Values;
 
 type Variants<Key extends string, Values extends DiscriminatorValues> = {
   [Value in Values[number]]: z.ZodObject<Record<Key, z.ZodLiteral<Value>> & z.ZodRawShape>;
@@ -13,10 +15,12 @@ type Variants<Key extends string, Values extends DiscriminatorValues> = {
 
 /**
  * Resolves to `never` for any variant whose key is absent from `values`. Such a variant would be
- * dropped at build time and its discriminator would read as `ENUM_FALLBACK`.
+ * dropped at build time and its discriminator would read as `ENUM_FALLBACK`. The template literal
+ * normalizes enum members to their string values, so a `values` tuple built from `Object.values` of
+ * a TypeScript enum still lines up with the record keys.
  */
 type OrphanedVariants<Schemas, Values extends DiscriminatorValues> = Record<
-  Exclude<keyof Schemas, Values[number]>,
+  Exclude<keyof Schemas, `${Values[number]}`>,
   never
 >;
 
@@ -28,17 +32,19 @@ type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>
  * `request` is a `z.discriminatedUnion` of the known variants, each made `.strict()`: an unknown
  * discriminator, an unknown key, a missing field, or an invalid value is rejected.
  *
- * `response` is a `z.union` of the known variants, each made `.strip()`, plus an unrecognized
- * variant carrying the discriminator alone. An unknown discriminator collapses to
- * `{ [discriminator]: ENUM_FALLBACK }` so a future variant parses instead of failing, while a known
- * discriminator with a missing field or invalid value still fails.
+ * `response` is a `z.discriminatedUnion` of the known variants, each made `.strip()`, plus a branch
+ * pinned to `z.literal(ENUM_FALLBACK)`. An unknown discriminator is rewritten to
+ * `{ [discriminator]: ENUM_FALLBACK }` before parsing so a future variant reads as the fallback
+ * instead of failing, while a known discriminator with a missing field or invalid value still fails
+ * with the issue on the offending field rather than an opaque union error.
  *
  * The helper owns strictness on both sides, so an already-`.strict()` variant still yields a
  * stripping response branch. Only top-level discriminators are supported.
  *
  * `values` and `variants` must line up exactly, and each variant must declare `z.literal` of its own
- * key. A value with no variant, a variant with no value, and a mismatched or missing literal are all
- * compile errors. That is the point: a variant must never silently read as `ENUM_FALLBACK`.
+ * key. A value with no variant, a variant with no value, a mismatched or missing literal, and
+ * `ENUM_FALLBACK` among the values are all compile errors. That is the point: a variant must never
+ * silently read as `ENUM_FALLBACK`. Duplicate values throw at module load.
  *
  * ```ts
  * const { request, response } = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
@@ -89,16 +95,24 @@ export function discriminatedUnionWithFallback(
   const first = variantFor({ discriminator, value: firstValue, variants });
   const rest = restValues.map((value) => variantFor({ discriminator, value, variants }));
 
+  const unknownDiscriminator = z.object({
+    [discriminator]: z.string().refine((value) => !known.has(value)),
+  });
+
   return {
     request: z.discriminatedUnion(discriminator, [
       first.strict(),
       ...rest.map((variant) => variant.strict()),
     ]),
-    response: z.union([
-      first.strip(),
-      unrecognizedVariant({ discriminator, known }),
-      ...rest.map((variant) => variant.strip()),
-    ]),
+    response: z.preprocess(
+      (value) =>
+        unknownDiscriminator.safeParse(value).success ? { [discriminator]: ENUM_FALLBACK } : value,
+      z.discriminatedUnion(discriminator, [
+        first.strip(),
+        z.object({ [discriminator]: z.literal(ENUM_FALLBACK) }),
+        ...rest.map((variant) => variant.strip()),
+      ]),
+    ),
   };
 }
 
@@ -122,18 +136,4 @@ function variantFor(options: {
   }
 
   return variant;
-}
-
-function unrecognizedVariant(options: {
-  discriminator: string;
-  known: ReadonlySet<string>;
-}): z.AnyZodObject {
-  const { discriminator, known } = options;
-
-  return z.object({
-    [discriminator]: z
-      .string()
-      .refine((value) => !known.has(value))
-      .transform(() => ENUM_FALLBACK),
-  });
 }

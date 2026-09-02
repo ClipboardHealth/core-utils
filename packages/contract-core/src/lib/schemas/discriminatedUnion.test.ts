@@ -133,6 +133,13 @@ describe(discriminatedUnionWithFallback, () => {
 
         expectToBeSafeParseError(actual);
       });
+
+      it("reports the offending field rather than an opaque union error", () => {
+        const actual = response.safeParse({ ...DNR_COUNT_TRIGGER, dnrCount: "three" });
+
+        expectToBeSafeParseError(actual);
+        expect(actual.error.issues.map((issue) => issue.path)).toStrictEqual([["dnrCount"]]);
+      });
     });
   });
 
@@ -211,8 +218,9 @@ describe(discriminatedUnionWithFallback, () => {
   });
 
   describe("misuse", () => {
-    it("throws when values include the fallback sentinel", () => {
+    it("rejects values including the fallback sentinel", () => {
       expect(() =>
+        // @ts-expect-error -- the fallback sentinel is never a discriminator value.
         discriminatedUnionWithFallback("type", [ENUM_FALLBACK], {
           [ENUM_FALLBACK]: z.object({ type: z.literal(ENUM_FALLBACK) }),
         }),

@@ -252,10 +252,10 @@ const unrecognizedTrigger = trigger.response.parse({ type: "WORKPLACE_RATING", r
 // => { type: "UNRECOGNIZED_" }
 console.log(unrecognizedTrigger);
 
-// A known variant with a bad field still fails on reads.
+// A known variant with a bad field still fails on reads, naming the field.
 try {
   trigger.response.parse({ type: "DNR_COUNT", dnrCount: "three" });
 } catch (error) {
   logError(error);
-  // => Invalid input
+  // => Expected number, received string
 }

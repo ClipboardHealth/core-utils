@@ -59,7 +59,9 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 The helper owns strictness on both sides, so a variant composed with `.extend()` off a shared base — or one the caller already made `.strict()` — still gets a stripping response branch. The discriminator key is a parameter, and only top-level discriminators are supported.
 
-The tuple and the variant record must line up exactly, and each variant must declare `z.literal` of its own key. A value with no variant, a variant with no value, and a mismatched or missing literal are all build failures, so a variant can never silently read as `ENUM_FALLBACK`.
+The tuple and the variant record must line up exactly, and each variant must declare `z.literal` of its own key. A value with no variant, a variant with no value, a mismatched or missing literal, and `ENUM_FALLBACK` among the values are all build failures, so a variant can never silently read as `ENUM_FALLBACK`. Values may come straight from `Object.values` of a TypeScript enum.
+
+A failing known variant reports the issue on the offending field, not as an opaque union error, so a rejected response is diagnosable from logs. Replacing a hand-rolled union nested inside a `z.union` changes the generated OpenAPI document, which flattens to one `anyOf` per variant plus the fallback branch, so regenerate the spec when migrating.
 
 #### Enum validation helpers
 
@@ -346,12 +348,12 @@ const unrecognizedTrigger = trigger.response.parse({ type: "WORKPLACE_RATING", r
 // => { type: "UNRECOGNIZED_" }
 console.log(unrecognizedTrigger);
 
-// A known variant with a bad field still fails on reads.
+// A known variant with a bad field still fails on reads, naming the field.
 try {
   trigger.response.parse({ type: "DNR_COUNT", dnrCount: "three" });
 } catch (error) {
   logError(error);
-  // => Invalid input
+  // => Expected number, received string
 }
 ```
 
