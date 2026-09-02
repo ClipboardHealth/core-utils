@@ -85,7 +85,7 @@ function discriminatorValue(options: {
 
   const literal: unknown = variant.shape[discriminator];
   if (!(literal instanceof z.ZodLiteral) || typeof literal.value !== "string") {
-    throw new Error(
+    throw new TypeError(
       `Variant at index ${index} must declare ${discriminator}: z.literal("<value>") in its shape.`,
     );
   }
