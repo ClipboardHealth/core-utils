@@ -51,11 +51,11 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 `discriminatedUnionWithFallback(discriminator, variants)` takes the same arguments as `z.discriminatedUnion` and returns a `{ request, response }` pair for a union whose variant set grows over time. Writes stay strict; reads tolerate variants this consumer does not know yet.
 
-|                                | `request` | `response`           |
-| ------------------------------ | --------- | -------------------- |
-| Unknown discriminator          | reject    | collapse to fallback |
-| Unknown key on a known variant | reject    | strip                |
-| Missing field, invalid value   | reject    | reject               |
+|                                          | `request` | `response`           |
+| ---------------------------------------- | --------- | -------------------- |
+| Unknown discriminator                    | reject    | collapse to fallback |
+| Unknown top-level key on a known variant | reject    | strip                |
+| Missing field, invalid value             | reject    | reject               |
 
 `z.union` cannot express this. Its fallback branch matches any unknown value, so a known variant with a bad field fails every branch and reports an opaque `invalid_union` carrying one nested error per branch. Rewriting the unknown discriminator first means the response discriminates normally and reports the issue on the offending field alone, which is what makes a rejected response diagnosable from logs.
 

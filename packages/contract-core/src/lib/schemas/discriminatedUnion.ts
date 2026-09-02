@@ -25,9 +25,9 @@ type UnrecognizedVariant<Key extends string> = Record<Key, typeof ENUM_FALLBACK>
  * A `z.union` fallback branch matches any unknown value, so a failing known variant reports an
  * opaque `invalid_union`. Discriminating first names the offending field.
  *
- * Every variant must declare `z.literal` at the discriminator. The helper owns strictness on both
- * sides, so an already-`.strict()` variant still yields a stripping response branch. Only top-level
- * discriminators are supported.
+ * Every variant must declare `z.literal` at the discriminator. The helper owns strictness at each
+ * variant's top level, so an already-`.strict()` variant still yields a stripping response branch.
+ * Only top-level discriminators are supported.
  *
  * ```ts
  * const { request, response } = discriminatedUnionWithFallback("channel", [
