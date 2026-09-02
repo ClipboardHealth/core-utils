@@ -4,6 +4,7 @@ import {
   booleanString,
   commaSeparatedArray,
   dateTimeSchema,
+  discriminatedUnionWithFallback,
   ENUM_FALLBACK,
   nonEmptyString,
   objectId,
@@ -13,7 +14,7 @@ import {
   requiredEnumWithFallback,
   uuid,
 } from "@clipboard-health/contract-core";
-import type { z, ZodError } from "zod";
+import { z, type ZodError } from "zod";
 
 function logError(error: unknown) {
   console.error((error as ZodError).issues[0]!.message);
@@ -216,4 +217,45 @@ try {
 } catch (error) {
   logError(error);
   // => Invalid enum value. Expected 'admin' | 'worker' | 'workplace', received 'invalid'
+}
+
+// Discriminated union with fallback examples
+// One declaration yields a strict `request` and a forwards-compatible `response`.
+// Omitting a variant for any value in the tuple is a compile error, so a new
+// variant can never silently read as ENUM_FALLBACK.
+const TRIGGER_TYPES = ["DNR_COUNT", "SHIFT_CANCELLATION"] as const;
+
+const trigger = discriminatedUnionWithFallback("type", TRIGGER_TYPES, {
+  DNR_COUNT: z.object({
+    type: z.literal("DNR_COUNT"),
+    dnrCount: z.number().int().positive(),
+  }),
+  SHIFT_CANCELLATION: z.object({
+    type: z.literal("SHIFT_CANCELLATION"),
+    cancellationCount: z.number().int().positive(),
+  }),
+});
+
+const dnrCountTrigger = trigger.request.parse({ type: "DNR_COUNT", dnrCount: 3 });
+// => { type: "DNR_COUNT", dnrCount: 3 }
+console.log(dnrCountTrigger);
+
+try {
+  trigger.request.parse({ type: "WORKPLACE_RATING", rating: 1 });
+} catch (error) {
+  logError(error);
+  // => Invalid discriminator value. Expected 'DNR_COUNT' | 'SHIFT_CANCELLATION'
+}
+
+// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK on reads.
+const unrecognizedTrigger = trigger.response.parse({ type: "WORKPLACE_RATING", rating: 1 });
+// => { type: "UNRECOGNIZED_" }
+console.log(unrecognizedTrigger);
+
+// A known variant with a bad field still fails on reads.
+try {
+  trigger.response.parse({ type: "DNR_COUNT", dnrCount: "three" });
+} catch (error) {
+  logError(error);
+  // => Invalid input
 }
