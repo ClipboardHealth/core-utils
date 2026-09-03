@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/config",
-  "version": "2.12.3",
+  "version": "2.12.4",
   "description": "Type-safe static configuration management: a pure function to resolve, validate against a Zod schema, and freeze configuration values.",
   "keywords": [
     "config",
