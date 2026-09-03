@@ -2,6 +2,7 @@ export * from "./apiError";
 export * from "./booleanString";
 export * from "./commaSeparatedArray";
 export * from "./dateTime";
+export * from "./discriminatedUnion";
 export * from "./enum";
 export * from "./money";
 export * from "./nonEmptyString";
