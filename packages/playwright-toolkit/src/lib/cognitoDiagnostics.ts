@@ -168,8 +168,8 @@ async function waitForTerminalCognitoChallengeFailure(params: {
     attempt.type === "not-observed" ||
     (attempt.type === "response" && attempt.status >= 200 && attempt.status < 300)
   ) {
-    return await new Promise<never>((resolve) => {
-      void resolve;
+    return await new Promise<never>(() => {
+      // Keep the challenge monitor active until its outer timeout stops it.
     });
   }
 
