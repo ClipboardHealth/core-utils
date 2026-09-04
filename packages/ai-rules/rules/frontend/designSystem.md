@@ -5,16 +5,14 @@ description: "Implementing UI from the design system or Figma: prefer shared com
 # Design System
 
 There is no shared design-system package across Clipboard frontend apps. Each repo owns its own
-theme and components. Prefer those over hand-rolled UI.
+theme and components. Prefer this repo's existing theme and components over hand-rolled UI; do not
+invent import paths from another app (Workplace and Worker do not share one tree).
 
 ## Resolve from the repo's code
 
-1. Look up tokens and components in this repo's theme / design-system source (paths in `OVERLAY.md`).
+1. Look up tokens and components in this repo's theme / design-system source.
 2. Theme and component code are authoritative. If a `.rules` doc disagrees, trust the code and flag
    the rule as stale — do not invent or restate token hex/values from memory or docs.
-
-Repo-specific import paths, mapped components, and Code Connect status live in that repo's
-`OVERLAY.md`. Do not assume Workplace and Worker share the same tree or APIs.
 
 ## Figma / Code Connect (when present)
 
