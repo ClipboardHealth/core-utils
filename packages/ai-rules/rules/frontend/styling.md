@@ -11,6 +11,11 @@ description: "Styling components with MUI sx prop: theme tokens, spacing, no CSS
 3. **Type-safe theme access**—use `sx={(theme) => ({...})}`
 4. **Use semantic token names**—`theme.palette.text.primary`, not `common.white`
 
+## Design system
+
+Prefer the repo's design-system components and theme code over hand-rolled UI or remembered token
+values. See `frontend/designSystem` (and this repo's `OVERLAY.md` for paths / Code Connect).
+
 ## Patterns
 
 ```typescript
