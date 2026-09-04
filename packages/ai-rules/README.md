@@ -161,6 +161,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | `frontend/architecture`    | Frontend architecture: feature-based file organization, where business logic lives                                             |
 | `frontend/customHooks`     | Creating React custom hooks: naming, shared state with constate                                                                |
 | `frontend/dataFetching`    | Implementing data fetching, API response fixtures, and error handling: React Query, MSW, Playwright, caching, parsedApi        |
+| `frontend/designSystem`    | Implementing UI from the design system or Figma: prefer shared components, theme lookup, optional Code Connect                 |
 | `frontend/e2eTesting`      | Choosing and writing Playwright E2E tests for registered critical flows                                                        |
 | `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook                   |
 | `frontend/renderScope`     | Adding or restructuring React state, context, hook returns, wall-clock values, hidden queries/subscriptions, or list filtering |
