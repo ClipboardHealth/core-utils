@@ -61,7 +61,7 @@ jobs:
           gh api \
             --header 'Accept: application/vnd.github.raw+json' \
             --header 'X-GitHub-Api-Version: 2022-11-28' \
-            'repos/ClipboardHealth/skills-private/contents/skills/pullfrog-private-skill-poc/SKILL.md?ref=460a534170c135f164e92e8bb212823bbc3a5385' \
+            'repos/ClipboardHealth/skills-private/contents/skills/pullfrog-private-skill-poc/SKILL.md?ref=56106f858cdf10ea4857d42a0252ac09c92e4c18' \
             > "$skill_dir/SKILL.md"
       - name: Set up Node for the skills installer
         if: ${{ inputs.private_skill_poc }}
@@ -92,8 +92,7 @@ jobs:
           prompt: |
             Use the native skill tool to load `pullfrog-private-skill-poc`.
             Read no SKILL.md file directly. Follow the loaded skill and keep the repository unchanged.
-            Call `set_output` exactly once with the three fields required by the output schema,
-            taking every value from the loaded skill's frontmatter. Then stop.
+            Call `set_output` exactly once with the exact object supplied by the loaded skill. Then stop.
           timeout: 10m
           model: openai/gpt-sol
           effort: low
@@ -129,19 +128,9 @@ jobs:
             ".agents/skills/pullfrog-private-skill-poc/SKILL.md",
             "utf8",
           );
-          const capture = (pattern, label) => {
-            const match = skill.match(pattern);
-            assert(match, `Missing ${label} in installed skill frontmatter`);
-            return match[1];
-          };
-          const expected = {
-            skill_name: capture(/^name:\s*"?([^"\r\n]+?)"?\s*$/m, "name"),
-            source_repository: capture(
-              /^  source_repository:\s*"([^"]+)"\s*$/m,
-              "metadata.source_repository",
-            ),
-            canary: capture(/^  canary:\s*"([^"]+)"\s*$/m, "metadata.canary"),
-          };
+          const proofBlock = skill.match(/```json\s*([\s\S]*?)\s*```/);
+          assert(proofBlock, "Missing JSON proof object in installed skill");
+          const expected = JSON.parse(proofBlock[1]);
           assert.deepEqual(JSON.parse(process.env.PULLFROG_RESULT), expected);
           console.log(`Verified ${expected.skill_name} from ${expected.source_repository}.`);
           NODE
