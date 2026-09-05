@@ -4,51 +4,17 @@
 
 Read the rule files relevant to the code you're changing or reviewing.
 
-| Rule                    | File                                  | When to Read                                                                                                          |
-| ----------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| AI Rules                | .rules/common/aiRules.md              | Updating Clipboard AI rules or modifying generated .rules, AGENTS.md, CLAUDE.md, or OVERLAY.md files                  |
-| Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                              |
-| Container Registry      | .rules/common/containerRegistry.md    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                          |
-| Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library          |
-| Date & Time             | .rules/common/dateTime.md             | Working with dates, times, timezones, or date comparisons                                                             |
-| Error Handling          | .rules/common/errorHandling.md        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                       |
-| Git Workflow            | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests                                                        |
-| Library Authoring       | .rules/common/libraryAuthoring.md     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib) |
-| Logging & Observability | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                  |
-| Rules Engine            | .rules/common/rulesEngine.md          | Writing or modifying @clipboard-health/rules-engine rule functions                                                    |
-| Testing                 | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                                    |
-| TypeScript              | .rules/common/typeScript.md           | Writing ANY TypeScript code                                                                                           |
-
-<!-- Source: ./OVERLAY.md -->
-
-## Project-specific rules
-
-### Development workflow
-
-1. Use red, green, refactor test-driven development
-2. Validate changes with at least `node --run verify`
-3. Invoke core:cb-work skill for ALL code changes
-
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
-
-# General Guidelines for working with Nx
-
-- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
-- You have access to the Nx MCP server and its tools, use them to help the user
-- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
-- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
-
-## Scaffolding & Generators
-
-- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
-
-## When to use nx_docs
-
-- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
-- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
-
-<!-- nx configuration end-->
+| Rule                    | File                                  | When to Read                                                                                                                 |
+| ----------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| AI Rules                | .rules/common/aiRules.md              | Editing Clipboard agent instructions: shared rules, repository overlays, or generated .rules, AGENTS.md, and CLAUDE.md files |
+| Configuration           | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                                     |
+| Container Registry      | .rules/common/containerRegistry.md    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                                 |
+| Core Libraries          | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library                 |
+| Date & Time             | .rules/common/dateTime.md             | Working with dates, times, timezones, or date comparisons                                                                    |
+| Error Handling          | .rules/common/errorHandling.md        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                              |
+| Git Workflow            | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests                                                               |
+| Library Authoring       | .rules/common/libraryAuthoring.md     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib)        |
+| Logging & Observability | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                         |
+| Rules Engine            | .rules/common/rulesEngine.md          | Writing or modifying @clipboard-health/rules-engine rule functions                                                           |
+| Testing                 | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                                           |
+| TypeScript              | .rules/common/typeScript.md           | Writing ANY TypeScript code                                                                                                  |
