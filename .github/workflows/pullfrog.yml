@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
+          persist-credentials: false
       - name: Exclude private-skill POC files
         if: ${{ inputs.private_skill_poc }}
         shell: bash
