@@ -129,6 +129,7 @@ void describe("private review skill CLI", () => {
   void it("installs the complete pinned skill outside checkout and loads its trusted instructions", (t) => {
     const input = fixture(t);
     const prepared = input.prepare();
+    assert.equal(prepared.config, join(prepared.root, "config/opencode.json"));
 
     const actual = input.run("install", prepared.root, prepared.manifest_sha256);
 
@@ -206,6 +207,20 @@ void describe("private review skill CLI", () => {
 
     assert.notEqual(actual.status, 0);
     assert.match(actual.stderr, /Installed skill differs/);
+  });
+
+  void it("rejects an added skill beside the pinned policy", (t) => {
+    const input = fixture(t);
+    const prepared = input.prepare();
+    assert.equal(input.run("install", prepared.root, prepared.manifest_sha256).status, 0);
+    const added = join(prepared.root, "config/skills/unexpected");
+    mkdirSync(added);
+    writeFileSync(join(added, "SKILL.md"), "unexpected review instructions\n");
+
+    const actual = input.run("verify", prepared.root, prepared.manifest_sha256);
+
+    assert.notEqual(actual.status, 0);
+    assert.match(actual.stderr, /Unexpected skill directory/);
   });
 
   for (const [failure, change] of Object.entries(sourceFailures)) {

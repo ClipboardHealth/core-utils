@@ -57,13 +57,19 @@ jobs:
           REVIEW_SKILL_ROOT: ${{ steps.review_skill.outputs.root }}
           MANIFEST_SHA256: ${{ steps.review_skill.outputs.manifest_sha256 }}
         run: node "$REVIEW_SKILL_ROOT/skill.mjs" install "$REVIEW_SKILL_ROOT" "$MANIFEST_SHA256"
+      - name: Protect review policy from native agent writes
+        env:
+          REVIEW_SKILL_ROOT: ${{ steps.review_skill.outputs.root }}
+        run: |
+          sudo bash .github/pullfrog/protect.sh "$REVIEW_SKILL_ROOT"
+          node .github/pullfrog/protectionProbe.mjs "$REVIEW_SKILL_ROOT"
       - name: Run agent
         uses: pullfrog/pullfrog@22442cbbe9039fe186e20f1fdf9206bb4a07e7cd # v0
         with:
           prompt: ${{ inputs.prompt }}
         env:
           PULLFROG_AGENT: opencode
-          OPENCODE_CONFIG_DIR: ${{ steps.review_skill.outputs.config }}
+          OPENCODE_CONFIG: ${{ steps.review_skill.outputs.config }}
           # add at least one provider API key
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

@@ -163,7 +163,7 @@ function prepare(commit) {
   writeFileSync(join(root, "manifest.json"), manifest);
   cpSync(import.meta.filename, join(root, "skill.mjs"));
   emit("root", root);
-  emit("config", join(root, "config"));
+  emit("config", join(root, "config/opencode.json"));
   emit("script_sha256", sha256(readFileSync(join(root, "skill.mjs"))));
   emit("manifest_sha256", sha256(manifest));
   process.stdout.write(`Prepared cb-review at ${commit} (${Object.keys(files).length} files).\n`);
@@ -182,6 +182,11 @@ function readManifest(root, expectedHash) {
 function verify(root, expectedHash) {
   assert.match(expectedHash, /^[a-f0-9]{64}$/, "Expected the pre-install manifest hash.");
   const expected = readManifest(root, expectedHash);
+  assert.deepEqual(
+    readdirSync(join(root, "config/skills")),
+    ["cb-review"],
+    "Unexpected skill directory alongside the pinned skill.",
+  );
   assert.deepEqual(
     fileManifest(join(root, "config/skills/cb-review")),
     expected.files,

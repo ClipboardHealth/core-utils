@@ -10,11 +10,17 @@ The GitHub App token can read only `skills-private`. The fetcher requests the `c
 
 Vercel's installer runs in a container with the source mounted read-only and one writable output directory. The container receives no host credentials, process namespace, workspace, or Docker socket. This matters because the surrounding Pullfrog job has OIDC permission. The output must match the complete source manifest before it is used.
 
+The installer still has outbound network access to download its npm package and dependencies. A compromised installer could upload the private skill contents; a read-only mount and matching output hashes do not prevent that. This design trusts the pinned installer with the skill's confidentiality. Use only non-secret instruction content; an offline, pre-fetched installer would be a separate hardening step.
+
 The pinned [Vercel Skills CLI](https://github.com/vercel-labs/skills) is MIT-licensed and maintained by Vercel Labs. It is an ephemeral installer, not an application dependency; it adds no application bundle weight. The container bounds the impact of installer or dependency compromise, and the source comparison checks what it copied.
 
 The skill and OpenCode configuration live outside the checkout under `/tmp`, which Pullfrog permits its native readers to access. Pullfrog changes its agent's home directory, so a global install into the runner's home is insufficient. An absolute instruction path reaches the root agent and specialists and survives PR checkout. The activation instruction selects the trusted path even if a PR contains another skill named `cb-review`.
 
 The workflow pins OpenCode as the Pullfrog harness. A harness change needs equivalent trusted instruction loading and a fresh live validation. The managed `inputs.prompt` passes through unchanged. No Pullfrog console changes or setup hooks are needed.
+
+Before launching the agent, the workflow makes the complete prepared tree root-owned and non-writable. `OPENCODE_CONFIG` points to the protected config file; unlike a custom config directory, that path does not require OpenCode to bootstrap dependencies inside the protected tree. An unprivileged filesystem probe must confirm that reads work and policy mutations fail before review can start. This protects against native agent file operations, not an actor with host root privileges.
+
+The pinned Pullfrog shell's [`sudo-unshare` path](https://github.com/pullfrog/pullfrog/blob/22442cbbe9039fe186e20f1fdf9206bb4a07e7cd/mcp/shell.ts#L372) drops back to the runner account without blocking later privilege elevation. On a runner with passwordless sudo, a shell command can regain root and bypass file ownership; the policy directory is not part of its protected mount overlays. Closing that path requires upstream shell-sandbox hardening. The post-run verifier remains detection after execution, not a guarantee that every possible agent execution path used unchanged policy.
 
 The post-run step checks the copied verifier against its pre-run digest, then checks the original manifest digest, complete installed skill, activation instruction, and configuration. The digests remain in GitHub Actions step outputs, outside the agent's writable files. No private skill artifact is uploaded. Skills are instructions, not a place to store secrets; a review agent may quote their content in logs or findings.
 
