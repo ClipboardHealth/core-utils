@@ -223,7 +223,7 @@ function install(root, expectedHash) {
     "no-new-privileges",
     "--read-only",
     "--tmpfs",
-    "/tmp:rw,nosuid,nodev",
+    "/tmp:rw,nosuid,nodev,exec",
     "--workdir",
     "/output",
     "--env",

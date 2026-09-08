@@ -161,6 +161,7 @@ void describe("private review skill CLI", () => {
       `type=bind,source=${prepared.root}/installer-output,target=/output`,
     ]);
     assert.ok(docker.args.includes("--read-only"));
+    assert.deepEqual(options(docker.args, "--tmpfs"), ["/tmp:rw,nosuid,nodev,exec"]);
     assert.ok(docker.args.includes("no-new-privileges"));
     assert.ok(!docker.args.some((arg) => /--privileged|--pid|--network=host|--env-file/.test(arg)));
   });
