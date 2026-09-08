@@ -30,6 +30,7 @@ function checkOwnership(directory) {
     }
   } else {
     assert.ok(stat.isFile(), "Review policy must contain only files and directories.");
+    readFileSync(directory);
   }
 }
 
@@ -50,18 +51,6 @@ function probe(root) {
   assert.match(root, /^\/tmp\/pullfrog-review-[A-Za-z0-9]{6}$/);
   assert.ok(process.getuid && process.getuid() !== 0, "Run the probe without root privileges.");
   checkOwnership(root);
-  for (const file of [
-    "skill.mjs",
-    "manifest.json",
-    "config/opencode.json",
-    "config/review-instructions.md",
-    "config/skills/cb-review/SKILL.md",
-    "config/skills/cb-review/references/pullfrog-mode.md",
-    "config/skills/cb-review/references/review-policy.md",
-    "config/skills/cb-review/references/review-rubric.md",
-  ]) {
-    readFileSync(join(root, file));
-  }
   const directory = join(root, "protection-probe");
   const file = join(directory, "file");
   const scratch = mkdtempSync("/tmp/pullfrog-protection-probe-");

@@ -39,7 +39,7 @@ jobs:
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
-      - run: node --test .github/pullfrog/skill.test.mjs
+      - run: node --test .github/pullfrog/*.test.mjs
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: node --run verify
       - run: node --run affected
@@ -69,7 +69,7 @@ jobs:
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
-      - run: node --test .github/pullfrog/skill.test.mjs
+      - run: node --test .github/pullfrog/*.test.mjs
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
       - run: npx nx affected --configuration ci --skip-nx-cache --target build
         env:

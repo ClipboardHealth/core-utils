@@ -70,6 +70,7 @@ jobs:
         env:
           PULLFROG_AGENT: opencode
           OPENCODE_CONFIG: ${{ steps.review_skill.outputs.config }}
+          OPENCODE_DISABLE_PROJECT_CONFIG: "true"
           # add at least one provider API key
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
