@@ -25,11 +25,45 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Node for private review policy
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Create private-skills read token
+        id: private_skills_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: skills-private
+          permission-contents: read
+      - name: Fetch pinned review skill
+        id: review_skill
+        env:
+          GH_TOKEN: ${{ steps.private_skills_token.outputs.token }}
+          PRIVATE_SKILLS_COMMIT: "6b1bc7cad373707e99639a5ad173baeb5c86f391"
+        run: node .github/pullfrog/skill.mjs prepare "$PRIVATE_SKILLS_COMMIT"
+      - name: Revoke private-skills token
+        if: ${{ always() && steps.private_skills_token.outputs.token != '' }}
+        env:
+          GH_TOKEN: ${{ steps.private_skills_token.outputs.token }}
+        run: gh api --method DELETE /installation/token
+      - name: Install review skill without host credentials
+        id: install_review_skill
+        env:
+          REVIEW_SKILL_ROOT: ${{ steps.review_skill.outputs.root }}
+          MANIFEST_SHA256: ${{ steps.review_skill.outputs.manifest_sha256 }}
+        run: node "$REVIEW_SKILL_ROOT/skill.mjs" install "$REVIEW_SKILL_ROOT" "$MANIFEST_SHA256"
       - name: Run agent
         uses: pullfrog/pullfrog@22442cbbe9039fe186e20f1fdf9206bb4a07e7cd # v0
         with:
           prompt: ${{ inputs.prompt }}
         env:
+          PULLFROG_AGENT: opencode
+          OPENCODE_CONFIG_DIR: ${{ steps.review_skill.outputs.config }}
           # add at least one provider API key
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -76,3 +110,12 @@ jobs:
           # both limits are required — set them to the real limits of that model
           # OPENAI_COMPATIBLE_CONTEXT: "128000"
           # OPENAI_COMPATIBLE_MAX_OUTPUT: "16384"
+      - name: Verify review policy integrity
+        if: ${{ always() && steps.install_review_skill.outcome == 'success' }}
+        env:
+          REVIEW_SKILL_ROOT: ${{ steps.review_skill.outputs.root }}
+          SCRIPT_SHA256: ${{ steps.review_skill.outputs.script_sha256 }}
+          MANIFEST_SHA256: ${{ steps.review_skill.outputs.manifest_sha256 }}
+        run: |
+          printf '%s  %s\n' "$SCRIPT_SHA256" "$REVIEW_SKILL_ROOT/skill.mjs" | sha256sum --check --status
+          node "$REVIEW_SKILL_ROOT/skill.mjs" verify "$REVIEW_SKILL_ROOT" "$MANIFEST_SHA256"

@@ -1,0 +1,29 @@
+# Pullfrog review policy
+
+The workflow installs the complete `cb-review` skill from a pinned commit of `ClipboardHealth/skills-private`. Pullfrog uses its `--pullfrog` mode, which shares review policy, rubric, and evidence standards with the normal skill. Pullfrog continues to own checkout, specialist dispatch, incremental scope, and review submission.
+
+Update `PRIVATE_SKILLS_COMMIT` in the workflow when adopting a new skill revision. Install failures stop the run. The preparation log records the commit and file count without printing private file contents; the activation log records the trusted absolute path.
+
+## Trust boundaries
+
+The GitHub App token can read only `skills-private`. The fetcher requests the `cb-review` Git subtree and its blobs, verifies blob hashes, and rejects incomplete responses and unsupported Git entries. Other private skill bodies are not downloaded. The workflow revokes the token immediately after fetching. The token action also retains its automatic cleanup as a fallback; it may warn that the already-revoked token is invalid.
+
+Vercel's installer runs in a container with the source mounted read-only and one writable output directory. The container receives no host credentials, process namespace, workspace, or Docker socket. This matters because the surrounding Pullfrog job has OIDC permission. The output must match the complete source manifest before it is used.
+
+The pinned [Vercel Skills CLI](https://github.com/vercel-labs/skills) is MIT-licensed and maintained by Vercel Labs. It is an ephemeral installer, not an application dependency; it adds no application bundle weight. The container bounds the impact of installer or dependency compromise, and the source comparison checks what it copied.
+
+The skill and OpenCode configuration live outside the checkout under `/tmp`, which Pullfrog permits its native readers to access. Pullfrog changes its agent's home directory, so a global install into the runner's home is insufficient. An absolute instruction path reaches the root agent and specialists and survives PR checkout. The activation instruction selects the trusted path even if a PR contains another skill named `cb-review`.
+
+The workflow pins OpenCode as the Pullfrog harness. A harness change needs equivalent trusted instruction loading and a fresh live validation. The managed `inputs.prompt` passes through unchanged. No Pullfrog console changes or setup hooks are needed.
+
+The post-run step checks the copied verifier against its pre-run digest, then checks the original manifest digest, complete installed skill, activation instruction, and configuration. The digests remain in GitHub Actions step outputs, outside the agent's writable files. No private skill artifact is uploaded. Skills are instructions, not a place to store secrets; a review agent may quote their content in logs or findings.
+
+## Container registry exception
+
+The installer uses the official Node image from ECR Public at an immutable linux/amd64 digest. This integration makes one unauthenticated image pull per run because the workflow has no AWS identity. Provisioning AWS authentication is outside this change. This bounded exception to the CI authentication rule retains ECR Public as the registry; its unauthenticated quota can still cause a pull failure.
+
+## Validation
+
+Run `node --test .github/pullfrog/skill.test.mjs` and `actionlint .github/workflows/pullfrog.yml .github/workflows/ci.yml`. The tests execute the public CLI with real temporary files and mocked GitHub and Docker boundaries. Normal CI runs them as well.
+
+Before enabling a changed integration, dispatch the branch's workflow with an unwrapped prompt to review its actual implementation PR. This exercises the skill in Pullfrog's real `Review` mode and posts a review on that PR. Inspect the run for the trusted activation path and shared-reference reads by the orchestrator and any specialists. Auto-reviews use the workflow on the default branch, so validate that path after the workflow lands.
