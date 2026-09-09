@@ -20,6 +20,13 @@
       "token": "{{ secrets.COM_GITHUB_TOKEN }}"
     }
   ],
+  "logLevelRemap": [
+    {
+      "description": "Demote the timestamp-optional notice from WARN to INFO. Mend renders every WARN in a red 'Repository problems' banner on the dependency dashboard, and this one fires on every run for any repo using a registry that does not publish release timestamps (public.ecr.aws, private ECR, GHCR, Quay) -- which is most of ours. It reports expected behaviour, not a failure: the update was raised rather than frozen. Left at WARN it is a permanent false alarm that trains engineers to ignore the banner.",
+      "matchMessage": "/Some .+ did not have a releaseTimestamp, but as we're running with minimumReleaseAgeBehaviour=timestamp-optional, proceeding/",
+      "newLogLevel": "info"
+    }
+  ],
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true,
