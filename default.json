@@ -25,6 +25,8 @@
     "automerge": true,
     "automergeType": "branch"
   },
+  "minimumReleaseAge": "7 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
   "npmToken": "{{ secrets.NPM_TOKEN }}",
   "packageRules": [
     {
@@ -81,6 +83,42 @@
       "matchUpdateTypes": ["security"],
       "commitMessagePrefix": "fix(deps): ",
       "commitMessageTopic": "{{depName}}"
+    },
+    {
+      "description": "Do not require Minimum Release Age for container images. Only Docker Hub returns release timestamps; public.ecr.aws (our default registry per .rules/common/containerRegistry.md), private *.dkr.ecr.*.amazonaws.com, GHCR and Quay return none. minimumReleaseAgeBehaviour=timestamp-optional already prevents these from freezing, but stating it here keeps the gap explicit rather than implicit, and stops image updates being silently held if that behaviour is ever changed back.",
+      "matchDatasources": ["docker"],
+      "minimumReleaseAge": null,
+      "prBodyNotes": [
+        "⚠️ Container registries other than Docker Hub do not publish release timestamps, so this image update was raised without the usual 7-day check. Validate the release age manually before merging."
+      ]
+    },
+    {
+      "description": "Re-assert 7 days for npm. config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule pins npm to 3 days; preset rules resolve before ours and override the top-level minimumReleaseAge, so npm needs this to reach 7 days.",
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Do not require Minimum Release Age for update types Renovate cannot age. Renovate does not wire a release timestamp into these, so under the default minimumReleaseAgeBehaviour=timestamp-required they would otherwise be held back indefinitely.",
+      "matchUpdateTypes": [
+        "bump",
+        "lockFileMaintenance",
+        "lockfileUpdate",
+        "pin",
+        "replacement",
+        "rollback"
+      ],
+      "minimumReleaseAge": null,
+      "prBodyNotes": [
+        "⚠️ Renovate cannot enforce Minimum Release Age for this update type, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
+      ]
+    },
+    {
+      "description": "Do not require Minimum Release Age for digest updates. Renovate ages a digest against its matched version's timestamp, which is unavailable for registries that publish none (GHCR, Quay, ECR) and for unversioned refs such as `latest` or a branch-pinned GitHub Action, where no version exists to match. Left gated, those updates are held indefinitely. Deliberately not scoped to a datasource: the unversioned-ref case applies to github-tags too, and config:best-practices pins GitHub Action digests via helpers:pinGitHubActionDigests.",
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "minimumReleaseAge": null,
+      "prBodyNotes": [
+        "⚠️ Digest updates are not age-checked, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
+      ]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
