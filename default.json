@@ -85,14 +85,6 @@
       "commitMessageTopic": "{{depName}}"
     },
     {
-      "description": "Do not require Minimum Release Age for container images. Only Docker Hub returns release timestamps; public.ecr.aws (our default registry per .rules/common/containerRegistry.md), private *.dkr.ecr.*.amazonaws.com, GHCR and Quay return none. minimumReleaseAgeBehaviour=timestamp-optional already prevents these from freezing, but stating it here keeps the gap explicit rather than implicit, and stops image updates being silently held if that behaviour is ever changed back.",
-      "matchDatasources": ["docker"],
-      "minimumReleaseAge": null,
-      "prBodyNotes": [
-        "⚠️ Container registries other than Docker Hub do not publish release timestamps, so this image update was raised without the usual 7-day check. Validate the release age manually before merging."
-      ]
-    },
-    {
       "description": "Re-assert 7 days for npm. config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule pins npm to 3 days; preset rules resolve before ours and override the top-level minimumReleaseAge, so npm needs this to reach 7 days.",
       "matchDatasources": ["npm"],
       "minimumReleaseAge": "7 days"
