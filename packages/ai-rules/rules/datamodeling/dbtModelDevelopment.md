@@ -1,5 +1,5 @@
 ---
-description: "Developing dbt models: naming, structure, testing"
+description: "Developing dbt models or diagnosing schema and ingestion failures"
 ---
 
 # dbt Model Development
@@ -15,38 +15,26 @@ These docs in the data-modeling repo define our modeling rules, patterns, and sa
 ## Key best practices to follow
 
 - When running dbt commands, reuse the existing `SNOWFLAKE_SCHEMA` environment variable value if it is already set — it is a unique per-session schema; never overwrite it with a hardcoded value.
-- Use `dbt build` to verify your changes.
 - ALL dbt staging models must have strictly defined datatypes (see the `datamodeling/castingDbtStagingModels` rule). These datatypes need to be defined in the YAML documentation too.
-- When adding new fields to tables keep the original source field name format, but remove any custom field prefix (`__c`). For example `assignment_type__c` should be renamed to `assignment_type`. Verify column names against the source table before referencing them — do not guess.
-- If a source table doesn't exist, tell the user to ask the data-team to ingest it via the relevant ETL tool.
+- When adding new fields to tables keep the original source field name format, but remove any custom field prefix (`__c`). For example `assignment_type__c` should be renamed to `assignment_type`.
 - A model must always have a primary/unique key. If there's no obvious one, create a surrogate key using a combination of fields and by looking at the data. Use `dbt_utils.generate_surrogate_key` to do so.
 - Snapshots must be configured in YAML files (dbt 1.9+ style), not in SQL files. Define the `config` block and `relation` property in the snapshot's `.yml` file instead of using `{% snapshot %}` blocks in `.sql` files.
 
-## Never replace missing required columns with NULL
+## Verify required columns
 
-- Never add or reuse logic that substitutes `NULL` for a required column because it does not exist in the source or upstream relation. A column is required when the relation's declared schema or the requested model behavior expects it, even without an enforced dbt contract. This includes `source_has_column`, `adapter.get_columns_in_relation`, `information_schema` checks, and equivalent helpers or Jinja conditionals that emit `null::type`, `cast(null as type)`, or another placeholder when a required column is absent. Existing uses in the repository are not precedent to copy.
-- A missing required column is a schema or ingestion problem. Hiding it behind a fallback lets builds pass while silently producing incomplete data. This rule also applies to temporary workarounds while waiting for an ETL sync and attempts to make CI pass.
-- Verify the exact column name and type in the warehouse using `DESCRIBE TABLE` or an exact `information_schema.columns` lookup. Reference the verified required column directly and let missing-column errors surface. Schema inspection must not generate fallback values that conceal missing required fields.
-- If a required column is absent, report the fully qualified relation and missing column names, and tell the user the data team must refresh the source schema or ingest the fields through the relevant ETL tool before the model change can be validated and merged. If warehouse access is unavailable, report that validation is blocked; do not assume the column exists or fabricate a replacement.
-- Once the fields are ingested, verify them and run `dbt build` for the affected models. A successful build with fabricated all-NULL columns is not validation.
-- Normal row-level NULL handling for columns that exist, such as `nullif(trim(column_name), '')`, remains valid.
-- Intentional multi-relation schema alignment, such as `dbt_utils.union_relations` or `UNION ALL BY NAME`, may fill non-applicable fields with NULL when the inputs have deliberately different schemas. Document which fields are expected to be absent from which inputs and why, and verify each input's required columns before alignment. This exception must never hide an unexpectedly missing required field or a field awaiting ingestion.
+A column is required when its input relation's declared schema or the requested model behavior expects it, even without an enforced dbt contract. Reference verified required columns directly; never use `source_has_column` or equivalent logic to replace absent required columns with NULL or another placeholder, including temporary ETL or CI workarounds. These fallbacks let builds pass with incomplete data.
 
-Forbidden pattern (as seen in [data-modeling PR #4556](https://github.com/ClipboardHealth/data-modeling/pull/4556)):
+1. **Identify and verify.** Identify every required input column and verify its exact name and type in the warehouse. For source inspection, follow [Analytics: Finding Source Columns and Column Discovery](analytics.md#finding-source-columns-for-dbt-models).
+2. **Resolve.** Trace each missing column to its source. If the raw source table or field is absent, report the fully qualified relation and missing fields and ask the user to have the data team refresh the schema or ingest them. If the field exists upstream, repair the dbt projection, alias, or stale model build. If warehouse access is unavailable, report validation as blocked and name what remains unverified.
+3. **Build.** Validation is complete when every required input column has been verified, the model references those columns directly, and `dbt build` succeeds for the affected models. Otherwise, report the specific unresolved blocker before merge.
 
-```sql
-{% if source_has_column(source_relation, 'write-off type') %}
-    source_data."WRITE-OFF TYPE"::varchar as write_off_type
-{% else %}
-    null::varchar as write_off_type
-{% endif %}
-```
-
-After confirming that the source column exists, select it directly:
+After verification, select the column directly:
 
 ```sql
 source_data."WRITE-OFF TYPE"::varchar as write_off_type
 ```
+
+Normal row-level NULL handling, such as `nullif(trim(column_name), '')`, remains valid. Intentional schema alignment with `dbt_utils.union_relations` or `UNION ALL BY NAME` may fill non-applicable fields with NULL: document which fields are absent from each input and why, and verify every input's required columns before alignment. Only deliberately non-applicable fields qualify; unexpected gaps and fields awaiting ingestion remain blockers.
 
 ## When creating PRs for the data-modeling repo
 
