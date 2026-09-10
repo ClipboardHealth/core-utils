@@ -1,0 +1,2 @@
+// flake-lint-allow shared-readiness -- This response belongs to the auth service.
+await page.waitForResponse((response) => response.url().includes("/auth"));

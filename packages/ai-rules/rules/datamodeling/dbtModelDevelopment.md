@@ -4,14 +4,13 @@ description: "Developing dbt models: naming, structure, testing"
 
 # dbt Model Development
 
-Read the following docs in the data-modeling repo; they define our modeling rules, patterns, and safety constraints:
+These docs in the data-modeling repo define our modeling rules, patterns, and safety constraints. Read the ones your task touches rather than all of them up front:
 
 - CONTRIBUTING.md
 - dbt_style_guide.md
 - README.md
 - models/DEVIN_ANALYST_MODEL_GUIDE.md
 - models/DEVIN_ANALYST_FOLDER_STRUCTURE.md
-- .github/pull_request_template.md
 
 ## Key best practices to follow
 

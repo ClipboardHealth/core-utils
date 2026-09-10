@@ -1,3 +1,4 @@
+export * from "./lib/contractFixtures";
 export * from "./lib/expectToBeDefined";
 export * from "./lib/expectToBeFailure";
 export * from "./lib/expectToBeLeft";

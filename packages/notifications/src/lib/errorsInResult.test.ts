@@ -1,9 +1,13 @@
-import { failure, ServiceError, success } from "@clipboard-health/util-ts";
+import { failure, ServiceError, type ServiceResult, success } from "@clipboard-health/util-ts";
 
 import { ERROR_CODES, type ErrorCode, type TriggerResponse } from "..";
 import { errorsInResult } from "./errorsInResult";
 
 const errors: ErrorCode[] = [ERROR_CODES.unknown];
+
+class TestNotificationError extends ServiceError {
+  public readonly _tag = "TestNotificationError" as const;
+}
 
 describe(errorsInResult, () => {
   const mockTriggerResponse: TriggerResponse = {
@@ -62,4 +66,28 @@ describe(errorsInResult, () => {
 
     expect(actual).toBe(false);
   });
+
+  it("preserves the typed error when the result is a failure", () => {
+    const input = failure(
+      new TestNotificationError({
+        issues: [{ code: ERROR_CODES.unknown, message: "Unknown error" }],
+      }),
+    );
+
+    const actual = errorsInResult(input);
+    const error = getNotificationError(input);
+
+    expect(actual).toBe(true);
+    expectTypeOf(error).toEqualTypeOf<TestNotificationError>();
+  });
 });
+
+function getNotificationError(
+  result: ServiceResult<TriggerResponse, TestNotificationError>,
+): TestNotificationError {
+  if (!errorsInResult(result)) {
+    throw new Error("Expected matching notification error");
+  }
+
+  return result.error;
+}

@@ -1,0 +1,2 @@
+// flake-lint-allow response-wait -- The isolated fixture emits exactly one response.
+await page.waitForResponse((response) => response.status() === 204);

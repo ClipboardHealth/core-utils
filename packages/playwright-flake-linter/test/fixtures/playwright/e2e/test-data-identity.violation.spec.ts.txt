@@ -1,0 +1,1 @@
+const workerEmail = `worker-${generateRandomAlphaNumericString(8)}@example.com`;

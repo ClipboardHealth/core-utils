@@ -10,6 +10,7 @@
     "@anthropic-ai/claude-agent-sdk",
     "@nx/webpack",
     "eslint-plugin-promise",
+    "oxlint-tsgolint",
     "ts-node",
     "tslib",
     "webpack-cli",
@@ -17,7 +18,7 @@
   "webpack": false,
   "workspaces": {
     ".": {
-      "entry": ["scripts/prepareTsgoPackage.mts"],
+      "entry": ["scripts/buildEsmPackage.mts", "scripts/prepareTsgoPackage.mts"],
       "project": ["scripts/**/*.mts"],
     },
     "packages/analytics": {
@@ -52,11 +53,15 @@
     "packages/json-api": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
     },
-    "packages/mongo-jobs": {
-      "entry": ["examples/**/*.ts", "src/index.ts"],
-    },
     "packages/notifications": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
+    },
+    "packages/oxlint-config": {
+      "ignoreDependencies": ["@clipboard-health/oxlint-plugin"],
+    },
+    "packages/oxlint-plugin": {
+      "entry": ["scripts/verifyNegativeFixtures.mjs"],
+      "ignore": ["test/negative/**/*.ts"],
     },
     "packages/rules-engine": {
       "entry": ["examples/**/*.ts", "src/index.ts"],
@@ -69,6 +74,9 @@
     },
     "packages/playwright-reporter-llm": {
       "entry": ["src/index.ts", "test/e2e/playwright.config.ts"],
+    },
+    "packages/playwright-flake-linter": {
+      "entry": ["src/bin/cli.ts", "src/index.ts"],
     },
   },
 }

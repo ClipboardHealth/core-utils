@@ -1,0 +1,1 @@
+await page.waitForResponse((response) => response.ok());

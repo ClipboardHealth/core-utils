@@ -1,0 +1,38 @@
+{
+  "name": "@clipboard-health/playwright-toolkit",
+  "version": "1.4.4",
+  "description": "Shared anti-flake primitives for Clipboard Health Playwright suites.",
+  "keywords": [
+    "cognito",
+    "e2e",
+    "flaky-tests",
+    "mailpit",
+    "playwright",
+    "retry",
+    "testing",
+    "traceparent"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/playwright-toolkit"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@clipboard-health/util-ts": "5.17.3",
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.50.0"
+  }
+}

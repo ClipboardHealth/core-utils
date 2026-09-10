@@ -6,6 +6,7 @@ TypeScript-friendly testing utilities.
 
 - [Install](#install)
 - [Usage](#usage)
+  - [Contract fixtures](#contract-fixtures)
   - [Type narrowing `expect` helpers](#type-narrowing-expect-helpers)
 - [Local development commands](#local-development-commands)
 
@@ -16,6 +17,36 @@ npm install @clipboard-health/testing-core
 ```
 
 ## Usage
+
+### Contract fixtures
+
+Parse API response fixtures through their producer-owned Zod contract so drift fails when the
+fixture is constructed. Use `buildContractFixture` for one-off fixtures:
+
+```ts
+import { FeatureResponseSchema } from "@clipboard-health/contract-feature";
+import { buildContractFixture } from "@clipboard-health/testing-core";
+
+export const mockFeature = buildContractFixture({
+  schema: FeatureResponseSchema,
+  fixture: { id: "feature-id" },
+});
+```
+
+Use `createContractFixtureBuilder` for fixture families with shallow overrides:
+
+```ts
+import { createContractFixtureBuilder } from "@clipboard-health/testing-core";
+
+const buildFeature = createContractFixtureBuilder({
+  schema: FeatureResponseSchema,
+  defaults: { id: "default-id", name: "Default" },
+});
+
+export const mockRenamedFeature = buildFeature({ name: "Renamed" });
+```
+
+Both helpers accept schema input and return schema output, including Zod transforms.
 
 ### Type narrowing `expect` helpers
 

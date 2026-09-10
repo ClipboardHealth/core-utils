@@ -13,7 +13,8 @@ const ruleTester = new TSESLint.RuleTester({
   },
 });
 
-ruleTester.run("require-http-module-factory", rule, {
+// oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
+ruleTester.run("require-http-module-factory", rule as never, {
   valid: [
     {
       name: "HttpModule with registerAsync factory",

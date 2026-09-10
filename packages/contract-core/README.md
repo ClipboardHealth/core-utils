@@ -47,6 +47,20 @@ Composes with all contract-core schemas and enum helpers. Replaces `z.preprocess
 
 `dateTimeSchema()` validates strict ISO-8601 datetime strings and transforms them to `Date` objects. Unlike `z.coerce.date()`, it rejects loose inputs like epoch numbers and date-only strings. Composable with `.optional()`, `.nullable()`, etc. at the call site.
 
+#### Discriminated union with fallback
+
+`discriminatedUnionWithFallback(discriminator, variants)` takes the same arguments as `z.discriminatedUnion` and returns a response schema for a union whose variant set grows over time, so reads tolerate variants this consumer does not know yet.
+
+It is for responses only. Requests declare their own `z.discriminatedUnion` over the same variants, where an unknown variant is a client error rather than something to tolerate.
+
+|                                          | `z.discriminatedUnion` (requests) | `discriminatedUnionWithFallback` (responses) |
+| ---------------------------------------- | --------------------------------- | -------------------------------------------- |
+| Unknown discriminator                    | reject                            | collapse to fallback                         |
+| Unknown top-level key on a known variant | strip                             | strip                                        |
+| Missing field, invalid value             | reject                            | reject                                       |
+
+`z.union` cannot express this. Its fallback branch matches any unknown value, so a known variant with a bad field fails every branch and reports an opaque `invalid_union` carrying one nested error per branch. Rewriting the unknown discriminator first means the response discriminates normally and reports the issue on the offending field alone, which is what makes a rejected response diagnosable from logs.
+
 #### Enum validation helpers
 
 This package provides four enum validation helpers to cover different use cases:
@@ -84,6 +98,7 @@ import {
   booleanString,
   commaSeparatedArray,
   dateTimeSchema,
+  discriminatedUnionWithFallback,
   ENUM_FALLBACK,
   nonEmptyString,
   objectId,
@@ -93,7 +108,7 @@ import {
   requiredEnumWithFallback,
   uuid,
 } from "@clipboard-health/contract-core";
-import type { z, ZodError } from "zod";
+import { z, type ZodError } from "zod";
 
 function logError(error: unknown) {
   console.error((error as ZodError).issues[0]!.message);
@@ -296,6 +311,56 @@ try {
 } catch (error) {
   logError(error);
   // => Invalid enum value. Expected 'admin' | 'worker' | 'workplace', received 'invalid'
+}
+
+// Discriminated union with fallback examples
+// Takes the same arguments as z.discriminatedUnion and returns a response schema
+// that tolerates variants this consumer does not know yet.
+const notificationVariants = [
+  z.object({
+    channel: z.literal("EMAIL"),
+    emailAddress: z.string().email(),
+  }),
+  z.object({
+    channel: z.literal("SMS"),
+    phoneNumber: nonEmptyString,
+  }),
+] as const;
+
+const notificationResponseSchema = discriminatedUnionWithFallback("channel", notificationVariants);
+
+const emailNotification = notificationResponseSchema.parse({
+  channel: "EMAIL",
+  emailAddress: "worker@example.com",
+});
+// => { channel: "EMAIL", emailAddress: "worker@example.com" }
+console.log(emailNotification);
+
+// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK.
+const unrecognizedNotification = notificationResponseSchema.parse({
+  channel: "PUSH",
+  deviceToken: "abc123",
+});
+// => { channel: "UNRECOGNIZED_" }
+console.log(unrecognizedNotification);
+
+// A known variant with a bad field still fails, naming the field.
+try {
+  notificationResponseSchema.parse({ channel: "EMAIL", emailAddress: 3 });
+} catch (error) {
+  logError(error);
+  // => Expected string, received number
+}
+
+// Requests use z.discriminatedUnion directly: an unknown variant is a client
+// error, not something to tolerate.
+const notificationRequestSchema = z.discriminatedUnion("channel", [...notificationVariants]);
+
+try {
+  notificationRequestSchema.parse({ channel: "PUSH", deviceToken: "abc123" });
+} catch (error) {
+  logError(error);
+  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }
 ```
 

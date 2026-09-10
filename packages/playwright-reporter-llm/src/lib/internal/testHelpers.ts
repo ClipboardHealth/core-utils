@@ -2,6 +2,121 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 import { deflateRawSync } from "node:zlib";
 
+import type { BrowserLifecycleRecord } from "../clientLifecycleContract";
+
+export function createBrowserLifecycleRequest43Fixture(): BrowserLifecycleRecord {
+  return {
+    playwrightRequestKey: "request-43",
+    cdpRequestId: "79540.2856",
+    loaderId: "F552CA195D976C31D2F826922E2C790E",
+    method: "GET",
+    origin: "https://apigateway.staging.clipboardhealth.org",
+    pathTemplate: "/home-health-api/api/v1/:id/cases",
+    requestStarted: {
+      cdp: {
+        utc: "2026-07-28T16:08:52.453Z",
+        monotonicMilliseconds: 13_041.814_252,
+      },
+      playwright: {
+        utc: "2026-07-28T16:08:52.455Z",
+        monotonicMilliseconds: 13_043.575_483,
+      },
+    },
+    protocol: "h2",
+    connection: {
+      id: 2743,
+      reused: true,
+      remoteEndpoint: { ipAddress: "34.208.216.128", port: 443 },
+    },
+    encodedBytes: { data: 0 },
+    classification: "no_response_headers",
+  };
+}
+
+export function createBrowserLifecycle48RecordFixture(): BrowserLifecycleRecord[] {
+  return Array.from({ length: 48 }, (_, index) => {
+    const requestNumber = index + 1;
+    if (requestNumber === 43) {
+      return createBrowserLifecycleRequest43Fixture();
+    }
+    if (requestNumber >= 15 && requestNumber <= 22) {
+      return createNetworkFailureRecord({ requestNumber });
+    }
+    return createBrowserLifecycleCompletedFixture({ requestNumber });
+  });
+}
+
+export function createBrowserLifecycleCompletedFixture({
+  requestNumber,
+}: {
+  requestNumber: number;
+}): BrowserLifecycleRecord {
+  const requestStartedAt = new Date(Date.UTC(2026, 6, 28, 16, 8, 51, requestNumber));
+
+  return {
+    playwrightRequestKey: `request-${requestNumber}`,
+    cdpRequestId: `79540.${1300 + requestNumber}`,
+    loaderId: "067496AC31AA115D647CA0F7443C8EA6",
+    method: "GET",
+    origin: "https://apigateway.staging.clipboardhealth.org",
+    pathTemplate: `/api/:id/request-${requestNumber}`,
+    requestStarted: {
+      cdp: {
+        utc: requestStartedAt.toISOString(),
+        monotonicMilliseconds: 11_640 + requestNumber,
+      },
+    },
+    responseReceived: {
+      cdp: {
+        utc: new Date(requestStartedAt.getTime() + 45).toISOString(),
+        monotonicMilliseconds: 11_685 + requestNumber,
+      },
+    },
+    loadingFinished: {
+      cdp: {
+        utc: new Date(requestStartedAt.getTime() + 50).toISOString(),
+        monotonicMilliseconds: 11_690 + requestNumber,
+      },
+    },
+    protocol: "h2",
+    connection: {
+      id: 2743,
+      reused: true,
+      remoteEndpoint: { ipAddress: "34.208.216.128", port: 443 },
+    },
+    encodedBytes: { data: 681, responseHeaders: 256, total: 937 },
+    classification: "completed",
+  };
+}
+
+function createNetworkFailureRecord({
+  requestNumber,
+}: {
+  requestNumber: number;
+}): BrowserLifecycleRecord {
+  const record = createBrowserLifecycleCompletedFixture({ requestNumber });
+
+  return {
+    method: "GET",
+    origin: "https://apigateway.staging.clipboardhealth.org",
+    pathTemplate: `/api/:id/request-${requestNumber}`,
+    requestStarted: record.requestStarted,
+    playwrightRequestKey: `request-${requestNumber}`,
+    cdpRequestId: `79540.${1300 + requestNumber}`,
+    loaderId: "067496AC31AA115D647CA0F7443C8EA6",
+    loadingFailed: {
+      cdp: {
+        utc: "2026-07-28T16:08:51.459Z",
+        monotonicMilliseconds: 12_048,
+      },
+      errorText: "net::ERR_ABORTED",
+      canceled: true,
+    },
+    encodedBytes: { data: 0 },
+    classification: "network_failure",
+  };
+}
+
 interface ZipFixtureEntry {
   fileName: string;
   content: string | Buffer;

@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/playwright-reporter-llm",
-  "version": "2.5.1",
+  "version": "2.11.3",
   "description": "Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.",
   "keywords": [
     "agent",
@@ -41,7 +41,7 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.60.0"
+    "@playwright/test": "1.63.0"
   },
   "peerDependencies": {
     "@playwright/test": ">=1.50.0"

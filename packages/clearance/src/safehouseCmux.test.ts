@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -58,6 +58,40 @@ describe(resolveSafehouseCmuxIntegration, () => {
     ]);
   });
 
+  it("includes cmux-owned Codex hook scripts when their directory exists", () => {
+    const tempHome = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-home-"));
+    const hooksDir = path.join(tempHome, ".cmux", "hooks");
+    try {
+      mkdirSync(hooksDir, { recursive: true });
+
+      const actual = resolveSafehouseCmuxIntegration({
+        env: { HOME: tempHome },
+        readFile: () => "",
+      });
+
+      expect(actual.addDirsReadOnly).toContain(hooksDir);
+    } finally {
+      rmSync(tempHome, { force: true, recursive: true });
+    }
+  });
+
+  it("includes the existing Sentry cache as a writable cmux directory", () => {
+    const tempHome = mkdtempSync(path.join(tmpdir(), "safehouse-cmux-home-"));
+    const sentryCacheDir = path.join(tempHome, "Library", "Caches", "io.sentry");
+    try {
+      mkdirSync(sentryCacheDir, { recursive: true });
+
+      const actual = resolveSafehouseCmuxIntegration({
+        env: { HOME: tempHome },
+        readFile: () => "",
+      });
+
+      expect(actual.addDirs).toStrictEqual([sentryCacheDir]);
+    } finally {
+      rmSync(tempHome, { force: true, recursive: true });
+    }
+  });
+
   it("prefers XDG_STATE_HOME and dedupes the socket directory", () => {
     const actual = resolveSafehouseCmuxIntegration({
       env: {
@@ -82,6 +116,7 @@ describe(resolveSafehouseCmuxIntegration, () => {
     });
 
     expect(actual.addDirsReadOnly).toStrictEqual(["/Applications/cmux.app"]);
+    expect(actual.addDirs).toStrictEqual([]);
   });
 
   it("reports cmux wrapper env names that have not been reviewed", () => {
@@ -102,6 +137,41 @@ describe(resolveSafehouseCmuxIntegration, () => {
 
     expect(readFile).toHaveBeenCalledWith(path.join("/tmp/cmux/bin", "cmux-claude-wrapper"));
     expect(actual.unreviewedEnvNames).toStrictEqual(["CMUX_NEW_REQUIRED_SETTING"]);
+  });
+
+  it("treats the cmux settings-merge wrapper names as reviewed", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: {
+        CMUX_BUNDLED_CLI_PATH: "/tmp/cmux/bin/cmux",
+      },
+      readFile: () =>
+        [
+          "CMUX_BASE_SETTINGS",
+          "CMUX_FILTERED_ARGS",
+          "CMUX_MERGED_SETTINGS",
+          "CMUX_USER_SETTINGS",
+          "CMUX_USER_SETTINGS_B64",
+        ].join("\n"),
+    });
+
+    expect(actual.unreviewedEnvNames).toStrictEqual([]);
+  });
+
+  it("treats the cmux wrapper launch markers as reviewed", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: {
+        CMUX_BUNDLED_CLI_PATH: "/tmp/cmux/bin/cmux",
+      },
+      readFile: () =>
+        [
+          "CMUX_AGENT_RESTORE_LAUNCH",
+          "CMUX_AGENT_RESUME_LAUNCH",
+          "CMUX_CLAUDE_TEAMS_CMUX_BIN",
+          "CMUX_CLAUDE_TEAMS_WRAPPER_LAUNCH",
+        ].join("\n"),
+    });
+
+    expect(actual.unreviewedEnvNames).toStrictEqual([]);
   });
 
   it("reads the bundled cmux wrapper source with the default file reader", () => {

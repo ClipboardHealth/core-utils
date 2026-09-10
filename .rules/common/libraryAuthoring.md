@@ -6,7 +6,7 @@ description: "Authoring shared library code: @clipboard-health/* packages or sha
 
 Applies when writing shared library code: `@clipboard-health/*` packages and shared library modules within services (e.g., `src/lib`).
 
-- Use object arguments and object return types in library APIs; wrap exported responses in `ServiceResult`; prefer `ServiceResult` for expected errors and reserve throwing for unexpected/unrecoverable failures
+- Use object arguments and object return types in library APIs; wrap exported responses in `ServiceResult` (see the Error Handling rule for which errors to return versus throw)
 - Library API types must not contain `any` or bare `object`; prefer specific types over `unknown`, but allow `unknown` when type safety requires caller-side narrowing; use TypeScript generics
 - Define the public API exclusively through index exports (`src/index.ts` in packages); place non-public code in `internal/`
 - Strive for 100% test coverage in library code (`/* istanbul ignore next */` only for genuinely untestable lines)

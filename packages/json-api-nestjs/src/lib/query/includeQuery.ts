@@ -4,6 +4,8 @@ import { z } from "zod";
 import { splitString } from "../internal/splitString";
 import type { JsonApiDocument, Relationship, Relationships } from "../types";
 
+type ArrayableValue<T> = T extends Array<infer ValueT> ? ValueT : T;
+
 /**
  * Recursively traverse the JSON:API document to build a list of all possible relationship paths up
  * to the specified depth, which prevents stack overflow for circular relationships. Use the result
@@ -21,30 +23,28 @@ export type RelationshipPaths<
   Prefix extends string = "",
 > =
   GreaterThan<Depth, 0> extends true
-    ? DocumentT["data"] extends Array<infer Data> | (infer Data)
-      ? Data extends { relationships?: infer Relation }
-        ? Relation extends Relationships
-          ? {
-              [K in keyof Relation]: K extends string
-                ? NonNullable<Relation[K]> extends Relationship
-                  ? NonNullable<Relation[K]>["data"] extends
-                      | { type?: infer RelationT }
-                      | Array<{ type?: infer RelationT }>
-                    ? RelationT extends keyof MapT
-                      ?
-                          | `${Prefix}${K}`
-                          | RelationshipPaths<
-                              MapT,
-                              z.infer<MapT[RelationT]>,
-                              Subtract<Depth, 1>,
-                              `${Prefix}${K}.`
-                            >
-                      : never
+    ? ArrayableValue<DocumentT["data"]> extends { relationships?: infer Relation }
+      ? Relation extends Relationships
+        ? {
+            [K in keyof Relation]: K extends string
+              ? NonNullable<Relation[K]> extends Relationship
+                ? ArrayableValue<NonNullable<Relation[K]>["data"]> extends {
+                    type?: infer RelationT;
+                  }
+                  ? RelationT extends keyof MapT
+                    ?
+                        | `${Prefix}${K}`
+                        | RelationshipPaths<
+                            MapT,
+                            z.infer<MapT[RelationT]>,
+                            Subtract<Depth, 1>,
+                            `${Prefix}${K}.`
+                          >
                     : never
                   : never
-                : never;
-            }[keyof Relation]
-          : never
+                : never
+              : never;
+          }[keyof Relation]
         : never
       : never
     : never;

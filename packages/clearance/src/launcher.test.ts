@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import * as net from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,8 +8,13 @@ import {
   type ClearanceSpawner,
   ensureClearance,
   isClearanceListening,
+  parseClearanceCommand,
+  type ProcessKiller,
+  restartClearance,
   spawnClearance,
   type SpawnClearanceInput,
+  statusClearance,
+  stopClearance,
 } from "./launcher.ts";
 
 function createTempCacheDir(): string {
@@ -322,5 +327,295 @@ describe(spawnClearance, () => {
     });
 
     expect(actual).toBeGreaterThan(0);
+  });
+});
+
+function writePidFile(cacheDir: string, pid: number): string {
+  const pidPath = path.join(cacheDir, "clearance.pid");
+  writeFileSync(pidPath, `${pid}\n`);
+  return pidPath;
+}
+
+describe(stopClearance, () => {
+  let cacheDir: string | undefined;
+
+  afterEach(() => {
+    cleanupCacheDir(cacheDir);
+    cacheDir = undefined;
+  });
+
+  it("kills the pidfile process, removes the pidfile, and reports stopped", async () => {
+    cacheDir = createTempCacheDir();
+    const pidPath = writePidFile(cacheDir, 12_345);
+    const isListeningMock = createListenerMock([false]);
+    const killMock = vi.fn<ProcessKiller>();
+    const messages: string[] = [];
+
+    const actual = await stopClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      kill: killMock,
+      logger: rememberMessage(messages),
+    });
+
+    expect(actual).toStrictEqual({ pid: 12_345, port: 19_999, status: "stopped" });
+    expect(killMock).toHaveBeenCalledWith({ pid: 12_345 });
+    expect(existsSync(pidPath)).toBe(false);
+    expect(messages).toContain("Stopped clearance (pid 12345)");
+  });
+
+  it("reports not-running when no pidfile exists, deriving the cache dir from env", async () => {
+    cacheDir = createTempCacheDir();
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    const actual = await stopClearance({
+      env: { XDG_CACHE_HOME: cacheDir },
+      isListening: isListeningMock,
+      kill: killMock,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
+  it("treats a garbage pidfile as not running", async () => {
+    cacheDir = createTempCacheDir();
+    writeFileSync(path.join(cacheDir, "clearance.pid"), "not-a-pid\n");
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    const actual = await stopClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      kill: killMock,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
+  it("treats a partially numeric pidfile as not running", async () => {
+    cacheDir = createTempCacheDir();
+    writeFileSync(path.join(cacheDir, "clearance.pid"), "123abc\n");
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    const actual = await stopClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      kill: killMock,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
+  it("treats an unsafe numeric pidfile as not running", async () => {
+    cacheDir = createTempCacheDir();
+    writeFileSync(path.join(cacheDir, "clearance.pid"), `${Number.MAX_SAFE_INTEGER + 1}\n`);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    const actual = await stopClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      kill: killMock,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
+  it("removes a stale pidfile when the process is already gone", async () => {
+    cacheDir = createTempCacheDir();
+    const pidPath = writePidFile(cacheDir, 999_999);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>().mockImplementation(() => {
+      const error: NodeJS.ErrnoException = new Error("no such process");
+      error.code = "ESRCH";
+      throw error;
+    });
+
+    const actual = await stopClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      kill: killMock,
+      sleep: noopAsync,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(existsSync(pidPath)).toBe(false);
+    expect(isListeningMock).not.toHaveBeenCalled();
+  });
+
+  it("rethrows kill errors that are not 'already gone'", async () => {
+    cacheDir = createTempCacheDir();
+    writePidFile(cacheDir, 12_345);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>().mockImplementation(() => {
+      const error: NodeJS.ErrnoException = new Error("operation not permitted");
+      error.code = "EPERM";
+      throw error;
+    });
+
+    await expect(
+      stopClearance({
+        cacheDir,
+        isListening: isListeningMock,
+        kill: killMock,
+        sleep: noopAsync,
+      }),
+    ).rejects.toThrow(/operation not permitted/);
+    expect(isListeningMock).not.toHaveBeenCalled();
+  });
+
+  it("rethrows non-ENOENT pidfile read failures", async () => {
+    cacheDir = createTempCacheDir();
+    mkdirSync(path.join(cacheDir, "clearance.pid"));
+    const isListeningMock = vi.fn<ClearanceListenerCheck>();
+    const killMock = vi.fn<ProcessKiller>();
+
+    await expect(
+      stopClearance({ cacheDir, isListening: isListeningMock, kill: killMock }),
+    ).rejects.toThrow(/EISDIR/);
+    expect(killMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-positive poll interval", async () => {
+    cacheDir = createTempCacheDir();
+    writePidFile(cacheDir, 12_345);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>().mockResolvedValue(false);
+    const killMock = vi.fn<ProcessKiller>();
+
+    await expect(
+      stopClearance({
+        cacheDir,
+        isListening: isListeningMock,
+        kill: killMock,
+        pollIntervalMs: 0,
+      }),
+    ).rejects.toThrow(/pollIntervalMs must be a positive number/);
+  });
+
+  it("throws when the process refuses to stop within the timeout", async () => {
+    cacheDir = createTempCacheDir();
+    writePidFile(cacheDir, 12_345);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>().mockResolvedValue(true);
+    const killMock = vi.fn<ProcessKiller>();
+
+    await expect(
+      stopClearance({
+        cacheDir,
+        isListening: isListeningMock,
+        kill: killMock,
+        pollIntervalMs: 1,
+        sleep: noopAsync,
+        timeoutMs: 2,
+      }),
+    ).rejects.toThrow(/did not stop/);
+  });
+});
+
+describe(statusClearance, () => {
+  let cacheDir: string | undefined;
+
+  afterEach(() => {
+    cleanupCacheDir(cacheDir);
+    cacheDir = undefined;
+  });
+
+  it("reports a running proxy with its pid", async () => {
+    cacheDir = createTempCacheDir();
+    writePidFile(cacheDir, 54_321);
+    const isListeningMock = vi.fn<ClearanceListenerCheck>().mockResolvedValue(true);
+    const messages: string[] = [];
+
+    const actual = await statusClearance({
+      cacheDir,
+      env: { XDG_CACHE_HOME: cacheDir },
+      isListening: isListeningMock,
+      logger: rememberMessage(messages),
+    });
+
+    expect(actual).toStrictEqual({ pid: 54_321, port: 19_999, status: "running" });
+    expect(messages).toContain("Clearance is running (pid 54321) on http://127.0.0.1:19999");
+  });
+
+  it("reports a running proxy even when no pidfile is present", async () => {
+    cacheDir = createTempCacheDir();
+    const isListeningMock = vi.fn<ClearanceListenerCheck>().mockResolvedValue(true);
+    const messages: string[] = [];
+
+    const actual = await statusClearance({
+      cacheDir,
+      isListening: isListeningMock,
+      logger: rememberMessage(messages),
+    });
+
+    expect(actual).toStrictEqual({ port: 19_999, status: "running" });
+    expect(messages).toContain("Clearance is running on http://127.0.0.1:19999");
+  });
+
+  it("reports not-running when nothing is listening, deriving the cache dir from env", async () => {
+    cacheDir = createTempCacheDir();
+    const isListeningMock = vi.fn<ClearanceListenerCheck>().mockResolvedValue(false);
+
+    const actual = await statusClearance({
+      env: { XDG_CACHE_HOME: cacheDir },
+      isListening: isListeningMock,
+    });
+
+    expect(actual.status).toBe("not-running");
+    expect(actual.pid).toBeUndefined();
+  });
+});
+
+describe(restartClearance, () => {
+  let cacheDir: string | undefined;
+
+  afterEach(() => {
+    cleanupCacheDir(cacheDir);
+    cacheDir = undefined;
+  });
+
+  it("stops the existing proxy and starts a fresh one", async () => {
+    cacheDir = createTempCacheDir();
+    const pidPath = writePidFile(cacheDir, 111);
+    const isListeningMock = createListenerMock([false, false, true]);
+    const killMock = vi.fn<ProcessKiller>();
+    const spawnMock = vi.fn<ClearanceSpawner>().mockReturnValue(222);
+
+    const actual = await restartClearance({
+      cacheDir,
+      env: { CLEARANCE_ALLOW_HOSTS: "api.example.com" },
+      isListening: isListeningMock,
+      kill: killMock,
+      sleep: noopAsync,
+      spawnDetached: spawnMock,
+    });
+
+    expect(killMock).toHaveBeenCalledWith({ pid: 111 });
+    expect(spawnMock).toHaveBeenCalledTimes(1);
+    expect(actual.status).toBe("started");
+    expect(actual.pid).toBe(222);
+    expect(readFileSync(pidPath, "utf8")).toBe("222\n");
+  });
+});
+
+describe(parseClearanceCommand, () => {
+  it("defaults to start when no command is given", () => {
+    expect(parseClearanceCommand([])).toBe("start");
+  });
+
+  it("returns the recognized command", () => {
+    expect(parseClearanceCommand(["stop"])).toBe("stop");
+    expect(parseClearanceCommand(["restart"])).toBe("restart");
+    expect(parseClearanceCommand(["status"])).toBe("status");
+    expect(parseClearanceCommand(["start"])).toBe("start");
+  });
+
+  it("throws on an unknown command", () => {
+    expect(() => parseClearanceCommand(["bogus"])).toThrow(/Unknown clearance-ensure command/);
   });
 });

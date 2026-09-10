@@ -4,6 +4,7 @@ import {
   booleanString,
   commaSeparatedArray,
   dateTimeSchema,
+  discriminatedUnionWithFallback,
   ENUM_FALLBACK,
   nonEmptyString,
   objectId,
@@ -13,7 +14,7 @@ import {
   requiredEnumWithFallback,
   uuid,
 } from "@clipboard-health/contract-core";
-import type { z, ZodError } from "zod";
+import { z, type ZodError } from "zod";
 
 function logError(error: unknown) {
   console.error((error as ZodError).issues[0]!.message);
@@ -216,4 +217,54 @@ try {
 } catch (error) {
   logError(error);
   // => Invalid enum value. Expected 'admin' | 'worker' | 'workplace', received 'invalid'
+}
+
+// Discriminated union with fallback examples
+// Takes the same arguments as z.discriminatedUnion and returns a response schema
+// that tolerates variants this consumer does not know yet.
+const notificationVariants = [
+  z.object({
+    channel: z.literal("EMAIL"),
+    emailAddress: z.string().email(),
+  }),
+  z.object({
+    channel: z.literal("SMS"),
+    phoneNumber: nonEmptyString,
+  }),
+] as const;
+
+const notificationResponseSchema = discriminatedUnionWithFallback("channel", notificationVariants);
+
+const emailNotification = notificationResponseSchema.parse({
+  channel: "EMAIL",
+  emailAddress: "worker@example.com",
+});
+// => { channel: "EMAIL", emailAddress: "worker@example.com" }
+console.log(emailNotification);
+
+// A variant this consumer does not recognize yet collapses to ENUM_FALLBACK.
+const unrecognizedNotification = notificationResponseSchema.parse({
+  channel: "PUSH",
+  deviceToken: "abc123",
+});
+// => { channel: "UNRECOGNIZED_" }
+console.log(unrecognizedNotification);
+
+// A known variant with a bad field still fails, naming the field.
+try {
+  notificationResponseSchema.parse({ channel: "EMAIL", emailAddress: 3 });
+} catch (error) {
+  logError(error);
+  // => Expected string, received number
+}
+
+// Requests use z.discriminatedUnion directly: an unknown variant is a client
+// error, not something to tolerate.
+const notificationRequestSchema = z.discriminatedUnion("channel", [...notificationVariants]);
+
+try {
+  notificationRequestSchema.parse({ channel: "PUSH", deviceToken: "abc123" });
+} catch (error) {
+  logError(error);
+  // => Invalid discriminator value. Expected 'EMAIL' | 'SMS'
 }

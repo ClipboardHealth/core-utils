@@ -1,5 +1,5 @@
 {
-  "extends": ["@tsconfig/node24", "@tsconfig/strictest"],
+  "extends": ["@tsconfig/node24/tsconfig.json", "@tsconfig/strictest/tsconfig.json"],
   "compileOnSave": false,
   "compilerOptions": {
     "declaration": false,
@@ -23,16 +23,18 @@
       "@clipboard-health/execution-context": ["./packages/execution-context/src/index.ts"],
       "@clipboard-health/json-api": ["./packages/json-api/src/index.ts"],
       "@clipboard-health/json-api-nestjs": ["./packages/json-api-nestjs/src/index.ts"],
-      "@clipboard-health/mongo-jobs": ["./packages/mongo-jobs/src/index.ts"],
       "@clipboard-health/notifications": ["./packages/notifications/src/index.ts"],
       "@clipboard-health/nx-plugin": ["./packages/nx-plugin/src/index.ts"],
       "@clipboard-health/oxlint-config": ["./packages/oxlint-config/src/index.ts"],
+      "@clipboard-health/oxlint-plugin": ["./packages/oxlint-plugin/src/index.ts"],
       "@clipboard-health/phone-number": ["./packages/phone-number/src/index.ts"],
       "@clipboard-health/playwright-reporter-llm": [
         "./packages/playwright-reporter-llm/src/index.ts"
       ],
+      "@clipboard-health/playwright-toolkit": ["./packages/playwright-toolkit/src/index.ts"],
       "@clipboard-health/rules-engine": ["./packages/rules-engine/src/index.ts"],
       "@clipboard-health/testing-core": ["./packages/testing-core/src/index.ts"],
+      "@clipboard-health/usa-states": ["./packages/usa-states/src/index.ts"],
       "@clipboard-health/util-ts": ["./packages/util-ts/src/index.ts"],
       "embedex": ["./packages/embedex/src/index.ts"]
     },

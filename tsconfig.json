@@ -42,9 +42,6 @@
       "path": "./packages/testing-core"
     },
     {
-      "path": "./packages/mongo-jobs"
-    },
-    {
       "path": "./packages/analytics"
     },
     {
@@ -64,6 +61,21 @@
     },
     {
       "path": "./packages/config"
+    },
+    {
+      "path": "./packages/clearance"
+    },
+    {
+      "path": "./packages/playwright-flake-linter"
+    },
+    {
+      "path": "./packages/playwright-toolkit"
+    },
+    {
+      "path": "./packages/usa-states"
+    },
+    {
+      "path": "./packages/oxlint-plugin"
     }
   ]
 }

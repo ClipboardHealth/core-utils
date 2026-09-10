@@ -28,6 +28,9 @@ try {
 
   const safehouseArgs = cmuxIntegration.isActive
     ? [
+        ...(cmuxIntegration.addDirs.length === 0
+          ? []
+          : [`--add-dirs=${cmuxIntegration.addDirs.join(":")}`]),
         `--add-dirs-ro=${cmuxIntegration.addDirsReadOnly.join(":")}`,
         `--env-pass=${cmuxIntegration.envPass.join(",")}`,
       ]

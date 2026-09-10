@@ -10,5 +10,8 @@
   },
   "gitignore": true,
   "globs": ["**/*.{md,mdx}"],
-  "ignores": [".nx/**"],
+  "ignores": [
+    ".nx/**",
+    "**/flaky-critic/references/backtests/2026-07-16-b8-prior-attempts/inputs/**",
+  ],
 }

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "module": "ESNext",
+    "outDir": "../../dist/packages/contract-core/esm",
+    "tsBuildInfoFile": "../../.nx/tsbuildinfo/packages/contract-core/tsconfig.lib.esm.tsbuildinfo"
+  }
+}

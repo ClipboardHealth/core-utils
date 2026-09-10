@@ -1,0 +1,2 @@
+// flake-lint-allow test-data-identity -- The vendor field is limited to eight characters.
+const workerName = generateRandomString(8);

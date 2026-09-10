@@ -1,8 +1,3 @@
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "oxc.oxc-vscode",
-    "streetsidesoftware.code-spell-checker",
-    "typescriptteam.native-preview"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "oxc.oxc-vscode", "typescriptteam.native-preview"]
 }

@@ -13,7 +13,8 @@ const ruleTester = new TSESLint.RuleTester({
   },
 });
 
-ruleTester.run("require-run-validators-with-upsert", rule, {
+// oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
+ruleTester.run("require-run-validators-with-upsert", rule as never, {
   valid: [
     {
       name: "upsert: true with runValidators: true",

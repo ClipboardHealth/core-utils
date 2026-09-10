@@ -1,40 +1,14 @@
 ---
-description: "Frontend architecture: technology stack, file organization, where business logic lives"
+description: "Frontend architecture: feature-based file organization, where business logic lives"
 ---
 
 # Frontend Architecture
 
-## Technology Stack
-
-- **React** with TypeScript (strict mode)
-- **MUI** for UI components
-- **React Query** (@tanstack/react-query) for data fetching
-- **Zod** for runtime validation
-- **Vitest** + **@testing-library/react** for testing
-- **MSW** for API mocking
-- **Playwright** for E2E tests
-- **constate** for shared state
-
 ## File Organization
 
-Organize frontend code by concept/feature (e.g., `Shifts/`, `Invites/`), not by type (e.g., `components/`, `hooks/`).
+Organize frontend code by concept/feature (e.g., `Shifts/`, `Invites/`), not by type (no top-level `components/` or `hooks/`).
 
-```text
-FeatureName/
-├── api/                    # Data fetching hooks
-│   └── useGetFeature.ts
-├── components/             # Feature-specific components
-│   └── FeatureCard.tsx
-├── hooks/                  # Non-API hooks
-│   └── useFeatureLogic.ts
-├── utils/                  # Utilities + tests
-│   ├── formatFeature.ts
-│   └── formatFeature.test.ts
-├── Page.tsx                # Main page
-├── Router.tsx              # Routes
-├── paths.ts                # Route constants
-└── types.ts                # Shared types
-```
+Within a feature directory: `api/` for data-fetching hooks, `components/`, `hooks/` for non-API hooks, `utils/` with co-located `*.test.ts` files, plus `Page.tsx`, `Router.tsx`, `paths.ts`, and `types.ts`.
 
 ## Business Logic Placement
 

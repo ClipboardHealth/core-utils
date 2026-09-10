@@ -178,9 +178,28 @@ async function writePackageJson({
 
   packageJson.types ??= packageJson.typings;
   removeSourceExportCondition(packageJson);
+  promotePublishConfigExports(packageJson);
 
   const packageJsonPath = joinPathFragments(workspaceRoot, outputPath, "package.json");
   writeJsonFile(packageJsonPath, packageJson);
+}
+
+/**
+ * A top-level `exports` field in a source package.json breaks in-repo
+ * resolution of the workspace symlink (the mapped build outputs do not exist
+ * in the source tree), so packages author their published exports map under
+ * `publishConfig.exports` — inert for resolvers — and it is promoted here,
+ * mirroring pnpm's publishConfig convention.
+ */
+function promotePublishConfigExports(packageJson: PackageJson): void {
+  const publishConfig = packageJson["publishConfig"] as Record<string, unknown> | undefined;
+
+  if (publishConfig?.["exports"] === undefined) {
+    return;
+  }
+
+  packageJson.exports = publishConfig["exports"] as PackageJson["exports"];
+  delete publishConfig["exports"];
 }
 
 function removeSourceExportCondition(packageJson: PackageJson): void {

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 export const SAFEHOUSE_CMUX_ENV_PASS = [
@@ -22,10 +22,28 @@ export const SAFEHOUSE_CMUX_WRAPPER_LOCAL_ENV_NAMES = [
   "CMUX_AGENT_LAUNCH_CWD",
   "CMUX_AGENT_LAUNCH_EXECUTABLE",
   "CMUX_AGENT_LAUNCH_KIND",
+  // App-minted one-shot token authorizing a cmux-owned session restore. A
+  // safehouse launch is never one, and the wrapper consumes it and re-issues it
+  // across its own shim hops, so passing it in only hands over stale authority.
+  "CMUX_AGENT_RESTORE_LAUNCH",
+  // The wrapper derives this from the `--resume` id in its own argv.
+  "CMUX_AGENT_RESUME_LAUNCH",
+  // Settings-merge names: shell locals plus env set inline on the wrapper's
+  // own `node` merge child. None cross the sandbox boundary as ambient env.
+  "CMUX_BASE_SETTINGS",
   "CMUX_CLAUDE_HOOK_CMUX_BIN",
   "CMUX_CLAUDE_PID",
+  // Marker pair `cmux claude-teams` sets when it re-enters the wrapper to bind
+  // a lead session. Forwarding it would suppress the ordinary Claude launch
+  // capture that a safehouse agent depends on.
+  "CMUX_CLAUDE_TEAMS_CMUX_BIN",
+  "CMUX_CLAUDE_TEAMS_WRAPPER_LAUNCH",
+  "CMUX_FILTERED_ARGS",
+  "CMUX_MERGED_SETTINGS",
   "CMUX_ORIGINAL_NODE_OPTIONS",
   "CMUX_ORIGINAL_NODE_OPTIONS_PRESENT",
+  "CMUX_USER_SETTINGS",
+  "CMUX_USER_SETTINGS_B64",
 ] as const;
 
 export const SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE = [
@@ -44,6 +62,7 @@ export interface ResolveSafehouseCmuxIntegrationInput {
 }
 
 export interface SafehouseCmuxIntegration {
+  addDirs: readonly string[];
   addDirsReadOnly: readonly string[];
   claudeCommandPrelude: string;
   envPass: readonly string[];
@@ -62,12 +81,18 @@ export function resolveSafehouseCmuxIntegration(
   const readFile = input.readFile ?? defaultReadFile;
 
   return {
+    addDirs: resolveCmuxWritableDirs({ env }),
     addDirsReadOnly: resolveCmuxReadOnlyDirs({ env }),
     claudeCommandPrelude: SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
     envPass: SAFEHOUSE_CMUX_ENV_PASS,
     isActive: isSafehouseCmuxIntegrationActive({ env }),
     unreviewedEnvNames: resolveUnreviewedCmuxEnvNames({ env, readFile }),
   };
+}
+
+function resolveCmuxWritableDirs(input: { env: NodeJS.ProcessEnv }): readonly string[] {
+  const sentryCacheDir = homeSentryCacheDir({ env: input.env });
+  return sentryCacheDir === undefined || !existsSync(sentryCacheDir) ? [] : [sentryCacheDir];
 }
 
 export function safehouseCmuxIntegrationWarningLines(input: {
@@ -95,15 +120,27 @@ function resolveCmuxReadOnlyDirs(input: { env: NodeJS.ProcessEnv }): readonly st
   const xdgStateHome = normalizeAbsolutePath({ value: input.env["XDG_STATE_HOME"] });
   const stateDir =
     xdgStateHome === undefined ? homeStateDir({ env: input.env }) : path.join(xdgStateHome, "cmux");
+  const hooksDir = homeHooksDir({ env: input.env });
   const socketPath = normalizeAbsolutePath({ value: input.env["CMUX_SOCKET_PATH"] });
 
   return [
     ...new Set([
       "/Applications/cmux.app",
       ...(stateDir === undefined ? [] : [stateDir]),
+      ...(hooksDir === undefined || !existsSync(hooksDir) ? [] : [hooksDir]),
       ...(socketPath === undefined ? [] : [path.dirname(socketPath)]),
     ]),
   ];
+}
+
+function homeHooksDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
+  const home = normalizeAbsolutePath({ value: input.env["HOME"] });
+  return home === undefined ? undefined : path.join(home, ".cmux", "hooks");
+}
+
+function homeSentryCacheDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
+  const home = normalizeAbsolutePath({ value: input.env["HOME"] });
+  return home === undefined ? undefined : path.join(home, "Library", "Caches", "io.sentry");
 }
 
 function homeStateDir(input: { env: NodeJS.ProcessEnv }): string | undefined {

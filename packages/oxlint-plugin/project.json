@@ -1,0 +1,45 @@
+{
+  "name": "oxlint-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/oxlint-plugin/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/oxlint-plugin"],
+      "options": {
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/oxlint-plugin/**/*.[jt]s?(x)"],
+        "maxWarnings": 0
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "dependsOn": ["test-negative-fixtures"],
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "packages/oxlint-plugin/vitest.config.ts"
+      }
+    },
+    "test-negative-fixtures": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node packages/oxlint-plugin/scripts/verifyNegativeFixtures.mjs"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/oxlint-plugin"
+      }
+    }
+  }
+}

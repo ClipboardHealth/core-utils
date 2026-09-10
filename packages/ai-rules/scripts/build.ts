@@ -7,9 +7,6 @@ import { execAndLog } from "./execAndLog";
 
 const { packageRoot, outputDirectory } = PATHS;
 
-const PLUGIN_ROOT = path.join(packageRoot, "..", "..", "plugins", "core");
-const SKILLS_SOURCE = path.join(PLUGIN_ROOT, "skills");
-
 const params = {
   timeout: 60_000,
   verbose: false,
@@ -27,16 +24,12 @@ async function build(): Promise<void> {
     cp(path.join(packageRoot, "rules"), path.join(outputDirectory, "rules"), {
       recursive: true,
     }),
-    cp(SKILLS_SOURCE, path.join(outputDirectory, "skills"), {
-      recursive: true,
-      filter: (source) => !isTestFile(source),
-    }),
     mkdir(scriptsOutput, { recursive: true }),
     copyFile(path.join(packageRoot, "README.md"), path.join(outputDirectory, "README.md")),
     copyFile(path.join(packageRoot, "package.json"), path.join(outputDirectory, "package.json")),
   ]);
 
-  console.log(`📦 Copied rules/ and skills/ to dist`);
+  console.log(`📦 Copied rules/ to dist`);
 
   await Promise.all([
     execAndLog({
@@ -68,14 +61,9 @@ async function build(): Promise<void> {
         "--skipLibCheck",
       ],
     }),
-    copyFile(path.join(packageRoot, "scripts", "setup.sh"), path.join(scriptsOutput, "setup.sh")),
   ]);
 
   console.log(`\n✨ Build complete. See ${path.relative(process.cwd(), outputDirectory)}.`);
-}
-
-function isTestFile(source: string): boolean {
-  return /\.(?<type>spec|test)\.ts$/.test(source);
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await

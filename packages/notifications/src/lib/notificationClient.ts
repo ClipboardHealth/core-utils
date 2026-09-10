@@ -1,6 +1,7 @@
 import {
   failure,
   type FailureResult,
+  isDefined,
   isFailure,
   type LogFunction,
   ServiceError,
@@ -15,6 +16,7 @@ import { chunkRecipients, MAXIMUM_RECIPIENTS_COUNT } from "./internal/chunkRecip
 import { createTriggerLogParams } from "./internal/createTriggerLogParams";
 import { createTriggerTraceOptions } from "./internal/createTriggerTraceOptions";
 import { IdempotentKnock } from "./internal/idempotentKnock";
+import { withKnockRequestId } from "./internal/knockRequestId";
 import { parseTriggerIdempotencyKey } from "./internal/parseTriggerIdempotencyKey";
 import { redact } from "./internal/redact";
 import { toKnockUserPreferences } from "./internal/toKnockUserPreferences";
@@ -140,25 +142,27 @@ export class NotificationClient {
             return success({ id: "dry-run" });
           }
 
-          const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
-            idempotencyKey: triggerIdempotencyKeyParamsToHash({
-              ...idempotencyKeyParams,
-              workplaceId,
+          const { knockRequestId, response } = await withKnockRequestId(
+            this.provider.workflows.trigger(workflowKey, triggerBody, {
+              idempotencyKey: triggerIdempotencyKeyParamsToHash({
+                ...idempotencyKeyParams,
+                workplaceId,
+              }),
             }),
-          });
+          );
 
           const id = response.workflow_run_id;
-          this.logTriggerResponse({ span, response, id, logParams });
+          this.logTriggerResponse({ span, response, id, knockRequestId, logParams });
 
-          return success({ id });
+          return success({ id, ...(isDefined(knockRequestId) && { knockRequestId }) });
         } catch (maybeError) {
-          const { code, error, message } = toNotificationError(maybeError);
+          const { code, error, knockRequestId, message } = toNotificationError(maybeError);
           return this.createAndLogError({
             notificationError: { code, message },
             span,
             logFunction: this.logger.error,
             logParams,
-            metadata: { error },
+            metadata: { error, knockRequestId },
           });
         }
       },
@@ -324,7 +328,7 @@ export class NotificationClient {
         }
 
         const chunks = chunkRecipients({ recipients: body.recipients });
-        const responses: Array<{ chunkNumber: number; id: string }> = [];
+        const responses: TriggerChunkedResponse["responses"] = [];
 
         // Sequential execution is intentional - we want to fail fast on error and track progress
         for (const recipientChunk of chunks) {
@@ -337,9 +341,11 @@ export class NotificationClient {
             const triggerBody = toTriggerBody(chunkBody);
 
             // eslint-disable-next-line no-await-in-loop
-            const response = await this.provider.workflows.trigger(workflowKey, triggerBody, {
-              idempotencyKey: chunkIdempotencyKey,
-            });
+            const { knockRequestId, response } = await withKnockRequestId(
+              this.provider.workflows.trigger(workflowKey, triggerBody, {
+                idempotencyKey: chunkIdempotencyKey,
+              }),
+            );
 
             const id = response.workflow_run_id;
             this.logger.info(`${logParams.traceName} chunk response`, {
@@ -347,11 +353,16 @@ export class NotificationClient {
               chunkNumber: recipientChunk.number,
               totalChunks: chunks.length,
               id,
+              knockRequestId,
             });
 
-            responses.push({ chunkNumber: recipientChunk.number, id });
+            responses.push({
+              chunkNumber: recipientChunk.number,
+              id,
+              ...(isDefined(knockRequestId) && { knockRequestId }),
+            });
           } catch (maybeError) {
-            const { code, error, message } = toNotificationError(maybeError);
+            const { code, error, knockRequestId, message } = toNotificationError(maybeError);
             return this.createAndLogError({
               notificationError: {
                 code,
@@ -362,6 +373,7 @@ export class NotificationClient {
               logParams,
               metadata: {
                 error,
+                knockRequestId,
                 chunkNumber: recipientChunk.number,
                 totalChunks: chunks.length,
                 completedChunks: responses.length,
@@ -422,20 +434,22 @@ export class NotificationClient {
       }
 
       try {
-        await this.provider.workflows.cancel(workflowKey, {
-          cancellation_key: cancellationKey,
-          ...(recipients ? { recipients } : {}),
-        });
+        const { knockRequestId } = await withKnockRequestId(
+          this.provider.workflows.cancel(workflowKey, {
+            cancellation_key: cancellationKey,
+            ...(recipients ? { recipients } : {}),
+          }),
+        );
 
-        this.logger.info(`${logParams.traceName} response`, logParams);
+        this.logger.info(`${logParams.traceName} response`, { ...logParams, knockRequestId });
       } catch (maybeError) {
-        const { code, error, message } = toNotificationError(maybeError);
+        const { code, error, knockRequestId, message } = toNotificationError(maybeError);
         const result = this.createAndLogError({
           notificationError: { code, message },
           span,
           logFunction: this.logger.error,
           logParams,
-          metadata: { error },
+          metadata: { error, knockRequestId },
         });
         throw result.error;
       }
@@ -462,24 +476,27 @@ export class NotificationClient {
         existingTokenCount: existingTokens.length,
       });
 
-      const response = await this.provider.users.setChannelData(userId, channelId, {
-        data: { tokens: [...new Set([...existingTokens, token])] },
-      });
+      const { knockRequestId, response } = await withKnockRequestId(
+        this.provider.users.setChannelData(userId, channelId, {
+          data: { tokens: [...new Set([...existingTokens, token])] },
+        }),
+      );
 
       this.logger.info(`${logParams.traceName} response`, {
         ...logParams,
+        knockRequestId,
         // Don't log the actual response; push tokens are sensitive.
         response: { tokenCount: "tokens" in response.data ? response.data.tokens.length : 0 },
       });
 
       return success({ success: true });
     } catch (maybeError) {
-      const { code, error, message } = toNotificationError(maybeError);
+      const { code, error, knockRequestId, message } = toNotificationError(maybeError);
       return this.createAndLogError({
         notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
-        metadata: { error },
+        metadata: { error, knockRequestId },
       });
     }
   }
@@ -546,10 +563,13 @@ export class NotificationClient {
     try {
       this.logger.info(`${logParams.traceName} request`, logParams);
 
-      const response = await this.provider.tenants.set(workplaceId, toTenantSetRequest(body));
+      const { knockRequestId, response } = await withKnockRequestId(
+        this.provider.tenants.set(workplaceId, toTenantSetRequest(body)),
+      );
 
       this.logger.info(`${logParams.traceName} response`, {
         ...logParams,
+        knockRequestId,
         response: { workplaceId: response.id, name: response.name },
       });
 
@@ -557,12 +577,12 @@ export class NotificationClient {
         workplaceId: response.id,
       });
     } catch (maybeError) {
-      const { code, error, message } = toNotificationError(maybeError);
+      const { code, error, knockRequestId, message } = toNotificationError(maybeError);
       return this.createAndLogError({
         notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
-        metadata: { error },
+        metadata: { error, knockRequestId },
       });
     }
   }
@@ -582,21 +602,24 @@ export class NotificationClient {
       this.logger.info(`${logParams.traceName} request`, logParams);
 
       const userPreferences = toKnockUserPreferences(params);
-      const response = await this.provider.users.setPreferences(userId, "default", userPreferences);
+      const { knockRequestId, response } = await withKnockRequestId(
+        this.provider.users.setPreferences(userId, "default", userPreferences),
+      );
 
       this.logger.info(`${logParams.traceName} response`, {
         ...logParams,
+        knockRequestId,
         response: { userId, preferenceSet: response },
       });
 
       return success({ userId });
     } catch (maybeError) {
-      const { code, error, message } = toNotificationError(maybeError);
+      const { code, error, knockRequestId, message } = toNotificationError(maybeError);
       return this.createAndLogError({
         notificationError: { code, message },
         logFunction: this.logger.error,
         logParams,
-        metadata: { error },
+        metadata: { error, knockRequestId },
       });
     }
   }
@@ -780,16 +803,22 @@ export class NotificationClient {
     span?: Span | undefined;
     response: unknown;
     id: string;
+    knockRequestId?: string | undefined;
     logParams: LogParams;
   }): string {
-    const { span, response, id, logParams } = params;
+    const { span, response, id, knockRequestId, logParams } = params;
 
     span?.addTags({
       "response.id": id,
       success: true,
     });
 
-    this.logger.info(`${logParams.traceName} response`, { ...logParams, id, response });
+    this.logger.info(`${logParams.traceName} response`, {
+      ...logParams,
+      id,
+      knockRequestId,
+      response,
+    });
 
     return id;
   }

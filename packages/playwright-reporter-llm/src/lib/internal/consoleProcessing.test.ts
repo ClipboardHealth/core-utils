@@ -106,7 +106,7 @@ describe(buildConsoleEntryFromEvent, () => {
     const event = {
       type: "console",
       messageType: "error",
-      text: `\u001B[31mred error\u001B[39m`, // cspell:disable-line
+      text: `\u001B[31mred error\u001B[39m`,
     };
 
     const result = buildConsoleEntryFromEvent(event, undefined, 0);

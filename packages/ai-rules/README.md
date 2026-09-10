@@ -1,6 +1,6 @@
 # @clipboard-health/ai-rules
 
-Pre-built AI agent rules for consistent coding standards. Uses a retrieval-based approach: generates a compressed index in `AGENTS.md` pointing to copied `.rules/` files that agents read on demand, with `.agents/` linked to package-provided agent assets.
+Pre-built AI agent rules for consistent coding standards. Uses a retrieval-based approach: generates a compressed index in `AGENTS.md` pointing to copied `.rules/` files that agents read on demand.
 
 ## Table of contents
 
@@ -56,7 +56,7 @@ npm install --save-dev @clipboard-health/ai-rules
 5. Commit the generated files:
 
    ```bash
-   git add .rules/ .agents/ AGENTS.md CLAUDE.md
+   git add .rules/ AGENTS.md CLAUDE.md
    git commit -m "feat: add AI coding rules"
    ```
 
@@ -99,12 +99,14 @@ npm update @clipboard-health/ai-rules
 npm install
 
 # Review the changes
-git diff .rules/ .agents/ AGENTS.md
+git diff .rules/ AGENTS.md
 
 # Commit the updates
-git add .rules/ .agents/ AGENTS.md CLAUDE.md
+git add .rules/ AGENTS.md CLAUDE.md
 git commit -m "chore: update AI coding rules"
 ```
+
+Rules are occasionally split so each one carries a narrower retrieval trigger. If you pin individual rule ids with `--include` rather than taking a whole category, check the diff for new ids after upgrading: a stale `--include` keeps resolving, so you lose the split-out rules without a warning.
 
 ## Available Rules
 
@@ -127,16 +129,21 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 ### common
 
-| Rule ID                       | When to Read                                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                               |
-| `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/\* library          |
-| `common/featureFlags`         | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                          |
-| `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                                                         |
-| `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/\* packages or shared library modules within services (e.g., src/lib) |
-| `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                   |
-| `common/testing`              | Writing unit tests: conventions, naming, structure                                                                     |
-| `common/typeScript`           | Writing ANY TypeScript code                                                                                            |
+| Rule ID                       | When to Read                                                                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `common/aiRules`              | Editing Clipboard agent instructions: shared rules, repository overlays, or generated .rules, AGENTS.md, and CLAUDE.md files |
+| `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                                     |
+| `common/containerRegistry`    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                                 |
+| `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library                 |
+| `common/dateTime`             | Working with dates, times, timezones, or date comparisons                                                                    |
+| `common/errorHandling`        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                              |
+| `common/featureFlags`         | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                                |
+| `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                                                               |
+| `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib)        |
+| `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                         |
+| `common/rulesEngine`          | Writing or modifying @clipboard-health/rules-engine rule functions                                                           |
+| `common/testing`              | Writing unit tests: conventions, naming, structure                                                                           |
+| `common/typeScript`           | Writing ANY TypeScript code                                                                                                  |
 
 ### datamodeling
 
@@ -149,15 +156,17 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 ### frontend
 
-| Rule ID                    | When to Read                                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `frontend/architecture`    | Frontend architecture: technology stack, file organization, where business logic lives                       |
-| `frontend/customHooks`     | Creating React custom hooks: naming, shared state with constate                                              |
-| `frontend/dataFetching`    | Implementing data fetching and error handling: React Query, API calls, caching, parsedApi                    |
-| `frontend/e2eTesting`      | Writing E2E tests with Playwright                                                                            |
-| `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook |
-| `frontend/styling`         | Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS                                      |
-| `frontend/testing`         | Writing frontend tests: React Testing Library, component tests                                               |
+| Rule ID                    | When to Read                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `frontend/architecture`    | Frontend architecture: feature-based file organization, where business logic lives                                             |
+| `frontend/customHooks`     | Creating React custom hooks: naming, shared state with constate                                                                |
+| `frontend/dataFetching`    | Implementing data fetching, API response fixtures, and error handling: React Query, MSW, Playwright, caching, parsedApi        |
+| `frontend/designSystem`    | Implementing UI from the design system or Figma: prefer shared components, theme lookup, optional Code Connect                 |
+| `frontend/e2eTesting`      | Choosing and writing Playwright E2E tests for registered critical flows                                                        |
+| `frontend/reactComponents` | Building UI components: structure, composition, modals, bottom sheets, interactive elements, a11y, Storybook                   |
+| `frontend/renderScope`     | Adding or restructuring React state, context, hook returns, wall-clock values, hidden queries/subscriptions, or list filtering |
+| `frontend/styling`         | Styling components with MUI sx prop: theme tokens, spacing, no CSS/SCSS                                                        |
+| `frontend/testing`         | Writing frontend tests: React Testing Library, component tests                                                                 |
 
 <!-- END: Auto-generated by ./scripts/populateReadme.ts -->
 
@@ -187,10 +196,10 @@ v2 replaces the monolithic `AGENTS.md` with a retrieval-based approach. Rule fil
    npm install
    ```
 
-3. Add `.rules/` and `.agents/` to git and commit:
+3. Add `.rules/` to git and commit:
 
    ```bash
-   git add .rules/ .agents/ AGENTS.md CLAUDE.md
+   git add .rules/ AGENTS.md CLAUDE.md
    git commit -m "feat!: update ai-rules to v2 retrieval-based approach"
    ```
 

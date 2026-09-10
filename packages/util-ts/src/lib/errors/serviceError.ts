@@ -116,6 +116,8 @@ export class ServiceError extends Error {
    * @returns If the value is already a `ServiceError`, returns it unchanged. Otherwise, convert it
    *          to a `ServiceError`.
    */
+  public static fromUnknown<E extends ServiceError>(value: E): E;
+  public static fromUnknown(value: unknown): ServiceError;
   public static fromUnknown(value: unknown): ServiceError {
     if (value instanceof ServiceError) {
       return value;
@@ -150,7 +152,12 @@ export class ServiceError extends Error {
    * @param errors - Additional ServiceErrors
    * @returns New ServiceError containing all issues from input errors
    */
-  public static merge(error: ServiceError, ...errors: readonly ServiceError[]): ServiceError;
+  public static merge<E extends ServiceError>(error: E): E;
+  public static merge(
+    error: ServiceError,
+    additionalError: ServiceError,
+    ...errors: readonly ServiceError[]
+  ): ServiceError;
   public static merge(error: unknown, ...errors: readonly unknown[]): ServiceError;
   public static merge(error: Readonly<unknown>, ...errors: readonly unknown[]): ServiceError {
     const firstError = error instanceof ServiceError ? error : ServiceError.fromUnknown(error);

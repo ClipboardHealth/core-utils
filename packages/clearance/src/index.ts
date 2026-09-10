@@ -11,14 +11,26 @@ import { normalizeHost, normalizeRules, parseList } from "./hostRule.ts";
 export { resolveAllowlist, type ResolveAllowlistInput } from "./allowlist.ts";
 export {
   type ClearanceCheckInput,
+  type ClearanceCommand,
   type ClearanceListenerCheck,
   type ClearanceSpawner,
   ensureClearance,
   type EnsureClearanceInput,
   type EnsureClearanceResult,
   isClearanceListening,
+  parseClearanceCommand,
+  type ProcessKiller,
+  type ProcessKillInput,
+  restartClearance,
+  type RestartClearanceInput,
   spawnClearance,
   type SpawnClearanceInput,
+  statusClearance,
+  type StatusClearanceInput,
+  type StatusClearanceResult,
+  stopClearance,
+  type StopClearanceInput,
+  type StopClearanceResult,
 } from "./launcher.ts";
 export {
   resolveSafehouseCmuxIntegration,

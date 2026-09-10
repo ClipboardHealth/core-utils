@@ -95,10 +95,28 @@ pid at `…/clearance.pid`.
 CLEARANCE_ALLOW_HOSTS_FILES="$REPO/clearance-allow-hosts" clearance-ensure
 ```
 
-To stop or restart the managed proxy after editing your allow-host files:
+### Lifecycle subcommands
+
+`clearance-ensure` accepts an optional subcommand. With none, it defaults to
+`start` (the idempotent launch above). All subcommands discover the running
+proxy through the pidfile.
+
+<!-- markdownlint-disable MD060 -->
+
+| Command                    | Behavior                                                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `clearance-ensure`         | Default `start`: launch the proxy if nothing is already listening.                                   |
+| `clearance-ensure start`   | Same as the bare invocation.                                                                         |
+| `clearance-ensure stop`    | Signal the pidfile process to terminate, wait for the port to close, and remove the pidfile.         |
+| `clearance-ensure restart` | `stop` the existing proxy (if any), then `start` a fresh one. Use this to pick up edited host files. |
+| `clearance-ensure status`  | Report whether the proxy is listening and its pid. Exits non-zero when it is not running.            |
+
+<!-- markdownlint-enable MD060 -->
+
+To pick up edited allow-host files, restart in one step:
 
 ```bash
-kill "$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/clearance/clearance.pid")"
+CLEARANCE_ALLOW_HOSTS_FILES="$REPO/clearance-allow-hosts" clearance-ensure restart
 ```
 
 ## Safehouse integration (macOS)
@@ -126,24 +144,24 @@ SAFEHOUSE_CLEARANCE="$(npm root -g)/@clipboard-health/clearance/safehouse/safeho
   -- codex --dangerously-bypass-approvals-and-sandbox
 ```
 
-For day-to-day agent use, set `CLEARANCE_ALLOW_HOSTS_FILES` to point at
-your team's checked-in file (and optionally a personal file), then add
-shell aliases:
+For day-to-day agent use, configure your allow-host files and add shell
+aliases:
 
 ```bash
-SAFEHOUSE_CLEARANCE="$(npm root -g)/@clipboard-health/clearance/safehouse/safehouse-clearance"
-SAFEHOUSE_CLAUDE_PROXY="$(npm root -g)/@clipboard-health/clearance/safehouse/safehouse-claude-proxy"
+SAFEHOUSE="$(npm root -g)/@clipboard-health/clearance/safehouse"
 export CLEARANCE_ALLOW_HOSTS_FILES="$HOME/code/<your-repo>/clearance-allow-hosts:$HOME/.config/clearance/personal-allow-hosts"
 
-alias codex-proxy="$SAFEHOUSE_CLEARANCE codex --dangerously-bypass-approvals-and-sandbox"
-alias claude-proxy="$SAFEHOUSE_CLAUDE_PROXY"
+alias codex-proxy="$SAFEHOUSE/safehouse-clearance codex --dangerously-bypass-approvals-and-sandbox"
+alias claude-proxy="$SAFEHOUSE/safehouse-claude-proxy"
 ```
 
 `safehouse-claude-proxy` runs Claude through Safehouse with
 `--permission-mode auto`. When launched from a cmux terminal, it preserves
 cmux's Claude shim by forwarding the cmux session environment and granting
-read-only access to the cmux app/socket state. It also points the shim at the
-real Claude binary so the shim does not recurse through itself.
+read-only access to the cmux app/socket state and generated Codex hooks. The
+integration also grants cmux's existing Sentry cache write access so diagnostics
+cannot corrupt hook JSON output. It points the shim at the real Claude binary so
+the shim does not recurse through itself.
 
 The cmux environment pass-through is an explicit reviewed allowlist. If a cmux
 update adds new `CMUX_*` variables to its Claude wrapper contract,
@@ -155,7 +173,7 @@ credentials flag through the wrapper:
 
 ```bash
 aws sso login --profile <profile>
-AWS_PROFILE=<profile> "$SAFEHOUSE_CLEARANCE" \
+AWS_PROFILE=<profile> "$SAFEHOUSE/safehouse-clearance" \
   --enable=cloud-credentials --env-pass=AWS_PROFILE,AWS_REGION,AWS_SDK_LOAD_CONFIG,AWS_CONFIG_FILE,AWS_SHARED_CREDENTIALS_FILE,AWS_CA_BUNDLE \
   -- codex --dangerously-bypass-approvals-and-sandbox
 ```

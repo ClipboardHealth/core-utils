@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-process-exit, n/no-process-exit */
-import { access, chmod, cp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { FILES, type ProfileName, PROFILES } from "./constants";
@@ -17,9 +17,6 @@ interface ParsedArguments {
   extraIncludes: string[];
   excludes: string[];
 }
-
-type AgentDirectoryName = "skills" | "lib";
-type AgentDirectorySyncResult = "missing" | "linked" | "copied";
 
 async function sync() {
   try {
@@ -42,21 +39,8 @@ async function sync() {
     }
 
     const rulesOutput = path.join(PATHS.projectRoot, ".rules");
-    const agentsOutput = path.join(PATHS.projectRoot, ".agents");
-    const skillsOutput = path.join(agentsOutput, "skills");
-    const libraryOutput = path.join(agentsOutput, "lib");
-    await Promise.all([
-      rm(rulesOutput, { recursive: true, force: true }),
-      rm(skillsOutput, { recursive: true, force: true }),
-      rm(libraryOutput, { recursive: true, force: true }),
-    ]);
-    const [, skillsSyncResult, librarySyncResult] = await Promise.all([
-      copyRuleFiles(rules, rulesOutput),
-      syncAgentDirectory("skills", skillsOutput),
-      syncAgentDirectory("lib", libraryOutput),
-      copySetupScript(),
-      mergeSessionStartHook(),
-    ]);
+    await rm(rulesOutput, { recursive: true, force: true });
+    await copyRuleFiles(rules, rulesOutput);
 
     const agentsContent = generateAgentsIndex(rules);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
@@ -67,10 +51,7 @@ async function sync() {
     );
 
     await appendOverlay(PATHS.projectRoot);
-    await formatOutputFiles(PATHS.projectRoot, {
-      skillsCopied: skillsSyncResult === "copied",
-      libCopied: librarySyncResult === "copied",
-    });
+    await formatOutputFiles({ projectRoot: PATHS.projectRoot });
   } catch (error) {
     // Log error but exit gracefully to avoid breaking installs
     console.error(`⚠️ @clipboard-health/ai-rules sync failed: ${toErrorMessage(error)}`);
@@ -135,144 +116,6 @@ async function copyRuleFiles(rules: RuleMetadata[], rulesOutput: string): Promis
       await cp(path.join(PATHS.packageRoot, "rules", rule.relativePath), destination);
     }),
   );
-}
-
-async function syncAgentDirectory(
-  directoryName: AgentDirectoryName,
-  destination: string,
-): Promise<AgentDirectorySyncResult> {
-  const source = await resolveAgentDirectorySource(directoryName);
-
-  if (!source) {
-    return "missing";
-  }
-
-  await mkdir(path.dirname(destination), { recursive: true });
-
-  const relativeSource = path.relative(path.dirname(destination), source);
-  try {
-    await symlink(relativeSource, destination, "dir");
-    console.log(`📋 Linked ${directoryName} to .agents/${directoryName}/`);
-    return "linked";
-  } catch (error) {
-    console.warn(
-      `⚠️ Could not symlink ${directoryName}; copying instead: ${toErrorMessage(error)}`,
-    );
-    await cp(source, destination, { recursive: true });
-    console.log(`📋 Synced ${directoryName} to .agents/${directoryName}/`);
-    return "copied";
-  }
-}
-
-async function resolveAgentDirectorySource(
-  directoryName: AgentDirectoryName,
-): Promise<string | undefined> {
-  const packageSource = path.join(PATHS.packageRoot, directoryName);
-  const sourceTreeSource = path.join(PATHS.projectRoot, "plugins", "core", directoryName);
-
-  // This repo runs the built sync script from dist/, but checked-in links should
-  // target source assets rather than ignored build output.
-  if (isSourceBuildPackage() && (await fileExists(sourceTreeSource))) {
-    return sourceTreeSource;
-  }
-
-  if (await fileExists(packageSource)) {
-    return packageSource;
-  }
-
-  return undefined;
-}
-
-function isSourceBuildPackage(): boolean {
-  return path
-    .normalize(PATHS.packageRoot)
-    .endsWith(path.normalize(path.join("dist", "packages", "ai-rules")));
-}
-
-async function copySetupScript(): Promise<void> {
-  const source = path.join(PATHS.packageRoot, "scripts", "setup.sh");
-  const claudeDirectory = path.join(PATHS.projectRoot, ".claude");
-  const destination = path.join(claudeDirectory, "setup.sh");
-
-  await mkdir(claudeDirectory, { recursive: true });
-  await cp(source, destination);
-  await chmod(destination, 0o755);
-
-  console.log(`📋 Synced setup.sh to .claude/setup.sh`);
-}
-
-async function mergeSessionStartHook(): Promise<void> {
-  const claudeDirectory = path.join(PATHS.projectRoot, ".claude");
-  const settingsPath = path.join(claudeDirectory, "settings.json");
-
-  await mkdir(claudeDirectory, { recursive: true });
-
-  const expectedCommand = '"$CLAUDE_PROJECT_DIR"/.claude/setup.sh';
-  const setupHook = {
-    matcher: "startup",
-    hooks: [{ type: "command" as const, command: expectedCommand }],
-  };
-
-  let settings: Record<string, unknown>;
-  try {
-    settings = JSON.parse(await readFile(settingsPath, "utf8")) as Record<string, unknown>;
-  } catch {
-    settings = {};
-  }
-
-  const hooks = (settings["hooks"] ?? {}) as Record<string, unknown>;
-  const sessionStart = (hooks["SessionStart"] ?? []) as Array<Record<string, unknown>>;
-
-  // Every command string this package has ever shipped, past and present.
-  const knownCommands = new Set([expectedCommand, '"$CLAUDE_PROJECT_DIR"/scripts/setup.sh']);
-
-  function isKnownCommand(h: Record<string, unknown>): boolean {
-    return typeof h["command"] === "string" && knownCommands.has(h["command"]);
-  }
-
-  // Check current state: do we need to add, update, or skip?
-  let hasStale = false;
-  let currentCount = 0;
-  for (const entry of sessionStart) {
-    const entryHooks = (entry["hooks"] ?? []) as Array<Record<string, unknown>>;
-    for (const h of entryHooks) {
-      if (typeof h["command"] !== "string" || !knownCommands.has(h["command"])) {
-        continue;
-      }
-
-      if (h["command"] === expectedCommand) {
-        currentCount += 1;
-      } else {
-        hasStale = true;
-      }
-    }
-  }
-
-  // Already correct: one current hook, no stale ones to clean up.
-  if (!hasStale && currentCount === 1) {
-    return;
-  }
-
-  // Remove only our specific hook commands from each entry, preserving unrelated
-  // commands that may share the same entry. Drop entries left with no hooks.
-  const cleaned = sessionStart.flatMap((entry) => {
-    const entryHooks = entry["hooks"] as Array<Record<string, unknown>> | undefined;
-    if (entryHooks?.some((h) => isKnownCommand(h)) !== true) {
-      return [entry];
-    }
-
-    const remaining = entryHooks.filter((h) => !isKnownCommand(h));
-    return remaining.length > 0 ? [{ ...entry, hooks: remaining }] : [];
-  });
-
-  const updatedSessionStart = [...cleaned, setupHook];
-  const updatedHooks = { ...hooks, SessionStart: updatedSessionStart };
-  const updatedSettings = { ...settings, hooks: updatedHooks };
-
-  await writeFile(settingsPath, `${JSON.stringify(updatedSettings, undefined, 2)}\n`, "utf8");
-
-  const action = hasStale || currentCount > 1 ? "Updated" : "Added";
-  console.log(`📋 ${action} SessionStart hook in .claude/settings.json`);
 }
 
 async function appendOverlay(projectRoot: string): Promise<void> {
@@ -348,12 +191,12 @@ async function detectFormatter(projectRoot: string): Promise<"oxfmt" | "prettier
   return undefined;
 }
 
-interface FormatOptions {
-  skillsCopied: boolean;
-  libCopied: boolean;
+interface FormatOutputFilesArguments {
+  projectRoot: string;
 }
 
-async function formatOutputFiles(projectRoot: string, options: FormatOptions): Promise<void> {
+async function formatOutputFiles(arguments_: FormatOutputFilesArguments): Promise<void> {
+  const { projectRoot } = arguments_;
   const formatter = await detectFormatter(projectRoot);
 
   if (!formatter) {
@@ -362,14 +205,6 @@ async function formatOutputFiles(projectRoot: string, options: FormatOptions): P
   }
 
   const filesToFormat = [path.join(projectRoot, FILES.agents), path.join(projectRoot, ".rules")];
-
-  if (options.skillsCopied) {
-    filesToFormat.push(path.join(projectRoot, ".agents", "skills"));
-  }
-
-  if (options.libCopied) {
-    filesToFormat.push(path.join(projectRoot, ".agents", "lib"));
-  }
 
   const command =
     formatter === "oxfmt"

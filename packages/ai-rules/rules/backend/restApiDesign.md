@@ -55,6 +55,11 @@ GET /shifts?filter[verified]=true&sort=startDate,-urgency&page[cursor]=abc&page[
 
 - Add contracts to `contract-<microservice-name>` package
 - Use `ts-rest` with composable Zod schemas (enforced by `enforce-ts-rest-in-controllers`)
+- Own the shape of your inputs and outputs — do not depend on other contract packages (`contract-*`, `api-contract-*`, `flag-*`); `@clipboard-health/contract-core` is the only shared contract dependency
+- Contracts validate the shape of the request and response, not the business logic
+- Duplicate schemas from other contracts locally when needed — type-checking and response validation catch drift
+- Do not re-export or pass through another contract's schemas or endpoints
+- Do not directly test contracts; use a service test to verify the contract is working as expected
 
 ### Schema rules
 
@@ -62,6 +67,7 @@ Use helpers from `@clipboard-health/contract-core` instead of raw Zod methods in
 
 - Use `dateTimeSchema()` for date fields — not `z.coerce.date()` (too permissive), `z.string().datetime()` (gives string, not Date), or `z.date()` (won't parse JSON strings)
 - Use `requiredEnumWithFallback`/`optionalEnumWithFallback` for enums — not bare `z.enum()` (breaks old mobile clients when new values are added) or `z.enum().catch()` (doesn't compose with `.optional()`). These helpers automatically append `ENUM_FALLBACK` (`"UNRECOGNIZED_"`) to the output type — do not pass a fallback value. Pre-declared array variables must use `as const` to preserve literal types (widened `string[]` is rejected at compile time)
+- Use `discriminatedUnionWithFallback(discriminator, variants)` for **response** discriminated unions whose variant set can grow — not `z.discriminatedUnion()` (a new variant breaks old mobile clients) or a hand-rolled `z.union()` with an `ENUM_FALLBACK` branch (a known variant with a bad field then reports an opaque `invalid_union` instead of naming the field). It takes the same arguments as `z.discriminatedUnion` and returns one schema that collapses an unknown discriminator to `ENUM_FALLBACK`, strips unknown top-level keys, and still rejects a known variant with a missing field or an invalid value. **Requests keep using `z.discriminatedUnion()`** over the same variants: an unknown variant from a client is an error, not something to tolerate
 - Do not use `.default()` in contracts — client and server can drift on defaults. Set defaults in the service layer.
 - Name schemas with a `Schema` suffix: `ShiftAttributeSchema`, not `shiftAttribute`
 - Export at the DTO boundary (request/response schemas), not every intermediate schema

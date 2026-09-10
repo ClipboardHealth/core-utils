@@ -150,7 +150,33 @@
                 "status": 200,
                 "offsetMs": 80,
                 "redirectFromId": "n0",
-                "responseBodyRef": "b0"
+                "responseBodyRef": "b0",
+                "clientLifecycle": {
+                  "method": "GET",
+                  "origin": "https://app.example.com",
+                  "pathTemplate": "/final",
+                  "requestStartedAt": "2026-02-25T19:00:00.080Z",
+                  "requestStartedMonotonicMs": 5080,
+                  "responseHeadersAt": "2026-02-25T19:00:00.090Z",
+                  "responseHeadersMonotonicMs": 5090,
+                  "completedAt": "2026-02-25T19:00:00.095Z",
+                  "completedMonotonicMs": 5095,
+                  "requestStarted": true,
+                  "responseHeadersReceived": true,
+                  "loadingFinished": true,
+                  "loadingFailed": false,
+                  "pendingAtTimeout": false,
+                  "cdpRequestId": "1234.56",
+                  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+                  "spanId": "00f067aa0ba902b7",
+                  "protocol": "h2",
+                  "connectionId": 17,
+                  "connectionReused": true,
+                  "remoteIPAddress": "10.0.0.12",
+                  "remotePort": 443,
+                  "completedEncodedDataLength": 677,
+                  "classification": "completed"
+                }
               }
             ],
             "groups": {

@@ -1,0 +1,22 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json", "test/fixtures/**"],
+  "parserOptions": {
+    "project": "packages/playwright-flake-linter/tsconfig.lint.json"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "security/detect-non-literal-fs-filename": "off",
+        "security/detect-non-literal-regexp": "off",
+        "unicorn/filename-case": ["error", { "case": "camelCase" }]
+      }
+    }
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

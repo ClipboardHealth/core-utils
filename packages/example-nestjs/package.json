@@ -5,19 +5,19 @@
   "dependencies": {
     "@clipboard-health/contract-core": "*",
     "@clipboard-health/json-api-nestjs": "*",
-    "@nestjs/common": "11.1.26",
-    "@nestjs/core": "11.1.26",
-    "@nestjs/platform-express": "11.1.26",
-    "@nx/webpack": "22.7.2",
+    "@nestjs/common": "11.2.3",
+    "@nestjs/core": "11.2.3",
+    "@nestjs/platform-express": "11.2.3",
+    "@nx/webpack": "22.7.8",
     "@ts-rest/core": "3.52.1",
     "@ts-rest/nest": "3.52.1",
-    "qs": "6.15.2",
+    "qs": "6.16.0",
     "reflect-metadata": "0.2.2",
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@nestjs/testing": "11.1.26",
-    "@types/supertest": "6.0.3",
+    "@nestjs/testing": "11.2.3",
+    "@types/supertest": "7.2.1",
     "supertest": "7.2.2",
     "webpack-cli": "6.0.1"
   }

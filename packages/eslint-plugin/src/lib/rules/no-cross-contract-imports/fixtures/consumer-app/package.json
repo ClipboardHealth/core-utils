@@ -1,0 +1,5 @@
+{
+  "name": "@clipboard-health/fixture-consumer-app",
+  "private": true,
+  "description": "Test fixture: a regular app package (does not match the contract package name pattern)."
+}

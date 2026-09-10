@@ -1,0 +1,2 @@
+// flake-lint-allow fixed-sleep -- This fixture verifies elapsed product time.
+await page.waitForTimeout(2_000);

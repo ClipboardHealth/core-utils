@@ -34,14 +34,12 @@ function checkEnumDeclarations(output: string, issues: string[]): void {
   }
 }
 
-/* cspell:disable -- regex word boundaries */
 const PROHIBITED_NAMING_PATTERNS = [
   { pattern: /\bagent(?!s?\.)(?=[A-Z]|\b)/i, term: "agent" },
   { pattern: /\bhcp\b/i, term: "hcp" },
   { pattern: /\bfacility(?=[A-Z]|\b)/i, term: "facility" },
   { pattern: /\bhcf\b/i, term: "hcf" },
 ] as const;
-/* cspell:enable */
 
 function checkNamingViolations(codeLines: string[], issues: string[]): void {
   for (const { pattern, term } of PROHIBITED_NAMING_PATTERNS) {

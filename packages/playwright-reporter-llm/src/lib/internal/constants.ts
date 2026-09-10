@@ -13,11 +13,12 @@ export const DUPLICATE_SAMPLE_STRIDE = 10;
 export const HEADER_VALUE_CAP = 256;
 export const TRUNCATION_MARKER = "[truncated]";
 export const SCREENSHOT_BASE64_CAP = 524_288;
-
 export const ABORTED_FAILURE_PATTERN = /^net::ERR_ABORTED\b/i;
 
 export const REQUEST_HEADER_ALLOWLIST = new Set([
   "content-type",
+  "x-datadog-parent-id",
+  "x-datadog-trace-id",
   "x-request-id",
   "x-correlation-id",
   "traceparent",

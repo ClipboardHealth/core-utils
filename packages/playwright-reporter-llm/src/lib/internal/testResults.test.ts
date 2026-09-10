@@ -96,18 +96,23 @@ describe(statusIndicator, () => {
 });
 
 describe(collectStdio, () => {
-  it("concatenates string and buffer chunks with ANSI stripping and capping", () => {
+  it("concatenates live and serialized chunks", () => {
     const result = {
-      stdout: ["hello ", Buffer.from("world")],
+      stdout: [
+        "live ",
+        Buffer.from("buffer "),
+        { text: "serialized " },
+        { buffer: Buffer.from("buffer").toString("base64") },
+      ],
       stderr: [],
     } as unknown as TestResult;
 
-    expect(collectStdio(result, "stdout")).toBe("hello world");
+    expect(collectStdio(result, "stdout")).toBe("live buffer serialized buffer");
   });
 
   it("caps at 4KB", () => {
     const result = {
-      stdout: ["x".repeat(5000)],
+      stdout: [{ text: "x".repeat(5000) }],
       stderr: [],
     } as unknown as TestResult;
 

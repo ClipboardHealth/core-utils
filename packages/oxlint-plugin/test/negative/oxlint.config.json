@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": [
+    {
+      "name": "clipboard",
+      "specifier": "../../../../dist/packages/oxlint-plugin"
+    }
+  ],
+  "overrides": [
+    {
+      "files": ["contract-package/missing-handler.controller.ts"],
+      "rules": { "clipboard/enforce-ts-rest-in-controllers": "error" }
+    },
+    {
+      "files": ["contract-package/cross-import.ts"],
+      "rules": { "clipboard/no-cross-contract-imports": "error" }
+    },
+    {
+      "files": ["contract-package/testUtils/mocks.ts"],
+      "rules": { "clipboard/require-contract-fixture-construction": "error" }
+    },
+    {
+      "files": ["contract-package/unparsed-response.fixture.ts"],
+      "rules": { "clipboard/require-contract-response-parse": "error" }
+    },
+    {
+      "files": ["contract-package/direct-http.module.ts"],
+      "rules": { "clipboard/require-http-module-factory": "error" }
+    },
+    {
+      "files": ["contract-package/unvalidated-upsert.ts"],
+      "rules": { "clipboard/require-run-validators-with-upsert": "error" }
+    },
+    {
+      "files": ["contract-package/missing-zod.contract.ts"],
+      "rules": { "clipboard/require-zod-import-in-contracts": "error" }
+    }
+  ]
+}

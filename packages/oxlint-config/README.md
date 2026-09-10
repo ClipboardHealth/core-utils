@@ -16,6 +16,11 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 npm install @clipboard-health/oxlint-config
 ```
 
+The config package includes `@clipboard-health/oxlint-plugin` for presets that use Clipboard Health
+custom rules.
+
+Repositories using the `frontend` preset must also install `oxlint-plugin-react-doctor >= 0.9.12`.
+
 Requires `oxlint >= 1.68.0`: the config references rules that older oxlint versions do not register, which fails config parsing outright.
 
 ## Usage
@@ -27,7 +32,13 @@ Use the package's TypeScript helper when a repo needs additive composition. Oxli
 Create an `oxlint.config.ts` in your repo root:
 
 ```ts
-import { base, createOxlintConfig, vitest } from "@clipboard-health/oxlint-config";
+import {
+  base,
+  createOxlintConfig,
+  customRules,
+  typeAware,
+  vitest,
+} from "@clipboard-health/oxlint-config";
 import { defineConfig } from "oxlint";
 
 export default defineConfig(
@@ -58,7 +69,7 @@ export default defineConfig(
         },
       },
     },
-    presets: [base, vitest],
+    presets: [base, customRules, typeAware, vitest],
   }),
 );
 ```
@@ -66,8 +77,12 @@ export default defineConfig(
 Available presets:
 
 - `base`
+- `contractFixtures`
+- `customRules`
+- `frontend`
 - `react`
 - `jest`
+- `typeAware`
 - `vitest`
 
 Merge behavior:
@@ -75,6 +90,30 @@ Merge behavior:
 - `plugins`, `jsPlugins`, `overrides`, and `ignorePatterns` append in order
 - `rules`, `settings`, `options`, `categories`, `env`, and `globals` merge left-to-right
 - `localConfig` always wins over preset values when keys conflict
+
+For React applications, compose the standalone `frontend` policy with the repository's test runner:
+
+```ts
+import { createOxlintConfig, frontend, typeAware, vitest } from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+export default defineConfig(
+  createOxlintConfig({
+    localConfig: {
+      ignorePatterns: ["coverage/"],
+    },
+    presets: [frontend, typeAware, vitest],
+  }),
+);
+```
+
+Keep repository architecture rules, import restrictions, and additional JavaScript plugins in
+`localConfig`.
+
+`base` is the organization-wide general JavaScript and TypeScript policy. `frontend` is the
+standalone frontend application policy, including React, accessibility, and browser-facing
+JavaScript rules. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and `vitest`
+adds the complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
 
 ### JSON config
 
@@ -150,7 +189,13 @@ The package includes:
 - **`base.json`**: the backwards-compatible JSON preset for simple `extends` usage
 - **`vitest.json`**: extends `base.json` with the vitest plugin and rules for JSON `extends` usage
 - **`base` preset**: shared plugins, rules, and overrides exported for TypeScript composition
+- **`frontend` preset**: shared frontend JavaScript, React Doctor, React, and JSX accessibility policy
+- **`typeAware` preset**: rules that require Oxlint's type-aware execution mode
 - **`react`, `jest`, `vitest` presets**: additive plugin presets for common repo types
+- **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
+  fixtures are parsed by producer-owned contract response schemas
+- **`customRules` preset**: registers the ESLint-independent Clipboard plugin and reproduces the
+  shared controller, module, contract, and cross-contract-import enforcement scopes
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
 ## Intentionally disabled rules

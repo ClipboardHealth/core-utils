@@ -1,0 +1,7 @@
+await page.waitForResponse(
+  (response) =>
+    response.request().method() === "POST" &&
+    response.url().includes("/visits/123") &&
+    response.request().postDataJSON().data.type === "visit" &&
+    response.ok(),
+);

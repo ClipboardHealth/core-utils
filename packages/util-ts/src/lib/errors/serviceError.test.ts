@@ -4,6 +4,8 @@ import { ZodError } from "zod";
 
 import { ERROR_CODES, ServiceError, type ServiceErrorParams } from "./serviceError";
 
+class TestServiceError extends ServiceError {}
+
 describe(ServiceError, () => {
   describe("fromZodLike", () => {
     it("converts ZodLike to ServiceError", () => {
@@ -95,6 +97,15 @@ describe(ServiceError, () => {
 
       expect(actual).toBe(input);
       expect(actual.status).toBe(404);
+    });
+
+    it("preserves the type of an existing ServiceError subtype", () => {
+      const input = new TestServiceError("test error");
+
+      const actual = ServiceError.fromUnknown(input);
+
+      expectTypeOf(actual).toEqualTypeOf<TestServiceError>();
+      expect(actual).toBe(input);
     });
   });
 
@@ -655,13 +666,14 @@ describe(ServiceError, () => {
   });
 
   describe("merge", () => {
-    it("returns same error when merging single error", () => {
-      const error = new ServiceError({
+    it("preserves the error subtype when merging a single error", () => {
+      const error = new TestServiceError({
         issues: [{ code: ERROR_CODES.notFound, message: "Not found" }],
       });
 
       const result = ServiceError.merge(error);
 
+      expectTypeOf(result).toEqualTypeOf<TestServiceError>();
       expect(result).toBe(error);
     });
 
