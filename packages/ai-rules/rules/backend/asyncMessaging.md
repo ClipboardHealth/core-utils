@@ -53,12 +53,12 @@ If a design depends on strict message ordering, consult #eng-staff-plus before p
 
 Choose the simplest strategy that protects every write and side effect against duplicate delivery, concurrent execution, and replay after completion.
 
-| Handler write shape                                                             | Strategy                                                                                                                                       |
-| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Recompute from current DB state and apply absolute `$set`, or rebuild/reconcile | Convergent database writes need no message ledger. Hold an entity lock across the read and write, or reject stale writes with a version check. |
-| Delta / counter (`$inc`, array append)                                          | Deduplicate by producer message identity; commit the dedupe record and DB mutation atomically.                                                 |
-| External side effect (email, webhook)                                           | Use an idempotent operation or durable deduplication, even when the handler also performs convergent database writes.                          |
-| Enqueue a downstream job                                                        | Use the backend's [job uniqueness](#job-uniqueness) option to coalesce outstanding work; make the downstream effects replay-safe.              |
+| Handler write shape                                                             | Strategy                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Recompute from current DB state and apply absolute `$set`, or rebuild/reconcile | Convergent database writes need no message ledger. Hold an entity lock across the read and write, or reject stale writes with a version check.                                                                                 |
+| Delta / counter (`$inc`, array append)                                          | Deduplicate by producer message identity; commit the dedupe record and DB mutation atomically.                                                                                                                                 |
+| External side effect (email, webhook)                                           | Use receiver/provider-enforced idempotency with a stable key derived from message and effect identity. If unsupported, document the trade-off between duplicate effects on retry and lost effects when retries are suppressed. |
+| Enqueue a downstream job                                                        | Use the backend's [job uniqueness](#job-uniqueness) option to coalesce outstanding work; make the downstream effects replay-safe.                                                                                              |
 
 **Dedupe keys:** Use `@clipboard-health/message-consumer`'s `idempotencyKey({ id, source })` to distinguish replay from a new event. A business key like `(shiftId, type)` legitimately repeats (assign → unassign → reassign), so deduplicating by it drops valid events.
 
@@ -69,4 +69,4 @@ Use this to coalesce interchangeable work; for distinct operations, include the 
 - **Mongo:** A string `unique` key in `@clipboard-health/mongo-jobs`, such as `shift-fill-submission:<shiftId>`, prevents another job with that key from being enqueued while the first is queued or running.
 - **Postgres:** `@clipboard-health/background-jobs-postgres`'s `idempotencyKey` deduplicates queued, retrying, and running jobs when the queue's actual policy is `exclusive`. The key does not deduplicate on `standard` queues, including existing queues created with that policy.
 
-Both keys can be reused after completion, so a later replay can enqueue again. Protect completed side effects with an idempotent operation or durable deduplication.
+Both keys can be reused after completion, so a later replay can enqueue again. Apply the table's replay strategy to each downstream effect.
