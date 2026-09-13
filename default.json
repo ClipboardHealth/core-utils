@@ -20,11 +20,25 @@
       "token": "{{ secrets.COM_GITHUB_TOKEN }}"
     }
   ],
+  "logLevelRemap": [
+    {
+      "description": "Demote the timestamp-optional notice from WARN to INFO. Mend renders every WARN in a red 'Repository problems' banner on the dependency dashboard, and this one fires on every run for any repo using a registry that does not publish release timestamps (public.ecr.aws, private ECR, GHCR, Quay) -- which is most of ours. It reports expected behaviour, not a failure: the update was raised rather than frozen. Left at WARN it is a permanent false alarm that trains engineers to ignore the banner.",
+      "matchMessage": "/Some .+ did not have a releaseTimestamp, but as we're running with minimumReleaseAgeBehaviour=timestamp-optional, proceeding/",
+      "newLogLevel": "info"
+    },
+    {
+      "description": "Demote the npm --before fallback notice from WARN to INFO, for the same banner reason. Setting minimumReleaseAge makes Renovate pass --before to npm during lock file generation; every lockfile we already have contains packages published inside the last 7 days, so npm returns ETARGET and Renovate retries without the flag. That is handled and non-fatal -- the lockfile is still written -- and it self-heals once lockFileMaintenance regenerates the file. Without this, every npm repo shows a red banner for the first week. The same text is also pushed to artifactNotices, so it still appears in the PR body where it is actually actionable.",
+      "matchMessage": "/npm `--before` could not be enforced because existing locked packages were published after the/",
+      "newLogLevel": "info"
+    }
+  ],
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true,
     "automergeType": "branch"
   },
+  "minimumReleaseAge": "7 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
   "npmToken": "{{ secrets.NPM_TOKEN }}",
   "packageRules": [
     {
@@ -81,6 +95,34 @@
       "matchUpdateTypes": ["security"],
       "commitMessagePrefix": "fix(deps): ",
       "commitMessageTopic": "{{depName}}"
+    },
+    {
+      "description": "Re-assert 7 days for npm. config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule pins npm to 3 days; preset rules resolve before ours and override the top-level minimumReleaseAge, so npm needs this to reach 7 days.",
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Do not require Minimum Release Age for update types Renovate cannot age. Renovate does not wire a release timestamp into these, so under the default minimumReleaseAgeBehaviour=timestamp-required they would otherwise be held back indefinitely.",
+      "matchUpdateTypes": [
+        "bump",
+        "lockFileMaintenance",
+        "lockfileUpdate",
+        "pin",
+        "replacement",
+        "rollback"
+      ],
+      "minimumReleaseAge": null,
+      "prBodyNotes": [
+        "⚠️ Renovate cannot enforce Minimum Release Age for this update type, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
+      ]
+    },
+    {
+      "description": "Do not require Minimum Release Age for digest updates. Renovate ages a digest against its matched version's timestamp, which is unavailable for registries that publish none (GHCR, Quay, ECR) and for unversioned refs such as `latest` or a branch-pinned GitHub Action, where no version exists to match. Left gated, those updates are held indefinitely. Deliberately not scoped to a datasource: the unversioned-ref case applies to github-tags too, and config:best-practices pins GitHub Action digests via helpers:pinGitHubActionDigests.",
+      "matchUpdateTypes": ["digest", "pinDigest"],
+      "minimumReleaseAge": null,
+      "prBodyNotes": [
+        "⚠️ Digest updates are not age-checked, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
+      ]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
