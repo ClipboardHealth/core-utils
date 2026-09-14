@@ -75,6 +75,9 @@
     "@anthropic-ai/claude-agent-sdk": {
       "zod": "3.25.76"
     },
+    "@nx/vitest": {
+      "vitest": "$vitest"
+    },
     "@swc/core": "$@swc/core",
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0"
