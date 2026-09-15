@@ -151,7 +151,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | -------------------------------------- | ------------------------------------------------------------------------------ |
 | `datamodeling/analytics`               | Querying analytics data: dbt-mcp, Snowflake, source columns, output formatting |
 | `datamodeling/castingDbtStagingModels` | Casting data types in dbt staging models                                       |
-| `datamodeling/dbtModelDevelopment`     | Developing dbt models: naming, structure, testing                              |
+| `datamodeling/dbtModelDevelopment`     | Developing dbt models or diagnosing schema and ingestion failures              |
 | `datamodeling/dbtYamlDocumentation`    | Writing dbt YAML documentation and schema files                                |
 
 ### frontend

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { isNil, isRecord, toErrorMessage as getErrorMessage } from "@clipboard-health/util-ts";
 
 import { RetryError, type RetrySuccess, runWithRetry, type RunWithRetryParams } from "./retry";
@@ -55,6 +57,20 @@ export interface MailpitPollingDiagnostics {
   transientRequestErrorCount: number;
   transientRequestErrorStatuses: string[];
   newestCandidateTimestamp: string | undefined;
+  cachedExtractionMissCount: number;
+  transientSearchErrorCount: number;
+  transientMessageFetchErrorCount: number;
+  extractionMissSamples: Array<{
+    messageIdHash: string;
+    contentChannel: "text" | "html" | "both" | "none";
+    contentSizeBucket: "empty" | "1-256" | "257-4096" | "4097+";
+    otpMissShape:
+      | "empty-content"
+      | "no-eight-digit-sequence"
+      | "eight-digits-with-unsupported-separator"
+      | "other";
+    candidateAgeAtFetchBucket: "unavailable" | "future" | "under-5s" | "5-30s" | "30s+";
+  }>;
 }
 
 export interface FetchMailpitValueResult {
@@ -108,6 +124,10 @@ interface MailpitPollingSnapshot {
   transientRequestErrorCount: number;
   transientRequestErrorStatuses: Set<string>;
   newestCandidateTimestampMs: number | undefined;
+  cachedExtractionMissCount: number;
+  transientSearchErrorCount: number;
+  transientMessageFetchErrorCount: number;
+  extractionMissSamples: MailpitPollingDiagnostics["extractionMissSamples"];
 }
 
 export class MailpitRequestError extends Error {
@@ -199,7 +219,7 @@ export async function fetchMailpitValue(
           throw error;
         }
 
-        recordTransientRequestError({ error, pollingSnapshot });
+        recordTransientRequestError({ error, pollingSnapshot, phase: "search" });
         throw createMailpitValueNotFoundError({
           nowMs: nowImplementation(),
           pollingSnapshot,
@@ -228,6 +248,9 @@ export async function fetchMailpitValue(
       for (const message of candidates) {
         if (valuesByMessageId.has(message.ID)) {
           const cachedValue = valuesByMessageId.get(message.ID);
+          if (cachedValue === undefined) {
+            pollingSnapshot.cachedExtractionMissCount += 1;
+          }
 
           if (cachedValue !== undefined && !excludedValues.has(cachedValue)) {
             return createFetchMailpitValueResult({
@@ -251,6 +274,12 @@ export async function fetchMailpitValue(
 
           if (value === undefined) {
             pollingSnapshot.extractionMissCount += 1;
+            recordExtractionMiss({
+              message: fullMessage,
+              messageSummary: message,
+              pollingSnapshot,
+              nowMs: nowImplementation(),
+            });
           } else if (excludedValues.has(value)) {
             pollingSnapshot.excludedValueCount += 1;
           } else {
@@ -261,7 +290,7 @@ export async function fetchMailpitValue(
             throw error;
           }
 
-          recordTransientRequestError({ error, pollingSnapshot });
+          recordTransientRequestError({ error, pollingSnapshot, phase: "message-fetch" });
         }
       }
 
@@ -516,6 +545,10 @@ function createMailpitPollingSnapshot(): MailpitPollingSnapshot {
     transientRequestErrorCount: 0,
     transientRequestErrorStatuses: new Set(),
     newestCandidateTimestampMs: undefined,
+    cachedExtractionMissCount: 0,
+    transientSearchErrorCount: 0,
+    transientMessageFetchErrorCount: 0,
+    extractionMissSamples: [],
   };
 }
 
@@ -546,6 +579,10 @@ function createFetchMailpitValueResult(params: {
         newestCandidateTimestampMs === undefined
           ? undefined
           : new Date(newestCandidateTimestampMs).toISOString(),
+      cachedExtractionMissCount: params.pollingSnapshot.cachedExtractionMissCount,
+      transientSearchErrorCount: params.pollingSnapshot.transientSearchErrorCount,
+      transientMessageFetchErrorCount: params.pollingSnapshot.transientMessageFetchErrorCount,
+      extractionMissSamples: params.pollingSnapshot.extractionMissSamples,
     },
   };
 }
@@ -588,7 +625,11 @@ function formatMailpitPollingSnapshot(params: {
     `excludedValueCount=${params.pollingSnapshot.excludedValueCount}, ` +
     `transientRequestErrorCount=${params.pollingSnapshot.transientRequestErrorCount}, ` +
     `transientRequestErrorStatuses=[${transientRequestErrorStatuses}], ` +
-    `newestCandidateAgeMs=${newestCandidateAgeMs}`
+    `newestCandidateAgeMs=${newestCandidateAgeMs}, ` +
+    `cachedExtractionMissCount=${params.pollingSnapshot.cachedExtractionMissCount}, ` +
+    `transientSearchErrorCount=${params.pollingSnapshot.transientSearchErrorCount}, ` +
+    `transientMessageFetchErrorCount=${params.pollingSnapshot.transientMessageFetchErrorCount}, ` +
+    `extractionMissSamples=${JSON.stringify(params.pollingSnapshot.extractionMissSamples)}`
   );
 }
 
@@ -624,12 +665,87 @@ function recordNewestCandidateTimestamp(params: {
 function recordTransientRequestError(params: {
   error: unknown;
   pollingSnapshot: MailpitPollingSnapshot;
+  phase: "search" | "message-fetch";
 }): void {
   params.pollingSnapshot.transientRequestErrorCount += 1;
+  if (params.phase === "search") {
+    params.pollingSnapshot.transientSearchErrorCount += 1;
+  } else {
+    params.pollingSnapshot.transientMessageFetchErrorCount += 1;
+  }
 
   if (params.error instanceof MailpitRequestError) {
     params.pollingSnapshot.transientRequestErrorStatuses.add(
       params.error.status?.toString() ?? "unavailable",
     );
   }
+}
+
+function recordExtractionMiss(params: {
+  message: MailpitMessage;
+  messageSummary: MailpitMessageSummary;
+  pollingSnapshot: MailpitPollingSnapshot;
+  nowMs: number;
+}): void {
+  // Keep only the first three misses for the whole wait, even if later probes find new IDs.
+  if (params.pollingSnapshot.extractionMissSamples.length >= MAX_MESSAGES_TO_FETCH) {
+    return;
+  }
+
+  const { message } = params;
+  const contentSize = message.Text.length + message.HTML.length;
+  const timestampMs = getMailpitMessageTimestampMs({ message: params.messageSummary });
+  const ageMs = timestampMs === undefined ? undefined : params.nowMs - timestampMs;
+  params.pollingSnapshot.extractionMissSamples.push({
+    messageIdHash: createHash("sha256").update(params.messageSummary.ID).digest("hex"),
+    contentChannel:
+      message.Text.length > 0
+        ? message.HTML.length > 0
+          ? "both"
+          : "text"
+        : message.HTML.length > 0
+          ? "html"
+          : "none",
+    contentSizeBucket:
+      contentSize === 0
+        ? "empty"
+        : contentSize <= 256
+          ? "1-256"
+          : contentSize <= 4096
+            ? "257-4096"
+            : "4097+",
+    otpMissShape: getOtpMissShape({ message }),
+    candidateAgeAtFetchBucket:
+      ageMs === undefined
+        ? "unavailable"
+        : ageMs < 0
+          ? "future"
+          : ageMs < 5000
+            ? "under-5s"
+            : ageMs < 30_000
+              ? "5-30s"
+              : "30s+",
+  });
+}
+
+function getOtpMissShape(params: {
+  message: MailpitMessage;
+}): MailpitPollingDiagnostics["extractionMissSamples"][number]["otpMissShape"] {
+  const { message } = params;
+  if (message.Text.length + message.HTML.length === 0) {
+    return "empty-content";
+  }
+  // A custom extractor can miss even when the built-in OTP parser recognizes the content.
+  if (extractEmailOtpCodeFromMailpitMessage({ message }) !== undefined) {
+    return "other";
+  }
+  const visibleHtml = message.HTML.replaceAll(
+    /<(style|script)[^>]*>[\s\S]*?<\/\1>/gi,
+    "",
+  ).replaceAll(/<[^>]+>/g, " ");
+  // This observes the documented four-plus-four form; it never feeds the extractor.
+  const unsupportedSeparator = /(?<!\d)\d{4}[^\d\s]+\d{4}(?!\d)/;
+  return unsupportedSeparator.test(message.Text) || unsupportedSeparator.test(visibleHtml)
+    ? "eight-digits-with-unsupported-separator"
+    : "no-eight-digit-sequence";
 }

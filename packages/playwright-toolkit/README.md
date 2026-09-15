@@ -279,6 +279,18 @@ await page.getByLabel("Verification Code").fill(code.value);
 
 The pollers search newest-first, tolerate incomplete dates in search results, fetch at most three candidates per probe, and retry Mailpit network errors, `404`, `408`, `429`, and `5xx`. They return both the extracted value and source message ID.
 
+Timeout errors and successful results include polling diagnostics. These distinguish transient
+search errors from message-fetch errors and count skips of cached extraction misses. The first
+three extraction misses across the entire wait carry only a SHA-256 message-ID hash, content
+channel, combined Text/HTML character-count bucket, candidate age at fetch, and OTP shape.
+Shape classification observes the documented four-plus-four OTP format; it does not select a
+value or change the parser. `other` means the built-in OTP parser recognized a value that the
+caller’s extractor did not select. Samples contain no raw message fields or extracted secrets.
+The error retains this evidence for Playwright reports without a separate logging hook.
+
+Misses remain cached by message ID, and the default wait remains 60 seconds. These diagnostics
+help classify a future failure; they do not establish why a historical message failed extraction.
+
 ## Cognito OTP and login diagnostics
 
 `fillOtpAndWaitForCognitoRedirect` monitors `RespondToAuthChallenge` requests for `SMS_OTP` and `EMAIL_OTP` while it waits for the expected redirect.

@@ -4,6 +4,7 @@ import {
   extractMagicLinkFromMailpitMessage,
   fetchEmailOtpCodeFromMailpit,
   fetchMagicLinkFromMailpit,
+  fetchMailpitValue,
   type MailpitClient,
   type MailpitMessage,
   type MailpitMessageSummary,
@@ -11,6 +12,54 @@ import {
 } from "../index";
 
 describe("Mailpit polling", () => {
+  it("diagnoses a cached extraction miss without refetching or extending the default deadline", async () => {
+    let currentTimeMs = Date.parse("2026-07-16T12:00:01.000Z");
+    const messageId = "private-mailpit-id";
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({ id: messageId }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+        createMessage({ id: messageId, text: "private-body 8102-7033" }),
+      ),
+    };
+
+    const actualError = await captureError({
+      promise: fetchEmailOtpCodeFromMailpit({
+        client: mockClient,
+        email: "private-user@example.test",
+        nowImplementation: () => currentTimeMs,
+        sleepImplementation: async ({ durationMs }) => {
+          currentTimeMs += durationMs;
+        },
+      }),
+    });
+    const actualErrorChain = getErrorChainMessage({ error: actualError });
+
+    expect(actualError).toMatchObject({ attempts: 60, elapsedMs: 60_000, reason: "timeout" });
+    expect(mockClient.searchMessages).toHaveBeenCalledTimes(60);
+    expect(mockClient.getMessage).toHaveBeenCalledTimes(1);
+    expect(actualError.message).toContain("cachedExtractionMissCount=59");
+    expect(actualError.message).toContain(
+      '"otpMissShape":"eight-digits-with-unsupported-separator"',
+    );
+    expect(actualError.message).toContain('"contentChannel":"text"');
+    expect(actualError.message).toContain('"contentSizeBucket":"1-256"');
+    expect(actualError.message).toContain('"candidateAgeAtFetchBucket":"under-5s"');
+    expect(actualError.message).toMatch(/"messageIdHash":"[a-f0-9]{64}"/);
+    for (const secret of [
+      messageId,
+      "private-user@example.test",
+      "private-body",
+      "8102-7033",
+      "81027033",
+      "noreply@example.test",
+      "Sign in",
+    ]) {
+      expect(actualErrorChain).not.toContain(secret);
+    }
+  });
+
   it("returns the newest non-excluded magic link", async () => {
     const messages = [
       createSearchSummary({ id: "new", created: "2026-07-16T12:00:00.000Z" }),
@@ -48,6 +97,10 @@ describe("Mailpit polling", () => {
         transientRequestErrorCount: 0,
         transientRequestErrorStatuses: [],
         newestCandidateTimestamp: "2026-07-16T12:00:00.000Z",
+        cachedExtractionMissCount: 0,
+        transientSearchErrorCount: 0,
+        transientMessageFetchErrorCount: 0,
+        extractionMissSamples: [],
       },
     });
   });
@@ -86,8 +139,240 @@ describe("Mailpit polling", () => {
         transientRequestErrorCount: 0,
         transientRequestErrorStatuses: [],
         newestCandidateTimestamp: "2026-07-16T12:00:00.000Z",
+        cachedExtractionMissCount: 0,
+        transientSearchErrorCount: 0,
+        transientMessageFetchErrorCount: 0,
+        extractionMissSamples: [],
       },
     });
+  });
+
+  it.each([
+    {
+      text: "",
+      html: "",
+      channel: "none",
+      size: "empty",
+      shape: "empty-content",
+      created: undefined,
+      age: "unavailable",
+    },
+    {
+      text: "No code",
+      html: "<p>Private content</p>",
+      channel: "both",
+      size: "1-256",
+      shape: "no-eight-digit-sequence",
+      created: "2026-07-16T12:00:02.000Z",
+      age: "future",
+    },
+    {
+      text: "x".repeat(257),
+      html: "",
+      channel: "text",
+      size: "257-4096",
+      shape: "no-eight-digit-sequence",
+      created: "2026-07-16T11:59:50.000Z",
+      age: "5-30s",
+    },
+    {
+      text: "",
+      html: `<p>${"x".repeat(4097)}8102-7033</p>`,
+      channel: "html",
+      size: "4097+",
+      shape: "eight-digits-with-unsupported-separator",
+      created: "2026-07-16T11:59:00.000Z",
+      age: "30s+",
+    },
+    {
+      text: "",
+      html: "<script>8102-7033</script><style>8102-7033</style><p>No code</p>",
+      channel: "html",
+      size: "1-256",
+      shape: "no-eight-digit-sequence",
+      created: "2026-07-16T12:00:00.000Z",
+      age: "under-5s",
+    },
+  ])(
+    "reports bounded miss shape $shape for $channel content",
+    async ({ text, html, channel, size, shape, created, age }) => {
+      const mockClient: MailpitClient = {
+        searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+          { ...createSearchSummary({ id: "private-id" }), Created: created },
+        ]),
+        getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+          createMessage({ id: "private-id", text, html }),
+        ),
+      };
+
+      const actualError = await captureError({
+        promise: fetchEmailOtpCodeFromMailpit({
+          client: mockClient,
+          email: "user@example.test",
+          ...createImmediateTimeout(),
+        }),
+      });
+
+      expect(actualError.message).toContain(`"contentChannel":"${channel}"`);
+      expect(actualError.message).toContain(`"contentSizeBucket":"${size}"`);
+      expect(actualError.message).toContain(`"otpMissShape":"${shape}"`);
+      expect(actualError.message).toContain(`"candidateAgeAtFetchBucket":"${age}"`);
+      expect(actualError.message).not.toContain("private-id");
+      expect(actualError.message).not.toContain("Private content");
+      expect(actualError.message).not.toContain("8102");
+      expect(actualError.message.length).toBeLessThan(1300);
+    },
+  );
+
+  it.each([
+    { text: "Code 81027033", html: "" },
+    { text: "Code 8102 7033", html: "" },
+    { text: "Code 8102\n\t7033", html: "" },
+    { text: "", html: "<div>8102<span>7033</span></div>" },
+  ])("preserves the supported OTP parser for $text $html", async ({ text, html }) => {
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({ id: "otp" }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+        createMessage({ id: "otp", text, html }),
+      ),
+    };
+
+    const actual = await fetchEmailOtpCodeFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+    });
+
+    expect(actual.value).toBe("81027033");
+    expect(actual.pollingDiagnostics.extractionMissSamples).toEqual([]);
+    expect(mockClient.getMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports other when a custom extractor misses a supported OTP", async () => {
+    const mockExtractValue = vi.fn<() => undefined>();
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({ id: "otp" }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+        createMessage({ id: "otp", text: "81027033" }),
+      ),
+    };
+
+    const actualError = await captureError({
+      promise: fetchMailpitValue({
+        client: mockClient,
+        email: "user@example.test",
+        extractValue: mockExtractValue,
+        valueLabel: "custom OTP",
+        ...createImmediateTimeout(),
+      }),
+    });
+
+    expect(actualError.message).toContain('"otpMissShape":"other"');
+    expect(actualError.message).not.toContain("81027033");
+    expect(mockExtractValue).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      phase: "search",
+      responseSequence: [{ body: "private response body", status: 404 }],
+      searchErrors: 3,
+      fetchErrors: 0,
+    },
+    {
+      phase: "message-fetch",
+      responseSequence: [
+        {
+          body: JSON.stringify({ messages: [createSearchSummary({ id: "private-id" })] }),
+          status: 200,
+        },
+        { body: "private response body", status: 404 },
+      ],
+      searchErrors: 0,
+      fetchErrors: 3,
+    },
+  ])(
+    "preserves 404 retries and identifies the $phase phase",
+    async ({ responseSequence, searchErrors, fetchErrors }) => {
+      let currentTimeMs = 0;
+      const mockFetch = vi.fn<typeof fetch>();
+      for (const { body, status } of Array.from({ length: 3 }, () => responseSequence).flat()) {
+        mockFetch.mockResolvedValueOnce(new Response(body, { status }));
+      }
+      const client = createMailpitClient({
+        password: "private-password",
+        fetchImplementation: mockFetch,
+      });
+
+      const actualError = await captureError({
+        promise: fetchEmailOtpCodeFromMailpit({
+          client,
+          email: "private-user@example.test",
+          timeoutMs: 300,
+          pollIntervalMs: 100,
+          nowImplementation: () => currentTimeMs,
+          sleepImplementation: async ({ durationMs }) => {
+            currentTimeMs += durationMs;
+          },
+        }),
+      });
+
+      expect(actualError).toMatchObject({ attempts: 3, elapsedMs: 300, reason: "timeout" });
+      expect(mockFetch).toHaveBeenCalledTimes(responseSequence.length * 3);
+      expect(actualError.message).toContain(
+        "transientRequestErrorCount=3, transientRequestErrorStatuses=[404]",
+      );
+      expect(actualError.message).toContain(`transientSearchErrorCount=${searchErrors}`);
+      expect(actualError.message).toContain(`transientMessageFetchErrorCount=${fetchErrors}`);
+      expect(actualError.message).toContain("extractionMissSamples=[]");
+      expect(getErrorChainMessage({ error: actualError })).not.toMatch(
+        /private-|private response body/,
+      );
+    },
+  );
+
+  it("caps miss samples across polls while preserving three candidates per probe", async () => {
+    let currentTimeMs = 0;
+    const mockClient: MailpitClient = {
+      searchMessages: vi
+        .fn<MailpitClient["searchMessages"]>()
+        .mockResolvedValueOnce(
+          ["one", "two", "three", "never-fetched"].map((id) => createSearchSummary({ id })),
+        )
+        .mockResolvedValueOnce(["four", "five", "ready"].map((id) => createSearchSummary({ id }))),
+      getMessage: vi
+        .fn<MailpitClient["getMessage"]>()
+        .mockResolvedValueOnce(createMessage({ id: "one", text: "private-body" }))
+        .mockResolvedValueOnce(createMessage({ id: "two", text: "private-body" }))
+        .mockResolvedValueOnce(createMessage({ id: "three", text: "private-body" }))
+        .mockResolvedValueOnce(createMessage({ id: "four", text: "private-body" }))
+        .mockResolvedValueOnce(createMessage({ id: "five", text: "private-body" }))
+        .mockResolvedValueOnce(createMessage({ id: "ready", text: "81027033" })),
+    };
+
+    const actual = await fetchEmailOtpCodeFromMailpit({
+      client: mockClient,
+      email: "user@example.test",
+      nowImplementation: () => currentTimeMs,
+      sleepImplementation: async ({ durationMs }) => {
+        currentTimeMs += durationMs;
+      },
+    });
+
+    expect(actual.value).toBe("81027033");
+    expect(actual.pollingDiagnostics.extractionMissCount).toBe(5);
+    expect(actual.pollingDiagnostics.extractionMissSamples).toHaveLength(3);
+    expect(
+      new Set(
+        actual.pollingDiagnostics.extractionMissSamples.map(({ messageIdHash }) => messageIdHash),
+      ).size,
+    ).toBe(3);
+    expect(JSON.stringify(actual.pollingDiagnostics)).not.toMatch(/private-body|81027033/);
+    expect(mockClient.getMessage).toHaveBeenCalledTimes(6);
+    expect(mockClient.getMessage).not.toHaveBeenCalledWith({ messageId: "never-fetched" });
   });
 
   it("uses authenticated Mailpit HTTP search and message endpoints", async () => {
@@ -528,6 +813,38 @@ describe("Mailpit polling", () => {
     );
     expect(actualErrorChain).not.toContain(email);
     expect(actualErrorChain).not.toContain(secret);
+  });
+
+  it("keeps excluded values cached without counting them as extraction misses", async () => {
+    let currentTimeMs = 0;
+    const mockClient: MailpitClient = {
+      searchMessages: vi.fn<MailpitClient["searchMessages"]>(async () => [
+        createSearchSummary({ id: "excluded" }),
+      ]),
+      getMessage: vi.fn<MailpitClient["getMessage"]>(async () =>
+        createMessage({ id: "excluded", text: "81027033" }),
+      ),
+    };
+
+    const actualError = await captureError({
+      promise: fetchEmailOtpCodeFromMailpit({
+        client: mockClient,
+        email: "user@example.test",
+        excludeCodes: ["81027033"],
+        timeoutMs: 300,
+        pollIntervalMs: 100,
+        nowImplementation: () => currentTimeMs,
+        sleepImplementation: async ({ durationMs }) => {
+          currentTimeMs += durationMs;
+        },
+      }),
+    });
+
+    expect(mockClient.searchMessages).toHaveBeenCalledTimes(3);
+    expect(mockClient.getMessage).toHaveBeenCalledTimes(1);
+    expect(actualError.message).toContain("excludedValueCount=1");
+    expect(actualError.message).toContain("cachedExtractionMissCount=0");
+    expect(actualError.message).toContain("extractionMissSamples=[]");
   });
 });
 
