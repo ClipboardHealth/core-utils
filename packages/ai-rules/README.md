@@ -116,16 +116,16 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 
 ### backend
 
-| Rule ID                  | When to Read                                                                              |
-| ------------------------ | ----------------------------------------------------------------------------------------- |
-| `backend/architecture`   | Structuring NestJS modules, services, repos: three-tier, microservices, ts-rest contracts |
-| `backend/asyncMessaging` | Working with queues, async messaging, or background jobs                                  |
-| `backend/infrastructure` | Provisioning infrastructure: Terraform, Docker, ECS, DNS                                  |
-| `backend/mongodb`        | Working with MongoDB/Mongoose: schemas, indexes, queries, transactions, migrations        |
-| `backend/notifications`  | Implementing notifications via Knock: push notifications, deep links, workflow design     |
-| `backend/postgres`       | Working with Postgres: column types, schema changes, query patterns, Prisma TypedSQL      |
-| `backend/restApiDesign`  | Designing REST APIs: JSON:API, auth, validation, pagination, ts-rest contracts, DTOs      |
-| `backend/serviceTests`   | Writing service tests: test data, background jobs, bug handling, migrations               |
+| Rule ID                  | When to Read                                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `backend/architecture`   | Structuring NestJS modules, services, repos: three-tier, microservices, ts-rest contracts                                     |
+| `backend/asyncMessaging` | Working with queues, async messaging, or background jobs; planning their rollout or rollback; adding event-dependent behavior |
+| `backend/infrastructure` | Provisioning infrastructure: Terraform, Docker, ECS, DNS                                                                      |
+| `backend/mongodb`        | Working with MongoDB/Mongoose: schemas, indexes, queries, transactions, migrations                                            |
+| `backend/notifications`  | Implementing notifications via Knock: push notifications, deep links, workflow design                                         |
+| `backend/postgres`       | Working with Postgres: column types, schema changes, query patterns, Prisma TypedSQL                                          |
+| `backend/restApiDesign`  | Designing REST APIs: JSON:API, auth, validation, pagination, ts-rest contracts, DTOs                                          |
+| `backend/serviceTests`   | Writing service tests: test data, background jobs, bug handling, migrations                                                   |
 
 ### common
 

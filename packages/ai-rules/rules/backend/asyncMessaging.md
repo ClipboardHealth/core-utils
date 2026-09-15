@@ -1,5 +1,5 @@
 ---
-description: "Working with queues, async messaging, or background jobs"
+description: "Working with queues, async messaging, or background jobs; planning their rollout or rollback; adding event-dependent behavior"
 ---
 
 # Async Messaging & Background Jobs
@@ -24,7 +24,7 @@ Enqueue inside the same transaction as the write that triggers it, passing the t
 - Fetch fresh data in handler
 - Choose a replay-safe strategy from [Idempotency](#idempotency) for each handler
 - Check state before action; return a descriptive skip-reason string for non-retryable conditions; rethrow only retryable errors (`error instanceof KnownRecoverableError`)
-- Use Expand/Contract for job code updates
+- Follow [Deployment Compatibility](#deployment-compatibility) for job code updates
 - Keep jobs short-lived (under 15 minutes for Postgres, under 10 minutes for Mongo); split longer work into multiple jobs
 
 **File Organization:**
@@ -48,6 +48,14 @@ Enqueue inside the same transaction as the write that triggers it, passing the t
 **Dead-Letter Queues:** Configure a DLQ for every SQS queue with 14-day retention; do not auto-consume DLQ messages — retain until root cause is fixed, then replay.
 
 If a design depends on strict message ordering, consult #eng-staff-plus before proceeding.
+
+## Deployment Compatibility
+
+When changing queued jobs or async events, check payload shape, kinds, field meanings, and referenced persisted data. During version overlap, old consumers must correctly process new producers' work, and new consumers must correctly process old producers' and retained work. Verify the intended effects; successful deserialization or a fulfilled handler promise alone does not prove processing.
+
+- **Incompatible changes:** use Expand/Contract. Deploy consumers that accept old and new work, confirm incompatible consumers have stopped, then enable new production. Verify background workers have stopped claiming jobs separately from HTTP traffic drain.
+- **Event-dependent behavior:** enable behavior that waits for a new event only after every relevant producer, including workers and API processes, emits it.
+- **Retention and rollback:** preserve support for queued, delayed, and retrying work. Choose rollback versions that can process work already emitted. Retire compatibility support only when the affected work can no longer arrive.
 
 ## Idempotency
 
