@@ -117,11 +117,11 @@
       ]
     },
     {
-      "description": "Do not require Minimum Release Age for digest updates. Renovate ages a digest against its matched version's timestamp, which is unavailable for registries that publish none (GHCR, Quay, ECR) and for unversioned refs such as `latest` or a branch-pinned GitHub Action, where no version exists to match. Left gated, those updates are held indefinitely. Deliberately not scoped to a datasource: the unversioned-ref case applies to github-tags too, and config:best-practices pins GitHub Action digests via helpers:pinGitHubActionDigests.",
-      "matchUpdateTypes": ["digest", "pinDigest"],
+      "description": "Do not require Minimum Release Age for pinDigest updates only. A pinDigest ages against the newest version matching the current value, so a fast-releasing reference may never clear a 7-day check -- leaving it perpetually unpinned, which is less safe than pinning to a slightly-stale release. Plain `digest` updates are deliberately NOT exempted: Docker Hub ages them against `tag_last_pushed`, so a malicious re-push restarts the delay, and exempting them would hand that straight to the digest automerge rule. Registries without timestamps (GHCR, Quay, ECR) and unversioned refs are already handled by minimumReleaseAgeBehaviour=timestamp-optional, which raises them with a warning rather than holding them.",
+      "matchUpdateTypes": ["pinDigest"],
       "minimumReleaseAge": null,
       "prBodyNotes": [
-        "⚠️ Digest updates are not age-checked, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
+        "⚠️ pinDigest updates are not age-checked, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
       ]
     }
   ],
