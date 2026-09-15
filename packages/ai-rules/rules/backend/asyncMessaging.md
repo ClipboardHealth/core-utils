@@ -53,8 +53,8 @@ If a design depends on strict message ordering, consult #eng-staff-plus before p
 
 When changing queued jobs or async events, check payload shape, kinds, field meanings, and referenced persisted data. During version overlap, old consumers must correctly process new producers' work, and new consumers must correctly process old producers' and retained work. Verify the intended effects; successful deserialization or a fulfilled handler promise alone does not prove processing.
 
-- **Incompatible changes:** use Expand/Contract. Deploy consumers that accept old and new work, confirm incompatible consumers have stopped, then enable new production. Verify background workers have stopped claiming jobs separately from HTTP traffic drain.
-- **Event-dependent behavior:** enable behavior that waits for a new event only after every relevant producer, including workers and API processes, emits it.
+- **Incompatible changes:** use Expand/Contract. Deploy consumers that accept old and new work, confirm incompatible consumers have stopped, then enable new production. Verify background worker shutdown separately from HTTP traffic drain.
+- **Event-dependent behavior:** enable behavior that waits for a new event only after every relevant producer, including workers and API processes, emits it and older executions that omit it have finished or been reconciled. Before rolling back to producers that omit the event, disable the waiting behavior and complete or safely release existing waits.
 - **Retention and rollback:** preserve support for queued, delayed, and retrying work. Choose rollback versions that can process work already emitted. Retire compatibility support only when the affected work can no longer arrive.
 
 ## Idempotency
