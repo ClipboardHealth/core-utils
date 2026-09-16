@@ -8,6 +8,13 @@
   ],
   "overrides": [
     {
+      "files": ["contract-package/negated-nullish-checks.ts"],
+      "rules": {
+        "clipboard/prefer-is-defined": "error",
+        "clipboard/prefer-is-nil": "error"
+      }
+    },
+    {
       "files": ["contract-package/missing-handler.controller.ts"],
       "rules": { "clipboard/enforce-ts-rest-in-controllers": "error" }
     },

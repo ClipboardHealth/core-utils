@@ -74,6 +74,10 @@ describe("oxlint-config", () => {
 
     it("exports additive plugin presets", () => {
       expect(customRules).toStrictEqual({
+        rules: {
+          "@clipboard-health/prefer-is-defined": "error",
+          "@clipboard-health/prefer-is-nil": "error",
+        },
         jsPlugins: [
           {
             name: "@clipboard-health",

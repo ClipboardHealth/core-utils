@@ -9,6 +9,8 @@ const oxlintBin = path.join(workspaceRoot, "node_modules/oxlint/bin/oxlint");
 const expectedCodes = [
   "clipboard(enforce-ts-rest-in-controllers)",
   "clipboard(no-cross-contract-imports)",
+  "clipboard(prefer-is-defined)",
+  "clipboard(prefer-is-nil)",
   "clipboard(require-contract-fixture-construction)",
   "clipboard(require-contract-response-parse)",
   "clipboard(require-http-module-factory)",

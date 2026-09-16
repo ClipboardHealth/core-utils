@@ -195,7 +195,8 @@ The package includes:
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
   fixtures are parsed by producer-owned contract response schemas
 - **`customRules` preset**: registers the ESLint-independent Clipboard plugin and reproduces the
-  shared controller, module, contract, and cross-contract-import enforcement scopes
+  shared controller, module, contract, and cross-contract-import enforcement scopes; also prefers
+  positive `isNil` and `isDefined` checks over their negated counterparts
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
 ## Intentionally disabled rules

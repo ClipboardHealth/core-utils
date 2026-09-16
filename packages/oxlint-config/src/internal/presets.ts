@@ -461,6 +461,10 @@ export const typeAware: OxlintPreset = {
 };
 export const vitest: OxlintPreset = createVitestPreset();
 export const customRules: OxlintPreset = {
+  rules: {
+    "@clipboard-health/prefer-is-defined": "error",
+    "@clipboard-health/prefer-is-nil": "error",
+  },
   jsPlugins: [
     {
       name: "@clipboard-health",

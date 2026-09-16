@@ -13,6 +13,8 @@ ESLint.
 - `no-empty-boolean-call`
 - `no-cross-contract-imports`
 - `no-parallel-mongo-session-ops`
+- `prefer-is-defined`
+- `prefer-is-nil`
 - `require-contract-fixture-construction`
 - `require-contract-response-parse`
 - `require-http-module-factory`
