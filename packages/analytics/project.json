@@ -20,12 +20,10 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/analytics/**/*.[jt]s?(x)"],
-        "maxWarnings": 0
-      },
-      "outputs": ["{options.outputFile}"]
+        "command": "eslint \"packages/analytics/**/*.[jt]s?(x)\" --max-warnings 0"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",

@@ -1,4 +1,4 @@
-import { readProjectConfiguration, type Tree } from "@nx/devkit";
+import { readProjectConfiguration, type Tree, updateJson } from "@nx/devkit";
 import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
 
 import generator from "./generator";
@@ -27,6 +27,37 @@ describe(generator, () => {
 
     const config = readProjectConfiguration(appTree, name);
     expect(config.name).toBe(name);
+    expect(config.targets?.["lint"]).toStrictEqual({
+      executor: "nx:run-commands",
+      options: { command: 'eslint "libs/test/**/*.[jt]s?(x)" --max-warnings 0' },
+    });
+    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(true);
+  });
+
+  it.each([
+    { workspaceName: "@clipboard-health/core-utils", expected: "@clipboard-health/test" },
+    { workspaceName: "workspace", expected: "test" },
+  ])("derives the library import path from $workspaceName", async ({ workspaceName, expected }) => {
+    updateJson<{ name?: string }>(appTree, "package.json", (packageJson) => ({
+      ...packageJson,
+      name: workspaceName,
+    }));
+
+    await generator(appTree, { name: "test", publishPublicly: false });
+
+    const packageJson = JSON.parse(readWorkspaceFile(appTree, "libs/test/package.json"));
+    const tsconfig = JSON.parse(readWorkspaceFile(appTree, "tsconfig.base.json"));
+    expect(packageJson.name).toBe(expected);
+    expect(tsconfig.compilerOptions.paths[expected]).toStrictEqual(["libs/test/src/index.ts"]);
+  });
+
+  it("generates an unscoped library without a root package.json", async () => {
+    appTree.delete("package.json");
+
+    await generator(appTree, { name: "test", publishPublicly: false });
+
+    const packageJson = JSON.parse(readWorkspaceFile(appTree, "libs/test/package.json"));
+    expect(packageJson.name).toBe("test");
   });
 
   it("generates public publish metadata when requested", async () => {

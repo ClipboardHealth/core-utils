@@ -6,12 +6,10 @@
   "tags": [],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/example-nestjs/**/*.[jt]s"],
-        "maxWarnings": 0
-      },
-      "outputs": ["{options.outputFile}"]
+        "command": "eslint \"packages/example-nestjs/**/*.[jt]s\" --max-warnings 0"
+      }
     },
     "serve": {
       "executor": "@nx/js:node",

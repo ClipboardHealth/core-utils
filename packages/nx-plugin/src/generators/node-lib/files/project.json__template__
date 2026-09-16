@@ -16,12 +16,10 @@
       "outputs": ["{options.outputPath}"]
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/<%= projectName %>/**/*.[jt]s?(x)"],
-        "maxWarnings": 0
-      },
-      "outputs": ["{options.outputFile}"]
+        "command": "eslint \"<%= projectRoot %>/**/*.[jt]s?(x)\" --max-warnings 0"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",

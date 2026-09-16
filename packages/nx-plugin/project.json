@@ -14,9 +14,9 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "maxWarnings": 0
+        "command": "eslint \"packages/nx-plugin\" --max-warnings 0"
       }
     },
     "test": {

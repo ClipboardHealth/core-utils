@@ -23,12 +23,10 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/contract-core/**/*.[jt]s"],
-        "maxWarnings": 0
-      },
-      "outputs": ["{options.outputFile}"]
+        "command": "eslint \"packages/contract-core/**/*.[jt]s\" --max-warnings 0"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",

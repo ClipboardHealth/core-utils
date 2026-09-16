@@ -48,13 +48,6 @@
       }
     },
     {
-      "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/oxlint-plugin/test/negative/**"],
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
       "plugin": "@nx/webpack/plugin",
       "options": {
         "buildTargetName": "build",
@@ -85,7 +78,7 @@
     }
   },
   "targetDefaults": {
-    "@nx/eslint:lint": {
+    "lint": {
       "cache": true,
       "inputs": [
         "default",
