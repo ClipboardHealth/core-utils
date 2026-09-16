@@ -27,7 +27,10 @@ describe(generator, () => {
 
     const config = readProjectConfiguration(appTree, name);
     expect(config.name).toBe(name);
-    expect(config.targets?.["lint"]?.executor).toBe("@nx/eslint:lint");
+    expect(config.targets?.["lint"]).toStrictEqual({
+      executor: "nx:run-commands",
+      options: { command: 'eslint "libs/test/**/*.[jt]s?(x)" --max-warnings 0' },
+    });
     expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(true);
   });
 
