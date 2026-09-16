@@ -24,7 +24,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "node packages/oxlint-plugin/scripts/verifyNegativeFixtures.mjs"
+        "command": "node packages/oxlint-plugin/scripts/verifyNegativeFixtures.mts"
       }
     },
     "prepare-build-package": {
