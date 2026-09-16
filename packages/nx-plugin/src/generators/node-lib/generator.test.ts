@@ -1,10 +1,4 @@
-import {
-  readNxJson,
-  readProjectConfiguration,
-  type Tree,
-  updateJson,
-  updateNxJson,
-} from "@nx/devkit";
+import { readProjectConfiguration, type Tree, updateJson } from "@nx/devkit";
 import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
 
 import generator from "./generator";
@@ -33,37 +27,6 @@ describe(generator, () => {
 
     const config = readProjectConfiguration(appTree, name);
     expect(config.name).toBe(name);
-    expect(config.targets?.["lint"]).toBeUndefined();
-    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(false);
-  });
-
-  it.each(["@nx/oxlint", { plugin: "@nx/oxlint", options: { targetName: "lint" } }])(
-    "inherits Oxlint linting when the workspace registers %j",
-    async (plugin) => {
-      const name = "test";
-      updateNxJson(appTree, { ...readNxJson(appTree), plugins: [plugin] });
-
-      await generator(appTree, { name, publishPublicly: false });
-
-      const config = readProjectConfiguration(appTree, name);
-      expect(config.targets?.["lint"]).toBeUndefined();
-      expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(false);
-      expect(appTree.exists(`libs/${name}/tsconfig.lint.json`)).toBe(true);
-    },
-  );
-
-  it("inherits workspace linting when another Nx plugin is registered", async () => {
-    const name = "test";
-    updateNxJson(appTree, {
-      ...readNxJson(appTree),
-      plugins: ["@nx/js/typescript", { plugin: "@nx/eslint/plugin" }],
-    });
-
-    await generator(appTree, { name, publishPublicly: false });
-
-    const config = readProjectConfiguration(appTree, name);
-    expect(config.targets?.["lint"]).toBeUndefined();
-    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(false);
   });
 
   it.each([

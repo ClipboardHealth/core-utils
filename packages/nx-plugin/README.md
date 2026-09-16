@@ -17,8 +17,6 @@ npm install @clipboard-health/nx-plugin
 
 Libraries version and publish separately. We use [Nx Local Generators](https://nx.dev/recipes/generators/local-generators) to generate library stubs that successfully build, lint, and test. The `--publishPublicly` flag publishes the NPM package publicly.
 
-Generated libraries inherit linting from the workspace. Register `@nx/oxlint` in `nx.json` and configure Oxlint at the workspace root; the generator creates no package lint target or ESLint configuration.
-
 ```bash
 # Optionally, include the --publishPublicly flag.
 npx nx generate @clipboard-health/nx-plugin:node-lib [PROJECT_NAME] [OPTIONS]

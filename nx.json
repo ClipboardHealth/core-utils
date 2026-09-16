@@ -96,6 +96,17 @@
     }
   },
   "targetDefaults": {
+    "lint": {
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.oxlintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/.gitignore",
+        "{workspaceRoot}/packages/oxlint-config/src/**/*.json",
+        "{workspaceRoot}/tsconfig*.json"
+      ]
+    },
     "@nx/vitest:test": {
       "inputs": [
         "default",
@@ -119,17 +130,6 @@
       "options": {
         "packageRoot": "dist/packages/{projectName}"
       }
-    },
-    "lint": {
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/.oxlintrc.json",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/.gitignore",
-        "{workspaceRoot}/packages/oxlint-config/src/**/*.json",
-        "{workspaceRoot}/tsconfig*.json"
-      ]
     }
   },
   "analytics": false
