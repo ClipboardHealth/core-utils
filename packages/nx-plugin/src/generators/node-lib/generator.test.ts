@@ -33,11 +33,8 @@ describe(generator, () => {
 
     const config = readProjectConfiguration(appTree, name);
     expect(config.name).toBe(name);
-    expect(config.targets?.["lint"]).toStrictEqual({
-      executor: "nx:run-commands",
-      options: { command: 'eslint "libs/test/**/*.[jt]s?(x)" --max-warnings 0' },
-    });
-    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(true);
+    expect(config.targets?.["lint"]).toBeUndefined();
+    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(false);
   });
 
   it.each(["@nx/oxlint", { plugin: "@nx/oxlint", options: { targetName: "lint" } }])(
@@ -55,7 +52,7 @@ describe(generator, () => {
     },
   );
 
-  it("keeps ESLint when the workspace registers another Nx plugin", async () => {
+  it("inherits workspace linting when another Nx plugin is registered", async () => {
     const name = "test";
     updateNxJson(appTree, {
       ...readNxJson(appTree),
@@ -65,11 +62,8 @@ describe(generator, () => {
     await generator(appTree, { name, publishPublicly: false });
 
     const config = readProjectConfiguration(appTree, name);
-    expect(config.targets?.["lint"]).toStrictEqual({
-      executor: "nx:run-commands",
-      options: { command: 'eslint "libs/test/**/*.[jt]s?(x)" --max-warnings 0' },
-    });
-    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(true);
+    expect(config.targets?.["lint"]).toBeUndefined();
+    expect(appTree.exists(`libs/${name}/.eslintrc.json`)).toBe(false);
   });
 
   it.each([

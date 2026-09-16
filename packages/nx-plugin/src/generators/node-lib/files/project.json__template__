@@ -15,13 +15,7 @@
       },
       "outputs": ["{options.outputPath}"]
     },
-<% if (!usesOxlint) { %>    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"<%= projectRoot %>/**/*.[jt]s?(x)\" --max-warnings 0"
-      }
-    },
-<% } %>    "test": {
+    "test": {
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/<%= projectName %>/vitest.config.ts"

@@ -8,7 +8,6 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  readNxJson,
   type Tree,
   updateJson,
 } from "@nx/devkit";
@@ -23,7 +22,6 @@ type NormalizedSchema = {
   projectName: string;
   projectRoot: string;
   publishConfigAccess: string;
-  usesOxlint: boolean;
 } & NxPluginGeneratorSchema;
 
 function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): NormalizedSchema {
@@ -37,10 +35,6 @@ function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): Normali
     projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,
     publishConfigAccess:
       /* istanbul ignore next */ options.publishPublicly === true ? "public" : "restricted",
-    usesOxlint:
-      readNxJson(tree)?.plugins?.some(
-        (plugin) => (typeof plugin === "string" ? plugin : plugin.plugin) === "@nx/oxlint",
-      ) ?? false,
   };
 }
 
@@ -67,9 +61,6 @@ function addFiles(tree: Tree, options: NormalizedSchema) {
     rootTsConfigPath: getRelativePathToRootTsConfig(options.projectRoot),
     template: "",
   });
-  if (options.usesOxlint) {
-    tree.delete(joinPathFragments(options.projectRoot, ".eslintrc.json"));
-  }
 }
 
 function updateRootTsConfig(
