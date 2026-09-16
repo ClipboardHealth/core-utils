@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.lint.json",
-  "include": ["."]
+  "include": ["."],
+  "compilerOptions": {
+    "allowJs": true
+  }
 }

@@ -13,12 +13,6 @@
         "forwardAllArgs": false
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/notifications/**/*.[jt]s?(x)\" --max-warnings 0"
-      }
-    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {

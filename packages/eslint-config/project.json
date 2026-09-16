@@ -15,8 +15,11 @@
     },
     "lint": {
       "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["eslintLint", "^default"],
       "options": {
-        "command": "eslint \"packages/eslint-config/**/*.[jt]s\" --max-warnings 0"
+        "command": "eslint \"packages/eslint-config/**/*.[jt]s\" --max-warnings 0",
+        "cwd": "{workspaceRoot}"
       }
     },
     "test": {

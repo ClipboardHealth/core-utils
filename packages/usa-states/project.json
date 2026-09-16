@@ -19,12 +19,6 @@
         "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/usa-states"
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/usa-states/**/*.[jt]s?(x)\" --max-warnings 0"
-      }
-    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {

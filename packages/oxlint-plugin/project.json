@@ -13,12 +13,6 @@
         "forwardAllArgs": false
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/oxlint-plugin/**/*.[jt]s?(x)\" --max-warnings 0"
-      }
-    },
     "test": {
       "dependsOn": ["test-negative-fixtures"],
       "executor": "@nx/vitest:test",

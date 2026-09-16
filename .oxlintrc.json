@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./packages/oxlint-config/src/vitest.json"],
+  "jsPlugins": ["@nx/oxlint/boundaries-plugin"],
   "ignorePatterns": [
     ".agents/",
     ".rules/",
@@ -21,6 +22,16 @@
     }
   },
   "rules": {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        "allow": ["type-fest"],
+        "allowCircularSelfDependency": true,
+        "banTransitiveDependencies": true,
+        "depConstraints": [{ "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }],
+        "enforceBuildableLibDependency": true
+      }
+    ],
     "oxc/no-barrel-file": "off",
 
     // Temporarily disabled globally until issue gets fixed, should then move to test-only disable
@@ -35,6 +46,10 @@
     "typescript/unbound-method": "off"
   },
   "overrides": [
+    {
+      "files": ["**/vitest.config.ts"],
+      "rules": { "@nx/enforce-module-boundaries": "off" }
+    },
     {
       "files": [
         "**/bin/**/*.ts",
