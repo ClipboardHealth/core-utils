@@ -15,12 +15,6 @@
       },
       "outputs": ["{options.outputPath}"]
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"<%= projectRoot %>/**/*.[jt]s?(x)\" --max-warnings 0"
-      }
-    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {

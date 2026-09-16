@@ -19,12 +19,6 @@
         "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/testing-core"
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/testing-core/**/*.[jt]s\" --max-warnings 0"
-      }
-    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {

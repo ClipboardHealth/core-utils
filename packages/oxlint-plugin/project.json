@@ -13,12 +13,6 @@
         "forwardAllArgs": false
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/oxlint-plugin/**/*.[jt]s?(x)\" --max-warnings 0"
-      }
-    },
     "test": {
       "dependsOn": ["test-negative-fixtures"],
       "executor": "@nx/vitest:test",
@@ -30,7 +24,7 @@
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "node packages/oxlint-plugin/scripts/verifyNegativeFixtures.mjs"
+        "command": "node packages/oxlint-plugin/scripts/verifyNegativeFixtures.mts"
       }
     },
     "prepare-build-package": {

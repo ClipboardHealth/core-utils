@@ -30,6 +30,13 @@
       "{projectRoot}/*.md",
       "{workspaceRoot}/scripts/prepareTsgoPackage.mts",
       "{workspaceRoot}/scripts/buildEsmPackage.mts"
+    ],
+    "eslintLint": [
+      "default",
+      "{workspaceRoot}/.eslintrc.json",
+      "{workspaceRoot}/.eslintignore",
+      "{workspaceRoot}/packages/eslint-config/src/index.js",
+      "{workspaceRoot}/tools/eslint-rules/**/*"
     ]
   },
   "nxCloudAccessToken": "Nzg3YTFkOGQtOWFmMi00MTQ2LThkNzQtOTRjN2NlMjBjYmQzfHJlYWQ=",
@@ -45,6 +52,17 @@
           "buildDepsName": "build-deps",
           "watchDepsName": "watch-deps"
         }
+      }
+    },
+    {
+      "plugin": "@nx/oxlint",
+      "exclude": [
+        "packages/eslint-config/**",
+        "packages/eslint-plugin/**",
+        "packages/oxlint-plugin/test/negative/**"
+      ],
+      "options": {
+        "targetName": "lint"
       }
     },
     {
@@ -79,14 +97,14 @@
   },
   "targetDefaults": {
     "lint": {
-      "cache": true,
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.oxlintrc.json",
         "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/packages/eslint-config/src/index.js",
-        "{workspaceRoot}/tools/eslint-rules/**/*"
+        "{workspaceRoot}/.gitignore",
+        "{workspaceRoot}/packages/oxlint-config/src/**/*.json",
+        "{workspaceRoot}/tsconfig*.json"
       ]
     },
     "@nx/vitest:test": {

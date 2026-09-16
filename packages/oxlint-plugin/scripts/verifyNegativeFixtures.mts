@@ -39,8 +39,7 @@ if (result.status !== 1) {
   );
 }
 
-/** @type {unknown} */
-const report = JSON.parse(result.stdout);
+const report: unknown = JSON.parse(result.stdout);
 
 if (!isDiagnosticReport(report)) {
   throw new TypeError(`Oxlint returned an unexpected JSON report.\n${result.stdout}`);
@@ -57,11 +56,7 @@ if (missingCodes.length > 0) {
 
 process.stdout.write(`Verified ${expectedCodes.length} custom-rule negative fixtures.\n`);
 
-/**
- * @param {unknown} value
- * @returns {value is { diagnostics: Array<{ code: string }> }}
- */
-function isDiagnosticReport(value) {
+function isDiagnosticReport(value: unknown): value is { diagnostics: Array<{ code: string }> } {
   return (
     typeof value === "object" &&
     value !== null &&

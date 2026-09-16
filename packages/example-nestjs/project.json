@@ -5,12 +5,6 @@
   "sourceRoot": "packages/example-nestjs/src",
   "tags": [],
   "targets": {
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/example-nestjs/**/*.[jt]s\" --max-warnings 0"
-      }
-    },
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",

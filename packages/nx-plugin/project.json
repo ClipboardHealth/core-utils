@@ -13,12 +13,6 @@
         "forwardAllArgs": false
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/nx-plugin\" --max-warnings 0"
-      }
-    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {
@@ -30,6 +24,18 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "env -u NO_COLOR tsx scripts/prepareTsgoPackage.mts packages/nx-plugin"
+      }
+    },
+    "lint": {
+      "dependsOn": ["lint-dependencies"]
+    },
+    "lint-dependencies": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["eslintLint", "^default"],
+      "options": {
+        "command": "eslint packages/nx-plugin/package.json --max-warnings 0",
+        "cwd": "{workspaceRoot}"
       }
     }
   }

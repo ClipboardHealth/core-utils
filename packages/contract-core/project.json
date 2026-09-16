@@ -22,12 +22,6 @@
         "command": "env -u NO_COLOR tsx scripts/buildEsmPackage.mts packages/contract-core"
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "eslint \"packages/contract-core/**/*.[jt]s\" --max-warnings 0"
-      }
-    },
     "test": {
       "executor": "@nx/vitest:test",
       "options": {
