@@ -3,5 +3,19 @@
   "ignorePatterns": ["!**/*", "**/*.json", "!**/package.json"],
   "parserOptions": {
     "project": "packages/nx-plugin/tsconfig.lint.json"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["package.json"],
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            // Generated libraries use the @nx/js:tsc executor.
+            "ignoredDependencies": ["@nx/js"]
+          }
+        ]
+      }
+    }
+  ]
 }

@@ -17,12 +17,10 @@
       "outputs": ["{options.outputPath}"]
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/ai-rules/**/*.[jt]s?(x)"],
-        "maxWarnings": 0
-      },
-      "outputs": ["{options.outputFile}"]
+        "command": "eslint \"packages/ai-rules/**/*.[jt]s?(x)\" --max-warnings 0"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",

@@ -14,12 +14,10 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/config/**/*.[jt]s"],
-        "maxWarnings": 0
-      },
-      "outputs": ["{options.outputFile}"]
+        "command": "eslint \"packages/config/**/*.[jt]s\" --max-warnings 0"
+      }
     },
     "test": {
       "executor": "@nx/vitest:test",

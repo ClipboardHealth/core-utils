@@ -7,10 +7,10 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readJson,
   type Tree,
   updateJson,
 } from "@nx/devkit";
-import { getImportPath } from "@nx/js/src/utils/get-import-path";
 
 import type { NxPluginGeneratorSchema } from "./schema";
 
@@ -29,13 +29,24 @@ function normalizeOptions(tree: Tree, options: NxPluginGeneratorSchema): Normali
   const projectDirectory = name;
   return {
     ...options,
-    importPath: getImportPath(tree, projectDirectory),
+    importPath: getImportPath({ tree, projectDirectory }),
     projectDirectory,
     projectName: name.replaceAll("/", "-"),
     projectRoot: `${getWorkspaceLayout(tree).libsDir}/${name}`,
     publishConfigAccess:
       /* istanbul ignore next */ options.publishPublicly === true ? "public" : "restricted",
   };
+}
+
+function getImportPath(request: { tree: Tree; projectDirectory: string }): string {
+  const { tree, projectDirectory } = request;
+  const workspaceName = tree.exists("package.json")
+    ? readJson<{ name?: string }>(tree, "package.json").name
+    : undefined;
+  const npmScope = workspaceName?.startsWith("@")
+    ? workspaceName.split("/")[0]?.slice(1)
+    : undefined;
+  return npmScope ? `@${npmScope}/${projectDirectory}` : projectDirectory;
 }
 
 function getRelativePathToRootTsConfig(targetPath: string): string {
