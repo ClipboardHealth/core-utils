@@ -1,4 +1,4 @@
-import { isDefined, toError } from "@clipboard-health/util-ts";
+import { isNil, toError } from "@clipboard-health/util-ts";
 import { errors, type Page, type Response } from "@playwright/test";
 
 const MAX_RESPONSE_BODY_LOSS_DIAGNOSTICS = 3;
@@ -96,7 +96,7 @@ export async function waitForParsedJsonResponse<T>(
   }
   const parsedResponse = parsedCandidates.get(response);
 
-  if (!isDefined(parsedResponse)) {
+  if (isNil(parsedResponse)) {
     throw new Error(
       "Expected the matched JSON response body to be captured while it was readable.",
     );
