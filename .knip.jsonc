@@ -60,7 +60,7 @@
       "ignoreDependencies": ["@clipboard-health/oxlint-plugin"],
     },
     "packages/oxlint-plugin": {
-      "entry": ["scripts/verifyNegativeFixtures.mjs"],
+      "entry": ["scripts/verifyNegativeFixtures.mts"],
       "ignore": ["test/negative/**/*.ts"],
     },
     "packages/rules-engine": {
