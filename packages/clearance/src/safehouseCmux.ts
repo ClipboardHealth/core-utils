@@ -67,6 +67,13 @@ export interface SafehouseCmuxIntegration {
   claudeCommandPrelude: string;
   envPass: readonly string[];
   isActive: boolean;
+  /**
+   * Always undefined: cmux's control socket can launch commands outside the
+   * sandbox. Status hooks need a host-side relay restricted to hook operations
+   * and the assigned workspace before any socket access can be granted.
+   * Retained so consumers can omit their optional `--append-profile` flag.
+   */
+  socketProfile: string | undefined;
   unreviewedEnvNames: readonly string[];
 }
 
@@ -86,6 +93,7 @@ export function resolveSafehouseCmuxIntegration(
     claudeCommandPrelude: SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
     envPass: SAFEHOUSE_CMUX_ENV_PASS,
     isActive: isSafehouseCmuxIntegrationActive({ env }),
+    socketProfile: undefined,
     unreviewedEnvNames: resolveUnreviewedCmuxEnvNames({ env, readFile }),
   };
 }

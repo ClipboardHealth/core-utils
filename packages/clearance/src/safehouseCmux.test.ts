@@ -105,6 +105,32 @@ describe(resolveSafehouseCmuxIntegration, () => {
     expect(actual.addDirsReadOnly).toStrictEqual(["/Applications/cmux.app", "/state/cmux"]);
   });
 
+  it.each(["/state/cmux/cmux.sock", "/tmp/cmux-debug.sock"])(
+    "does not grant a sandboxed agent access to the cmux control socket at %s",
+    (socketPath) => {
+      const actual = resolveSafehouseCmuxIntegration({
+        env: {
+          CMUX_SOCKET_PATH: socketPath,
+          CMUX_SURFACE_ID: "surface-1",
+          HOME: "/Users/dev",
+        },
+        readFile: () => "",
+      });
+
+      expect(actual.isActive).toBe(true);
+      expect(actual.socketProfile).toBeUndefined();
+    },
+  );
+
+  it("omits the socket profile when no absolute socket path is known", () => {
+    const actual = resolveSafehouseCmuxIntegration({
+      env: { CMUX_SOCKET_PATH: "relative/cmux.sock", HOME: "/Users/dev" },
+      readFile: () => "",
+    });
+
+    expect(actual.socketProfile).toBeUndefined();
+  });
+
   it("skips empty and relative cmux read-only dirs", () => {
     const actual = resolveSafehouseCmuxIntegration({
       env: {
