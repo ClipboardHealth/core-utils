@@ -68,16 +68,10 @@ export interface SafehouseCmuxIntegration {
   envPass: readonly string[];
   isActive: boolean;
   /**
-   * sandbox-exec profile text that permits connecting to the cmux socket, or
-   * undefined when no absolute socket path is known. Safehouse denies
-   * unix-socket connects, and `addDirsReadOnly` covers only the socket's
-   * directory — reading a directory is not permission to connect to a socket
-   * inside it. Without this, every cmux agent hook
-   * (`cmux --socket ... hooks <agent> <event>`) is refused inside the sandbox
-   * and, because the hooks discard their own errors, agents silently report no
-   * activity. Callers stage this to a file and pass it to
-   * `safehouse --append-profile`; it is appended after the generated policy, and
-   * sandbox-exec resolves by last matching rule.
+   * Always undefined: cmux's control socket can launch commands outside the
+   * sandbox. Status hooks need a host-side relay restricted to hook operations
+   * and the assigned workspace before any socket access can be granted.
+   * Retained so consumers can omit their optional `--append-profile` flag.
    */
   socketProfile: string | undefined;
   unreviewedEnvNames: readonly string[];
@@ -99,7 +93,7 @@ export function resolveSafehouseCmuxIntegration(
     claudeCommandPrelude: SAFEHOUSE_CMUX_CLAUDE_COMMAND_PRELUDE,
     envPass: SAFEHOUSE_CMUX_ENV_PASS,
     isActive: isSafehouseCmuxIntegrationActive({ env }),
-    socketProfile: resolveCmuxSocketProfile({ env }),
+    socketProfile: undefined,
     unreviewedEnvNames: resolveUnreviewedCmuxEnvNames({ env, readFile }),
   };
 }
@@ -155,36 +149,6 @@ function homeHooksDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
 function homeSentryCacheDir(input: { env: NodeJS.ProcessEnv }): string | undefined {
   const home = normalizeAbsolutePath({ value: input.env["HOME"] });
   return home === undefined ? undefined : path.join(home, "Library", "Caches", "io.sentry");
-}
-
-/**
- * Directories macOS exposes through a symlink from the root. sandbox-exec
- * matches on the resolved path, so a rule written against `/tmp/x` never fires
- * for a process connecting to what is really `/private/tmp/x`. Both spellings
- * are emitted rather than resolving on disk, which keeps this a pure function
- * and works for a socket that does not exist yet.
- */
-const MACOS_PRIVATE_PREFIXES = ["/tmp/", "/var/", "/etc/"] as const;
-
-function resolveCmuxSocketProfile(input: { env: NodeJS.ProcessEnv }): string | undefined {
-  const socketPath = normalizeAbsolutePath({ value: input.env["CMUX_SOCKET_PATH"] });
-  // A quote or newline would break out of the profile's string literal. No real
-  // socket path contains one, so refuse rather than attempt to escape it.
-  if (socketPath === undefined || /["\n]/.test(socketPath)) {
-    return undefined;
-  }
-
-  const socketPaths = MACOS_PRIVATE_PREFIXES.some((prefix) => socketPath.startsWith(prefix))
-    ? [socketPath, `/private${socketPath}`]
-    : [socketPath];
-
-  return [
-    ";; Safehouse denies unix-socket connects, so cmux's agent hooks cannot reach",
-    ";; the cmux CLI from inside the sandbox and silently report no activity.",
-    ";; Allow the cmux socket itself, and nothing else.",
-    ...socketPaths.map((value) => `(allow network-outbound (literal "${value}"))`),
-    "",
-  ].join("\n");
 }
 
 function homeStateDir(input: { env: NodeJS.ProcessEnv }): string | undefined {

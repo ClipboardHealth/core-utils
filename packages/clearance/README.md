@@ -163,6 +163,14 @@ integration also grants cmux's existing Sentry cache write access so diagnostics
 cannot corrupt hook JSON output. It points the shim at the real Claude binary so
 the shim does not recurse through itself.
 
+The integration does not grant connections to cmux's control socket:
+`resolveSafehouseCmuxIntegration().socketProfile` is always `undefined`.
+That socket can create terminals and run commands outside Safehouse, so granting
+access for status hooks would also let sandboxed code bypass its restrictions.
+Hooks that require the socket remain blocked. Restoring them requires a
+host-side relay that accepts only the required hook operations for the assigned
+workspace; consumers must not append a profile granting the control socket.
+
 The cmux environment pass-through is an explicit reviewed allowlist. If a cmux
 update adds new `CMUX_*` variables to its Claude wrapper contract,
 `safehouse-claude-proxy` prints a warning naming the unreviewed variables

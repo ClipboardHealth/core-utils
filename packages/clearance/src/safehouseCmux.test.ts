@@ -105,30 +105,22 @@ describe(resolveSafehouseCmuxIntegration, () => {
     expect(actual.addDirsReadOnly).toStrictEqual(["/Applications/cmux.app", "/state/cmux"]);
   });
 
-  it("allows connecting to the cmux socket, which the read-only dir grant does not cover", () => {
-    const actual = resolveSafehouseCmuxIntegration({
-      env: { CMUX_SOCKET_PATH: "/state/cmux/cmux.sock", HOME: "/Users/dev" },
-      readFile: () => "",
-    });
+  it.each(["/state/cmux/cmux.sock", "/tmp/cmux-debug.sock"])(
+    "does not grant a sandboxed agent access to the cmux control socket at %s",
+    (socketPath) => {
+      const actual = resolveSafehouseCmuxIntegration({
+        env: {
+          CMUX_SOCKET_PATH: socketPath,
+          CMUX_SURFACE_ID: "surface-1",
+          HOME: "/Users/dev",
+        },
+        readFile: () => "",
+      });
 
-    expect(actual.socketProfile).toContain(
-      '(allow network-outbound (literal "/state/cmux/cmux.sock"))',
-    );
-  });
-
-  it("also allows the /private-prefixed socket path, which is what sandbox-exec matches on macOS", () => {
-    const actual = resolveSafehouseCmuxIntegration({
-      env: { CMUX_SOCKET_PATH: "/tmp/cmux-debug.sock", HOME: "/Users/dev" },
-      readFile: () => "",
-    });
-
-    expect(actual.socketProfile).toContain(
-      '(allow network-outbound (literal "/private/tmp/cmux-debug.sock"))',
-    );
-    expect(actual.socketProfile).toContain(
-      '(allow network-outbound (literal "/tmp/cmux-debug.sock"))',
-    );
-  });
+      expect(actual.isActive).toBe(true);
+      expect(actual.socketProfile).toBeUndefined();
+    },
+  );
 
   it("omits the socket profile when no absolute socket path is known", () => {
     const actual = resolveSafehouseCmuxIntegration({
