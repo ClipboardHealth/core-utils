@@ -35,7 +35,6 @@ async function build(): Promise<void> {
     execAndLog({
       ...params,
       command: [
-        "npx",
         "oxfmt",
         "--write",
         // Oxfmt needs explicit file paths to format gitignored build output.
@@ -45,7 +44,6 @@ async function build(): Promise<void> {
     execAndLog({
       ...params,
       command: [
-        "npx",
         "tsc",
         path.join(packageRoot, "scripts", "sync.ts"),
         "--outDir",
