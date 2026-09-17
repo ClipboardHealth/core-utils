@@ -1,0 +1,10 @@
+# This file overrides package.json workspace discovery; preserve the local packages.
+packages:
+  - packages/*
+
+# Repair the missing peer; keep package-lock.json metadata aligned for frozen installs.
+packageExtensions:
+  # Use the project's compiler so the dependency checker can read its TypeScript config.
+  "dependency-cruiser@18.2.0":
+    peerDependencies:
+      typescript: "^5.0.0"
