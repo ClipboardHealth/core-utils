@@ -6,7 +6,6 @@
     ".nx/workspace-data",
     ".serena",
     "coverage/",
-    "dist/",
     "docs/",
     ".github/CODEOWNERS",
     "*.toml"

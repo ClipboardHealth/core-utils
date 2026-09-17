@@ -1,5 +1,5 @@
+import { globSync } from "node:fs";
 import { copyFile, cp, mkdir, rm } from "node:fs/promises";
-import { devNull } from "node:os";
 import path from "node:path";
 
 import { PATHS } from "./constants";
@@ -36,11 +36,10 @@ async function build(): Promise<void> {
       ...params,
       command: [
         "npx",
-        "prettier",
+        "oxfmt",
         "--write",
-        "--ignore-path",
-        devNull,
-        `${outputDirectory}/**/*.md`,
+        // Oxfmt needs explicit file paths to format gitignored build output.
+        ...globSync(`${outputDirectory}/**/*.md`),
       ],
     }),
     execAndLog({
