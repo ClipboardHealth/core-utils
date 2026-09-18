@@ -139,6 +139,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | `common/errorHandling`        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                              |
 | `common/featureFlags`         | Creating or managing feature flags: naming, lifecycle, SDK usage, Zod schemas                                                |
 | `common/gitWorkflow`          | Writing commit messages, PR titles, or reviewing pull requests                                                               |
+| `common/groundtruth`          | Identifying owners or understanding architecture across Clipboard systems                                                    |
 | `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib)        |
 | `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                         |
 | `common/rulesEngine`          | Writing or modifying @clipboard-health/rules-engine rule functions                                                           |
