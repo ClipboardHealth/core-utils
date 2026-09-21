@@ -8,7 +8,6 @@ export const PATHS = {
 
 export const FILES = {
   agents: "AGENTS.md",
-  claude: "CLAUDE.md",
 } as const;
 
 export const PROFILES = {

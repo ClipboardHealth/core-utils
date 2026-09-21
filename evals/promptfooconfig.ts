@@ -3,8 +3,7 @@ import path from "node:path";
 
 const repoRoot = path.join(import.meta.dirname, "..");
 
-// claude-agent-sdk doesn't resolve @mentions in CLAUDE.md like Claude Code CLI does, so load
-// AGENTS.md to give the agent the index; we're still testing that it Read the actual rule files.
+// Load the agent index explicitly; the eval still tests whether the agent reads the rule files.
 const agentsMd = readFileSync(path.join(repoRoot, "AGENTS.md"), "utf8");
 
 const textGenFormat =
@@ -12,7 +11,7 @@ const textGenFormat =
 
 // oxlint-disable import/no-anonymous-default-export
 export default {
-  description: "CLAUDE.md rule adherence evals",
+  description: "AGENTS.md rule adherence evals",
 
   providers: [
     {

@@ -44,7 +44,6 @@ async function sync() {
 
     const agentsContent = generateAgentsIndex(rules);
     await writeFile(path.join(PATHS.projectRoot, FILES.agents), agentsContent, "utf8");
-    await writeFile(path.join(PATHS.projectRoot, FILES.claude), "@AGENTS.md\n", "utf8");
 
     console.log(
       `✅ @clipboard-health/ai-rules synced ${parsedArguments.profile} (${rules.length} rules)`,

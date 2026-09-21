@@ -29,6 +29,7 @@ tmp/
 .tool-versions
 *.bak
 CLAUDE.local.md
+CLAUDE.md
 npm-debug.log
 /tribunal.config.*
 !/tribunal.config.example.json

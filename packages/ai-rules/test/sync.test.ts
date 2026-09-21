@@ -1,4 +1,4 @@
-import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -17,7 +17,7 @@ afterEach(async () => {
 });
 
 describe("sync script", () => {
-  it("does not create a consumer .agents directory", async () => {
+  it("generates only the shared rules and agent index in the consumer root", async () => {
     const consumerRoot = await createConsumerProject();
     const installedPackageRoot = path.join(
       consumerRoot,
@@ -41,11 +41,9 @@ describe("sync script", () => {
       verbose: false,
     });
 
-    await expect(access(path.join(consumerRoot, ".rules"))).resolves.toBeUndefined();
-    await expect(access(path.join(consumerRoot, "AGENTS.md"))).resolves.toBeUndefined();
-    await expect(access(path.join(consumerRoot, ".agents"))).rejects.toMatchObject({
-      code: "ENOENT",
-    });
+    const actual = (await readdir(consumerRoot)).toSorted();
+    const expected = [".rules", "AGENTS.md", "node_modules"];
+    expect(actual).toEqual(expected);
   });
 
   it("leaves consumer Claude configuration untouched", async () => {
