@@ -50,7 +50,7 @@ Run `explain("executionStats")` on new or changed queries; verify `$lookup` stag
 - Include partial/sparse index constraints in queries that rely on those indexes
 - Avoid `$expr` in `$lookup` pipelines except for simple comparisons (`$eq`, `$lt`, `$lte`, `$gt`, `$gte`)
 - Limit `$in` to fewer than 100 values
-- Use `aggregate` with `$group` instead of `distinct`: `distinct` picks the oldest index whose leading field is filtered on and that contains the distinct field, with no cost comparison, so a better index is ignored and the query may walk the whole index tree
+- Use `aggregate` with `$group` instead of `distinct`: `distinct` picks the oldest index whose leading field is filtered on and that contains the distinct field, with no cost comparison, so a better index is ignored and the query may walk the whole index tree; `$unwind` array fields before `$group` to keep `distinct`'s per-element semantics
 
 ## Transactions
 
