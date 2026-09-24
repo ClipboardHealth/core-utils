@@ -1,0 +1,73 @@
+import { deepFreeze } from "@clipboard-health/util-ts";
+
+import type { StateCode } from "./usStates";
+
+/**
+ * Representative IANA zones for every supported state and territory in preference
+ * order. The first entry prefers the timezone whose local calendar day ends earliest
+ * in UTC under current rules. The ordering is fixed; zones can tie, and historical
+ * ordering can differ. These lists represent current standard-time/DST regimes.
+ *
+ * See the package README for geographic sources and exceptions.
+ */
+export const STATE_TIME_ZONES = deepFreeze({
+  AL: ["America/Chicago"],
+  AK: ["America/Anchorage", "America/Adak"],
+  AS: ["Pacific/Pago_Pago"],
+  AZ: ["America/Denver", "America/Phoenix"],
+  AR: ["America/Chicago"],
+  CA: ["America/Los_Angeles"],
+  CO: ["America/Denver"],
+  CT: ["America/New_York"],
+  DE: ["America/New_York"],
+  DC: ["America/New_York"],
+  FM: ["Pacific/Pohnpei", "Pacific/Chuuk"],
+  FL: ["America/New_York", "America/Chicago"],
+  GA: ["America/New_York"],
+  GU: ["Pacific/Guam"],
+  HI: ["Pacific/Honolulu"],
+  ID: ["America/Boise", "America/Los_Angeles"],
+  IL: ["America/Chicago"],
+  IN: ["America/Indiana/Indianapolis", "America/Chicago"],
+  IA: ["America/Chicago"],
+  KS: ["America/Chicago", "America/Denver"],
+  KY: ["America/New_York", "America/Chicago"],
+  LA: ["America/Chicago"],
+  ME: ["America/New_York"],
+  MH: ["Pacific/Majuro"],
+  MD: ["America/New_York"],
+  MA: ["America/New_York"],
+  MI: ["America/Detroit", "America/Menominee"],
+  MN: ["America/Chicago"],
+  MS: ["America/Chicago"],
+  MO: ["America/Chicago"],
+  MT: ["America/Denver"],
+  NE: ["America/Chicago", "America/Denver"],
+  NV: ["America/Denver", "America/Los_Angeles"],
+  NH: ["America/New_York"],
+  NJ: ["America/New_York"],
+  NM: ["America/Denver"],
+  NY: ["America/New_York"],
+  NC: ["America/New_York"],
+  ND: ["America/Chicago", "America/Denver"],
+  MP: ["Pacific/Saipan"],
+  OH: ["America/New_York"],
+  OK: ["America/Chicago"],
+  OR: ["America/Boise", "America/Los_Angeles"],
+  PW: ["Pacific/Palau"],
+  PA: ["America/New_York"],
+  PR: ["America/Puerto_Rico"],
+  RI: ["America/New_York"],
+  SC: ["America/New_York"],
+  SD: ["America/Chicago", "America/Denver"],
+  TN: ["America/New_York", "America/Chicago"],
+  TX: ["America/Chicago", "America/Denver"],
+  UT: ["America/Denver"],
+  VT: ["America/New_York"],
+  VI: ["America/St_Thomas"],
+  VA: ["America/New_York"],
+  WA: ["America/Los_Angeles"],
+  WV: ["America/New_York"],
+  WI: ["America/Chicago"],
+  WY: ["America/Denver"],
+} as const satisfies Record<StateCode, readonly [string, ...string[]]>);
