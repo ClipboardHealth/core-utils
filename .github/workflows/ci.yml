@@ -34,9 +34,18 @@ jobs:
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
+      # `projectsAffectedByDependencyUpdates: auto` narrows what `nx affected` counts for
+      # package-lock.json changes, so run everything when the lockfile changed.
+      - name: Choose nx affected or run-many
+        run: |
+          if git diff --quiet "$NX_BASE...$NX_HEAD" -- package-lock.json; then
+            echo "CI_NX_COMMAND=affected" >> "$GITHUB_ENV"
+          else
+            echo "CI_NX_COMMAND=run-many" >> "$GITHUB_ENV"
+          fi
       # Don't use the read-write NX_CLOUD_ACCESS_TOKEN when not on `main`, see https://nx.dev/ci/concepts/cache-security#use-a-readwrite-token-in-ci
       - run: node --run verify
-      - run: node --run affected
+      - run: npx nx "$CI_NX_COMMAND" --configuration ci --parallel 8 --targets build,lint,test
       - run: docker compose down --volumes
         if: always()
 
@@ -63,12 +72,21 @@ jobs:
         with:
           npm_token: ${{ secrets.NPM_TOKEN }}
           start_services: "true"
+      # `projectsAffectedByDependencyUpdates: auto` narrows what `nx affected` counts for
+      # package-lock.json changes, so run everything when the lockfile changed.
+      - name: Choose nx affected or run-many
+        run: |
+          if git diff --quiet "$NX_BASE...$NX_HEAD" -- package-lock.json; then
+            echo "CI_NX_COMMAND=affected" >> "$GITHUB_ENV"
+          else
+            echo "CI_NX_COMMAND=run-many" >> "$GITHUB_ENV"
+          fi
       # Skip the cache and use the read-write NX_CLOUD_ACCESS_TOKEN on `main`, see https://nx.dev/ci/concepts/cache-security#skip-the-cache-when-creating-a-deployment-artifact
-      - run: npx nx affected --configuration ci --skip-nx-cache --target build
+      - run: npx nx "$CI_NX_COMMAND" --configuration ci --skip-nx-cache --target build
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
       # Lint and test can use the cache; only build needs --skip-nx-cache for deployment artifact integrity
-      - run: npx nx affected --configuration ci --targets lint,test
+      - run: npx nx "$CI_NX_COMMAND" --configuration ci --targets lint,test
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
       - run: docker compose down --volumes
