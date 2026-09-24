@@ -1,4 +1,4 @@
-export * from "./lib/getLicenseTimeZone";
+export * from "./lib/getStateTimeZones";
 export * from "./lib/isStateCode";
 export * from "./lib/stateTimeZones";
 export * from "./lib/toStateCode";

@@ -6,7 +6,7 @@ Canonical US state and territory list, `StateCode` and `StateName` types, and na
 
 - [Install](#install)
 - [Usage](#usage)
-- [License timezone policy](#license-timezone-policy)
+- [State timezones](#state-timezones)
   - [Ordered choices and geographic exceptions](#ordered-choices-and-geographic-exceptions)
   - [Existing license processor conventions](#existing-license-processor-conventions)
 - [Local development commands](#local-development-commands)
@@ -71,38 +71,41 @@ representation to compare across services. Both normalizers return `undefined` f
 input — treat that as a validation failure rather than falling back to the raw value, otherwise
 unnormalized input reaches storage.
 
-## License timezone policy
+## State timezones
 
 `STATE_TIME_ZONES` provides a frozen, nonempty list of representative IANA timezone names for
-each supported `StateCode`. `getLicenseTimeZone` normalizes an issuing state using `toStateCode`
-and selects the first entry. Existing state names/codes and `US_STATES` objects are unchanged.
+each supported `StateCode`. `getStateTimeZones` normalizes a state using `toStateCode` and returns
+the complete ordered array. Callers decide which entry to use. Existing state names/codes and
+`US_STATES` objects are unchanged.
 
 ```ts
-import { getLicenseTimeZone, STATE_TIME_ZONES } from "@clipboard-health/usa-states";
+import { getStateTimeZones, STATE_TIME_ZONES } from "@clipboard-health/usa-states";
 
 STATE_TIME_ZONES.WA;
 // => ["America/Los_Angeles"]
 STATE_TIME_ZONES.TN;
 // => ["America/New_York", "America/Chicago"]
 
-const result = getLicenseTimeZone({ state: "  washington " });
-if (result.isSuccess) {
-  result.value.licenseTimeZone;
-  // => "America/Los_Angeles"
-}
+getStateTimeZones({ state: "  tennessee " });
+// => ["America/New_York", "America/Chicago"]
 
-const unknown = getLicenseTimeZone({ state: "Any" });
-if (unknown.isSuccess) {
-  unknown.value.licenseTimeZone;
-  // => undefined
-}
+getStateTimeZones({ state: "Any" });
+// => []
+getStateTimeZones({});
+// => []
+
+// A licensing consumer selects the first entry and persists absence as null.
+const licenseTimeZone = getStateTimeZones({ state: "Washington" })[0] ?? null;
+// => "America/Los_Angeles"
 ```
 
-The helper follows the shared `ServiceResult` API convention. A missing (`null`, `undefined`, or
-omitted), blank, `Any`, or unrecognized state successfully resolves to `licenseTimeZone: undefined`.
-License Manager can persist that absence as `null`. No UTC or viewer-timezone fallback is selected
-here; null presentation/input behavior must be decided by consumers consistently before rollout.
-Resolving metadata does not change the stored state representation.
+The helper accepts `state?: string` and returns a frozen `readonly string[]` directly. An omitted,
+blank, `Any`, or unrecognized state returns a frozen empty array. With `exactOptionalPropertyTypes`,
+callers should omit `state` when the source value is nullish instead of explicitly passing `null`
+or `undefined`. License Manager can select the first entry and persist its absence as `null`.
+No UTC or viewer-timezone fallback is selected here; null presentation/input behavior must be
+decided by consumers consistently before rollout. Resolving metadata does not change the stored
+state representation.
 
 Use the **issuing state** even for compact/multistate licenses. Worker residence, physical location,
 workplace state, and shift timezone do not select this metadata. Persist the selected zone on
