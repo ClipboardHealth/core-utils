@@ -16,6 +16,7 @@ TypeScript utilities.
     - [`pipe`](#pipe)
     - [`option`](#option)
     - [`either`](#either)
+  - [`commaSeparatedList`](#commaseparatedlist)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -403,6 +404,33 @@ const result = pipe(
 );
 
 strictEqual(result, "Result is 0.1");
+```
+
+</embedex>
+
+### `commaSeparatedList`
+
+`commaSeparatedList<Allowed>()` returns a function that checks nonempty comma-separated
+string literals against an explicit allowed literal union. It preserves the exact string type,
+order, and repeated items. Every member of an input union must be valid; widened `string` inputs
+and an unrestricted `string` allowed type are rejected.
+
+This is a compile-time check. The function returns its input unchanged and performs no runtime
+validation or whitespace normalization. Each segment must match an allowed item exactly.
+
+<embedex source="packages/util-ts/examples/commaSeparatedList.ts">
+
+```ts
+import { strictEqual } from "node:assert/strict";
+
+import { commaSeparatedList } from "@clipboard-health/util-ts";
+
+type Field = "id" | "name" | "email";
+
+const fields = commaSeparatedList<Field>();
+const selected: "id,name,id" = fields("id,name,id");
+
+strictEqual(selected, "id,name,id");
 ```
 
 </embedex>
