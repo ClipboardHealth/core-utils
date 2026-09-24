@@ -1,7 +1,8 @@
 {
   "pluginsConfig": {
     "@nx/js": {
-      "analyzeSourceFiles": true
+      "analyzeSourceFiles": true,
+      "projectsAffectedByDependencyUpdates": "auto"
     }
   },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
