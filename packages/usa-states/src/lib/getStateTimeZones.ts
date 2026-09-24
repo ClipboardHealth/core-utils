@@ -9,9 +9,13 @@ export interface GetStateTimeZonesInput {
 }
 
 /**
- * Returns the complete, frozen list of representative IANA zones in policy order
- * after applying the existing state normalizer. Omitted, blank, `Any`, and
- * unrecognized states return a frozen empty array. Selection is left to callers.
+ * Returns the complete, frozen list of representative IANA zones in preference
+ * order after applying the existing state normalizer. The first entry prefers
+ * the timezone whose local calendar day ends earliest in UTC under current rules.
+ * The ordering is fixed; zones can tie, and historical ordering can differ.
+ *
+ * Omitted, blank, `Any`, and unrecognized states return a frozen empty array.
+ * Selection is left to callers.
  */
 export function getStateTimeZones(input: GetStateTimeZonesInput): readonly string[] {
   const { state } = input;

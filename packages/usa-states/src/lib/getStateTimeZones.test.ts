@@ -12,7 +12,7 @@ describe(getStateTimeZones, () => {
     { state: "Oregon", expected: ["America/Boise", "America/Los_Angeles"] },
     { state: "NV", expected: ["America/Denver", "America/Los_Angeles"] },
     { state: "Federated States Of Micronesia", expected: ["Pacific/Pohnpei", "Pacific/Chuuk"] },
-  ])("returns all zones in policy order for $state", ({ state, expected }) => {
+  ])("returns all zones in preference order for $state", ({ state, expected }) => {
     const actual = getStateTimeZones({ state });
 
     expect(actual).toStrictEqual(expected);

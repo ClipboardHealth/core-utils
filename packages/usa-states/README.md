@@ -8,7 +8,6 @@ Canonical US state and territory list, `StateCode` and `StateName` types, and na
 - [Usage](#usage)
 - [State timezones](#state-timezones)
   - [Ordered choices and geographic exceptions](#ordered-choices-and-geographic-exceptions)
-  - [Existing license processor conventions](#existing-license-processor-conventions)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -62,7 +61,7 @@ interface LabelInput {
 function toLabel(input: LabelInput): string {
   const { name } = input;
 
-  return `Licensed in ${name}`;
+  return `State: ${name}`;
 }
 ```
 
@@ -93,40 +92,24 @@ getStateTimeZones({ state: "Any" });
 // => []
 getStateTimeZones({});
 // => []
-
-// A licensing consumer selects the first entry and persists absence as null.
-const licenseTimeZone = getStateTimeZones({ state: "Washington" })[0] ?? null;
-// => "America/Los_Angeles"
 ```
 
 The helper accepts `state?: string` and returns a frozen `readonly string[]` directly. An omitted,
 blank, `Any`, or unrecognized state returns a frozen empty array. With `exactOptionalPropertyTypes`,
 callers should omit `state` when the source value is nullish instead of explicitly passing `null`
-or `undefined`. License Manager can select the first entry and persist its absence as `null`.
-No UTC or viewer-timezone fallback is selected here; null presentation/input behavior must be
-decided by consumers consistently before rollout. Resolving metadata does not change the stored
-state representation.
-
-Use the **issuing state** even for compact/multistate licenses. Worker residence, physical location,
-workplace state, and shift timezone do not select this metadata. Persist the selected zone on
-creation and issuing-state changes; unrelated updates should preserve the existing snapshot.
-Changing this shared policy does not authorize a historical backfill or a processor cutoff change.
-
-This package supplies policy metadata only. Continue using `@clipboard-health/date-time` with an
-explicit timezone for conversion and formatting. Preserve the UTC `expiresAt` instant: for example,
-`2026-09-27T06:59:59Z` represents September 26 at 23:59:59 in Washington's
-`America/Los_Angeles`, even when the viewer is in Georgia.
+or `undefined`. This package supplies timezone metadata; consumers handle selection, formatting,
+and conversion with an explicit timezone.
 
 ### Ordered choices and geographic exceptions
 
-The first entry is the conservative application preference: the earlier expiration cutoff for the
-same credential calendar day under current timezone rules. The order is stable and documented;
-it is neither a population/capital preference nor a chain of fallbacks. Do not sort by today's UTC
-offset or substitute fixed `PST`/`EST` offsets. Arizona's entries tie during standard time.
+The first entry prefers the timezone whose local calendar day ends earliest in UTC under current
+timezone rules. The ordering is fixed; zones can tie, and historical ordering can differ. Arizona's
+entries tie during standard time. The order expresses this preference rather than population or
+capital-city coverage. Use the documented order and IANA rules instead of sorting by today's UTC
+offset or substituting fixed `PST`/`EST` offsets.
 
-The lists represent current standard-time/DST regimes, not every historical IANA location or alias.
-They do not guarantee chronological ordering for every historical date or claim that a licensing
-registry has established a legal expiration hour. Existing timestamps retain their original meaning.
+The lists represent current standard-time/DST regimes, rather than every historical IANA location
+or alias. Consult date-specific timezone rules when historical ordering matters.
 
 The 14 states spanning federal standard-time zones, plus Arizona's separate DST case, are:
 
@@ -163,26 +146,6 @@ Geography and timezone identifiers reviewed September 24, 2026:
   for Arizona/Navajo and territory DST exceptions.
 - [IANA timezone descriptions](https://data.iana.org/time-zones/tzdb/zone1970.tab) and
   [location names and aliases](https://data.iana.org/time-zones/tzdb/zone.tab).
-
-### Existing license processor conventions
-
-The document-verification-service inventory includes its Washington Pacific-date work and the
-state-specific processors/configurations reviewed September 24, 2026. Shared-policy adoption must
-preserve each processor's existing instant; a policy mismatch requires separate review.
-
-| Existing processor/configuration                    | Existing convention                                                                                    | Adoption guidance                                                                |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Washington; Hawaii; Idaho; Michigan                 | Los Angeles; Honolulu; Boise; Detroit respectively                                                     | Shared first entries match                                                       |
-| Kentucky; Kansas; North Dakota; South Dakota; Texas | New York for Kentucky; Chicago for the other four                                                      | Shared first entries match                                                       |
-| Oregon BON                                          | America/Los_Angeles                                                                                    | Preserve explicit exception; shared policy prefers Boise                         |
-| Nevada BON                                          | America/Los_Angeles                                                                                    | Preserve explicit exception; shared policy prefers Denver                        |
-| Arizona BON                                         | America/Phoenix                                                                                        | Preserve explicit exception; shared policy prefers Denver and differs during DST |
-| Remaining explicit-zone CNA processors/configs      | New York, Chicago, or Denver for their issuing state                                                   | Shared first entries match; validate each migration with existing fixtures       |
-| Legacy California, Florida, Ohio, RN, and LVN       | Shared UTC end-of-day suffix                                                                           | Preserve legacy convention; do not substitute state end-of-day                   |
-| Nebraska presence-based verification                | Verification instant plus two UTC calendar years; inactive observation can use its observation instant | Preserve synthetic/observation timestamp semantics                               |
-
-Changing only the timezone annotation cannot reconstruct an original registry calendar date for
-legacy or synthetic expirations. Do not rewrite those instants while adopting this package.
 
 ## Local development commands
 

@@ -3,12 +3,12 @@ import { deepFreeze } from "@clipboard-health/util-ts";
 import type { StateCode } from "./usStates";
 
 /**
- * Representative IANA zones for every supported state and territory, ordered by
- * license policy. The first entry prefers the earlier expiration cutoff for the
- * same calendar day under current rules. This is a stable policy preference,
- * not an offset sort, a fallback chain, or an exhaustive historical zone list.
+ * Representative IANA zones for every supported state and territory in preference
+ * order. The first entry prefers the timezone whose local calendar day ends earliest
+ * in UTC under current rules. The ordering is fixed; zones can tie, and historical
+ * ordering can differ. These lists represent current standard-time/DST regimes.
  *
- * See the package README for geographic sources and processor exceptions.
+ * See the package README for geographic sources and exceptions.
  */
 export const STATE_TIME_ZONES = deepFreeze({
   AL: ["America/Chicago"],

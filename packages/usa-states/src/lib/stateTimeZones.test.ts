@@ -1,6 +1,6 @@
 import { type StateCode, STATE_TIME_ZONES, US_STATES } from "../index";
 
-const SPLIT_STATE_POLICIES = [
+const SPLIT_STATE_TIME_ZONES = [
   { state: "AK", expected: ["America/Anchorage", "America/Adak"] },
   { state: "AZ", expected: ["America/Denver", "America/Phoenix"] },
   { state: "FL", expected: ["America/New_York", "America/Chicago"] },
@@ -18,7 +18,7 @@ const SPLIT_STATE_POLICIES = [
   { state: "TX", expected: ["America/Chicago", "America/Denver"] },
 ] satisfies Array<{ state: StateCode; expected: string[] }>;
 
-const CUTOFF_FIXTURES = [
+const END_OF_DAY_FIXTURES = [
   { states: ["FL", "IN", "KY", "MI", "TN"], summer: "03:59:59Z", winter: "04:59:59Z" },
   { states: ["KS", "NE", "ND", "SD", "TX"], summer: "04:59:59Z", winter: "05:59:59Z" },
   { states: ["ID", "NV", "OR"], summer: "05:59:59Z", winter: "06:59:59Z" },
@@ -32,7 +32,7 @@ describe("STATE_TIME_ZONES", () => {
     expect(actual).toStrictEqual(US_STATES.map(({ code }) => code).toSorted());
   });
 
-  it("freezes the shared policy so consumers cannot change it", () => {
+  it("freezes the shared mapping so consumers cannot change it", () => {
     expect(Object.isFrozen(STATE_TIME_ZONES)).toBe(true);
     expectTypeOf(STATE_TIME_ZONES.AZ).toEqualTypeOf<
       readonly ["America/Denver", "America/Phoenix"]
@@ -51,8 +51,8 @@ describe("STATE_TIME_ZONES", () => {
     }
   });
 
-  it.each(SPLIT_STATE_POLICIES)(
-    "documents the ordered policy for $state",
+  it.each(SPLIT_STATE_TIME_ZONES)(
+    "preserves the timezone preference order for $state",
     ({ state, expected }) => {
       const actual = STATE_TIME_ZONES[state];
 
@@ -79,39 +79,42 @@ describe("STATE_TIME_ZONES", () => {
   );
 });
 
-describe("license timezone policy against IANA rules", () => {
-  describe.each(CUTOFF_FIXTURES)("earlier cutoff for $states", ({ states, summer, winter }) => {
-    it.each([
-      { date: "2026-01-16", cutoff: winter, credentialDay: "15", month: "01" },
-      { date: "2026-03-09", cutoff: summer, credentialDay: "08", month: "03" },
-      { date: "2026-07-02", cutoff: summer, credentialDay: "01", month: "07" },
-      { date: "2026-11-02", cutoff: winter, credentialDay: "01", month: "11" },
-    ])("uses the earlier end of day before $date", ({ date, cutoff, credentialDay, month }) => {
-      for (const state of states) {
-        const [preferredTimeZone, ...alternatives] = STATE_TIME_ZONES[state];
-        const instant = `${date}T${cutoff}`;
+describe("state timezone ordering against IANA rules", () => {
+  describe.each(END_OF_DAY_FIXTURES)(
+    "earlier end of day for $states",
+    ({ states, summer, winter }) => {
+      it.each([
+        { date: "2026-01-16", endOfDay: winter, localDay: "15", month: "01" },
+        { date: "2026-03-09", endOfDay: summer, localDay: "08", month: "03" },
+        { date: "2026-07-02", endOfDay: summer, localDay: "01", month: "07" },
+        { date: "2026-11-02", endOfDay: winter, localDay: "01", month: "11" },
+      ])("uses the earlier end of day before $date", ({ date, endOfDay, localDay, month }) => {
+        for (const state of states) {
+          const [preferredTimeZone, ...alternatives] = STATE_TIME_ZONES[state];
+          const instant = `${date}T${endOfDay}`;
 
-        const actual = localParts({ instant, timeZone: preferredTimeZone });
+          const actual = localParts({ instant, timeZone: preferredTimeZone });
 
-        expect(actual).toMatchObject({
-          month,
-          day: credentialDay,
-          hour: "23",
-          minute: "59",
-          second: "59",
-        });
-        for (const timeZone of alternatives) {
-          expect(localParts({ instant, timeZone })).toMatchObject({
+          expect(actual).toMatchObject({
             month,
-            day: credentialDay,
-            hour: "22",
+            day: localDay,
+            hour: "23",
             minute: "59",
             second: "59",
           });
+          for (const timeZone of alternatives) {
+            expect(localParts({ instant, timeZone })).toMatchObject({
+              month,
+              day: localDay,
+              hour: "22",
+              minute: "59",
+              second: "59",
+            });
+          }
         }
-      }
-    });
-  });
+      });
+    },
+  );
 
   it.each([
     { instant: "2026-01-16T06:59:59Z", month: "01", day: "15", phoenixHour: "23" },
@@ -131,7 +134,7 @@ describe("license timezone policy against IANA rules", () => {
   it.each([
     { instant: "2026-01-16T07:59:59Z", month: "01", day: "15" },
     { instant: "2026-09-27T06:59:59Z", month: "09", day: "26" },
-  ])("keeps Washington's credential day at $instant", ({ instant, month, day }) => {
+  ])("resolves Washington's local calendar day at $instant", ({ instant, month, day }) => {
     const actual = localParts({ instant, timeZone: STATE_TIME_ZONES.WA[0] });
 
     expect(actual).toMatchObject({ month, day, hour: "23", minute: "59", second: "59" });
@@ -149,7 +152,7 @@ describe("license timezone policy against IANA rules", () => {
     expect(actual).toMatchObject({ hour, minute, second });
   });
 
-  it("prefers Micronesia's earlier cutoff across the UTC date boundary", () => {
+  it("prefers Micronesia's earlier end of day across the UTC date boundary", () => {
     const instant = "2026-07-01T12:59:59Z";
     const [preferredTimeZone, otherTimeZone] = STATE_TIME_ZONES.FM;
 
@@ -166,8 +169,7 @@ interface LocalPartsInput {
   timeZone: string;
 }
 
-// Intl is an independent test oracle for geographic metadata. Production
-// conversion/formatting stays in consumers' @clipboard-health/date-time library.
+// Intl is an independent test oracle for geographic metadata.
 function localParts(input: LocalPartsInput): Record<string, string> {
   const { instant, timeZone } = input;
   const formatter = new Intl.DateTimeFormat("en-US", {
