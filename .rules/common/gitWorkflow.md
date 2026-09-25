@@ -1,5 +1,5 @@
 ---
-description: "Writing commit messages, PR titles, or reviewing pull requests"
+description: "Writing commit messages, PR titles and descriptions, or reviewing pull requests"
 ---
 
 # Git Workflow
@@ -18,5 +18,8 @@ description: "Writing commit messages, PR titles, or reviewing pull requests"
 Link Linear ticket in PR description. Include context, reasoning, and areas of concern.
 
 Include proof of validation: tests, screenshots, telemetry, or Loom video.
+
+When you make a judgment call a human should confirm (a cache duration, a default value, a copy
+choice), list it under `## Reviewer decisions` in the PR description instead of stopping to ask.
 
 Split large non-functional changes (refactors, dependency upgrades) into separate PRs from feature work.
