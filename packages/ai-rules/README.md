@@ -132,6 +132,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | Rule ID                       | When to Read                                                                                                                 |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `common/aiRules`              | Editing Clipboard agent instructions: shared rules, repository overlays, or generated .rules, AGENTS.md, and CLAUDE.md files |
+| `common/ciRunners`            | Writing or editing GitHub Actions workflows: choosing runs-on runners, runner OS and egress constraints                      |
 | `common/configuration`        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                                     |
 | `common/containerRegistry`    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                                 |
 | `common/coreLibraries`        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library                 |
