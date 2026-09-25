@@ -12,7 +12,7 @@ Read the rule files relevant to the code you're changing or reviewing.
 | Core Libraries             | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library                 |
 | Date & Time                | .rules/common/dateTime.md             | Working with dates, times, timezones, or date comparisons                                                                    |
 | Error Handling             | .rules/common/errorHandling.md        | Returning or throwing errors: ServiceResult, ServiceError, ERROR_CODES, toError                                              |
-| Git Workflow               | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles, or reviewing pull requests                                                               |
+| Git Workflow               | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles and descriptions, or reviewing pull requests                                              |
 | Ownership and Architecture | .rules/common/groundtruth.md          | Identifying owners or understanding architecture across Clipboard systems                                                    |
 | Library Authoring          | .rules/common/libraryAuthoring.md     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib)        |
 | Logging & Observability    | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                         |

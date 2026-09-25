@@ -91,6 +91,14 @@ Check every changed query against each applicable branch:
   `placeholderData: keepPreviousData`/`isPlaceholderData`. Separate hooks toggled with `enabled`
   do not share observer history; model compatible alternatives as one key-changing query or handle
   the pending state explicitly.
+- **Freshness is a per-query decision.** When adding a query, or calling an existing query hook
+  from a new surface, decide its `staleTime`; the option has the same name in v4 and v5. Without
+  one, every mount, window focus and reconnect refetches. Base the value on how often the data
+  changes server-side and whether a mutation already invalidates it: near-static reference data
+  (workplace profile, config) gets minutes or longer; state the user acts on (shift status,
+  bookings) gets a short value or relies on invalidation. Don't block on this. Pick a value and
+  record it under `## Reviewer decisions` in the PR description with the query key, the value and
+  a one-line reason.
 
 ## `parsedApi.ts` vs `api.ts`
 
