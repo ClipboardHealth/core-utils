@@ -23,4 +23,4 @@ description: "Writing or editing GitHub Actions workflows: choosing runs-on runn
   - macOS, Windows, arm64, or GPU jobs.
   - Actions without Amazon Linux support, such as `ruby/setup-ruby`.
 - Public repositories use self-hosted runners only with Settings → Actions → "Require approval for all external contributors" enabled. Verify with `gh api repos/<owner>/<repo>/actions/permissions/fork-pr-contributor-approval`: it must report `approval_policy: all_external_contributors`. Otherwise use GitHub-hosted runners. `pull_request_target` runs fork PRs without that approval, so public-repository jobs on that trigger that check out or run PR code stay on GitHub-hosted runners.
-- Rationale: self-hosted 8- and 16-core jobs ran about 50% faster in the open-shifts migration, and p90 queue wait dropped from 74s to 2s. Their egress firewall blocks data exfiltration from compromised actions or dependencies.
+- Rationale: self-hosted 8- and 16-core jobs ran about 50% faster in the open-shifts migration, and p90 queue wait dropped from 74s to 2s. Their egress firewall blocks data exfiltration from compromised actions or dependencies to non-allowlisted domains.
