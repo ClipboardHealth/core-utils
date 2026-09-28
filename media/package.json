@@ -57,7 +57,7 @@
     "jsonc-eslint-parser": "3.3.0",
     "knip": "6.32.3",
     "lint-staged": "17.5.1",
-    "markdownlint-cli2": "0.23.2",
+    "markdownlint-cli2": "0.23.3",
     "nx": "23.2.1",
     "oxfmt": "0.68.0",
     "oxlint": "1.83.0",
