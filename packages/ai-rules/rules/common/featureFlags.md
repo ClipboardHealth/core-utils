@@ -4,24 +4,27 @@ description: "Creating or managing feature flags: naming, lifecycle, SDK usage, 
 
 # Feature Flags
 
-**Naming:** `YYYY-MM-[kind]-[subject]` (e.g., `2024-03-release-new-booking-flow`)
+**Naming:** `YYYY-MM-<feature-descriptive-name>` (e.g., `2026-09-new-booking-flow`).
 
-| Kind         | Purpose                  |
-| ------------ | ------------------------ |
-| `release`    | Gradual rollout to 100%  |
-| `enable`     | Kill switch              |
-| `experiment` | Trial for small audience |
-| `configure`  | Runtime config           |
+## Required Metadata
 
-**Rules:**
+When creating a flag, set the following tags and custom properties:
+
+- Category tag: Classify the flag's purpose and lifecycle
+- `team-<name>` tag: Identify the owning team; update it when ownership changes
+- `blast-*` tag: Describe the risk of changing the flag
+- `cb.domain` custom property: Identify the domain
+- `cb.review-date` custom property: Set the next flag audit date
+
+## Lifecycle and Defaults
 
 - "Off" = default/safer value
-- No permanent flags (except `configure`)
+- Retain permanent flags only for runtime configuration. When a temporary flag becomes permanent configuration, update its category tag and metadata in place.
 - Create archival ticket when creating flag
+- Use `cb.review-date` to schedule audits and keep the flag's metadata current
 - Validate staging before production
 - Always provide default values in code
-- Clean up after full launch
-- Tag flags with owning team (not in key name)
+- Clean up flags that are no longer needed after launch
 
 **When making feature flag changes**: include LaunchDarkly link: `https://app.launchdarkly.com/projects/default/flags/{flag-key}`
 
