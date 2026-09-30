@@ -10,13 +10,11 @@ description: "Creating or managing feature flags: naming, lifecycle, SDK usage, 
 
 When creating a flag, set the following tags and custom properties:
 
-| Tag or custom property           | Purpose                                                    |
-| -------------------------------- | ---------------------------------------------------------- |
-| Category tag                     | Classify the flag's purpose and lifecycle                  |
-| `team-<name>` tag                | Identify the owning team; update it when ownership changes |
-| `blast-*` tag                    | Describe the risk of changing the flag                     |
-| `cb.domain` custom property      | Identify the domain                                        |
-| `cb.review-date` custom property | Set the next flag audit date                               |
+- Category tag: Classify the flag's purpose and lifecycle
+- `team-<name>` tag: Identify the owning team; update it when ownership changes
+- `blast-*` tag: Describe the risk of changing the flag
+- `cb.domain` custom property: Identify the domain
+- `cb.review-date` custom property: Set the next flag audit date
 
 ## Lifecycle and Defaults
 
