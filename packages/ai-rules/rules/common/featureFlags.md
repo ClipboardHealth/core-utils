@@ -4,9 +4,11 @@ description: "Creating or managing feature flags: naming, lifecycle, SDK usage, 
 
 # Feature Flags
 
-**Naming:** `YYYY-MM-<feature-descriptive-name>` (e.g., `2026-09-new-booking-flow`). Store the category and owning team in tags, not in the key, so they can change without replacing the flag.
+**Naming:** `YYYY-MM-<feature-descriptive-name>` (e.g., `2026-09-new-booking-flow`).
 
 ## Required Metadata
+
+When creating a flag, set the following tags and custom properties:
 
 | Tag or custom property           | Purpose                                                    |
 | -------------------------------- | ---------------------------------------------------------- |
