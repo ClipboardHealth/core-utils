@@ -4,24 +4,31 @@ description: "Creating or managing feature flags: naming, lifecycle, SDK usage, 
 
 # Feature Flags
 
-**Naming:** `YYYY-MM-[kind]-[subject]` (e.g., `2024-03-release-new-booking-flow`)
+Follow [BP: Feature Flags](https://app.notion.com/p/BP-Feature-Flags-3d68643321f481c3ab26d0176b706d03), updated [September 25, 2026](https://clipboardhealth.slack.com/archives/C03GWA3J1NY/p1790353920666269).
 
-| Kind         | Purpose                  |
-| ------------ | ------------------------ |
-| `release`    | Gradual rollout to 100%  |
-| `enable`     | Kill switch              |
-| `experiment` | Trial for small audience |
-| `configure`  | Runtime config           |
+**Naming:** `YYYY-MM-<feature-descriptive-name>` (e.g., `2026-09-new-booking-flow`). Store the category and owning team in tags, not in the key, so they can change without replacing the flag.
 
-**Rules:**
+## Required Metadata
+
+Use the BP's allowed category and blast-radius values; do not invent tag values.
+
+| Tag or custom property           | Purpose                                                    |
+| -------------------------------- | ---------------------------------------------------------- |
+| Category tag                     | Classify the flag's purpose and lifecycle                  |
+| `team-<name>` tag                | Identify the owning team; update it when ownership changes |
+| `blast-*` tag                    | Describe the risk of changing the flag                     |
+| `cb.domain` custom property      | Identify the domain                                        |
+| `cb.review-date` custom property | Set the next flag audit date                               |
+
+## Lifecycle and Defaults
 
 - "Off" = default/safer value
-- No permanent flags (except `configure`)
+- Retain permanent flags only for runtime configuration. When a temporary flag becomes permanent configuration, update its category tag and metadata in place instead of deleting and recreating it.
 - Create archival ticket when creating flag
+- Use `cb.review-date` to schedule audits and keep the flag's metadata current
 - Validate staging before production
 - Always provide default values in code
-- Clean up after full launch
-- Tag flags with owning team (not in key name)
+- Clean up flags that are no longer needed after launch
 
 **When making feature flag changes**: include LaunchDarkly link: `https://app.launchdarkly.com/projects/default/flags/{flag-key}`
 
