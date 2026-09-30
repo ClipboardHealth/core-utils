@@ -85,20 +85,6 @@ npx nx migrate latest && \
 Clipboard repositories can extend the default shared configuration with
 `github>ClipboardHealth/core-utils`.
 
-Repositories that should use Renovate only for published schema packages can instead extend the
-opt-in `schema-packages` preset:
-
-```json
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>ClipboardHealth/core-utils:schema-packages"]
-}
-```
-
-The preset manages `@clipboard-health/contract-*`, `@clipboard-health/flag-*`, and
-`@clipboard-health/message-*`. It opens pull requests for new releases, automerges minor and patch
-updates after checks pass, and leaves major updates for human review.
-
 ## Adding or porting libraries
 
 See our [Nx generator plugin](https://github.com/ClipboardHealth/core-utils/tree/main/packages/nx-plugin).
