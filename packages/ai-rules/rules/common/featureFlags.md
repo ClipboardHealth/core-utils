@@ -19,7 +19,7 @@ When creating a flag, set the following tags and custom properties:
 ## Lifecycle and Defaults
 
 - "Off" = default/safer value
-- Retain permanent flags only for runtime configuration. When a temporary flag becomes permanent configuration, update its category tag and metadata in place instead of deleting and recreating it.
+- Retain permanent flags only for runtime configuration. When a temporary flag becomes permanent configuration, update its category tag and metadata in place.
 - Create archival ticket when creating flag
 - Use `cb.review-date` to schedule audits and keep the flag's metadata current
 - Validate staging before production
