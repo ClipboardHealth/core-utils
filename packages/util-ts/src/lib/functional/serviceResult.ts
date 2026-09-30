@@ -31,13 +31,13 @@ export type ServiceResult<A, E extends ServiceError = ServiceError> =
 /**
  * Creates a successful ServiceResult.
  *
- * Call with no argument for a `ServiceResult<void>`; the value is `undefined`.
+ * Call with no argument for a `ServiceResult<undefined>`.
  */
-export function success<E extends ServiceError = ServiceError>(): ServiceResult<void, E>;
+export function success<E extends ServiceError = ServiceError>(): ServiceResult<undefined, E>;
 export function success<A, E extends ServiceError = ServiceError>(value: A): ServiceResult<A, E>;
 export function success<A, E extends ServiceError = ServiceError>(
   value?: A,
-): ServiceResult<A | void, E> {
+): ServiceResult<A | undefined, E> {
   return Object.freeze({
     isRight: true,
     isSuccess: true,
