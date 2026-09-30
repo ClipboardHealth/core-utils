@@ -67,14 +67,6 @@
 <h2 id="shared-renovate-presets" class="tsd-anchor-link">Shared Renovate presets<a href="#shared-renovate-presets" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>Clipboard repositories can extend the default shared configuration with
 <code>github&gt;ClipboardHealth/core-utils</code>.</p>
-<p>Repositories that should use Renovate only for published schema packages can instead extend the
-opt-in <code>schema-packages</code> preset:</p>
-<pre><code class="json"><span class="hl-2">{</span><br/><span class="hl-2">  </span><span class="hl-6">&quot;$schema&quot;</span><span class="hl-2">: </span><span class="hl-3">&quot;https://docs.renovatebot.com/renovate-schema.json&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">  </span><span class="hl-6">&quot;extends&quot;</span><span class="hl-2">: [</span><span class="hl-3">&quot;github&gt;ClipboardHealth/core-utils:schema-packages&quot;</span><span class="hl-2">]</span><br/><span class="hl-2">}</span>
-</code><button type="button">Copy</button></pre>
-
-<p>The preset manages <code>@clipboard-health/contract-*</code>, <code>@clipboard-health/flag-*</code>, and
-<code>@clipboard-health/message-*</code>. It opens pull requests for new releases, automerges minor and patch
-updates after checks pass, and leaves major updates for human review.</p>
 <h2 id="adding-or-porting-libraries" class="tsd-anchor-link">Adding or porting libraries<a href="#adding-or-porting-libraries" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>See our <a href="https://github.com/ClipboardHealth/core-utils/tree/main/packages/nx-plugin">Nx generator plugin</a>.</p>
 <h2 id="contributing" class="tsd-anchor-link">Contributing<a href="#contributing" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
