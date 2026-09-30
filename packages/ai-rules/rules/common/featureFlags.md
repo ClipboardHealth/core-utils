@@ -4,13 +4,9 @@ description: "Creating or managing feature flags: naming, lifecycle, SDK usage, 
 
 # Feature Flags
 
-Follow [BP: Feature Flags](https://app.notion.com/p/BP-Feature-Flags-3d68643321f481c3ab26d0176b706d03), updated [September 25, 2026](https://clipboardhealth.slack.com/archives/C03GWA3J1NY/p1790353920666269).
-
 **Naming:** `YYYY-MM-<feature-descriptive-name>` (e.g., `2026-09-new-booking-flow`). Store the category and owning team in tags, not in the key, so they can change without replacing the flag.
 
 ## Required Metadata
-
-Use the BP's allowed category and blast-radius values; do not invent tag values.
 
 | Tag or custom property           | Purpose                                                    |
 | -------------------------------- | ---------------------------------------------------------- |
