@@ -45,13 +45,19 @@ describe("ServiceResult", () => {
       expect((actual as Success<{ data: string }>).value).toStrictEqual(input);
     });
 
-    it("creates a void success result with no argument", () => {
-      // Assigning to ServiceResult<void> compiles only if success() is typed as such.
-      const actual: ServiceResult<void> = success();
+    it("creates an undefined success result with no argument", () => {
+      const actual = success();
 
-      expect(isSuccess(actual)).toBe(true);
-      expect(actual.isSuccess).toBe(true);
-      expect((actual as Success<void>).value).toBeUndefined();
+      expectTypeOf(actual).toEqualTypeOf<ServiceResult<undefined>>();
+      expectTypeOf(actual).toExtend<ServiceResult<void>>();
+      expectTypeOf(actual).toExtend<ServiceResult<string[] | undefined>>();
+      expect(actual).toStrictEqual({
+        isRight: true,
+        isSuccess: true,
+        right: undefined,
+        value: undefined,
+      });
+      expect(Object.isFrozen(actual)).toBe(true);
     });
 
     it("can be used with a specific error channel", () => {
@@ -59,6 +65,15 @@ describe("ServiceResult", () => {
 
       expect(isSuccess(actual)).toBe(true);
       expect((actual as Success<void>).value).toBeUndefined();
+    });
+
+    it("preserves an explicit error channel with no argument", () => {
+      const actual = success<TestServiceError>();
+
+      expectTypeOf(actual).toEqualTypeOf<ServiceResult<undefined, TestServiceError>>();
+      expectTypeOf(actual).toExtend<ServiceResult<void, TestServiceError>>();
+      expectTypeOf(actual).toExtend<ServiceResult<string[] | undefined, TestServiceError>>();
+      expect(isSuccess(actual)).toBe(true);
     });
   });
 
