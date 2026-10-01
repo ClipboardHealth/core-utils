@@ -48,7 +48,7 @@ Run `explain("executionStats")` on new or changed queries; verify `$lookup` stag
 
 - Use `$exists: true` to check field presence (matches even if value is `null`); use `$ne: null` to check field is present and not `null`; use `$eq: null` to match missing or explicitly `null` fields; combining `$exists: true` with `$ne: null` is valid but redundant since `$ne: null` already excludes missing and null fields
 - Include partial/sparse index constraints in queries that rely on those indexes
-- Call `.lean()` on read-only queries (`find`, `findOne`, `findById`, `populate`) so Mongoose returns plain objects instead of hydrated documents; keep full documents only when the caller needs `save()`, instance methods, virtuals, getters, or change tracking
+- Call `.lean()` on read-only queries (`find`, `findOne`, `findById`, including any `.populate()` chained before it) so Mongoose returns plain objects instead of hydrated documents; keep full documents only when the caller needs `save()`, instance methods, virtuals, getters, schema defaults, `toJSON`/`toObject` transforms, or change tracking
 - Avoid `$expr` in `$lookup` pipelines except for simple comparisons (`$eq`, `$lt`, `$lte`, `$gt`, `$gte`)
 - Limit `$in` to fewer than 100 values
 - Use `aggregate` with `$group` instead of `distinct`: `distinct` picks the oldest index whose leading field is filtered on and that contains the distinct field, with no cost comparison, so a better index is ignored and the query may walk the whole index tree; `$unwind` array fields before `$group` because `distinct` returns array elements individually
