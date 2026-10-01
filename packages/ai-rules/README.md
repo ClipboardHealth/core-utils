@@ -142,6 +142,7 @@ Each rule's "When to Read" text comes from the `description` field in the rule f
 | `common/gitWorkflow`          | Writing commit messages, PR titles and descriptions, or reviewing pull requests                                              |
 | `common/groundtruth`          | Identifying owners or understanding architecture across Clipboard systems                                                    |
 | `common/libraryAuthoring`     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib)        |
+| `common/localChecks`          | Running type checks, lint, or tests locally to verify a change                                                               |
 | `common/loggingObservability` | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                         |
 | `common/rulesEngine`          | Writing or modifying @clipboard-health/rules-engine rule functions                                                           |
 | `common/testing`              | Writing unit tests: conventions, naming, structure                                                                           |
