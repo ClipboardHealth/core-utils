@@ -6,6 +6,12 @@ packages:
 # packages with undeclared peers (dependency-cruiser's TypeScript) resolve this project's copy.
 enableGlobalVirtualStore: false
 
+# Nx's webpack externals only scan the root node_modules; hoist example-nestjs's runtime
+# dependencies there so its build leaves them external, as it does under npm.
+publicHoistPattern:
+  - "@nestjs/*"
+  - "@ts-rest/*"
+
 # Dependency build scripts reviewed and intentionally skipped; builds and tests don't need them.
 allowBuilds:
   # Downloads Chromium for promptfoo; run `npx playwright install chromium` if needed.
