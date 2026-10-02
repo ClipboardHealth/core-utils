@@ -2,9 +2,19 @@
 packages:
   - packages/*
 
-# Repair the missing peer; keep package-lock.json metadata aligned for frozen installs.
-packageExtensions:
-  # Use the project's compiler so the dependency checker can read its TypeScript config.
-  "dependency-cruiser@18.2.0":
-    peerDependencies:
-      typescript: "^5.0.0"
+# Match npm's flat layout. Nx's webpack externals only scan the root node_modules, and
+# aube's isolated-layout bin shims break when npx reaches them through workspace symlinks.
+nodeLinker: hoisted
+
+# Dependency build scripts reviewed and intentionally skipped; builds and tests don't need them.
+allowBuilds:
+  # Downloads Chromium for promptfoo; run `npx playwright install chromium` if needed.
+  "@playwright/browser-chromium": false
+  # Only verifies the native binding, which optional dependencies already provide.
+  "@swc/core": false
+  # Runs `pnpm exec playwright install` for Less's own development checkout.
+  less: false
+  # Downloads optional CUDA binaries for promptfoo's local models.
+  onnxruntime-node: false
+  # Only warns about version-scheme mismatches.
+  protobufjs: false
