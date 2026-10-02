@@ -2,9 +2,9 @@
 packages:
   - packages/*
 
-# Match npm's flat layout. Nx's webpack externals only scan the root node_modules, and
-# aube's isolated-layout bin shims break when npx reaches them through workspace symlinks.
-nodeLinker: hoisted
+# Keep dependencies in this project's node_modules/.aube instead of aube's per-user store, so
+# packages with undeclared peers (dependency-cruiser's TypeScript) resolve this project's copy.
+enableGlobalVirtualStore: false
 
 # Dependency build scripts reviewed and intentionally skipped; builds and tests don't need them.
 allowBuilds:
