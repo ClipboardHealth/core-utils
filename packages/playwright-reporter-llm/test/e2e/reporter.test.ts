@@ -1,5 +1,6 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { LlmTestReport } from "../../src/lib/types";
@@ -22,12 +23,18 @@ describe("LLM Reporter E2E", () => {
     );
 
     try {
-      execSync("npx playwright test --config test/e2e/playwright.config.ts", {
-        cwd: path.resolve(__dirname, "../.."),
-        timeout: 60_000,
-        stdio: "pipe",
-        env: environment,
-      });
+      // Run the CLI with Node directly; npx can't run aube's bin shims through workspace symlinks.
+      const playwrightCli = createRequire(__filename).resolve("@playwright/test/cli");
+      execFileSync(
+        process.execPath,
+        [playwrightCli, "test", "--config", "test/e2e/playwright.config.ts"],
+        {
+          cwd: path.resolve(__dirname, "../.."),
+          timeout: 60_000,
+          stdio: "pipe",
+          env: environment,
+        },
+      );
     } catch {
       // Playwright exits non-zero when tests fail — that's expected.
       if (!existsSync(reportPath)) {
