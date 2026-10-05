@@ -16,6 +16,7 @@ Read the rule files relevant to the code you're changing or reviewing.
 | Git Workflow               | .rules/common/gitWorkflow.md          | Writing commit messages, PR titles and descriptions, or reviewing pull requests                                              |
 | Ownership and Architecture | .rules/common/groundtruth.md          | Identifying owners or understanding architecture across Clipboard systems                                                    |
 | Library Authoring          | .rules/common/libraryAuthoring.md     | Authoring shared library code: @clipboard-health/* packages or shared library modules within services (e.g., src/lib)        |
+| Local Checks               | .rules/common/localChecks.md          | Running type checks, lint, or tests locally to verify a change                                                               |
 | Logging & Observability    | .rules/common/loggingObservability.md | Adding logging, metrics, monitoring, or observability: levels, context, PII, Datadog                                         |
 | Rules Engine               | .rules/common/rulesEngine.md          | Writing or modifying @clipboard-health/rules-engine rule functions                                                           |
 | Testing                    | .rules/common/testing.md              | Writing unit tests: conventions, naming, structure                                                                           |

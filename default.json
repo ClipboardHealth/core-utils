@@ -5,10 +5,10 @@
     "config:best-practices",
     ":enableVulnerabilityAlertsWithLabel(SECURITY)",
     ":preserveSemverRanges",
-    "docker:enableMajor",
-    "schedule:daily",
-    "schedule:automergeDaily"
+    "docker:enableMajor"
   ],
+  "schedule": ["* 0-3 * * 2-5"],
+  "automergeSchedule": ["* 7-23 * * 1", "* * * * 2-4", "* 0-19 * * 5"],
   "hostRules": [
     {
       "matchHost": "app.terraform.io",
