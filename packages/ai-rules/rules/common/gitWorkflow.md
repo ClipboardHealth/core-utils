@@ -17,6 +17,9 @@ description: "Writing commit messages, PR titles and descriptions, or reviewing 
 
 Link Linear ticket in PR description. Include context, reasoning, and areas of concern.
 
+When referring to humans, don't guess pronouns. Use known pronouns already in context; otherwise
+use they/them as a safe default.
+
 Include proof of validation: tests, screenshots, telemetry, or Loom video.
 
 When you make a judgment call a human should confirm (a cache duration, a default value, a copy
