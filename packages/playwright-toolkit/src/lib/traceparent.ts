@@ -38,10 +38,10 @@ export interface InstallTraceparentForTestParams {
  * Creates an auto fixture that installs one W3C traceparent per Playwright
  * test and records it as a test annotation for reporter/APM correlation.
  */
-export function createTraceparentFixtures(
-  params: CreateTraceparentParams = {},
-): Fixtures<
+export function createTraceparentFixtures(params: CreateTraceparentParams = {}): Fixtures<
   TraceparentFixtures,
+  // No worker fixtures are added by this factory.
+  // eslint-disable-next-line typescript/no-generated-empty-object-type
   Record<never, never>,
   PlaywrightTestArgs & PlaywrightTestOptions,
   PlaywrightWorkerArgs & PlaywrightWorkerOptions
