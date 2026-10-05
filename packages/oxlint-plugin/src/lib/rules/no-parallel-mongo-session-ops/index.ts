@@ -107,6 +107,24 @@ function isTaskList(init: ESTree.Node | null | undefined): boolean {
   );
 }
 
+/**
+ * A session is per-branch only when a task callback *creates* one. Neither declaration scope
+ * nor creation alone is proof: a callback parameter receives whatever the caller mapped over,
+ * an alias of an outer binding is the very same session, and a session created in a scope
+ * that encloses the fan-out is shared by every branch. All three stay reportable.
+ */
+function createsOwnSession(variable: Variable | undefined, range: readonly number[]): boolean {
+  return (
+    variable?.defs.some((definition) => {
+      if (definition.type !== "Variable" || !isWithin(definition.name.range, range)) {
+        return false;
+      }
+
+      return definition.node.type === "VariableDeclarator" && createsSession(definition.node.init);
+    }) === true
+  );
+}
+
 const rule = defineRule({
   meta: {
     type: "problem",
@@ -188,26 +206,6 @@ const rule = defineRule({
       }
 
       return node.arguments.some((argument) => "value" in argument && argument.value === 1);
-    }
-
-    /**
-     * A session is per-branch only when a task callback *creates* one. Neither declaration scope
-     * nor creation alone is proof: a callback parameter receives whatever the caller mapped over,
-     * an alias of an outer binding is the very same session, and a session created in a scope
-     * that encloses the fan-out is shared by every branch. All three stay reportable.
-     */
-    function createsOwnSession(variable: Variable | undefined, range: readonly number[]): boolean {
-      return (
-        variable?.defs.some((definition) => {
-          if (definition.type !== "Variable" || !isWithin(definition.name.range, range)) {
-            return false;
-          }
-
-          return (
-            definition.node.type === "VariableDeclarator" && createsSession(definition.node.init)
-          );
-        }) === true
-      );
     }
 
     return {

@@ -157,6 +157,78 @@ function isParsedBodyPropertyPath(node: ESTree.Node | undefined): boolean {
   );
 }
 
+function rootIdentifier(node: ESTree.Node | undefined): Identifier | undefined {
+  let current = unwrap(node);
+
+  while (current?.type === "MemberExpression") {
+    current = unwrap(current.object);
+  }
+
+  return current?.type === "Identifier" ? current : undefined;
+}
+
+function parsedBodyAccess(node: ESTree.Node | undefined): ESTree.MemberExpression | undefined {
+  let current = unwrap(node);
+
+  while (current?.type === "MemberExpression") {
+    if (memberPropertyName(current) === "parsedBody") {
+      return current;
+    }
+
+    current = unwrap(current.object);
+  }
+
+  return undefined;
+}
+
+function parseDominatesAssertion(parseNode: ESTree.Node, assertionNode: ESTree.Node): boolean {
+  if (
+    containingFunction(parseNode) !== containingFunction(assertionNode) ||
+    parseNode.range[0] >= assertionNode.range[0]
+  ) {
+    return false;
+  }
+
+  let current = parseNode.parent;
+  const functionNode = containingFunction(parseNode);
+  while (current && current !== functionNode) {
+    if (
+      CONTROL_FLOW_TYPES.has(current.type) &&
+      (!isAncestor(current, assertionNode) ||
+        directChild(current, parseNode) !== directChild(current, assertionNode))
+    ) {
+      return false;
+    }
+    current = current.parent;
+  }
+
+  return true;
+}
+
+function expectCall(node: ESTree.CallExpression): ESTree.CallExpression | undefined {
+  if (node.callee.type !== "MemberExpression") {
+    return undefined;
+  }
+
+  let matcherTarget = node.callee.object;
+  while (
+    matcherTarget.type === "MemberExpression" &&
+    MATCHER_MODIFIERS.has(memberPropertyName(matcherTarget) ?? "")
+  ) {
+    matcherTarget = matcherTarget.object;
+  }
+
+  if (
+    matcherTarget.type !== "CallExpression" ||
+    matcherTarget.callee.type !== "Identifier" ||
+    matcherTarget.callee.name !== "expect"
+  ) {
+    return undefined;
+  }
+
+  return matcherTarget;
+}
+
 const rule: Rule = {
   meta: {
     type: "problem",
@@ -184,30 +256,6 @@ const rule: Rule = {
       writes: new Map(),
     };
     const validatedParsedBodyAccesses = new WeakSet<ESTree.MemberExpression>();
-
-    function rootIdentifier(node: ESTree.Node | undefined): Identifier | undefined {
-      let current = unwrap(node);
-
-      while (current?.type === "MemberExpression") {
-        current = unwrap(current.object);
-      }
-
-      return current?.type === "Identifier" ? current : undefined;
-    }
-
-    function parsedBodyAccess(node: ESTree.Node | undefined): ESTree.MemberExpression | undefined {
-      let current = unwrap(node);
-
-      while (current?.type === "MemberExpression") {
-        if (memberPropertyName(current) === "parsedBody") {
-          return current;
-        }
-
-        current = unwrap(current.object);
-      }
-
-      return undefined;
-    }
 
     function findVariable(node: Identifier): Variable | undefined {
       return findVariableInScope(context.sourceCode, node);
@@ -251,30 +299,6 @@ const rule: Rule = {
       const state: FunctionState = { parses: new Map(), writes: new Map() };
       functionStates.set(functionNode, state);
       return state;
-    }
-
-    function parseDominatesAssertion(parseNode: ESTree.Node, assertionNode: ESTree.Node): boolean {
-      if (
-        containingFunction(parseNode) !== containingFunction(assertionNode) ||
-        parseNode.range[0] >= assertionNode.range[0]
-      ) {
-        return false;
-      }
-
-      let current = parseNode.parent;
-      const functionNode = containingFunction(parseNode);
-      while (current && current !== functionNode) {
-        if (
-          CONTROL_FLOW_TYPES.has(current.type) &&
-          (!isAncestor(current, assertionNode) ||
-            directChild(current, parseNode) !== directChild(current, assertionNode))
-        ) {
-          return false;
-        }
-        current = current.parent;
-      }
-
-      return true;
     }
 
     function hasContractParse(node: ESTree.Node, key: ResponseKey): boolean {
@@ -351,30 +375,6 @@ const rule: Rule = {
       if (key === undefined || !hasContractParse(node, key)) {
         context.report({ node, messageId: "missingContractParse" });
       }
-    }
-
-    function expectCall(node: ESTree.CallExpression): ESTree.CallExpression | undefined {
-      if (node.callee.type !== "MemberExpression") {
-        return undefined;
-      }
-
-      let matcherTarget = node.callee.object;
-      while (
-        matcherTarget.type === "MemberExpression" &&
-        MATCHER_MODIFIERS.has(memberPropertyName(matcherTarget) ?? "")
-      ) {
-        matcherTarget = matcherTarget.object;
-      }
-
-      if (
-        matcherTarget.type !== "CallExpression" ||
-        matcherTarget.callee.type !== "Identifier" ||
-        matcherTarget.callee.name !== "expect"
-      ) {
-        return undefined;
-      }
-
-      return matcherTarget;
     }
 
     function checkWholeResponseAssertion(node: ESTree.CallExpression): void {
