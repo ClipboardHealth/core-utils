@@ -8,7 +8,7 @@ Read the rule files relevant to the code you're changing or reviewing.
 | -------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | AI Rules                   | .rules/common/aiRules.md              | Editing Clipboard agent instructions: shared rules, repository overlays, or generated .rules, AGENTS.md, and CLAUDE.md files |
 | CI Runners                 | .rules/common/ciRunners.md            | Writing or editing GitHub Actions workflows: choosing runs-on runners, runner OS and egress constraints                      |
-| Comments and Copy          | .rules/common/commentsAndCopy.md      | Writing code comments, docs, or UI copy                                                                                      |
+| Comments and Copy          | .rules/common/commentsAndCopy.md      | Writing code comments, docs, UI copy, or identifier names                                                                    |
 | Configuration              | .rules/common/configuration.md        | Adding config, secrets, or third-party dependencies: SSM, LaunchDarkly, DB, NPM packages                                     |
 | Container Registry         | .rules/common/containerRegistry.md    | Choosing or pulling a container image: Dockerfile FROM, Compose services, CI workflow images                                 |
 | Core Libraries             | .rules/common/coreLibraries.md        | Adding dependencies, implementing functionality, or debugging errors involving a @clipboard-health/* library                 |
