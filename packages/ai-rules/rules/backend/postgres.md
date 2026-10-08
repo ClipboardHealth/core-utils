@@ -8,6 +8,7 @@ description: "Working with Postgres: column types, schema changes, query pattern
 
 - Use `timestamptz` for all timestamp columns; annotate Prisma DateTime fields with `@db.Timestamptz()`
 - Use `TEXT` for string columns
+- Store code sets (status, type, kind) as `TEXT` identifiers such as `OPEN`, validated in app code; Postgres `ENUM` types are banned because Prisma raw-query parameters, `@prisma/adapter-pg` enum arrays, and DMS replication all break on custom enum types. Leave existing enum columns in place; convert one when you already change it
 - Use `bigint` for numeric and UUIDv7 for string primary keys
 - Do not use PostgreSQL reserved keywords for table, index, or column names
 
@@ -24,6 +25,7 @@ description: "Working with Postgres: column types, schema changes, query pattern
 - For complex queries (joins, aggregations, conditional filtering), prefer Prisma TypedSQL over Prisma client methods
 - Include the current-state condition in UPDATE WHERE clauses instead of read-then-check-then-update
 - Avoid read-modify-write cycles using single-call updates, SELECT FOR UPDATE, SERIALIZABLE transactions, or optimistic concurrency
+- When raw SQL filters an existing enum column with a bound parameter, cast the parameter, not the column: `status = $1::"VisitStatus"`; casting the column (`status::text = $1`) disables its index
 
 ## Configuration
 
