@@ -56,6 +56,18 @@
       "matchPackageNames": ["oxlint", "/^@oxlint\\//", "@clipboard-health/oxlint-config"]
     },
     {
+      "groupName": "Ionic React",
+      "matchPackageNames": ["@ionic/core", "@ionic/react", "@ionic/react-router"]
+    },
+    {
+      "groupName": "Sendbird",
+      "matchPackageNames": ["@sendbird/chat", "@sendbird/uikit-react"]
+    },
+    {
+      "groupName": "pino",
+      "matchPackageNames": ["pino", "pino-http", "nestjs-pino"]
+    },
+    {
       "groupName": "ts-rest",
       "matchPackageNames": ["/^@ts-rest/"]
     },
