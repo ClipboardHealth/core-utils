@@ -147,6 +147,11 @@
       "prBodyNotes": [
         "⚠️ pinDigest updates are not age-checked, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
       ]
+    },
+    {
+      "description": "The cbh-core sync workflow updates this package and regenerates the synced rules, which Renovate cannot do.",
+      "matchPackageNames": ["@clipboard-health/engineering-practices"],
+      "enabled": false
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",

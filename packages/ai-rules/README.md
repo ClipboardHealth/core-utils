@@ -1,5 +1,7 @@
 # @clipboard-health/ai-rules
 
+> **This package is frozen.** It is replaced by `@clipboard-health/engineering-practices` in [ClipboardHealth/cbh-core](https://github.com/ClipboardHealth/cbh-core/tree/main/packages/engineering-practices), where rule changes now go. Do not change rules here.
+
 Pre-built AI agent rules for consistent coding standards. Uses a retrieval-based approach: generates a compressed index in `AGENTS.md` pointing to copied `.rules/` files that agents read on demand.
 
 ## Table of contents
