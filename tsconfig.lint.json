@@ -9,7 +9,6 @@
     "moduleResolution": "bundler",
     "noEmit": true,
     "paths": {
-      "@clipboard-health/ai-rules": ["./packages/ai-rules/src/index.ts"],
       "@clipboard-health/analytics": ["./packages/analytics/src/index.ts"],
       "@clipboard-health/background-jobs-adapter": [
         "./packages/background-jobs-adapter/src/index.ts"

@@ -48,9 +48,6 @@
       "path": "./packages/nx-plugin"
     },
     {
-      "path": "./packages/ai-rules"
-    },
-    {
       "path": "./packages/json-api"
     },
     {

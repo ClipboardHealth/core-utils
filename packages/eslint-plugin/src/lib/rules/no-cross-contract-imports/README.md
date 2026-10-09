@@ -18,7 +18,7 @@ Instead:
 - Duplicate the rare shared domain schema locally. Zod brands are structural, so duplicates stay type-compatible, and ts-rest response validation catches drift.
 - Do not re-export or pass through another contract's schemas or endpoints.
 
-See `rules/backend/restApiDesign.md` in `@clipboard-health/ai-rules` for the full guidance.
+See `rules/backend/restApiDesign.md` in `@clipboard-health/engineering-practices` for the full guidance.
 
 ## Rule Details
 
