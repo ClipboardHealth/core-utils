@@ -81,8 +81,20 @@
       "matchPackageNames": ["nx", "/^@nx\\//"]
     },
     {
-      "matchPackageNames": ["node", "npm"],
-      "enabled": false
+      "description": "Update Node version files, package engines, npm, and official Node images together.",
+      "groupName": "Node.js",
+      "groupSlug": "nodejs",
+      "matchPackageNames": [
+        "node",
+        "npm",
+        "docker.io/node",
+        "docker.io/library/node",
+        "library/node",
+        "public.ecr.aws/docker/library/node"
+      ],
+      "enabled": true,
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
     },
     {
       "matchUpdateTypes": ["minor", "patch", "digest"],
