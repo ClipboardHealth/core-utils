@@ -26,4 +26,4 @@ description: "Adding logging, metrics, monitoring, or observability: levels, con
 
 ## Monitoring
 
-- Create Datadog monitors for every service that uses background jobs: alert on sustained `background_jobs.queue.failed` (e.g., failure rate above threshold for several minutes) and on no-data for `background_jobs.queue.created` (jobs stopped being created)
+- Create Datadog monitors for every service that uses background jobs: alert on sustained `background_jobs.queue.failed` (e.g., failure rate above threshold for several minutes)

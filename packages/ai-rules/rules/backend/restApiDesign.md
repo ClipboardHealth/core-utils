@@ -29,7 +29,7 @@ POST /workers/:workerId/referral-codes
 - Model state changes as PATCH to resource attributes (not action-specific POST endpoints)
 - POST returns the created resource DTO with 201
 - GET must be idempotent with no side effects
-- Return 400 for syntactic errors and unsupported query params; 422 for semantic validation errors and unsupported filters/sorts
+- Return 400 for syntactic errors and unsupported query params, filters, and sorts; 422 for semantic validation errors
 
 ## Authentication & Authorization
 
