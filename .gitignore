@@ -39,3 +39,5 @@ npm-debug.log
 .nx/self-healing
 
 .nx/migrate-runs
+
+.rules/
