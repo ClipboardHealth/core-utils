@@ -1,14 +1,17 @@
 {
-  "name": "@clipboard-health/usa-states",
-  "version": "1.6.7",
-  "description": "Canonical US state and territory list, StateCode and StateName types, and name/code normalizers.",
-  "keywords": [],
+  "name": "@clipboard-health/util-ts",
+  "version": "5.17.14",
+  "description": "TypeScript utilities.",
+  "keywords": [
+    "typescript",
+    "utility"
+  ],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
-    "directory": "packages/usa-states"
+    "directory": "packages/util-ts"
   },
   "type": "commonjs",
   "main": "./src/index.js",
@@ -17,7 +20,14 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/util-ts": "5.17.14",
     "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "type-fest": "5.10.0",
+    "zod": "3.25.76"
+  },
+  "peerDependencies": {
+    "type-fest": "^4 || ^5.0.0",
+    "zod": "^3"
   }
 }

@@ -1,35 +1,19 @@
 {
-  "name": "@clipboard-health/playwright-reporter-llm",
-  "version": "2.11.13",
-  "description": "Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.",
+  "name": "@clipboard-health/rules-engine",
+  "version": "3.11.13",
+  "description": "A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.",
   "keywords": [
-    "agent",
-    "ai",
-    "ai-agent",
-    "coding-agent",
-    "debugging",
-    "e2e",
-    "e2e-testing",
-    "flaky-tests",
-    "json",
-    "json-reporter",
-    "llm",
-    "observability",
-    "opentelemetry",
-    "playwright",
-    "playwright-reporter",
-    "reporter",
-    "test-reporter",
-    "testing",
-    "trace-correlation",
-    "traceparent"
+    "engine",
+    "functional",
+    "rules",
+    "typescript"
   ],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
-    "directory": "packages/playwright-reporter-llm"
+    "directory": "packages/rules-engine"
   },
   "type": "commonjs",
   "main": "./src/index.js",
@@ -41,9 +25,9 @@
     "tslib": "2.8.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.63.0"
+    "type-fest": "5.10.0"
   },
   "peerDependencies": {
-    "@playwright/test": ">=1.50.0"
+    "type-fest": "^4 || ^5.0.0"
   }
 }

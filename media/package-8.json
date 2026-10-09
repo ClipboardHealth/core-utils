@@ -1,25 +1,27 @@
 {
-  "name": "@clipboard-health/example-nestjs",
-  "version": "1.0.3",
-  "description": "A NestJS application using our libraries, primarily for end-to-end testing.",
-  "dependencies": {
-    "@clipboard-health/contract-core": "*",
-    "@clipboard-health/json-api-nestjs": "*",
-    "@nestjs/common": "11.2.7",
-    "@nestjs/core": "11.2.7",
-    "@nestjs/platform-express": "11.2.7",
-    "@nx/webpack": "23.2.1",
-    "@ts-rest/core": "3.52.1",
-    "@ts-rest/nest": "3.52.1",
-    "qs": "6.16.0",
-    "reflect-metadata": "0.2.2",
-    "zod": "3.25.76"
+  "name": "@clipboard-health/execution-context",
+  "version": "2.10.13",
+  "description": "A lightweight Node.js utility for managing execution contexts and metadata aggregation using AsyncLocalStorage.",
+  "keywords": [
+    "async-local-storage",
+    "execution-context",
+    "metadata",
+    "typescript"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/execution-context"
   },
-  "devDependencies": {
-    "@nestjs/testing": "11.2.7",
-    "@types/qs": "6.15.1",
-    "@types/supertest": "7.2.1",
-    "supertest": "7.3.0",
-    "webpack-cli": "6.0.1"
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "tslib": "2.8.1"
   }
 }

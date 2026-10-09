@@ -1,18 +1,14 @@
 {
-  "name": "@clipboard-health/testing-core",
-  "version": "2.12.14",
-  "description": "TypeScript-friendly testing utilities.",
-  "keywords": [
-    "expect",
-    "testing",
-    "typescript"
-  ],
+  "name": "@clipboard-health/usa-states",
+  "version": "1.6.7",
+  "description": "Canonical US state and territory list, StateCode and StateName types, and name/code normalizers.",
+  "keywords": [],
   "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
-    "directory": "packages/testing-core"
+    "directory": "packages/usa-states"
   },
   "type": "commonjs",
   "main": "./src/index.js",
@@ -23,11 +19,5 @@
   "dependencies": {
     "@clipboard-health/util-ts": "5.17.14",
     "tslib": "2.8.1"
-  },
-  "devDependencies": {
-    "zod": "3.25.76"
-  },
-  "peerDependencies": {
-    "zod": "^3"
   }
 }

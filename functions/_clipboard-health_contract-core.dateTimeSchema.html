@@ -24,7 +24,7 @@
 </ul>
 <p>Rejects epoch numbers, date-only strings, and other loose inputs.</p>
 <p>Composable with <code>.optional()</code>, <code>.nullable()</code>, etc. at the call site:</p>
-<pre><code class="ts"><span class="hl-8">z</span><span class="hl-2">.</span><span class="hl-1">object</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-8">start:</span><span class="hl-2"> </span><span class="hl-1">dateTimeSchema</span><span class="hl-2">(),</span><br/><span class="hl-2">  </span><span class="hl-8">clockIn:</span><span class="hl-2"> </span><span class="hl-1">dateTimeSchema</span><span class="hl-2">().</span><span class="hl-1">optional</span><span class="hl-2">(),</span><br/><span class="hl-2">});</span>
+<pre><code class="ts"><span class="hl-7">z</span><span class="hl-2">.</span><span class="hl-1">object</span><span class="hl-2">({</span><br/><span class="hl-2">  </span><span class="hl-7">start:</span><span class="hl-2"> </span><span class="hl-1">dateTimeSchema</span><span class="hl-2">(),</span><br/><span class="hl-2">  </span><span class="hl-7">clockIn:</span><span class="hl-2"> </span><span class="hl-1">dateTimeSchema</span><span class="hl-2">().</span><span class="hl-1">optional</span><span class="hl-2">(),</span><br/><span class="hl-2">});</span>
 </code><button type="button">Copy</button></pre>
 
 <p>z.input  → string | Date
@@ -32,7 +32,7 @@ z.output → Date</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">ZodEffects</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ZodUnion</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">ZodString</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">ZodDate</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">Date</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">Date</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/34d36ce1d4d15abe841f7608038f7d79165c1118/packages/contract-core/src/lib/schemas/dateTime.ts#L23">dateTime.ts:23</a></li></ul></aside></div></li></ul></section></div>
+<li>Defined in <a href="https://github.com/ClipboardHealth/core-utils/blob/dfdb5febf390d4ddfc6be416baf178e507b468fc/packages/contract-core/src/lib/schemas/dateTime.ts#L23">dateTime.ts:23</a></li></ul></aside></div></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

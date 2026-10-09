@@ -38,7 +38,7 @@ repository-specific.</p>
 <p><code>no-parallel-mongo-session-ops</code> is also opt-in. Out of the box it covers <code>Promise.all</code>,
 <code>Promise.allSettled</code>, <code>Promise.race</code>, and <code>Promise.any</code>. Repositories with their own
 bounded-concurrency helpers must name them, or those call sites go unchecked:</p>
-<pre><code class="ts"><span class="hl-3">&quot;@clipboard-health/no-parallel-mongo-session-ops&quot;</span><span class="hl-2">: [</span><br/><span class="hl-2">  </span><span class="hl-3">&quot;warn&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">  { </span><span class="hl-8">additionalPrimitives:</span><span class="hl-2"> [</span><span class="hl-3">&quot;batchPromiseAllWithLimit&quot;</span><span class="hl-2">, </span><span class="hl-3">&quot;batchPromiseAllSettledWithLimit&quot;</span><span class="hl-2">] },</span><br/><span class="hl-2">],</span>
+<pre><code class="ts"><span class="hl-3">&quot;@clipboard-health/no-parallel-mongo-session-ops&quot;</span><span class="hl-2">: [</span><br/><span class="hl-2">  </span><span class="hl-3">&quot;warn&quot;</span><span class="hl-2">,</span><br/><span class="hl-2">  { </span><span class="hl-7">additionalPrimitives:</span><span class="hl-2"> [</span><span class="hl-3">&quot;batchPromiseAllWithLimit&quot;</span><span class="hl-2">, </span><span class="hl-3">&quot;batchPromiseAllSettledWithLimit&quot;</span><span class="hl-2">] },</span><br/><span class="hl-2">],</span>
 </code><button type="button">Copy</button></pre>
 
 <p>Exclude tests: app-level session objects such as <code>session.sessionUserId</code> share the name but are
