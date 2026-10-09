@@ -2,7 +2,6 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "ignore": [
     "**/webpack.*.js",
-    "packages/ai-rules/scripts/*.ts",
     "packages/eslint-config/src/react.js",
     "packages/mongo-jobs/test/support/emulateCompletionOfBackgroundJobs.ts",
   ],
