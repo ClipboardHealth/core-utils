@@ -83,8 +83,8 @@
     "tsconfig-paths": "4.2.0"
   },
   "engines": {
-    "node": "24.15.0",
-    "npm": "~11.12.0"
+    "node": "24.21.0",
+    "npm": "~12.2.0"
   },
   "knip": {
     "ignoreBinaries": [
