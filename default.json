@@ -161,10 +161,23 @@
         "required_provider",
         "required_version",
         "module",
-        "tfe_workspace"
+        "tfe_workspace",
+        "github",
+        "gitTags",
+        "terragrunt"
       ],
       "automerge": false,
-      "automergeType": "pr",
+      "automergeType": "pr"
+    },
+    {
+      "description": "Terraform CLI versions need compatibility assessment, including version files and tool-version managers.",
+      "matchPackageNames": ["hashicorp/terraform"],
+      "automerge": false,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Include existing-state plan guidance on Terraform and Terragrunt updates, including lockfile maintenance.",
+      "matchManagers": ["terraform", "terragrunt", "terraform-version"],
       "prBodyNotes": [
         "Validate the resolved versions and migration requirements, then run the affected Terraform plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
       ]
