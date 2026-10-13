@@ -87,7 +87,7 @@
       "matchPackageNames": ["nx", "/^@nx\\//"]
     },
     {
-      "description": "Update Node version files, package engines, npm, and official Node images together.",
+      "description": "Node and npm updates are handled manually. Keep runtime version files, package engines, npm, and official Node images grouped for any future automated updates.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
       "matchPackageNames": [
@@ -98,7 +98,7 @@
         "library/node",
         "public.ecr.aws/docker/library/node"
       ],
-      "enabled": true,
+      "enabled": false,
       "separateMajorMinor": false,
       "separateMinorPatch": false
     },
