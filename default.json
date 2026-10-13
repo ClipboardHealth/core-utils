@@ -87,6 +87,12 @@
       "matchPackageNames": ["nx", "/^@nx\\//"]
     },
     {
+      "description": "Keep NestJS below v12 until the installed ts-rest integration supports it.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["/^@nestjs\\//"],
+      "allowedVersions": "<12.0.0"
+    },
+    {
       "description": "Node and npm updates are handled manually. Keep runtime version files, package engines, npm, and official Node images grouped for any future automated updates.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
