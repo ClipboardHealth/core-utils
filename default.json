@@ -34,15 +34,15 @@
   ],
   "lockFileMaintenance": {
     "enabled": true,
-    "automerge": true,
-    "automergeType": "branch"
+    "automerge": false,
+    "automergeType": "pr"
   },
   "minimumReleaseAge": "7 days",
   "minimumReleaseAgeBehaviour": "timestamp-optional",
   "npmToken": "{{ secrets.NPM_TOKEN }}",
   "packageRules": [
     {
-      "matchDepTypes": ["peerDependencies", "provider", "required_provider", "required_version"],
+      "matchDepTypes": ["peerDependencies"],
       "rangeStrategy": "widen"
     },
     {
@@ -152,6 +152,38 @@
       "description": "The cbh-core sync workflow updates this package and regenerates the synced rules, which Renovate cannot do.",
       "matchPackageNames": ["@clipboard-health/engineering-practices"],
       "enabled": false
+    },
+    {
+      "description": "Terraform provider, module, and runtime updates need compatibility assessment and plans against existing state before merging.",
+      "matchManagers": ["terraform", "terragrunt"],
+      "matchDepTypes": [
+        "provider",
+        "required_provider",
+        "required_version",
+        "module",
+        "tfe_workspace",
+        "github",
+        "gitTags",
+        "terragrunt"
+      ],
+      "automerge": false,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Terraform CLI versions need compatibility assessment, including version files and tool-version managers.",
+      "matchPackageNames": ["hashicorp/terraform"],
+      "automerge": false,
+      "automergeType": "pr",
+      "prBodyNotes": [
+        "Validate Terraform CLI compatibility by running the affected plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
+      ]
+    },
+    {
+      "description": "Include existing-state plan guidance on Terraform and Terragrunt updates, including lockfile maintenance.",
+      "matchManagers": ["terraform", "terragrunt", "terraform-version"],
+      "prBodyNotes": [
+        "Validate the resolved versions and migration requirements, then run the affected Terraform plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
+      ]
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
