@@ -59,7 +59,14 @@
     {
       "groupName": "oxlint",
       "groupSlug": "oxlint",
-      "matchPackageNames": ["oxlint", "/^@oxlint\\//", "@clipboard-health/oxlint-config"]
+      "matchPackageNames": [
+        "oxlint",
+        "oxlint-tsgolint",
+        "/^@oxlint\\//",
+        "/^@oxlint-tsgolint\\//",
+        "@clipboard-health/oxlint-config"
+      ],
+      "separateMinorPatch": false
     },
     {
       "groupName": "Ionic React",
