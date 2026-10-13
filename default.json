@@ -173,7 +173,10 @@
       "description": "Terraform CLI versions need compatibility assessment, including version files and tool-version managers.",
       "matchPackageNames": ["hashicorp/terraform"],
       "automerge": false,
-      "automergeType": "pr"
+      "automergeType": "pr",
+      "prBodyNotes": [
+        "Validate Terraform CLI compatibility by running the affected plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
+      ]
     },
     {
       "description": "Include existing-state plan guidance on Terraform and Terragrunt updates, including lockfile maintenance.",
