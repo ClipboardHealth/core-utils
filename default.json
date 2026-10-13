@@ -42,6 +42,12 @@
   "npmToken": "{{ secrets.NPM_TOKEN }}",
   "packageRules": [
     {
+      "description": "Keep internal GitHub Actions and reusable workflows on their branch or version tags so they receive updates without SHA pinning.",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["/^ClipboardHealth\\//i"],
+      "pinDigests": false
+    },
+    {
       "matchDepTypes": ["peerDependencies"],
       "rangeStrategy": "widen"
     },
