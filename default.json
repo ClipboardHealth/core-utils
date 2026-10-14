@@ -170,8 +170,18 @@
       "matchUpdateTypes": ["pinDigest"],
       "minimumReleaseAge": null,
       "prBodyNotes": [
-        "⚠️ pinDigest updates are not age-checked, so this PR was raised without the usual 7-day check. Validate the release age manually before merging."
+        "⚠️ pinDigest updates are not age-checked. Initial SHA pins of version-tagged actions/* GitHub Actions may automerge after checks; validate release age manually for other pinDigest updates."
       ]
+    },
+    {
+      "description": "Pin official GitHub Actions to immutable SHAs while retaining their existing version tags. Passing checks gate automerge.",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["actions/*"],
+      "matchSourceUrls": ["https://github.com/actions/**"],
+      "matchUpdateTypes": ["pinDigest"],
+      "matchCurrentValue": "/^v[0-9]+(?:\\.[0-9]+){0,2}$/",
+      "automerge": true,
+      "automergeType": "branch"
     },
     {
       "description": "The cbh-core sync workflow updates this package and regenerates the synced rules, which Renovate cannot do.",
