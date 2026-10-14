@@ -62,17 +62,10 @@
       }
     },
     {
-      "files": ["**/config/**/*.ts", "**/plugins/**/*.ts"],
-      "rules": {
-        "node/no-process-env": "off"
-      }
-    },
-    {
       "files": ["packages/clearance/**/*.ts", "packages/groundcrew/**/*.ts"],
       "rules": {
         "no-console": "off",
         "no-throw-literal": "off",
-        "node/no-process-env": "off",
         "typescript/consistent-return": "off",
         "typescript/no-unsafe-argument": "off"
       }

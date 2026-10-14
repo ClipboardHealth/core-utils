@@ -214,7 +214,7 @@ The following were turned off after an audit of 13 consumer repos (repo-local `"
 - **`oxc/no-map-spread`**: a micro-optimization. Its suggested fix mutates with `Object.assign`.
 - **`unicorn/consistent-function-scoping`**: moving closures to module scope often makes code harder to read.
 - **`unicorn/no-useless-undefined`**: conflicts with TypeScript signatures that need an explicit `undefined`.
-- **Style only**: `no-plusplus`, `typescript/explicit-member-accessibility`, `typescript/no-import-type-side-effects`, `unicorn/import-style`.
+- **Stylistic, in the restriction category**: `no-plusplus`, `typescript/explicit-member-accessibility`, `typescript/no-import-type-side-effects`, `unicorn/import-style`.
 
 The same audit removed the explicit opt-ins for `typescript/array-type` and `unicorn/filename-case`. They are `style` rules, so the `style` category now keeps them off.
 
