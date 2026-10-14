@@ -145,7 +145,7 @@ shared controller, module, contract, and cross-contract-import enforcement scope
 <li><strong><code>oxc/no-map-spread</code></strong>: a micro-optimization. Its suggested fix mutates with <code>Object.assign</code>.</li>
 <li><strong><code>unicorn/consistent-function-scoping</code></strong>: moving closures to module scope often makes code harder to read.</li>
 <li><strong><code>unicorn/no-useless-undefined</code></strong>: conflicts with TypeScript signatures that need an explicit <code>undefined</code>.</li>
-<li><strong>Style only</strong>: <code>no-plusplus</code>, <code>typescript/explicit-member-accessibility</code>, <code>typescript/no-import-type-side-effects</code>, <code>unicorn/import-style</code>.</li>
+<li><strong>Stylistic, in the restriction category</strong>: <code>no-plusplus</code>, <code>typescript/explicit-member-accessibility</code>, <code>typescript/no-import-type-side-effects</code>, <code>unicorn/import-style</code>.</li>
 </ul>
 <p>The same audit removed the explicit opt-ins for <code>typescript/array-type</code> and <code>unicorn/filename-case</code>. They are <code>style</code> rules, so the <code>style</code> category now keeps them off.</p>
 <p>The test-file override in <code>base.json</code> disables the <code>typescript/no-unsafe-*</code> family, <code>unbound-method</code>, <code>no-non-null-assertion</code>, and <code>restrict-template-expressions</code> for test files: mocks, <code>expect.any</code>, and <code>createMock</code> make these rules ~90% noise in tests (mirrors the long-standing eslint-config override), while keeping them enforceable for production code.</p>
