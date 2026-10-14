@@ -54,7 +54,8 @@
     {
       "groupName": "Clipboard Health",
       "matchPackageNames": ["/^@clipboard-health/"],
-      "excludePackageNames": ["@clipboard-health/oxlint-config"]
+      "excludePackageNames": ["@clipboard-health/oxlint-config"],
+      "separateMinorPatch": false
     },
     {
       "groupName": "oxlint",
@@ -70,23 +71,28 @@
     },
     {
       "groupName": "Ionic React",
-      "matchPackageNames": ["@ionic/core", "@ionic/react", "@ionic/react-router"]
+      "matchPackageNames": ["@ionic/core", "@ionic/react", "@ionic/react-router"],
+      "separateMinorPatch": false
     },
     {
       "groupName": "Sendbird",
-      "matchPackageNames": ["@sendbird/chat", "@sendbird/uikit-react"]
+      "matchPackageNames": ["@sendbird/chat", "@sendbird/uikit-react"],
+      "separateMinorPatch": false
     },
     {
       "groupName": "pino",
-      "matchPackageNames": ["pino", "pino-http", "nestjs-pino"]
+      "matchPackageNames": ["pino", "pino-http", "nestjs-pino"],
+      "separateMinorPatch": false
     },
     {
       "groupName": "ts-rest",
-      "matchPackageNames": ["/^@ts-rest/"]
+      "matchPackageNames": ["/^@ts-rest/"],
+      "separateMinorPatch": false
     },
     {
       "groupName": "Buf",
-      "matchPackageNames": ["/^@bufbuild/"]
+      "matchPackageNames": ["/^@bufbuild/"],
+      "separateMinorPatch": false
     },
     {
       "enabled": false,
