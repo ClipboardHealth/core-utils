@@ -66,7 +66,8 @@ describe("oxlint-config", () => {
         "no-script-url": "error",
         "no-template-curly-in-string": "error",
         "node/no-exports-assign": "error",
-        "typescript/array-type": ["error", { default: "array-simple" }],
+        "no-await-in-loop": "off",
+        "typescript/explicit-member-accessibility": "off",
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
