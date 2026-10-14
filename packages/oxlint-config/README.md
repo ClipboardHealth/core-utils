@@ -211,10 +211,11 @@ The following were turned off after an audit of 13 consumer repos (repo-local `"
 
 - **`no-await-in-loop`**: sequential awaits are usually intentional (rate limits, Mongo sessions, ordering). The rule pushes agents toward `Promise.all`, which can cause concurrency bugs. It had 1,007 inline disables across 9 repos.
 - **`node/no-process-env`**: off locally in 8 of 13 repos. Repos that centralize configuration can turn it back on.
-- **`node/callback-return`**: a callback-era rule that flags `await callback()` and Express `next(error)`.
 - **`oxc/no-map-spread`**: a micro-optimization. Its suggested fix mutates with `Object.assign`.
 - **`unicorn/consistent-function-scoping`**: moving closures to module scope often makes code harder to read.
 - **`unicorn/no-useless-undefined`**: conflicts with TypeScript signatures that need an explicit `undefined`.
-- **Style only**: `no-plusplus`, `prefer-named-capture-group`, `typescript/array-type`, `typescript/explicit-member-accessibility`, `typescript/no-import-type-side-effects`, `unicorn/filename-case`, `unicorn/import-style`.
+- **Style only**: `no-plusplus`, `typescript/explicit-member-accessibility`, `typescript/no-import-type-side-effects`, `unicorn/import-style`.
+
+The same audit removed the explicit opt-ins for `typescript/array-type` and `unicorn/filename-case`. They are `style` rules, so the `style` category now keeps them off.
 
 The test-file override in `base.json` disables the `typescript/no-unsafe-*` family, `unbound-method`, `no-non-null-assertion`, and `restrict-template-expressions` for test files: mocks, `expect.any`, and `createMock` make these rules ~90% noise in tests (mirrors the long-standing eslint-config override), while keeping them enforceable for production code.
