@@ -207,6 +207,26 @@ The package includes:
   shared controller, module, contract, and cross-contract-import enforcement scopes
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
+## Switch fallback policy
+
+`typescript/switch-exhaustiveness-check` remains an error with
+`considerDefaultExhaustiveForUnions: true`. An explicit `default` defines the policy for unmatched
+values: rejecting them, returning an optional result, or applying a fallback can all be intentional.
+This also permits defaults for legacy values that runtime data contains but TypeScript does not
+represent. The rule still reports omitted union members when a switch has no default.
+
+This is a deliberate tradeoff: adding a union or enum member does not trigger a diagnostic at a
+switch that already has a default. Repositories or closed dispatchers that need every new member
+reviewed can opt into `considerDefaultExhaustiveForUnions: false` with a local rule override. Keep
+runtime fallbacks where their contracts need them; do not introduce throws merely to satisfy a lint
+check. An explicit default does not prove that its business policy is correct.
+
+Requiring repeated empty labels before a fallback conflicts with `unicorn/no-useless-switch-case`
+and makes `complexity` count those labels as extra paths. Both guards remain enabled. See the
+[upstream option documentation](https://typescript-eslint.io/rules/switch-exhaustiveness-check/#considerdefaultexhaustiveforunions)
+for the stricter future-member behavior. Upgrade to a published package release before removing a
+consumer's local rule disable.
+
 ## Intentionally disabled rules
 
 `base.json` cannot hold comments, so the reasoning for non-obvious "off" entries lives here (audited against clipboard-health on oxlint 1.60, 2026-06-11):

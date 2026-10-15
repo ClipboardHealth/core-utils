@@ -110,6 +110,10 @@
       { "allowNullableBoolean": true, "allowNullableString": true }
     ],
     "typescript/strict-void-return": "off",
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      { "considerDefaultExhaustiveForUnions": true }
+    ],
     "unicorn/consistent-function-scoping": "off",
     "unicorn/import-style": "off",
     "unicorn/no-array-callback-reference": "off",

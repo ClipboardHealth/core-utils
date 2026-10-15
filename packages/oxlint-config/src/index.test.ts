@@ -76,6 +76,10 @@ describe("oxlint-config", () => {
         "typescript/no-unnecessary-template-expression": "off",
         "typescript/no-unnecessary-type-conversion": "off",
         "typescript/strict-void-return": "off",
+        "typescript/switch-exhaustiveness-check": [
+          "error",
+          { considerDefaultExhaustiveForUnions: true },
+        ],
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
