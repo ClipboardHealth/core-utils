@@ -142,7 +142,7 @@ describe("oxlint-config", () => {
             specifier: "oxlint-plugin-react-doctor",
           },
         ],
-        plugins: ["react", "jsx-a11y", "import"],
+        plugins: ["react", "jsx-a11y", "import", "oxc", "typescript", "unicorn"],
         rules: expect.objectContaining({
           "array-callback-return": "error",
           curly: ["error", "all"],
@@ -374,6 +374,7 @@ describe("oxlint-config", () => {
       );
 
       expect(typeAware).toStrictEqual({
+        plugins: ["typescript"],
         rules: {
           "typescript/await-thenable": "error",
           "typescript/no-base-to-string": "error",
