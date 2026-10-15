@@ -418,6 +418,7 @@ describe("oxlint-config", () => {
           "vitest/max-expects": "off",
           "vitest/max-nested-describe": "off",
           "vitest/no-conditional-expect": "off",
+          "vitest/no-conditional-in-test": "off",
           "vitest/no-disabled-tests": "error",
           "vitest/no-focused-tests": "error",
           "vitest/no-hooks": "off",
