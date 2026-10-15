@@ -98,6 +98,8 @@
     "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
     "typescript/no-import-type-side-effects": "off",
     "typescript/no-invalid-void-type": "off",
+    "typescript/no-unnecessary-template-expression": "off",
+    "typescript/no-unnecessary-type-conversion": "off",
     "typescript/no-unnecessary-type-parameters": "off",
     "typescript/parameter-properties": "off",
     "typescript/prefer-readonly-parameter-types": "off",
@@ -107,6 +109,7 @@
       "error",
       { "allowNullableBoolean": true, "allowNullableString": true }
     ],
+    "typescript/strict-void-return": "off",
     "unicorn/consistent-function-scoping": "off",
     "unicorn/import-style": "off",
     "unicorn/no-array-callback-reference": "off",
