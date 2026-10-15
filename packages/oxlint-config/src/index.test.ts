@@ -54,7 +54,11 @@ describe("oxlint-config", () => {
         },
       });
 
-      expect(base.overrides).toHaveLength(3);
+      expect(base.overrides).toHaveLength(4);
+      expect(base.overrides).toContainEqual({
+        files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+        rules: { "no-throw-literal": "off" },
+      });
       expect(base.rules).toMatchObject({
         curly: ["error", "all"],
         "guard-for-in": "error",

@@ -11,8 +11,12 @@ const OXLINT_CLI = path.join(
   "bin/oxlint",
 );
 
+const TSGOLINT_EXECUTABLE = createRequire(__filename).resolve(
+  `@oxlint-tsgolint/${process.platform}-${process.arch}/tsgolint${process.platform === "win32" ? ".exe" : ""}`,
+);
+
 interface LintOutput {
-  diagnostics: Array<{ code: string; severity: string }>;
+  diagnostics: Array<{ code: string; severity: string; filename: string }>;
 }
 
 describe("shared type-aware policy", () => {
@@ -66,7 +70,11 @@ export function unsafeInterpolation(value: Record<string, unknown>) { return \`\
           "json",
           fixturePath,
         ],
-        { cwd: directory, encoding: "utf8" },
+        {
+          cwd: directory,
+          encoding: "utf8",
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+        },
       );
       expect(result.error).toBeUndefined();
       expect(result.status).toBe(1);
@@ -85,4 +93,92 @@ export function unsafeInterpolation(value: Record<string, unknown>) { return \`\
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it.each(["ts", "tsx", "mts", "cts"])(
+    "uses typed throw validation for .%s while retaining JavaScript validation",
+    (extension) => {
+      const directory = mkdtempSync(path.join(tmpdir(), "oxlint-throw-policy-"));
+      const configPath = path.join(directory, ".oxlintrc.json");
+      const tsconfigPath = path.join(directory, "tsconfig.json");
+      const fixtureName = `policy.${extension}`;
+      const fixturePath = path.join(directory, fixtureName);
+      const javascriptPath = path.join(directory, "control.js");
+
+      try {
+        writeFileSync(
+          configPath,
+          JSON.stringify(createOxlintConfig({ presets: [base, typeAware] })),
+        );
+        writeFileSync(
+          tsconfigPath,
+          JSON.stringify({
+            compilerOptions: {
+              strict: true,
+              target: "ES2022",
+              module: "ESNext",
+              moduleResolution: "bundler",
+              jsx: "preserve",
+              allowJs: true,
+              checkJs: true,
+              noEmit: true,
+              types: [],
+              lib: ["ES2022"],
+            },
+            files: [fixtureName, "control.js"],
+          }),
+        );
+        writeFileSync(
+          fixturePath,
+          `
+export function deferredError(error: Error) {
+  let firstError: Error | undefined;
+  for (const currentError of [error]) { firstError = currentError; }
+  if (firstError !== undefined) { throw firstError; }
+}
+export function invalidString() { throw "not an Error"; }
+export function invalidObject() { throw { reason: "not an Error" }; }
+`,
+        );
+        writeFileSync(javascriptPath, 'throw "not an Error";\n');
+
+        const result = spawnSync(
+          process.execPath,
+          [
+            OXLINT_CLI,
+            "--config",
+            configPath,
+            "--type-aware",
+            "--threads=2",
+            "--tsconfig",
+            tsconfigPath,
+            "--format",
+            "json",
+            fixturePath,
+            javascriptPath,
+          ],
+          {
+            cwd: directory,
+            encoding: "utf8",
+            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          },
+        );
+        expect(result.error).toBeUndefined();
+        expect(result.status).toBe(1);
+        const output: LintOutput = JSON.parse(result.stdout);
+
+        expect(
+          output.diagnostics
+            .map(({ code, filename, severity }) => `${path.basename(filename)}:${code}:${severity}`)
+            .toSorted(),
+        ).toStrictEqual([
+          "control.js:eslint(no-throw-literal):error",
+          "control.js:typescript(only-throw-error):error",
+          `${fixtureName}:typescript(only-throw-error):error`,
+          `${fixtureName}:typescript(only-throw-error):error`,
+        ]);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
 });

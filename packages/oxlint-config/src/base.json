@@ -162,6 +162,12 @@
         "typescript/restrict-template-expressions": "off",
         "typescript/unbound-method": "off"
       }
+    },
+    {
+      "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "rules": {
+        "no-throw-literal": "off"
+      }
     }
   ]
 }
