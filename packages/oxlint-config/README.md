@@ -115,6 +115,15 @@ standalone frontend application policy, including React, accessibility, and brow
 JavaScript rules. `typeAware` contains rules that require Oxlint's `--type-aware` mode, and `vitest`
 adds the complete Vitest policy. Keep repository-specific exceptions in `localConfig`.
 
+`frontend` registers the built-in `react`, `jsx-a11y`, `import`, `oxc`, `typescript`, and
+`unicorn` plugins. `typeAware` registers `typescript`, including when composed with another
+plugin preset without `base`.
+
+> [!IMPORTANT]
+> Upgrading from versions that omitted these plugin registrations can expose existing lint
+> violations. Run normal and type-aware lint when upgrading, and allow enough CI runner memory
+> for the newly active type-aware analysis. Existing repo-local registrations can remain.
+
 ### JSON config
 
 Create an `.oxlintrc.json` in your repo root:

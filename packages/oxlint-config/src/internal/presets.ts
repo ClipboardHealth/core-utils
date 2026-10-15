@@ -449,7 +449,7 @@ export const frontend: OxlintPreset = {
       specifier: "oxlint-plugin-react-doctor",
     },
   ],
-  plugins: ["react", "jsx-a11y", "import"],
+  plugins: ["react", "jsx-a11y", "import", "oxc", "typescript", "unicorn"],
   rules: { ...FRONTEND_RULES, ...REACT_DOCTOR_RULES },
 };
 export const jest: OxlintPreset = {
@@ -457,6 +457,7 @@ export const jest: OxlintPreset = {
   rules: JEST_RULES,
 };
 export const typeAware: OxlintPreset = {
+  plugins: ["typescript"],
   rules: TYPE_AWARE_RULES,
 };
 export const vitest: OxlintPreset = createVitestPreset();
