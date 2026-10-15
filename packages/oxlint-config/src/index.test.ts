@@ -69,6 +69,9 @@ describe("oxlint-config", () => {
         "no-await-in-loop": "off",
         "typescript/explicit-member-accessibility": "off",
         "typescript/no-invalid-void-type": "off",
+        "typescript/no-unnecessary-template-expression": "off",
+        "typescript/no-unnecessary-type-conversion": "off",
+        "typescript/strict-void-return": "off",
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
