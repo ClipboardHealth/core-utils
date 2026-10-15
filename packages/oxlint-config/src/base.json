@@ -97,6 +97,7 @@
     "typescript/explicit-module-boundary-types": "off",
     "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
     "typescript/no-import-type-side-effects": "off",
+    "typescript/no-invalid-void-type": "off",
     "typescript/no-unnecessary-type-parameters": "off",
     "typescript/parameter-properties": "off",
     "typescript/prefer-readonly-parameter-types": "off",
