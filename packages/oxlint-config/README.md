@@ -232,4 +232,6 @@ The following were turned off after an audit of 13 consumer repos (repo-local `"
 
 The same audit removed the explicit opt-ins for `typescript/array-type` and `unicorn/filename-case`. They are `style` rules, so the `style` category now keeps them off.
 
+When adopting the callback and coercion defaults, first upgrade to a published release containing them, then remove redundant local `off` entries for `typescript/strict-void-return`, `typescript/no-unnecessary-template-expression`, and `typescript/no-unnecessary-type-conversion`. Repositories that require these stricter conventions can opt back in with local `error` overrides. Keep `no-misused-promises` and `no-floating-promises` enabled: allowing discarded synchronous results does not permit unhandled async failures. Keep `restrict-template-expressions` and `no-base-to-string` enabled for unsafe interpolation.
+
 The test-file override in `base.json` disables the `typescript/no-unsafe-*` family, `unbound-method`, `no-non-null-assertion`, and `restrict-template-expressions` for test files: mocks, `expect.any`, and `createMock` make these rules ~90% noise in tests (mirrors the long-standing eslint-config override), while keeping them enforceable for production code.
