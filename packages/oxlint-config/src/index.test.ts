@@ -72,6 +72,7 @@ describe("oxlint-config", () => {
         "node/no-exports-assign": "error",
         "no-await-in-loop": "off",
         "typescript/explicit-member-accessibility": "off",
+        "typescript/consistent-return": "off",
         "typescript/no-invalid-void-type": "off",
         "typescript/no-unnecessary-template-expression": "off",
         "typescript/no-unnecessary-type-conversion": "off",
