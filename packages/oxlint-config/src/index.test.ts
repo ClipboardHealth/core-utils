@@ -68,6 +68,7 @@ describe("oxlint-config", () => {
         "node/no-exports-assign": "error",
         "no-await-in-loop": "off",
         "typescript/explicit-member-accessibility": "off",
+        "typescript/no-invalid-void-type": "off",
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
