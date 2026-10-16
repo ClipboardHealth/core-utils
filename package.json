@@ -62,7 +62,7 @@
     "oxfmt": "0.72.0",
     "oxlint": "1.87.0",
     "oxlint-tsgolint": "7.0.2003",
-    "promptfoo": "0.123.1",
+    "promptfoo": "0.124.1",
     "syncpack": "15.3.3",
     "ts-node": "11.0.0-beta.1",
     "tsx": "4.23.15",
@@ -77,6 +77,9 @@
     },
     "@nx/vitest": {
       "vitest": "$vitest"
+    },
+    "@openai/agents": {
+      "zod": "3.25.76"
     },
     "@swc/core": "$@swc/core",
     "ts-node": "11.0.0-beta.1",
