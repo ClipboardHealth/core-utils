@@ -1,13 +1,13 @@
 export { createOxlintConfig } from "./internal/createOxlintConfig";
 export {
   base,
-  changedCode,
-  changedCodeTypeAware,
   contractFixtures,
   customRules,
   frontend,
   jest,
   react,
+  strict,
+  strictTypeAware,
   typeAware,
   vitest,
 } from "./internal/presets";

@@ -503,10 +503,10 @@ export const customRules: OxlintPreset = {
   ],
 };
 /**
- * Rules that legacy code breaks too often to enable repo-wide. Run them only on changed lines with
- * the `oxlint-changed` CLI; never add these presets to a repository's main config.
+ * Bug-catching rules that legacy code breaks often. Opt in per repository, suppressing existing
+ * violations inline in the same change.
  */
-export const changedCode: OxlintPreset = {
+export const strict: OxlintPreset = {
   jsPlugins: [
     {
       name: "@clipboard-health",
@@ -517,8 +517,8 @@ export const changedCode: OxlintPreset = {
     "@clipboard-health/no-ambiguous-positional-parameters": "error",
   },
 };
-/** Type-aware companion to `changedCode`; `oxlint-changed --type-aware` adds it. */
-export const changedCodeTypeAware: OxlintPreset = {
+/** Type-aware companion to `strict`; compose it with `typeAware`. */
+export const strictTypeAware: OxlintPreset = {
   plugins: ["typescript"],
   rules: {
     // Flags truthiness checks on numbers and strings, where 0 and "" are valid values that read

@@ -6,7 +6,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 
 - [Install](#install)
 - [Usage](#usage)
-- [Lint only changed code](#lint-only-changed-code)
+- [Strict presets](#strict-presets)
 - [Categories](#categories)
 - [What is shared](#what-is-shared)
 - [Intentionally disabled rules](#intentionally-disabled-rules)
@@ -78,12 +78,12 @@ export default defineConfig(
 Available presets:
 
 - `base`
-- `changedCode` and `changedCodeTypeAware` (only for `oxlint-changed`; see [Lint only changed code](#lint-only-changed-code))
 - `contractFixtures`
 - `customRules`
 - `frontend`
 - `react`
 - `jest`
+- `strict` and `strictTypeAware` (opt in; see [Strict presets](#strict-presets))
 - `typeAware`
 - `vitest`
 
@@ -179,42 +179,22 @@ Override shared rules as needed:
 }
 ```
 
-## Lint only changed code
+## Strict presets
 
-Some rules catch real bugs but fire too often in legacy code to enable repo-wide. The
-`oxlint-changed` CLI runs them only on lines a change adds, so new code meets the bar without a
-suppression baseline or a cleanup project.
+These rules catch real bugs but fire often in legacy code, so they are opt-in. Adopt them per
+repository: add the presets, then suppress existing violations inline in the same change so new
+code meets the bar.
 
-| Preset                 | Rule                                                   | Catches                                                                                                                                                                        |
-| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `changedCode`          | `@clipboard-health/no-ambiguous-positional-parameters` | Two or more positional parameters where two share a type (callers can swap them) or one is a boolean (unreadable at call sites). A function with a single parameter is exempt. |
-| `changedCodeTypeAware` | `typescript/strict-boolean-expressions`                | Truthiness checks on numbers and strings, where `0` and `""` read as missing                                                                                                   |
+| Preset            | Rule                                                   | Catches                                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `strict`          | `@clipboard-health/no-ambiguous-positional-parameters` | Two or more positional parameters where two share a type (callers can swap them) or one is a boolean (unreadable at call sites). A function with a single parameter is exempt. |
+| `strictTypeAware` | `typescript/strict-boolean-expressions`                | Truthiness checks on numbers and strings, where `0` and `""` read as missing                                                                                                   |
 
-```bash
-# CI: lines added since the PR base
-npx oxlint-changed --base origin/main
-
-# Add the type-aware rule (requires oxlint-tsgolint)
-npx oxlint-changed --base origin/main --type-aware --tsconfig tsconfig.lint.json
-
-# Pre-commit: staged lines
-npx oxlint-changed --staged
+```ts
+presets: [base, customRules, strict, typeAware, strictTypeAware, vitest],
 ```
 
-In lint-staged, use the function form so lint-staged does not append file paths, which the CLI
-rejects: `"*.{js,jsx,ts,tsx}": () => "oxlint-changed --staged"`.
-
-- **CI checkout:** `--base` diffs against the merge base, so check out with `fetch-depth: 0` or fetch the base branch first.
-- **Local runs:** files with unstaged (`--staged`) or uncommitted (`--base`) changes exit `2`, because their line numbers can't be matched. lint-staged stashes unstaged changes for you.
-- **Exit codes:** `0` clean, `1` violations on changed lines, `2` usage or runtime error.
-- **What counts as changed:** a diagnostic is reported when any line of its span was added. The
-  positional-parameter rule reports on the parameter list, so editing inside a legacy function body
-  does not flag its signature.
-- **Output:** in GitHub Actions, violations print as `::error` annotations on the PR diff.
-- **Ignored paths:** pass `--ignore-pattern <glob>` (repeatable, relative to the repository root) for generated code.
-
-Do not add these presets to a repository's main config; the CLI builds its own config and runs
-oxlint from the repository's `node_modules`.
+Give each suppression a reason: `// oxlint-disable-next-line <rule> -- <reason>`.
 
 ## Categories
 

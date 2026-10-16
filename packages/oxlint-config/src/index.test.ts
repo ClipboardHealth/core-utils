@@ -7,6 +7,8 @@ import {
   jest as jestPreset,
   type OxlintPreset,
   react,
+  strict,
+  strictTypeAware,
   typeAware,
   vitest,
 } from "./index";
@@ -416,6 +418,12 @@ describe("oxlint-config", () => {
           "typescript/unbound-method": "error",
         },
       });
+
+      expect(strict).toStrictEqual({
+        jsPlugins: [{ name: "@clipboard-health", specifier: "@clipboard-health/oxlint-plugin" }],
+        rules: { "@clipboard-health/no-ambiguous-positional-parameters": "error" },
+      });
+      expect(strictTypeAware.rules).toHaveProperty("typescript/strict-boolean-expressions");
 
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
