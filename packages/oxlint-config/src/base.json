@@ -102,6 +102,7 @@
     "typescript/no-unnecessary-template-expression": "off",
     "typescript/no-unnecessary-type-conversion": "off",
     "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unsafe-enum-comparison": "off",
     "typescript/parameter-properties": "off",
     "typescript/prefer-readonly-parameter-types": "off",
     "typescript/require-await": "off",
@@ -111,6 +112,10 @@
       { "allowNullableBoolean": true, "allowNullableString": true }
     ],
     "typescript/strict-void-return": "off",
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      { "considerDefaultExhaustiveForUnions": true }
+    ],
     "unicorn/consistent-function-scoping": "off",
     "unicorn/import-style": "off",
     "unicorn/no-array-callback-reference": "off",

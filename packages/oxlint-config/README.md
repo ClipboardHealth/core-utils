@@ -207,6 +207,26 @@ The package includes:
   shared controller, module, contract, and cross-contract-import enforcement scopes
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
+## Switch fallback policy
+
+`typescript/switch-exhaustiveness-check` remains an error with
+`considerDefaultExhaustiveForUnions: true`. An explicit `default` defines the policy for unmatched
+values: rejecting them, returning an optional result, or applying a fallback can all be intentional.
+This also permits defaults for legacy values that runtime data contains but TypeScript does not
+represent. The rule still reports omitted union members when a switch has no default.
+
+This is a deliberate tradeoff: adding a union or enum member does not trigger a diagnostic at a
+switch that already has a default. Repositories or closed dispatchers that need every new member
+reviewed can opt into `considerDefaultExhaustiveForUnions: false` with a local rule override. Keep
+runtime fallbacks where their contracts need them; do not introduce throws merely to satisfy a lint
+check. An explicit default does not prove that its business policy is correct.
+
+Requiring repeated empty labels before a fallback conflicts with `unicorn/no-useless-switch-case`
+and makes `complexity` count those labels as extra paths. Both guards remain enabled. See the
+[upstream option documentation](https://typescript-eslint.io/rules/switch-exhaustiveness-check/#considerdefaultexhaustiveforunions)
+for the stricter future-member behavior. Upgrade to a published package release before removing a
+consumer's local rule disable.
+
 ## Intentionally disabled rules
 
 `base.json` cannot hold comments, so the reasoning for non-obvious "off" entries lives here (audited against clipboard-health on oxlint 1.60, 2026-06-11):
@@ -217,6 +237,7 @@ The package includes:
 - **`typescript/no-unnecessary-type-conversion`**: removing `Number`, `String`, `Boolean`, or `.toString()` conversions based on a declared type is a style preference. At boundaries where runtime data does not match its declared type, removal can change the value or its type. Explicit coercion is allowed; it does not replace runtime schema validation or the unsafe-operation guards.
 - **`typescript/no-invalid-void-type`**: valid completion APIs use generic calls such as `Promise.withResolvers<void>()` and `http.get<void>()`. Even with `allowInGenericTypeArguments: true`, the rule rejects call-expression type arguments; this restriction is inherited from typescript-eslint, rather than an Oxlint port difference. Changing these APIs to `undefined` can change their public signatures: a `void` resolver permits `resolve()` without an argument. Keep the other TypeScript correctness and unsafe-operation guards enabled.
 - **`typescript/consistent-return`**: optional lookups and filtered callbacks legitimately mix bare returns with value returns; the rule also reports catch paths that call a declared `never` helper. Its `treatUndefinedAsUnspecified` option changes how explicit `undefined` is classified, rather than recognizing these contracts. [Upstream recommends](https://typescript-eslint.io/rules/consistent-return/) TypeScript's `noImplicitReturns` compiler option instead. Enable that option and run compiler checks in CI; `strict` alone does not enable it. Repositories without that compiler guard must keep an explicit local `"typescript/consistent-return": "error"` until they adopt a replacement. `array-callback-return` remains enabled for missing callback results. Existing suppressed return-type errors and ambiguous fallthrough contracts remain code debt.
+- **`typescript/no-unsafe-enum-comparison`**: named constants such as HTTP statuses are compared with wire numbers and serialized strings. The shared TypeScript guidance also prefers const objects over enums. This rule instead requires matching nominal enum types, rejecting those boundary comparisons and input validation. Disabling it also permits matching raw enum literals: it does not enforce using a named member in that case. The compiler still rejects incompatible distinct enums and out-of-range literals; it does not replace every check this rule can make. Repositories that require nominal enum identity can explicitly set this rule to `"error"` in `localConfig.rules`. The [upstream guidance](https://typescript-eslint.io/rules/no-unsafe-enum-comparison/#when-not-to-use-it) describes this tradeoff; the rule has no configuration option for scalar-boundary comparisons. Other enum guards, including duplicate-value detection, remain enabled.
 - **`typescript/consistent-type-imports`**: oxlint's port is not `emitDecoratorMetadata`-aware (even type-aware with the flag in the tsconfig chain), so it flags NestJS constructor-injected classes as type-only. Applying its fix converts DI tokens to `import type`, which SWC erases from `design:paramtypes` metadata, breaking injection at runtime. Do not enable in NestJS repos until oxlint matches typescript-eslint's decorator handling.
 - **`jest/no-confusing-set-timeout`** (jest preset): false-positive explosion — when a jest setup file calls `jest.setTimeout`, the rule flags spec files that contain no `setTimeout` call at all (265k diagnostics across 764 clean files). The vitest preset carries no `jest/*` keys at all: under oxlint ≥1.68 with only the vitest plugin enabled, `jest/*` config keys are silently ignored, and jest-plugin-only rules (such as this one and `jest/prefer-ending-with-an-expect`) cannot fire — `vitest/no-confusing-set-timeout` is not a registered rule name, so an "off" entry for it fails config parsing.
 - **`import/no-named-as-default` / `import/no-named-as-default-member`**: low signal; they flag legitimate default-export import patterns far more often than real mistakes (870 hits, ~0 bugs).
