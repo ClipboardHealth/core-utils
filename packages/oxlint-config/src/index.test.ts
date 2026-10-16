@@ -13,6 +13,17 @@ import {
 
 describe("oxlint-config", () => {
   describe("presets", () => {
+    it("allows repositories to opt into nominal enum comparisons", () => {
+      const shared = createOxlintConfig({ presets: [base, typeAware] });
+      const optedIn = createOxlintConfig({
+        presets: [base, typeAware],
+        localConfig: { rules: { "typescript/no-unsafe-enum-comparison": "error" } },
+      });
+
+      expect(shared.rules?.["typescript/no-unsafe-enum-comparison"]).toBe("off");
+      expect(optedIn.rules?.["typescript/no-unsafe-enum-comparison"]).toBe("error");
+    });
+
     it("exports the shared base preset plugins, categories, and ignore patterns", () => {
       expect(base.plugins).toStrictEqual([
         "eslint",
@@ -73,6 +84,7 @@ describe("oxlint-config", () => {
         "no-await-in-loop": "off",
         "typescript/explicit-member-accessibility": "off",
         "typescript/no-invalid-void-type": "off",
+        "typescript/no-unsafe-enum-comparison": "off",
         "typescript/no-unnecessary-template-expression": "off",
         "typescript/no-unnecessary-type-conversion": "off",
         "typescript/strict-void-return": "off",
