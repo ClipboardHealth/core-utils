@@ -123,3 +123,4 @@ jobs:
         with:
           branch: gh-pages
           folder: docs
+          single-commit: true
