@@ -117,6 +117,66 @@ describe("runOxlintChanged", () => {
     expect(output.join("")).toContain("changed lines are clean");
   });
 
+  it("skips paths matched by --ignore-pattern", () => {
+    mkdirSync(path.join(repository, "src/gen"));
+    writeFileSync(
+      path.join(repository, "src/gen/client.ts"),
+      "export function call(first: string, second: string) {\n  return first + second;\n}\n",
+    );
+    git({ repository, args: ["add", "src/gen/client.ts"] });
+    const output: string[] = [];
+
+    const actual = runOxlintChanged({
+      arguments_: ["--staged", "--ignore-pattern", "src/gen/**"],
+      cwd: repository,
+      environment: {},
+      pluginPath,
+      write: (text) => output.push(text),
+    });
+
+    expect(actual).toBe(0);
+    expect(output.join("")).toContain("no changed JavaScript or TypeScript lines");
+  });
+
+  it("finds changed files when user config changes diff prefixes", () => {
+    git({ repository, args: ["config", "diff.mnemonicPrefix", "true"] });
+    writeFileSync(
+      path.join(repository, "src/new.ts"),
+      "export function assign(workerId: string, workplaceId: string) {\n  return workerId + workplaceId;\n}\n",
+    );
+    git({ repository, args: ["add", "src/new.ts"] });
+    const output: string[] = [];
+
+    const actual = runOxlintChanged({
+      arguments_: ["--staged"],
+      cwd: repository,
+      environment: {},
+      pluginPath,
+      write: (text) => output.push(text),
+    });
+
+    expect(actual).toBe(1);
+    expect(output.join("")).toContain("src/new.ts:1:");
+  });
+
+  it("refuses to run when a staged file also has unstaged changes", () => {
+    writeFileSync(path.join(repository, "src/legacy.ts"), `// staged\n${LEGACY}`);
+    git({ repository, args: ["add", "src/legacy.ts"] });
+    writeFileSync(path.join(repository, "src/legacy.ts"), `// unstaged\n// staged\n${LEGACY}`);
+    const output: string[] = [];
+
+    const actual = runOxlintChanged({
+      arguments_: ["--staged"],
+      cwd: repository,
+      environment: {},
+      pluginPath,
+      write: (text) => output.push(text),
+    });
+
+    expect(actual).toBe(2);
+    expect(output.join("")).toContain("unstaged changes");
+  });
+
   it("rejects missing or conflicting diff sources", () => {
     const output: string[] = [];
 

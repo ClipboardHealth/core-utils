@@ -39,6 +39,38 @@ describe("parseAddedLines", () => {
   });
 });
 
+describe("parseAddedLines path handling", () => {
+  it("strips the tab git appends to paths with spaces", () => {
+    const actual = parseAddedLines({
+      diff: "diff --git a/with space.ts b/with space.ts\n--- a/with space.ts\t\n+++ b/with space.ts\t\n@@ -1 +1 @@\n-a\n+b\n",
+    });
+
+    expect([...actual.keys()]).toStrictEqual(["with space.ts"]);
+  });
+
+  it("skips quoted paths instead of crediting their hunks to the previous file", () => {
+    const actual = parseAddedLines({
+      diff: [
+        "diff --git a/src/a.ts b/src/a.ts",
+        "+++ b/src/a.ts",
+        "@@ -1 +1 @@",
+        "+a",
+        'diff --git "a/q\\"uote.ts" "b/q\\"uote.ts"',
+        '+++ "b/q\\"uote.ts"',
+        "@@ -1 +7 @@",
+        "+b",
+        "",
+      ].join("\n"),
+    });
+
+    expect(
+      Object.fromEntries([...actual].map(([file, lines]) => [file, [...lines]])),
+    ).toStrictEqual({
+      "src/a.ts": [1],
+    });
+  });
+});
+
 describe("filterChangedDiagnostics", () => {
   const source = "// café ☕\nfunction load(\n  a: string,\n  b: string,\n) {}\n";
   const bytes = Buffer.from(source);

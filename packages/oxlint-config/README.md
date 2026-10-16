@@ -185,10 +185,10 @@ Some rules catch real bugs but fire too often in legacy code to enable repo-wide
 `oxlint-changed` CLI runs them only on lines a change adds, so new code meets the bar without a
 suppression baseline or a cleanup project.
 
-| Preset                 | Rule                                                   | Catches                                                                                        |
-| ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `changedCode`          | `@clipboard-health/no-ambiguous-positional-parameters` | Positional parameters that share a type (callers can swap them) or take a boolean (unreadable) |
-| `changedCodeTypeAware` | `typescript/strict-boolean-expressions`                | Truthiness checks on numbers and strings, where `0` and `""` read as missing                   |
+| Preset                 | Rule                                                   | Catches                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `changedCode`          | `@clipboard-health/no-ambiguous-positional-parameters` | Two or more positional parameters where two share a type (callers can swap them) or one is a boolean (unreadable at call sites). A function with a single parameter is exempt. |
+| `changedCodeTypeAware` | `typescript/strict-boolean-expressions`                | Truthiness checks on numbers and strings, where `0` and `""` read as missing                                                                                                   |
 
 ```bash
 # CI: lines added since the PR base
@@ -201,12 +201,14 @@ npx oxlint-changed --base origin/main --type-aware --tsconfig tsconfig.lint.json
 npx oxlint-changed --staged
 ```
 
+- **CI checkout:** `--base` diffs against the merge base, so check out with `fetch-depth: 0` or fetch the base branch first.
+- **Local runs:** files with unstaged (`--staged`) or uncommitted (`--base`) changes exit `2`, because their line numbers can't be matched. lint-staged stashes unstaged changes for you.
 - **Exit codes:** `0` clean, `1` violations on changed lines, `2` usage or runtime error.
 - **What counts as changed:** a diagnostic is reported when any line of its span was added. The
   positional-parameter rule reports on the parameter list, so editing inside a legacy function body
   does not flag its signature.
 - **Output:** in GitHub Actions, violations print as `::error` annotations on the PR diff.
-- **Ignored paths:** pass `--ignore-pattern <glob>` (repeatable) for generated code.
+- **Ignored paths:** pass `--ignore-pattern <glob>` (repeatable, relative to the repository root) for generated code.
 
 Do not add these presets to a repository's main config; the CLI builds its own config and runs
 oxlint from the repository's `node_modules`.

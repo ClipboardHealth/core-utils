@@ -18,7 +18,10 @@ export interface ChangedDiagnostic {
   message: string;
 }
 
-const FILE_HEADER = /^\+\+\+ (?:b\/(?<path>.+)|\/dev\/null)$/;
+// Git appends a tab to paths that contain spaces. Quoted paths (special characters) do not match
+// and are skipped rather than misattributed.
+const FILE_HEADER = /^\+\+\+ (?:b\/(?<path>[^"].*?)\t?|\/dev\/null)$/;
+const DIFF_HEADER = "diff --git ";
 const HUNK_HEADER = /^@@ -\d+(?:,\d+)? \+(?<start>\d+)(?:,(?<count>\d+))? @@/;
 
 /** Parses `git diff --unified=0` output into the new-side line numbers each file adds. */
@@ -28,6 +31,11 @@ export function parseAddedLines(params: { diff: string }): AddedLines {
   let currentLines: Set<number> | undefined;
 
   for (const line of diff.split("\n")) {
+    if (line.startsWith(DIFF_HEADER)) {
+      currentLines = undefined;
+      continue;
+    }
+
     const file = FILE_HEADER.exec(line);
     if (file) {
       const filePath = file.groups?.["path"];

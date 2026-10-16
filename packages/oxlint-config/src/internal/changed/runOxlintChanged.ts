@@ -74,11 +74,26 @@ export function runOxlintChanged(request: RunOxlintChangedRequest): number {
   const range = values.base === undefined ? ["--cached"] : [`${values.base}...HEAD`];
   const diff = git({
     cwd: root,
-    args: ["diff", "--unified=0", "--no-color", "--no-ext-diff", "--diff-filter=AMR", ...range],
+    args: [
+      "diff",
+      "--unified=0",
+      "--no-color",
+      "--no-ext-diff",
+      // Pin prefixes so diff.mnemonicPrefix or diff.noprefix in user config can't hide files.
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      "--diff-filter=AMR",
+      ...range,
+    ],
   });
+  // Filter ignores here rather than in the config: oxlint resolves config ignorePatterns relative
+  // to the temporary config's directory, so they would never match repository paths.
+  const ignorePatterns = values["ignore-pattern"] ?? [];
   const addedLines = new Map(
-    [...parseAddedLines({ diff })].filter(([filePath]) =>
-      LINTED_EXTENSIONS.has(path.extname(filePath)),
+    [...parseAddedLines({ diff })].filter(
+      ([filePath]) =>
+        LINTED_EXTENSIONS.has(path.extname(filePath)) &&
+        !ignorePatterns.some((pattern) => path.matchesGlob(filePath, pattern)),
     ),
   );
 
@@ -87,9 +102,27 @@ export function runOxlintChanged(request: RunOxlintChangedRequest): number {
     return 0;
   }
 
+  // Line numbers come from the index (--staged) or HEAD (--base), but oxlint reads the working
+  // tree. Refuse to run when they differ rather than report against the wrong lines.
+  const unsynced = git({
+    cwd: root,
+    args: [
+      "diff",
+      "--name-only",
+      ...(values.base === undefined ? [] : ["HEAD"]),
+      "--",
+      ...addedLines.keys(),
+    ],
+  }).trim();
+  if (unsynced !== "") {
+    write(
+      `oxlint-changed: these files have ${values.base === undefined ? "unstaged" : "uncommitted"} changes, so their lines can't be matched:\n${unsynced}\nStage or stash them (lint-staged stashes unstaged changes for you) and rerun.\n`,
+    );
+    return 2;
+  }
+
   const diagnostics = lintFiles({
     files: [...addedLines.keys()],
-    ignorePatterns: values["ignore-pattern"] ?? [],
     isTypeAware: values["type-aware"] === true,
     pluginPath:
       request.pluginPath ?? createRequire(__filename).resolve("@clipboard-health/oxlint-plugin"),
@@ -113,22 +146,18 @@ export function runOxlintChanged(request: RunOxlintChangedRequest): number {
 
 function lintFiles(params: {
   files: readonly string[];
-  ignorePatterns: readonly string[];
   isTypeAware: boolean;
   pluginPath: string;
   root: string;
   tsconfig: string | undefined;
 }): OxlintDiagnostic[] {
-  const { files, ignorePatterns, isTypeAware, pluginPath, root, tsconfig } = params;
+  const { files, isTypeAware, pluginPath, root, tsconfig } = params;
   const directory = mkdtempSync(path.join(tmpdir(), "oxlint-changed-"));
   const configPath = path.join(directory, ".oxlintrc.json");
   const oxlintCli = resolveOxlintCli({ root });
 
   try {
-    writeFileSync(
-      configPath,
-      JSON.stringify(buildConfig({ ignorePatterns, isTypeAware, pluginPath })),
-    );
+    writeFileSync(configPath, JSON.stringify(buildConfig({ isTypeAware, pluginPath })));
     const typeAwareArguments = isTypeAware
       ? ["--type-aware", ...(tsconfig === undefined ? [] : ["--tsconfig", tsconfig])]
       : [];
@@ -164,11 +193,7 @@ function lintFiles(params: {
   }
 }
 
-function buildConfig(params: {
-  ignorePatterns: readonly string[];
-  isTypeAware: boolean;
-  pluginPath: string;
-}): object {
+function buildConfig(params: { isTypeAware: boolean; pluginPath: string }): object {
   const { pluginPath } = params;
 
   return createOxlintConfig({
@@ -184,10 +209,7 @@ function buildConfig(params: {
       },
       ...(params.isTypeAware ? [changedCodeTypeAware] : []),
     ],
-    localConfig: {
-      categories: ALL_CATEGORIES_OFF,
-      ignorePatterns: [...params.ignorePatterns],
-    },
+    localConfig: { categories: ALL_CATEGORIES_OFF },
   });
 }
 

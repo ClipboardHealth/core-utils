@@ -19,7 +19,7 @@ const rule = defineRule({
     type: "problem",
     docs: {
       description:
-        "Disallow positional parameters that share a type or take a boolean, which callers can swap or misread",
+        "Disallow two or more positional parameters where two share a type or one is a boolean, which callers can swap or misread",
       url: "https://github.com/ClipboardHealth/core-utils/tree/main/packages/oxlint-plugin/src/lib/rules/no-ambiguous-positional-parameters",
     },
     schema: [],
