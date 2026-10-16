@@ -340,7 +340,6 @@ export class NotificationClient {
             };
             const triggerBody = toTriggerBody(chunkBody);
 
-            // eslint-disable-next-line no-await-in-loop
             const { knockRequestId, response } = await withKnockRequestId(
               this.provider.workflows.trigger(workflowKey, triggerBody, {
                 idempotencyKey: chunkIdempotencyKey,

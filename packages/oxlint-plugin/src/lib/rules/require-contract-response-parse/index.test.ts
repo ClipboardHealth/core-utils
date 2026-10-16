@@ -16,7 +16,6 @@ const ruleTester = new RuleTester({
   },
 });
 
-// oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
 ruleTester.run("require-contract-response-parse", rule, {
   valid: [
     {

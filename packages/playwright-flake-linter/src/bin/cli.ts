@@ -22,5 +22,4 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-// eslint-disable-next-line unicorn/prefer-top-level-await -- the published CLI is CommonJS
 void main();

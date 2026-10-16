@@ -79,7 +79,6 @@ describe(embedScreenshot, () => {
   it("embeds small screenshot as base64", () => {
     const screenshotPath = path.join(temporaryDirectory, "screenshot.png");
     const content = Buffer.from("fake-png-content");
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(screenshotPath, content);
     const failureArtifacts: FailureArtifacts = {};
 
@@ -90,7 +89,6 @@ describe(embedScreenshot, () => {
 
   it("skips when base64 would exceed cap", () => {
     const screenshotPath = path.join(temporaryDirectory, "large.png");
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(screenshotPath, Buffer.alloc(600_000, "x"));
     const failureArtifacts: FailureArtifacts = {};
 

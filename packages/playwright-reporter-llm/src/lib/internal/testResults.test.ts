@@ -76,7 +76,6 @@ describe(buildTestError, () => {
   });
 
   it("handles missing message gracefully", () => {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const error = {} as { message?: string };
 
     const result = buildTestError(error);

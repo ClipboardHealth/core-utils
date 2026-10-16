@@ -12,10 +12,8 @@ async function bootstrap() {
       arrayLimit: 100,
     }),
   );
-  // oxlint-disable-next-line node/no-process-env
   const port = process.env["PORT"] ?? 3000;
   await app.listen(port);
 }
 
-// eslint-disable-next-line unicorn/prefer-top-level-await
 void bootstrap();

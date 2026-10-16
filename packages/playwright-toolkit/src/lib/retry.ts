@@ -121,7 +121,6 @@ export async function runWithRetry<T>(params: RunWithRetryParams<T>): Promise<Re
     const abortController = new AbortController();
 
     try {
-      // eslint-disable-next-line no-await-in-loop -- Retry attempts are intentionally sequential.
       const value = await runAttempt({
         context: {
           attemptNumber,
@@ -143,7 +142,6 @@ export async function runWithRetry<T>(params: RunWithRetryParams<T>): Promise<Re
       };
 
       try {
-        // eslint-disable-next-line no-await-in-loop -- Attempt reporting is intentionally sequential.
         await runWithinRetryBudget({
           abortController,
           elapsedMs: failureContext.elapsedMs,
@@ -188,7 +186,6 @@ export async function runWithRetry<T>(params: RunWithRetryParams<T>): Promise<Re
       });
 
       try {
-        // eslint-disable-next-line no-await-in-loop -- Retry attempts are intentionally sequential.
         await runWithinRetryBudget({
           abortController,
           elapsedMs: failureContext.elapsedMs,

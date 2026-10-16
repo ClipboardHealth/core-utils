@@ -24,5 +24,4 @@ async function example() {
   strictEqual(failureResult.error.issues[0]?.message, "Failed to fetch: Error: Network error");
 }
 
-// eslint-disable-next-line unicorn/prefer-top-level-await
 void example();

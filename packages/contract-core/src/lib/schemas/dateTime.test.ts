@@ -69,7 +69,6 @@ describe(dateTimeSchema, () => {
     it("composes with .optional()", () => {
       const optionalSchema = dateTimeSchema().optional();
 
-      // eslint-disable-next-line unicorn/no-useless-undefined
       const undef = optionalSchema.safeParse(undefined);
       expectToBeSafeParseSuccess(undef);
       expect(undef.data).toBeUndefined();

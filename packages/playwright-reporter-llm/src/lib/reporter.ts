@@ -254,13 +254,10 @@ export default class LlmReporter implements Reporter {
     };
 
     const directory = path.dirname(this.outputFile);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     mkdirSync(directory, { recursive: true });
     const temporaryFile = path.join(directory, `.llm-report-${randomUUID()}.tmp`);
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       writeFileSync(temporaryFile, JSON.stringify(report, undefined, 2));
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       renameSync(temporaryFile, this.outputFile);
     } catch (error) {
       // eslint-disable-next-line no-console

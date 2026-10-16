@@ -143,7 +143,6 @@ Send notifications through third-party providers.
      provide: NOTIFICATION_CLIENT_TOKEN,
      useFactory: (): NotificationClient =>
        new NotificationClient({
-         // oxlint-disable-next-line node/no-process-env
          apiKey: process.env["KNOCK_API_KEY"]!,
          logger: toLogger(
            new CBHLogger({
@@ -220,7 +219,6 @@ Send notifications through third-party providers.
      });
    }
 
-   // eslint-disable-next-line unicorn/prefer-top-level-await
    void enqueueTriggerNotificationJob(
      // Use your instance of `@clipboard-health/mongo-jobs` or `@clipboard-health/background-jobs-postgres` here.
      new BackgroundJobsService(),

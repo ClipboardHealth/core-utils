@@ -264,7 +264,6 @@ export async function fetchMailpitValue(
         }
 
         try {
-          // eslint-disable-next-line no-await-in-loop -- Candidates are checked newest-first.
           const fullMessage = await params.client.getMessage({
             messageId: message.ID,
           });

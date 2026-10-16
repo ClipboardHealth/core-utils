@@ -63,12 +63,10 @@ function createSharedLifecycleAttachment({
 }
 
 function createMockConfig(overrides: Partial<FullConfig> = {}): FullConfig {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {
     rootDir: "/project",
     version: "1.52.0",
     workers: 4,
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     projects: [{ name: "chromium", retries: 2 } as FullConfig["projects"][0]],
     ...overrides,
   } as FullConfig;
@@ -144,7 +142,6 @@ function createMockStep(overrides: Partial<TestStep> = {}): TestStep {
 }
 
 function createMockResult(overrides: Partial<TestResult> = {}): TestResult {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {
     status: "passed",
     duration: 150,
@@ -162,7 +159,6 @@ function createMockResult(overrides: Partial<TestResult> = {}): TestResult {
 }
 
 function readReport(filePath: string): LlmTestReport {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   return JSON.parse(readFileSync(filePath, "utf8")) as LlmTestReport;
 }
 
@@ -190,13 +186,11 @@ describe(LlmReporter, () => {
   });
 
   it("deletes stale report on begin", () => {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(outputFile, "stale");
 
     const reporter = new LlmReporter({ outputFile });
     reporter.onBegin(createMockConfig(), createMockSuite());
 
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     expect(existsSync(outputFile)).toBe(false);
   });
 
@@ -736,7 +730,6 @@ describe(LlmReporter, () => {
       truncated: true,
     });
     const lifecyclePath = path.join(outputDirectory, "browser-network-lifecycle.json");
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(lifecyclePath, lifecycleAttachment.body);
 
     reporter.onTestEnd(
@@ -1065,7 +1058,6 @@ describe(LlmReporter, () => {
     reporter.onTestEnd(createMockTestCase(), createMockResult());
     reporter.onEnd({ status: "passed" } as FullResult);
 
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     expect(existsSync(outputFile)).toBe(false);
   });
 

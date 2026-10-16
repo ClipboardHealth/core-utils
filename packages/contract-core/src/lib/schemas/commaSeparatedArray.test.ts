@@ -253,7 +253,6 @@ describe(commaSeparatedArray, () => {
     it("composes with .optional()", () => {
       const schema = commaSeparatedArray(nonEmptyString).optional();
 
-      // eslint-disable-next-line unicorn/no-useless-undefined
       const undef = schema.safeParse(undefined);
       expectToBeSafeParseSuccess(undef);
       expect(undef.data).toBeUndefined();

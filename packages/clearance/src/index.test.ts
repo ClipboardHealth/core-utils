@@ -199,7 +199,6 @@ describe("@clipboard-health/clearance", () => {
     const upstream = http.createServer((req, res) => {
       expect(req.method).toBe("GET");
       expect(req.url).toBe("/hello?x=1");
-      // eslint-disable-next-line no-use-before-define -- handler fires only after `upstreamPort` is assigned on the next line.
       expect(req.headers.host).toBe(`allowed.test:${upstreamPort}`);
       expect(req.headers["x-remove"]).toBeUndefined();
 

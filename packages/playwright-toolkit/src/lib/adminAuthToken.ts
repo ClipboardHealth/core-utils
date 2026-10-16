@@ -771,7 +771,6 @@ async function runWithAdminAuthTokenLock<Result>(params: {
   const lockWaitTimeoutMs = params.lockWaitTimeoutMs ?? DEFAULT_LOCK_WAIT_TIMEOUT_MS;
   const sleepImplementation = params.sleepImplementation ?? sleep;
 
-  /* eslint-disable no-await-in-loop -- Lock acquisition and ownership checks are sequential. */
   while (performance.now() - waitStartedAtMs < lockWaitTimeoutMs) {
     const lock = await tryAcquireLock({
       lockFilePath: params.cachePaths.lockFilePath,
@@ -800,7 +799,6 @@ async function runWithAdminAuthTokenLock<Result>(params: {
       );
     await sleepImplementation({ durationMs: retryDelayMs });
   }
-  /* eslint-enable no-await-in-loop */
 
   throw new Error(
     `Timed out waiting for admin auth token cache lock: ${params.cachePaths.lockFilePath}`,
@@ -1069,7 +1067,6 @@ async function runAdminAuthTokenCommand(
       [...params.arguments],
       {
         encoding: "utf8",
-        // oxlint-disable-next-line node/no-process-env -- The CLI needs inherited AWS credentials and config.
         env: { ...process.env, DOTENV_CONFIG_QUIET: "true" },
         timeout: params.timeoutMs,
       },

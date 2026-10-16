@@ -20,7 +20,6 @@ export async function forEachAsyncSequentially<T>(
   asyncTask: (item: T, index: number) => Promise<unknown>,
 ): Promise<void> {
   for (const [index, item] of array.entries()) {
-    // eslint-disable-next-line no-await-in-loop
     await asyncTask(item, index);
   }
 }

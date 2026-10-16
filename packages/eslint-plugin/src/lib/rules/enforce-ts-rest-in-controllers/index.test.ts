@@ -13,7 +13,6 @@ const ruleTester = new TSESLint.RuleTester({
   },
 });
 
-// oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
 ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
   valid: [
     {

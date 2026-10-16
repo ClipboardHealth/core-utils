@@ -130,7 +130,6 @@ describe(collectTraceDiagnosticsFromAttachments, () => {
 
   it("returns empty report when trace is an invalid zip", () => {
     const invalidPath = path.join(temporaryDirectory, "invalid.zip");
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(invalidPath, "not a zip archive");
 
     const result = collectTraceDiagnosticsFromAttachments([invalidPath], 0);

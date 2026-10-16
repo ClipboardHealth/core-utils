@@ -132,7 +132,6 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
   const { owner, repo, token, tag, body, commitSha } = request;
 
   for (let attempt = 1; attempt <= MAX_RETRY_COUNT; attempt++) {
-    // oxlint-disable-next-line no-await-in-loop
     const response = await fetch(gitHubReleasesUrl(owner, repo), {
       method: "POST",
       headers: gitHubHeaders(token),
@@ -151,7 +150,6 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
 
     // Handle "already exists" by updating the existing release (makes re-runs safe)
     if (response.status === 422) {
-      // oxlint-disable-next-line no-await-in-loop
       const errorBody: unknown = await response.json();
       const alreadyExists =
         isRecord(errorBody) &&
@@ -159,7 +157,6 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
         errorBody.errors.some((entry) => isRecord(entry) && entry.code === "already_exists");
       if (alreadyExists) {
         verbose(`  Release for ${tag} already exists, updating...`);
-        // oxlint-disable-next-line no-await-in-loop
         await updateExistingRelease({ owner, repo, token, tag, body });
         return;
       }
@@ -182,7 +179,6 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
       `  GitHub API returned ${response.status} for ${tag} (attempt ${attempt}/${MAX_RETRY_COUNT}), retrying in ${backoffMs}ms...`,
     );
 
-    // oxlint-disable-next-line no-await-in-loop
     await sleep(backoffMs);
   }
 }
@@ -297,7 +293,6 @@ async function main(): Promise<void> {
 
     try {
       log(`  Creating release for ${tag}...`);
-      // oxlint-disable-next-line no-await-in-loop
       await createGitHubRelease({
         owner,
         repo,

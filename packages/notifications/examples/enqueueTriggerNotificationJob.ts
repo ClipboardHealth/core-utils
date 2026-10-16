@@ -48,7 +48,6 @@ async function enqueueTriggerNotificationJob(adapter: BackgroundJobsAdapter) {
   });
 }
 
-// eslint-disable-next-line unicorn/prefer-top-level-await
 void enqueueTriggerNotificationJob(
   // Use your instance of `@clipboard-health/mongo-jobs` or `@clipboard-health/background-jobs-postgres` here.
   new BackgroundJobsService(),

@@ -51,7 +51,6 @@ export function embedScreenshot(
   absoluteScreenshotPath: string,
 ): void {
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const raw = readFileSync(absoluteScreenshotPath);
     // base64 expands ~4/3x; skip conversion when raw bytes cannot possibly fit
     if (raw.length > Math.floor((SCREENSHOT_BASE64_CAP * 3) / 4)) {

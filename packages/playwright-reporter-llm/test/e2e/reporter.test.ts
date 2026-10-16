@@ -17,7 +17,6 @@ describe("LLM Reporter E2E", () => {
 
     // Strip Jest environment variables so Playwright doesn't detect a Jest context and skip test discovery.
     const environment = Object.fromEntries(
-      // oxlint-disable-next-line node/no-process-env
       Object.entries(process.env).filter(([key]) => !key.startsWith("JEST")),
     );
 

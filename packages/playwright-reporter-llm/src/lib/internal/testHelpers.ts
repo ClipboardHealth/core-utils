@@ -270,7 +270,6 @@ export function writeTraceZipFixture(
   ]);
 
   const tracePath = path.join(fixtureDirectory, fileName);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   writeFileSync(tracePath, archive);
   return tracePath;
 }

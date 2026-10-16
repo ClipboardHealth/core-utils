@@ -25,7 +25,6 @@ function nearestPackageName(directory: string): string | undefined {
   let name: string | undefined;
   const manifestPath = path.join(directory, "package.json");
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- resolves the linted file's own package.json
     const manifest: unknown = JSON.parse(readFileSync(manifestPath, "utf8"));
     if (
       typeof manifest === "object" &&
