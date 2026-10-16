@@ -502,6 +502,41 @@ export const customRules: OxlintPreset = {
     },
   ],
 };
+/**
+ * Rules that legacy code breaks too often to enable repo-wide. Run them only on changed lines with
+ * the `oxlint-changed` CLI; never add these presets to a repository's main config.
+ */
+export const changedCode: OxlintPreset = {
+  jsPlugins: [
+    {
+      name: "@clipboard-health",
+      specifier: "@clipboard-health/oxlint-plugin",
+    },
+  ],
+  rules: {
+    "@clipboard-health/no-ambiguous-positional-parameters": "error",
+  },
+};
+/** Type-aware companion to `changedCode`; `oxlint-changed --type-aware` adds it. */
+export const changedCodeTypeAware: OxlintPreset = {
+  plugins: ["typescript"],
+  rules: {
+    // Flags truthiness checks on numbers and strings, where 0 and "" are valid values that read
+    // as missing. Nullable objects and booleans stay allowed because their truthiness is exact.
+    "typescript/strict-boolean-expressions": [
+      "error",
+      {
+        allowAny: true,
+        allowNullableBoolean: true,
+        allowNullableNumber: false,
+        allowNullableObject: true,
+        allowNullableString: false,
+        allowNumber: false,
+        allowString: false,
+      },
+    ],
+  },
+};
 export const contractFixtures: OxlintPreset = {
   jsPlugins: [
     {

@@ -4,6 +4,7 @@ describe("oxlint plugin", () => {
   it("exports every Clipboard lint rule", () => {
     expect(Object.keys(rules)).toStrictEqual([
       "enforce-ts-rest-in-controllers",
+      "no-ambiguous-positional-parameters",
       "no-empty-boolean-call",
       "no-cross-contract-imports",
       "no-parallel-mongo-session-ops",

@@ -10,6 +10,7 @@ ESLint.
 ## Rules
 
 - `enforce-ts-rest-in-controllers`
+- `no-ambiguous-positional-parameters`
 - `no-empty-boolean-call`
 - `no-cross-contract-imports`
 - `no-parallel-mongo-session-ops`

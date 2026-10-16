@@ -1,4 +1,5 @@
 import enforceTsRestInControllers from "./lib/rules/enforce-ts-rest-in-controllers";
+import noAmbiguousPositionalParameters from "./lib/rules/no-ambiguous-positional-parameters";
 import noCrossContractImports from "./lib/rules/no-cross-contract-imports";
 import noEmptyBooleanCall from "./lib/rules/no-empty-boolean-call";
 import noParallelMongoSessionOps from "./lib/rules/no-parallel-mongo-session-ops";
@@ -10,6 +11,7 @@ import requireZodImportInContracts from "./lib/rules/require-zod-import-in-contr
 
 export const rules = {
   "enforce-ts-rest-in-controllers": enforceTsRestInControllers,
+  "no-ambiguous-positional-parameters": noAmbiguousPositionalParameters,
   "no-empty-boolean-call": noEmptyBooleanCall,
   "no-cross-contract-imports": noCrossContractImports,
   "no-parallel-mongo-session-ops": noParallelMongoSessionOps,

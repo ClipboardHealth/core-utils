@@ -6,6 +6,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 
 - [Install](#install)
 - [Usage](#usage)
+- [Lint only changed code](#lint-only-changed-code)
 - [Categories](#categories)
 - [What is shared](#what-is-shared)
 - [Intentionally disabled rules](#intentionally-disabled-rules)
@@ -77,6 +78,7 @@ export default defineConfig(
 Available presets:
 
 - `base`
+- `changedCode` and `changedCodeTypeAware` (only for `oxlint-changed`; see [Lint only changed code](#lint-only-changed-code))
 - `contractFixtures`
 - `customRules`
 - `frontend`
@@ -176,6 +178,38 @@ Override shared rules as needed:
   }
 }
 ```
+
+## Lint only changed code
+
+Some rules catch real bugs but fire too often in legacy code to enable repo-wide. The
+`oxlint-changed` CLI runs them only on lines a change adds, so new code meets the bar without a
+suppression baseline or a cleanup project.
+
+| Preset                 | Rule                                                   | Catches                                                                                        |
+| ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `changedCode`          | `@clipboard-health/no-ambiguous-positional-parameters` | Positional parameters that share a type (callers can swap them) or take a boolean (unreadable) |
+| `changedCodeTypeAware` | `typescript/strict-boolean-expressions`                | Truthiness checks on numbers and strings, where `0` and `""` read as missing                   |
+
+```bash
+# CI: lines added since the PR base
+npx oxlint-changed --base origin/main
+
+# Add the type-aware rule (requires oxlint-tsgolint)
+npx oxlint-changed --base origin/main --type-aware --tsconfig tsconfig.lint.json
+
+# Pre-commit: staged lines
+npx oxlint-changed --staged
+```
+
+- **Exit codes:** `0` clean, `1` violations on changed lines, `2` usage or runtime error.
+- **What counts as changed:** a diagnostic is reported when any line of its span was added. The
+  positional-parameter rule reports on the parameter list, so editing inside a legacy function body
+  does not flag its signature.
+- **Output:** in GitHub Actions, violations print as `::error` annotations on the PR diff.
+- **Ignored paths:** pass `--ignore-pattern <glob>` (repeatable) for generated code.
+
+Do not add these presets to a repository's main config; the CLI builds its own config and runs
+oxlint from the repository's `node_modules`.
 
 ## Categories
 
