@@ -104,19 +104,16 @@ export function runOxlintChanged(request: RunOxlintChangedRequest): number {
 
   // Line numbers come from the index (--staged) or HEAD (--base), but oxlint reads the working
   // tree. Refuse to run when they differ rather than report against the wrong lines.
+  // List all dirty paths and intersect here: passing changed paths as pathspecs can exceed ARG_MAX.
   const unsynced = git({
     cwd: root,
-    args: [
-      "diff",
-      "--name-only",
-      ...(values.base === undefined ? [] : ["HEAD"]),
-      "--",
-      ...addedLines.keys(),
-    ],
-  }).trim();
-  if (unsynced !== "") {
+    args: ["diff", "--name-only", "-z", ...(values.base === undefined ? [] : ["HEAD"])],
+  })
+    .split("\0")
+    .filter((filePath) => addedLines.has(filePath));
+  if (unsynced.length > 0) {
     write(
-      `oxlint-changed: these files have ${values.base === undefined ? "unstaged" : "uncommitted"} changes, so their lines can't be matched:\n${unsynced}\nStage or stash them (lint-staged stashes unstaged changes for you) and rerun.\n`,
+      `oxlint-changed: these files have ${values.base === undefined ? "unstaged" : "uncommitted"} changes, so their lines can't be matched:\n${unsynced.join("\n")}\nStage or stash them (lint-staged stashes unstaged changes for you) and rerun.\n`,
     );
     return 2;
   }

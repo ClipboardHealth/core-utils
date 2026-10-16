@@ -201,6 +201,9 @@ npx oxlint-changed --base origin/main --type-aware --tsconfig tsconfig.lint.json
 npx oxlint-changed --staged
 ```
 
+In lint-staged, use the function form so lint-staged does not append file paths, which the CLI
+rejects: `"*.{js,jsx,ts,tsx}": () => "oxlint-changed --staged"`.
+
 - **CI checkout:** `--base` diffs against the merge base, so check out with `fetch-depth: 0` or fetch the base branch first.
 - **Local runs:** files with unstaged (`--staged`) or uncommitted (`--base`) changes exit `2`, because their line numbers can't be matched. lint-staged stashes unstaged changes for you.
 - **Exit codes:** `0` clean, `1` violations on changed lines, `2` usage or runtime error.
