@@ -93,6 +93,10 @@ function isAuthorChosenSignature(params: { node: FunctionNode }): boolean {
   }
 
   const { parent } = node;
+  if (parent?.type === "ExportDefaultDeclaration") {
+    return true;
+  }
+
   if (parent?.type === "VariableDeclarator") {
     return parent.init === node && parent.id.type === "Identifier" && !parent.id.typeAnnotation;
   }

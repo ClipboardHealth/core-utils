@@ -126,6 +126,16 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
       errors: [{ messageId: "interchangeableParameters" }],
     },
     {
+      name: "default-exported arrow function",
+      code: "export default (workerId: string, facilityId: string) => workerId;",
+      errors: [{ messageId: "interchangeableParameters" }],
+    },
+    {
+      name: "default-exported function expression",
+      code: "export default (function (id: string, includeArchived: boolean) { return id; });",
+      errors: [{ messageId: "booleanParameter" }],
+    },
+    {
       name: "report covers a multi-line parameter list",
       code: "function load(\n  threadId: string,\n  mailboxId: string,\n) { return threadId; }",
       errors: [{ messageId: "interchangeableParameters", line: 2, endLine: 3 }],
