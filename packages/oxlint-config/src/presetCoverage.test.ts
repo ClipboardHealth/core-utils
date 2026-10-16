@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -81,4 +81,57 @@ describe("standalone preset coverage", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it.each(["ts", "tsx", "mts", "cts"])(
+    "allows legal .%s type/value names while retaining JavaScript and unsafe merging checks",
+    (extension) => {
+      const directory = mkdtempSync(path.join(tmpdir(), "oxlint-redeclaration-policy-"));
+      const configPath = path.join(directory, ".oxlintrc.json");
+      const fixtureName = `policy.${extension}`;
+
+      try {
+        const config = createOxlintConfig({ presets: [frontend, typeAware, vitest] });
+        // React Doctor is optional; this fixture exercises the built-in declaration checks.
+        config.jsPlugins = [];
+        config.rules = Object.fromEntries(
+          Object.entries(config.rules ?? {}).filter(([rule]) => !rule.startsWith("react-doctor/")),
+        );
+        writeFileSync(configPath, JSON.stringify(config));
+        writeFileSync(
+          path.join(directory, fixtureName),
+          'export type Status = string;\nexport const Status = "active";\n' +
+            "export interface Widget { value: string; }\nexport class Widget {}\n",
+        );
+        writeFileSync(
+          path.join(directory, "control.js"),
+          "var duplicate = 1;\nvar duplicate = 2;\nexport { duplicate };\n",
+        );
+
+        const result = spawnSync(
+          process.execPath,
+          [OXLINT_CLI, "--config", configPath, "--format", "json", fixtureName, "control.js"],
+          { cwd: directory, encoding: "utf8" },
+        );
+        expect(result.error).toBeUndefined();
+        expect(result.status).toBe(1);
+        const output: { diagnostics: Array<{ code: string; filename: string }> } = JSON.parse(
+          result.stdout,
+        );
+
+        expect(
+          output.diagnostics
+            .filter(({ code }) =>
+              ["eslint(no-redeclare)", "typescript(no-unsafe-declaration-merging)"].includes(code),
+            )
+            .map(({ code, filename }) => `${path.basename(filename)}:${code}`)
+            .toSorted(),
+        ).toStrictEqual([
+          "control.js:eslint(no-redeclare)",
+          `${fixtureName}:typescript(no-unsafe-declaration-merging)`,
+        ]);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
 });

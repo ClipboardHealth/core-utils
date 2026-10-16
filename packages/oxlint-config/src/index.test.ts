@@ -168,6 +168,12 @@ describe("oxlint-config", () => {
           },
         ],
         plugins: ["react", "jsx-a11y", "import", "oxc", "typescript", "unicorn"],
+        overrides: [
+          {
+            files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+            rules: { "no-redeclare": "off" },
+          },
+        ],
         rules: expect.objectContaining({
           "array-callback-return": "error",
           curly: ["error", "all"],

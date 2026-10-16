@@ -450,6 +450,13 @@ export const frontend: OxlintPreset = {
     },
   ],
   plugins: ["react", "jsx-a11y", "import", "oxc", "typescript", "unicorn"],
+  overrides: [
+    {
+      files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      // TypeScript permits shared type/value names and checks duplicate value declarations.
+      rules: { "no-redeclare": "off" },
+    },
+  ],
   rules: { ...FRONTEND_RULES, ...REACT_DOCTOR_RULES },
 };
 export const jest: OxlintPreset = {
