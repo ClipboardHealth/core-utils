@@ -91,6 +91,7 @@
     "return-await": "off",
     "sort-imports": "off",
     "sort-keys": "off",
+    "typescript/consistent-return": "off",
     "typescript/consistent-type-imports": "off",
     "typescript/explicit-function-return-type": "off",
     "typescript/explicit-member-accessibility": "off",
