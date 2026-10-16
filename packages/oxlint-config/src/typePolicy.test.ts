@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { base, createOxlintConfig, typeAware } from "./index";
+import { base, createOxlintConfig, strictTypeAware, typeAware } from "./index";
 
 const OXLINT_CLI = path.join(
   path.dirname(createRequire(__filename).resolve("oxlint/package.json")),
@@ -408,4 +408,63 @@ export function invalidObject() { throw { reason: "not an Error" }; }
       }
     },
   );
+  it("strictTypeAware flags number truthiness but allows strings, nullable objects, and booleans", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "oxlint-strict-boolean-policy-"));
+    const configPath = path.join(directory, ".oxlintrc.json");
+    const tsconfigPath = path.join(directory, "tsconfig.json");
+    const fixturePath = path.join(directory, "policy.ts");
+
+    try {
+      writeFileSync(
+        configPath,
+        JSON.stringify(createOxlintConfig({ presets: [typeAware, strictTypeAware] })),
+      );
+      writeFileSync(
+        tsconfigPath,
+        JSON.stringify({
+          compilerOptions: { strict: true, target: "ES2022", types: [], lib: ["ES2022"] },
+          files: ["policy.ts"],
+        }),
+      );
+      writeFileSync(
+        fixturePath,
+        `
+export function count(total: number): string { return total ? "some" : "none"; }
+export function hours(worked: number | undefined): string { return worked ? "worked" : "missing"; }
+export function label(name: string | undefined): string { return name ? name : "unknown"; }
+export function owner(record: { id: string } | undefined): string { return record ? record.id : ""; }
+export function flag(isEnabled: boolean | undefined): boolean { return isEnabled ? true : false; }
+`,
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          OXLINT_CLI,
+          "--config",
+          configPath,
+          "--type-aware",
+          "--threads=2",
+          "--tsconfig",
+          tsconfigPath,
+          "--format",
+          "json",
+          fixturePath,
+        ],
+        {
+          cwd: directory,
+          encoding: "utf8",
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+        },
+      );
+
+      expect(result.error).toBeUndefined();
+      const output: LintOutput = JSON.parse(result.stdout);
+      expect(output.diagnostics.map(({ code }) => code)).toStrictEqual([
+        "typescript(strict-boolean-expressions)",
+        "typescript(strict-boolean-expressions)",
+      ]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });

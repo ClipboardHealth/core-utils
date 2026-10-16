@@ -502,6 +502,51 @@ export const customRules: OxlintPreset = {
     },
   ],
 };
+/**
+ * Bug-catching rules that legacy code breaks often. Opt in per repository, suppressing existing
+ * violations inline in the same change.
+ */
+export const strict: OxlintPreset = {
+  jsPlugins: [
+    {
+      name: "@clipboard-health",
+      specifier: "@clipboard-health/oxlint-plugin",
+    },
+  ],
+  rules: {
+    "@clipboard-health/no-ambiguous-positional-parameters": "error",
+  },
+  overrides: [
+    {
+      // A swapped argument in a test helper fails the test that calls it.
+      files: ["**/*.test.*", "**/*.spec.*", "**/__tests__/**"],
+      rules: {
+        "@clipboard-health/no-ambiguous-positional-parameters": "off",
+      },
+    },
+  ],
+};
+/** Type-aware companion to `strict`; compose it with `typeAware`. */
+export const strictTypeAware: OxlintPreset = {
+  plugins: ["typescript"],
+  rules: {
+    // Flags truthiness checks on numbers and enums, where 0 is a valid value that reads as
+    // missing. Strings stay allowed because treating "" as missing is usually intended, and
+    // rewriting those checks would let empty strings through.
+    "typescript/strict-boolean-expressions": [
+      "error",
+      {
+        allowAny: true,
+        allowNullableBoolean: true,
+        allowNullableNumber: false,
+        allowNullableObject: true,
+        allowNullableString: true,
+        allowNumber: false,
+        allowString: true,
+      },
+    ],
+  },
+};
 export const contractFixtures: OxlintPreset = {
   jsPlugins: [
     {

@@ -6,6 +6,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 
 - [Install](#install)
 - [Usage](#usage)
+- [Strict presets](#strict-presets)
 - [Categories](#categories)
 - [What is shared](#what-is-shared)
 - [Intentionally disabled rules](#intentionally-disabled-rules)
@@ -82,6 +83,7 @@ Available presets:
 - `frontend`
 - `react`
 - `jest`
+- `strict` and `strictTypeAware` (opt in; see [Strict presets](#strict-presets))
 - `typeAware`
 - `vitest`
 
@@ -176,6 +178,23 @@ Override shared rules as needed:
   }
 }
 ```
+
+## Strict presets
+
+These rules catch real bugs but fire often in legacy code, so they are opt-in. Adopt them per
+repository: add the presets, then suppress existing violations inline in the same change so new
+code meets the bar.
+
+| Preset            | Rule                                                   | Catches                                                                                                                                                                                               |
+| ----------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `strict`          | `@clipboard-health/no-ambiguous-positional-parameters` | Two or more positional parameters where two share a type (callers can swap them) or one is a boolean (unreadable at call sites). A function with a single parameter is exempt, and so are test files. |
+| `strictTypeAware` | `typescript/strict-boolean-expressions`                | Truthiness checks on numbers and enums, where `0` reads as missing. Strings stay allowed: treating `""` as missing is usually intended.                                                               |
+
+```ts
+presets: [base, customRules, strict, typeAware, strictTypeAware, vitest],
+```
+
+Give each suppression a reason: `// oxlint-disable-next-line <rule> -- <reason>`.
 
 ## Categories
 

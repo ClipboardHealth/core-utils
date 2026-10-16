@@ -6,6 +6,8 @@ export {
   frontend,
   jest,
   react,
+  strict,
+  strictTypeAware,
   typeAware,
   vitest,
 } from "./internal/presets";
