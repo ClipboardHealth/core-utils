@@ -19,7 +19,6 @@ describe(readZipArchiveEntries, () => {
   it("reads entries from a valid stored ZIP", () => {
     const zipPath = path.join(temporaryDirectory, "test.zip");
     const archive = createStoredZipArchive([{ fileName: "hello.txt", content: "world" }]);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(zipPath, archive);
 
     const entries = readZipArchiveEntries(zipPath);
@@ -34,7 +33,6 @@ describe(readZipArchiveEntries, () => {
     const falseSignature = Buffer.alloc(4);
     falseSignature.writeUInt32LE(101_010_256, 0);
     const garbage = Buffer.alloc(100, 0x42);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(temporaryPath, Buffer.concat([falseSignature, garbage]));
 
     const entries = readZipArchiveEntries(temporaryPath);
@@ -52,7 +50,6 @@ describe(readZipArchiveEntries, () => {
     // The end record is at archive.length - 22; patch the comment length field at offset + 20
     const endRecordOffset = archive.length - 22;
     patched.writeUInt16LE(comment.length, endRecordOffset + 20);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(temporaryPath, patched);
 
     const entries = readZipArchiveEntries(temporaryPath);
@@ -62,7 +59,6 @@ describe(readZipArchiveEntries, () => {
 
   it("returns empty for a non-ZIP file", () => {
     const temporaryPath = path.join(temporaryDirectory, "not-a-zip.txt");
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFileSync(temporaryPath, "this is not a zip");
 
     const entries = readZipArchiveEntries(temporaryPath);

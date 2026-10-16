@@ -31,7 +31,6 @@ function findEndOfCentralDirectoryOffset(zipBuffer: Buffer): number {
 }
 
 export function readZipArchiveEntries(zipPath: string): Record<string, Uint8Array> {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const zipBuffer = readFileSync(zipPath);
   const endOfCentralDirectoryOffset = findEndOfCentralDirectoryOffset(zipBuffer);
   if (endOfCentralDirectoryOffset < 0) {

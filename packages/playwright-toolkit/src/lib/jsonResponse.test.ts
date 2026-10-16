@@ -74,7 +74,6 @@ function createMockPage(params: {
       }
 
       for (const response of params.responses) {
-        // eslint-disable-next-line no-await-in-loop -- Mock responses arrive in observed order.
         if (await predicate(response)) {
           params.afterMatch?.();
           return response;

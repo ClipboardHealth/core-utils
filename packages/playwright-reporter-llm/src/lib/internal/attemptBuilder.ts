@@ -70,7 +70,6 @@ function buildTimeline(
       text: entry.text,
     }));
 
-  // eslint-disable-next-line no-use-extend-native/no-use-extend-native
   return [...stepEntries, ...networkEntries, ...consoleEntries].toSorted(
     (a, b) => a.offsetMs - b.offsetMs,
   );

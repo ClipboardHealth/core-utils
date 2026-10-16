@@ -22,7 +22,6 @@ describe(isEmpty, () => {
   });
 
   it("returns true for an object with only inherited properties", () => {
-    // oxlint-disable-next-line typescript/no-unsafe-assignment
     const input = Object.create({ inherited: true });
 
     const actual = isEmpty(input);

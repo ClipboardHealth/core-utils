@@ -81,7 +81,6 @@ function getSchema(
 ): z.ZodType<unknown> | undefined {
   return path.reduce<z.ZodType<unknown> | undefined>((result, key) => {
     if (!isZodObject(result)) {
-      // eslint-disable-next-line unicorn/no-useless-undefined -- consistent-return requires explicit undefined
       return undefined;
     }
 

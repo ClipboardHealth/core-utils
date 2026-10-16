@@ -24,7 +24,6 @@ const CODE_FENCE_ID_BY_FILE_EXTENSION: Record<string, "" | "js" | "ts"> = {
  * 1. The block's prefix
  * 2. The source file path
  */
-// eslint-disable-next-line security/detect-unsafe-regex
 const REGEX = /^(?<prefix>.*)<embedex source="(?<source>.+?)">(?:\r?\n)?[\S\s]*?<\/embedex>/gm;
 
 export function processDestinations(
@@ -209,7 +208,6 @@ function createReplacement(
   if (codeFenceId === "") {
     processedContent = processedContent
       .replaceAll(
-        // eslint-disable-next-line security/detect-unsafe-regex
         /^(?<prefix>.*)<embedex source=".+?">(?:\r?\n)?(?<content>[\S\s]*?)<\/embedex>/gm,
         (_match, _prefix, c: string) => {
           const lines = c.split(/\r?\n/);

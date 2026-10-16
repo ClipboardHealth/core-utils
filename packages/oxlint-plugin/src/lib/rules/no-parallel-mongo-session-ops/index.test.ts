@@ -22,7 +22,6 @@ const withHelpers = [
   { additionalPrimitives: ["batchPromiseAllWithLimit", "batchPromiseAllSettledWithLimit"] },
 ];
 
-// oxlint-disable-next-line vitest/expect-expect -- RuleTester validates declaratively
 ruleTester.run("no-parallel-mongo-session-ops", rule, {
   valid: [
     {

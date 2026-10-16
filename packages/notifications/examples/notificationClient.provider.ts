@@ -9,7 +9,6 @@ export const NotificationClientProvider: Provider<NotificationClient> = {
   provide: NOTIFICATION_CLIENT_TOKEN,
   useFactory: (): NotificationClient =>
     new NotificationClient({
-      // oxlint-disable-next-line node/no-process-env
       apiKey: process.env["KNOCK_API_KEY"]!,
       logger: toLogger(
         new CBHLogger({

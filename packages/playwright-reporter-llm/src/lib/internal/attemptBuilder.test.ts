@@ -9,7 +9,6 @@ import type { ActionRecord } from "./actionDiagnostics";
 import { buildAttemptResult } from "./attemptBuilder";
 
 function createMockResult(overrides: Partial<TestResult> = {}): TestResult {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {
     status: "passed",
     duration: 150,
@@ -195,7 +194,6 @@ describe(buildAttemptResult, () => {
     try {
       const screenshotPath = path.join(temporaryDirectory, "screenshot.png");
       const content = Buffer.from("fake-png");
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       writeFileSync(screenshotPath, content);
 
       const result = buildAttemptResult({

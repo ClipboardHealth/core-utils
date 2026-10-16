@@ -47,7 +47,6 @@ function isProviderName(providerName: string): providerName is ProviderName {
 }
 
 function parseProviderNames(): ProviderName[] {
-  // oxlint-disable-next-line node/no-process-env -- Manual evals choose Claude, Codex, or both without duplicating configs.
   const rawProviderNames = process.env.FRONTEND_UI_VERIFICATION_EVAL_PROVIDERS ?? "claude,codex";
 
   const providerNames: ProviderName[] = [];
@@ -87,7 +86,6 @@ const sharedAssertions = [
   },
 ] as const;
 
-// oxlint-disable import/no-anonymous-default-export
 export default {
   description: "Frontend UI verification skill regression evals",
 

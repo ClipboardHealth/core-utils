@@ -168,14 +168,12 @@ function readBoundedAttachment(
   }
 
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const attachmentSize = statSync(attachment.path).size;
     if (attachmentSize > BROWSER_LIFECYCLE_ATTACHMENT_SCHEMA.maximumBytes) {
       return undefined;
     }
 
     const content = Buffer.alloc(attachmentSize);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const fileDescriptor = openSync(attachment.path, "r");
     try {
       const bytesRead = readSync(fileDescriptor, content, 0, attachmentSize, 0);

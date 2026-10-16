@@ -37,7 +37,6 @@ function runPlaywright({
       timeout: 30_000,
     });
   } catch (error) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!expectedOutputPath || !existsSync(expectedOutputPath)) {
       throw error;
     }
@@ -50,7 +49,6 @@ interface CopyBlobReportOptions {
 }
 
 function copyBlobReport({ sourceDirectory, targetDirectory }: CopyBlobReportOptions): void {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const fileName = readdirSync(sourceDirectory).find((entry) => entry.endsWith(".zip"));
   if (!fileName) {
     throw new Error(`No blob report found in ${sourceDirectory}`);
@@ -68,11 +66,9 @@ describe("merged blob reports", () => {
     const secondBlobDirectory = path.join(temporaryDirectory, "blob-2");
     const mergedBlobDirectory = path.join(temporaryDirectory, "merged-blobs");
     const reportPath = path.join(temporaryDirectory, "llm-report.json");
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     mkdirSync(mergedBlobDirectory);
 
     const environment = Object.fromEntries(
-      // oxlint-disable-next-line node/no-process-env
       Object.entries(process.env).filter(([key]) => !key.startsWith("JEST")),
     );
 
@@ -110,7 +106,6 @@ describe("merged blob reports", () => {
       expectedOutputPath: reportPath,
     });
 
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     report = JSON.parse(readFileSync(reportPath, "utf8")) as LlmTestReport;
   }, 100_000);
 

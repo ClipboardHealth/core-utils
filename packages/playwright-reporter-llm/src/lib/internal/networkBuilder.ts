@@ -555,7 +555,6 @@ export class NetworkBuilder {
   }
 
   private sortInstances(): void {
-    // eslint-disable-next-line no-use-extend-native/no-use-extend-native
     const sorted = [...this.instancesById.entries()].toSorted(([idA, a], [idB, b]) => {
       const offsetA = a.offsetMs ?? Number.POSITIVE_INFINITY;
       const offsetB = b.offsetMs ?? Number.POSITIVE_INFINITY;

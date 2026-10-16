@@ -399,10 +399,9 @@ function proxyEnv(input: Pick<EnsureClearanceInput, "env" | "envOverrides">): No
 
 function defaultProxyEnv(): NodeJS.ProcessEnv {
   return Object.fromEntries(
-    FORWARDED_ENV_VARS
-      // oxlint-disable-next-line node/no-process-env -- centralized env accessor for the launcher CLI
-      .map((name) => [name, process.env[name]] as const)
-      .filter(([, value]) => value !== undefined),
+    FORWARDED_ENV_VARS.map((name) => [name, process.env[name]] as const).filter(
+      ([, value]) => value !== undefined,
+    ),
   );
 }
 
@@ -419,11 +418,9 @@ async function pollUntil(input: {
 
   const attempts = Math.max(1, Math.ceil(input.timeoutMs / input.pollIntervalMs));
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    // eslint-disable-next-line no-await-in-loop -- readiness polling is intentionally sequential
     if (await input.check()) {
       return true;
     }
-    // eslint-disable-next-line no-await-in-loop -- readiness polling is intentionally sequential
     await input.sleep(input.pollIntervalMs);
   }
 

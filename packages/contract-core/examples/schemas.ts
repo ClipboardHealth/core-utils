@@ -52,7 +52,6 @@ const workerIds = commaSeparatedArray(objectId).optional();
 const dates = commaSeparatedArray(dateTimeSchema());
 
 // Works with .optional()
-// eslint-disable-next-line unicorn/no-useless-undefined
 const noIds = workerIds.parse(undefined);
 // => undefined
 console.log(noIds);
@@ -116,7 +115,6 @@ try {
 
 // Optional usage — compose at the call site
 const schema = dateTimeSchema().optional();
-// eslint-disable-next-line unicorn/no-useless-undefined
 const noDate = schema.parse(undefined);
 // => undefined
 console.log(noDate);
@@ -145,7 +143,6 @@ console.log(additionalStatus);
 console.log(additionalStatus === ENUM_FALLBACK); // true
 
 try {
-  // eslint-disable-next-line unicorn/no-useless-undefined
   requiredStatusEnumSchema.parse(undefined);
 } catch (error) {
   logError(error);
@@ -165,7 +162,6 @@ const extraStatus = optionalStatusEnumSchema.parse("extra");
 // => "UNRECOGNIZED_" (ENUM_FALLBACK)
 console.log(extraStatus);
 
-// eslint-disable-next-line unicorn/no-useless-undefined
 const undefinedStatus = optionalStatusEnumSchema.parse(undefined);
 // => undefined
 console.log(undefinedStatus);
@@ -191,7 +187,6 @@ try {
 }
 
 try {
-  // eslint-disable-next-line unicorn/no-useless-undefined
   requiredUserTypeSchema.parse(undefined);
 } catch (error) {
   logError(error);
@@ -207,7 +202,6 @@ const workerUser: OptionalUserType = optionalUserTypeSchema.parse("worker");
 // => "worker"
 console.log(workerUser);
 
-// eslint-disable-next-line unicorn/no-useless-undefined
 const noUserType = optionalUserTypeSchema.parse(undefined);
 // => undefined
 console.log(noUserType);

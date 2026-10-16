@@ -358,7 +358,6 @@ async function attachSanitizedScreenshot(params: {
 
 async function redactPageForScreenshot(params: { page: Page }): Promise<void> {
   await params.page.evaluate(() => {
-    // eslint-disable-next-line unicorn/consistent-function-scoping -- Serialized into the browser context.
     function redact(value: string): string {
       return value
         .replaceAll(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted-token]")

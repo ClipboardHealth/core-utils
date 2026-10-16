@@ -8,11 +8,12 @@
     "coverage/",
     "dist/",
     "node_modules/",
+    "packages/eslint-plugin/",
     "packages/oxlint-plugin/test/negative/"
   ],
   "options": {
     "denyWarnings": true,
-    "reportUnusedDisableDirectives": "off",
+    "reportUnusedDisableDirectives": "error",
     "typeAware": true,
     "typeCheck": true
   },
@@ -65,8 +66,6 @@
       "files": ["packages/clearance/**/*.ts", "packages/groundcrew/**/*.ts"],
       "rules": {
         "no-console": "off",
-        "no-throw-literal": "off",
-        "typescript/consistent-return": "off",
         "typescript/no-unsafe-argument": "off"
       }
     },

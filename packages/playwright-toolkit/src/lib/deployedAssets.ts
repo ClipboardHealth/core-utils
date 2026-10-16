@@ -144,7 +144,6 @@ export async function verifyDeployedAssets(
         return;
       }
 
-      // eslint-disable-next-line no-await-in-loop -- Each worker consumes one bounded queue item at a time.
       results[index] = await verifyDeployedAsset({ check, options: params });
     }
   }

@@ -918,7 +918,6 @@ async function loadPresetsModuleWithVitestJson(
   vitestJson?: unknown,
 ): Promise<unknown> {
   vi.resetModules();
-  // oxlint-disable-next-line jest/no-untyped-mock-factory -- conflicts with consistent-type-imports
   vi.doMock("node:fs", () => ({
     readFileSync: vi.fn<(filePath: string) => string>((filePath) => {
       if (vitestJson !== undefined && filePath.includes("vitest.json")) {
