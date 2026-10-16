@@ -18,8 +18,8 @@ export interface RunOxlintChangedRequest {
   arguments_: readonly string[];
   cwd: string;
   environment: NodeJS.ProcessEnv;
-  /** Overrides where the Clipboard plugin loads from; defaults to the installed package. */
-  pluginPath?: string;
+  /** Absolute path to the Clipboard plugin; the temporary config lives outside the repository. */
+  pluginPath: string;
   write: (output: string) => void;
 }
 
@@ -121,8 +121,7 @@ export function runOxlintChanged(request: RunOxlintChangedRequest): number {
   const diagnostics = lintFiles({
     files: [...addedLines.keys()],
     isTypeAware: values["type-aware"] === true,
-    pluginPath:
-      request.pluginPath ?? createRequire(__filename).resolve("@clipboard-health/oxlint-plugin"),
+    pluginPath: request.pluginPath,
     root,
     tsconfig: values.tsconfig,
   });
@@ -197,12 +196,8 @@ function buildConfig(params: { isTypeAware: boolean; pluginPath: string }): obje
     presets: [
       {
         ...changedCode,
-        // The temporary config lives outside the repository, so resolve the plugin from here.
-        jsPlugins: (changedCode.jsPlugins ?? []).map((plugin) =>
-          typeof plugin === "object" && plugin.specifier === "@clipboard-health/oxlint-plugin"
-            ? { ...plugin, specifier: pluginPath }
-            : plugin,
-        ),
+        // The temporary config lives outside the repository, so point at the resolved plugin.
+        jsPlugins: [{ name: "@clipboard-health", specifier: pluginPath }],
       },
       ...(params.isTypeAware ? [changedCodeTypeAware] : []),
     ],
@@ -227,7 +222,7 @@ function parseOxlintOutput(params: { stderr: string; stdout: string }): OxlintDi
     // Fall through to the error below with oxlint's own output.
   }
 
-  throw new Error(`oxlint did not return JSON diagnostics:\n${stderr || stdout}`);
+  throw new Error(`oxlint did not return JSON diagnostics:\n${stderr}${stdout}`);
 }
 
 function git(params: { args: readonly string[]; cwd: string }): string {

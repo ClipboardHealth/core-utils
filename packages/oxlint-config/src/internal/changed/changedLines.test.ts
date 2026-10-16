@@ -69,6 +69,30 @@ describe("parseAddedLines path handling", () => {
       "src/a.ts": [1],
     });
   });
+
+  it("ignores hunks whose new side is /dev/null", () => {
+    const actual = parseAddedLines({
+      diff: "diff --git a/gone.ts b/gone.ts\n--- a/gone.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-a\n",
+    });
+
+    expect(actual.size).toBe(0);
+  });
+
+  it("merges hunks when the same path appears in more than one file section", () => {
+    const actual = parseAddedLines({
+      diff: [
+        "diff --git a/src/a.ts b/src/a.ts",
+        "+++ b/src/a.ts",
+        "@@ -1 +1 @@",
+        "diff --git a/src/a.ts b/src/a.ts",
+        "+++ b/src/a.ts",
+        "@@ -9 +9 @@",
+        "",
+      ].join("\n"),
+    });
+
+    expect([...(actual.get("src/a.ts") ?? [])]).toStrictEqual([1, 9]);
+  });
 });
 
 describe("filterChangedDiagnostics", () => {

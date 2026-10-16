@@ -1,9 +1,15 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { runOxlintChanged } from "./runOxlintChanged";
+
+// Wraps spawnSync so tests can stub oxlint failures; other calls run the real oxlint.
+vi.mock("node:child_process", async (importOriginal) => {
+  const original = await importOriginal<typeof import("node:child_process")>();
+  return { ...original, spawnSync: vi.fn(original.spawnSync) };
+});
 
 const WORKSPACE_NODE_MODULES = path.resolve(__dirname, "../../../../../node_modules");
 // The workspace plugin has no built JavaScript under test, so a fixture stands in for it. The real
@@ -54,6 +60,23 @@ describe("runOxlintChanged", () => {
   afterEach(() => {
     rmSync(repository, { force: true, recursive: true });
   });
+
+  function stageFile(params: { content: string; filePath: string }): void {
+    writeFileSync(path.join(repository, params.filePath), params.content);
+    git({ repository, args: ["add", params.filePath] });
+  }
+
+  function run(params: { arguments_: readonly string[] }): { exitCode: number; output: string } {
+    const output: string[] = [];
+    const exitCode = runOxlintChanged({
+      arguments_: params.arguments_,
+      cwd: repository,
+      environment: {},
+      pluginPath,
+      write: (text) => output.push(text),
+    });
+    return { exitCode, output: output.join("") };
+  }
 
   it("reports violations on added lines and ignores legacy violations in the same file", () => {
     writeFileSync(
@@ -190,6 +213,78 @@ describe("runOxlintChanged", () => {
 
     expect(actual).toBe(2);
     expect(output.join("")).toContain("Usage: oxlint-changed");
+  });
+
+  it("prints usage and succeeds with --help", () => {
+    const actual = run({ arguments_: ["--help"] });
+
+    expect(actual.exitCode).toBe(0);
+    expect(actual.output).toContain("Usage: oxlint-changed");
+  });
+
+  it("refuses to run when a file changed since --base has uncommitted changes", () => {
+    writeFileSync(path.join(repository, "src/legacy.ts"), `// committed\n${LEGACY}`);
+    git({ repository, args: ["commit", "--quiet", "--all", "--message", "change"] });
+    writeFileSync(path.join(repository, "src/legacy.ts"), `// uncommitted\n${LEGACY}`);
+
+    const actual = run({ arguments_: ["--base", "HEAD~1"] });
+
+    expect(actual.exitCode).toBe(2);
+    expect(actual.output).toContain("uncommitted changes");
+  });
+
+  it.each([
+    { name: "the default tsconfig", tsconfigArguments: [] },
+    { name: "--tsconfig", tsconfigArguments: ["--tsconfig", "tsconfig.json"] },
+  ])("adds the type-aware preset with $name", ({ tsconfigArguments }) => {
+    stageFile({
+      content: '{ "compilerOptions": { "strict": true } }\n',
+      filePath: "tsconfig.json",
+    });
+    stageFile({
+      content: "export function label(count: number) {\n  return count ? 'some' : 'none';\n}\n",
+      filePath: "src/count.ts",
+    });
+
+    const actual = run({ arguments_: ["--staged", "--type-aware", ...tsconfigArguments] });
+
+    expect(actual.exitCode).toBe(1);
+    expect(actual.output).toContain("src/count.ts:2:");
+    expect(actual.output).toContain("strict-boolean-expressions");
+  });
+
+  it("throws when oxlint cannot start", () => {
+    stageFile({ content: "export const a = 1;\n", filePath: "src/a.ts" });
+    vi.mocked(spawnSync).mockReturnValueOnce({
+      error: new Error("spawn failed"),
+      output: [],
+      pid: 0,
+      signal: null,
+      status: null,
+      stderr: "",
+      stdout: "",
+    });
+
+    expect(() => run({ arguments_: ["--staged"] })).toThrow("spawn failed");
+  });
+
+  it.each([
+    { name: "is not JSON", stderr: "config error", stdout: "" },
+    { name: "has no diagnostics", stderr: "", stdout: "{}" },
+  ])("throws with oxlint's output when it $name", ({ stderr, stdout }) => {
+    stageFile({ content: "export const a = 1;\n", filePath: "src/a.ts" });
+    vi.mocked(spawnSync).mockReturnValueOnce({
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 1,
+      stderr,
+      stdout,
+    });
+
+    expect(() => run({ arguments_: ["--staged"] })).toThrow(
+      `oxlint did not return JSON diagnostics:\n${stderr}${stdout}`,
+    );
   });
 });
 
