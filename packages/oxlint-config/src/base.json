@@ -101,6 +101,7 @@
     "typescript/no-unnecessary-template-expression": "off",
     "typescript/no-unnecessary-type-conversion": "off",
     "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unsafe-enum-comparison": "off",
     "typescript/parameter-properties": "off",
     "typescript/prefer-readonly-parameter-types": "off",
     "typescript/require-await": "off",
