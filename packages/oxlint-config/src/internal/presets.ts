@@ -516,13 +516,23 @@ export const strict: OxlintPreset = {
   rules: {
     "@clipboard-health/no-ambiguous-positional-parameters": "error",
   },
+  overrides: [
+    {
+      // A swapped argument in a test helper fails the test that calls it.
+      files: ["**/*.test.*", "**/*.spec.*", "**/__tests__/**"],
+      rules: {
+        "@clipboard-health/no-ambiguous-positional-parameters": "off",
+      },
+    },
+  ],
 };
 /** Type-aware companion to `strict`; compose it with `typeAware`. */
 export const strictTypeAware: OxlintPreset = {
   plugins: ["typescript"],
   rules: {
-    // Flags truthiness checks on numbers and strings, where 0 and "" are valid values that read
-    // as missing. Nullable objects and booleans stay allowed because their truthiness is exact.
+    // Flags truthiness checks on numbers and enums, where 0 is a valid value that reads as
+    // missing. Strings stay allowed because treating "" as missing is usually intended, and
+    // rewriting those checks would let empty strings through.
     "typescript/strict-boolean-expressions": [
       "error",
       {
@@ -530,9 +540,9 @@ export const strictTypeAware: OxlintPreset = {
         allowNullableBoolean: true,
         allowNullableNumber: false,
         allowNullableObject: true,
-        allowNullableString: false,
+        allowNullableString: true,
         allowNumber: false,
-        allowString: false,
+        allowString: true,
       },
     ],
   },

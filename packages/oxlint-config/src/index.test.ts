@@ -422,6 +422,12 @@ describe("oxlint-config", () => {
       expect(strict).toStrictEqual({
         jsPlugins: [{ name: "@clipboard-health", specifier: "@clipboard-health/oxlint-plugin" }],
         rules: { "@clipboard-health/no-ambiguous-positional-parameters": "error" },
+        overrides: [
+          {
+            files: ["**/*.test.*", "**/*.spec.*", "**/__tests__/**"],
+            rules: { "@clipboard-health/no-ambiguous-positional-parameters": "off" },
+          },
+        ],
       });
       expect(strictTypeAware.rules).toHaveProperty("typescript/strict-boolean-expressions");
 

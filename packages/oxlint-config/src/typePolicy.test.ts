@@ -408,7 +408,7 @@ export function invalidObject() { throw { reason: "not an Error" }; }
       }
     },
   );
-  it("strictTypeAware flags number and string truthiness but allows nullable objects and booleans", () => {
+  it("strictTypeAware flags number truthiness but allows strings, nullable objects, and booleans", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "oxlint-strict-boolean-policy-"));
     const configPath = path.join(directory, ".oxlintrc.json");
     const tsconfigPath = path.join(directory, "tsconfig.json");
@@ -430,6 +430,7 @@ export function invalidObject() { throw { reason: "not an Error" }; }
         fixturePath,
         `
 export function count(total: number): string { return total ? "some" : "none"; }
+export function hours(worked: number | undefined): string { return worked ? "worked" : "missing"; }
 export function label(name: string | undefined): string { return name ? name : "unknown"; }
 export function owner(record: { id: string } | undefined): string { return record ? record.id : ""; }
 export function flag(isEnabled: boolean | undefined): boolean { return isEnabled ? true : false; }
