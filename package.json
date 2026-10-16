@@ -78,6 +78,9 @@
     "@nx/vitest": {
       "vitest": "$vitest"
     },
+    "@openai/agents": {
+      "zod": "3.25.76"
+    },
     "@swc/core": "$@swc/core",
     "ts-node": "11.0.0-beta.1",
     "tsconfig-paths": "4.2.0"
