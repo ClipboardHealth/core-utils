@@ -91,6 +91,10 @@ describe("oxlint-config", () => {
         "unicorn/no-null": "off",
         "no-underscore-dangle": "off",
       });
+      expect(base.rules?.["typescript/switch-exhaustiveness-check"]).toStrictEqual([
+        "error",
+        { considerDefaultExhaustiveForUnions: true },
+      ]);
     });
 
     it("exports additive plugin presets", () => {
