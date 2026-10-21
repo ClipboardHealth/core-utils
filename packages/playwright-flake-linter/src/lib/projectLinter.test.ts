@@ -67,6 +67,56 @@ describe("lintPlaywrightProject", () => {
 });
 
 describe("loadPlaywrightFlakeLinterConfig", () => {
+  it("loads allowlist entries and identity helper length limits", async () => {
+    const cwd = await createTemporaryDirectory();
+    const configFilePath = path.join(cwd, "allowlist.mjs");
+    await writeFile(
+      configFilePath,
+      `export default {
+        scanRoots: ["playwright"],
+        allowlist: [{
+          filePathPattern: "legacy\\\\.spec\\\\.ts$",
+          reason: "Legacy fixture awaiting migration",
+          ruleId: "fixed-sleep",
+        }],
+        identityHelperMinimumLengths: { randomSuffix: 24 },
+      };`,
+      "utf8",
+    );
+
+    const actual = await loadPlaywrightFlakeLinterConfig({ configFilePath });
+
+    expect(actual.allowlist).toEqual([
+      {
+        filePathPattern: String.raw`legacy\.spec\.ts$`,
+        reason: "Legacy fixture awaiting migration",
+        ruleId: "fixed-sleep",
+      },
+    ]);
+    expect(actual.identityHelperMinimumLengths).toEqual({ randomSuffix: 24 });
+  });
+
+  it.each([
+    [
+      "unknown allowlist rule",
+      '{ allowlist: [{ filePathPattern: ".*", reason: "Legacy", ruleId: "unknown" }] }',
+    ],
+    ["non-numeric identity limit", '{ identityHelperMinimumLengths: { randomSuffix: "24" } }'],
+    ["non-finite identity limit", "{ identityHelperMinimumLengths: { randomSuffix: Infinity } }"],
+  ])("rejects a config with %s", async (_description, options) => {
+    const cwd = await createTemporaryDirectory();
+    const configFilePath = path.join(cwd, "invalid-options.mjs");
+    await writeFile(
+      configFilePath,
+      `export default { scanRoots: ["playwright"], ...${options} };`,
+      "utf8",
+    );
+
+    await expect(loadPlaywrightFlakeLinterConfig({ configFilePath })).rejects.toThrow(
+      `Invalid Playwright flake linter config at ${configFilePath}.`,
+    );
+  });
+
   it("loads a default-exported repository config fixture", async () => {
     const cwd = await createTemporaryDirectory();
     const configFilePath = path.join(cwd, "mobile.config.mjs");
