@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/qs": "6.15.1",
-    "qs": "6.16.0"
+    "qs": "6.16.1"
   },
   "peerDependencies": {
     "qs": "^6.14"
