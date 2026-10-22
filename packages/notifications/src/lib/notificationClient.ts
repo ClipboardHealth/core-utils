@@ -347,7 +347,7 @@ export class NotificationClient {
             );
 
             const id = response.workflow_run_id;
-            this.logger.info(`${logParams.traceName} chunk response`, {
+            this.logger.info("Notification chunk response", {
               ...logParams,
               chunkNumber: recipientChunk.number,
               totalChunks: chunks.length,
@@ -388,7 +388,7 @@ export class NotificationClient {
           success: true,
         });
 
-        this.logger.info(`${logParams.traceName} response`, {
+        this.logger.info("Notification response", {
           ...logParams,
           responses,
         });
@@ -422,13 +422,13 @@ export class NotificationClient {
     };
 
     await this.tracer.trace(logParams.traceName, traceOptions, async (span) => {
-      this.logger.info(`${logParams.traceName} request`, {
+      this.logger.info("Notification request", {
         ...logParams,
         recipientCount: recipients?.length,
       });
 
       if (dryRun) {
-        this.logger.info(`${logParams.traceName} response`, { ...logParams, dryRun: true });
+        this.logger.info("Notification response", { ...logParams, dryRun: true });
         return;
       }
 
@@ -440,7 +440,7 @@ export class NotificationClient {
           }),
         );
 
-        this.logger.info(`${logParams.traceName} response`, { ...logParams, knockRequestId });
+        this.logger.info("Notification response", { ...logParams, knockRequestId });
       } catch (maybeError) {
         const { code, error, knockRequestId, message } = toNotificationError(maybeError);
         const result = this.createAndLogError({
@@ -468,9 +468,9 @@ export class NotificationClient {
 
     try {
       // Don't log the push token, it is sensitive.
-      this.logger.info(`${logParams.traceName} request`, logParams);
+      this.logger.info("Notification request", logParams);
       const existingTokens = await this.getExistingTokens({ userId, channelId, logParams });
-      this.logger.info(`${logParams.traceName} existing tokens`, {
+      this.logger.info("Notification existing tokens", {
         ...logParams,
         existingTokenCount: existingTokens.length,
       });
@@ -481,7 +481,7 @@ export class NotificationClient {
         }),
       );
 
-      this.logger.info(`${logParams.traceName} response`, {
+      this.logger.info("Notification response", {
         ...logParams,
         knockRequestId,
         // Don't log the actual response; push tokens are sensitive.
@@ -525,7 +525,7 @@ export class NotificationClient {
     }
 
     try {
-      this.logger.info(`${logParams.traceName} request`, logParams);
+      this.logger.info("Notification request", logParams);
 
       const response = await signUserToken(userId, {
         signingKey: this.signingKey,
@@ -534,7 +534,7 @@ export class NotificationClient {
       });
 
       // Don't log the actual response; user tokens are sensitive.
-      this.logger.info(`${logParams.traceName} response`, logParams);
+      this.logger.info("Notification response", logParams);
 
       return success({ token: response });
     } catch (maybeError) {
@@ -560,13 +560,13 @@ export class NotificationClient {
     const logParams = { ...LOG_PARAMS.upsertWorkplace, workplaceId, ...body };
 
     try {
-      this.logger.info(`${logParams.traceName} request`, logParams);
+      this.logger.info("Notification request", logParams);
 
       const { knockRequestId, response } = await withKnockRequestId(
         this.provider.tenants.set(workplaceId, toTenantSetRequest(body)),
       );
 
-      this.logger.info(`${logParams.traceName} response`, {
+      this.logger.info("Notification response", {
         ...logParams,
         knockRequestId,
         response: { workplaceId: response.id, name: response.name },
@@ -598,14 +598,14 @@ export class NotificationClient {
     const logParams = { ...LOG_PARAMS.upsertUserPreferences, userId, preferences: params };
 
     try {
-      this.logger.info(`${logParams.traceName} request`, logParams);
+      this.logger.info("Notification request", logParams);
 
       const userPreferences = toKnockUserPreferences(params);
       const { knockRequestId, response } = await withKnockRequestId(
         this.provider.users.setPreferences(userId, "default", userPreferences),
       );
 
-      this.logger.info(`${logParams.traceName} response`, {
+      this.logger.info("Notification response", {
         ...logParams,
         knockRequestId,
         response: { userId, preferenceSet: response },
@@ -764,7 +764,7 @@ export class NotificationClient {
     } catch (maybeError) {
       const error = toError(maybeError);
       if ("status" in error && error.status === 404) {
-        this.logger.info(`${logParams.traceName} no existing channel data`, logParams);
+        this.logger.info("Notification no existing channel data", logParams);
         return [];
       }
 
@@ -779,7 +779,7 @@ export class NotificationClient {
   }): void {
     const { logParams, body, keysToRedact } = params;
 
-    this.logger.info(`${logParams.traceName} request`, {
+    this.logger.info("Notification request", {
       ...logParams,
       redactedBody: {
         ...body,
@@ -812,7 +812,7 @@ export class NotificationClient {
       success: true,
     });
 
-    this.logger.info(`${logParams.traceName} response`, {
+    this.logger.info("Notification response", {
       ...logParams,
       id,
       knockRequestId,

@@ -136,14 +136,8 @@ describe(NotificationClient, () => {
           idempotencyKey: expect.any(String),
         },
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger request",
-        expect.any(Object),
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger response",
-        expect.any(Object),
-      );
+      expect(mockLogger.info).toHaveBeenCalledWith("Notification request", expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalledWith("Notification response", expect.any(Object));
     });
 
     it("rejects expired request", async () => {
@@ -214,7 +208,7 @@ describe(NotificationClient, () => {
       expectToBeSuccess(actual);
       expect(actual.value.knockRequestId).toBe(mockKnockRequestId);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger response",
+        "Notification response",
         expect.objectContaining({ knockRequestId: mockKnockRequestId }),
       );
     });
@@ -312,7 +306,7 @@ describe(NotificationClient, () => {
 
       expectToBeSuccess(actual);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger request",
+        "Notification request",
         expect.objectContaining({
           redactedBody: {
             recipients: 1,
@@ -347,7 +341,7 @@ describe(NotificationClient, () => {
 
       expectToBeSuccess(actual);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger request",
+        "Notification request",
         expect.objectContaining({
           redactedBody: {
             recipients: 1,
@@ -692,11 +686,11 @@ describe(NotificationClient, () => {
       await client.trigger(input);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger request",
+        "Notification request",
         expect.objectContaining({ dryRun: true }),
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.trigger response",
+        "Notification response",
         expect.objectContaining({ dryRun: true }),
       );
     });
@@ -804,7 +798,7 @@ describe(NotificationClient, () => {
       await client.cancel(input);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.cancel response",
+        "Notification response",
         expect.objectContaining({ knockRequestId: mockKnockRequestId }),
       );
     });
@@ -928,7 +922,7 @@ describe(NotificationClient, () => {
         { chunkNumber: 1, id: mockWorkflowRunId, knockRequestId: mockKnockRequestId },
       ]);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.triggerChunked chunk response",
+        "Notification chunk response",
         expect.objectContaining({ knockRequestId: mockKnockRequestId }),
       );
     });
@@ -1152,12 +1146,9 @@ describe(NotificationClient, () => {
 
       await client.triggerChunked(input);
 
+      expect(mockLogger.info).toHaveBeenCalledWith("Notification request", expect.any(Object));
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.triggerChunked request",
-        expect.any(Object),
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.triggerChunked chunk response",
+        "Notification chunk response",
         expect.objectContaining({
           chunkNumber: 1,
           totalChunks: 1,
@@ -1262,7 +1253,7 @@ describe(NotificationClient, () => {
       await client.triggerChunked(input);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.triggerChunked request",
+        "Notification request",
         expect.objectContaining({
           redactedBody: {
             recipients: 1,
@@ -1345,7 +1336,7 @@ describe(NotificationClient, () => {
       await client.triggerChunked(input);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.triggerChunked request",
+        "Notification request",
         expect.objectContaining({
           redactedBody: expect.objectContaining({
             attachments: [
@@ -1390,7 +1381,7 @@ describe(NotificationClient, () => {
         data: { tokens: [mockToken] },
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.appendPushToken request",
+        "Notification request",
         expect.objectContaining({
           traceName: "notifications.appendPushToken",
           destination: "knock.users.setChannelData",
@@ -1399,7 +1390,7 @@ describe(NotificationClient, () => {
         }),
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.appendPushToken response",
+        "Notification response",
         expect.objectContaining({
           response: { tokenCount: 1 },
         }),
@@ -1430,7 +1421,7 @@ describe(NotificationClient, () => {
         data: { tokens: [...existingTokens, mockToken] },
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.appendPushToken response",
+        "Notification response",
         expect.objectContaining({
           response: { tokenCount: 3 },
         }),
@@ -1461,7 +1452,7 @@ describe(NotificationClient, () => {
         data: { tokens: ["existing-token-1", mockToken] },
       });
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.appendPushToken response",
+        "Notification response",
         expect.objectContaining({
           response: { tokenCount: 2 },
         }),
@@ -1505,7 +1496,7 @@ describe(NotificationClient, () => {
       });
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.appendPushToken no existing channel data",
+        "Notification no existing channel data",
         expect.objectContaining({
           traceName: "notifications.appendPushToken",
           userId: mockUserId,
@@ -1744,7 +1735,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
       expectTypeOf(result.value.token).toBeString();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.signUserToken request",
+        "Notification request",
         expect.objectContaining({
           traceName: "notifications.signUserToken",
           destination: "knock.signUserToken",
@@ -1753,7 +1744,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
         }),
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.signUserToken response",
+        "Notification response",
         expect.objectContaining({
           traceName: "notifications.signUserToken",
           destination: "knock.signUserToken",
@@ -1784,7 +1775,7 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
       expectTypeOf(result.value.token).toBeString();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "notifications.signUserToken request",
+        "Notification request",
         expect.objectContaining({
           userId: mockUserId,
           expiresInSeconds: customExpiration,
@@ -1886,14 +1877,14 @@ fQ4QecZi2079UtRo1Amb8+wqaQ==
 
       await clientWithSigningKey.signUserToken(input);
 
-      expect(mockLogger.info).toHaveBeenCalledWith("notifications.signUserToken request", {
+      expect(mockLogger.info).toHaveBeenCalledWith("Notification request", {
         traceName: "notifications.signUserToken",
         destination: "knock.signUserToken",
         userId: mockUserId,
         expiresInSeconds: customExpiration,
       });
 
-      expect(mockLogger.info).toHaveBeenCalledWith("notifications.signUserToken response", {
+      expect(mockLogger.info).toHaveBeenCalledWith("Notification response", {
         traceName: "notifications.signUserToken",
         destination: "knock.signUserToken",
         userId: mockUserId,
