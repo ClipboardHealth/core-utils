@@ -136,8 +136,14 @@ describe(NotificationClient, () => {
           idempotencyKey: expect.any(String),
         },
       );
-      expect(mockLogger.info).toHaveBeenCalledWith("Notification request", expect.any(Object));
-      expect(mockLogger.info).toHaveBeenCalledWith("Notification response", expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Notification request",
+        expect.objectContaining({ traceName: "notifications.trigger" }),
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Notification response",
+        expect.objectContaining({ traceName: "notifications.trigger" }),
+      );
     });
 
     it("rejects expired request", async () => {
@@ -1146,7 +1152,10 @@ describe(NotificationClient, () => {
 
       await client.triggerChunked(input);
 
-      expect(mockLogger.info).toHaveBeenCalledWith("Notification request", expect.any(Object));
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Notification request",
+        expect.objectContaining({ traceName: "notifications.triggerChunked" }),
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         "Notification chunk response",
         expect.objectContaining({
