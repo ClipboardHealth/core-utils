@@ -108,7 +108,7 @@
       "matchPackageNames": ["nx", "/^@nx\\//"]
     },
     {
-      "description": "Keep NestJS below v12 until the peer ranges of the Nest adapters services use, @ts-rest/nest and @orpc/nest, admit the new major.",
+      "description": "Keep NestJS below v12 while services use @ts-rest/nest, which supports NestJS 11 at most. Lift the hold once services have replaced ts-rest with oRPC.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@nestjs\\//"],
       "allowedVersions": "<12.0.0"
