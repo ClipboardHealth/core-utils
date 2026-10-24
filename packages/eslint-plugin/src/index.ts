@@ -1,5 +1,6 @@
 import type { Rule } from "@oxlint/plugins";
 
+import enforceContractInControllers from "./lib/rules/enforce-contract-in-controllers";
 import enforceTsRestInControllers from "./lib/rules/enforce-ts-rest-in-controllers";
 import noCrossContractImports from "./lib/rules/no-cross-contract-imports";
 import requireContractFixtureConstruction from "./lib/rules/require-contract-fixture-construction";
@@ -9,6 +10,7 @@ import requireRunValidatorsWithUpsert from "./lib/rules/require-run-validators-w
 import requireZodImportInContracts from "./lib/rules/require-zod-import-in-contracts";
 
 export const rules = {
+  "enforce-contract-in-controllers": enforceContractInControllers,
   "enforce-ts-rest-in-controllers": enforceTsRestInControllers,
   "no-cross-contract-imports": noCrossContractImports,
   "require-contract-fixture-construction": requireContractFixtureConstruction,

@@ -236,8 +236,13 @@ const rule: Rule = {
         return root !== undefined && isContractRoot(root);
       }
 
+      // oRPC's counterpart to a ts-rest route's response schema.
+      const selectedOrpcOutputSchema =
+        propertyName(current) === "outputSchema" &&
+        current.object.type === "MemberExpression" &&
+        propertyName(current.object) === "~orpc";
       const selectedNamedSchema = propertyName(current)?.endsWith("ResponseSchema") === true;
-      if (selectedNamedSchema) {
+      if (selectedOrpcOutputSchema || selectedNamedSchema) {
         const root = rootIdentifier(current);
         return root !== undefined && isContractRoot(root);
       }

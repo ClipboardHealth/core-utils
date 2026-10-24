@@ -31,7 +31,7 @@ module.exports = {
     {
       files: ["**/*.controller.ts", "**/*.controllers.ts"],
       rules: {
-        "@clipboard-health/enforce-ts-rest-in-controllers": "error",
+        "@clipboard-health/enforce-contract-in-controllers": "error",
       },
     },
   ],
@@ -45,6 +45,12 @@ module.exports = {
 constructed through response schemas imported from `@clipboard-health/contract-*` packages. It
 also checks exported fixtures in `testUtils/mocks` modules and rejects fixtures mutated after they
 were parsed.
+
+It recognizes these response schemas:
+
+- exports named `*ResponseSchema`;
+- a ts-rest route's response map, `contract.x.responses[status]`;
+- an oRPC procedure's output schema, `contract.x["~orpc"].outputSchema`.
 
 Prefer the `contractFixtures` preset from `@clipboard-health/oxlint-config`. Repositories migrating
 an existing fixture backlog should enable the preset's warning baseline, then add local error-level

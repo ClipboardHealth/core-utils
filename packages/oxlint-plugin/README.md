@@ -9,7 +9,9 @@ ESLint.
 
 ## Rules
 
-- `enforce-ts-rest-in-controllers`
+- `enforce-contract-in-controllers`
+- `enforce-ts-rest-in-controllers`: deprecated alias of `enforce-contract-in-controllers`, removed
+  in the next major version
 - `no-ambiguous-positional-parameters`
 - `no-empty-boolean-call`
 - `no-cross-contract-imports`

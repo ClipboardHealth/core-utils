@@ -9,7 +9,7 @@
   "overrides": [
     {
       "files": ["contract-package/missing-handler.controller.ts"],
-      "rules": { "clipboard/enforce-ts-rest-in-controllers": "error" }
+      "rules": { "clipboard/enforce-contract-in-controllers": "error" }
     },
     {
       "files": ["contract-package/cross-import.ts"],

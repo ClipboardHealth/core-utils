@@ -1,0 +1,73 @@
+import { TSESLint } from "@typescript-eslint/utils";
+
+import rule from "./index";
+
+// eslint-disable-next-line n/no-unpublished-require
+const parser = require.resolve("@typescript-eslint/parser");
+
+const ruleTester = new TSESLint.RuleTester({
+  parser,
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: "module",
+  },
+});
+
+ruleTester.run("enforce-contract-in-controllers", rule as never, {
+  valid: [
+    {
+      name: "ts-rest controller methods remain valid under ESLint",
+      code: `
+        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+
+        class ExampleController {
+          @TsRestHandler()
+          public getExample() {
+            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
+          }
+        }
+      `,
+    },
+    {
+      name: "oRPC controller methods are valid under ESLint",
+      code: `
+        import { Implement, implement } from "@orpc/nest";
+
+        class ExampleController {
+          @Implement(exampleContract.get)
+          public getExample() {
+            return implement(exampleContract.get).handler(async () => ({ data: {} }));
+          }
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      name: "missing ts-rest enforcement remains reported under ESLint",
+      code: `
+        class ExampleController {
+          public getExample() {
+            return {};
+          }
+        }
+      `,
+      errors: [{ messageId: "missingDecorator" }, { messageId: "missingReturn" }],
+    },
+    {
+      name: "forbidTsRestHandler rejects ts-rest handlers under ESLint",
+      code: `
+        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+
+        class ExampleController {
+          @TsRestHandler()
+          public getExample() {
+            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
+          }
+        }
+      `,
+      options: [{ forbidTsRestHandler: true }],
+      errors: [{ messageId: "tsRestHandlerForbidden" }],
+    },
+  ],
+});

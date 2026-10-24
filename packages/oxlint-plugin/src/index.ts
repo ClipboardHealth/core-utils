@@ -1,3 +1,4 @@
+import enforceContractInControllers from "./lib/rules/enforce-contract-in-controllers";
 import enforceTsRestInControllers from "./lib/rules/enforce-ts-rest-in-controllers";
 import noAmbiguousPositionalParameters from "./lib/rules/no-ambiguous-positional-parameters";
 import noCrossContractImports from "./lib/rules/no-cross-contract-imports";
@@ -10,6 +11,7 @@ import requireRunValidatorsWithUpsert from "./lib/rules/require-run-validators-w
 import requireZodImportInContracts from "./lib/rules/require-zod-import-in-contracts";
 
 export const rules = {
+  "enforce-contract-in-controllers": enforceContractInControllers,
   "enforce-ts-rest-in-controllers": enforceTsRestInControllers,
   "no-ambiguous-positional-parameters": noAmbiguousPositionalParameters,
   "no-empty-boolean-call": noEmptyBooleanCall,

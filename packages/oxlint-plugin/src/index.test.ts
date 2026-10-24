@@ -3,6 +3,7 @@ import { rules } from "./index";
 describe("oxlint plugin", () => {
   it("exports every Clipboard lint rule", () => {
     expect(Object.keys(rules)).toStrictEqual([
+      "enforce-contract-in-controllers",
       "enforce-ts-rest-in-controllers",
       "no-ambiguous-positional-parameters",
       "no-empty-boolean-call",

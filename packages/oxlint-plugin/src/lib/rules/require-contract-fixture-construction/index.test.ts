@@ -92,6 +92,37 @@ ruleTester.run("require-contract-fixture-construction", rule, {
         await route.fulfill({ ...base, headers: {} });
       `,
     },
+    {
+      name: "accepts an oRPC procedure output schema from a contract subpath",
+      filename: mocksFile,
+      code: `
+        import { featureContract } from "@clipboard-health/contract-feature/contract";
+        export const mockFeature = featureContract.get["~orpc"].outputSchema.parse({ id: "feature" });
+      `,
+    },
+    {
+      name: "accepts an oRPC procedure output schema through a fixture builder",
+      filename: mocksFile,
+      code: `
+        import { featureContract } from "@clipboard-health/contract-feature/contract";
+        import { createContractFixtureBuilder } from "@clipboard-health/testing-core";
+        export const buildFeature = createContractFixtureBuilder({
+          schema: featureContract.get["~orpc"]["outputSchema"],
+          defaults: { id: "feature" },
+        });
+        export const mockFeature = buildFeature();
+      `,
+    },
+    {
+      name: "accepts a *ResponseSchema selected from a contract namespace",
+      filename: handlersFile,
+      code: `
+        import * as featureSchemas from "@clipboard-health/contract-feature";
+        import { HttpResponse } from "msw";
+        const payload = featureSchemas.GetFeatureResponseSchema.parse({ id: "feature" });
+        export const handler = http.get("/feature", () => HttpResponse.json(payload));
+      `,
+    },
   ],
   invalid: [
     {
@@ -119,6 +150,18 @@ ruleTester.run("require-contract-fixture-construction", rule, {
         export const mockNested = featureContract.get.responses[200].shape.data.parse([]);
       `,
       errors: [{ messageId: "parseMock" }, { messageId: "parseMock" }],
+    },
+    {
+      name: "rejects oRPC input, nested output, and non-contract procedure schemas",
+      filename: mocksFile,
+      code: `
+        import { featureContract } from "@clipboard-health/contract-feature/contract";
+        import { localContract } from "../localContract";
+        export const mockInput = featureContract.get["~orpc"].inputSchema.parse({ id: "feature" });
+        export const mockNested = featureContract.get["~orpc"].outputSchema.shape.data.parse([]);
+        export const mockLocal = localContract.get["~orpc"].outputSchema.parse({ id: "feature" });
+      `,
+      errors: [{ messageId: "parseMock" }, { messageId: "parseMock" }, { messageId: "parseMock" }],
     },
     {
       name: "rejects a shadowed contract schema",
