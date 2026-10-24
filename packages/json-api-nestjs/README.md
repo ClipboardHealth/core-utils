@@ -7,6 +7,7 @@ TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org
 - [Install](#install)
 - [Usage](#usage)
   - [Query helpers](#query-helpers)
+  - [Express query parser](#express-query-parser)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -82,6 +83,33 @@ export const query = z
 ```
 
 </embedex>
+
+### Express query parser
+
+The query helpers expect `req.query` to hold nested objects: `?filter[age][gt]=10` must arrive as
+`{ filter: { age: { gt: "10" } } }`. Express 5's default `simple` query parser leaves
+`filter[age][gt]` as one flat key, so the helpers reject the query. Set a `qs` query parser on the
+Nest app.
+
+Clipboard services can use `createQueryParser()` from `@clipboard-health/api-nestjs`:
+
+```ts
+import { createQueryParser } from "@clipboard-health/api-nestjs";
+import { NestFactory } from "@nestjs/core";
+import { type NestExpressApplication } from "@nestjs/platform-express";
+
+import { AppModule } from "./app.module";
+
+const app = await NestFactory.create<NestExpressApplication>(AppModule);
+app.set("query parser", createQueryParser());
+await app.listen(3000);
+```
+
+Other apps can pass a function that calls [`qs`](https://github.com/ljharb/qs)'s `parse` instead,
+for example `app.set("query parser", (query: string) => qs.parse(query))`.
+
+oRPC routes don't read `req.query`: oRPC parses their query strings itself, with its own bracket
+notation.
 
 ## Local development commands
 
