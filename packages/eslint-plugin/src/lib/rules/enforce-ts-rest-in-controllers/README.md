@@ -3,7 +3,7 @@
 This rule requires every NestJS controller method to implement a contract route, with either ts-rest
 or oRPC. A controller can mix both styles while its routes move from ts-rest to oRPC.
 
-Each public controller method must use one of these styles:
+Each controller method other than a constructor or a `private` method must use one of these styles:
 
 - **ts-rest:** decorate the method with `@TsRestHandler()`, and make its only statement
   `return tsRestHandler(…)`. Import both from `@ts-rest/nest`.
@@ -28,8 +28,6 @@ export class ExampleController {
   }
 }
 ```
-
-Constructors and `private` methods are exempt.
 
 See [BP: REST API](https://www.notion.so/BP-REST-API-f769b7fe745c4cf38f6eca2e9ad8a843) for more information.
 

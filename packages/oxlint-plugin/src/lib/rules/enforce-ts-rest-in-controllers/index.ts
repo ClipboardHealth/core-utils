@@ -143,8 +143,9 @@ const rule = defineRule({
     /** Names imported from each style's package, keyed by the package specifier. */
     const correctlyImported = new Map<string, Set<string>>();
 
-    function isImportedFrom(name: string, source: string): boolean {
-      return correctlyImported.get(source)?.has(name) === true;
+    function isImportedFrom(params: { name: string; style: HandlerStyle }): boolean {
+      const { name, style } = params;
+      return correctlyImported.get(style.source)?.has(name) === true;
     }
 
     function report(node: ESTree.Node, messageId: MessageId, data: Record<string, string>): void {
@@ -152,7 +153,7 @@ const rule = defineRule({
     }
 
     function validateHandlerImport(handlerCall: ESTree.Expression, style: HandlerStyle): void {
-      if (!isImportedFrom(style.handlerFunction, style.source)) {
+      if (!isImportedFrom({ name: style.handlerFunction, style })) {
         report(handlerCall, "callNotFromPackage", {
           handlerFunction: style.handlerFunction,
           source: style.source,
@@ -165,7 +166,7 @@ const rule = defineRule({
       symbolName: string,
       style: HandlerStyle,
     ): void {
-      if (!isImportedFrom(style.decorator, style.source)) {
+      if (!isImportedFrom({ name: style.decorator, style })) {
         for (const decorator of decoratorCalls(node, style.decorator)) {
           report(decorator, "decoratorNotFromPackage", {
             decorator: style.decorator,
