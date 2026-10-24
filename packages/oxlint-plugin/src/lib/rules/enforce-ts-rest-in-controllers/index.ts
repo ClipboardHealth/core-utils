@@ -28,7 +28,6 @@ interface HandlerStyle {
   handlerCall: (node: ESTree.Expression) => ESTree.Expression | undefined;
 }
 
-/** `@TsRestHandler(...)` with `return tsRestHandler(...)`. */
 const TS_REST: HandlerStyle = {
   decorator: "TsRestHandler",
   handlerFunction: "tsRestHandler",
@@ -37,7 +36,6 @@ const TS_REST: HandlerStyle = {
   handlerCall: (node) => (calleeIdentifierName(node) === "tsRestHandler" ? node : undefined),
 };
 
-/** `@Implement(...)` with `return implement(...).handler(...)`. */
 const ORPC: HandlerStyle = {
   decorator: "Implement",
   handlerFunction: "implement",

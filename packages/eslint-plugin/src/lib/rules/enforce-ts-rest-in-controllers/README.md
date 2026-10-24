@@ -37,9 +37,8 @@ See [BP: REST API](https://www.notion.so/BP-REST-API-f769b7fe745c4cf38f6eca2e9ad
   `@Implement`. Enable it once a repository has migrated every route to oRPC, so new ts-rest
   handlers aren't added.
 
-The shared `customRules` preset in `@clipboard-health/oxlint-config` enables this rule for
-`*.controller.ts` and `*.controllers.ts` files. To turn on the option, override the rule for the same
-files:
+To turn on the option, override the rule for the controller files that the `customRules` preset in
+`@clipboard-health/oxlint-config` covers:
 
 ```ts
 overrides: [

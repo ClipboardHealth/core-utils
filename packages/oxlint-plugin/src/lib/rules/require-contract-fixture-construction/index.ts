@@ -236,7 +236,7 @@ const rule: Rule = {
         return root !== undefined && isContractRoot(root);
       }
 
-      // An oRPC procedure contract keeps its output schema at `procedure["~orpc"].outputSchema`.
+      // oRPC's counterpart to a ts-rest route's response schema.
       const selectedOrpcOutputSchema =
         propertyName(current) === "outputSchema" &&
         current.object.type === "MemberExpression" &&

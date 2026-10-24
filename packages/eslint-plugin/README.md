@@ -48,7 +48,7 @@ were parsed.
 
 It recognizes these response schemas:
 
-- exports named `*ResponseSchema`, for ts-rest and oRPC contract packages;
+- exports named `*ResponseSchema`;
 - a ts-rest route's response map, `contract.x.responses[status]`;
 - an oRPC procedure's output schema, `contract.x["~orpc"].outputSchema`.
 
