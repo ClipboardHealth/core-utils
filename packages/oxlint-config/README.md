@@ -225,7 +225,7 @@ The package includes:
 - **`customRules` preset**: registers the ESLint-independent Clipboard plugin and reproduces the
   shared controller, module, contract, and cross-contract-import enforcement scopes. Set rule
   options, such as the controller rule's
-  [`forbidTsRestHandler`](https://github.com/ClipboardHealth/core-utils/tree/main/packages/eslint-plugin/src/lib/rules/enforce-ts-rest-in-controllers),
+  [`forbidTsRestHandler`](https://github.com/ClipboardHealth/core-utils/tree/main/packages/eslint-plugin/src/lib/rules/enforce-contract-in-controllers),
   with a local override
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
