@@ -88,10 +88,11 @@ export const query = z
 
 The query helpers expect `req.query` to hold nested objects: `?filter[age][gt]=10` must arrive as
 `{ filter: { age: { gt: "10" } } }`. Express 5's default `simple` query parser leaves
-`filter[age][gt]` as one flat key. A `.strict()` query schema then rejects the query with a 400, and a
-non-strict one silently drops the filter and pagination. Set a `qs` query parser on the Nest app.
+`filter[age][gt]` as one flat key, so a `.strict()` query schema rejects the query with a 400 and a
+non-strict one silently drops the filter and pagination.
 
-Clipboard services can use `createQueryParser()` from `@clipboard-health/api-nestjs`:
+Set a `qs` query parser on the Nest app. Clipboard services can use `createQueryParser()` from
+`@clipboard-health/api-nestjs`:
 
 ```ts
 import { createQueryParser } from "@clipboard-health/api-nestjs";
@@ -108,8 +109,7 @@ await app.listen(3000);
 Other apps can pass a function that calls [`qs`](https://github.com/ljharb/qs)'s `parse` instead,
 for example `app.set("query parser", (query: string) => qs.parse(query))`.
 
-oRPC routes don't read `req.query`: oRPC parses their query strings itself, with its own bracket
-notation.
+oRPC routes don't need the setting: they don't read `req.query`.
 
 ## Local development commands
 
