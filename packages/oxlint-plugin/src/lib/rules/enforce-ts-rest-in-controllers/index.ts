@@ -1,140 +1,227 @@
-import { type Context, defineRule, type ESTree } from "@oxlint/plugins";
+import { defineRule, type ESTree } from "@oxlint/plugins";
 
 type MessageId =
   | "missingDecorator"
   | "missingReturn"
   | "decoratorNotFromPackage"
-  | "callNotFromPackage";
+  | "callNotFromPackage"
+  | "conflictingDecorators"
+  | "tsRestHandlerForbidden";
 
-function validateDecorators(
-  context: Context,
-  node: ESTree.MethodDefinition,
-  symbolName: string,
-  decoratorImportedCorrectly: boolean,
-): void {
-  const decorators = node.decorators ?? [];
-  const hasMatchingDecorator = decorators.some(
-    (decorator) =>
-      decorator.expression.type === "CallExpression" &&
-      decorator.expression.callee.type === "Identifier" &&
-      decorator.expression.callee.name === "TsRestHandler",
-  );
-
-  if (!hasMatchingDecorator) {
-    context.report({
-      node,
-      messageId: "missingDecorator" satisfies MessageId,
-      data: { name: symbolName },
-    });
-  }
-
-  for (const decorator of decorators) {
-    if (
-      decorator.expression.type === "CallExpression" &&
-      decorator.expression.callee.type === "Identifier" &&
-      decorator.expression.callee.name === "TsRestHandler" &&
-      !decoratorImportedCorrectly
-    ) {
-      context.report({
-        node: decorator,
-        messageId: "decoratorNotFromPackage" satisfies MessageId,
-      });
-    }
-  }
+interface Options {
+  forbidTsRestHandler?: boolean;
 }
 
-function validateReturnStatement(
-  context: Context,
-  node: ESTree.MethodDefinition,
-  symbolName: string,
-  methodImportedCorrectly: boolean,
-): void {
+/**
+ * One way to implement a contract route in a Nest controller: a method decorator plus the handler
+ * call the method must return, both imported from the library's Nest adapter.
+ */
+interface HandlerStyle {
+  decorator: string;
+  handlerFunction: string;
+  source: string;
+  expectedReturn: string;
+  /**
+   * Returns the call to `handlerFunction` when `node` is the expected return expression, so its
+   * import can be checked, or `undefined` when `node` has another shape.
+   */
+  handlerCall: (node: ESTree.Expression) => ESTree.Expression | undefined;
+}
+
+/** `@TsRestHandler(...)` with `return tsRestHandler(...)`. */
+const TS_REST: HandlerStyle = {
+  decorator: "TsRestHandler",
+  handlerFunction: "tsRestHandler",
+  source: "@ts-rest/nest",
+  expectedReturn: "`tsRestHandler(…)` from `@ts-rest/nest`",
+  handlerCall: (node) => (calleeIdentifierName(node) === "tsRestHandler" ? node : undefined),
+};
+
+/** `@Implement(...)` with `return implement(...).handler(...)`. */
+const ORPC: HandlerStyle = {
+  decorator: "Implement",
+  handlerFunction: "implement",
+  source: "@orpc/nest",
+  expectedReturn: "`implement(…).handler(…)` from `@orpc/nest`",
+  handlerCall: implementCallOfHandlerChain,
+};
+
+const DOCS_REFERENCE =
+  "See https://www.notion.so/BP-REST-API-f769b7fe745c4cf38f6eca2e9ad8a843 for more information.";
+
+function calleeIdentifierName(node: ESTree.Expression | null | undefined): string | undefined {
+  return node?.type === "CallExpression" && node.callee.type === "Identifier"
+    ? node.callee.name
+    : undefined;
+}
+
+function memberPropertyName(node: ESTree.Expression): string | undefined {
+  return node.type === "MemberExpression" && !node.computed && node.property.type === "Identifier"
+    ? node.property.name
+    : undefined;
+}
+
+/**
+ * Returns the `implement(...)` call at the root of `implement(...).handler(...)`, allowing builder
+ * calls such as `.use(...)` between them, or `undefined` when the expression has another shape.
+ */
+function implementCallOfHandlerChain(node: ESTree.Expression): ESTree.Expression | undefined {
+  if (node.type !== "CallExpression" || memberPropertyName(node.callee) !== "handler") {
+    return undefined;
+  }
+
+  let current: ESTree.Expression = node;
+  while (current.type === "CallExpression" && current.callee.type === "MemberExpression") {
+    current = current.callee.object;
+  }
+
+  return calleeIdentifierName(current) === "implement" ? current : undefined;
+}
+
+function decoratorCalls(node: ESTree.MethodDefinition, name: string): ESTree.Decorator[] {
+  return (node.decorators ?? []).filter(
+    (decorator) => calleeIdentifierName(decorator.expression) === name,
+  );
+}
+
+function soleReturnArgument(node: ESTree.MethodDefinition): ESTree.Expression | undefined {
   const body = node.value.body;
   if (
     body?.type !== "BlockStatement" ||
     body.body.length !== 1 ||
     body.body[0]?.type !== "ReturnStatement"
   ) {
-    context.report({
-      node,
-      messageId: "missingReturn" satisfies MessageId,
-      data: { name: symbolName },
-    });
-    return;
+    return undefined;
   }
 
-  const returnValueExpression = body.body[0].argument;
-  if (
-    returnValueExpression?.type !== "CallExpression" ||
-    returnValueExpression.callee.type !== "Identifier" ||
-    returnValueExpression.callee.name !== "tsRestHandler"
-  ) {
-    context.report({
-      node,
-      messageId: "missingReturn" satisfies MessageId,
-      data: { name: symbolName },
-    });
-  }
+  return body.body[0].argument ?? undefined;
+}
 
-  if (
-    returnValueExpression?.type === "CallExpression" &&
-    returnValueExpression.callee.type === "Identifier" &&
-    returnValueExpression.callee.name === "tsRestHandler" &&
-    !methodImportedCorrectly
-  ) {
-    context.report({
-      node: returnValueExpression,
-      messageId: "callNotFromPackage" satisfies MessageId,
-    });
-  }
+function describeAlternatives(
+  styles: readonly HandlerStyle[],
+  describe: (style: HandlerStyle) => string,
+): string {
+  return styles.map(describe).join(" or ");
 }
 
 const rule = defineRule({
   meta: {
     type: "problem",
     docs: {
-      description: "Require use of ts-rest on all controller methods",
+      description: "Require controller methods to implement a contract route with ts-rest or oRPC",
       url: "https://github.com/ClipboardHealth/core-utils/tree/main/packages/eslint-plugin/src/lib/rules/enforce-ts-rest-in-controllers",
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          forbidTsRestHandler: {
+            type: "boolean",
+            description:
+              "Reject `@TsRestHandler` and `tsRestHandler()`, so controllers accept only oRPC's `@Implement`. Enable it once a repository has migrated every route to oRPC.",
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     messages: {
-      missingDecorator:
-        "Controller method '{{name}}' must be decorated with `@TsRestHandler()` from `@ts-rest/nest` package. See https://www.notion.so/BP-REST-API-f769b7fe745c4cf38f6eca2e9ad8a843 for more information.",
-      missingReturn:
-        "Controller method '{{name}}' must only return the result of calling `tsRestHandler()` from `@ts-rest/nest` package. See https://www.notion.so/BP-REST-API-f769b7fe745c4cf38f6eca2e9ad8a843 for more information.",
-      decoratorNotFromPackage: "Decorator `TsRestHandler` must be imported from `@ts-rest/nest`",
-      callNotFromPackage: "Method `tsRestHandler` must be imported from `@ts-rest/nest`",
+      missingDecorator: `Controller method '{{name}}' must be decorated with {{expected}}. ${DOCS_REFERENCE}`,
+      missingReturn: `Controller method '{{name}}' must only return the result of calling {{expected}}. ${DOCS_REFERENCE}`,
+      decoratorNotFromPackage: "Decorator `{{decorator}}` must be imported from `{{source}}`",
+      callNotFromPackage: "Method `{{handlerFunction}}` must be imported from `{{source}}`",
+      conflictingDecorators:
+        "Controller method '{{name}}' must use either `@TsRestHandler()` or `@Implement()`, not both.",
+      tsRestHandlerForbidden:
+        "Controller method '{{name}}' must implement its route with oRPC's `@Implement()` and `implement(…).handler(…)` from `@orpc/nest`; this repository no longer accepts ts-rest handlers.",
     },
   },
   create(context) {
-    let methodImportedCorrectly = false;
-    let decoratorImportedCorrectly = false;
+    const [rawOptions] = context.options;
+    const options: Options = (rawOptions ?? {}) as Options;
+    const allowedStyles: readonly HandlerStyle[] =
+      options.forbidTsRestHandler === true ? [ORPC] : [TS_REST, ORPC];
+    /** Names imported from each style's package, keyed by the package specifier. */
+    const correctlyImported = new Map<string, Set<string>>();
+
+    function isImportedFrom(name: string, source: string): boolean {
+      return correctlyImported.get(source)?.has(name) === true;
+    }
+
+    function report(node: ESTree.Node, messageId: MessageId, data: Record<string, string>): void {
+      context.report({ node, messageId, data });
+    }
+
+    function validateHandlerImport(handlerCall: ESTree.Expression, style: HandlerStyle): void {
+      if (!isImportedFrom(style.handlerFunction, style.source)) {
+        report(handlerCall, "callNotFromPackage", {
+          handlerFunction: style.handlerFunction,
+          source: style.source,
+        });
+      }
+    }
+
+    function validateStyle(
+      node: ESTree.MethodDefinition,
+      symbolName: string,
+      style: HandlerStyle,
+    ): void {
+      if (!isImportedFrom(style.decorator, style.source)) {
+        for (const decorator of decoratorCalls(node, style.decorator)) {
+          report(decorator, "decoratorNotFromPackage", {
+            decorator: style.decorator,
+            source: style.source,
+          });
+        }
+      }
+
+      const returned = soleReturnArgument(node);
+      const handlerCall = returned === undefined ? undefined : style.handlerCall(returned);
+      if (handlerCall === undefined) {
+        report(node, "missingReturn", { name: symbolName, expected: style.expectedReturn });
+        return;
+      }
+
+      validateHandlerImport(handlerCall, style);
+    }
+
+    function validateUndecorated(node: ESTree.MethodDefinition, symbolName: string): void {
+      report(node, "missingDecorator", {
+        name: symbolName,
+        expected: describeAlternatives(
+          allowedStyles,
+          (style) => `\`@${style.decorator}()\` from \`${style.source}\``,
+        ),
+      });
+
+      const returned = soleReturnArgument(node);
+      for (const style of allowedStyles) {
+        const handlerCall = returned === undefined ? undefined : style.handlerCall(returned);
+        if (handlerCall !== undefined) {
+          validateHandlerImport(handlerCall, style);
+          return;
+        }
+      }
+
+      report(node, "missingReturn", {
+        name: symbolName,
+        expected: describeAlternatives(allowedStyles, (style) => style.expectedReturn),
+      });
+    }
 
     return {
       ImportDeclaration(node) {
-        if (node.source.value !== "@ts-rest/nest") {
+        const source = node.source.value;
+        if (source !== TS_REST.source && source !== ORPC.source) {
           return;
         }
 
+        const names = correctlyImported.get(source) ?? new Set<string>();
         for (const specifier of node.specifiers) {
-          if (specifier.type !== "ImportSpecifier") {
-            continue;
-          }
-
-          if (
-            specifier.imported.type === "Identifier" &&
-            specifier.imported.name === "tsRestHandler"
-          ) {
-            methodImportedCorrectly = true;
-          }
-
-          if (
-            specifier.imported.type === "Identifier" &&
-            specifier.imported.name === "TsRestHandler"
-          ) {
-            decoratorImportedCorrectly = true;
+          if (specifier.type === "ImportSpecifier" && specifier.imported.type === "Identifier") {
+            names.add(specifier.imported.name);
           }
         }
+        correctlyImported.set(source, names);
       },
 
       MethodDefinition(node) {
@@ -147,8 +234,26 @@ const rule = defineRule({
           return;
         }
 
-        validateDecorators(context, node, symbolName, decoratorImportedCorrectly);
-        validateReturnStatement(context, node, symbolName, methodImportedCorrectly);
+        const usesTsRest = decoratorCalls(node, TS_REST.decorator).length > 0;
+        const usesOrpc = decoratorCalls(node, ORPC.decorator).length > 0;
+
+        if (usesTsRest && usesOrpc) {
+          report(node, "conflictingDecorators", { name: symbolName });
+          return;
+        }
+
+        if (usesTsRest && options.forbidTsRestHandler === true) {
+          report(node, "tsRestHandlerForbidden", { name: symbolName });
+          return;
+        }
+
+        if (usesTsRest) {
+          validateStyle(node, symbolName, TS_REST);
+        } else if (usesOrpc) {
+          validateStyle(node, symbolName, ORPC);
+        } else {
+          validateUndecorated(node, symbolName);
+        }
       },
     };
   },

@@ -236,8 +236,13 @@ const rule: Rule = {
         return root !== undefined && isContractRoot(root);
       }
 
+      // An oRPC procedure contract keeps its output schema at `procedure["~orpc"].outputSchema`.
+      const selectedOrpcOutputSchema =
+        propertyName(current) === "outputSchema" &&
+        current.object.type === "MemberExpression" &&
+        propertyName(current.object) === "~orpc";
       const selectedNamedSchema = propertyName(current)?.endsWith("ResponseSchema") === true;
-      if (selectedNamedSchema) {
+      if (selectedOrpcOutputSchema || selectedNamedSchema) {
         const root = rootIdentifier(current);
         return root !== undefined && isContractRoot(root);
       }

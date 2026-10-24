@@ -28,6 +28,19 @@ ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
         }
       `,
     },
+    {
+      name: "oRPC controller methods are valid under ESLint",
+      code: `
+        import { Implement, implement } from "@orpc/nest";
+
+        class ExampleController {
+          @Implement(exampleContract.get)
+          public getExample() {
+            return implement(exampleContract.get).handler(async () => ({ data: {} }));
+          }
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -40,6 +53,21 @@ ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
         }
       `,
       errors: [{ messageId: "missingDecorator" }, { messageId: "missingReturn" }],
+    },
+    {
+      name: "forbidTsRestHandler rejects ts-rest handlers under ESLint",
+      code: `
+        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+
+        class ExampleController {
+          @TsRestHandler()
+          public getExample() {
+            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
+          }
+        }
+      `,
+      options: [{ forbidTsRestHandler: true }],
+      errors: [{ messageId: "tsRestHandlerForbidden" }],
     },
   ],
 });
