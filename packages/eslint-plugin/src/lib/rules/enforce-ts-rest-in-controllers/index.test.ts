@@ -13,23 +13,16 @@ const ruleTester = new TSESLint.RuleTester({
   },
 });
 
+describe("enforce-ts-rest-in-controllers alias under ESLint", () => {
+  it("reports enforce-contract-in-controllers as its replacement", () => {
+    expect(rule.meta?.replacedBy).toStrictEqual(["enforce-contract-in-controllers"]);
+  });
+});
+
 ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
   valid: [
     {
-      name: "ts-rest controller methods remain valid under ESLint",
-      code: `
-        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
-
-        class ExampleController {
-          @TsRestHandler()
-          public getExample() {
-            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
-          }
-        }
-      `,
-    },
-    {
-      name: "oRPC controller methods are valid under ESLint",
+      name: "oRPC controller methods pass under the alias",
       code: `
         import { Implement, implement } from "@orpc/nest";
 
@@ -44,7 +37,7 @@ ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
   ],
   invalid: [
     {
-      name: "missing ts-rest enforcement remains reported under ESLint",
+      name: "missing contract handlers are reported under the alias",
       code: `
         class ExampleController {
           public getExample() {
@@ -53,21 +46,6 @@ ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
         }
       `,
       errors: [{ messageId: "missingDecorator" }, { messageId: "missingReturn" }],
-    },
-    {
-      name: "forbidTsRestHandler rejects ts-rest handlers under ESLint",
-      code: `
-        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
-
-        class ExampleController {
-          @TsRestHandler()
-          public getExample() {
-            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
-          }
-        }
-      `,
-      options: [{ forbidTsRestHandler: true }],
-      errors: [{ messageId: "tsRestHandlerForbidden" }],
     },
   ],
 });
