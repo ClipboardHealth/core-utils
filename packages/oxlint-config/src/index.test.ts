@@ -112,7 +112,7 @@ describe("oxlint-config", () => {
           {
             files: ["**/*.controller.ts", "**/*.controllers.ts"],
             rules: {
-              "@clipboard-health/enforce-ts-rest-in-controllers": "error",
+              "@clipboard-health/enforce-contract-in-controllers": "error",
             },
           },
           {
