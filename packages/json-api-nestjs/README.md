@@ -151,7 +151,7 @@ first (`filter[age][gt]=5&filter[age]=10` works), write `filter[age][eq]=10` exp
 values with commas (`filter[age]=10,20`). The same applies to `sort`, `include`, and `fields`
 (`sort=age&sort[]=-age` keeps only `-age`).
 
-Smaller differences, all with oRPC being stricter or unbounded:
+Smaller differences:
 
 - oRPC rejects prototype-like keys (`filter[__proto__][x]=1`, `filter[hasOwnProperty]=1`) with a 400
   from `.strict()`. `qs` with `allowPrototypes: false` drops them silently.
