@@ -92,7 +92,7 @@ The query helpers expect `req.query` to hold nested objects: `?filter[age][gt]=1
 non-strict one silently drops the filter and pagination.
 
 Set a `qs` query parser on the Nest app. Clipboard services can use `createQueryParser()` from
-`@clipboard-health/api-nestjs`:
+`@clipboard-health/api-nestjs` 17.0.0 or later:
 
 ```ts
 import { createQueryParser } from "@clipboard-health/api-nestjs";
