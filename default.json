@@ -8,6 +8,7 @@
     "docker:enableMajor"
   ],
   "schedule": ["* 0-3 * * 2-5"],
+  "platformAutomerge": false,
   "automergeSchedule": ["* 7-23 * * 1", "* * * * 2-4", "* 0-19 * * 5"],
   "hostRules": [
     {
@@ -124,11 +125,11 @@
     {
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "automerge": true,
-      "automergeType": "branch"
+      "automergeType": "pr"
     },
     {
       "automerge": true,
-      "automergeType": "branch",
+      "automergeType": "pr",
       "matchDepTypes": ["devDependencies"]
     },
     {
@@ -181,7 +182,7 @@
       "matchUpdateTypes": ["pinDigest"],
       "matchCurrentValue": "/^v[0-9]+(?:\\.[0-9]+){0,2}$/",
       "automerge": true,
-      "automergeType": "branch"
+      "automergeType": "pr"
     },
     {
       "description": "The cbh-core sync workflow updates this package and regenerates the synced rules, which Renovate cannot do.",
