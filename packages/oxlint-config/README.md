@@ -223,7 +223,10 @@ The package includes:
 - **`contractFixtures` preset**: warning-level enforcement that MSW, Playwright, and exported mock
   fixtures are parsed by producer-owned contract response schemas
 - **`customRules` preset**: registers the ESLint-independent Clipboard plugin and reproduces the
-  shared controller, module, contract, and cross-contract-import enforcement scopes
+  shared controller, module, contract, and cross-contract-import enforcement scopes. Set rule
+  options, such as the controller rule's
+  [`forbidTsRestHandler`](https://github.com/ClipboardHealth/core-utils/tree/main/packages/eslint-plugin/src/lib/rules/enforce-ts-rest-in-controllers),
+  with a local override
 - **`createOxlintConfig`**: helper for composing presets with repo-local config
 
 ## Switch fallback policy

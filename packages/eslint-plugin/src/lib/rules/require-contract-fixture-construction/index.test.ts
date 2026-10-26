@@ -38,6 +38,14 @@ ruleTester.run("require-contract-fixture-construction", rule as never, {
       `,
     },
     {
+      name: "accepts an oRPC procedure output schema",
+      filename: mocksFile,
+      code: `
+        import { featureContract } from "@clipboard-health/contract-feature/contract";
+        export const mockFeature = featureContract.get["~orpc"].outputSchema.parse({ id: "feature" });
+      `,
+    },
+    {
       name: "accepts fixtures imported from an enforced sibling mocks module",
       filename: handlersFile,
       code: `

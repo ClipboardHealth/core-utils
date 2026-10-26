@@ -7,7 +7,7 @@ const fixtureRoot = path.join(packageRoot, "test/negative");
 const configPath = path.join(fixtureRoot, "oxlint.config.json");
 const oxlintBin = path.join(workspaceRoot, "node_modules/oxlint/bin/oxlint");
 const expectedCodes = [
-  "clipboard(enforce-ts-rest-in-controllers)",
+  "clipboard(enforce-contract-in-controllers)",
   "clipboard(no-cross-contract-imports)",
   "clipboard(require-contract-fixture-construction)",
   "clipboard(require-contract-response-parse)",

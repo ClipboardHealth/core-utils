@@ -1,5 +1,6 @@
 import { RuleTester } from "oxlint/plugins-dev";
 
+import enforceContractInControllers from "../enforce-contract-in-controllers";
 import rule from "./index";
 
 RuleTester.describe = (name, run) => {
@@ -16,71 +17,53 @@ const ruleTester = new RuleTester({
   },
 });
 
+describe("enforce-ts-rest-in-controllers alias", () => {
+  it("is deprecated in favor of enforce-contract-in-controllers", () => {
+    expect(rule.meta?.deprecated).toStrictEqual({
+      message: "Renamed to `enforce-contract-in-controllers`, which accepts the same options.",
+      replacedBy: [{ rule: { name: "enforce-contract-in-controllers" } }],
+    });
+    expect(rule.meta?.replacedBy).toStrictEqual(["enforce-contract-in-controllers"]);
+  });
+
+  it("shares the replacement rule's implementation, options and messages", () => {
+    expect(rule.create).toBe(enforceContractInControllers.create);
+    expect(rule.meta?.schema).toBe(enforceContractInControllers.meta?.schema);
+    expect(rule.meta?.messages).toBe(enforceContractInControllers.meta?.messages);
+  });
+});
+
 ruleTester.run("enforce-ts-rest-in-controllers", rule, {
   valid: [
     {
-      name: "controller method uses ts-rest imports, decorator, and handler",
+      name: "oRPC controller methods pass under the alias",
       code: `
-        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+        import { Implement, implement } from "@orpc/nest";
 
         class ExampleController {
-          @TsRestHandler()
+          @Implement(exampleContract.get)
           public getExample() {
-            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
+            return implement(exampleContract.get).handler(async () => ({ data: {} }));
           }
-        }
-      `,
-    },
-    {
-      name: "constructors and private methods remain outside the rule's scope",
-      code: `
-        class ExampleController {
-          public constructor() {}
-          private getInternalExample() { return {}; }
         }
       `,
     },
   ],
   invalid: [
     {
-      name: "controller method omits the ts-rest decorator and handler return",
-      code: `
-        class ExampleController {
-          public getExample() {
-            return {};
-          }
-        }
-      `,
-      errors: [{ messageId: "missingDecorator" }, { messageId: "missingReturn" }],
-    },
-    {
-      name: "matching symbols must be imported from @ts-rest/nest",
-      code: `
-        import { TsRestHandler, tsRestHandler } from "somewhere-else";
-
-        class ExampleController {
-          @TsRestHandler()
-          public getExample() {
-            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
-          }
-        }
-      `,
-      errors: [{ messageId: "decoratorNotFromPackage" }, { messageId: "callNotFromPackage" }],
-    },
-    {
-      name: "the handler call must be the method's only statement",
+      name: "forbidTsRestHandler applies under the alias",
       code: `
         import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
 
         class ExampleController {
           @TsRestHandler()
           public getExample() {
-            logRequest();
             return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
           }
         }
       `,
-      errors: [{ messageId: "missingReturn" }],
+      options: [{ forbidTsRestHandler: true }],
+      errors: [{ messageId: "tsRestHandlerForbidden" }],
     },
   ],
 });

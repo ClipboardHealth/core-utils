@@ -91,6 +91,14 @@
       "separateMinorPatch": false
     },
     {
+      "description": "Update every @orpc/* package together, to the same version: ORPCError's instanceof check fails across oRPC versions, so a mismatched @orpc/nest turns oRPC 4xx errors into 500s.",
+      "groupName": "oRPC",
+      "groupSlug": "orpc",
+      "matchPackageNames": ["/^@orpc\\//"],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
+    },
+    {
       "groupName": "Buf",
       "matchPackageNames": ["/^@bufbuild/"],
       "separateMinorPatch": false
@@ -101,7 +109,7 @@
       "matchPackageNames": ["nx", "/^@nx\\//"]
     },
     {
-      "description": "Keep NestJS below v12 until the installed ts-rest integration supports it.",
+      "description": "Keep NestJS below v12 while services use @ts-rest/nest, which supports NestJS 11 at most. Lift the hold once services have replaced ts-rest with oRPC.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@nestjs\\//"],
       "allowedVersions": "<12.0.0"

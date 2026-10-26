@@ -13,17 +13,23 @@ const ruleTester = new TSESLint.RuleTester({
   },
 });
 
+describe("enforce-ts-rest-in-controllers alias under ESLint", () => {
+  it("reports enforce-contract-in-controllers as its replacement", () => {
+    expect(rule.meta?.replacedBy).toStrictEqual(["enforce-contract-in-controllers"]);
+  });
+});
+
 ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
   valid: [
     {
-      name: "ts-rest controller methods remain valid under ESLint",
+      name: "oRPC controller methods pass under the alias",
       code: `
-        import { TsRestHandler, tsRestHandler } from "@ts-rest/nest";
+        import { Implement, implement } from "@orpc/nest";
 
         class ExampleController {
-          @TsRestHandler()
+          @Implement(exampleContract.get)
           public getExample() {
-            return tsRestHandler(exampleContract, async () => ({ status: 200, body: {} }));
+            return implement(exampleContract.get).handler(async () => ({ data: {} }));
           }
         }
       `,
@@ -31,7 +37,7 @@ ruleTester.run("enforce-ts-rest-in-controllers", rule as never, {
   ],
   invalid: [
     {
-      name: "missing ts-rest enforcement remains reported under ESLint",
+      name: "missing contract handlers are reported under the alias",
       code: `
         class ExampleController {
           public getExample() {
