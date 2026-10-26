@@ -9,6 +9,8 @@
     "@nestjs/core": "11.2.7",
     "@nestjs/platform-express": "11.2.7",
     "@nx/webpack": "23.2.1",
+    "@orpc/contract": "1.16.1",
+    "@orpc/nest": "1.16.1",
     "@ts-rest/core": "3.52.1",
     "@ts-rest/nest": "3.52.1",
     "qs": "6.16.1",

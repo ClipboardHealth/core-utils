@@ -3,3 +3,7 @@
 ### Test query
 
 GET {{url}}/users?fields[user]=age,dateOfBirth&fields[article]=title
+
+### Test query with oRPC
+
+GET {{url}}/orpc/users?fields[user]=age,dateOfBirth&fields[article]=title

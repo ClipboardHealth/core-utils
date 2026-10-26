@@ -20,6 +20,8 @@ npx nx serve example-nestjs
 
 Install the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) VSCode extension and open [`requests.http`](./requests.http) to send requests.
 
+`GET /users` is a ts-rest route and `GET /orpc/users` is its oRPC twin; both use the same query schema.
+
 ### `ts-rest` client
 
 The following makes requests to the example application using the `ts-rest` client.
