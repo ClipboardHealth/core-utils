@@ -1,5 +1,9 @@
 import { queryFilterPreprocessor } from "./queryFilterPreprocessor";
 
+function withoutPrototype(value: Record<string, unknown>) {
+  return Object.assign(Object.create(null) as Record<string, unknown>, value);
+}
+
 describe(queryFilterPreprocessor, () => {
   it.each<{ expected: unknown; input: unknown; name: string }>([
     {
@@ -66,6 +70,26 @@ describe(queryFilterPreprocessor, () => {
       name: "handles array values for filters",
       input: { lt: ["10", "20", "30"] },
       expected: { lt: "10,20,30" },
+    },
+    {
+      name: "handles nested array values for filters",
+      input: { lt: [["10", "20"], "30"] },
+      expected: { lt: "10,20,30" },
+    },
+    {
+      name: "handles object values for filters without throwing",
+      input: { gt: { lt: "10" } },
+      expected: { gt: "[object Object]" },
+    },
+    {
+      name: "handles prototype-less object values for filters without throwing",
+      input: withoutPrototype({ gt: withoutPrototype({ lt: "10" }) }),
+      expected: { gt: "[object Object]" },
+    },
+    {
+      name: "handles prototype-less objects in array values for filters without throwing",
+      input: withoutPrototype({ gt: [withoutPrototype({ lt: "10" }), "20"] }),
+      expected: { gt: "[object Object],20" },
     },
     {
       name: "handles object with existing eq key",

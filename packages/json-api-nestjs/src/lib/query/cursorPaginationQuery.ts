@@ -9,6 +9,18 @@ export const PAGINATION = {
 } as const;
 
 /**
+ * Like `z.coerce.number()`, but a value `Number()` can't convert, such as the prototype-less object
+ * oRPC parses `?page[size][x]=1` into, becomes `NaN` so validation fails instead of throwing.
+ */
+function toNumber(value: unknown) {
+  try {
+    return Number(value);
+  } catch {
+    return Number.NaN;
+  }
+}
+
+/**
  * Creates a Zod schema for JSON:API cursor pagination.
  *
  * @example
@@ -87,7 +99,7 @@ export function cursorPaginationQuery(
     page: z
       .object({
         cursor: nonEmptyString.optional(),
-        size: z.coerce.number().int().positive().max(maximum).default(defaultSize),
+        size: z.preprocess(toNumber, z.number().int().positive().max(maximum)).default(defaultSize),
       })
       .strict()
       .default({ size: defaultSize }),

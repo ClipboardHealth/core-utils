@@ -1,5 +1,6 @@
 /**
- * NestJS-specific query processing based on the output of `ctx.switchToHttp().getRequest().query`.
+ * Query processing based on the output of `qs` (`ctx.switchToHttp().getRequest().query`) or of
+ * oRPC's bracket-notation parser, which returns objects without a prototype.
  *
  * We handle the following cases:
  * 1. For `?filter[age]=10,20`, `value` is `10,20`, which we transform to `{eq: "10,20"}`.
@@ -26,6 +27,19 @@ export function queryFilterPreprocessor(value: unknown): Record<string, string> 
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && value !== undefined && typeof value === "object";
+}
+
+/**
+ * Not `String(value)`, which throws for oRPC's prototype-less objects, such as the one
+ * `?filter[age][gt][lt]=1` produces. Objects become `[object Object]`, as they do for `qs`, so
+ * the filter's schema rejects them.
+ */
+function toFilterString(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => toFilterString(item)).join(",");
+  }
+
+  return isObject(value) ? "[object Object]" : String(value);
 }
 
 function appendFilterValue(filter: Record<string, string>, key: string, value: string) {
@@ -74,10 +88,6 @@ function normalizeObjectFilter(value: Record<string, unknown>): Record<string, s
       return appendFilterValue(filter, "eq", String(filterValue));
     }
 
-    return appendFilterValue(
-      filter,
-      key,
-      Array.isArray(filterValue) ? filterValue.join(",") : String(filterValue),
-    );
+    return appendFilterValue(filter, key, toFilterString(filterValue));
   }, {});
 }

@@ -8,6 +8,8 @@ TypeScript-friendly utilities for adhering to the [JSON:API](https://jsonapi.org
 - [Usage](#usage)
   - [Query helpers](#query-helpers)
   - [Express query parser](#express-query-parser)
+  - [oRPC procedures](#orpc-procedures)
+    - [Differences from qs](#differences-from-qs)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -109,7 +111,54 @@ await app.listen(3000);
 Other apps can pass a function that calls [`qs`](https://github.com/ljharb/qs)'s `parse` instead,
 for example `app.set("query parser", (query: string) => qs.parse(query))`.
 
-oRPC routes don't need the setting: they don't read `req.query`.
+oRPC routes don't need the setting: they don't read `req.query`. See [oRPC procedures](#orpc-procedures).
+
+### oRPC procedures
+
+The query helpers work in [oRPC](https://orpc.dev) procedures. oRPC parses the query string itself, so
+declare the procedure with `inputStructure: "detailed"` and put the helpers' schema under `query`:
+
+```ts
+import { oc } from "@orpc/contract";
+import { z } from "zod";
+
+const query = z
+  .object({
+    ...cursorPaginationQuery(),
+    ...filterQuery(userFilterMap),
+    ...sortQuery(userFields),
+  })
+  .strict();
+
+export const list = oc
+  .route({ inputStructure: "detailed", method: "GET", path: "/users" })
+  .input(z.object({ query }));
+```
+
+For the same query string, the helpers return the same values and the same validation issues as with
+`qs` and ts-rest, apart from the differences below. Issue paths in an oRPC 400 start with `query`.
+[`orpcQueryParsing.test.ts`](./src/lib/query/orpcQueryParsing.test.ts) runs each helper through both
+parsers. `@orpc/*` isn't a dependency or peer dependency of this package.
+
+#### Differences from qs
+
+oRPC's parser builds each key's value in the order the parameters appear. When a plain value
+(`filter[age]=10`) is followed by a bracketed key on the same key (`filter[age][gt]=5`,
+`filter[age][eq]=20`, `filter[age][]=20`), it discards the plain value before the schema sees it,
+and `qs` keeps it. The request succeeds without that value, so a filter can match more than the client
+asked for. Helpers can't recover the value. Clients should send one style per key: put the operator
+first (`filter[age][gt]=5&filter[age]=10` works), write `filter[age][eq]=10` explicitly, or separate
+values with commas (`filter[age]=10,20`). The same applies to `sort`, `include`, and `fields`
+(`sort=age&sort[]=-age` keeps only `-age`).
+
+Smaller differences, all with oRPC being stricter or unbounded:
+
+- oRPC rejects prototype-like keys (`filter[__proto__][x]=1`, `filter[hasOwnProperty]=1`) with a 400
+  from `.strict()`. `qs` with `allowPrototypes: false` drops them silently.
+- oRPC rejects malformed bracket keys (`filter[age]]=10`) and an empty key (`=x`) with a 400. `qs`
+  accepts the first and ignores the second.
+- oRPC has no parameter limit. `qs` with `parameterLimit: 1000` silently drops parameters after the
+  first 1,000. The helpers' own array limits still apply.
 
 ## Local development commands
 

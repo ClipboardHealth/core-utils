@@ -30,6 +30,10 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "2.13.9",
+    "@orpc/openapi": "1.16.1",
+    "@orpc/server": "1.16.1",
+    "@types/qs": "6.15.1",
+    "qs": "6.16.1",
     "type-fest": "5.10.0",
     "zod": "3.25.76"
   },

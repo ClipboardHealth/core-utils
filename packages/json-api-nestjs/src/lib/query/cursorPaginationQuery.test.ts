@@ -37,6 +37,15 @@ describe(cursorPaginationQuery, () => {
     expect(actual.data).toStrictEqual(expected);
   });
 
+  it("coerces a numeric string size", () => {
+    const input = { page: { size: "30" } };
+
+    const actual = cursorPaginationSchema.safeParse(input);
+
+    expectToBeSafeParseSuccess(actual);
+    expect(actual.data).toStrictEqual({ page: { size: 30 } });
+  });
+
   it.each<{ errorMessage: string; input: unknown; name: string }>([
     {
       name: "rejects size under minimum",
@@ -57,6 +66,16 @@ describe(cursorPaginationQuery, () => {
       name: "rejects empty cursor",
       input: { page: { cursor: "" } },
       errorMessage: "String must contain at least 1 character(s)",
+    },
+    {
+      name: "rejects non-numeric size",
+      input: { page: { size: "abc" } },
+      errorMessage: "Expected number, received nan",
+    },
+    {
+      name: "rejects size Number() can't convert",
+      input: { page: { size: Object.create(null) } },
+      errorMessage: "Expected number, received nan",
     },
   ])("$name", ({ input, errorMessage }) => {
     const actual = cursorPaginationSchema.safeParse(input);
