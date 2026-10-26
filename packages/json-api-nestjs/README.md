@@ -157,6 +157,8 @@ Smaller differences, all with oRPC being stricter or unbounded:
   from `.strict()`. `qs` with `allowPrototypes: false` drops them silently.
 - oRPC rejects malformed bracket keys (`filter[age]]=10`) and an empty key (`=x`) with a 400. `qs`
   accepts the first and ignores the second.
+- `filter[age][eq]=10&filter[age][]=20` keeps both values under both parsers, but `qs` orders them
+  `20, 10` and oRPC `10, 20`.
 - oRPC has no parameter limit. `qs` with `parameterLimit: 1000` silently drops parameters after the
   first 1,000. The helpers' own array limits still apply.
 

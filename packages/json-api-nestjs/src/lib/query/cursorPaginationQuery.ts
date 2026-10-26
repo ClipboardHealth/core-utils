@@ -99,7 +99,12 @@ export function cursorPaginationQuery(
     page: z
       .object({
         cursor: nonEmptyString.optional(),
-        size: z.preprocess(toNumber, z.number().int().positive().max(maximum)).default(defaultSize),
+        size: z
+          .effect(z.number().int().positive().max(maximum), {
+            type: "preprocess",
+            transform: toNumber,
+          })
+          .default(defaultSize),
       })
       .strict()
       .default({ size: defaultSize }),

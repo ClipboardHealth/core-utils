@@ -85,9 +85,9 @@ async function parseWithOrpc(queryString: string): Promise<Parsed> {
 
 const defaultPage = { size: 20 };
 const nan = "Expected number, received nan";
-const unrecognizedAtRoot = (key: string): Parsed => ({
-  issues: [{ message: `Unrecognized key(s) in object: '${key}'`, path: [] }],
-});
+function unrecognizedAtRoot(key: string): Parsed {
+  return { issues: [{ message: `Unrecognized key(s) in object: '${key}'`, path: [] }] };
+}
 
 interface Case {
   expected: Parsed;
@@ -280,6 +280,16 @@ describe("query helpers with oRPC's query parsing", () => {
           name: "parses an operator followed by a plain value",
           queryString: "filter[age][gt]=10&filter[age]=20",
           expected: { data: { page: defaultPage, filter: { age: { gt: [10], eq: [20] } } } },
+        },
+        {
+          name: "parses an operator followed by an empty-bracket value",
+          queryString: "filter[age][gt]=5&filter[age][]=10",
+          expected: { data: { page: defaultPage, filter: { age: { gt: [5], eq: [10] } } } },
+        },
+        {
+          name: "parses an empty-bracket value followed by an operator",
+          queryString: "filter[age][]=10&filter[age][gt]=5",
+          expected: { data: { page: defaultPage, filter: { age: { eq: [10], gt: [5] } } } },
         },
         {
           name: "parses an explicit eq followed by a plain value",
@@ -726,6 +736,17 @@ describe("query helpers with oRPC's query parsing", () => {
       });
     });
 
+    it("keeps both values of an explicit eq and an empty-bracket key, in a different order", async () => {
+      const queryString = "filter[age][eq]=10&filter[age][]=20";
+
+      expect(parseWithQs(queryString)).toStrictEqual({
+        data: { page: defaultPage, filter: { age: { eq: [20, 10] } } },
+      });
+      await expect(parseWithOrpc(queryString)).resolves.toStrictEqual({
+        data: { page: defaultPage, filter: { age: { eq: [10, 20] } } },
+      });
+    });
+
     describe("keys qs drops or tolerates", () => {
       it.each<{ name: string; orpc: Parsed; queryString: string; tsRest: Parsed }>([
         {
@@ -769,13 +790,12 @@ describe("query helpers with oRPC's query parsing", () => {
     it("applies qs's parameter limit but not oRPC's", async () => {
       const queryString = Array.from({ length: 1001 }, () => "filter[age]=1").join("&");
 
-      const tsRest = parseWithQs(queryString) as { data: { filter: { age: { eq: number[] } } } };
-      const orpc = (await parseWithOrpc(queryString)) as {
-        data: { filter: { age: { eq: number[] } } };
-      };
-
-      expect(tsRest.data.filter.age.eq).toHaveLength(1000);
-      expect(orpc.data.filter.age.eq).toHaveLength(1001);
+      expect(parseWithQs(queryString)).toStrictEqual({
+        data: { page: defaultPage, filter: { age: { eq: Array.from({ length: 1000 }, () => 1) } } },
+      });
+      await expect(parseWithOrpc(queryString)).resolves.toStrictEqual({
+        data: { page: defaultPage, filter: { age: { eq: Array.from({ length: 1001 }, () => 1) } } },
+      });
     });
   });
 });

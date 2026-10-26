@@ -76,7 +76,7 @@ function normalizeObjectFilter(value: Record<string, unknown>): Record<string, s
       return appendFilterValue(filter, "eq", key);
     }
 
-    if (/^\d+$/.test(key)) {
+    if (/^\d*$/.test(key)) {
       if (Array.isArray(filterValue)) {
         return mergeFilters(filter, normalizeArrayFilter(filterValue));
       }
