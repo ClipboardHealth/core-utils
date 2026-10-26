@@ -138,7 +138,7 @@ const userFilterMap = {
   },
 } as const satisfies FilterMap<UserAttributeFields>;
 
-const query = z
+export const query = z
   .object({
     ...cursorPaginationQuery(),
     ...fieldsQuery({ article: articleFields, user: userFields }),
