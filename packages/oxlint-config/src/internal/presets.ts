@@ -576,6 +576,15 @@ export const contractFixtures: OxlintPreset = {
   ],
 };
 
+/**
+ * Fast variant of the default config for quick local and editor runs without type information.
+ * Disables `reportUnusedDisableDirectives` because `typescript/*` directives look unused without it.
+ * Compose after `base`, which enables it.
+ */
+export const fast: OxlintPreset = {
+  options: { reportUnusedDisableDirectives: "off" },
+};
+
 function createBasePreset(): OxlintPreset {
   const parsedBaseJson = loadBaseJson();
   const preset: OxlintPreset = {
