@@ -133,6 +133,12 @@ describe("oxlint-config", () => {
               "@clipboard-health/no-cross-contract-imports": "error",
             },
           },
+          {
+            files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+            rules: {
+              "@clipboard-health/no-tests-in-contract-packages": "error",
+            },
+          },
         ],
       });
 
