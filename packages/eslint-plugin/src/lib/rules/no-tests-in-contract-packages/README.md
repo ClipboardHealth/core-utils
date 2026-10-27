@@ -41,17 +41,22 @@ packages/contract-license-manager/src/index.test.ts
 
 ### ✅ Correct
 
+The assertions move to the owning service's service tests, which send requests through its real
+handlers:
+
 ```text
+src/service-test/endpoints/api/shifts/get.test.ts             # backend-main
+service-test/worker-licences/s2s/s2s.active-licenses.spec.ts  # license-manager, template-nestjs
 packages/contract-backend-main/src/lib/contracts/shift.contract.ts
 packages/contract-core/src/lib/schemas/objectId.spec.ts
-src/modules/shifts/shift.controller.spec.ts
 ```
 
 ## Options
 
 None.
 
-## When Not To Use It
+## Adopting it
 
-In a repository whose contract packages still contain test files, move their assertions into the
-service's service tests before enabling the rule.
+`@clipboard-health/oxlint-config` 3 and `@clipboard-health/eslint-config` 9 enable the rule. When a
+repository bumps to them, move each contract-package test's assertions into the service's service
+tests and delete the file.

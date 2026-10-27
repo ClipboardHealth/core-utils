@@ -33,13 +33,9 @@ apply the shared controller, module, contract, and cross-contract-import scopes.
 `require-run-validators-with-upsert` are opt-in because their safe adoption scope is
 repository-specific.
 
-`no-tests-in-contract-packages` is opt-in until repositories move their contract-package tests into
-service tests. Enable it for every file; it reports only test files inside `packages/contract-*`
-directories, excluding `packages/contract-core`:
-
-```ts
-"@clipboard-health/no-tests-in-contract-packages": "error",
-```
+`customRules` enables `no-tests-in-contract-packages` from `@clipboard-health/oxlint-config` 3.0.0.
+It reports only test files inside `packages/contract-*` directories, excluding
+`packages/contract-core`.
 
 `no-parallel-mongo-session-ops` is also opt-in. Out of the box it covers `Promise.all`,
 `Promise.allSettled`, `Promise.race`, and `Promise.any`. Repositories with their own
