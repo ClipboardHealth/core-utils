@@ -168,11 +168,12 @@ module.exports = {
             },
           },
           {
-            // Self-scoped: no-ops unless the nearest package.json name matches
-            // the contract package pattern, so it is safe on every file.
+            // Self-scoped: each rule no-ops outside contract packages, so both are
+            // safe on every file.
             files: ["**/*.ts", "**/*.tsx"],
             rules: {
               "@clipboard-health/no-cross-contract-imports": "error",
+              "@clipboard-health/no-tests-in-contract-packages": "error",
             },
           },
         ]

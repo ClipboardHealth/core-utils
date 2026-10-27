@@ -498,6 +498,7 @@ export const customRules: OxlintPreset = {
       files: ["**/*.ts", "**/*.tsx"],
       rules: {
         "@clipboard-health/no-cross-contract-imports": "error",
+        "@clipboard-health/no-tests-in-contract-packages": "error",
       },
     },
   ],
