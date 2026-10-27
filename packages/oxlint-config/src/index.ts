@@ -3,6 +3,7 @@ export {
   base,
   contractFixtures,
   customRules,
+  fast,
   frontend,
   jest,
   react,

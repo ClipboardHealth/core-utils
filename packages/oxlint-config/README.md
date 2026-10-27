@@ -6,6 +6,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 
 - [Install](#install)
 - [Usage](#usage)
+- [Fast runs](#fast-runs)
 - [Strict presets](#strict-presets)
 - [Categories](#categories)
 - [What is shared](#what-is-shared)
@@ -57,7 +58,6 @@ export default defineConfig(
       ignorePatterns: [".agents", "coverage/", "node_modules/"],
       options: {
         denyWarnings: true,
-        reportUnusedDisableDirectives: "error",
         typeAware: true,
         typeCheck: true,
       },
@@ -80,6 +80,7 @@ Available presets:
 - `base`
 - `contractFixtures`
 - `customRules`
+- `fast` (see [Fast runs](#fast-runs))
 - `frontend`
 - `react`
 - `jest`
@@ -178,6 +179,64 @@ Override shared rules as needed:
   }
 }
 ```
+
+## Fast runs
+
+`base` enables `reportUnusedDisableDirectives: "error"`, which flags `oxlint-disable` and
+`eslint-disable` comments that no longer suppress anything. The default config is therefore the slow
+one. The option is only accurate on the full, type-aware run: without type information,
+`typescript/*` rules cannot fire, so their directives look unused. The `fast` preset extends the
+default by setting the option to `"off"` for quick non-type-aware local and editor runs.
+
+| Config           | `options.reportUnusedDisableDirectives` | Use for                                    |
+| ---------------- | --------------------------------------- | ------------------------------------------ |
+| default (`base`) | `"error"`                               | The full type-aware lint run and CI        |
+| `base` + `fast`  | `"off"`                                 | Quick non-type-aware local and editor runs |
+
+`fast` sets nothing else, so the two configs are otherwise identical. Compose it last in `presets`;
+`localConfig` still wins if a repository sets the option itself.
+
+A repository keeps its rules in `oxlint.config.ts` and derives the fast config from it, so there is
+one place to edit rules:
+
+```ts
+// oxlint.config.ts
+import { base, createOxlintConfig, typeAware } from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+export default defineConfig(
+  createOxlintConfig({
+    presets: [base, typeAware],
+  }),
+);
+```
+
+```ts
+// oxlint.config.fast.ts
+import { fast } from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+import defaultConfig from "./oxlint.config.ts";
+
+export default defineConfig({ extends: [defaultConfig], ...fast });
+```
+
+```json
+{
+  "scripts": {
+    "lint": "oxlint --type-aware --type-check",
+    "lint:fast": "oxlint --config oxlint.config.fast.ts"
+  }
+}
+```
+
+`lint` loads `oxlint.config.ts` and runs the type-aware rules with unused-directive reporting.
+`lint:fast` selects the fast config and omits `--type-aware`, so the `typeAware` preset's rules do
+not run. Keep `typeAware` and `typeCheck` out of the config options and on the `lint` command line,
+as above, so the fast config does not need to override them.
+
+The JSON `extends` entry point `base.json` includes the option; set
+`options.reportUnusedDisableDirectives` to `"off"` after extending it for a fast config.
 
 ## Strict presets
 

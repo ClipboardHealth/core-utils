@@ -3,6 +3,7 @@ import {
   contractFixtures,
   createOxlintConfig,
   customRules,
+  fast,
   frontend,
   jest as jestPreset,
   type OxlintPreset,
@@ -59,6 +60,7 @@ describe("oxlint-config", () => {
     it("exports the shared base preset options, settings, overrides, and rules", () => {
       expect(base.options).toStrictEqual({
         denyWarnings: true,
+        reportUnusedDisableDirectives: "error",
       });
 
       expect(base.settings).toStrictEqual({
@@ -488,6 +490,17 @@ describe("oxlint-config", () => {
           "vitest/valid-expect": "error",
           "vitest/valid-title": ["error", { ignoreTypeOfDescribeName: true }],
         },
+      });
+    });
+  });
+
+  describe("fast preset", () => {
+    it("turns off reportUnusedDisableDirectives, which base enables", () => {
+      const actual = createOxlintConfig({ presets: [base, fast] });
+
+      expect(actual.options).toStrictEqual({
+        denyWarnings: true,
+        reportUnusedDisableDirectives: "off",
       });
     });
   });

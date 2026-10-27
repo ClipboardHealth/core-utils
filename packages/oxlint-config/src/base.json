@@ -9,7 +9,8 @@
     "suspicious": "error"
   },
   "options": {
-    "denyWarnings": true
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error"
   },
   "ignorePatterns": [".agents/", ".rules/", "coverage/", "dist/", "node_modules/"],
   "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise"],
