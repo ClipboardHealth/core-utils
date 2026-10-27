@@ -498,6 +498,12 @@ export const customRules: OxlintPreset = {
       files: ["**/*.ts", "**/*.tsx"],
       rules: {
         "@clipboard-health/no-cross-contract-imports": "error",
+      },
+    },
+    {
+      // Self-scoped to test files in packages/contract-*, so it is safe on every TypeScript file.
+      files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      rules: {
         "@clipboard-health/no-tests-in-contract-packages": "error",
       },
     },
