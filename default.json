@@ -35,7 +35,7 @@
   ],
   "lockFileMaintenance": {
     "enabled": true,
-    "automerge": false,
+    "automerge": true,
     "automergeType": "pr"
   },
   "minimumReleaseAge": "7 days",
