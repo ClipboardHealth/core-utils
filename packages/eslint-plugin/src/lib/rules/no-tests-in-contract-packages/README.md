@@ -45,8 +45,8 @@ The assertions move to the owning service's service tests, which send requests t
 handlers:
 
 ```text
-src/service-test/endpoints/api/shifts/get.test.ts             # backend-main
-service-test/worker-licences/s2s/s2s.active-licenses.spec.ts  # license-manager, template-nestjs
+src/service-test/endpoints/api/shifts/get.test.ts         # backend-main: src/service-test/**/*.test.ts
+service-test/worker-licences/s2s.active-licenses.spec.ts  # license-manager: service-test/**/*.spec.ts
 packages/contract-backend-main/src/lib/contracts/shift.contract.ts
 packages/contract-core/src/lib/schemas/objectId.spec.ts
 ```
