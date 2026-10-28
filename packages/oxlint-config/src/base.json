@@ -54,6 +54,7 @@
     "no-await-in-loop": "off",
     "no-continue": "off",
     "no-else-return": ["error", { "allowElseIf": false }],
+    "no-extra-boolean-cast": "off",
     "no-inline-comments": "off",
     "no-magic-numbers": "off",
     "no-named-export": "off",

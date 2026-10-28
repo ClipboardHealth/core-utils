@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { base, createOxlintConfig, strictTypeAware, typeAware } from "./index";
+import { base, createOxlintConfig, frontend, strictTypeAware, typeAware } from "./index";
 
 const OXLINT_CLI = path.join(
   path.dirname(createRequire(__filename).resolve("oxlint/package.json")),
@@ -247,79 +247,121 @@ export function branching(value: string): number {
     }
   });
 
-  it("allows discarded sync results and explicit coercion while rejecting async and interpolation hazards", () => {
-    const directory = mkdtempSync(path.join(tmpdir(), "oxlint-type-policy-"));
-    const configPath = path.join(directory, ".oxlintrc.json");
-    const tsconfigPath = path.join(directory, "tsconfig.json");
-    const fixturePath = path.join(directory, "policy.ts");
+  it.each([
+    { presetName: "base", presets: [base, typeAware, strictTypeAware] },
+    { presetName: "frontend", presets: [frontend, typeAware, strictTypeAware] },
+  ])(
+    "keeps explicit Boolean coercions while rejecting implicit numeric truthiness and unsafe operations under the $presetName preset's native rules",
+    ({ presetName, presets }) => {
+      const directory = mkdtempSync(path.join(tmpdir(), "oxlint-type-policy-"));
+      const configPath = path.join(directory, ".oxlintrc.json");
+      const tsconfigPath = path.join(directory, "tsconfig.json");
+      const fixturePath = path.join(directory, "policy.ts");
 
-    try {
-      writeFileSync(configPath, JSON.stringify(createOxlintConfig({ presets: [base, typeAware] })));
-      writeFileSync(
-        tsconfigPath,
-        JSON.stringify({
-          compilerOptions: {
-            strict: true,
-            target: "ES2022",
-            module: "ESNext",
-            moduleResolution: "bundler",
-            types: [],
-            lib: ["ES2022"],
+      function lint(source: string): { status: number | null; output: LintOutput } {
+        writeFileSync(fixturePath, source);
+        const result = spawnSync(
+          process.execPath,
+          [
+            OXLINT_CLI,
+            "--config",
+            configPath,
+            "--type-aware",
+            "--tsconfig",
+            tsconfigPath,
+            "--format",
+            "json",
+            fixturePath,
+          ],
+          {
+            cwd: directory,
+            encoding: "utf8",
+            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
           },
-          files: ["policy.ts"],
-        }),
-      );
-      writeFileSync(
-        fixturePath,
-        `
+        );
+        expect(result.error).toBeUndefined();
+        return { status: result.status, output: JSON.parse(result.stdout) };
+      }
+
+      try {
+        const config = createOxlintConfig({ presets });
+        // This fixture isolates native rules; the production frontend preset retains React Doctor.
+        config.jsPlugins = [];
+        config.rules = Object.fromEntries(
+          Object.entries(config.rules ?? {}).filter(([rule]) => !rule.startsWith("react-doctor/")),
+        );
+        writeFileSync(configPath, JSON.stringify(config));
+        writeFileSync(
+          tsconfigPath,
+          JSON.stringify({
+            compilerOptions: {
+              strict: true,
+              target: "ES2022",
+              module: "ESNext",
+              moduleResolution: "bundler",
+              types: [],
+              lib: ["ES2022"],
+            },
+            files: ["policy.ts"],
+          }),
+        );
+        const explicitCoercions = `
+enum ShiftStatus { Pending = 0, Assigned = 1 }
+interface BoundaryInput { number: number; string: string; boolean: boolean; status: ShiftStatus; }
 export const values: number[] = [];
 export const discardSync: (value: number) => void = (value) => values.push(value);
-interface BoundaryInput { number: number; string: string; boolean: boolean; }
 export function normalizeBoundary(value: BoundaryInput) {
   return { number: Number(value.number), string: \`\${value.string}\`, boolean: Boolean(value.boolean) };
+}
+export function explicitConditions(value: BoundaryInput) {
+  if (Boolean(value.number) && Boolean(value.status)) { return true; }
+  return false;
+}
+`;
+
+        const explicitResult = lint(explicitCoercions);
+        expect(explicitResult.status).toBe(0);
+        expect(explicitResult.output.diagnostics).toStrictEqual([]);
+
+        const invalidResult = lint(
+          `${explicitCoercions}
+export function implicitConditions(value: BoundaryInput) {
+  if (value.number) { return true; }
+  if (value.status) { return true; }
+  return false;
 }
 export const discardAsync: () => void = async () => { throw new Error("fixture"); };
 Promise.reject(new Error("fixture"));
 export function unsafeInterpolation(value: Record<string, unknown>) { return \`\${value}\`; }
 `,
-      );
+        );
+        expect(invalidResult.status).toBe(1);
+        const diagnosticCodes = invalidResult.output.diagnostics.map(
+          ({ code, severity }) => `${code}:${severity}`,
+        );
+        expect(
+          diagnosticCodes.filter((code) => code === "typescript(strict-boolean-expressions):error"),
+        ).toHaveLength(2);
+        expect(diagnosticCodes).toContain("typescript(no-floating-promises):error");
+        expect(diagnosticCodes).toContain("typescript(restrict-template-expressions):error");
+        expect(diagnosticCodes).toContain("typescript(no-base-to-string):error");
 
-      const result = spawnSync(
-        process.execPath,
-        [
-          OXLINT_CLI,
-          "--config",
-          configPath,
-          "--type-aware",
-          "--tsconfig",
-          tsconfigPath,
-          "--format",
-          "json",
-          fixturePath,
-        ],
-        {
-          cwd: directory,
-          encoding: "utf8",
-          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
-        },
-      );
-      expect(result.error).toBeUndefined();
-      expect(result.status).toBe(1);
-      const output: LintOutput = JSON.parse(result.stdout);
-
-      expect(
-        output.diagnostics.map(({ code, severity }) => `${code}:${severity}`).toSorted(),
-      ).toStrictEqual([
-        "promise(catch-or-return):error",
-        "typescript(no-base-to-string):error",
-        "typescript(no-floating-promises):error",
-        "typescript(no-misused-promises):error",
-        "typescript(restrict-template-expressions):error",
-      ]);
-    } finally {
-      rmSync(directory, { recursive: true, force: true });
-    }
-  });
+        if (presetName === "base") {
+          expect(diagnosticCodes.toSorted()).toStrictEqual([
+            "promise(catch-or-return):error",
+            "typescript(no-base-to-string):error",
+            "typescript(no-floating-promises):error",
+            "typescript(no-misused-promises):error",
+            "typescript(restrict-template-expressions):error",
+            "typescript(strict-boolean-expressions):error",
+            "typescript(strict-boolean-expressions):error",
+          ]);
+        }
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
 
   it.each(["ts", "tsx", "mts", "cts"])(
     "uses typed throw validation for .%s while retaining JavaScript validation",
