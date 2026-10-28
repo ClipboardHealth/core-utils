@@ -120,6 +120,8 @@
       "groupSlug": "nodejs",
       "matchPackageNames": [
         "node",
+        "actions/node-versions",
+        "@types/node",
         "npm",
         "docker.io/node",
         "docker.io/library/node",
