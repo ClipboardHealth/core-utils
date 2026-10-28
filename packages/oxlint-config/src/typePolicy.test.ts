@@ -258,7 +258,7 @@ export function branching(value: string): number {
       const tsconfigPath = path.join(directory, "tsconfig.json");
       const fixturePath = path.join(directory, "policy.ts");
 
-      function lint(source: string) {
+      function lint(source: string): { status: number | null; output: LintOutput } {
         writeFileSync(fixturePath, source);
         const result = spawnSync(
           process.execPath,
@@ -280,7 +280,7 @@ export function branching(value: string): number {
           },
         );
         expect(result.error).toBeUndefined();
-        return { status: result.status, output: JSON.parse(result.stdout) as LintOutput };
+        return { status: result.status, output: JSON.parse(result.stdout) };
       }
 
       try {
