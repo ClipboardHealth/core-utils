@@ -14,6 +14,7 @@ describe("oxlint plugin", () => {
       "require-contract-response-parse",
       "require-http-module-factory",
       "require-run-validators-with-upsert",
+      "require-to-declared-error",
       "require-zod-import-in-contracts",
     ]);
   });

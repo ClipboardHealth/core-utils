@@ -36,6 +36,10 @@
       "rules": { "clipboard/require-run-validators-with-upsert": "error" }
     },
     {
+      "files": ["contract-package/undeclared-error.controller.ts"],
+      "rules": { "clipboard/require-to-declared-error": "error" }
+    },
+    {
       "files": ["contract-package/missing-zod.contract.ts"],
       "rules": { "clipboard/require-zod-import-in-contracts": "error" }
     }

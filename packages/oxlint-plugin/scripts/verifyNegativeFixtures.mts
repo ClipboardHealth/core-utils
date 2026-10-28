@@ -14,6 +14,7 @@ const expectedCodes = [
   "clipboard(require-contract-response-parse)",
   "clipboard(require-http-module-factory)",
   "clipboard(require-run-validators-with-upsert)",
+  "clipboard(require-to-declared-error)",
   "clipboard(require-zod-import-in-contracts)",
 ];
 
