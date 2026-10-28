@@ -1,10 +1,10 @@
 import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { base, createOxlintConfig, frontend, strictTypeAware, typeAware } from "./index";
+import { base, createOxlintConfig, frontend, strictTypeAware, typeAware, vitest } from "./index";
 
 const OXLINT_CLI = path.join(
   path.dirname(createRequire(__filename).resolve("oxlint/package.json")),
@@ -20,6 +20,96 @@ interface LintOutput {
 }
 
 describe("shared type-aware policy", () => {
+  it("keeps unbound-method enabled in production and honors later local test overrides", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "oxlint-unbound-method-policy-"));
+    const configPath = path.join(directory, ".oxlintrc.json");
+    const tsconfigPath = path.join(directory, "tsconfig.json");
+    const testFixturePath = path.join(directory, "policy.test.ts");
+    const productionFixturePath = path.join(directory, "production.ts");
+    const authFixturePath = path.join(directory, "auth", "AuthService.test.ts");
+    const source = `
+class Store {
+  public value = 1;
+  public read(): number { return this.value; }
+}
+export const detached = new Store().read;
+`;
+
+    try {
+      mkdirSync(path.dirname(authFixturePath), { recursive: true });
+      const config = createOxlintConfig({
+        presets: [frontend, typeAware, vitest],
+        localConfig: {
+          overrides: [
+            {
+              files: ["**/*Auth*.test.ts"],
+              rules: { "typescript/unbound-method": "error" },
+            },
+          ],
+        },
+      });
+      config.jsPlugins = [];
+      config.rules = Object.fromEntries(
+        Object.entries(config.rules ?? {}).filter(([rule]) => !rule.startsWith("react-doctor/")),
+      );
+      writeFileSync(configPath, JSON.stringify(config));
+      writeFileSync(
+        tsconfigPath,
+        JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            target: "ES2022",
+            module: "ESNext",
+            moduleResolution: "bundler",
+            types: [],
+            lib: ["ES2022"],
+          },
+          files: ["policy.test.ts", "production.ts", "auth/AuthService.test.ts"],
+        }),
+      );
+      writeFileSync(testFixturePath, source);
+      writeFileSync(productionFixturePath, source);
+      writeFileSync(authFixturePath, source);
+
+      const result = spawnSync(
+        process.execPath,
+        [
+          OXLINT_CLI,
+          "--config",
+          configPath,
+          "--type-aware",
+          "--tsconfig",
+          tsconfigPath,
+          "--threads=2",
+          "--format",
+          "json",
+          testFixturePath,
+          productionFixturePath,
+          authFixturePath,
+        ],
+        {
+          cwd: directory,
+          encoding: "utf8",
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+        },
+      );
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      const output: LintOutput = JSON.parse(result.stdout);
+      expect(
+        output.diagnostics
+          .map(({ code, filename }) => `${path.basename(filename)}:${code}`)
+          .toSorted(),
+      ).toStrictEqual([
+        "AuthService.test.ts:typescript(unbound-method)",
+        "production.ts:typescript(unbound-method)",
+      ]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("allows optional and never-return paths while compiler checks reject missing returns", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "oxlint-return-policy-"));
     const configPath = path.join(directory, ".oxlintrc.json");

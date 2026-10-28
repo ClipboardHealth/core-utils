@@ -458,6 +458,25 @@ describe("oxlint-config", () => {
 
       expect(vitest).toStrictEqual({
         plugins: ["vitest"],
+        overrides: [
+          {
+            files: [
+              "**/*.spec.ts",
+              "**/*.spec.tsx",
+              "**/*.spec.js",
+              "**/*.spec.jsx",
+              "**/*.test.ts",
+              "**/*.test.tsx",
+              "**/*.test.js",
+              "**/*.test.jsx",
+              "**/__mocks__/**",
+              "**/__tests__/**",
+              "**/service-test/**",
+              "**/tests/**",
+            ],
+            rules: { "typescript/unbound-method": "off" },
+          },
+        ],
         rules: {
           "max-lines": ["error", { max: 2000 }],
           "vitest/consistent-test-filename": [
