@@ -258,6 +258,31 @@ export function branching(value: string): number {
       const tsconfigPath = path.join(directory, "tsconfig.json");
       const fixturePath = path.join(directory, "policy.ts");
 
+      function lint(source: string) {
+        writeFileSync(fixturePath, source);
+        const result = spawnSync(
+          process.execPath,
+          [
+            OXLINT_CLI,
+            "--config",
+            configPath,
+            "--type-aware",
+            "--tsconfig",
+            tsconfigPath,
+            "--format",
+            "json",
+            fixturePath,
+          ],
+          {
+            cwd: directory,
+            encoding: "utf8",
+            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          },
+        );
+        expect(result.error).toBeUndefined();
+        return { status: result.status, output: JSON.parse(result.stdout) as LintOutput };
+      }
+
       try {
         const config = createOxlintConfig({ presets });
         // This fixture isolates native rules; the production frontend preset retains React Doctor.
@@ -293,31 +318,6 @@ export function explicitConditions(value: BoundaryInput) {
   return false;
 }
 `;
-
-        const lint = (source: string) => {
-          writeFileSync(fixturePath, source);
-          const result = spawnSync(
-            process.execPath,
-            [
-              OXLINT_CLI,
-              "--config",
-              configPath,
-              "--type-aware",
-              "--tsconfig",
-              tsconfigPath,
-              "--format",
-              "json",
-              fixturePath,
-            ],
-            {
-              cwd: directory,
-              encoding: "utf8",
-              env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
-            },
-          );
-          expect(result.error).toBeUndefined();
-          return { status: result.status, output: JSON.parse(result.stdout) as LintOutput };
-        };
 
         const explicitResult = lint(explicitCoercions);
         expect(explicitResult.status).toBe(0);
