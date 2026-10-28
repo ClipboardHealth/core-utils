@@ -111,6 +111,29 @@ builder.handler(async () => {
   if (isFailure(result)) { throw new BadRequestException("bad"); }
 });`,
     },
+    {
+      name: "options parameter's errors constructor",
+      code: handler(
+        `if (isFailure(result)) { throw options.errors.NOT_FOUND({ data }); }`,
+        "options",
+      ),
+    },
+    {
+      name: "else branch of an isFailure check",
+      code: handler(
+        `if (isFailure(result)) { return { data: [] }; } else { throw new Error("bad"); }`,
+      ),
+    },
+    {
+      name: "string-literal import name",
+      code: `
+import { "isFailure" as failed } from "@clipboard-health/util-ts";
+import { toDeclaredError } from "@clipboard-health/api-nestjs";
+import { implement } from "@orpc/nest";
+implement(contract.list).handler(async ({ errors }) => {
+  if (failed(result)) { throw toDeclaredError({ errors, error: result.error }); }
+});`,
+    },
   ],
   invalid: [
     {
@@ -159,6 +182,41 @@ import { isFailure as failed } from "@clipboard-health/util-ts";
 import { implement as impl } from "@orpc/server";
 impl(contract.list).use(middleware).handler(async function ({ errors }) {
   if (failed(result)) { throw new Error("bad"); }
+});`,
+      errors: [{ messageId: "throwDeclaredError" }],
+    },
+    {
+      name: "else branch of an isSuccess call",
+      code: handler(`if (isSuccess(result)) { audit(); } else { throw result.error; }`),
+      errors: [{ messageId: "throwDeclaredError" }],
+    },
+    {
+      name: "else branch of a negated isFailure call",
+      code: handler(`if (!isFailure(result)) { audit(); } else { throw result.error; }`),
+      errors: [{ messageId: "throwDeclaredError" }],
+    },
+    {
+      name: "else-if chain under an isSuccess check",
+      code: handler(`if (isSuccess(result)) { audit(); } else if (retry) { throw result.error; }`),
+      errors: [{ messageId: "throwDeclaredError" }],
+    },
+    {
+      name: "router member before handler",
+      code: `
+import { isFailure } from "@clipboard-health/util-ts";
+import { implement } from "@orpc/nest";
+implement(contract).shifts.list.handler(async () => {
+  if (isFailure(result)) { throw result.error; }
+});`,
+      errors: [{ messageId: "throwDeclaredError" }],
+    },
+    {
+      name: "string-literal import name",
+      code: `
+import { "isFailure" as failed } from "@clipboard-health/util-ts";
+import { implement } from "@orpc/nest";
+implement(contract.list).handler(async () => {
+  if (failed(result)) { throw result.error; }
 });`,
       errors: [{ messageId: "throwDeclaredError" }],
     },

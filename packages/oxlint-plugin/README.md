@@ -56,7 +56,8 @@ unrelated to MongoDB sessions.
 `implement(...).handler()`, every `throw` in a branch that handles a failed `ServiceResult` must
 throw `toDeclaredError({ errors, error })` from `@clipboard-health/api-nestjs`, or one of the
 handler's `errors` constructors, so the response keeps the status the contract declares. The branch
-may still `return`. Enable it on controllers:
+may still `return`. The rule is syntactic: its file comment lists the conditions it recognizes and
+the forms it skips. Enable it on controllers:
 
 ```ts
 {
