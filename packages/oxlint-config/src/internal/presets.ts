@@ -647,8 +647,22 @@ function createVitestPreset(): OxlintPreset {
     throw new Error("The bundled vitest.json file is not a valid oxlint config preset.");
   }
 
+  const testFileOverride = base.overrides?.find(
+    ({ rules }) => rules?.["typescript/unbound-method"] === "off",
+  );
+
   return {
     plugins: normalizePlugins(json["plugins"].filter((p) => !base.plugins?.some((bp) => bp === p))),
+    ...(testFileOverride === undefined
+      ? {}
+      : {
+          overrides: [
+            {
+              files: [...testFileOverride.files],
+              rules: { "typescript/unbound-method": "off" },
+            },
+          ],
+        }),
     rules: json["rules"],
   };
 }
