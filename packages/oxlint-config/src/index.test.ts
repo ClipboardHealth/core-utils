@@ -178,6 +178,7 @@ describe("oxlint-config", () => {
           },
         ],
         plugins: ["react", "jsx-a11y", "import", "oxc", "typescript", "unicorn"],
+        options: { reportUnusedDisableDirectives: "error" },
         overrides: [
           {
             files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
@@ -502,6 +503,12 @@ describe("oxlint-config", () => {
         denyWarnings: true,
         reportUnusedDisableDirectives: "off",
       });
+    });
+
+    it("turns off reportUnusedDisableDirectives, which frontend enables", () => {
+      const actual = createOxlintConfig({ presets: [frontend, fast] });
+
+      expect(actual.options).toStrictEqual({ reportUnusedDisableDirectives: "off" });
     });
   });
 

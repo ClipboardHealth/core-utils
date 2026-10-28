@@ -450,6 +450,7 @@ export const frontend: OxlintPreset = {
     },
   ],
   plugins: ["react", "jsx-a11y", "import", "oxc", "typescript", "unicorn"],
+  options: { reportUnusedDisableDirectives: "error" },
   overrides: [
     {
       files: ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
@@ -579,7 +580,7 @@ export const contractFixtures: OxlintPreset = {
 /**
  * Fast variant of the default config for quick local and editor runs without type information.
  * Disables `reportUnusedDisableDirectives` because `typescript/*` directives look unused without it.
- * Compose after `base`, which enables it.
+ * Compose after `base` or `frontend`, which enable it.
  */
 export const fast: OxlintPreset = {
   options: { reportUnusedDisableDirectives: "off" },

@@ -182,16 +182,16 @@ Override shared rules as needed:
 
 ## Fast runs
 
-`base` enables `reportUnusedDisableDirectives: "error"`, which flags `oxlint-disable` and
-`eslint-disable` comments that no longer suppress anything. The default config is therefore the slow
-one. The option is only accurate on the full, type-aware run: without type information,
+`base` and `frontend` enable `reportUnusedDisableDirectives: "error"`, which flags `oxlint-disable`
+and `eslint-disable` comments that no longer suppress anything. The default config is therefore the
+slow one. The option is only accurate on the full, type-aware run: without type information,
 `typescript/*` rules cannot fire, so their directives look unused. The `fast` preset extends the
 default by setting the option to `"off"` for quick non-type-aware local and editor runs.
 
-| Config           | `options.reportUnusedDisableDirectives` | Use for                                    |
-| ---------------- | --------------------------------------- | ------------------------------------------ |
-| default (`base`) | `"error"`                               | The full type-aware lint run and CI        |
-| `base` + `fast`  | `"off"`                                 | Quick non-type-aware local and editor runs |
+| Config                         | `options.reportUnusedDisableDirectives` | Use for                                    |
+| ------------------------------ | --------------------------------------- | ------------------------------------------ |
+| default (`base` or `frontend`) | `"error"`                               | The full type-aware lint run and CI        |
+| default + `fast`               | `"off"`                                 | Quick non-type-aware local and editor runs |
 
 `fast` sets nothing else, so the two configs are otherwise identical. Compose it last in `presets`;
 `localConfig` still wins if a repository sets the option itself.
