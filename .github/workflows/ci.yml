@@ -57,6 +57,10 @@ jobs:
       id-token: write
     runs-on: [self-hosted, cbh-amazon-linux-2023]
     timeout-minutes: 15
+    # A full re-run uploads a second artifact in the same run, and deploy-pages fails when it finds
+    # two with one name. Deploy-only re-runs reuse this output, so they find the original artifact.
+    outputs:
+      pages-artifact: github-pages-${{ github.run_attempt }}
     steps:
       - id: token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
@@ -121,6 +125,7 @@ jobs:
       - run: node --run docs
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
+          name: github-pages-${{ github.run_attempt }}
           path: docs
 
   deploy-docs:
@@ -136,3 +141,5 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+        with:
+          artifact_name: ${{ needs.main.outputs.pages-artifact }}
