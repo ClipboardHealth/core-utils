@@ -99,6 +99,12 @@
       "separateMinorPatch": false
     },
     {
+      "description": "Keep opentelemetry-js monorepo majors in the same PR as its minor updates. The SDK, API, and experimental exporter packages pin bounded peer ranges on each other (SDK 2 rejects API 1.10), so a branch that updates only one side cannot install.",
+      "matchSourceUrls": ["https://github.com/open-telemetry/opentelemetry-js{/,}**"],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
+    },
+    {
       "groupName": "Buf",
       "matchPackageNames": ["/^@bufbuild/"],
       "separateMinorPatch": false
