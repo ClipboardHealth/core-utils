@@ -21,6 +21,7 @@ ESLint.
 - `require-contract-response-parse`
 - `require-http-module-factory`
 - `require-run-validators-with-upsert`
+- `require-to-declared-error`
 - `require-zod-import-in-contracts`
 
 ## Configuration
@@ -50,3 +51,17 @@ bounded-concurrency helpers must name them, or those call sites go unchecked:
 
 Exclude tests: app-level session objects such as `session.sessionUserId` share the name but are
 unrelated to MongoDB sessions.
+
+`require-to-declared-error` is opt-in while services adopt oRPC. In a handler passed to oRPC's
+`implement(...).handler()`, every `throw` in a branch that handles a failed `ServiceResult` must
+throw `toDeclaredError({ errors, error })` from `@clipboard-health/api-nestjs`, or one of the
+handler's `errors` constructors, so the response keeps the status the contract declares. The branch
+may still `return`. The rule is syntactic: its file comment lists the conditions it recognizes and
+the forms it skips. Enable it on controllers:
+
+```ts
+{
+  files: ["**/*.controller.ts"],
+  rules: { "@clipboard-health/require-to-declared-error": "error" },
+},
+```

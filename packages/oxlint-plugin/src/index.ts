@@ -9,6 +9,7 @@ import requireContractFixtureConstruction from "./lib/rules/require-contract-fix
 import requireContractResponseParse from "./lib/rules/require-contract-response-parse";
 import requireHttpModuleFactory from "./lib/rules/require-http-module-factory";
 import requireRunValidatorsWithUpsert from "./lib/rules/require-run-validators-with-upsert";
+import requireToDeclaredError from "./lib/rules/require-to-declared-error";
 import requireZodImportInContracts from "./lib/rules/require-zod-import-in-contracts";
 
 export const rules = {
@@ -23,5 +24,6 @@ export const rules = {
   "require-contract-response-parse": requireContractResponseParse,
   "require-http-module-factory": requireHttpModuleFactory,
   "require-run-validators-with-upsert": requireRunValidatorsWithUpsert,
+  "require-to-declared-error": requireToDeclaredError,
   "require-zod-import-in-contracts": requireZodImportInContracts,
 };
