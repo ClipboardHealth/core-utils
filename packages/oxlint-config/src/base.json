@@ -101,6 +101,7 @@
     "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
     "typescript/no-import-type-side-effects": "off",
     "typescript/no-invalid-void-type": "off",
+    "typescript/no-unnecessary-boolean-literal-compare": "off",
     "typescript/no-unnecessary-template-expression": "off",
     "typescript/no-unnecessary-type-conversion": "off",
     "typescript/no-unnecessary-type-parameters": "off",

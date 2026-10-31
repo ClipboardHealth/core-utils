@@ -398,6 +398,7 @@ const TYPE_AWARE_RULES: DummyRuleMap = {
   "typescript/no-floating-promises": "error",
   "typescript/no-misused-spread": "error",
   "typescript/no-redundant-type-constituents": "error",
+  "typescript/no-unnecessary-boolean-literal-compare": "off",
   "typescript/no-useless-default-assignment": "off",
   "typescript/restrict-template-expressions": "error",
   "typescript/unbound-method": "error",

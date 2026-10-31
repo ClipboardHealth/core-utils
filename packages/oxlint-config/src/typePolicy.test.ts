@@ -1,5 +1,5 @@
 import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -20,6 +20,97 @@ interface LintOutput {
 }
 
 describe("shared type-aware policy", () => {
+  it("keeps explicit Boolean comparisons available as a local opt-in", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "oxlint-boolean-comparison-policy-"));
+    const configPath = path.join(directory, ".oxlintrc.json");
+    const tsconfigPath = path.join(directory, "tsconfig.json");
+    const fixturePath = path.join(directory, "policy.ts");
+    const rule = "typescript/no-unnecessary-boolean-literal-compare";
+    const source = `interface Flags { enabled: boolean; }
+export function compare(flags: Flags): boolean {
+  const isTrue = flags.enabled === true;
+  const isFalse = flags.enabled === false;
+  const isNotFalse = flags.enabled !== false;
+  return isTrue || isFalse || isNotFalse;
+}
+`;
+
+    try {
+      writeFileSync(
+        tsconfigPath,
+        JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            target: "ES2022",
+            module: "ESNext",
+            moduleResolution: "bundler",
+            types: [],
+            lib: ["ES2022"],
+          },
+          files: ["policy.ts"],
+        }),
+      );
+
+      const config = createOxlintConfig({ presets: [base, typeAware] });
+      config.jsPlugins = [];
+      writeFileSync(configPath, JSON.stringify(config));
+      writeFileSync(fixturePath, source);
+
+      const lint = (fix: boolean) =>
+        spawnSync(
+          process.execPath,
+          [
+            OXLINT_CLI,
+            "--config",
+            configPath,
+            "--type-aware",
+            "--type-check",
+            "--threads=2",
+            "--tsconfig",
+            tsconfigPath,
+            ...(fix ? ["--fix"] : []),
+            "--format",
+            "json",
+            fixturePath,
+          ],
+          {
+            cwd: directory,
+            encoding: "utf8",
+            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          },
+        );
+
+      const sharedFixRun = lint(true);
+      expect(sharedFixRun.error).toBeUndefined();
+      expect(sharedFixRun.status).toBe(0);
+      expect(JSON.parse(sharedFixRun.stdout).diagnostics).toStrictEqual([]);
+      expect(readFileSync(fixturePath, "utf8")).toBe(source);
+
+      config.rules = { ...config.rules, [rule]: "error" };
+      writeFileSync(configPath, JSON.stringify(config));
+      const explicitRuleRun = lint(false);
+      expect(explicitRuleRun.error).toBeUndefined();
+      expect(explicitRuleRun.status).toBe(1);
+      const diagnostics: LintOutput["diagnostics"] = JSON.parse(explicitRuleRun.stdout).diagnostics;
+      expect(diagnostics.map(({ code }) => code)).toStrictEqual([
+        "typescript(no-unnecessary-boolean-literal-compare)",
+        "typescript(no-unnecessary-boolean-literal-compare)",
+        "typescript(no-unnecessary-boolean-literal-compare)",
+      ]);
+
+      writeFileSync(fixturePath, source);
+      const nativeFixRun = lint(true);
+      expect(nativeFixRun.error).toBeUndefined();
+      expect(nativeFixRun.status).toBe(0);
+      const fixedSource = readFileSync(fixturePath, "utf8");
+      expect(fixedSource).not.toContain("=== true");
+      expect(fixedSource).not.toContain("=== false");
+      expect(fixedSource).not.toContain("!== false");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("keeps unbound-method enabled in production and honors later local test overrides", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "oxlint-unbound-method-policy-"));
     const configPath = path.join(directory, ".oxlintrc.json");

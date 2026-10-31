@@ -23,6 +23,7 @@ const TYPE_AWARE_RULES = {
   "typescript/no-floating-promises": "deny",
   "typescript/no-misused-spread": "deny",
   "typescript/no-redundant-type-constituents": "deny",
+  "typescript/no-unnecessary-boolean-literal-compare": "allow",
   "typescript/no-useless-default-assignment": "allow",
   "typescript/restrict-template-expressions": "deny",
   "typescript/unbound-method": "deny",
