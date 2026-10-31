@@ -400,6 +400,10 @@ enum ShiftStatus { Pending = 0, Assigned = 1 }
 interface BoundaryInput { number: number; string: string; boolean: boolean; status: ShiftStatus; }
 export const values: number[] = [];
 export const discardSync: (value: number) => void = (value) => values.push(value);
+export function keepDefensiveDefault(value: BoundaryInput): number {
+  const { number: count = 0 } = value;
+  return count;
+}
 export function normalizeBoundary(value: BoundaryInput) {
   return { number: Number(value.number), string: \`\${value.string}\`, boolean: Boolean(value.boolean) };
 }
