@@ -20,7 +20,7 @@ interface LintOutput {
 }
 
 describe("shared type-aware policy", () => {
-  it("keeps explicit Boolean comparisons available as a local opt-in", () => {
+  it("allows strict Boolean comparisons by default and honors a local rule opt-in", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "oxlint-boolean-comparison-policy-"));
     const configPath = path.join(directory, ".oxlintrc.json");
     const tsconfigPath = path.join(directory, "tsconfig.json");
@@ -34,6 +34,31 @@ export function compare(flags: Flags): boolean {
   return isTrue || isFalse || isNotFalse;
 }
 `;
+
+    function lint(fix: boolean) {
+      return spawnSync(
+        process.execPath,
+        [
+          OXLINT_CLI,
+          "--config",
+          configPath,
+          "--type-aware",
+          "--type-check",
+          "--threads=2",
+          "--tsconfig",
+          tsconfigPath,
+          ...(fix ? ["--fix"] : []),
+          "--format",
+          "json",
+          fixturePath,
+        ],
+        {
+          cwd: directory,
+          encoding: "utf8",
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+        },
+      );
+    }
 
     try {
       writeFileSync(
@@ -55,30 +80,6 @@ export function compare(flags: Flags): boolean {
       config.jsPlugins = [];
       writeFileSync(configPath, JSON.stringify(config));
       writeFileSync(fixturePath, source);
-
-      const lint = (fix: boolean) =>
-        spawnSync(
-          process.execPath,
-          [
-            OXLINT_CLI,
-            "--config",
-            configPath,
-            "--type-aware",
-            "--type-check",
-            "--threads=2",
-            "--tsconfig",
-            tsconfigPath,
-            ...(fix ? ["--fix"] : []),
-            "--format",
-            "json",
-            fixturePath,
-          ],
-          {
-            cwd: directory,
-            encoding: "utf8",
-            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
-          },
-        );
 
       const sharedFixRun = lint(true);
       expect(sharedFixRun.error).toBeUndefined();
