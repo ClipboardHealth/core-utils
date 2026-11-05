@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/oxlint-config",
-  "version": "5.1.6",
+  "version": "5.1.7",
   "description": "Shared Oxlint configuration for Clipboard Health repositories.",
   "keywords": [
     "config",
@@ -20,7 +20,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@clipboard-health/oxlint-plugin": "1.8.5"
+    "@clipboard-health/oxlint-plugin": "1.8.6"
   },
   "peerDependencies": {
     "oxlint": ">=1.68.0",
