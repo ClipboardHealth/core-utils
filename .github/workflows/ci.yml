@@ -16,7 +16,7 @@ env:
 jobs:
   pull-request:
     if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
-    runs-on: [self-hosted, cbh-amazon-linux-2023]
+    runs-on: [self-hosted, cb-ephemeral-2-cores]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -55,7 +55,7 @@ jobs:
       actions: read
       contents: write
       id-token: write
-    runs-on: [self-hosted, cbh-amazon-linux-2023]
+    runs-on: [self-hosted, cb-ephemeral-2-cores]
     timeout-minutes: 15
     # A full re-run uploads a second artifact in the same run, and deploy-pages fails when it finds
     # two with one name. Deploy-only re-runs reuse this output, so they find the original artifact.
@@ -136,7 +136,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
-    runs-on: [self-hosted, cbh-amazon-linux-2023]
+    runs-on: [self-hosted, cb-ephemeral-2-cores]
     timeout-minutes: 10
     steps:
       - id: deploy
