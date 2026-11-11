@@ -1,0 +1,5 @@
+self-hosted-runner:
+  labels:
+    - cb-ephemeral-2-cores
+    - cb-ephemeral-8-cores
+    - cb-ephemeral-16-cores
