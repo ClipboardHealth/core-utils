@@ -31,16 +31,24 @@ class CustomErrorBodySchema<BodySchema extends z.ZodType<unknown>> implements St
     this["~standard"] = {
       version: 1,
       vendor: "clipboard-custom-error",
-      validate: async (input) => {
-        const document = errorDocumentSchema.safeParse(
-          isCustomErrorResponse(input) ? input.document : input,
-        );
+      validate: (input) => {
+        const isResponse = isCustomErrorResponse(input);
+        // Issue paths are relative to the validated input, which wraps a marked response's fields.
+        const documentPath = isResponse ? ["document"] : [];
+        const document = errorDocumentSchema.safeParse(isResponse ? input.document : input);
         if (!document.success) {
-          return { issues: document.error.issues };
+          return {
+            issues: prefixIssuePaths({ issues: document.error.issues, prefix: documentPath }),
+          };
         }
-        const result = await bodySchema.safeParseAsync(document.data.body);
+        const result = bodySchema.safeParse(document.data.body);
         if (!result.success) {
-          return { issues: result.error.issues };
+          return {
+            issues: prefixIssuePaths({
+              issues: result.error.issues,
+              prefix: [...documentPath, "body"],
+            }),
+          };
         }
         return {
           value: new CustomErrorResponse({
@@ -71,6 +79,14 @@ export function getCustomErrorBodySchema(params: {
 }): z.ZodType<unknown> | undefined {
   const { schema } = params;
   return isCustomErrorBodySchema(schema) ? schema.bodySchema : undefined;
+}
+
+function prefixIssuePaths(params: {
+  issues: z.ZodIssue[];
+  prefix: string[];
+}): StandardSchemaV1.Issue[] {
+  const { issues, prefix } = params;
+  return issues.map((issue) => ({ ...issue, path: [...prefix, ...issue.path] }));
 }
 
 function isCustomErrorResponse(data: unknown): data is CustomErrorResponse {

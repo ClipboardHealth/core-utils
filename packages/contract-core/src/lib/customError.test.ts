@@ -45,23 +45,27 @@ describe(customError, () => {
     }
   });
 
-  it("validates async refinements but does not apply transformations or defaults", async () => {
+  it("validates refinements synchronously but does not apply transformations or defaults", () => {
     const schema = z.object({
       message: z
         .string()
-        .refine(async (message) => message.length > 0)
+        .refine((message) => message.length > 0)
         .transform((message) => message.toUpperCase()),
       attempt: z.number().default(1),
     });
     const original = { message: "keep lowercase" };
     const data = customError({ status: 422, body: schema }).data;
-    const result = await data["~standard"].validate({ body: original });
+    const result = data["~standard"].validate({ body: original });
 
-    expect(result.issues).toBeUndefined();
-    if (!result.issues) {
-      expect(getCustomErrorResponse({ data: result.value })?.body).toBe(original);
+    expect(result).not.toBeInstanceOf(Promise);
+    if (!(result instanceof Promise)) {
+      expect(result.issues).toBeUndefined();
+      if (!result.issues) {
+        expect(getCustomErrorResponse({ data: result.value })?.body).toBe(original);
+      }
     }
-    expect((await data["~standard"].validate({ body: { message: "" } })).issues).toBeDefined();
+    const rejected = data["~standard"].validate({ body: { message: "" } });
+    expect(rejected instanceof Promise ? undefined : rejected.issues).toBeDefined();
     expectTypeOf<StandardSchemaV1.InferInput<typeof data>>().toEqualTypeOf<{
       body: { message: string; attempt?: number | undefined };
       headers?: Record<string, string>;
@@ -102,6 +106,43 @@ describe(customError, () => {
       }
     },
   );
+
+  it("throws on an async body refinement, which synchronous validation can't run", () => {
+    const schema = z.object({ message: z.string().refine(async () => true) });
+
+    const validate = (): unknown =>
+      customError({ status: 422, body: schema }).data["~standard"].validate({
+        body: { message: "x" },
+      });
+
+    expect(validate).toThrow(/async refinement/i);
+  });
+
+  it.each([
+    { input: { body: { ...body, message: 1 } }, path: ["body", "message"] },
+    { input: { body, headers: { "retry-after": 30 } }, path: ["headers", "retry-after"] },
+    { input: {}, path: ["body"] },
+  ])("reports issues at their path in the input: $path", async ({ input, path }) => {
+    const result = await declaration.data["~standard"].validate(input);
+
+    expect(result.issues?.map((issue) => issue.path)).toContainEqual(path);
+  });
+
+  it("reports a revalidated response's issues under its document", async () => {
+    const result = await declaration.data["~standard"].validate({ body });
+    const stricter = customError({
+      status: 403,
+      body: bodySchema.extend({ required: z.string() }),
+    });
+
+    expect(result.issues).toBeUndefined();
+    if (!result.issues) {
+      const revalidated = await stricter.data["~standard"].validate(result.value);
+      expect(revalidated.issues?.map((issue) => issue.path)).toStrictEqual([
+        ["document", "body", "required"],
+      ]);
+    }
+  });
 
   it("revalidates rather than trusting a previously validated response", async () => {
     const result = await declaration.data["~standard"].validate({ body });

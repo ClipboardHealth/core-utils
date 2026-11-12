@@ -90,7 +90,9 @@ const data = {
 ```
 
 The returned `{ status, data }` declaration implements Standard Schema v1. Its validator checks the
-`{ body, headers? }` envelope and awaits the body schema, including async refinements. On success it
+`{ body, headers? }` envelope and the body schema synchronously, so body schemas can't use async
+refinements; Zod throws if they do. Issue paths are relative to the input, such as
+`["body", "message"]`. On success it
 marks a response containing the **original body**, not Zod's parsed output: extra fields, key order,
 and values survive; transforms, coercions, defaults, and stripping are not applied to that body.
 This is deliberately not a sanitizing parser. Only put caller-safe data in the original body and

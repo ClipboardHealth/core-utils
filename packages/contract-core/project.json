@@ -24,6 +24,13 @@
     },
     "test": {
       "dependsOn": ["build"],
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/vitest.preset.ts",
+        "{workspaceRoot}/vitest.config.ts",
+        { "dependentTasksOutputFiles": "dist/packages/contract-core/**/*" }
+      ],
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/contract-core/vitest.config.ts"
