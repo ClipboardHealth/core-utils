@@ -81,6 +81,13 @@
       "separateMinorPatch": false
     },
     {
+      "description": "Keep the Knock React adapter and its client together so adapter updates do not leave incompatible client versions installed.",
+      "groupName": "Knock",
+      "matchPackageNames": ["@knocklabs/client", "@knocklabs/react-core"],
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
+    },
+    {
       "groupName": "pino",
       "matchPackageNames": ["pino", "pino-http", "nestjs-pino"],
       "separateMinorPatch": false
