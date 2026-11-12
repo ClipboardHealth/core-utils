@@ -1,6 +1,6 @@
 services:
   test-mongo:
-    image: public.ecr.aws/docker/library/mongo:9.0@sha256:452bdaf2127b8ff851e31410a267809b9829eded219979f2210e7c7efb85a058
+    image: public.ecr.aws/docker/library/mongo:9.0@sha256:1444adda2e4b8d6a0d7f242a625d834a78d6e3aa6e4ed1b0b4c2dab2318c5e3d
     command: --replSet "rs0"
     ports:
       - 127.0.0.1:27017:27017
