@@ -7,6 +7,8 @@ Shared Zod schemas for Clipboard's contracts.
 - [Install](#install)
 - [Usage](#usage)
   - [Zod schemas](#zod-schemas)
+  - [Typed JSON:API error extensions](#typed-jsonapi-error-extensions)
+  - [Custom error documents](#custom-error-documents)
 - [Local development commands](#local-development-commands)
 
 ## Install
@@ -16,6 +18,105 @@ npm install @clipboard-health/contract-core
 ```
 
 ## Usage
+
+### Typed JSON:API error extensions
+
+`apiError` and `apiErrors` keep their existing required fields and strip undeclared members.
+Opt in to `source` and typed per-error `meta` with Zod's `.extend()`. `apiErrorsWith(errorSchema)`
+builds a document from that error schema, retaining the default limit of 0–100 errors. Extend the
+document separately for top-level `meta`; metadata stays at the location its consumer reads.
+
+```ts
+import { apiError, apiErrorsWith, apiErrorSource } from "@clipboard-health/contract-core";
+import { z } from "zod";
+
+const stepUpErrors = apiErrorsWith(
+  apiError.extend({
+    source: apiErrorSource.optional(),
+    meta: z.object({ stepUpMethod: z.enum(["otp", "password"]) }),
+  }),
+);
+
+const documentErrors = apiErrorsWith(
+  apiError.extend({
+    source: apiErrorSource.optional(),
+    meta: z.object({ reason: z.literal("homeHealthBookingRequired") }).optional(),
+  }),
+).extend({
+  meta: z.object({ unmetPrerequisites: z.array(z.string()).min(1) }).optional(),
+});
+
+type StepUpErrorDocument = z.infer<typeof stepUpErrors>;
+type DocumentErrorDocument = z.infer<typeof documentErrors>;
+```
+
+`apiErrorSource` declares optional string `pointer`, `parameter`, and `header` members. An empty
+pointer addresses the whole document. Unknown source and metadata members are still stripped.
+Required versus optional metadata, error-code narrowing, and stricter array bounds belong to the
+route's schema. Use `.optional()` explicitly for optional metadata.
+
+For example, admin uses source pointers to label invalid fields, home-health clients read
+`errors[].meta.stepUpMethod`, and documents clients read `errors[].meta.reason` and top-level
+`meta.unmetPrerequisites`. Ordinary routes keep using `apiErrors` without accepting these extensions.
+Source extensions also accept the source objects produced by `ServiceError.toJsonApi()`; no runtime
+dependency on `ServiceError` is needed. Declaring an extension does not itself install a server
+renderer: that renderer must preserve the declared source and metadata instead of parsing them
+through bare `apiErrors` again.
+
+### Custom error documents
+
+`customError({ status, body })` is an escape hatch for a consumer that needs an existing body that
+cannot be represented by typed JSON:API extensions. Prefer `apiErrors` or `apiErrorsWith` otherwise.
+For example, the payout-settings PATCH consumer reads a top-level `message` alongside JSON:API
+errors:
+
+```ts
+import { apiErrors, customError } from "@clipboard-health/contract-core";
+import { z } from "zod";
+
+const payoutSettingsError = customError({
+  status: 422,
+  body: apiErrors.extend({ message: z.string() }),
+});
+
+// In an oRPC contract's error map:
+const errors = { UNPROCESSABLE_CONTENT: payoutSettingsError };
+
+// Handler error data has this envelope; it is not the HTTP response body:
+const data = {
+  body: { message: "Payout settings cannot be updated", errors: [] },
+  headers: { "retry-after": "30" },
+};
+```
+
+The returned `{ status, data }` declaration implements Standard Schema v1. Its validator checks the
+`{ body, headers? }` envelope and awaits the body schema, including async refinements. On success it
+marks a response containing the **original body**, not Zod's parsed output: extra fields, key order,
+and values survive; transforms, coercions, defaults, and stripping are not applied to that body.
+This is deliberately not a sanitizing parser. Only put caller-safe data in the original body and
+trusted, string-valued response headers in `headers`. Status validation remains the transport's
+responsibility, matching backend-main's existing helper.
+
+Server and documentation adapters use the package-root readers:
+
+- `getCustomErrorResponse({ data })` returns `{ body, headers? }` only for a marked, validated
+  response; ordinary `{ body }` data is not recognized. Render this body with the declared HTTP
+  status only after the transport has classified the error as declared and valid. Do not send
+  undeclared or invalid errors through this escape hatch.
+- `getCustomErrorBodySchema({ schema })` returns the original Zod body schema for a custom
+  declaration's `data`, so an OpenAPI generator documents the actual HTTP body rather than the
+  transport envelope. Other schemas return `undefined`.
+
+Both readers use the versioned `Symbol.for("@clipboard-health/contract-core/custom-error/v1")`
+protocol, with `"schema"` and `"response"` brands, rather than class identity. Recognition and repeated
+validation work across duplicate package instances and the CommonJS and ESM builds in one JavaScript
+realm. The symbol is an in-process interoperability marker, not an authentication boundary; serialized
+JSON is not a marked response. Backend-main can re-export these three helpers without changing
+their signatures.
+
+These APIs are tested with Zod 3.25.76, not Zod 4; other Zod versions are not covered by this
+validation suite. The existing Zod 3 peer range is unchanged. The package root has no Node.js,
+Nest, Express, or oRPC runtime imports; `@standard-schema/spec` is imported only as a type.
 
 ### Zod schemas
 

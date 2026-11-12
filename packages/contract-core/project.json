@@ -23,6 +23,7 @@
       }
     },
     "test": {
+      "dependsOn": ["build"],
       "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/contract-core/vitest.config.ts"
