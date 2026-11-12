@@ -43,7 +43,7 @@
     "@nx/webpack": "23.2.1",
     "@swc-node/register": "1.12.1",
     "@swc/core": "1.16.21",
-    "@swc/helpers": "0.5.23",
+    "@swc/helpers": "0.5.24",
     "@tsconfig/node24": "24.0.5",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "26.6.5",
