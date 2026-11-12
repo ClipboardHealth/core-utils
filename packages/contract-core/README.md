@@ -116,6 +116,10 @@ realm. The symbol is an in-process interoperability marker, not an authenticatio
 JSON is not a marked response. Backend-main can re-export these three helpers without changing
 their signatures.
 
+The brand is set at runtime only. Public types are the exported `CustomErrorDeclaration`,
+`CustomErrorBodySchema`, `CustomErrorResponse`, and `CustomErrorDocument` interfaces, so a
+consumer can emit declarations for an exported contract that uses `customError`.
+
 These APIs are tested with Zod 3.25.76, not Zod 4; other Zod versions are not covered by this
 validation suite. The existing Zod 3 peer range is unchanged. The package root has no Node.js,
 Nest, Express, or oRPC runtime imports; `@standard-schema/spec` is imported only as a type.
