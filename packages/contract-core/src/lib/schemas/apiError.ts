@@ -20,6 +20,18 @@ export const apiErrors = z.object({
   errors: apiError.array().min(0).max(100),
 });
 
+export const apiErrorSource = z.object({
+  pointer: z.string().optional(),
+  parameter: z.string().optional(),
+  header: z.string().optional(),
+});
+
+export function apiErrorsWith<ErrorSchema extends z.ZodType<ApiError>>(error: ErrorSchema) {
+  return apiErrors.extend({
+    errors: error.array().min(0).max(100),
+  });
+}
+
 /**
  * @see {@link https://jsonapi.org/format/#error-objects Error Objects}
  */
