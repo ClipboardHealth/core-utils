@@ -372,14 +372,21 @@ export interface PreferenceOverrides {
 /**
  * Request parameters for upserting user notification preferences.
  *
- * When one of the fields is null, the preferences is cleared and Knock will fall back
- * to default preferences. The fields are optional, so that we can support partial updates.
+ * In `replace` mode, the default, the request becomes the user's whole preference set: Knock
+ * clears each field the request omits or sets to null and falls back to default preferences for
+ * it. In `merge` mode, Knock deep-merges the request into the user's existing preferences and keeps
+ * each field the request omits.
  */
 export interface UpsertUserPreferencesRequest {
   /**
    * The user's unique identifier.
    */
   userId: string;
+
+  /**
+   * How the request updates the user's existing preferences. Defaults to `replace`.
+   */
+  mode?: "merge" | "replace";
 
   /**
    * Channel type-specific preferences.

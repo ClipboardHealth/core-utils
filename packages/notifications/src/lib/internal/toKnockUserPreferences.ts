@@ -67,6 +67,7 @@ export function toKnockUserPreferences(
   params: UpsertUserPreferencesRequest,
 ): UserSetPreferencesParams {
   return {
+    ...ifDefined(params.mode, { __persistence_strategy__: params.mode }),
     ...ifDefined(params.commercialSubscribed, {
       commercial_subscribed: params.commercialSubscribed,
     }),

@@ -98,6 +98,24 @@ describe("toKnockPreferences", () => {
     });
   });
 
+  it.each(["merge", "replace"] as const)(
+    "sends the %s mode as Knock's persistence strategy",
+    (mode) => {
+      const request: UpsertUserPreferencesRequest = {
+        userId: "test",
+        mode,
+        channelTypes: { sms: false },
+      };
+
+      const preferencesSet: UserSetPreferencesParams = toKnockUserPreferences(request);
+
+      expect(preferencesSet).toStrictEqual({
+        __persistence_strategy__: mode,
+        channel_types: { sms: false },
+      });
+    },
+  );
+
   it("allows resetting preferences", () => {
     const request: UpsertUserPreferencesRequest = {
       userId: "test",
