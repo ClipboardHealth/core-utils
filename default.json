@@ -252,7 +252,7 @@
       ]
     },
     {
-      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the ECR mirror of the official image, which has no release timestamps, time to publish the matching tag, so the group bumps the Dockerfile with the other pins. Docker Hub tags age from their push time, so a Docker Hub Dockerfile can trail the other pins by one run. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
+      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official images time to publish the matching tag, so the group bumps the Dockerfile with the other pins. internalChecksFilter none keeps updates that have not reached their age in the branch rather than dropping them: the ECR mirror has no release timestamps and passes the age check at once, so under the default strict filter it could automerge a Dockerfile-only branch while the Node pins were still waiting. With none, those pending pins hold the branch's stability check, and so its automerge, until they reach one day. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
       "matchPackageNames": [
         "node",
         "actions/node-versions",
@@ -264,6 +264,7 @@
       ],
       "matchUpdateTypes": ["patch"],
       "minimumReleaseAge": "1 day",
+      "internalChecksFilter": "none",
       "schedule": ["at any time"],
       "automergeSchedule": ["at any time"],
       "automerge": true,
