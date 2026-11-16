@@ -80,6 +80,26 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
       code: "interface Props { onRequest?: (workerId: string, facilityId: string) => void; }",
     },
     {
+      name: "NestJS parameters bound by decorators",
+      code: 'class Controller { get(@Headers("x-worker-id") workerId: string, @Headers("x-workplace-id") workplaceId: string) {} }',
+    },
+    {
+      name: "decorated parameters with defaults",
+      code: 'class Controller { get(@Query("a") a: string = "x", @Query("b") b: string = "y") {} }',
+    },
+    {
+      name: "NestMiddleware use signature",
+      code: "class Logger implements NestMiddleware { use(req: Request, res: Request, next: () => void) {} }",
+    },
+    {
+      name: "generic NestMiddleware in a class expression",
+      code: "const Logger = class implements NestMiddleware<Request, Response> { use(req: Request, res: Request, next: () => void) {} };",
+    },
+    {
+      name: "namespaced NestMiddleware use signature",
+      code: "class Logger implements nest.NestMiddleware { use(req: unknown, res: unknown, next: () => void) {} }",
+    },
+    {
       name: "overload signature",
       code: "declare function pad(text: string, fill: string): string;",
     },
@@ -134,6 +154,26 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
       name: "default-exported function expression",
       code: "export default (function (id: string, includeArchived: boolean) { return id; });",
       errors: [{ messageId: "booleanParameter" }],
+    },
+    {
+      name: "an undecorated parameter beside a decorated one is still checked",
+      code: 'class Controller { get(@Param("id") id: string, includeArchived: boolean) {} }',
+      errors: [{ messageId: "booleanParameter" }],
+    },
+    {
+      name: "a static use method on a NestMiddleware class",
+      code: "class Logger implements NestMiddleware { static use(workerId: string, workplaceId: string) {} }",
+      errors: [{ messageId: "interchangeableParameters" }],
+    },
+    {
+      name: "use method outside a NestMiddleware class",
+      code: "class Logger { use(req: Request, res: Request) {} }",
+      errors: [{ messageId: "interchangeableParameters" }],
+    },
+    {
+      name: "other methods of a NestMiddleware class",
+      code: "class Logger implements NestMiddleware { log(workerId: string, workplaceId: string) {} }",
+      errors: [{ messageId: "interchangeableParameters" }],
     },
     {
       name: "report covers a multi-line parameter list",

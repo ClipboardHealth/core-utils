@@ -40,6 +40,10 @@ const rule = defineRule({
         (parameter: ESTree.ParamPattern) =>
           !(parameter.type === "Identifier" && parameter.name === "this"),
       );
+      // NestJS binds decorated parameters (`@Headers("x-id")`) by decorator, not position.
+      if (parameters.every((parameter: ESTree.ParamPattern) => hasDecorators({ parameter }))) {
+        return;
+      }
       const first = parameters[0];
       const last = parameters.at(-1);
       if (parameters.length < 2 || first === undefined || last === undefined) {
@@ -102,7 +106,7 @@ function isAuthorChosenSignature(params: { node: FunctionNode }): boolean {
   }
 
   if (parent?.type === "MethodDefinition") {
-    return parent.kind === "method" && !parent.override;
+    return parent.kind === "method" && !parent.override && !isNestMiddlewareUse({ method: parent });
   }
 
   if (parent?.type === "PropertyDefinition") {
@@ -110,6 +114,32 @@ function isAuthorChosenSignature(params: { node: FunctionNode }): boolean {
   }
 
   return false;
+}
+
+function hasDecorators(params: { parameter: ESTree.ParamPattern }): boolean {
+  return (params.parameter.decorators ?? []).length > 0;
+}
+
+/** `NestMiddleware.use(req, res, next)` takes the signature the interface dictates. */
+function isNestMiddlewareUse(params: { method: ESTree.MethodDefinition }): boolean {
+  const { method } = params;
+  if (method.static || method.key.type !== "Identifier" || method.key.name !== "use") {
+    return false;
+  }
+
+  const classNode = method.parent.parent;
+  if (classNode?.type !== "ClassDeclaration" && classNode?.type !== "ClassExpression") {
+    return false;
+  }
+
+  return (classNode.implements ?? []).some(
+    (heritage: ESTree.TSClassImplements) =>
+      (heritage.expression.type === "Identifier" &&
+        heritage.expression.name === "NestMiddleware") ||
+      (heritage.expression.type === "MemberExpression" &&
+        heritage.expression.property.type === "Identifier" &&
+        heritage.expression.property.name === "NestMiddleware"),
+  );
 }
 
 function describeParameter(params: {
