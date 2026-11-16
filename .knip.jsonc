@@ -62,6 +62,7 @@
       "entry": [
         "scripts/verifyNegativeFixtures.mts",
         "src/bin/checkSuppressions.ts",
+        "src/bin/lintCeilings.ts",
         "src/index.ts",
       ],
       "ignore": ["test/negative/**/*.ts"],
