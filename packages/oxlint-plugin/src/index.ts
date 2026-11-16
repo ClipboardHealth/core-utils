@@ -11,6 +11,7 @@ import requireHttpModuleFactory from "./lib/rules/require-http-module-factory";
 import requireRunValidatorsWithUpsert from "./lib/rules/require-run-validators-with-upsert";
 import requireToDeclaredError from "./lib/rules/require-to-declared-error";
 import requireZodImportInContracts from "./lib/rules/require-zod-import-in-contracts";
+import suppressionPolicy from "./lib/rules/suppression-policy";
 
 export const rules = {
   "enforce-contract-in-controllers": enforceContractInControllers,
@@ -26,4 +27,8 @@ export const rules = {
   "require-run-validators-with-upsert": requireRunValidatorsWithUpsert,
   "require-to-declared-error": requireToDeclaredError,
   "require-zod-import-in-contracts": requireZodImportInContracts,
+  "suppression-policy": suppressionPolicy,
 };
+
+export { checkNeverSuppressRules } from "./lib/checkNeverSuppressRules";
+export { NEVER_SUPPRESS_RULES } from "./lib/internal/suppressionPolicy";

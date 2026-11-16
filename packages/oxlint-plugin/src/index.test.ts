@@ -16,6 +16,7 @@ describe("oxlint plugin", () => {
       "require-run-validators-with-upsert",
       "require-to-declared-error",
       "require-zod-import-in-contracts",
+      "suppression-policy",
     ]);
   });
 });
