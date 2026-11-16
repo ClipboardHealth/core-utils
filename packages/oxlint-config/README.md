@@ -8,6 +8,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 - [Usage](#usage)
 - [Fast runs](#fast-runs)
 - [Strict presets](#strict-presets)
+- [Suppression policy](#suppression-policy)
 - [Categories](#categories)
 - [What is shared](#what-is-shared)
 - [Intentionally disabled rules](#intentionally-disabled-rules)
@@ -254,6 +255,40 @@ presets: [base, customRules, strict, typeAware, strictTypeAware, vitest],
 ```
 
 Give each suppression a reason: `// oxlint-disable-next-line <rule> -- <reason>`.
+
+`typescript/strict-boolean-expressions` is on the [suppression policy](#suppression-policy)'s
+never-suppress list, so a repository that also enables `suppressionPolicy` must fix its violations
+instead of suppressing them.
+
+## Suppression policy
+
+The `suppressionPolicy` preset enables `@clipboard-health/suppression-policy`: every lint
+suppression needs a specific `-- <reason>`, and the rules in `NEVER_SUPPRESS_RULES` (`any`, the
+`typescript/no-unsafe-*` family, `strict-boolean-expressions`, `no-debugger`) cannot be suppressed.
+See the [plugin README](../oxlint-plugin/README.md#suppression-policy) for the full policy. It is
+opt in; no other preset enables it.
+
+Until a repository's existing directives comply, run `cbh-check-suppressions` from
+`@clipboard-health/oxlint-plugin` in CI. It holds directives added or changed since the merge base to
+the policy and needs no baseline. Once the backlog is zero, add the preset:
+
+```ts
+presets: [base, customRules, suppressionPolicy, typeAware, vitest],
+```
+
+Then assert in the repository's Oxlint configuration test that the policy stays on:
+
+```ts
+import { checkNeverSuppressRules } from "@clipboard-health/oxlint-config";
+
+assert.deepEqual(
+  checkNeverSuppressRules({ cwd: REPOSITORY_ROOT, directory: "src" }).unenforcedRules,
+  [],
+);
+```
+
+`checkNeverSuppressRules` lints a probe file in `directory` with the repository's own Oxlint and
+configuration, so it fails if the rule is turned off or an override disables it there.
 
 ## Categories
 

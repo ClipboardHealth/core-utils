@@ -536,6 +536,22 @@ export const strict: OxlintPreset = {
     },
   ],
 };
+/**
+ * Requires a specific reason on every lint suppression and forbids suppressing the rules in
+ * `NEVER_SUPPRESS_RULES`. Opt in per repository once existing directives comply; until then, run
+ * `cbh-check-suppressions` in CI to hold new and changed directives to the policy.
+ */
+export const suppressionPolicy: OxlintPreset = {
+  jsPlugins: [
+    {
+      name: "@clipboard-health",
+      specifier: "@clipboard-health/oxlint-plugin",
+    },
+  ],
+  rules: {
+    "@clipboard-health/suppression-policy": "error",
+  },
+};
 /** Type-aware companion to `strict`; compose it with `typeAware`. */
 export const strictTypeAware: OxlintPreset = {
   plugins: ["typescript"],

@@ -23,6 +23,7 @@ ESLint.
 - `require-run-validators-with-upsert`
 - `require-to-declared-error`
 - `require-zod-import-in-contracts`
+- `suppression-policy`
 
 ## Configuration
 
@@ -65,3 +66,37 @@ the forms it skips. Enable it on controllers:
   rules: { "@clipboard-health/require-to-declared-error": "error" },
 },
 ```
+
+## Suppression policy
+
+`suppression-policy` checks every `eslint-disable*`, `oxlint-disable*`, `@ts-ignore`, and
+`@ts-expect-error` comment:
+
+- It forbids suppressing the rules in `NEVER_SUPPRESS_RULES`: `no-debugger`,
+  `typescript/no-explicit-any`, `typescript/no-unsafe-{argument,assignment,call,member-access,return}`,
+  and `typescript/strict-boolean-expressions`. Aliases such as `@typescript-eslint/no-explicit-any`
+  and `eslint/no-debugger` count. The list is fixed; repositories cannot remove rules from it.
+- It requires `-- <reason>` on every other directive, and a reason after `@ts-expect-error`.
+- It rejects generic reasons, such as a bare TypeScript error code, "legacy", "pre-existing
+  complexity", or "Legacy code retains this existing lint violation". A reason that goes on to say
+  why the code needs the exception passes.
+- It forbids `@ts-ignore`, and any directive that disables `suppression-policy` or
+  `unicorn/no-abusive-eslint-disable`.
+
+Enable it with the `suppressionPolicy` preset from `@clipboard-health/oxlint-config`.
+
+### `cbh-check-suppressions`
+
+A file-level `/* oxlint-disable @clipboard-health/suppression-policy */` silences the rule for the
+whole file, including its report on that comment, and a repository with existing violations cannot
+enable the rule yet. The `cbh-check-suppressions` CLI covers both: it applies the same policy, under
+a plugin name no directive can disable, to directives added or changed since the merge base.
+Existing directives are left alone, so it can run in CI before the rule is enabled.
+
+```sh
+npx cbh-check-suppressions            # compares with the pull request base in GitHub Actions, else origin/HEAD
+npx cbh-check-suppressions --base origin/main
+```
+
+It compares the working tree, including uncommitted and untracked files, and respects the
+repository's Oxlint `ignorePatterns`. It exits 1 on a violation.

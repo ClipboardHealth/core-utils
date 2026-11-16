@@ -13,6 +13,9 @@
     "url": "git+https://github.com/ClipboardHealth/core-utils.git",
     "directory": "packages/oxlint-plugin"
   },
+  "bin": {
+    "cbh-check-suppressions": "./src/bin/checkSuppressions.js"
+  },
   "type": "commonjs",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",

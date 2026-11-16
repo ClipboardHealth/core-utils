@@ -10,6 +10,7 @@ import {
   react,
   strict,
   strictTypeAware,
+  suppressionPolicy,
   typeAware,
   vitest,
 } from "./index";
@@ -443,6 +444,14 @@ describe("oxlint-config", () => {
         ],
       });
       expect(strictTypeAware.rules).toHaveProperty("typescript/strict-boolean-expressions");
+
+      expect(suppressionPolicy).toStrictEqual({
+        jsPlugins: [{ name: "@clipboard-health", specifier: "@clipboard-health/oxlint-plugin" }],
+        rules: { "@clipboard-health/suppression-policy": "error" },
+      });
+      for (const preset of [base, customRules, strict, strictTypeAware]) {
+        expect(JSON.stringify(preset)).not.toContain("suppression-policy");
+      }
 
       expect(jestPreset).toStrictEqual({
         plugins: ["jest"],
