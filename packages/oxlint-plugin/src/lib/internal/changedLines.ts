@@ -1,6 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
+import { isPlainObject } from "./json";
+
 /** Line numbers (1-based) that are new or changed in each file, keyed by repository-relative path. */
 export type ChangedLines = Map<string, Set<number>>;
 
@@ -24,19 +26,38 @@ export function resolveMergeBase(params: {
 }): string {
   const { cwd, eventPath } = params;
   const base = params.base ?? readPullRequestBase({ eventPath }) ?? resolveDefaultBranch({ cwd });
-  return git({ args: ["merge-base", base, "HEAD"], cwd }).trim();
+  try {
+    return git({ args: ["merge-base", base, "HEAD"], cwd }).trim();
+  } catch (error) {
+    throw new Error(
+      `Cannot find the merge base of ${base} and HEAD. In GitHub Actions, check out with \`fetch-depth: 0\` so the base commit and its history are present.`,
+      { cause: error },
+    );
+  }
 }
 
-/** Compares the working tree, including uncommitted and untracked files, with `mergeBase`. */
-export function readChangedLines(params: { cwd: string; mergeBase: string }): ChangedLines {
-  const { cwd, mergeBase } = params;
+/**
+ * Compares the working tree, including uncommitted and untracked files, with `mergeBase`, and
+ * returns the changed lines of files whose path matches `include`.
+ */
+export function readChangedLines(params: {
+  cwd: string;
+  include: RegExp;
+  mergeBase: string;
+}): ChangedLines {
+  const { cwd, include, mergeBase } = params;
   const changed: ChangedLines = new Map();
+  // Fixed prefixes and unquoted paths, whatever the user's diff configuration.
   const diff = git({
     args: [
+      "-c",
+      "core.quotePath=false",
       "diff",
       "--unified=0",
       "--no-color",
       "--no-ext-diff",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
       "--find-renames",
       "--diff-filter=AMR",
       mergeBase,
@@ -45,26 +66,30 @@ export function readChangedLines(params: { cwd: string; mergeBase: string }): Ch
   });
 
   let lines: Set<number> | undefined;
+  let previous = "";
   for (const line of diff.split("\n")) {
-    if (line.startsWith("+++ ")) {
-      const file = line === "+++ /dev/null" ? undefined : line.slice("+++ b/".length);
-      lines = file === undefined ? undefined : getOrCreate({ changed, file });
-      continue;
-    }
-
-    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
-    if (hunk && lines) {
-      const start = Number(hunk[1]);
-      const count = hunk[2] === undefined ? 1 : Number(hunk[2]);
-      for (let offset = 0; offset < count; offset += 1) {
-        lines.add(start + offset);
+    // A `+++` line is a file header only right after `---`; elsewhere it is an added line.
+    if (previous.startsWith("--- ") && line.startsWith("+++ b/")) {
+      // Git ends a path that contains a space with a tab.
+      const file = line.slice("+++ b/".length).replace(/\t$/, "");
+      lines = include.test(file) ? getOrCreate({ changed, file }) : undefined;
+    } else {
+      const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
+      if (hunk && lines) {
+        const start = Number(hunk[1]);
+        const count = hunk[2] === undefined ? 1 : Number(hunk[2]);
+        for (let offset = 0; offset < count; offset += 1) {
+          lines.add(start + offset);
+        }
       }
     }
+
+    previous = line;
   }
 
   const untracked = git({ args: ["ls-files", "--others", "--exclude-standard", "-z"], cwd })
     .split("\0")
-    .filter((file) => file !== "");
+    .filter((file) => include.test(file));
   for (const file of untracked) {
     const lineCount = readFileSync(`${cwd}/${file}`, "utf8").split("\n").length;
     const fileLines = getOrCreate({ changed, file });
@@ -93,18 +118,16 @@ function readPullRequestBase(params: { eventPath: string | undefined }): string 
     return undefined;
   }
 
-  const event = JSON.parse(readFileSync(params.eventPath, "utf8")) as {
-    pull_request?: { base?: { sha?: string } };
-  };
-  return event.pull_request?.base?.sha;
+  const event: unknown = JSON.parse(readFileSync(params.eventPath, "utf8"));
+  const pullRequest = isPlainObject(event) ? event["pull_request"] : undefined;
+  const base = isPlainObject(pullRequest) ? pullRequest["base"] : undefined;
+  const sha = isPlainObject(base) ? base["sha"] : undefined;
+  return typeof sha === "string" ? sha : undefined;
 }
 
 function resolveDefaultBranch(params: { cwd: string }): string {
   try {
-    return git({
-      args: ["rev-parse", "--abbrev-ref", "origin/HEAD"],
-      cwd: params.cwd,
-    }).trim();
+    return git({ args: ["rev-parse", "--abbrev-ref", "origin/HEAD"], cwd: params.cwd }).trim();
   } catch {
     return "origin/main";
   }

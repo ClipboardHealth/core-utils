@@ -89,9 +89,10 @@ Enable it with the `suppressionPolicy` preset from `@clipboard-health/oxlint-con
 
 A file-level `/* oxlint-disable @clipboard-health/suppression-policy */` silences the rule for the
 whole file, including its report on that comment, and a repository with existing violations cannot
-enable the rule yet. The `cbh-check-suppressions` CLI covers both: it applies the same policy, under
-a plugin name no directive can disable, to directives added or changed since the merge base.
-Existing directives are left alone, so it can run in CI before the rule is enabled.
+enable the rule yet. The `cbh-check-suppressions` CLI covers both. It applies the same policy to
+directives added or changed since the merge base, under a plugin name no directive can name, and
+reports blanket disables, the only directives that could still silence it. Existing directives
+are left alone, so it can run in CI before the rule is enabled.
 
 ```sh
 npx cbh-check-suppressions            # compares with the pull request base in GitHub Actions, else origin/HEAD
@@ -99,4 +100,5 @@ npx cbh-check-suppressions --base origin/main
 ```
 
 It compares the working tree, including uncommitted and untracked files, and respects the
-repository's Oxlint `ignorePatterns`. It exits 1 on a violation.
+repository's Oxlint `ignorePatterns`. It exits 1 on a violation. In GitHub Actions, check out with
+`fetch-depth: 0` so it can find the merge base.

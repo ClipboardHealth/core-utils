@@ -86,6 +86,7 @@ Available presets:
 - `react`
 - `jest`
 - `strict` and `strictTypeAware` (opt in; see [Strict presets](#strict-presets))
+- `suppressionPolicy` (opt in; see [Suppression policy](#suppression-policy))
 - `typeAware`
 - `vitest`
 

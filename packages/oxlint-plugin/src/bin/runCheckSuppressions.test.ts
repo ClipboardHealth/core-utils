@@ -82,6 +82,79 @@ describe("runCheckSuppressions", () => {
     );
   });
 
+  it("maps directives after non-ASCII text to their own lines", () => {
+    writeFiles({
+      "src/existing.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+      "src/unicode.ts":
+        "export const label = 'Añadir turno — ✓';\n/* oxlint-disable-next-line no-console --\n   legacy */\nconsole.log(label);\n",
+    });
+    git("add", "--all");
+    commit("unicode");
+    writeFiles({
+      "src/existing.ts":
+        "// Añadir turno — ✓\n// oxlint-disable-next-line no-console\nconsole.log(2);\n",
+      "src/unicode.ts":
+        "export const label = 'Añadir turno — ✓';\n/* oxlint-disable-next-line no-console --\n   ok */\nconsole.log(label);\n",
+    });
+
+    const { exitCode, output } = check({ args: ["--base", "HEAD"] });
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain('src/unicode.ts:2: Reason "ok" is too generic.');
+    expect(output).not.toContain("src/existing.ts");
+  });
+
+  it("reports a blanket disable, which would silence the policy rule", () => {
+    writeFiles({
+      "src/blanket.ts":
+        "/* oxlint-disable */\n// oxlint-disable-next-line typescript/no-explicit-any -- ok\nexport const value: any = 1;\n",
+    });
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/blanket.ts:1:");
+  });
+
+  it("checks files whose names contain spaces or non-ASCII characters, whatever the diff settings", () => {
+    writeFiles({
+      "src/my file.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+      "src/café.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+    });
+    git("add", "--all");
+    git("config", "diff.noprefix", "true");
+
+    const { output } = check();
+
+    expect(output).toContain("src/my file.ts:1:");
+    expect(output).toContain("src/café.ts:1:");
+  });
+
+  it("uses the pull request base from the GitHub Actions event", () => {
+    const base = execFileSync("git", ["rev-parse", "base"], { cwd: repository, encoding: "utf8" });
+    writeFiles({
+      "event.json": JSON.stringify({ pull_request: { base: { sha: base.trim() } } }),
+      "src/added.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+    });
+
+    const { exitCode, output } = check({
+      args: [],
+      env: { GITHUB_EVENT_PATH: path.join(repository, "event.json") },
+    });
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/added.ts:1:");
+  });
+
+  it.each([["--base=base"], ["--base", "base", "--unknown"]])(
+    "accepts --base=<ref> and rejects unknown arguments: %s",
+    (...args) => {
+      writeFiles({ "src/clean.ts": "export const value = 1;\n" });
+
+      expect(check({ args }).exitCode).toBe(args.includes("--unknown") ? 2 : 0);
+    },
+  );
+
   it("leaves no temporary configuration behind", () => {
     writeFiles({ "src/clean.ts": "export const value = 1;\n" });
 
@@ -90,18 +163,34 @@ describe("runCheckSuppressions", () => {
     expect(readdirSync(repository).filter((name) => name.startsWith(".cbh-"))).toStrictEqual([]);
   });
 
-  function check(): { exitCode: number; output: string } {
+  function check(options: { args?: string[]; env?: Record<string, string> } = {}): {
+    exitCode: number;
+    output: string;
+  } {
     let output = "";
     const { exitCode } = runCheckSuppressions({
-      args: ["--base", "base"],
+      args: options.args ?? ["--base", "base"],
       cwd: repository,
-      env: {},
+      env: options.env ?? {},
       pluginSpecifier: PLUGIN,
       write: (text) => {
         output += text;
       },
     });
     return { exitCode, output };
+  }
+
+  function commit(message: string): void {
+    git(
+      "-c",
+      "user.name=test",
+      "-c",
+      "user.email=test@example.com",
+      "commit",
+      "--quiet",
+      "-m",
+      message,
+    );
   }
 
   function git(...args: string[]): void {

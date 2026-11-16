@@ -40,10 +40,10 @@ export function checkNeverSuppressRules(params: {
       diagnostics
         .filter(
           (diagnostic) =>
-            diagnostic.code?.endsWith(`(${SUPPRESSION_POLICY_RULE_NAME})`) === true &&
+            diagnostic.code.endsWith(`(${SUPPRESSION_POLICY_RULE_NAME})`) &&
             diagnostic.message.includes("must not be suppressed"),
         )
-        .map((diagnostic) => ruleLines.get(diagnostic.labels?.[0]?.span.line ?? 0)),
+        .map((diagnostic) => ruleLines.get(diagnostic.span?.line ?? 0)),
     );
 
     return { unenforcedRules: NEVER_SUPPRESS_RULES.filter((rule) => !enforced.has(rule)) };

@@ -35,6 +35,14 @@ ruleTester.run("suppression-policy", rule, {
       name: "reason that mentions history but says why this code needs the exception",
       code: "// oxlint-disable-next-line complexity -- pre-existing complexity: this method fans out across ack/upload/skip/override sub-flows; extracting each is a follow-up.\nfunction f() {}",
     },
+    ...[
+      "Pre-existing complexity because this switch dispatches nine event types.",
+      "Legacy: v1 webhook payloads are untyped and v2 replaces them.",
+      "https://github.com/oxc-project/oxc/issues/12345",
+    ].map((reason) => ({
+      name: `specific reason "${reason}"`,
+      code: `// oxlint-disable-next-line complexity -- ${reason}\nfunction f() {}`,
+    })),
     {
       name: "reason that starts with legacy and explains the exception",
       code: "// oxlint-disable-next-line typescript/no-deprecated -- Legacy claim errors have no contract schema.\nf();",

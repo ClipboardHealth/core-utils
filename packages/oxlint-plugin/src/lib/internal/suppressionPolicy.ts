@@ -26,19 +26,20 @@ const POLICY_RULES: ReadonlySet<string> = new Set(["unicorn/no-abusive-eslint-di
 /**
  * Matched against the whole reason, lowercased and without trailing periods, so a specific reason
  * that mentions history still passes: "pre-existing complexity" is banned, but "pre-existing
- * complexity: this method fans out across four sub-flows" is not. Tuned against every directive on
- * the main branches of clipboard-health, cbh-mobile-app, and cbh-admin-frontend.
+ * complexity: this method fans out across four sub-flows" is not. A clause marker (`:`, `;`, `,`,
+ * a dash, or a word such as "because") after a label introduces the specific part.
  */
 const BANNED_REASONS: readonly RegExp[] = [
-  // A single token: a TypeScript error code, a compiler option, or a word such as "ditto".
-  /^\S+$/,
+  // A single token, such as a TypeScript error code, a compiler option, or "ditto". A link alone
+  // passes: it points at the explanation.
+  /^(?!https?:\/\/)\S+$/,
   // Grandfathering labels with nothing specific after them.
   /^(legacy|existing|pre-?existing|old)( (code|debt|lint|violation|issue|error|suppression|usage)s?)*$/,
   /^legacy code retains? (this|these|the) existing( [\w-]+){0,3} (violation|assertion|issue|error)s?$/,
-  /^([a-z]+-\d+:? )?pre-?existing\b[^:;,(]*$/,
+  /^([a-z]+-\d+:? )?pre-?existing\b(?!.*([:;,(—–]| - | (because|since|so|as|when|until|while) ))/,
   /^legacy\b[^:;,(]* predates? (this|the)( lint)? rule\b.*$/,
   // Migration markers: an inventory belongs in the rule's configuration, not on each line.
-  /^legacy[,;:] .*$/,
+  /^legacy, use .*$/,
   /^legacy\b[^:;,(]*; remove this directive when .*$/,
   /^(todo|fixme|temp|temporary|ditto|needed|required|n\/a|ok|okay|ignore|intentional|see above|same as above|fine|safe|works|wip)$/,
 ];
