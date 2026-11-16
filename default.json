@@ -252,7 +252,7 @@
       ]
     },
     {
-      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official Docker images and their ECR mirror time to publish the matching tag, so the group bumps the Dockerfile with the other pins instead of leaving it a patch behind. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
+      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the ECR mirror of the official image, which has no release timestamps, time to publish the matching tag, so the group bumps the Dockerfile with the other pins. Docker Hub tags age from their push time, so a Docker Hub Dockerfile can trail the other pins by one run. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
       "matchPackageNames": [
         "node",
         "actions/node-versions",
