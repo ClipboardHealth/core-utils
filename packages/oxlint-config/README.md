@@ -303,26 +303,28 @@ as they are. A listed file may shrink but not grow. Pull requests don't edit the
 `cbh-lint-ceilings check` CLI blocks growth, and a weekly bot PR lowers stale values. This avoids
 the merge conflicts of exact-count baselines.
 
-```jsonc
+```json
 {
   "version": 1,
   "rules": {
     "complexity": {
-      "src/modules/users/user-manipulation.service.ts": 58,
+      "src/modules/users/user-manipulation.service.ts": 58
     },
 
     "max-lines": {
       "src/app/lib/analytics/events.ts": 2802,
 
-      "src/app/redesign/Login/Login.tsx": 3264,
-    },
-  },
+      "src/app/redesign/Login/Login.tsx": 3264
+    }
+  }
 }
 ```
 
 - Keys under `rules` are canonical Oxlint rule names: `complexity`, `import/max-dependencies`,
   `max-depth`, `max-lines`, `max-lines-per-function`, `max-nested-callbacks`, `max-params` and
-  `max-statements`. Aliases such as `eslint/max-lines` are rejected.
+  `max-statements`. Aliases such as `eslint/max-lines` are rejected. JavaScript plugin rules
+  aren't supported yet: `oxlint --print-config` omits their options, so the CLI can't measure
+  them against the configured default.
 - Paths are relative to the repository root. For per-function rules such as `complexity`, the
   value is the file's largest function value, because Oxlint overrides apply to whole files.
 - The layout is canonical: rules and paths sorted, a blank line between entries. `init` and
@@ -386,7 +388,7 @@ first parent, so `fetch-depth: 2` is enough:
 
 ```yaml
 lint-ceilings:
-  runs-on: [self-hosted, cb-ephemeral-2-cores]
+  runs-on: [self-hosted, cb-ephemeral-8-cores]
   steps:
     - uses: actions/checkout@v6
       with:

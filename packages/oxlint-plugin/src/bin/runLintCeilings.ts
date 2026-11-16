@@ -3,6 +3,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { git, resolveMergeBase } from "../lib/internal/changedLines";
+import { isPlainObject } from "../lib/internal/json";
 import { CEILING_RULES, isCeilingRule } from "../lib/internal/lintCeilings/ceilingRules";
 import { LINT_CEILINGS_ENV } from "../lib/internal/lintCeilings/ceilingOverrides";
 import {
@@ -284,8 +285,9 @@ function printDefaults(params: {
 }
 
 /**
- * In GitHub Actions, a pull request's merge ref and a merge-queue commit each have the target
- * branch as first parent, so a `fetch-depth: 2` checkout is enough.
+ * In GitHub Actions, a `pull_request` run's default checkout is a merge commit whose first parent
+ * is the target branch, so `fetch-depth: 2` is enough; a `merge_group` run compares with the
+ * queue's base. Any other checkout, such as the pull request head, uses the merge base.
  */
 function resolveBase(params: {
   base: string | undefined;
@@ -293,24 +295,69 @@ function resolveBase(params: {
   root: string;
 }): string {
   const { base, env, root } = params;
-  if (base === undefined && env["GITHUB_ACTIONS"] === "true") {
-    const parents =
-      git({ args: ["rev-list", "--parents", "-n", "1", "HEAD"], cwd: root })
-        .trim()
-        .split(" ").length - 1;
+  const eventPath = env["GITHUB_EVENT_PATH"];
+  if (base !== undefined || env["GITHUB_ACTIONS"] !== "true") {
+    return resolveMergeBase({ base, cwd: root, eventPath });
+  }
+
+  if (env["GITHUB_EVENT_NAME"] === "merge_group") {
+    const queueBase = readEventField({ eventPath, keys: ["merge_group", "base_sha"] });
+    if (queueBase === undefined) {
+      throw new Error("The merge_group event has no merge_group.base_sha.");
+    }
+
+    return requireCommit({ commit: queueBase, root });
+  }
+
+  const head = git({ args: ["rev-parse", "HEAD"], cwd: root }).trim();
+  if (head === env["GITHUB_SHA"]) {
+    const parents = git({ args: ["rev-list", "--parents", "-n", "1", "HEAD"], cwd: root })
+      .trim()
+      .split(" ")
+      .slice(1);
     // A shallow clone's oldest commit shows no parents.
-    if (parents === 0) {
+    if (parents.length === 0) {
       throw new Error(
         "HEAD has no parent commit in this checkout. In GitHub Actions, check out with `fetch-depth: 2`.",
       );
     }
 
-    if (env["GITHUB_EVENT_NAME"] === "merge_group" || parents >= 2) {
-      return git({ args: ["rev-parse", "HEAD^1"], cwd: root }).trim();
+    if (parents.length >= 2 && parents[0] !== undefined) {
+      return requireCommit({ commit: parents[0], root });
     }
   }
 
-  return resolveMergeBase({ base, cwd: root, eventPath: env["GITHUB_EVENT_PATH"] });
+  return resolveMergeBase({ base, cwd: root, eventPath });
+}
+
+function requireCommit(params: { commit: string; root: string }): string {
+  try {
+    git({ args: ["cat-file", "-e", `${params.commit}^{commit}`], cwd: params.root });
+  } catch (error) {
+    throw new Error(
+      `Base commit ${params.commit} is not in this checkout. In GitHub Actions, check out with \`fetch-depth: 2\`, or deeper for a rebase merge queue.`,
+      { cause: error },
+    );
+  }
+
+  return params.commit;
+}
+
+function readEventField(params: {
+  eventPath: string | undefined;
+  keys: readonly string[];
+}): string | undefined {
+  const { eventPath, keys } = params;
+  if (eventPath === undefined || eventPath === "") {
+    return undefined;
+  }
+
+  let value: unknown = JSON.parse(readFileSync(eventPath, "utf8"));
+  for (const key of keys) {
+    value = isPlainObject(value) ? value[key] : undefined;
+  }
+
+  return typeof value === "string" ? value : undefined;
 }
 
 function readBaseCeilings(params: { base: string; root: string }): LintCeilings {

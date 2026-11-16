@@ -111,6 +111,25 @@ describe("runLintCeilings", () => {
       );
     });
 
+    it("measures against the defaults when the configuration applies ceilings", () => {
+      // The configuration drops its ceiling only when the CLI asks it to, as createOxlintConfig does.
+      rmSync(path.join(repository, ".oxlintrc.json"));
+      writeFiles({
+        "oxlint.config.ts": `const config = ${JSON.stringify(OXLINT_CONFIG)};
+const ceilings = process.env["CBH_LINT_CEILINGS"] === "ignore"
+  ? []
+  : [{ files: ["src/big.ts"], rules: { "max-lines": ["error", { max: 30 }] } }];
+export default { ...config, overrides: [...config.overrides, ...ceilings] };
+`,
+        "src/big.ts": `${fn("big", 5)}${filler(8)}`,
+      });
+
+      const { exitCode, output } = run("check", "--base", "main");
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain("(base: 15; now: 16)");
+    });
+
     it("closes the complexity loophole: a new complex function fails, splitting passes", () => {
       // Adds a function at 4 (1 over) beside the one at 6: the file max holds, the excess grows.
       writeFiles({ "src/big.ts": `${fn("big", 5)}${fn("added", 3)}` });
@@ -178,49 +197,82 @@ describe("runLintCeilings", () => {
       git("switch", "--quiet", "--detach", "main");
       writeFiles({ "src/small.ts": filler(3) });
       commit("main moves on");
-      git(
-        "-c",
-        "user.name=test",
-        "-c",
-        "user.email=test@example.com",
-        "merge",
-        "--quiet",
-        "--no-ff",
-        "feature",
-      );
+      merge("feature");
 
-      const { exitCode, output } = run({ GITHUB_ACTIONS: "true" }, "check");
+      const { exitCode, output } = run(
+        { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "pull_request", GITHUB_SHA: rev("HEAD") },
+        "check",
+      );
 
       expect(exitCode).toBe(1);
       expect(output).toContain("(base: 15; now: 16)");
     });
 
-    it("compares a merge-queue commit with its parent", () => {
+    it("uses the pull request base when Actions checked out the head instead", () => {
+      // The head merges main back in, so its first parent is the branch's own earlier commit.
+      git("switch", "--quiet", "-c", "feature");
+      writeFiles({ "src/big.ts": `${fn("big", 5)}${filler(8)}` });
+      commit("grow");
+      git("switch", "--quiet", "main");
+      writeFiles({ "src/small.ts": filler(3) });
+      commit("main moves on");
+      git("switch", "--quiet", "feature");
+      merge("main");
+
+      const { exitCode, output } = run(
+        {
+          GITHUB_ACTIONS: "true",
+          GITHUB_EVENT_NAME: "pull_request",
+          GITHUB_EVENT_PATH: writeEvent({ pull_request: { base: { sha: rev("main") } } }),
+          GITHUB_SHA: "a-merge-commit-that-was-not-checked-out",
+        },
+        "check",
+      );
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain("(base: 15; now: 16)");
+    });
+
+    it("compares a merge-queue commit with the queue's base", () => {
       writeFiles({ "src/big.ts": `${fn("big", 5)}${filler(8)}` });
       commit("queued");
 
       const { exitCode } = run(
-        { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "merge_group" },
+        {
+          GITHUB_ACTIONS: "true",
+          GITHUB_EVENT_NAME: "merge_group",
+          GITHUB_EVENT_PATH: writeEvent({ merge_group: { base_sha: rev("HEAD^1") } }),
+        },
         "check",
       );
 
       expect(exitCode).toBe(1);
     });
 
-    it("asks for two commits of history when an Actions checkout is shallow", () => {
+    it("asks for more history when an Actions checkout lacks the base", () => {
       const shallow = path.join(repository, "shallow");
+      writeFiles({ "src/small.ts": filler(3) });
+      commit("second");
       git("clone", "--quiet", "--depth=1", `file://${repository}`, shallow);
-
-      expect(() =>
+      const runShallow = (env: Record<string, string>): { exitCode: number } =>
         runLintCeilings({
           args: ["check"],
           cwd: shallow,
-          env: { GITHUB_ACTIONS: "true", PATH: process.env["PATH"] },
+          env: { GITHUB_ACTIONS: "true", PATH: process.env["PATH"], ...env },
           write: () => {
             // Throws before writing.
           },
-        }),
+        });
+
+      expect(() =>
+        runShallow({ GITHUB_EVENT_NAME: "pull_request", GITHUB_SHA: rev("HEAD") }),
       ).toThrow("check out with `fetch-depth: 2`");
+      expect(() =>
+        runShallow({
+          GITHUB_EVENT_NAME: "merge_group",
+          GITHUB_EVENT_PATH: writeEvent({ merge_group: { base_sha: rev("HEAD^1") } }),
+        }),
+      ).toThrow("is not in this checkout");
     });
 
     it("refuses to treat an unparsable listed file as within the default", () => {
@@ -301,6 +353,30 @@ describe("runLintCeilings", () => {
       "-m",
       message,
     );
+  }
+
+  function rev(ref: string): string {
+    return execFileSync("git", ["rev-parse", ref], { cwd: repository, encoding: "utf8" }).trim();
+  }
+
+  function merge(ref: string): void {
+    git(
+      "-c",
+      "user.name=test",
+      "-c",
+      "user.email=test@example.com",
+      "merge",
+      "--quiet",
+      "--no-ff",
+      "--no-edit",
+      ref,
+    );
+  }
+
+  function writeEvent(event: object): string {
+    const eventPath = path.join(repository, ".git", "event.json");
+    writeFileSync(eventPath, JSON.stringify(event));
+    return eventPath;
   }
 
   function writeFiles(files: Record<string, string>): void {

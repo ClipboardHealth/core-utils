@@ -8,7 +8,7 @@ function overridesFor(params: {
     ceilings: { rules: params.rules, version: 1 },
     config: params.config,
     env: {},
-  });
+  }).overrides;
 }
 
 describe("createLintCeilingOverrides", () => {
@@ -92,6 +92,23 @@ describe("createLintCeilingOverrides", () => {
     ]);
   });
 
+  it("matches globs across dot directories, as Oxlint does", () => {
+    expect(
+      overridesFor({
+        config: {
+          overrides: [
+            { files: ["**/*.test.ts"], rules: { "max-lines": ["error", { max: 2000 }] } },
+            { files: [".storybook/**"], rules: { "max-lines": "off" } },
+          ],
+          rules: { "max-lines": ["error", { max: 1000, skipComments: true }] },
+        },
+        rules: { "max-lines": { ".storybook/main.ts": 1500, "src/.gen/x.test.ts": 2500 } },
+      }),
+    ).toStrictEqual([
+      { files: ["src/.gen/x.test.ts"], rules: { "max-lines": ["error", { max: 2500 }] } },
+    ]);
+  });
+
   it("escapes glob metacharacters in paths", () => {
     expect(
       overridesFor({
@@ -113,7 +130,7 @@ describe("createLintCeilingOverrides", () => {
         config: { rules: { "max-lines": "error" } },
         env: { CBH_LINT_CEILINGS: "ignore" },
       }),
-    ).toStrictEqual([]);
+    ).toStrictEqual({ overrides: [] });
   });
 
   it("rejects an unknown severity", () => {

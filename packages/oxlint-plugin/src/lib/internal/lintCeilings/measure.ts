@@ -64,8 +64,10 @@ export function measureFiles(params: {
     );
     const { diagnostics } = runOxlint({
       args: [
+        // Relative, because Oxlint resolves override globs against the config path as given, and an
+        // absolute path through a symlink, such as macOS's /var, matches no file.
         "--config",
-        configPath,
+        path.basename(configPath),
         "--disable-nested-config",
         "--format=json",
         ...files.map((file) => file.path),
@@ -100,7 +102,7 @@ export function measureRepository(params: {
     path: configPath,
     run: () =>
       runOxlint({
-        args: ["--config", configPath, "--disable-nested-config", "--format=json"],
+        args: ["--config", path.basename(configPath), "--disable-nested-config", "--format=json"],
         cwd: root,
       }),
   });

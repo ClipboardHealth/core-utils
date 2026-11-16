@@ -20,10 +20,10 @@ export function createOxlintConfig(request: CreateOxlintConfigRequest): OxlintCo
     return config;
   }
 
-  const ceilingOverrides = createLintCeilingOverrides({ ceilings, config });
-  return ceilingOverrides.length === 0
+  const { overrides } = createLintCeilingOverrides({ ceilings, config });
+  return overrides.length === 0
     ? config
-    : mergeOxlintPreset({ current: config, next: { overrides: ceilingOverrides } });
+    : mergeOxlintPreset({ current: config, next: { overrides } });
 }
 
 function mergeOxlintPreset(request: { current: OxlintConfig; next: OxlintPreset }): OxlintConfig {
