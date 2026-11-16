@@ -81,15 +81,19 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
     },
     {
       name: "NestJS parameters bound by decorators",
-      code: 'class Controller { get(@Headers("x-worker-id") workerId: string, @Headers("x-facility-id") facilityId: string) {} }',
+      code: 'class Controller { get(@Headers("x-worker-id") workerId: string, @Headers("x-workplace-id") workplaceId: string) {} }',
     },
     {
-      name: "decorated parameters are skipped when comparing the rest",
-      code: 'class Controller { get(@Param("id") id: string, @Query("kind") kind: string, limit: number) {} }',
+      name: "decorated parameters with defaults",
+      code: 'class Controller { get(@Query("a") a: string = "x", @Query("b") b: string = "y") {} }',
     },
     {
       name: "NestMiddleware use signature",
       code: "class Logger implements NestMiddleware { use(req: Request, res: Request, next: () => void) {} }",
+    },
+    {
+      name: "generic NestMiddleware in a class expression",
+      code: "const Logger = class implements NestMiddleware<Request, Response> { use(req: Request, res: Request, next: () => void) {} };",
     },
     {
       name: "namespaced NestMiddleware use signature",
@@ -152,8 +156,13 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
       errors: [{ messageId: "booleanParameter" }],
     },
     {
-      name: "undecorated parameters beside a decorated one are still compared",
-      code: 'class Controller { get(@Param("id") id: string, workerId: string, facilityId: string) {} }',
+      name: "an undecorated parameter beside a decorated one is still checked",
+      code: 'class Controller { get(@Param("id") id: string, includeArchived: boolean) {} }',
+      errors: [{ messageId: "booleanParameter" }],
+    },
+    {
+      name: "a static use method on a NestMiddleware class",
+      code: "class Logger implements NestMiddleware { static use(workerId: string, workplaceId: string) {} }",
       errors: [{ messageId: "interchangeableParameters" }],
     },
     {
@@ -163,7 +172,7 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
     },
     {
       name: "other methods of a NestMiddleware class",
-      code: "class Logger implements NestMiddleware { log(workerId: string, facilityId: string) {} }",
+      code: "class Logger implements NestMiddleware { log(workerId: string, workplaceId: string) {} }",
       errors: [{ messageId: "interchangeableParameters" }],
     },
     {

@@ -36,12 +36,14 @@ const rule = defineRule({
         return;
       }
 
-      // NestJS binds a decorated parameter by its decorator (`@Headers("x-id")`), not its position.
       const parameters = node.params.filter(
         (parameter: ESTree.ParamPattern) =>
-          !(parameter.type === "Identifier" && parameter.name === "this") &&
-          !hasDecorators({ parameter }),
+          !(parameter.type === "Identifier" && parameter.name === "this"),
       );
+      // NestJS binds decorated parameters (`@Headers("x-id")`) by decorator, not position.
+      if (parameters.every((parameter: ESTree.ParamPattern) => hasDecorators({ parameter }))) {
+        return;
+      }
       const first = parameters[0];
       const last = parameters.at(-1);
       if (parameters.length < 2 || first === undefined || last === undefined) {
@@ -115,15 +117,13 @@ function isAuthorChosenSignature(params: { node: FunctionNode }): boolean {
 }
 
 function hasDecorators(params: { parameter: ESTree.ParamPattern }): boolean {
-  const { parameter } = params;
-  const target = parameter.type === "TSParameterProperty" ? parameter.parameter : parameter;
-  return "decorators" in target && Array.isArray(target.decorators) && target.decorators.length > 0;
+  return (params.parameter.decorators ?? []).length > 0;
 }
 
 /** `NestMiddleware.use(req, res, next)` takes the signature the interface dictates. */
 function isNestMiddlewareUse(params: { method: ESTree.MethodDefinition }): boolean {
   const { method } = params;
-  if (method.key.type !== "Identifier" || method.key.name !== "use") {
+  if (method.static || method.key.type !== "Identifier" || method.key.name !== "use") {
     return false;
   }
 
