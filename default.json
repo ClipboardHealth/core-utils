@@ -128,7 +128,7 @@
       "allowedVersions": "<12.0.0"
     },
     {
-      "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches, minors and majors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, minors follow the normal schedule and automerge, and majors open without automerge.",
+      "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches, minors and majors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, minors follow the normal schedule and automerge, and majors open without automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors and majors still wait their 7 days, but through the status check rather than by delaying the branch.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
       "matchPackageNames": [
@@ -139,7 +139,8 @@
         "docker.io/library/node",
         "library/node",
         "public.ecr.aws/docker/library/node"
-      ]
+      ],
+      "internalChecksFilter": "none"
     },
     {
       "description": "Keep @types/node out of the Node.js group and disabled. Renovate takes a grouped branch's schedule and release age from its first update, so a @types/node bump in the group would put Node patches back on the 7-day, weekday path.",
@@ -252,7 +253,7 @@
       ]
     },
     {
-      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official images time to publish the matching tag, so the group bumps the Dockerfile with the other pins. internalChecksFilter none keeps updates that have not reached their age in the branch rather than dropping them: the ECR mirror has no release timestamps and passes the age check at once, so under the default strict filter it could automerge a Dockerfile-only branch while the Node pins were still waiting. With none, those pending pins hold the branch's stability check, and so its automerge, until they reach one day. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
+      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official images time to publish the matching tag, so the group bumps the Dockerfile with the other pins. The Node.js group rule holds the branch until every pin reaches this age. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
       "matchPackageNames": [
         "node",
         "actions/node-versions",
@@ -264,7 +265,6 @@
       ],
       "matchUpdateTypes": ["patch"],
       "minimumReleaseAge": "1 day",
-      "internalChecksFilter": "none",
       "schedule": ["at any time"],
       "automergeSchedule": ["at any time"],
       "automerge": true,
