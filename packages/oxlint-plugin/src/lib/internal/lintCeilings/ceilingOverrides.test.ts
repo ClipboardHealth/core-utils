@@ -98,7 +98,7 @@ describe("createLintCeilingOverrides", () => {
         config: {
           overrides: [
             { files: ["**/*.test.ts"], rules: { "max-lines": ["error", { max: 2000 }] } },
-            { files: [".storybook/**"], rules: { "max-lines": "off" } },
+            { files: ["{.storybook,stories}/**"], rules: { "max-lines": "off" } },
           ],
           rules: { "max-lines": ["error", { max: 1000, skipComments: true }] },
         },

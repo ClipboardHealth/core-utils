@@ -151,17 +151,16 @@ function toSeverity(params: { value: unknown }): Severity | "off" {
 
 /**
  * Oxlint matches a pattern without a slash against any directory, as `**\/<pattern>`, and its `*`
- * and `**` match dot segments. Node's matcher skips them, so a leading dot becomes a stand-in
- * character in both the path and the pattern.
+ * and `**` match dot segments. Node's matcher skips them, so a segment's leading dot becomes a
+ * stand-in character in both the path and the pattern, including after `{` or `,` in a brace set.
  */
 function matchesOxlintGlob(params: { file: string; pattern: string }): boolean {
   const { file, pattern } = params;
   const normalized = pattern.includes("/") ? pattern : `**/${pattern}`;
-  return path.posix.matchesGlob(hideLeadingDots(file), hideLeadingDots(normalized));
-}
-
-function hideLeadingDots(value: string): string {
-  return value.replaceAll(/(^|\/)\./g, `$1${DOT_STAND_IN}`);
+  return path.posix.matchesGlob(
+    file.replaceAll(/(^|\/)\./g, `$1${DOT_STAND_IN}`),
+    normalized.replaceAll(/(^|[/{,])\./g, `$1${DOT_STAND_IN}`),
+  );
 }
 
 /** Single-character classes escape glob metacharacters for both Oxlint and Node. */

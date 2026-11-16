@@ -363,7 +363,7 @@ npx cbh-lint-ceilings init                 # one entry per file above its defaul
 npx cbh-lint-ceilings init --rule complexity
 npx cbh-lint-ceilings check                # in CI; locally compares with the merge base of origin/HEAD
 npx cbh-lint-ceilings check --base origin/main
-npx cbh-lint-ceilings tighten              # weekly, on main
+npx cbh-lint-ceilings tighten              # weekly, on the default branch
 ```
 
 `check` looks at changed files that have a ceiling and lints their base and current versions. It
@@ -383,8 +383,11 @@ only when an increase is approved.
 ### CI
 
 Run `check` as its own small job, on an ephemeral runner, with the default merge-commit checkout.
-In GitHub Actions, `check` compares a pull request's merge commit or a merge-queue commit with its
-first parent, so `fetch-depth: 2` is enough:
+In GitHub Actions, `check` compares a pull request's merge commit with its first parent and a
+merge-queue commit with the queue's base (`merge_group.base_sha`). `fetch-depth: 2` covers pull
+requests and merge or squash queues; a rebase queue needs depth of at least the pull request's
+commit count plus one. Any other checkout, such as the pull request head, falls back to the merge
+base with the pull request base and needs that history:
 
 ```yaml
 lint-ceilings:
@@ -403,7 +406,7 @@ compute approval in its own workflow, for example from a review by a named team,
 `--allow-increases`.
 
 Copy the [weekly tighten workflow template](../oxlint-plugin/templates/tighten-lint-ceilings.yml)
-to keep values current. It runs `tighten` on main, opens or updates a `chore/tighten-lint-ceilings`
+to keep values current. It runs `tighten` on the default branch, opens or updates a `chore/tighten-lint-ceilings`
 PR, enables auto-merge and requests reviewers. The job that installs dependencies holds no write
 token, and the job that pushes installs nothing.
 
