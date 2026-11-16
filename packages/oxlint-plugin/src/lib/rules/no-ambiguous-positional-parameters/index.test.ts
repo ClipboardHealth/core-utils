@@ -80,6 +80,22 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
       code: "interface Props { onRequest?: (workerId: string, facilityId: string) => void; }",
     },
     {
+      name: "NestJS parameters bound by decorators",
+      code: 'class Controller { get(@Headers("x-worker-id") workerId: string, @Headers("x-facility-id") facilityId: string) {} }',
+    },
+    {
+      name: "decorated parameters are skipped when comparing the rest",
+      code: 'class Controller { get(@Param("id") id: string, @Query("kind") kind: string, limit: number) {} }',
+    },
+    {
+      name: "NestMiddleware use signature",
+      code: "class Logger implements NestMiddleware { use(req: Request, res: Request, next: () => void) {} }",
+    },
+    {
+      name: "namespaced NestMiddleware use signature",
+      code: "class Logger implements nest.NestMiddleware { use(req: unknown, res: unknown, next: () => void) {} }",
+    },
+    {
       name: "overload signature",
       code: "declare function pad(text: string, fill: string): string;",
     },
@@ -134,6 +150,21 @@ ruleTester.run("no-ambiguous-positional-parameters", rule, {
       name: "default-exported function expression",
       code: "export default (function (id: string, includeArchived: boolean) { return id; });",
       errors: [{ messageId: "booleanParameter" }],
+    },
+    {
+      name: "undecorated parameters beside a decorated one are still compared",
+      code: 'class Controller { get(@Param("id") id: string, workerId: string, facilityId: string) {} }',
+      errors: [{ messageId: "interchangeableParameters" }],
+    },
+    {
+      name: "use method outside a NestMiddleware class",
+      code: "class Logger { use(req: Request, res: Request) {} }",
+      errors: [{ messageId: "interchangeableParameters" }],
+    },
+    {
+      name: "other methods of a NestMiddleware class",
+      code: "class Logger implements NestMiddleware { log(workerId: string, facilityId: string) {} }",
+      errors: [{ messageId: "interchangeableParameters" }],
     },
     {
       name: "report covers a multi-line parameter list",
