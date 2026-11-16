@@ -158,7 +158,7 @@ export function evaluateDirective(params: {
   return violations;
 }
 
-export function isBannedReason(params: { reason: string }): boolean {
+function isBannedReason(params: { reason: string }): boolean {
   const comparable = params.reason.toLowerCase().replace(/[.!\s]+$/, "");
   if (BANNED_REASONS.some((pattern) => pattern.test(comparable))) {
     return true;
@@ -181,7 +181,7 @@ export function formatViolation(params: { violation: Violation }): string {
 }
 
 /** Maps the aliases Oxlint accepts to one name: `eslint/x` → `x`, `@typescript-eslint/x` → `typescript/x`. */
-export function normalizeRuleName(params: { rule: string }): string {
+function normalizeRuleName(params: { rule: string }): string {
   const { rule } = params;
   if (rule.startsWith("eslint/")) {
     return rule.slice("eslint/".length);
