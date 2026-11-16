@@ -1,14 +1,15 @@
 import { randomBytes } from "node:crypto";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { git, readChangedLines, resolveMergeBase } from "../lib/internal/changedLines";
 import { readIgnorePatterns, runOxlint } from "../lib/internal/runOxlint";
-import { SUPPRESSION_POLICY_RULE_NAME } from "../lib/internal/suppressionPolicy";
+import { isPlainObject } from "../lib/internal/json";
+import { RECORD_SETTING, SUPPRESSION_POLICY_RULE_NAME } from "../lib/internal/suppressionPolicy";
 
 const LINTABLE_FILE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
-const BLANKET_DISABLE_RULE = "no-abusive-eslint-disable";
 const USAGE = `Usage: cbh-check-suppressions [--base <ref>]
 
 Applies @clipboard-health/suppression-policy to lint directives added or changed since the merge
@@ -56,60 +57,61 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     return { exitCode: 0 };
   }
 
-  // A random plugin alias, so no directive in the code can name and disable the rule this run
-  // uses. `no-abusive-eslint-disable` reports blanket disables, which would silence it too.
-  const alias = `cbh-check-suppressions-${randomBytes(6).toString("hex")}`;
-  const policyCode = `${alias}(${SUPPRESSION_POLICY_RULE_NAME})`;
+  const recordDirectory = mkdtempSync(path.join(tmpdir(), "cbh-check-suppressions-"));
+  const recordPath = path.join(recordDirectory, "violations.jsonl");
   // The configuration sits in the repository root so its `ignorePatterns` resolve as the
   // repository's own do; Oxlint applies only configuration patterns to explicit file arguments.
-  const configPath = path.join(root, `.${alias}.json`);
-  const { diagnostics } = withTemporaryFile({
-    path: configPath,
-    content: JSON.stringify({
-      categories: Object.fromEntries(
-        ["correctness", "nursery", "pedantic", "perf", "restriction", "style", "suspicious"].map(
-          (category) => [category, "off"],
+  const configPath = path.join(
+    root,
+    `.cbh-check-suppressions-${randomBytes(6).toString("hex")}.json`,
+  );
+  let records: string;
+  try {
+    withTemporaryFile({
+      path: configPath,
+      content: JSON.stringify({
+        categories: Object.fromEntries(
+          ["correctness", "nursery", "pedantic", "perf", "restriction", "style", "suspicious"].map(
+            (category) => [category, "off"],
+          ),
         ),
-      ),
-      ignorePatterns: readIgnorePatterns({ cwd: root }).ignorePatterns,
-      jsPlugins: [{ name: alias, specifier: pluginSpecifier }],
-      plugins: ["unicorn"],
-      rules: {
-        [`${alias}/${SUPPRESSION_POLICY_RULE_NAME}`]: "error",
-        [`unicorn/${BLANKET_DISABLE_RULE}`]: "error",
-      },
-    }),
-    run: () =>
-      runOxlint({
-        args: ["--config", configPath, "--disable-nested-config", "--format=json", ...files],
-        cwd: root,
+        ignorePatterns: readIgnorePatterns({ cwd: root }).ignorePatterns,
+        jsPlugins: [{ name: "cbh-check-suppressions", specifier: pluginSpecifier }],
+        plugins: [],
+        rules: { [`cbh-check-suppressions/${SUPPRESSION_POLICY_RULE_NAME}`]: "error" },
+        settings: { [RECORD_SETTING]: { recordPath } },
       }),
-  });
+      run: () =>
+        runOxlint({
+          args: ["--config", configPath, "--disable-nested-config", "--format=json", ...files],
+          cwd: root,
+        }),
+    });
+    records = existsSync(recordPath) ? readFileSync(recordPath, "utf8") : "";
+  } finally {
+    rmSync(recordDirectory, { force: true, recursive: true });
+  }
 
   const failures: string[] = [];
-  const sources = new Map<string, Buffer>();
-  for (const { code, filename, message, span } of diagnostics) {
-    if ((code !== policyCode && code !== `unicorn(${BLANKET_DISABLE_RULE})`) || !span) {
+  for (const line of records.split("\n")) {
+    if (line === "") {
       continue;
     }
 
-    const file = path.relative(root, path.resolve(root, filename));
-    const source = sources.get(file) ?? readFileSync(path.join(root, file));
-    sources.set(file, source);
-    // Oxlint's offsets count UTF-8 bytes, so slice the bytes rather than a decoded string.
-    const spanText = source.subarray(span.offset, span.offset + span.length).toString("utf8");
-    const lastLine = span.line + spanText.split("\n").length - 1;
+    const { endLine, file: absoluteFile, message, startLine } = parseRecord({ line });
+    const file = path.relative(root, absoluteFile);
     const changedLines = changed.get(file);
     let touched = false;
-    for (let line = span.line; line <= lastLine && !touched; line += 1) {
-      touched = changedLines?.has(line) ?? false;
+    for (let lineNumber = startLine; lineNumber <= endLine && !touched; lineNumber += 1) {
+      touched = changedLines?.has(lineNumber) ?? false;
     }
 
     if (touched) {
-      failures.push(`${file}:${span.line}: ${message}`);
+      failures.push(`${file}:${startLine}: ${message}`);
     }
   }
 
+  failures.sort((left, right) => left.localeCompare(right, "en", { numeric: true }));
   if (failures.length > 0) {
     write(
       `${failures.join("\n")}\n\ncbh-check-suppressions: ${failures.length} new or changed suppression(s) break the suppression policy.\n`,
@@ -144,4 +146,29 @@ function withTemporaryFile<Result>(params: {
     process.off("SIGINT", keepAlive);
     process.off("SIGTERM", keepAlive);
   }
+}
+
+function parseRecord(params: { line: string }): {
+  endLine: number;
+  file: string;
+  message: string;
+  startLine: number;
+} {
+  const record: unknown = JSON.parse(params.line);
+  if (
+    !isPlainObject(record) ||
+    typeof record["file"] !== "string" ||
+    typeof record["message"] !== "string" ||
+    typeof record["startLine"] !== "number" ||
+    typeof record["endLine"] !== "number"
+  ) {
+    throw new TypeError(`Unexpected suppression-policy record: ${params.line}`);
+  }
+
+  return {
+    endLine: record["endLine"],
+    file: record["file"],
+    message: record["message"],
+    startLine: record["startLine"],
+  };
 }

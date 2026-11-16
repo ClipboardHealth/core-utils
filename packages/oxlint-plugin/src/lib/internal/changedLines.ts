@@ -30,7 +30,7 @@ export function resolveMergeBase(params: {
     return git({ args: ["merge-base", base, "HEAD"], cwd }).trim();
   } catch (error) {
     throw new Error(
-      `Cannot find the merge base of ${base} and HEAD. In GitHub Actions, check out with \`fetch-depth: 0\` so the base commit and its history are present.`,
+      `Cannot find the merge base of ${base} and HEAD: ${error instanceof Error ? error.message : String(error)}\nIn GitHub Actions, check out with \`fetch-depth: 0\` so the base commit and its history are present.`,
       { cause: error },
     );
   }

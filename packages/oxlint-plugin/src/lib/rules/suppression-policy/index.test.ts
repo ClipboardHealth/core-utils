@@ -123,6 +123,9 @@ ruleTester.run("suppression-policy", rule, {
       "noUncheckedIndexedAccess",
       "ditto",
       "see above",
+      "Legacy: pre-existing",
+      "legacy: ok",
+      "DEVOP-5573: pre-existing complexity, to be refactored",
     ].map((reason) => ({
       name: `generic reason "${reason}"`,
       code: `// oxlint-disable-next-line no-console -- ${reason}\nconsole.log(1);`,

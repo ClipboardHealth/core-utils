@@ -17,6 +17,9 @@ export const NEVER_SUPPRESS_RULES: readonly string[] = [
 
 export const SUPPRESSION_POLICY_RULE_NAME = "suppression-policy";
 
+/** Settings key through which `cbh-check-suppressions` asks the rule to record violations to a file. */
+export const RECORD_SETTING = "cbh-check-suppressions";
+
 /**
  * Disabling either rule lets a file opt out of the policy: this rule by name, and
  * `no-abusive-eslint-disable` by permitting a blanket disable that silences every rule.
@@ -44,6 +47,10 @@ const BANNED_REASONS: readonly RegExp[] = [
   /^(todo|fixme|temp|temporary|ditto|needed|required|n\/a|ok|okay|ignore|intentional|see above|same as above|fine|safe|works|wip)$/,
 ];
 
+const LABELLED_REASON =
+  /^(?:[a-z]+-\d+:? )?(?:legacy|pre-?existing|existing|old)\b[^:;,(—–]*?(?:[:;,(—–]| - | (?:because|since|so|as|when|until|while) )\s*(.+)$/;
+const MIN_REMAINDER_WORDS = 4;
+
 type DirectiveKind = "lint" | "ts-expect-error" | "ts-ignore";
 
 export interface Directive {
@@ -55,6 +62,7 @@ export interface Directive {
 
 export type ViolationId =
   | "bannedReason"
+  | "blanketDisable"
   | "forbiddenRule"
   | "missingReason"
   | "policyRule"
@@ -68,6 +76,8 @@ export interface Violation {
 export const VIOLATION_MESSAGES: Record<ViolationId, string> = {
   bannedReason:
     'Reason "{{reason}}" is too generic. State why this code needs the exception; never "legacy", "pre-existing", or a reason copied from a nearby directive.',
+  blanketDisable:
+    "Name the rules this directive disables; a blanket disable silences every rule, including this policy.",
   forbiddenRule: "`{{rule}}` must not be suppressed. Fix the code instead.",
   missingReason:
     "Add ' -- <reason>' stating why this code needs the exception, e.g. `// oxlint-disable-next-line no-console -- CLI prints usage to stdout`.",
@@ -114,8 +124,12 @@ export function parseDirective(params: { comment: string }): Directive | undefin
   return undefined;
 }
 
-export function evaluateDirective(params: { directive: Directive }): Violation[] {
-  const { directive } = params;
+export function evaluateDirective(params: {
+  directive: Directive;
+  /** Lint leaves blanket disables to `unicorn/no-abusive-eslint-disable`, which they cannot silence. */
+  reportBlanket: boolean;
+}): Violation[] {
+  const { directive, reportBlanket } = params;
 
   if (directive.kind === "ts-ignore") {
     return [{ messageId: "tsIgnore", data: {} }];
@@ -131,9 +145,8 @@ export function evaluateDirective(params: { directive: Directive }): Violation[]
     }
   }
 
-  // A blanket disable is reported by `unicorn/no-abusive-eslint-disable`, which it cannot silence.
   if (directive.kind === "lint" && directive.rules.length === 0) {
-    return violations;
+    return reportBlanket ? [{ messageId: "blanketDisable", data: {} }] : violations;
   }
 
   if (directive.reason === undefined) {
@@ -147,7 +160,24 @@ export function evaluateDirective(params: { directive: Directive }): Violation[]
 
 export function isBannedReason(params: { reason: string }): boolean {
   const comparable = params.reason.toLowerCase().replace(/[.!\s]+$/, "");
-  return BANNED_REASONS.some((pattern) => pattern.test(comparable));
+  if (BANNED_REASONS.some((pattern) => pattern.test(comparable))) {
+    return true;
+  }
+
+  // After a label such as "Legacy:", the rest must be a specific reason in its own right.
+  const remainder = LABELLED_REASON.exec(comparable)?.[1];
+  return (
+    remainder !== undefined &&
+    (remainder.split(" ").length < MIN_REMAINDER_WORDS || isBannedReason({ reason: remainder }))
+  );
+}
+
+export function formatViolation(params: { violation: Violation }): string {
+  const { data, messageId } = params.violation;
+  return VIOLATION_MESSAGES[messageId].replaceAll(
+    /\{\{(\w+)\}\}/g,
+    (placeholder, key: string) => data[key] ?? placeholder,
+  );
 }
 
 /** Maps the aliases Oxlint accepts to one name: `eslint/x` → `x`, `@typescript-eslint/x` → `typescript/x`. */

@@ -116,6 +116,24 @@ describe("runCheckSuppressions", () => {
     expect(output).toContain("src/blanket.ts:1:");
   });
 
+  it("reports directives that a blanket disable on the same line would silence in lint", () => {
+    writeFiles({
+      "src/bypass.ts":
+        "/* oxlint-disable */ // oxlint-disable-line unicorn/no-abusive-eslint-disable -- Needed for this generated file.\n// oxlint-disable-next-line typescript/no-explicit-any -- ok\nexport const value: any = 1;\n",
+    });
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/bypass.ts:1: Name the rules this directive disables");
+    expect(output).toContain(
+      "src/bypass.ts:1: `unicorn/no-abusive-eslint-disable` enforces the suppression policy",
+    );
+    expect(output).toContain(
+      "src/bypass.ts:2: `typescript/no-explicit-any` must not be suppressed.",
+    );
+  });
+
   it("checks files whose names contain spaces or non-ASCII characters, whatever the diff settings", () => {
     writeFiles({
       "src/my file.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
