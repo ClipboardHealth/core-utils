@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/clearance",
-  "version": "1.10.16",
+  "version": "1.10.17",
   "description": "Localhost HTTP/HTTPS egress proxy with hostname allow-listing, plus a macOS Safehouse integration for sandboxed agent processes.",
   "keywords": [
     "agent",
