@@ -104,6 +104,35 @@ describe("runCheckSuppressions", () => {
     expect(output).not.toContain("src/existing.ts");
   });
 
+  it("fails when Oxlint cannot parse a changed file instead of reporting no violations", () => {
+    writeFiles({
+      "src/broken.ts": "// oxlint-disable-next-line no-console\nconst value = ;\n",
+    });
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/broken.ts: Unexpected token");
+    expect(output).not.toContain("no violations");
+  });
+
+  it("reports a blanket disable with a reason that directly follows the keyword", () => {
+    writeFiles({
+      "src/generated.ts": "/* oxlint-disable -- Generated file. */\nexport const value = 1;\n",
+    });
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/generated.ts:1: Name the rules this directive disables");
+  });
+
+  it("fails when the repository configuration cannot be read", () => {
+    writeFiles({ ".oxlintrc.json": "{bad", "src/clean.ts": "export const value = 1;\n" });
+
+    expect(() => check()).toThrow("oxlint --print-config failed");
+  });
+
   it("reports a blanket disable, which would silence the policy rule", () => {
     writeFiles({
       "src/blanket.ts":

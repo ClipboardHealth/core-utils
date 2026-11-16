@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -47,6 +47,26 @@ describe("checkNeverSuppressRules", () => {
     expect(checkNeverSuppressRules({ cwd: repository, directory: "src" })).toStrictEqual({
       unenforcedRules: NEVER_SUPPRESS_RULES,
     });
+  });
+
+  it("returns no rules when a single-level files pattern enables the policy for the directory", () => {
+    writeConfig({
+      overrides: [
+        { files: ["src/*.ts"], rules: { "@clipboard-health/suppression-policy": "error" } },
+      ],
+    });
+
+    expect(checkNeverSuppressRules({ cwd: repository, directory: "src" })).toStrictEqual({
+      unenforcedRules: [],
+    });
+  });
+
+  it("leaves no probe file behind", () => {
+    writeConfig({ rules: { "@clipboard-health/suppression-policy": "error" } });
+
+    checkNeverSuppressRules({ cwd: repository, directory: "src" });
+
+    expect(readdirSync(path.join(repository, "src"))).toStrictEqual([]);
   });
 
   function writeConfig(config: Record<string, unknown>): void {

@@ -28,6 +28,10 @@ ruleTester.run("suppression-policy", rule, {
       code: "/* eslint-disable no-console, no-alert -- Debug overlay for local builds only. */",
     },
     {
+      name: "reason directly after the keyword leaves no rule names",
+      code: "/* eslint-disable -- Generated file. */",
+    },
+    {
       name: "trailing same-line directive with a reason",
       code: "console.log(1); // oxlint-disable-line no-console -- Prints the generated report path.",
     },

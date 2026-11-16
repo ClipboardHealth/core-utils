@@ -88,7 +88,7 @@ export const VIOLATION_MESSAGES: Record<ViolationId, string> = {
 
 const LINT_DIRECTIVE = /^\s*(?:eslint|oxlint)-disable(?:-next-line|-line)?(?:\s([\s\S]*))?$/;
 const TS_DIRECTIVE = /^[\s*/]*@ts-(expect-error|ignore)(?![\w-])([\s\S]*)$/;
-const REASON_SEPARATOR = /\s-{2,}\s|\s-{2,}$/;
+const REASON_SEPARATOR = /(?:^|\s)-{2,}(?:\s|$)/;
 
 /** Parses a comment's text (without its `//` or `/* *\/` delimiters). */
 export function parseDirective(params: { comment: string }): Directive | undefined {

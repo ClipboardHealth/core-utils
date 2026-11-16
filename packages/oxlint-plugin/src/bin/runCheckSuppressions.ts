@@ -5,7 +5,7 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { git, readChangedLines, resolveMergeBase } from "../lib/internal/changedLines";
-import { readIgnorePatterns, runOxlint } from "../lib/internal/runOxlint";
+import { type OxlintDiagnostic, readIgnorePatterns, runOxlint } from "../lib/internal/runOxlint";
 import { isPlainObject } from "../lib/internal/json";
 import { RECORD_SETTING, SUPPRESSION_POLICY_RULE_NAME } from "../lib/internal/suppressionPolicy";
 
@@ -66,8 +66,9 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     `.cbh-check-suppressions-${randomBytes(6).toString("hex")}.json`,
   );
   let records: string;
+  let diagnostics: OxlintDiagnostic[];
   try {
-    withTemporaryFile({
+    ({ diagnostics } = withTemporaryFile({
       path: configPath,
       content: JSON.stringify({
         categories: Object.fromEntries(
@@ -86,10 +87,22 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
           args: ["--config", configPath, "--disable-nested-config", "--format=json", ...files],
           cwd: root,
         }),
-    });
+    }));
     records = existsSync(recordPath) ? readFileSync(recordPath, "utf8") : "";
   } finally {
     rmSync(recordDirectory, { force: true, recursive: true });
+  }
+
+  // Only the policy rule is enabled, so any other diagnostic, such as a parse error, means Oxlint
+  // skipped the rule for that file and "no violations" would be false.
+  const unevaluated = diagnostics
+    .filter((diagnostic) => !diagnostic.code.endsWith(`(${SUPPRESSION_POLICY_RULE_NAME})`))
+    .map((diagnostic) => `${path.relative(root, diagnostic.filename)}: ${diagnostic.message}`);
+  if (unevaluated.length > 0) {
+    write(
+      `${unevaluated.join("\n")}\n\ncbh-check-suppressions: Oxlint could not evaluate the policy for ${unevaluated.length} diagnostic(s); fix them and rerun.\n`,
+    );
+    return { exitCode: 1 };
   }
 
   const failures: string[] = [];

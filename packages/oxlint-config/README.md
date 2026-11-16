@@ -288,8 +288,11 @@ assert.deepEqual(
 );
 ```
 
-`checkNeverSuppressRules` lints a probe file in `directory` with the repository's own Oxlint and
-configuration, so it fails if the rule is turned off or an override disables it there.
+`checkNeverSuppressRules` lints a uniquely named probe `.ts` file written directly in `directory`
+with the repository's own Oxlint and configuration. It fails if the rule is turned off, or if an
+override disables it for that file. It does not detect overrides that match only other file
+extensions, such as `*.tsx`, or other paths. Call it for each directory that must enforce the
+policy.
 
 ## Categories
 

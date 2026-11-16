@@ -50,8 +50,12 @@ export function readIgnorePatterns(params: { cwd: string }): { ignorePatterns: s
     maxBuffer: 64 * 1024 * 1024,
   });
 
+  if (result.error) {
+    throw result.error;
+  }
+
   if (result.status !== 0) {
-    return { ignorePatterns: [] };
+    throw new Error(`oxlint --print-config failed.\n${result.stderr}${result.stdout}`);
   }
 
   const config: unknown = JSON.parse(result.stdout);
