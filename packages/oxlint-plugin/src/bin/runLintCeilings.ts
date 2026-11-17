@@ -5,7 +5,10 @@ import { parseArgs } from "node:util";
 import { git, resolveMergeBase } from "../lib/internal/changedLines";
 import { isPlainObject } from "../lib/internal/json";
 import { CEILING_RULES, isCeilingRule } from "../lib/internal/lintCeilings/ceilingRules";
-import { LINT_CEILINGS_ENV } from "../lib/internal/lintCeilings/ceilingOverrides";
+import {
+  LEGACY_LINT_CEILINGS_ENV,
+  LINT_CEILINGS_ENV,
+} from "../lib/internal/lintCeilings/ceilingOverrides";
 import {
   formatLintCeilings,
   LINT_CEILINGS_FILE,
@@ -280,7 +283,7 @@ function printDefaults(params: {
 }): Record<string, unknown> {
   return printOxlintConfig({
     cwd: params.root,
-    env: { ...params.env, [LINT_CEILINGS_ENV]: "ignore" },
+    env: { ...params.env, [LEGACY_LINT_CEILINGS_ENV]: "ignore", [LINT_CEILINGS_ENV]: "ignore" },
   });
 }
 

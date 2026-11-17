@@ -7,6 +7,9 @@ import { compareStrings, type LintCeilings, parseLintCeilings } from "./ceilings
 /** Set to `ignore` to make createLintCeilingOverrides return nothing, so the defaults show. */
 export const LINT_CEILINGS_ENV = "CB_LINT_CEILINGS";
 
+/** The name before the rename; the CLI still sets it so an older plugin copy in the config honors it. */
+export const LEGACY_LINT_CEILINGS_ENV = "CBH_LINT_CEILINGS";
+
 /** The parts of an Oxlint configuration that decide whether and how a rule applies to a file. */
 export interface CeilingConfig {
   categories?: Readonly<Partial<Record<CeilingRule["category"], unknown>>> | undefined;
