@@ -11,8 +11,9 @@ const OXLINT_CLI = path.join(
   "bin/oxlint",
 );
 
-const TSGOLINT_EXECUTABLE = createRequire(__filename).resolve(
-  `@oxlint-tsgolint/${process.platform}-${process.arch}/tsgolint${process.platform === "win32" ? ".exe" : ""}`,
+const TSRS_LINT_EXECUTABLE = path.join(
+  path.dirname(createRequire(__filename).resolve("tsrs/package.json")),
+  "bin/tsrs-lint",
 );
 
 interface LintOutput {
@@ -55,7 +56,7 @@ export function compare(flags: Flags): boolean {
         {
           cwd: directory,
           encoding: "utf8",
-          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
         },
       );
     }
@@ -182,7 +183,7 @@ export const detached = new Store().read;
         {
           cwd: directory,
           encoding: "utf8",
-          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
         },
       );
 
@@ -263,7 +264,7 @@ export class Lookup {
       const options: SpawnSyncOptionsWithStringEncoding = {
         cwd: directory,
         encoding: "utf8",
-        env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+        env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
       };
       const validResult = spawnSync(process.execPath, args, options);
       expect(validResult.error).toBeUndefined();
@@ -337,7 +338,7 @@ export function closedUnion(mode: Mode): void {
         {
           cwd: directory,
           encoding: "utf8",
-          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
         },
       );
       expect(result.error).toBeUndefined();
@@ -458,7 +459,7 @@ export function branching(value: string): number {
           {
             cwd: directory,
             encoding: "utf8",
-            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
           },
         );
         expect(result.error).toBeUndefined();
@@ -614,7 +615,7 @@ export function invalidObject() { throw { reason: "not an Error" }; }
           {
             cwd: directory,
             encoding: "utf8",
-            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+            env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
           },
         );
         expect(result.error).toBeUndefined();
@@ -681,7 +682,7 @@ export function flag(isEnabled: boolean | undefined): boolean { return isEnabled
         {
           cwd: directory,
           encoding: "utf8",
-          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
         },
       );
 

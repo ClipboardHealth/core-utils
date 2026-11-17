@@ -61,13 +61,7 @@
     {
       "groupName": "oxlint",
       "groupSlug": "oxlint",
-      "matchPackageNames": [
-        "oxlint",
-        "oxlint-tsgolint",
-        "/^@oxlint\\//",
-        "/^@oxlint-tsgolint\\//",
-        "@clipboard-health/oxlint-config"
-      ],
+      "matchPackageNames": ["oxlint", "/^@oxlint\\//", "tsrs", "@clipboard-health/oxlint-config"],
       "separateMinorPatch": false
     },
     {
