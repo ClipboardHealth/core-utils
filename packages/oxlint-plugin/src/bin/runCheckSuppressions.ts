@@ -1,5 +1,12 @@
-import { randomBytes } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -58,17 +65,24 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     return { exitCode: 0 };
   }
 
-  const recordDirectory = mkdtempSync(path.join(tmpdir(), "cbh-check-suppressions-"));
+  // Resolved, because Oxlint reports the real path of each file.
+  const recordDirectory = mkdtempSync(path.join(realpathSync(tmpdir()), "cbh-check-suppressions-"));
   const recordPath = path.join(recordDirectory, "violations.jsonl");
-  // The configuration sits in the repository root so its `ignorePatterns` resolve as the
-  // repository's own do; Oxlint applies only configuration patterns to explicit file arguments.
-  const configPath = path.join(
-    root,
-    `.cbh-check-suppressions-${randomBytes(6).toString("hex")}.json`,
-  );
+  // Oxlint resolves a configuration's `ignorePatterns` against the configuration's own directory
+  // and applies only configuration patterns to explicit file arguments. So the changed files are
+  // copied to a scratch tree beside the configuration, outside the working tree, where tools that
+  // scan the repository never see either.
+  const scratchRoot = path.join(recordDirectory, "tree");
+  const configPath = path.join(scratchRoot, ".oxlintrc.json");
   let records: string;
   let diagnostics: OxlintDiagnostic[];
   try {
+    const { ignorePatterns } = readIgnorePatterns({ cwd: root });
+    for (const file of files) {
+      mkdirSync(path.dirname(path.join(scratchRoot, file)), { recursive: true });
+      copyFileSync(path.join(root, file), path.join(scratchRoot, file));
+    }
+
     ({ diagnostics } = withTemporaryFile({
       path: configPath,
       content: JSON.stringify({
@@ -77,7 +91,7 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
             (category) => [category, "off"],
           ),
         ),
-        ignorePatterns: readIgnorePatterns({ cwd: root }).ignorePatterns,
+        ignorePatterns,
         jsPlugins: [{ name: "cbh-check-suppressions", specifier: pluginSpecifier }],
         plugins: [],
         rules: { [`cbh-check-suppressions/${SUPPRESSION_POLICY_RULE_NAME}`]: "error" },
@@ -85,8 +99,16 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
       }),
       run: () =>
         runOxlint({
-          args: ["--config", configPath, "--disable-nested-config", "--format=json", ...files],
-          cwd: root,
+          // Relative, because Oxlint matches override and ignore globs against the path as given.
+          args: [
+            "--config",
+            path.basename(configPath),
+            "--disable-nested-config",
+            "--format=json",
+            ...files,
+          ],
+          cwd: scratchRoot,
+          oxlintFrom: root,
         }),
     }));
     records = existsSync(recordPath) ? readFileSync(recordPath, "utf8") : "";
@@ -98,7 +120,10 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   // skipped the rule for that file and "no violations" would be false.
   const unevaluated = diagnostics
     .filter((diagnostic) => !diagnostic.code.endsWith(`(${SUPPRESSION_POLICY_RULE_NAME})`))
-    .map((diagnostic) => `${path.relative(root, diagnostic.filename)}: ${diagnostic.message}`);
+    .map(
+      (diagnostic) =>
+        `${path.relative(scratchRoot, path.resolve(scratchRoot, diagnostic.filename))}: ${diagnostic.message}`,
+    );
   if (unevaluated.length > 0) {
     write(
       `${unevaluated.join("\n")}\n\ncbh-check-suppressions: Oxlint could not evaluate the policy for ${unevaluated.length} diagnostic(s); fix them and rerun.\n`,
@@ -113,7 +138,7 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     }
 
     const { endLine, file: absoluteFile, message, startLine } = parseRecord({ line });
-    const file = path.relative(root, absoluteFile);
+    const file = path.relative(scratchRoot, absoluteFile);
     const changedLines = changed.get(file);
     let touched = false;
     for (let lineNumber = startLine; lineNumber <= endLine && !touched; lineNumber += 1) {
