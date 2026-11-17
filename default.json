@@ -128,22 +128,30 @@
       "allowedVersions": "<12.0.0"
     },
     {
-      "description": "Node and npm updates are handled manually. Keep runtime version files, package engines, npm, and official Node images grouped for any future automated updates.",
+      "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches, minors and majors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, minors follow the normal schedule and automerge, and majors open without automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors and majors still wait their 7 days, but through the status check rather than by delaying the branch.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
       "matchPackageNames": [
         "node",
         "actions/node-versions",
-        "@types/node",
         "npm",
         "docker.io/node",
         "docker.io/library/node",
         "library/node",
         "public.ecr.aws/docker/library/node"
       ],
-      "enabled": false,
-      "separateMajorMinor": false,
-      "separateMinorPatch": false
+      "internalChecksFilter": "none"
+    },
+    {
+      "description": "Keep @types/node out of the Node.js group and disabled. Renovate takes a grouped branch's schedule and release age from its first update, so a @types/node bump in the group would put Node patches back on the 7-day, weekday path.",
+      "matchPackageNames": ["@types/node"],
+      "enabled": false
+    },
+    {
+      "description": "Move engines.npm ranges with the exact npm pin. Under the preset's replace strategy a patch such as 11.19.2 still satisfies ~11.19.0, so only mise.toml and packageManager would change and the pins would read differently. Bumping keeps engines.npm on the same version as the exact pins.",
+      "matchDepTypes": ["engines"],
+      "matchPackageNames": ["npm"],
+      "rangeStrategy": "bump"
     },
     {
       "matchUpdateTypes": ["minor", "patch", "digest"],
@@ -243,10 +251,43 @@
       "prBodyNotes": [
         "Validate the resolved versions and migration requirements, then run the affected Terraform plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
       ]
+    },
+    {
+      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official images time to publish the matching tag, so the group bumps the Dockerfile with the other pins. The Node.js group rule holds the branch until every pin reaches this age. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
+      "matchPackageNames": [
+        "node",
+        "actions/node-versions",
+        "npm",
+        "docker.io/node",
+        "docker.io/library/node",
+        "library/node",
+        "public.ecr.aws/docker/library/node"
+      ],
+      "matchUpdateTypes": ["patch"],
+      "minimumReleaseAge": "1 day",
+      "schedule": ["at any time"],
+      "automergeSchedule": ["at any time"],
+      "automerge": true,
+      "automergeType": "branch",
+      "prPriority": 10
+    },
+    {
+      "description": "Give the one-time digest pin of Node images its own branch. In the Node.js group it would share the minor branch, turn off that branch's automerge until someone merged the pin, and lend the branch its unaged release age.",
+      "matchPackageNames": [
+        "node",
+        "docker.io/node",
+        "docker.io/library/node",
+        "library/node",
+        "public.ecr.aws/docker/library/node"
+      ],
+      "matchUpdateTypes": ["pinDigest"],
+      "groupName": "Node.js image digests",
+      "groupSlug": "nodejs-pin"
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
   "prConcurrentLimit": 15,
   "prHourlyLimit": 5,
-  "separateMinorPatch": true
+  "separateMinorPatch": true,
+  "osvVulnerabilityAlerts": true
 }
