@@ -28,13 +28,7 @@ export function findReaders(params: {
     return [];
   }
 
-  const sourceFile = ts.createSourceFile(
-    filePath,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    /\.[cm]?jsx?$/.test(filePath) ? ts.ScriptKind.JSX : ts.ScriptKind.TSX,
-  );
+  const sourceFile = ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true);
   const lines = source.split("\n");
   const namesByKey = new Map([...names].map((name) => [toComparisonKey(name), name]));
   const readers = new Map<string, Reader>();

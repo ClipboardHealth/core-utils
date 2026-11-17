@@ -95,6 +95,10 @@ describe("runCli", () => {
     ["a schema key", "const schema = z.object({ API_KEY: z.string() });"],
     ["a class property", "class Environment { API_KEY!: string; }"],
     ["code after a block comment", "/*#__PURE__*/ connect(process.env.API_KEY);"],
+    [
+      "code after a generic arrow function",
+      "const identity = <T>(value: T): T => value; const value = identity(process.env.API_KEY);",
+    ],
   ])("fails on %s in repository code", (_label, source) => {
     const cwd = createRepository({
       "terraform/templates/base.json": template({ secrets: ["API_KEY"] }),
@@ -207,6 +211,22 @@ describe("runCli", () => {
     commitFiles(cwd, { "terraform/templates/base.json": template({}) });
 
     expect(run(cwd).exitCode).toBe(0);
+  });
+
+  it("fails when a @clipboard-health/config object defined outside createConfig derives the name", () => {
+    const cwd = createRepository({
+      "terraform/templates/base.json": template({ secrets: ["MY_API_BASE_URL"] }),
+      "src/values.ts":
+        'export const values = { myApi: { baseURL: { defaultValue: "x", description: "y" } } };\n',
+    });
+    commitFiles(cwd, { "terraform/templates/base.json": template({}) });
+
+    const actual = run(cwd);
+
+    expect(actual.exitCode).toBe(1);
+    expect(actual.output).toContain(
+      "src/values.ts:1  myApi.baseURL (read from MY_API_BASE_URL by @clipboard-health/config)",
+    );
   });
 
   it("searches nested packages only in the configured scopes", () => {

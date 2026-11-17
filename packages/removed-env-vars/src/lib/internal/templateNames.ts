@@ -1,4 +1,4 @@
-import { isRecord } from "./isRecord";
+import { isRecord } from "@clipboard-health/util-ts";
 
 const NAME_LIST_KEYS = new Set(["environment", "secrets"]);
 

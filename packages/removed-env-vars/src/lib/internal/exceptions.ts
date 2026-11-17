@@ -1,4 +1,4 @@
-import { isRecord } from "./isRecord";
+import { isRecord } from "@clipboard-health/util-ts";
 
 export interface RemovalException {
   name: string;

@@ -244,7 +244,7 @@ function findReaders(params: {
 
   return [...[...repositoryFiles].toSorted(), ...packageFiles].flatMap((filePath) => {
     const source = readFileSync(path.join(cwd, filePath), "utf8");
-    return [...findReadersInSource({ filePath, names, source })];
+    return findReadersInSource({ filePath, names, source });
   });
 }
 
