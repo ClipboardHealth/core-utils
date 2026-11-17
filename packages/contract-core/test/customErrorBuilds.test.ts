@@ -31,6 +31,7 @@ export function legacyTextError() {
       execFileSync(
         path.join(workspaceRoot, "node_modules/.bin/tsc"),
         [
+          "--ignoreConfig",
           "--declaration",
           "--emitDeclarationOnly",
           "--strict",
