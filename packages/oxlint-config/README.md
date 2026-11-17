@@ -25,7 +25,9 @@ custom rules.
 
 Repositories using the `frontend` preset must also install `oxlint-plugin-react-doctor >= 0.9.12`.
 
-Requires `oxlint >= 1.68.0`: the config references rules that older oxlint versions do not register, which fails config parsing outright.
+Repositories using the `typeAware` preset must also install `tsrs >= 0.21.0-ts7.1.0-beta`, which provides the `tsrs-lint` backend for `oxlint --type-aware`.
+
+Requires `oxlint >= 1.92.0`: older oxlint versions cannot find the `tsrs-lint` backend, and the config references rules they do not register, which fails config parsing outright.
 
 ## Usage
 
