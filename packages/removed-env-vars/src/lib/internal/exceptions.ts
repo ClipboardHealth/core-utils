@@ -1,3 +1,5 @@
+import { isRecord } from "./isRecord";
+
 export interface RemovalException {
   name: string;
   reason: string;
@@ -35,26 +37,24 @@ export function parseExceptions(params: { filePath: string; source: string }): P
   const errors: string[] = [];
   for (const [index, entry] of json.entries()) {
     const location = `${filePath}[${index}]`;
-    if (typeof entry !== "object" || entry === null) {
+    if (!isRecord(entry)) {
       errors.push(`${location}: expected an object`);
       continue;
     }
 
-    const record = entry as Record<string, unknown>;
-    const missing = REQUIRED_FIELDS.filter(
-      (field) => typeof record[field] !== "string" || String(record[field]).trim() === "",
-    );
-    if (missing.length > 0) {
+    const { name, reason, ticket, expiresOn } = entry;
+    if (
+      !isNonEmptyString(name) ||
+      !isNonEmptyString(reason) ||
+      !isNonEmptyString(ticket) ||
+      !isNonEmptyString(expiresOn)
+    ) {
+      const missing = REQUIRED_FIELDS.filter((field) => !isNonEmptyString(entry[field]));
       errors.push(`${location}: missing or empty ${missing.join(", ")}`);
       continue;
     }
 
-    const exception: RemovalException = {
-      name: String(record["name"]),
-      reason: String(record["reason"]),
-      ticket: String(record["ticket"]),
-      expiresOn: String(record["expiresOn"]),
-    };
+    const exception: RemovalException = { name, reason, ticket, expiresOn };
     if (!isValidDate(exception.expiresOn)) {
       errors.push(`${location}: expiresOn must be a YYYY-MM-DD date`);
       continue;
@@ -69,6 +69,10 @@ export function parseExceptions(params: { filePath: string; source: string }): P
 /** Whether `expiresOn` is before `today`; both are `YYYY-MM-DD`, so string order is date order. */
 export function isExpired(params: { expiresOn: string; today: string }): boolean {
   return params.expiresOn < params.today;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim() !== "";
 }
 
 function isValidDate(value: string): boolean {

@@ -1,3 +1,5 @@
+import { isRecord } from "./isRecord";
+
 const NAME_LIST_KEYS = new Set(["environment", "secrets"]);
 
 /**
@@ -35,8 +37,4 @@ function visit(value: unknown, names: Set<string>): void {
 
     visit(child, names);
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

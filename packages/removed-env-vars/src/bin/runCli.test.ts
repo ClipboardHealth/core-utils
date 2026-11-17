@@ -17,43 +17,43 @@ afterEach(() => {
 describe("runCli", () => {
   it("fails when a renamed secret is still read by an installed internal package", () => {
     const cwd = createRepository({
-      "terraform/templates/base.json": template({ secrets: ["API_BASE_URL", "OTHER_URL"] }),
+      "terraform/templates/base.json": template({ secrets: ["API_URL", "OTHER_URL"] }),
       "src/main.ts": "export const port = 3000;\n",
     });
     writeFiles(cwd, {
-      "node_modules/@clipboard-health/auth/src/user.js":
-        'const url = process.env["API_BASE_URL"] ?? process.env["FALLBACK_URL"];\n',
+      "node_modules/@clipboard-health/example-client/src/client.js":
+        'const url = process.env["API_URL"] ?? process.env["DEFAULT_URL"];\n',
     });
     commitFiles(cwd, {
-      "terraform/templates/base.json": template({ secrets: ["ALB_API_BASE_URL", "OTHER_URL"] }),
+      "terraform/templates/base.json": template({ secrets: ["API_ENDPOINT", "OTHER_URL"] }),
     });
 
     const actual = run(cwd);
 
     expect(actual.exitCode).toBe(1);
     expect(actual.output).toContain(
-      "API_BASE_URL is no longer set by terraform/templates/base.json, but code still reads it:",
+      "API_URL is no longer set by terraform/templates/base.json, but code still reads it:",
     );
     expect(actual.output).toContain(
-      'node_modules/@clipboard-health/auth/src/user.js:1  const url = process.env["API_BASE_URL"]',
+      'node_modules/@clipboard-health/example-client/src/client.js:1  const url = process.env["API_URL"]',
     );
   });
 
   it("passes once the readers move to the new name in the same change", () => {
     const cwd = createRepository({
-      "terraform/templates/base.json": template({ secrets: ["API_BASE_URL"] }),
-      "src/client.ts": "export const url = process.env.API_BASE_URL;\n",
+      "terraform/templates/base.json": template({ secrets: ["API_URL"] }),
+      "src/client.ts": "export const url = process.env.API_URL;\n",
     });
     commitFiles(cwd, {
-      "terraform/templates/base.json": template({ secrets: ["ALB_API_BASE_URL"] }),
-      "src/client.ts": "export const url = process.env.ALB_API_BASE_URL;\n",
+      "terraform/templates/base.json": template({ secrets: ["API_ENDPOINT"] }),
+      "src/client.ts": "export const url = process.env.API_ENDPOINT;\n",
     });
 
     const actual = run(cwd);
 
     expect(actual).toEqual({
       exitCode: 0,
-      output: "Removed API_BASE_URL (was in terraform/templates/base.json): no readers found.\n",
+      output: "Removed API_URL (was in terraform/templates/base.json): no readers found.\n",
     });
   });
 
@@ -92,6 +92,9 @@ describe("runCli", () => {
     ["bracket access", "const value = process.env['API_KEY'];"],
     ["destructuring", "const { PORT, API_KEY } = process.env;"],
     ["a string literal", 'const value = getRequiredEnvironmentVariable("API_KEY");'],
+    ["a schema key", "const schema = z.object({ API_KEY: z.string() });"],
+    ["a class property", "class Environment { API_KEY!: string; }"],
+    ["code after a block comment", "/*#__PURE__*/ connect(process.env.API_KEY);"],
   ])("fails on %s in repository code", (_label, source) => {
     const cwd = createRepository({
       "terraform/templates/base.json": template({ secrets: ["API_KEY"] }),
@@ -103,6 +106,29 @@ describe("runCli", () => {
 
     expect(actual.exitCode).toBe(1);
     expect(actual.output).toContain(`src/client.ts:1  ${source}`);
+  });
+
+  it("fails on destructuring wrapped across lines", () => {
+    const cwd = createRepository({
+      "terraform/templates/base.json": template({ secrets: ["API_KEY"] }),
+      "src/client.ts": "const {\n  PORT,\n  API_KEY,\n} = process.env;\n",
+    });
+    commitFiles(cwd, { "terraform/templates/base.json": template({}) });
+
+    const actual = run(cwd);
+
+    expect(actual.exitCode).toBe(1);
+    expect(actual.output).toContain("src/client.ts:3  API_KEY,");
+  });
+
+  it("ignores a local variable that shares the name", () => {
+    const cwd = createRepository({
+      "terraform/templates/base.json": template({ environment: ["PORT"] }),
+      "src/main.ts": "const PORT = 3000;\nexport { PORT as port };\n",
+    });
+    commitFiles(cwd, { "terraform/templates/base.json": template({}) });
+
+    expect(run(cwd).exitCode).toBe(0);
   });
 
   it("ignores names that only share a prefix", () => {
@@ -164,6 +190,60 @@ describe("runCli", () => {
       exitCode: 0,
       output: "Removed API_KEY (was in terraform/templates/base.json): no readers found.\n",
     });
+  });
+
+  it("matches the full @clipboard-health/config path below config", () => {
+    const cwd = createRepository({
+      "terraform/templates/base.json": template({ environment: ["PORT"] }),
+      "src/config.ts": [
+        "export const config = createConfig({",
+        "  config: {",
+        '    server: { port: { defaultValue: 3000, description: "Server port" } },',
+        "  },",
+        "});",
+        "",
+      ].join("\n"),
+    });
+    commitFiles(cwd, { "terraform/templates/base.json": template({}) });
+
+    expect(run(cwd).exitCode).toBe(0);
+  });
+
+  it("searches nested packages only in the configured scopes", () => {
+    const cwd = createRepository({
+      "terraform/templates/base.json": template({ environment: ["API_KEY", "LOG_LEVEL"] }),
+    });
+    writeFiles(cwd, {
+      "node_modules/@clipboard-health/client/node_modules/vendor/index.js":
+        "const level = process.env.LOG_LEVEL;\n",
+      "node_modules/@clipboard-health/client/node_modules/@clipboard-health/auth/index.js":
+        "const key = process.env.API_KEY;\n",
+    });
+    commitFiles(cwd, { "terraform/templates/base.json": template({}) });
+
+    const actual = run(cwd);
+
+    expect(actual.exitCode).toBe(1);
+    expect(actual.output).toContain(
+      "node_modules/@clipboard-health/client/node_modules/@clipboard-health/auth/index.js:1",
+    );
+    expect(actual.output).toContain(
+      "Removed LOG_LEVEL (was in terraform/templates/base.json): no readers found.",
+    );
+  });
+
+  it("compares with the merge base, ignoring variables the base branch added later", () => {
+    const cwd = createRepository({
+      "terraform/templates/base.json": template({}),
+      "src/client.ts": "const value = process.env.API_KEY;\n",
+    });
+    git(cwd, ["checkout", "--quiet", "-b", "feature"]);
+    commitFiles(cwd, { "README.md": "Feature\n" });
+    git(cwd, ["checkout", "--quiet", "main"]);
+    commitFiles(cwd, { "terraform/templates/base.json": template({ secrets: ["API_KEY"] }) });
+    git(cwd, ["checkout", "--quiet", "feature"]);
+
+    expect(runWith({ arguments_: ["--base", "main"], cwd })).toEqual({ exitCode: 0, output: "" });
   });
 
   it("passes with an unexpired exception and reports it", () => {
@@ -283,7 +363,7 @@ describe("runCli", () => {
     const cwd = createRepository({ "terraform/templates/base.json": template({}) });
 
     expect(() => runWith({ arguments_: ["--base", "missing-ref"], cwd })).toThrow(
-      "Base revision missing-ref isn't available. Fetch it before running the check.",
+      "Can't find the merge base of missing-ref and HEAD. Fetch the base revision and enough history before running the check.",
     );
   });
 });
@@ -293,7 +373,10 @@ function template(params: { environment?: string[]; secrets?: string[] }): strin
   return `${JSON.stringify(
     {
       environment: environment.map((name) => ({ name, value: "value" })),
-      secrets: secrets.map((name) => ({ name, ssmNamespace: "/shared/production/" })),
+      secrets: secrets.map((name) => ({
+        name,
+        valueFrom: `arn:aws:ssm:us-east-1:123456789012:parameter/${name}`,
+      })),
     },
     undefined,
     2,

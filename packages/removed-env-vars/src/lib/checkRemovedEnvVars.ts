@@ -2,9 +2,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import { isExpired, parseExceptions, type RemovalException } from "./exceptions";
-import { findConfigPathReaders, findLiteralReaders, type Reader } from "./readers";
-import { collectTemplateNames } from "./templateNames";
+import { isExpired, parseExceptions, type RemovalException } from "./internal/exceptions";
+import { findReaders as findReadersInSource, type Reader } from "./internal/readers";
+import { collectTemplateNames } from "./internal/templateNames";
 
 export interface CheckRemovedEnvVarsParams {
   /** Repository root. */
@@ -63,10 +63,11 @@ export function checkRemovedEnvVars(params: CheckRemovedEnvVarsParams): CheckRem
   const { cwd, baseRef, templateDirectories, exceptionsPath, packageScopes, today } = params;
   const errors: string[] = [];
 
+  const baseCommit = resolveBaseCommit({ baseRef, cwd });
   const base = readTemplateNames({
     errors,
-    files: listBaseTemplates({ baseRef, cwd, templateDirectories }),
-    read: (file) => git(cwd, ["show", `${baseRef}:${file}`]),
+    files: listBaseTemplates({ baseCommit, cwd, templateDirectories }),
+    read: (file) => git(cwd, ["show", `${baseCommit}:${file}`]),
   });
   const head = readTemplateNames({
     errors,
@@ -148,20 +149,30 @@ function splitNul(output: string): string[] {
   return output.split("\0").filter((entry) => entry !== "");
 }
 
+/**
+ * Compares with the merge base, so a branch checked out at its own head isn't charged with
+ * variables that the base branch added after it branched.
+ */
+function resolveBaseCommit(params: { baseRef: string; cwd: string }): string {
+  const { baseRef, cwd } = params;
+  try {
+    return git(cwd, ["merge-base", baseRef, "HEAD"]).trim();
+  } catch (error) {
+    throw new Error(
+      `Can't find the merge base of ${baseRef} and HEAD. Fetch the base revision and enough history before running the check.`,
+      { cause: error },
+    );
+  }
+}
+
 function listBaseTemplates(params: {
-  baseRef: string;
+  baseCommit: string;
   cwd: string;
   templateDirectories: readonly string[];
 }): string[] {
-  const { baseRef, cwd, templateDirectories } = params;
-  try {
-    git(cwd, ["rev-parse", "--verify", "--quiet", `${baseRef}^{commit}`]);
-  } catch {
-    throw new Error(`Base revision ${baseRef} isn't available. Fetch it before running the check.`);
-  }
-
+  const { baseCommit, cwd, templateDirectories } = params;
   return splitNul(
-    git(cwd, ["ls-tree", "-r", "-z", "--name-only", baseRef, "--", ...templateDirectories]),
+    git(cwd, ["ls-tree", "-r", "-z", "--name-only", baseCommit, "--", ...templateDirectories]),
   ).filter((file) => file.endsWith(".json"));
 }
 
@@ -223,29 +234,32 @@ function findReaders(params: {
   ]);
   const devPackages = readDevPackages(cwd);
   const packageFiles = packageScopes.flatMap((scope) =>
-    listPackageFiles({ cwd, devPackages, directory: path.join("node_modules", scope) }),
+    listPackageFiles({
+      cwd,
+      devPackages,
+      directory: path.join("node_modules", scope),
+      packageScopes,
+    }),
   );
 
   return [...[...repositoryFiles].toSorted(), ...packageFiles].flatMap((filePath) => {
     const source = readFileSync(path.join(cwd, filePath), "utf8");
-    return [
-      ...findLiteralReaders({ filePath, names, source }),
-      ...findConfigPathReaders({ filePath, names, source }),
-    ];
+    return [...findReadersInSource({ filePath, names, source })];
   });
 }
 
 /**
- * Lists package code files relative to `cwd`. Skips symbolic links, such as workspace packages,
- * which git already covers, and development-only packages, which the deployed service doesn't
- * install.
+ * Lists package code files relative to `cwd`. Inside nested `node_modules` directories it descends
+ * only into the configured scopes. It skips symbolic links, such as workspace packages, which git
+ * already covers, and development-only packages, which the deployed service doesn't install.
  */
 function listPackageFiles(params: {
   cwd: string;
   devPackages: ReadonlySet<string>;
   directory: string;
+  packageScopes: readonly string[];
 }): string[] {
-  const { cwd, devPackages, directory } = params;
+  const { cwd, devPackages, directory, packageScopes } = params;
   const absoluteDirectory = path.join(cwd, directory);
   if (devPackages.has(directory) || !existsSync(absoluteDirectory)) {
     return [];
@@ -255,8 +269,19 @@ function listPackageFiles(params: {
     .toSorted((left, right) => left.name.localeCompare(right.name))
     .flatMap((entry) => {
       const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory() && entry.name === "node_modules") {
+        return packageScopes.flatMap((scope) =>
+          listPackageFiles({
+            cwd,
+            devPackages,
+            directory: path.join(entryPath, scope),
+            packageScopes,
+          }),
+        );
+      }
+
       if (entry.isDirectory()) {
-        return listPackageFiles({ cwd, devPackages, directory: entryPath });
+        return listPackageFiles({ cwd, devPackages, directory: entryPath, packageScopes });
       }
 
       return entry.isFile() && PACKAGE_CODE_PATTERN.test(entry.name) ? [entryPath] : [];

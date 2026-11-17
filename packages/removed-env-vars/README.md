@@ -34,18 +34,19 @@ A GitHub Actions job:
 - uses: actions/checkout@v7
   with:
     fetch-depth: 0
+    persist-credentials: false
 - run: npm ci
 - run: npx @clipboard-health/removed-env-vars --base "${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}"
 ```
 
 ## What it checks
 
-1. It collects the `name` of every `environment` and `secrets` entry in the `*.json` templates, at the base revision and in the working tree. A name is removed when no template sets it any more, so moving a variable between templates, or deleting one service's template while another still sets the name, passes.
+1. It collects the `name` of every `environment` and `secrets` entry in the `*.json` templates, at the merge base of the base revision and `HEAD`, and in the working tree. A name is removed when no template sets it any more, so moving a variable between templates, or deleting one service's template while another still sets the name, passes.
 2. For each removed name it searches:
    - the repository's tracked JavaScript and TypeScript files, except `*.spec.*` and `*.test.*` files;
    - installed packages in the configured scopes, except those `package-lock.json` marks as development-only.
-3. A line reads a name when it uses `process.env.NAME`, `process.env["NAME"]`, a destructured `process.env`, or the name as a whole string literal. Comment lines don't count.
-4. An `@clipboard-health/config` value also reads a name: `{ myApi: { baseURL: { defaultValue, description } } }` reads `MY_API_BASE_URL`.
+3. Code reads a name when it uses the name as a whole string literal, such as `process.env["NAME"]` or `getEnv("NAME")`, or as a property: `process.env.NAME`, `const { NAME } = process.env`, or a schema key such as `z.object({ NAME: z.string() })`. Comments don't count.
+4. An `@clipboard-health/config` value also reads a name: `createConfig({ config: { myApi: { baseURL: { defaultValue, description } } } })` reads `MY_API_BASE_URL`.
 
 The check only looks at names the change removes, so variables that are already unset never fail it.
 
@@ -70,4 +71,4 @@ Every field is required. An expired exception fails the check. An exception that
 
 - It reads JSON templates only, not variables that Terraform, a Dockerfile or the image sets.
 - It can't see names built at runtime, such as `process.env[prefix + "_URL"]`.
-- Packages outside the configured scopes aren't searched.
+- Packages outside the configured scopes aren't searched, including those nested inside a scoped package.
