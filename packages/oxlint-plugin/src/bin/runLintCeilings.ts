@@ -5,7 +5,10 @@ import { parseArgs } from "node:util";
 import { git, resolveMergeBase } from "../lib/internal/changedLines";
 import { isPlainObject } from "../lib/internal/json";
 import { CEILING_RULES, isCeilingRule } from "../lib/internal/lintCeilings/ceilingRules";
-import { LINT_CEILINGS_ENV } from "../lib/internal/lintCeilings/ceilingOverrides";
+import {
+  LEGACY_LINT_CEILINGS_ENV,
+  LINT_CEILINGS_ENV,
+} from "../lib/internal/lintCeilings/ceilingOverrides";
 import {
   formatLintCeilings,
   LINT_CEILINGS_FILE,
@@ -27,7 +30,7 @@ import {
 import type { CliParams } from "../lib/internal/runCli";
 import { printOxlintConfig } from "../lib/internal/runOxlint";
 
-const USAGE = `Usage: cbh-lint-ceilings <command> [options]
+const USAGE = `Usage: cb-lint-ceilings <command> [options]
 
 Commands:
   check [--base <ref>] [--allow-increases]
@@ -130,7 +133,7 @@ function check(params: { allowIncreases: boolean; base: string | undefined; cont
   const { env, root, write } = context;
   const ceilingsPath = path.join(root, LINT_CEILINGS_FILE);
   if (!existsSync(ceilingsPath)) {
-    write(`cbh-lint-ceilings: no ${LINT_CEILINGS_FILE}; nothing to check.\n`);
+    write(`cb-lint-ceilings: no ${LINT_CEILINGS_FILE}; nothing to check.\n`);
     return { exitCode: 0 };
   }
 
@@ -139,7 +142,7 @@ function check(params: { allowIncreases: boolean; base: string | undefined; cont
   });
   if (!canonical) {
     write(
-      `${LINT_CEILINGS_FILE} is not in the canonical layout: rules and paths sorted, a blank line between entries, and no empty rules. \`cbh-lint-ceilings tighten\` rewrites it in that layout.\n`,
+      `${LINT_CEILINGS_FILE} is not in the canonical layout: rules and paths sorted, a blank line between entries, and no empty rules. \`cb-lint-ceilings tighten\` rewrites it in that layout.\n`,
     );
     return { exitCode: 1 };
   }
@@ -190,19 +193,19 @@ function check(params: { allowIncreases: boolean; base: string | undefined; cont
   });
   const messages = increases.map((increase) => increase.message).join("\n");
   if (increases.length === 0) {
-    write(`cbh-lint-ceilings: checked ${toMeasure.length} changed listed file(s); nothing grew.\n`);
+    write(`cb-lint-ceilings: checked ${toMeasure.length} changed listed file(s); nothing grew.\n`);
     return { exitCode: 0 };
   }
 
   if (allowIncreases) {
     write(
-      `${messages}\n\ncbh-lint-ceilings: ${increases.length} increase(s) allowed by --allow-increases.\n`,
+      `${messages}\n\ncb-lint-ceilings: ${increases.length} increase(s) allowed by --allow-increases.\n`,
     );
     return { exitCode: 0 };
   }
 
   write(
-    `${messages}\n\ncbh-lint-ceilings: ${increases.length} increase(s). Files listed in ${LINT_CEILINGS_FILE} may shrink but not grow, and entries may be lowered or removed but not added or raised without approval. Oxlint enforces the ceiling, which can be up to a week stale; this check enforces no growth.\n`,
+    `${messages}\n\ncb-lint-ceilings: ${increases.length} increase(s). Files listed in ${LINT_CEILINGS_FILE} may shrink but not grow, and entries may be lowered or removed but not added or raised without approval. Oxlint enforces the ceiling, which can be up to a week stale; this check enforces no growth.\n`,
   );
   return { exitCode: 1 };
 }
@@ -211,7 +214,7 @@ function tighten(params: { context: Context }): { exitCode: number } {
   const { env, root, write } = params.context;
   const ceilingsPath = path.join(root, LINT_CEILINGS_FILE);
   if (!existsSync(ceilingsPath)) {
-    write(`cbh-lint-ceilings: no ${LINT_CEILINGS_FILE}; nothing to tighten.\n`);
+    write(`cb-lint-ceilings: no ${LINT_CEILINGS_FILE}; nothing to tighten.\n`);
     return { exitCode: 0 };
   }
 
@@ -232,8 +235,8 @@ function tighten(params: { context: Context }): { exitCode: number } {
   writeFileSync(ceilingsPath, formatLintCeilings({ ceilings: tightened }));
   write(
     changes.length === 0
-      ? "cbh-lint-ceilings: every ceiling is current.\n"
-      : `${changes.join("\n")}\n\ncbh-lint-ceilings: tightened ${changes.length} entr${changes.length === 1 ? "y" : "ies"}.\n`,
+      ? "cb-lint-ceilings: every ceiling is current.\n"
+      : `${changes.join("\n")}\n\ncb-lint-ceilings: tightened ${changes.length} entr${changes.length === 1 ? "y" : "ies"}.\n`,
   );
   return { exitCode: 0 };
 }
@@ -268,7 +271,7 @@ function init(params: { context: Context; ruleNames: readonly string[] }): { exi
 
   writeFileSync(ceilingsPath, formatLintCeilings({ ceilings: { rules, version: 1 } }));
   write(
-    `cbh-lint-ceilings: wrote ${count} entr${count === 1 ? "y" : "ies"} to ${LINT_CEILINGS_FILE}.\n`,
+    `cb-lint-ceilings: wrote ${count} entr${count === 1 ? "y" : "ies"} to ${LINT_CEILINGS_FILE}.\n`,
   );
   return { exitCode: 0 };
 }
@@ -280,7 +283,7 @@ function printDefaults(params: {
 }): Record<string, unknown> {
   return printOxlintConfig({
     cwd: params.root,
-    env: { ...params.env, [LINT_CEILINGS_ENV]: "ignore" },
+    env: { ...params.env, [LEGACY_LINT_CEILINGS_ENV]: "ignore", [LINT_CEILINGS_ENV]: "ignore" },
   });
 }
 

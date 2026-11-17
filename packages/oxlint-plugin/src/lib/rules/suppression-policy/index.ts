@@ -62,7 +62,7 @@ const rule = defineRule({
 export default rule;
 
 /**
- * `cbh-check-suppressions` sets this so violations go to a file. Inline directives can silence any
+ * `cb-check-suppressions` sets this so violations go to a file. Inline directives can silence any
  * report, including one about the directive that silences it; they cannot silence a file write.
  */
 function readRecordPath(params: { settings: unknown }): string | undefined {

@@ -55,7 +55,7 @@ describe("runCheckSuppressions", () => {
 
     expect({ exitCode, output }).toStrictEqual({
       exitCode: 0,
-      output: "cbh-check-suppressions: checked 1 changed file(s); no violations.\n",
+      output: "cb-check-suppressions: checked 1 changed file(s); no violations.\n",
     });
   });
 

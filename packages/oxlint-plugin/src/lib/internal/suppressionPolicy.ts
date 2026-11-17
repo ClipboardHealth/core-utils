@@ -1,5 +1,5 @@
 /**
- * Shared by the `suppression-policy` rule and the `cbh-check-suppressions` CLI so both apply the
+ * Shared by the `suppression-policy` rule and the `cb-check-suppressions` CLI so both apply the
  * same parsing and verdicts.
  */
 
@@ -17,8 +17,8 @@ export const NEVER_SUPPRESS_RULES: readonly string[] = [
 
 export const SUPPRESSION_POLICY_RULE_NAME = "suppression-policy";
 
-/** Settings key through which `cbh-check-suppressions` asks the rule to record violations to a file. */
-export const RECORD_SETTING = "cbh-check-suppressions";
+/** Settings key through which `cb-check-suppressions` asks the rule to record violations to a file. */
+export const RECORD_SETTING = "cb-check-suppressions";
 
 /**
  * Disabling either rule lets a file opt out of the policy: this rule by name, and

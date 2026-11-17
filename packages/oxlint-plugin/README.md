@@ -85,26 +85,32 @@ the forms it skips. Enable it on controllers:
 
 Enable it with the `suppressionPolicy` preset from `@clipboard-health/oxlint-config`.
 
-### `cbh-check-suppressions`
+### `cb-check-suppressions`
 
 A file-level `/* oxlint-disable @clipboard-health/suppression-policy */` silences the rule for the
 whole file, including its report on that comment, and a repository with existing violations cannot
-enable the rule yet. The `cbh-check-suppressions` CLI covers both. It applies the same policy to
+enable the rule yet. The `cb-check-suppressions` CLI covers both. It applies the same policy to
 directives added or changed since the merge base, and also reports blanket disables. The rule
 writes its findings to a file instead of reporting them to Oxlint, so no inline directive can
 silence them. Existing directives are left alone, so it can run in CI before the rule is enabled.
 
 ```sh
-npx cbh-check-suppressions            # compares with the pull request base in GitHub Actions, else origin/HEAD
-npx cbh-check-suppressions --base origin/main
+npx cb-check-suppressions            # compares with the pull request base in GitHub Actions, else origin/HEAD
+npx cb-check-suppressions --base origin/main
 ```
 
 It compares the working tree, including uncommitted and untracked files, and respects the
 repository's Oxlint `ignorePatterns`. It exits 1 on a violation. In GitHub Actions, check out with
 `fetch-depth: 0` so it can find the merge base.
 
-## `cbh-lint-ceilings`
+## `cb-lint-ceilings`
 
 Checks, tightens and generates `lint-ceilings.json`, the per-file upper bounds for count rules such
 as `max-lines` and `complexity`. See
 [Lint ceilings](../oxlint-config/README.md#lint-ceilings) in the config README.
+
+## Deprecated `cbh-*` CLIs
+
+`cbh-check-suppressions` and `cbh-lint-ceilings` are deprecated aliases for `cb-check-suppressions`
+and `cb-lint-ceilings`. They print a deprecation notice to stderr and then behave identically. Move
+to the `cb-*` names; the aliases will be removed in a future major version.

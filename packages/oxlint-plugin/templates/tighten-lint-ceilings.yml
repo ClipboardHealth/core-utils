@@ -38,7 +38,7 @@ jobs:
       - name: Tighten lint-ceilings.json
         id: tighten
         run: |
-          npx cbh-lint-ceilings tighten
+          npx cb-lint-ceilings tighten
           if git diff --quiet -- lint-ceilings.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else

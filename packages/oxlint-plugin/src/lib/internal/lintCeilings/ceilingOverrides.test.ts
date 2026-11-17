@@ -177,15 +177,18 @@ describe("createLintCeilingOverrides", () => {
     ]);
   });
 
-  it("returns nothing when the environment asks to ignore ceilings", () => {
-    expect(
-      createLintCeilingOverrides({
-        ceilings: { rules: { "max-lines": { "a.ts": 400 } }, version: 1 },
-        config: { rules: { "max-lines": "error" } },
-        env: { CBH_LINT_CEILINGS: "ignore" },
-      }),
-    ).toStrictEqual({ overrides: [] });
-  });
+  it.each(["CB_LINT_CEILINGS", "CBH_LINT_CEILINGS"])(
+    "returns nothing when %s asks to ignore ceilings",
+    (name) => {
+      expect(
+        createLintCeilingOverrides({
+          ceilings: { rules: { "max-lines": { "a.ts": 400 } }, version: 1 },
+          config: { rules: { "max-lines": "error" } },
+          env: { [name]: "ignore" },
+        }),
+      ).toStrictEqual({ overrides: [] });
+    },
+  );
 
   it("rejects an unknown severity", () => {
     expect(() =>
