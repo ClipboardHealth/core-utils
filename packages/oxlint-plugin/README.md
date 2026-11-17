@@ -59,7 +59,9 @@ a case-insensitive one, one not anchored with `^`, or one whose first atom after
 literal text, such as `^\s*`. It also reports `new RegExp(value, "i")` built from a runtime value,
 because a regex built in one function and queried in another is invisible at the filter. Enable
 it on code that queries MongoDB, not on tests. `knownViolations` holds per-file counts for
-violations that predate the rule; a listed file may shrink but not grow:
+violations that predate the rule; a listed file may shrink but not grow. A line disabled with an
+`oxlint-disable-next-line` or `oxlint-disable-line` directive and a reason is an exception outside
+the count:
 
 ```ts
 "@clipboard-health/no-unindexable-mongo-regex": [

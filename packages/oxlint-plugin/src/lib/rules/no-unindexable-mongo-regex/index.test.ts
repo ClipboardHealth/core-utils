@@ -65,6 +65,19 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       code: "const matcher = /abc/i; if (matcher.test(value)) { await User.find({ email }); }",
     },
     {
+      name: "case-insensitive RegExp from a runtime value used in memory",
+      code: 'const cleaned = text.replace(new RegExp(escapeRegExp(word), "gi"), "");',
+    },
+    {
+      name: "inline exception in a file at its known-violations count",
+      cwd,
+      filename,
+      options: [{ knownViolations: { "src/users/user.repository.ts": 1 } }],
+      code: `await User.find({ name: { $regex: search, $options: "i" } });
+        // oxlint-disable-next-line @clipboard-health/no-unindexable-mongo-regex -- Admin search over a small collection
+        await Tag.find({ name: { $regex: search, $options: "i" } });`,
+    },
+    {
       name: "file within its known-violations count",
       cwd,
       filename,
@@ -74,7 +87,7 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
   ],
   invalid: [
     {
-      name: "case-insensitive anchored regex built from input and returned (INC shape)",
+      name: "case-insensitive anchored regex built from input and returned for use elsewhere",
       code: `export function contactFilter(value: string): RegExp {
         return new RegExp(\`^\\\\s*\${escapeRegExp(value)}\\\\s*$\`, "i");
       }`,
@@ -145,6 +158,21 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       name: "filter object declared with a filter type",
       code: "const query: FilterQuery<User> = { email: /example/ }; await User.find(query);",
       errors: [{ messageId: "unanchored" }],
+    },
+    {
+      name: "multiline flag lets ^ match after any newline",
+      code: "await User.find({ name: /^smith/m });",
+      errors: [{ messageId: "unanchored" }],
+    },
+    {
+      name: "alphanumeric escape after the anchor",
+      code: "await User.find({ name: /^\\tsmith/ });",
+      errors: [{ messageId: "noLiteralPrefix" }],
+    },
+    {
+      name: "concatenated pattern with optional whitespace after the anchor",
+      code: 'await User.find({ email: { $regex: "^\\\\s*" + escapeRegExp(email) } });',
+      errors: [{ messageId: "noLiteralPrefix" }],
     },
     {
       name: "file over its known-violations count",

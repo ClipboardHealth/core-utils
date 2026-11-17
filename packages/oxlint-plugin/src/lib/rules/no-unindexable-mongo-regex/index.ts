@@ -82,6 +82,19 @@ const TRANSPARENT_PARENTS = new Set([
   "TSSatisfiesExpression",
 ]);
 
+const IN_MEMORY_STRING_METHODS = new Set([
+  "match",
+  "matchAll",
+  "replace",
+  "replaceAll",
+  "search",
+  "split",
+]);
+
+const IN_MEMORY_REGEX_METHODS = new Set(["exec", "test"]);
+
+const DISABLE_DIRECTIVE = /^\s*(?:eslint|oxlint)-disable-(next-)?line\s+([^\n]*?)(?:\s+--.*)?$/;
+
 const MAX_VARIABLE_DEPTH = 3;
 
 type Problem = "caseInsensitive" | "noLiteralPrefix" | "unanchored";
@@ -153,6 +166,26 @@ function isMapCallback(parent: ESTree.Node, child: ESTree.Node): boolean {
   );
 }
 
+/** A regex passed straight to a string method, or tested on the spot, never reaches a query. */
+function isUsedInMemory(node: ESTree.Node): boolean {
+  const parent = node.parent as ESTree.Node | null | undefined;
+  if (parent?.type === "CallExpression") {
+    const name = calleeName(parent.callee);
+    return (
+      parent.arguments.includes(node as ESTree.Expression) &&
+      name !== undefined &&
+      IN_MEMORY_STRING_METHODS.has(name)
+    );
+  }
+
+  return (
+    parent?.type === "MemberExpression" &&
+    parent.object === node &&
+    parent.property.type === "Identifier" &&
+    IN_MEMORY_REGEX_METHODS.has(parent.property.name)
+  );
+}
+
 function hasFilterType(declarator: ESTree.VariableDeclarator): boolean {
   const annotation =
     declarator.id.type === "Identifier" ? declarator.id.typeAnnotation?.typeAnnotation : undefined;
@@ -194,6 +227,12 @@ function toSegments(node: ESTree.Node | undefined): Segment[] | undefined {
     }
 
     return segments;
+  }
+
+  if (node.type === "BinaryExpression" && node.operator === "+") {
+    const left = toSegments(node.left);
+    const right = toSegments(node.right);
+    return left && right ? [...left, ...right] : undefined;
   }
 
   if (isRegExpConstructor(node)) {
@@ -253,7 +292,7 @@ function hasTopLevelAlternation(text: string): boolean {
 function literalAtomLength(text: string): number | undefined {
   const [char, next] = text;
   if (char === "\\") {
-    if (next === undefined || /[\dbBdDkKpPsSwW]/.test(next)) {
+    if (next === undefined || /[\dA-Za-z]/.test(next)) {
       return undefined;
     }
 
@@ -306,7 +345,9 @@ function regexProblem(
     return "caseInsensitive";
   }
 
-  return segments ? prefixProblem(segments) : undefined;
+  const problem = segments ? prefixProblem(segments) : undefined;
+  // With the multiline flag, `^` also matches after a newline, so it no longer bounds the index.
+  return problem ?? (flags?.includes("m") && segments ? "unanchored" : undefined);
 }
 
 const rule = defineRule({
@@ -436,7 +477,8 @@ const rule = defineRule({
         isRegExpConstructor(node) &&
         flags?.includes("i") &&
         segments !== undefined &&
-        !isStatic(segments)
+        !isStatic(segments) &&
+        !isUsedInMemory(node)
       ) {
         add(node, "dynamicCaseInsensitive");
       }
@@ -482,11 +524,25 @@ const rule = defineRule({
         }
       },
       "Program:exit"(node) {
+        // An inline exception is outside the count, so adding one doesn't fail baselined lines.
+        const disabledLines = new Set<number>();
+        for (const comment of context.sourceCode.getAllComments()) {
+          const match = DISABLE_DIRECTIVE.exec(comment.value);
+          const ruleNames = match?.[2]?.split(",").map((name) => name.trim()) ?? [];
+          if (match && ruleNames.some((name) => name.endsWith("/no-unindexable-mongo-regex"))) {
+            const line = comment.loc.end.line;
+            disabledLines.add(match[1] === undefined ? line : line + 1);
+          }
+        }
+
+        const counted = reports.filter(
+          (report) => !disabledLines.has(report.node.loc.start.line),
+        ).length;
         const baseline =
           allowed > 0
-            ? ` This file's known-violations count is ${allowed}; it now has ${reports.length}.`
+            ? ` This file's known-violations count is ${allowed}; it now has ${counted}.`
             : "";
-        if (reports.length > allowed) {
+        if (counted > allowed) {
           for (const report of reports) {
             context.report({
               node: report.node,
@@ -494,11 +550,11 @@ const rule = defineRule({
               data: { baseline },
             });
           }
-        } else if (reports.length < allowed) {
+        } else if (counted < allowed) {
           context.report({
             node,
             messageId: "staleBaseline",
-            data: { actual: String(reports.length), allowed: String(allowed) },
+            data: { actual: String(counted), allowed: String(allowed) },
           });
         }
       },
