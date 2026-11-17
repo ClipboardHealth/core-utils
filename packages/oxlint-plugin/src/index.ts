@@ -5,6 +5,7 @@ import noCrossContractImports from "./lib/rules/no-cross-contract-imports";
 import noEmptyBooleanCall from "./lib/rules/no-empty-boolean-call";
 import noParallelMongoSessionOps from "./lib/rules/no-parallel-mongo-session-ops";
 import noTestsInContractPackages from "./lib/rules/no-tests-in-contract-packages";
+import noUnindexableMongoRegex from "./lib/rules/no-unindexable-mongo-regex";
 import requireContractFixtureConstruction from "./lib/rules/require-contract-fixture-construction";
 import requireContractResponseParse from "./lib/rules/require-contract-response-parse";
 import requireHttpModuleFactory from "./lib/rules/require-http-module-factory";
@@ -21,6 +22,7 @@ export const rules = {
   "no-cross-contract-imports": noCrossContractImports,
   "no-parallel-mongo-session-ops": noParallelMongoSessionOps,
   "no-tests-in-contract-packages": noTestsInContractPackages,
+  "no-unindexable-mongo-regex": noUnindexableMongoRegex,
   "require-contract-fixture-construction": requireContractFixtureConstruction,
   "require-contract-response-parse": requireContractResponseParse,
   "require-http-module-factory": requireHttpModuleFactory,

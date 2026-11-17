@@ -17,6 +17,7 @@ ESLint.
 - `no-cross-contract-imports`
 - `no-parallel-mongo-session-ops`
 - `no-tests-in-contract-packages`
+- `no-unindexable-mongo-regex`
 - `require-contract-fixture-construction`
 - `require-contract-response-parse`
 - `require-http-module-factory`
@@ -52,6 +53,20 @@ bounded-concurrency helpers must name them, or those call sites go unchecked:
 
 Exclude tests: app-level session objects such as `session.sessionUserId` share the name but are
 unrelated to MongoDB sessions.
+
+`no-unindexable-mongo-regex` is opt-in. It reports a MongoDB filter regex that no index can bound:
+a case-insensitive one, one not anchored with `^`, or one whose first atom after `^` isn't
+literal text, such as `^\s*`. It also reports `new RegExp(value, "i")` built from a runtime value,
+because a regex built in one function and queried in another is invisible at the filter. Enable
+it on code that queries MongoDB, not on tests. `knownViolations` holds per-file counts for
+violations that predate the rule; a listed file may shrink but not grow:
+
+```ts
+"@clipboard-health/no-unindexable-mongo-regex": [
+  "error",
+  { knownViolations: { "src/users/user.repository.ts": 2 } },
+],
+```
 
 `require-to-declared-error` is opt-in while services adopt oRPC. In a handler passed to oRPC's
 `implement(...).handler()`, every `throw` in a branch that handles a failed `ServiceResult` must
