@@ -4,8 +4,7 @@
   "extends": [
     "config:best-practices",
     ":enableVulnerabilityAlertsWithLabel(SECURITY)",
-    ":preserveSemverRanges",
-    "docker:enableMajor"
+    ":preserveSemverRanges"
   ],
   "schedule": ["* 0-3 * * 2-5"],
   "platformAutomerge": false,
@@ -84,7 +83,6 @@
       "description": "Keep the Knock React adapter and its client together so adapter updates do not leave incompatible client versions installed.",
       "groupName": "Knock",
       "matchPackageNames": ["@knocklabs/client", "@knocklabs/react-core"],
-      "separateMajorMinor": false,
       "separateMinorPatch": false
     },
     {
@@ -102,13 +100,6 @@
       "groupName": "oRPC",
       "groupSlug": "orpc",
       "matchPackageNames": ["/^@orpc\\//"],
-      "separateMajorMinor": false,
-      "separateMinorPatch": false
-    },
-    {
-      "description": "Keep opentelemetry-js monorepo majors in the same PR as its minor updates. The SDK, API, and experimental exporter packages pin bounded peer ranges on each other (SDK 2 rejects API 1.10), so a branch that updates only one side cannot install.",
-      "matchSourceUrls": ["https://github.com/open-telemetry/opentelemetry-js"],
-      "separateMajorMinor": false,
       "separateMinorPatch": false
     },
     {
@@ -134,7 +125,7 @@
       "allowedVersions": "<4.0.0"
     },
     {
-      "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches, minors and majors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, minors follow the normal schedule and automerge, and majors open without automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors and majors still wait their 7 days, but through the status check rather than by delaying the branch.",
+      "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches and minors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, and minors follow the normal schedule and automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors still wait their 7 days, but through the status check rather than by delaying the branch.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
       "matchPackageNames": [
@@ -170,8 +161,9 @@
       "matchDepTypes": ["devDependencies"]
     },
     {
-      "automerge": false,
-      "matchUpdateTypes": ["major"]
+      "description": "Do not open major updates. A major can change APIs and needs a planned migration, so it is raised by the owning team when they choose to take it, not by Renovate.",
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     },
     {
       "enabled": false,
