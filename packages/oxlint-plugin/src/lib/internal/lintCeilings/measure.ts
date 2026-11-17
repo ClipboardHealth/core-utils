@@ -49,7 +49,7 @@ export function measureFiles(params: {
     return new Map();
   }
 
-  const directory = mkdtempSync(path.join(tmpdir(), "cbh-lint-ceilings-"));
+  const directory = mkdtempSync(path.join(tmpdir(), "cb-lint-ceilings-"));
   try {
     for (const file of files) {
       const target = path.join(directory, file.path);
@@ -57,7 +57,7 @@ export function measureFiles(params: {
       writeFileSync(target, file.content);
     }
 
-    const configPath = path.join(directory, ".cbh-lint-ceilings.json");
+    const configPath = path.join(directory, ".cb-lint-ceilings.json");
     writeFileSync(
       configPath,
       JSON.stringify(measurementConfig({ ignorePatterns: [], printedConfig, ruleNames })),
@@ -90,7 +90,7 @@ export function measureRepository(params: {
   const { printedConfig, root, ruleNames } = params;
   // The configuration sits in the repository root so its `ignorePatterns` and override globs
   // resolve as the repository's own do.
-  const configPath = path.join(root, `.cbh-lint-ceilings-${randomBytes(6).toString("hex")}.json`);
+  const configPath = path.join(root, `.cb-lint-ceilings-${randomBytes(6).toString("hex")}.json`);
   const { diagnostics } = withTemporaryFile({
     content: JSON.stringify(
       measurementConfig({

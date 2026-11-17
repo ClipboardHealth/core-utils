@@ -59,7 +59,7 @@ describe("runLintCeilings", () => {
     it("lists every file above its default, honoring overrides and ignorePatterns", () => {
       expect(run("init")).toStrictEqual({
         exitCode: 0,
-        output: "cbh-lint-ceilings: wrote 2 entries to lint-ceilings.json.\n",
+        output: "cb-lint-ceilings: wrote 2 entries to lint-ceilings.json.\n",
       });
       expect(readCeilings()).toBe(
         '{\n  "version": 1,\n  "rules": {\n    "complexity": {\n      "src/big.ts": 6\n    },\n\n    "max-lines": {\n      "src/big.ts": 15\n    }\n  }\n}\n',
@@ -87,14 +87,14 @@ describe("runLintCeilings", () => {
     it("passes when listed files are unchanged or shrink", () => {
       expect(run("check", "--base", "main")).toStrictEqual({
         exitCode: 0,
-        output: "cbh-lint-ceilings: checked 0 changed listed file(s); nothing grew.\n",
+        output: "cb-lint-ceilings: checked 0 changed listed file(s); nothing grew.\n",
       });
 
       writeFiles({ "src/big.ts": `${fn("big", 5)}${filler(6)}` });
 
       expect(run("check", "--base", "main")).toStrictEqual({
         exitCode: 0,
-        output: "cbh-lint-ceilings: checked 1 changed listed file(s); nothing grew.\n",
+        output: "cb-lint-ceilings: checked 1 changed listed file(s); nothing grew.\n",
       });
     });
 
@@ -116,7 +116,7 @@ describe("runLintCeilings", () => {
       rmSync(path.join(repository, ".oxlintrc.json"));
       writeFiles({
         "oxlint.config.ts": `const config = ${JSON.stringify(OXLINT_CONFIG)};
-const ceilings = process.env["CBH_LINT_CEILINGS"] === "ignore"
+const ceilings = process.env["CB_LINT_CEILINGS"] === "ignore"
   ? []
   : [{ files: ["src/big.ts"], rules: { "max-lines": ["error", { max: 30 }] } }];
 export default { ...config, overrides: [...config.overrides, ...ceilings] };
@@ -163,7 +163,7 @@ export default { ...config, overrides: [...config.overrides, ...ceilings] };
       expect(allowed).toStrictEqual({
         exitCode: 0,
         output:
-          "src/big.ts: complexity ceiling raised from 6 to 7 in lint-ceilings.json.\nsrc/small.ts: new max-lines entry (13) in lint-ceilings.json.\n\ncbh-lint-ceilings: 2 increase(s) allowed by --allow-increases.\n",
+          "src/big.ts: complexity ceiling raised from 6 to 7 in lint-ceilings.json.\nsrc/small.ts: new max-lines entry (13) in lint-ceilings.json.\n\ncb-lint-ceilings: 2 increase(s) allowed by --allow-increases.\n",
       });
     });
 
@@ -285,7 +285,7 @@ export default { ...config, overrides: [...config.overrides, ...ceilings] };
       rmSync(path.join(repository, "lint-ceilings.json"));
 
       expect(run("check").output).toBe(
-        "cbh-lint-ceilings: no lint-ceilings.json; nothing to check.\n",
+        "cb-lint-ceilings: no lint-ceilings.json; nothing to check.\n",
       );
     });
   });
@@ -300,13 +300,13 @@ export default { ...config, overrides: [...config.overrides, ...ceilings] };
       expect(run("tighten")).toStrictEqual({
         exitCode: 0,
         output:
-          "complexity src/big.ts: 9 -> 6.\ncomplexity src/gone.ts: removed (file not found).\nmax-lines src/big.test.ts: removed (within the default).\n\ncbh-lint-ceilings: tightened 3 entries.\n",
+          "complexity src/big.ts: 9 -> 6.\ncomplexity src/gone.ts: removed (file not found).\nmax-lines src/big.test.ts: removed (within the default).\n\ncb-lint-ceilings: tightened 3 entries.\n",
       });
       expect(JSON.parse(readCeilings())).toStrictEqual({
         rules: { complexity: { "src/big.ts": 6 }, "max-lines": { "src/big.ts": 15 } },
         version: 1,
       });
-      expect(run("tighten").output).toBe("cbh-lint-ceilings: every ceiling is current.\n");
+      expect(run("tighten").output).toBe("cb-lint-ceilings: every ceiling is current.\n");
     });
   });
 

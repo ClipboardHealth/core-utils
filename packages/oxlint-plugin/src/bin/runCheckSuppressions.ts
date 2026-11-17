@@ -19,7 +19,7 @@ import { withTemporaryFile } from "../lib/internal/temporaryFile";
 import { RECORD_SETTING, SUPPRESSION_POLICY_RULE_NAME } from "../lib/internal/suppressionPolicy";
 
 const LINTABLE_FILE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
-const USAGE = `Usage: cbh-check-suppressions [--base <ref>]
+const USAGE = `Usage: cb-check-suppressions [--base <ref>]
 
 Applies @clipboard-health/suppression-policy to lint directives added or changed since the merge
 base with <ref>. Defaults to the pull request base in GitHub Actions, else origin/HEAD.
@@ -65,12 +65,12 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   );
 
   if (files.length === 0) {
-    write("cbh-check-suppressions: no changed JavaScript or TypeScript files.\n");
+    write("cb-check-suppressions: no changed JavaScript or TypeScript files.\n");
     return { exitCode: 0 };
   }
 
   // Resolved, because Oxlint reports the real path of each file.
-  const recordDirectory = mkdtempSync(path.join(realpathSync(tmpdir()), "cbh-check-suppressions-"));
+  const recordDirectory = mkdtempSync(path.join(realpathSync(tmpdir()), "cb-check-suppressions-"));
   const recordPath = path.join(recordDirectory, "violations.jsonl");
   // Oxlint resolves a configuration's `ignorePatterns` against the configuration's own directory
   // and applies only configuration patterns to explicit file arguments. So the changed files are
@@ -97,9 +97,9 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
           ),
         ),
         ignorePatterns,
-        jsPlugins: [{ name: "cbh-check-suppressions", specifier: pluginSpecifier }],
+        jsPlugins: [{ name: "cb-check-suppressions", specifier: pluginSpecifier }],
         plugins: [],
-        rules: { [`cbh-check-suppressions/${SUPPRESSION_POLICY_RULE_NAME}`]: "error" },
+        rules: { [`cb-check-suppressions/${SUPPRESSION_POLICY_RULE_NAME}`]: "error" },
         settings: { [RECORD_SETTING]: { recordPath } },
       }),
       run: () => {
@@ -137,7 +137,7 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     );
   if (unevaluated.length > 0) {
     write(
-      `${unevaluated.join("\n")}\n\ncbh-check-suppressions: Oxlint could not evaluate the policy for ${unevaluated.length} diagnostic(s); fix them and rerun.\n`,
+      `${unevaluated.join("\n")}\n\ncb-check-suppressions: Oxlint could not evaluate the policy for ${unevaluated.length} diagnostic(s); fix them and rerun.\n`,
     );
     return { exitCode: 1 };
   }
@@ -164,12 +164,12 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   failures.sort((left, right) => left.localeCompare(right, "en", { numeric: true }));
   if (failures.length > 0) {
     write(
-      `${failures.join("\n")}\n\ncbh-check-suppressions: ${failures.length} new or changed suppression(s) break the suppression policy.\n`,
+      `${failures.join("\n")}\n\ncb-check-suppressions: ${failures.length} new or changed suppression(s) break the suppression policy.\n`,
     );
     return { exitCode: 1 };
   }
 
-  write(`cbh-check-suppressions: checked ${files.length} changed file(s); no violations.\n`);
+  write(`cb-check-suppressions: checked ${files.length} changed file(s); no violations.\n`);
   return { exitCode: 0 };
 }
 

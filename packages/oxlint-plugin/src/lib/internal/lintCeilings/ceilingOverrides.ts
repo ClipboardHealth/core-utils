@@ -5,7 +5,7 @@ import { type CeilingRule, getCeilingRule } from "./ceilingRules";
 import { compareStrings, type LintCeilings, parseLintCeilings } from "./ceilingsFile";
 
 /** Set to `ignore` to make createLintCeilingOverrides return nothing, so the defaults show. */
-export const LINT_CEILINGS_ENV = "CBH_LINT_CEILINGS";
+export const LINT_CEILINGS_ENV = "CB_LINT_CEILINGS";
 
 /** The parts of an Oxlint configuration that decide whether and how a rule applies to a file. */
 export interface CeilingConfig {

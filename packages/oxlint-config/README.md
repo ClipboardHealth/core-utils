@@ -270,7 +270,7 @@ suppression needs a specific `-- <reason>`, and the rules in `NEVER_SUPPRESS_RUL
 See the [plugin README](../oxlint-plugin/README.md#suppression-policy) for the full policy. It is
 opt in; no other preset enables it.
 
-Until a repository's existing directives comply, run `cbh-check-suppressions` from
+Until a repository's existing directives comply, run `cb-check-suppressions` from
 `@clipboard-health/oxlint-plugin` in CI. It holds directives added or changed since the merge base to
 the policy and needs no baseline. Once the backlog is zero, add the preset:
 
@@ -300,7 +300,7 @@ policy.
 `lint-ceilings.json` holds per-file upper bounds for count rules such as `max-lines` and
 `complexity`, so a repository can keep strict defaults while existing large or complex files stay
 as they are. A listed file may shrink but not grow. Pull requests don't edit the file: the
-`cbh-lint-ceilings check` CLI blocks growth, and a weekly bot PR lowers stale values. This avoids
+`cb-lint-ceilings check` CLI blocks growth, and a weekly bot PR lowers stale values. This avoids
 the merge conflicts of exact-count baselines.
 
 ```json
@@ -352,18 +352,18 @@ assumes `oxlint.config.ts` and `lint-ceilings.json` both sit in the repository r
 
 ### Commands
 
-`cbh-lint-ceilings` ships in `@clipboard-health/oxlint-plugin`, a dependency of this package. It
+`cb-lint-ceilings` ships in `@clipboard-health/oxlint-plugin`, a dependency of this package. It
 measures with the repository's own Oxlint and configuration, with ceilings ignored, so its numbers
 match the linter's. It reads the root configuration through `oxlint --print-config`, which drops
 rule options inherited through `extends` (Oxlint 1.91). Build the root `oxlint.config.ts` with
 `createOxlintConfig`, not `extends`, so options such as `max` survive.
 
 ```sh
-npx cbh-lint-ceilings init                 # one entry per file above its default, all supported rules
-npx cbh-lint-ceilings init --rule complexity
-npx cbh-lint-ceilings check                # in CI; locally compares with the merge base of origin/HEAD
-npx cbh-lint-ceilings check --base origin/main
-npx cbh-lint-ceilings tighten              # weekly, on the default branch
+npx cb-lint-ceilings init                 # one entry per file above its default, all supported rules
+npx cb-lint-ceilings init --rule complexity
+npx cb-lint-ceilings check                # in CI; locally compares with the merge base of origin/HEAD
+npx cb-lint-ceilings check --base origin/main
+npx cb-lint-ceilings tighten              # weekly, on the default branch
 ```
 
 `check` looks at changed files that have a ceiling and lints their base and current versions. It
@@ -398,7 +398,7 @@ lint-ceilings:
         fetch-depth: 2
         persist-credentials: false
     # Install the repository's dependencies, then:
-    - run: npx cbh-lint-ceilings check
+    - run: npx cb-lint-ceilings check
 ```
 
 There is no shared approval workflow yet. A repository that wants a reviewed path for raises can

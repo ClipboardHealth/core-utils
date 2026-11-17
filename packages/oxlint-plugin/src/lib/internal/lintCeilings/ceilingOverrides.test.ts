@@ -182,7 +182,7 @@ describe("createLintCeilingOverrides", () => {
       createLintCeilingOverrides({
         ceilings: { rules: { "max-lines": { "a.ts": 400 } }, version: 1 },
         config: { rules: { "max-lines": "error" } },
-        env: { CBH_LINT_CEILINGS: "ignore" },
+        env: { CB_LINT_CEILINGS: "ignore" },
       }),
     ).toStrictEqual({ overrides: [] });
   });
