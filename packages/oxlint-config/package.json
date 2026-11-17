@@ -23,15 +23,15 @@
     "@clipboard-health/oxlint-plugin": "1.12.0"
   },
   "peerDependencies": {
-    "oxlint": ">=1.68.0",
+    "oxlint": ">=1.92.0",
     "oxlint-plugin-react-doctor": ">=0.9.12",
-    "oxlint-tsgolint": ">=0.21.1"
+    "tsrs": ">=0.21.0-ts7.1.0-beta"
   },
   "peerDependenciesMeta": {
     "oxlint-plugin-react-doctor": {
       "optional": true
     },
-    "oxlint-tsgolint": {
+    "tsrs": {
       "optional": true
     }
   }

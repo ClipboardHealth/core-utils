@@ -12,8 +12,9 @@ const OXLINT_CLI = path.join(
   "bin/oxlint",
 );
 const TSC_CLI = requireFromTest.resolve("typescript/bin/tsc");
-const TSGOLINT_EXECUTABLE = requireFromTest.resolve(
-  `@oxlint-tsgolint/${process.platform}-${process.arch}/tsgolint${process.platform === "win32" ? ".exe" : ""}`,
+const TSRS_LINT_EXECUTABLE = path.join(
+  path.dirname(requireFromTest.resolve("tsrs/package.json")),
+  "bin/tsrs-lint",
 );
 const ENUM_COMPARISON_RULE = "typescript/no-unsafe-enum-comparison";
 
@@ -115,7 +116,7 @@ describe("enum comparison policy", () => {
         {
           cwd: directory,
           encoding: "utf8",
-          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSGOLINT_EXECUTABLE },
+          env: { ...process.env, OXLINT_TSGOLINT_PATH: TSRS_LINT_EXECUTABLE },
         },
       );
       expect(lint.error).toBeUndefined();
