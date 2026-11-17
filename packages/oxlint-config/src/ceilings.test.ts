@@ -88,6 +88,72 @@ describe("createOxlintConfig ceilings", () => {
     ).toStrictEqual(["app/x/page.ts"]);
   });
 
+  it("anchors a root file's ceiling to the configuration directory", () => {
+    const files = { "index.ts": lines(15), "src/index.ts": lines(15) };
+
+    expect(
+      lint({
+        config: createOxlintConfig({
+          ceilings: { rules: { "max-lines": { "index.ts": 15 } }, version: 1 },
+          presets: [TEST_FILES_PRESET],
+        }),
+        directory,
+        files,
+      }),
+    ).toStrictEqual(["src/index.ts"]);
+  });
+
+  it("replaces a limit alias rather than adding a duplicate max", () => {
+    const files = {
+      "src/a.ts": "export function f(a: number): void {\n  if (a) {}\n  if (a) {}\n}\n",
+    };
+
+    // Oxlint's types omit the `maximum` alias it accepts, so a variable skips the excess-property check.
+    const aliased = { maximum: 1, variant: "modified" } as const;
+
+    expect(
+      lint({
+        config: createOxlintConfig({
+          ceilings: { rules: { complexity: { "src/a.ts": 3 } }, version: 1 },
+          presets: [
+            {
+              categories: { correctness: "off" },
+              rules: { complexity: ["error", aliased] },
+            },
+          ],
+        }),
+        directory,
+        files,
+      }),
+    ).toStrictEqual([]);
+  });
+
+  it("keeps the ceiling for a file an override excludes", () => {
+    const files = { "src/legacy.ts": lines(15) };
+
+    expect(
+      lint({
+        config: createOxlintConfig({
+          ceilings: { rules: { "max-lines": { "src/legacy.ts": 15 } }, version: 1 },
+          presets: [
+            {
+              ...TEST_FILES_PRESET,
+              overrides: [
+                {
+                  excludeFiles: ["src/legacy.ts"],
+                  files: ["src/**"],
+                  rules: { "max-lines": "off" },
+                },
+              ],
+            },
+          ],
+        }),
+        directory,
+        files,
+      }),
+    ).toStrictEqual([]);
+  });
+
   it("appends ceiling overrides after local overrides", () => {
     const config = createOxlintConfig({
       ceilings: { rules: { complexity: { "src/a.ts": 30 } }, version: 1 },
@@ -97,7 +163,7 @@ describe("createOxlintConfig ceilings", () => {
 
     expect(config.overrides).toStrictEqual([
       { files: ["src/**"], rules: { complexity: ["warn", 25] } },
-      { files: ["src/a.ts"], rules: { complexity: ["warn", { max: 30 }] } },
+      { files: ["./src/a.ts"], rules: { complexity: ["warn", { max: 30 }] } },
     ]);
   });
 

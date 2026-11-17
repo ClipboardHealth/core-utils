@@ -15,12 +15,15 @@ export function withTemporaryFile<Result>(params: {
 
   process.on("SIGINT", keepAlive);
   process.on("SIGTERM", keepAlive);
-  writeFileSync(params.path, params.content);
   try {
+    writeFileSync(params.path, params.content);
     return params.run();
   } finally {
-    rmSync(params.path, { force: true });
-    process.off("SIGINT", keepAlive);
-    process.off("SIGTERM", keepAlive);
+    try {
+      rmSync(params.path, { force: true });
+    } finally {
+      process.off("SIGINT", keepAlive);
+      process.off("SIGTERM", keepAlive);
+    }
   }
 }

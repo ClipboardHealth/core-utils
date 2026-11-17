@@ -12,6 +12,7 @@ export interface CeilingConfig {
   categories?: Readonly<Partial<Record<CeilingRule["category"], unknown>>> | undefined;
   overrides?:
     | ReadonlyArray<{
+        excludeFiles?: readonly string[] | undefined;
         files: readonly string[];
         rules?: Readonly<Record<string, unknown>> | undefined;
       }>
@@ -33,6 +34,7 @@ type RuleSetting = "off" | { options: Record<string, unknown>; severity: Severit
 /**
  * Returns one override per file in `ceilings`, to append after every other override: Oxlint applies
  * the last matching override, so an earlier ceiling loses to a later glob such as a test preset.
+ * Each pattern starts with `./`, because Oxlint matches a slashless pattern in every directory.
  * Each keeps the severity and options the file would otherwise get, because an override replaces
  * a rule's options rather than merging them, and skips rules that are off for the file.
  */
@@ -62,7 +64,7 @@ export function createLintCeilingOverrides(params: {
   return {
     overrides: [...byFile.entries()]
       .toSorted(([left], [right]) => compareStrings(left, right))
-      .map(([file, rules]) => ({ files: [escapeGlob(file)], rules })),
+      .map(([file, rules]) => ({ files: [`./${escapeGlob(file)}`], rules })),
   };
 }
 
@@ -77,7 +79,8 @@ function resolveRuleSetting(params: {
   let setting = categorySetting({ ceilingRule, config });
   setting = findRuleSetting({ ceilingRule, ruleName, rules: config.rules }) ?? setting;
   for (const override of config.overrides ?? []) {
-    if (override.files.some((pattern) => matchesOxlintGlob({ file, pattern }))) {
+    const matches = (pattern: string): boolean => matchesOxlintGlob({ file, pattern });
+    if (override.files.some(matches) && !(override.excludeFiles ?? []).some(matches)) {
       setting = findRuleSetting({ ceilingRule, ruleName, rules: override.rules }) ?? setting;
     }
   }
@@ -121,7 +124,13 @@ function toSetting(params: { value: unknown }): RuleSetting {
     return { options: { max: option }, severity };
   }
 
-  return { options: isPlainObject(option) ? { ...option } : {}, severity };
+  if (!isPlainObject(option)) {
+    return { options: {}, severity };
+  }
+
+  // Oxlint reads `maximum` as `max` and rejects a configuration that sets both.
+  const { maximum, ...options } = option;
+  return { options: maximum === undefined ? options : { ...options, max: maximum }, severity };
 }
 
 function toSeverity(params: { value: unknown }): Severity | "off" {

@@ -22,9 +22,9 @@ describe("createLintCeilingOverrides", () => {
         },
       }),
     ).toStrictEqual([
-      { files: ["src/a.ts"], rules: { "max-lines": ["warn", { max: 1100 }] } },
+      { files: ["./src/a.ts"], rules: { "max-lines": ["warn", { max: 1100 }] } },
       {
-        files: ["src/b.ts"],
+        files: ["./src/b.ts"],
         rules: { complexity: ["error", { max: 30 }], "max-lines": ["warn", { max: 1200 }] },
       },
     ]);
@@ -51,11 +51,14 @@ describe("createLintCeilingOverrides", () => {
       }),
     ).toStrictEqual([
       {
-        files: ["src/a.test.ts"],
+        files: ["./src/a.test.ts"],
         rules: { "max-lines": ["error", { max: 2500, skipBlankLines: true }] },
       },
-      { files: ["src/a.ts"], rules: { "max-lines": ["error", { max: 1500, skipComments: true }] } },
-      { files: ["src/legacy/old.ts"], rules: { "max-lines": ["warn", { max: 900 }] } },
+      {
+        files: ["./src/a.ts"],
+        rules: { "max-lines": ["error", { max: 1500, skipComments: true }] },
+      },
+      { files: ["./src/legacy/old.ts"], rules: { "max-lines": ["warn", { max: 900 }] } },
     ]);
   });
 
@@ -68,14 +71,14 @@ describe("createLintCeilingOverrides", () => {
         },
         rules: { "max-lines": { "src/a.test.ts": 2500, "src/a.ts": 400 } },
       }),
-    ).toStrictEqual([{ files: ["src/a.ts"], rules: { "max-lines": ["error", { max: 400 }] } }]);
+    ).toStrictEqual([{ files: ["./src/a.ts"], rules: { "max-lines": ["error", { max: 400 }] } }]);
   });
 
   it("follows categories and plugins for rules the configuration does not name", () => {
     const rules = { complexity: { "a.ts": 30 }, "import/max-dependencies": { "a.ts": 12 } };
 
     expect(overridesFor({ config: { categories: { restriction: 1 } }, rules })).toStrictEqual([
-      { files: ["a.ts"], rules: { complexity: ["warn", { max: 30 }] } },
+      { files: ["./a.ts"], rules: { complexity: ["warn", { max: 30 }] } },
     ]);
     expect(
       overridesFor({
@@ -83,12 +86,12 @@ describe("createLintCeilingOverrides", () => {
         rules,
       }),
     ).toStrictEqual([
-      { files: ["a.ts"], rules: { "import/max-dependencies": ["error", { max: 12 }] } },
+      { files: ["./a.ts"], rules: { "import/max-dependencies": ["error", { max: 12 }] } },
     ]);
     expect(
       overridesFor({ config: { rules: { "max-dependencies": [2, 10] } }, rules }),
     ).toStrictEqual([
-      { files: ["a.ts"], rules: { "import/max-dependencies": ["error", { max: 12 }] } },
+      { files: ["./a.ts"], rules: { "import/max-dependencies": ["error", { max: 12 }] } },
     ]);
   });
 
@@ -105,7 +108,34 @@ describe("createLintCeilingOverrides", () => {
         rules: { "max-lines": { ".storybook/main.ts": 1500, "src/.gen/x.test.ts": 2500 } },
       }),
     ).toStrictEqual([
-      { files: ["src/.gen/x.test.ts"], rules: { "max-lines": ["error", { max: 2500 }] } },
+      { files: ["./src/.gen/x.test.ts"], rules: { "max-lines": ["error", { max: 2500 }] } },
+    ]);
+  });
+
+  it("replaces the maximum alias with max", () => {
+    expect(
+      overridesFor({
+        config: { rules: { complexity: ["error", { maximum: 20, variant: "modified" }] } },
+        rules: { complexity: { "a.ts": 30 } },
+      }),
+    ).toStrictEqual([
+      { files: ["./a.ts"], rules: { complexity: ["error", { max: 30, variant: "modified" }] } },
+    ]);
+  });
+
+  it("ignores an override for a file it excludes", () => {
+    expect(
+      overridesFor({
+        config: {
+          overrides: [
+            { excludeFiles: ["src/legacy.ts"], files: ["src/**"], rules: { "max-lines": "off" } },
+          ],
+          rules: { "max-lines": "error" },
+        },
+        rules: { "max-lines": { "src/a.ts": 400, "src/legacy.ts": 400 } },
+      }),
+    ).toStrictEqual([
+      { files: ["./src/legacy.ts"], rules: { "max-lines": ["error", { max: 400 }] } },
     ]);
   });
 
@@ -117,7 +147,7 @@ describe("createLintCeilingOverrides", () => {
       }),
     ).toStrictEqual([
       {
-        files: ["app/[[]id[]]/[{]x[}]/[*][?].ts"],
+        files: ["./app/[[]id[]]/[{]x[}]/[*][?].ts"],
         rules: { "max-lines": ["error", { max: 400 }] },
       },
     ]);
