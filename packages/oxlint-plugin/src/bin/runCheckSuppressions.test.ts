@@ -1,8 +1,17 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import * as temporaryFile from "../lib/internal/temporaryFile";
 import { runCheckSuppressions } from "./runCheckSuppressions";
 
 const WORKSPACE_ROOT = path.resolve(__dirname, "../../../..");
@@ -202,12 +211,58 @@ describe("runCheckSuppressions", () => {
     },
   );
 
-  it("leaves no temporary configuration behind", () => {
+  it("writes its temporary configuration outside the working tree and leaves nothing behind", () => {
     writeFiles({ "src/clean.ts": "export const value = 1;\n" });
+    const written: string[] = [];
+    const original = temporaryFile.withTemporaryFile;
+    const spy = vi.spyOn(temporaryFile, "withTemporaryFile").mockImplementation((params) => {
+      written.push(params.path);
+      return original(params);
+    });
+    const before = readdirSync(repository).toSorted();
 
-    check();
+    try {
+      expect(check().exitCode).toBe(0);
+    } finally {
+      spy.mockRestore();
+    }
 
-    expect(readdirSync(repository).filter((name) => name.startsWith(".cbh-"))).toStrictEqual([]);
+    expect(written).toHaveLength(1);
+    expect(path.relative(repository, written[0]!).startsWith("..")).toBe(true);
+    expect(readdirSync(repository).toSorted()).toStrictEqual(before);
+    expect(existsSync(path.dirname(path.dirname(written[0]!)))).toBe(false);
+  });
+
+  it("honors .eslintignore and skips symlinks that point nowhere", () => {
+    writeFiles({
+      ".eslintignore": "generated/**\n",
+      "generated/skipped.ts": "// oxlint-disable-next-line no-console\nconst value = ;\n",
+      "src/added.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+    });
+    symlinkSync("missing.ts", path.join(repository, "src/dangling.ts"));
+    git("add", "--all");
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/added.ts:1:");
+    expect(output).not.toContain("generated/skipped.ts");
+  });
+
+  it("honors the repository's ignorePatterns, which Oxlint resolves against the configuration's directory", () => {
+    writeFiles({
+      ".oxlintrc.json": JSON.stringify({ ignorePatterns: ["generated/**", "!generated/keep.ts"] }),
+      "generated/skipped.ts": "// oxlint-disable-next-line no-console\nconst value = ;\n",
+      "generated/keep.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+      "src/added.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+    });
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(1);
+    expect(output).toContain("src/added.ts:1:");
+    expect(output).toContain("generated/keep.ts:1:");
+    expect(output).not.toContain("generated/skipped.ts");
   });
 
   function check(options: { args?: string[]; env?: Record<string, string> } = {}): {

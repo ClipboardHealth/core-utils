@@ -1,5 +1,13 @@
-import { randomBytes } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -51,24 +59,35 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   const root = git({ args: ["rev-parse", "--show-toplevel"], cwd }).trim();
   const mergeBase = resolveMergeBase({ base, cwd: root, eventPath: env["GITHUB_EVENT_PATH"] });
   const changed = readChangedLines({ cwd: root, include: LINTABLE_FILE, mergeBase });
-  const files = [...changed.keys()];
+  // Oxlint skips a dangling or directory symlink that the diff lists; copying one would throw.
+  const files = [...changed.keys()].filter(
+    (file) => statSync(path.join(root, file), { throwIfNoEntry: false })?.isFile() === true,
+  );
 
   if (files.length === 0) {
     write("cbh-check-suppressions: no changed JavaScript or TypeScript files.\n");
     return { exitCode: 0 };
   }
 
-  const recordDirectory = mkdtempSync(path.join(tmpdir(), "cbh-check-suppressions-"));
+  // Resolved, because Oxlint reports the real path of each file.
+  const recordDirectory = mkdtempSync(path.join(realpathSync(tmpdir()), "cbh-check-suppressions-"));
   const recordPath = path.join(recordDirectory, "violations.jsonl");
-  // The configuration sits in the repository root so its `ignorePatterns` resolve as the
-  // repository's own do; Oxlint applies only configuration patterns to explicit file arguments.
-  const configPath = path.join(
-    root,
-    `.cbh-check-suppressions-${randomBytes(6).toString("hex")}.json`,
-  );
+  // Oxlint resolves a configuration's `ignorePatterns` against the configuration's own directory
+  // and applies only configuration patterns to explicit file arguments. So the changed files are
+  // copied to a scratch tree beside the configuration, outside the working tree, where tools that
+  // scan the repository never see either.
+  const scratchRoot = path.join(recordDirectory, "tree");
+  const configPath = path.join(scratchRoot, ".oxlintrc.json");
   let records: string;
   let diagnostics: OxlintDiagnostic[];
   try {
+    const { ignorePatterns } = readIgnorePatterns({ cwd: root });
+    mkdirSync(scratchRoot, { recursive: true });
+    // Oxlint reads this file from its working directory, and it is not part of `ignorePatterns`.
+    if (existsSync(path.join(root, ".eslintignore"))) {
+      copyFileSync(path.join(root, ".eslintignore"), path.join(scratchRoot, ".eslintignore"));
+    }
+
     ({ diagnostics } = withTemporaryFile({
       path: configPath,
       content: JSON.stringify({
@@ -77,17 +96,31 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
             (category) => [category, "off"],
           ),
         ),
-        ignorePatterns: readIgnorePatterns({ cwd: root }).ignorePatterns,
+        ignorePatterns,
         jsPlugins: [{ name: "cbh-check-suppressions", specifier: pluginSpecifier }],
         plugins: [],
         rules: { [`cbh-check-suppressions/${SUPPRESSION_POLICY_RULE_NAME}`]: "error" },
         settings: { [RECORD_SETTING]: { recordPath } },
       }),
-      run: () =>
-        runOxlint({
-          args: ["--config", configPath, "--disable-nested-config", "--format=json", ...files],
-          cwd: root,
-        }),
+      run: () => {
+        for (const file of files) {
+          mkdirSync(path.dirname(path.join(scratchRoot, file)), { recursive: true });
+          copyFileSync(path.join(root, file), path.join(scratchRoot, file));
+        }
+
+        return runOxlint({
+          // Relative, because Oxlint matches override and ignore globs against the path as given.
+          args: [
+            "--config",
+            path.basename(configPath),
+            "--disable-nested-config",
+            "--format=json",
+            ...files,
+          ],
+          cwd: scratchRoot,
+          oxlintFrom: root,
+        });
+      },
     }));
     records = existsSync(recordPath) ? readFileSync(recordPath, "utf8") : "";
   } finally {
@@ -98,7 +131,10 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   // skipped the rule for that file and "no violations" would be false.
   const unevaluated = diagnostics
     .filter((diagnostic) => !diagnostic.code.endsWith(`(${SUPPRESSION_POLICY_RULE_NAME})`))
-    .map((diagnostic) => `${path.relative(root, diagnostic.filename)}: ${diagnostic.message}`);
+    .map(
+      (diagnostic) =>
+        `${path.relative(scratchRoot, path.resolve(scratchRoot, diagnostic.filename))}: ${diagnostic.message}`,
+    );
   if (unevaluated.length > 0) {
     write(
       `${unevaluated.join("\n")}\n\ncbh-check-suppressions: Oxlint could not evaluate the policy for ${unevaluated.length} diagnostic(s); fix them and rerun.\n`,
@@ -113,7 +149,7 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     }
 
     const { endLine, file: absoluteFile, message, startLine } = parseRecord({ line });
-    const file = path.relative(root, absoluteFile);
+    const file = path.relative(scratchRoot, absoluteFile);
     const changedLines = changed.get(file);
     let touched = false;
     for (let lineNumber = startLine; lineNumber <= endLine && !touched; lineNumber += 1) {
