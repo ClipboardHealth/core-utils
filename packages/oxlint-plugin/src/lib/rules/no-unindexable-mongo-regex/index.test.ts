@@ -76,6 +76,22 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       code: "const pattern = /abc/i; const found = value.match(pattern);",
     },
     {
+      name: "concatenated literal prefix",
+      code: 'await User.find({ name: { $regex: "^" + "smith" } });',
+    },
+    {
+      name: "regex in update data, not the filter",
+      code: "await User.updateOne({ id }, { $set: { pattern: /smith/i } });",
+    },
+    {
+      name: "update document held in a variable",
+      code: "const update = { $set: { pattern: /smith/i } }; await User.updateOne({ id }, update);",
+    },
+    {
+      name: "runtime case-insensitive RegExp variable used only in memory",
+      code: 'const matcher = new RegExp(escapeRegExp(word), "i"); const isMatch = matcher.test(text);',
+    },
+    {
       name: "variable never used in a filter",
       code: "const matcher = /abc/i; if (matcher.test(value)) { await User.find({ email }); }",
     },
@@ -174,6 +190,41 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       name: "aggregate builder match stage",
       code: "await User.aggregate().match({ email: /example/ });",
       errors: [{ messageId: "unanchored" }],
+    },
+    {
+      name: "concatenated static text with no literal prefix",
+      code: 'await User.find({ name: { $regex: "^" + ".*smith" } });',
+      errors: [{ messageId: "noLiteralPrefix" }],
+    },
+    {
+      name: "quantifier split across concatenated text",
+      code: 'await User.find({ name: { $regex: "^a" + "?bc" } });',
+      errors: [{ messageId: "noLiteralPrefix" }],
+    },
+    {
+      name: "regex in the filter of an update",
+      code: "await User.updateOne({ name: /smith/i }, update);",
+      errors: [{ messageId: "caseInsensitive" }],
+    },
+    {
+      name: "regex in the filter argument of distinct",
+      code: 'await User.distinct("email", { name: /smith/ });',
+      errors: [{ messageId: "unanchored" }],
+    },
+    {
+      name: "alias of a filter object variable",
+      code: "const filter = { name: /smith/ }; const alias = filter; await User.find(alias);",
+      errors: [{ messageId: "unanchored" }],
+    },
+    {
+      name: "runtime case-insensitive RegExp variable that escapes",
+      code: 'const matcher = new RegExp(escapeRegExp(word), "i"); matcher.test(text); return matcher;',
+      errors: [{ messageId: "dynamicCaseInsensitive" }],
+    },
+    {
+      name: "exported runtime case-insensitive RegExp",
+      code: 'export const matcher = new RegExp(escapeRegExp(word), "i"); matcher.test(text);',
+      errors: [{ messageId: "dynamicCaseInsensitive" }],
     },
     {
       name: "multiline flag lets ^ match after any newline",

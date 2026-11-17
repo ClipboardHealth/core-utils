@@ -34,24 +34,25 @@ import { defineRule, type ESTree } from "@oxlint/plugins";
 const RULE_URL =
   "https://github.com/ClipboardHealth/core-utils/tree/main/packages/oxlint-plugin/src/lib/rules/no-unindexable-mongo-regex";
 
-const QUERY_METHODS = new Set([
-  "count",
-  "countDocuments",
-  "deleteMany",
-  "deleteOne",
-  "distinct",
-  "exists",
-  "find",
-  "findOne",
-  "findOneAndDelete",
-  "findOneAndRemove",
-  "findOneAndReplace",
-  "findOneAndUpdate",
-  "match",
-  "replaceOne",
-  "updateMany",
-  "updateOne",
-  "where",
+/** Query methods, mapped to the position of their filter argument. */
+const QUERY_METHODS = new Map([
+  ["count", 0],
+  ["countDocuments", 0],
+  ["deleteMany", 0],
+  ["deleteOne", 0],
+  ["distinct", 1],
+  ["exists", 0],
+  ["find", 0],
+  ["findOne", 0],
+  ["findOneAndDelete", 0],
+  ["findOneAndRemove", 0],
+  ["findOneAndReplace", 0],
+  ["findOneAndUpdate", 0],
+  ["match", 0],
+  ["replaceOne", 0],
+  ["updateMany", 0],
+  ["updateOne", 0],
+  ["where", 0],
 ]);
 
 /** Keys that only appear in MongoDB filters, so a regex below one is in a filter. */
@@ -304,7 +305,16 @@ function literalAtomLength(text: string): number | undefined {
 }
 
 function prefixProblem(segments: Segment[]): Problem | undefined {
-  const parts = segments.filter((segment) => segment.kind === "value" || segment.text !== "");
+  const parts: Segment[] = [];
+  for (const segment of segments) {
+    const previous = parts.at(-1);
+    if (segment.kind === "text" && previous?.kind === "text") {
+      previous.text += segment.text;
+    } else if (segment.kind === "value" || segment.text !== "") {
+      parts.push(segment.kind === "text" ? { ...segment } : segment);
+    }
+  }
+
   const [first, second] = parts;
   if (!first) {
     return "unanchored";
@@ -420,9 +430,8 @@ const rule = defineRule({
           const argument: ESTree.Node = child;
           return (
             (child.type === "ObjectExpression" || (objectAlias && child.type === "Identifier")) &&
-            (parent.arguments as ESTree.Node[]).includes(argument) &&
             name !== undefined &&
-            QUERY_METHODS.has(name)
+            (parent.arguments as ESTree.Node[]).indexOf(argument) === QUERY_METHODS.get(name)
           );
         } else if (isMapCallback(parent, child)) {
           // `values.map((value) => regex)` builds an array of regexes, such as an `$in` list.
@@ -430,7 +439,7 @@ const rule = defineRule({
           parent = child.parent as ESTree.Node | null | undefined;
           continue;
         } else if (parent.type === "VariableDeclarator") {
-          return parent.init === child && declaredInFilter(parent, depth);
+          return parent.init === child && declaredInFilter(parent, depth, objectAlias);
         } else if (!TRANSPARENT_PARENTS.has(parent.type)) {
           return false;
         }
@@ -442,7 +451,11 @@ const rule = defineRule({
       return false;
     }
 
-    function declaredInFilter(declarator: ESTree.VariableDeclarator, depth: number): boolean {
+    function declaredInFilter(
+      declarator: ESTree.VariableDeclarator,
+      depth: number,
+      objectAlias: boolean,
+    ): boolean {
       if (hasFilterType(declarator)) {
         return true;
       }
@@ -451,19 +464,41 @@ const rule = defineRule({
         return false;
       }
 
-      return context.sourceCode
+      return context.sourceCode.getDeclaredVariables(declarator).some((variable) =>
+        variable.references.some(
+          (reference) =>
+            reference.identifier !== declarator.id &&
+            inFilter(
+              reference.identifier,
+              depth + 1,
+              // An alias of an object filter is still an object filter.
+              declarator.init?.type === "ObjectExpression" ||
+                (declarator.init?.type === "Identifier" && objectAlias),
+            ),
+        ),
+      );
+    }
+
+    /** A local, unexported binding whose every use is in memory never reaches a query. */
+    function isBoundForInMemoryUseOnly(node: ESTree.Node): boolean {
+      const declarator = node.parent as ESTree.Node | null | undefined;
+      if (
+        declarator?.type !== "VariableDeclarator" ||
+        declarator.init !== node ||
+        declarator.id.type !== "Identifier" ||
+        declarator.parent.parent?.type === "ExportNamedDeclaration"
+      ) {
+        return false;
+      }
+
+      const references = context.sourceCode
         .getDeclaredVariables(declarator)
-        .some((variable) =>
-          variable.references.some(
-            (reference) =>
-              reference.identifier !== declarator.id &&
-              inFilter(
-                reference.identifier,
-                depth + 1,
-                declarator.init?.type === "ObjectExpression",
-              ),
-          ),
-        );
+        .flatMap((variable) => variable.references)
+        .filter((reference) => reference.identifier !== declarator.id);
+      return (
+        references.length > 0 &&
+        references.every((reference) => isUsedInMemory(reference.identifier))
+      );
     }
 
     function isRegexOperand(node: ESTree.Node): boolean {
@@ -486,7 +521,8 @@ const rule = defineRule({
         flags?.includes("i") &&
         segments !== undefined &&
         !isStatic(segments) &&
-        !isUsedInMemory(node)
+        !isUsedInMemory(node) &&
+        !isBoundForInMemoryUseOnly(node)
       ) {
         add(node, "dynamicCaseInsensitive");
       }
