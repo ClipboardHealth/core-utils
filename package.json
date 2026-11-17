@@ -44,7 +44,7 @@
     "@swc-node/register": "1.12.1",
     "@swc/core": "1.16.22",
     "@swc/helpers": "0.5.24",
-    "@tsconfig/node24": "24.0.5",
+    "@tsconfig/node26": "26.0.0",
     "@tsconfig/strictest": "2.0.8",
     "@types/node": "26.6.5",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
@@ -67,7 +67,7 @@
     "ts-node": "11.0.0-beta.1",
     "tsx": "4.23.15",
     "typedoc": "0.28.20",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vite": "8.3.7",
     "vitest": "5.1.0"
   },
