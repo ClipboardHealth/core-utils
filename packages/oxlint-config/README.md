@@ -9,6 +9,7 @@ Shared [Oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for Clipbo
 - [Fast runs](#fast-runs)
 - [Strict presets](#strict-presets)
 - [Suppression policy](#suppression-policy)
+- [Lint ceilings](#lint-ceilings)
 - [Categories](#categories)
 - [What is shared](#what-is-shared)
 - [Intentionally disabled rules](#intentionally-disabled-rules)
@@ -293,6 +294,121 @@ with the repository's own Oxlint and configuration. It fails if the rule is turn
 override disables it for that file. It does not detect overrides that match only other file
 extensions, such as `*.tsx`, or other paths. Call it for each directory that must enforce the
 policy.
+
+## Lint ceilings
+
+`lint-ceilings.json` holds per-file upper bounds for count rules such as `max-lines` and
+`complexity`, so a repository can keep strict defaults while existing large or complex files stay
+as they are. A listed file may shrink but not grow. Pull requests don't edit the file: the
+`cbh-lint-ceilings check` CLI blocks growth, and a weekly bot PR lowers stale values. This avoids
+the merge conflicts of exact-count baselines.
+
+```json
+{
+  "version": 1,
+  "rules": {
+    "complexity": {
+      "src/modules/users/user-manipulation.service.ts": 58
+    },
+
+    "max-lines": {
+      "src/app/lib/analytics/events.ts": 2802,
+
+      "src/app/redesign/Login/Login.tsx": 3264
+    }
+  }
+}
+```
+
+- Keys under `rules` are canonical Oxlint rule names: `complexity`, `import/max-dependencies`,
+  `max-depth`, `max-lines`, `max-lines-per-function`, `max-nested-callbacks`, `max-params` and
+  `max-statements`. Aliases such as `eslint/max-lines` are rejected. JavaScript plugin rules
+  aren't supported yet: `oxlint --print-config` omits their options, so the CLI can't measure
+  them against the configured default.
+- Paths are relative to the repository root. For per-function rules such as `complexity`, the
+  value is the file's largest function value, because Oxlint overrides apply to whole files.
+- The layout is canonical: rules and paths sorted, a blank line between entries. `init` and
+  `tighten` write it, and `check` fails on any other layout.
+
+### Configure
+
+Pass the parsed file to `createOxlintConfig`:
+
+```ts
+import { base, createOxlintConfig, typeAware, vitest } from "@clipboard-health/oxlint-config";
+import { defineConfig } from "oxlint";
+
+import ceilings from "./lint-ceilings.json" with { type: "json" };
+
+export default defineConfig(createOxlintConfig({ ceilings, presets: [base, typeAware, vitest] }));
+```
+
+The factory appends one override per listed file after every preset and local override. Oxlint
+applies the last matching override, so a ceiling listed before a later glob override, such as a
+higher `max-lines` for test files, would be ignored. Each ceiling override also carries the severity and
+options the file otherwise gets, such as `skipComments`, because an override replaces a rule's
+options. It skips files where the rule is off, so a ceiling never turns a rule back on. The factory
+assumes `oxlint.config.ts` and `lint-ceilings.json` both sit in the repository root.
+
+### Commands
+
+`cbh-lint-ceilings` ships in `@clipboard-health/oxlint-plugin`, a dependency of this package. It
+measures with the repository's own Oxlint and configuration, with ceilings ignored, so its numbers
+match the linter's. It reads the root configuration through `oxlint --print-config`, which drops
+rule options inherited through `extends` (Oxlint 1.91). Build the root `oxlint.config.ts` with
+`createOxlintConfig`, not `extends`, so options such as `max` survive.
+
+```sh
+npx cbh-lint-ceilings init                 # one entry per file above its default, all supported rules
+npx cbh-lint-ceilings init --rule complexity
+npx cbh-lint-ceilings check                # in CI; locally compares with the merge base of origin/HEAD
+npx cbh-lint-ceilings check --base origin/main
+npx cbh-lint-ceilings tighten              # weekly, on the default branch
+```
+
+`check` looks at changed files that have a ceiling and lints their base and current versions. It
+fails when:
+
+- a listed file's value grew, even if it is still under its ceiling. For per-function rules, it
+  fails when the file's largest value grew or the total excess over the default grew. Splitting a
+  function at 40 into two at 25 passes (excess 20 → 10), while a new function at 22 in a listed
+  file fails even though the file's largest value is unchanged.
+- an entry was added or raised. An entry that follows its file's rename at the same or a lower
+  value is not an addition.
+
+Stale-high values, entries for deleted files or files now within the default, and lowered or
+removed entries all pass. `--allow-increases` reports increases without failing: pass it from CI
+only when an increase is approved.
+
+### CI
+
+Run `check` as its own small job, on an ephemeral runner, with the default merge-commit checkout.
+In GitHub Actions, `check` compares a pull request's merge commit with its first parent and a
+merge-queue commit with the queue's base (`merge_group.base_sha`). `fetch-depth: 2` covers pull
+requests and merge or squash queues; a rebase queue needs depth of at least the pull request's
+commit count plus one. Any other checkout, such as the pull request head, falls back to the merge
+base with the pull request base and needs that history:
+
+```yaml
+lint-ceilings:
+  runs-on: [self-hosted, cb-ephemeral-8-cores]
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 2
+        persist-credentials: false
+    # Install the repository's dependencies, then:
+    - run: npx cbh-lint-ceilings check
+```
+
+There is no shared approval workflow yet. A repository that wants a reviewed path for raises can
+compute approval in its own workflow, for example from a review by a named team, and then pass
+`--allow-increases`.
+
+Copy the [weekly tighten workflow template](../oxlint-plugin/templates/tighten-lint-ceilings.yml)
+to keep values current. It runs `tighten` on the default branch, opens or updates a `chore/tighten-lint-ceilings`
+PR, enables auto-merge and requests reviewers. The job that installs dependencies holds no write
+token, and the job that pushes installs nothing.
 
 ## Categories
 

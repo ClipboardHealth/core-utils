@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -7,6 +7,7 @@ import { parseArgs } from "node:util";
 import { git, readChangedLines, resolveMergeBase } from "../lib/internal/changedLines";
 import { type OxlintDiagnostic, readIgnorePatterns, runOxlint } from "../lib/internal/runOxlint";
 import { isPlainObject } from "../lib/internal/json";
+import { withTemporaryFile } from "../lib/internal/temporaryFile";
 import { RECORD_SETTING, SUPPRESSION_POLICY_RULE_NAME } from "../lib/internal/suppressionPolicy";
 
 const LINTABLE_FILE = /\.(?:[cm]?[jt]s|[jt]sx)$/;
@@ -134,31 +135,6 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
 
   write(`cbh-check-suppressions: checked ${files.length} changed file(s); no violations.\n`);
   return { exitCode: 0 };
-}
-
-/**
- * Writes `path`, runs `run`, and removes the file. While `run` blocks, Ctrl-C or SIGTERM still
- * stops Oxlint, which makes `run` throw; the listeners keep Node alive long enough to clean up.
- */
-function withTemporaryFile<Result>(params: {
-  content: string;
-  path: string;
-  run: () => Result;
-}): Result {
-  const keepAlive = (): void => {
-    // Removing the listeners in `finally` restores the default exit-on-signal behavior.
-  };
-
-  process.on("SIGINT", keepAlive);
-  process.on("SIGTERM", keepAlive);
-  writeFileSync(params.path, params.content);
-  try {
-    return params.run();
-  } finally {
-    rmSync(params.path, { force: true });
-    process.off("SIGINT", keepAlive);
-    process.off("SIGTERM", keepAlive);
-  }
 }
 
 function parseRecord(params: { line: string }): {

@@ -102,3 +102,9 @@ npx cbh-check-suppressions --base origin/main
 It compares the working tree, including uncommitted and untracked files, and respects the
 repository's Oxlint `ignorePatterns`. It exits 1 on a violation. In GitHub Actions, check out with
 `fetch-depth: 0` so it can find the merge base.
+
+## `cbh-lint-ceilings`
+
+Checks, tightens and generates `lint-ceilings.json`, the per-file upper bounds for count rules such
+as `max-lines` and `complexity`. See
+[Lint ceilings](../oxlint-config/README.md#lint-ceilings) in the config README.

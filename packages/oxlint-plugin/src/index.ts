@@ -32,3 +32,9 @@ export const rules = {
 
 export { checkNeverSuppressRules } from "./lib/checkNeverSuppressRules";
 export { NEVER_SUPPRESS_RULES } from "./lib/internal/suppressionPolicy";
+export {
+  type CeilingConfig,
+  type CeilingOverride,
+  createLintCeilingOverrides,
+} from "./lib/internal/lintCeilings/ceilingOverrides";
+export type { LintCeilings } from "./lib/internal/lintCeilings/ceilingsFile";

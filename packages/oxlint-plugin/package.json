@@ -14,7 +14,8 @@
     "directory": "packages/oxlint-plugin"
   },
   "bin": {
-    "cbh-check-suppressions": "./src/bin/checkSuppressions.js"
+    "cbh-check-suppressions": "./src/bin/checkSuppressions.js",
+    "cbh-lint-ceilings": "./src/bin/lintCeilings.js"
   },
   "type": "commonjs",
   "main": "./src/index.js",
