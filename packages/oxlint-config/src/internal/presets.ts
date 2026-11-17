@@ -539,7 +539,7 @@ export const strict: OxlintPreset = {
 /**
  * Requires a specific reason on every lint suppression and forbids suppressing the rules in
  * `NEVER_SUPPRESS_RULES`. Opt in per repository once existing directives comply; until then, run
- * `cbh-check-suppressions` in CI to hold new and changed directives to the policy.
+ * `cb-check-suppressions` in CI to hold new and changed directives to the policy.
  */
 export const suppressionPolicy: OxlintPreset = {
   jsPlugins: [

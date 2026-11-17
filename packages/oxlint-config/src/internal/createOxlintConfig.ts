@@ -1,9 +1,10 @@
+import { createLintCeilingOverrides } from "@clipboard-health/oxlint-plugin";
 import type { OxlintConfig } from "oxlint";
 
 import type { CreateOxlintConfigRequest, OxlintPreset } from "./types";
 
 export function createOxlintConfig(request: CreateOxlintConfigRequest): OxlintConfig {
-  const { localConfig, presets = [] } = request;
+  const { ceilings, localConfig, presets = [] } = request;
   const configChain = localConfig === undefined ? [...presets] : [...presets, localConfig];
 
   let config: OxlintConfig = {};
@@ -15,7 +16,14 @@ export function createOxlintConfig(request: CreateOxlintConfigRequest): OxlintCo
     });
   }
 
-  return config;
+  if (ceilings === undefined) {
+    return config;
+  }
+
+  const { overrides } = createLintCeilingOverrides({ ceilings, config });
+  return overrides.length === 0
+    ? config
+    : mergeOxlintPreset({ current: config, next: { overrides } });
 }
 
 function mergeOxlintPreset(request: { current: OxlintConfig; next: OxlintPreset }): OxlintConfig {

@@ -1,6 +1,6 @@
 {
   "name": "@clipboard-health/oxlint-plugin",
-  "version": "1.9.1",
+  "version": "1.11.0",
   "description": "Clipboard's Oxlint plugin.",
   "keywords": [
     "oxlint",
@@ -14,7 +14,10 @@
     "directory": "packages/oxlint-plugin"
   },
   "bin": {
-    "cbh-check-suppressions": "./src/bin/checkSuppressions.js"
+    "cb-check-suppressions": "./src/bin/checkSuppressions.js",
+    "cb-lint-ceilings": "./src/bin/lintCeilings.js",
+    "cbh-check-suppressions": "./src/bin/deprecatedCheckSuppressions.js",
+    "cbh-lint-ceilings": "./src/bin/deprecatedLintCeilings.js"
   },
   "type": "commonjs",
   "main": "./src/index.js",

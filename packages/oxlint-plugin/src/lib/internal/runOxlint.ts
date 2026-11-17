@@ -12,12 +12,15 @@ export interface OxlintDiagnostic {
   span: { length: number; line: number; offset: number } | undefined;
 }
 
-/** Runs the repository's own Oxlint, so its version and configuration discovery apply. */
-export function runOxlint(params: { args: readonly string[]; cwd: string }): {
+/**
+ * Runs the repository's own Oxlint, so its version and configuration discovery apply. Oxlint
+ * resolves from `oxlintFrom`, which defaults to `cwd`.
+ */
+export function runOxlint(params: { args: readonly string[]; cwd: string; oxlintFrom?: string }): {
   diagnostics: OxlintDiagnostic[];
 } {
-  const { args, cwd } = params;
-  const result = spawnSync(process.execPath, [resolveOxlintBin({ cwd }), ...args], {
+  const { args, cwd, oxlintFrom = cwd } = params;
+  const result = spawnSync(process.execPath, [resolveOxlintBin({ cwd: oxlintFrom }), ...args], {
     cwd,
     encoding: "utf8",
     maxBuffer: 256 * 1024 * 1024,
@@ -43,10 +46,22 @@ export function runOxlint(params: { args: readonly string[]; cwd: string }): {
 
 /** Runs `oxlint --print-config` in the repository and returns its resolved `ignorePatterns`. */
 export function readIgnorePatterns(params: { cwd: string }): { ignorePatterns: string[] } {
-  const { cwd } = params;
+  return { ignorePatterns: toIgnorePatterns({ config: printOxlintConfig(params) }) };
+}
+
+/**
+ * Runs `oxlint --print-config` in the repository: the configuration after categories expand into
+ * rules and override globs are normalized. `env` replaces the environment the configuration sees.
+ */
+export function printOxlintConfig(params: {
+  cwd: string;
+  env?: NodeJS.ProcessEnv;
+}): Record<string, unknown> {
+  const { cwd, env } = params;
   const result = spawnSync(process.execPath, [resolveOxlintBin({ cwd }), "--print-config"], {
     cwd,
     encoding: "utf8",
+    env,
     maxBuffer: 64 * 1024 * 1024,
   });
 
@@ -59,12 +74,18 @@ export function readIgnorePatterns(params: { cwd: string }): { ignorePatterns: s
   }
 
   const config: unknown = JSON.parse(result.stdout);
-  const patterns = isPlainObject(config) ? config["ignorePatterns"] : undefined;
-  return {
-    ignorePatterns: Array.isArray(patterns)
-      ? patterns.filter((pattern): pattern is string => typeof pattern === "string")
-      : [],
-  };
+  if (!isPlainObject(config)) {
+    throw new TypeError(`oxlint --print-config returned an unexpected value.\n${result.stdout}`);
+  }
+
+  return config;
+}
+
+export function toIgnorePatterns(params: { config: Record<string, unknown> }): string[] {
+  const patterns = params.config["ignorePatterns"];
+  return Array.isArray(patterns)
+    ? patterns.filter((pattern): pattern is string => typeof pattern === "string")
+    : [];
 }
 
 function resolveOxlintBin(params: { cwd: string }): string {
