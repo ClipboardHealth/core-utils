@@ -161,9 +161,10 @@
       "matchDepTypes": ["devDependencies"]
     },
     {
-      "description": "Do not open major updates. A major can change APIs and needs a planned migration, so it is raised by the owning team when they choose to take it, not by Renovate.",
+      "description": "Do not open major updates. A major can change APIs and needs a planned migration, so it is raised by the owning team when they choose to take it, not by Renovate. Vulnerability fixes that need a major still open, because vulnerabilityAlerts forces them on; automerge stays off so a person reviews them.",
       "matchUpdateTypes": ["major"],
-      "enabled": false
+      "enabled": false,
+      "automerge": false
     },
     {
       "enabled": false,
