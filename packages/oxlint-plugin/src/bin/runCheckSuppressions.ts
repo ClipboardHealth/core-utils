@@ -6,6 +6,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -58,7 +59,10 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   const root = git({ args: ["rev-parse", "--show-toplevel"], cwd }).trim();
   const mergeBase = resolveMergeBase({ base, cwd: root, eventPath: env["GITHUB_EVENT_PATH"] });
   const changed = readChangedLines({ cwd: root, include: LINTABLE_FILE, mergeBase });
-  const files = [...changed.keys()];
+  // Oxlint skips a dangling or directory symlink that the diff lists; copying one would throw.
+  const files = [...changed.keys()].filter(
+    (file) => statSync(path.join(root, file), { throwIfNoEntry: false })?.isFile() === true,
+  );
 
   if (files.length === 0) {
     write("cbh-check-suppressions: no changed JavaScript or TypeScript files.\n");
@@ -78,9 +82,10 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
   let diagnostics: OxlintDiagnostic[];
   try {
     const { ignorePatterns } = readIgnorePatterns({ cwd: root });
-    for (const file of files) {
-      mkdirSync(path.dirname(path.join(scratchRoot, file)), { recursive: true });
-      copyFileSync(path.join(root, file), path.join(scratchRoot, file));
+    mkdirSync(scratchRoot, { recursive: true });
+    // Oxlint reads this file from its working directory, and it is not part of `ignorePatterns`.
+    if (existsSync(path.join(root, ".eslintignore"))) {
+      copyFileSync(path.join(root, ".eslintignore"), path.join(scratchRoot, ".eslintignore"));
     }
 
     ({ diagnostics } = withTemporaryFile({
@@ -97,8 +102,13 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
         rules: { [`cbh-check-suppressions/${SUPPRESSION_POLICY_RULE_NAME}`]: "error" },
         settings: { [RECORD_SETTING]: { recordPath } },
       }),
-      run: () =>
-        runOxlint({
+      run: () => {
+        for (const file of files) {
+          mkdirSync(path.dirname(path.join(scratchRoot, file)), { recursive: true });
+          copyFileSync(path.join(root, file), path.join(scratchRoot, file));
+        }
+
+        return runOxlint({
           // Relative, because Oxlint matches override and ignore globs against the path as given.
           args: [
             "--config",
@@ -109,7 +119,8 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
           ],
           cwd: scratchRoot,
           oxlintFrom: root,
-        }),
+        });
+      },
     }));
     records = existsSync(recordPath) ? readFileSync(recordPath, "utf8") : "";
   } finally {
