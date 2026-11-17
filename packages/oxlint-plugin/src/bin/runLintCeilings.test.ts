@@ -111,24 +111,27 @@ describe("runLintCeilings", () => {
       );
     });
 
-    it("measures against the defaults when the configuration applies ceilings", () => {
-      // The configuration drops its ceiling only when the CLI asks it to, as createOxlintConfig does.
-      rmSync(path.join(repository, ".oxlintrc.json"));
-      writeFiles({
-        "oxlint.config.ts": `const config = ${JSON.stringify(OXLINT_CONFIG)};
-const ceilings = process.env["CB_LINT_CEILINGS"] === "ignore"
+    it.each(["CB_LINT_CEILINGS", "CBH_LINT_CEILINGS"])(
+      "measures against the defaults when a configuration that reads %s applies ceilings",
+      (name) => {
+        // The configuration drops its ceiling only when the CLI asks it to, as createOxlintConfig does.
+        rmSync(path.join(repository, ".oxlintrc.json"));
+        writeFiles({
+          "oxlint.config.ts": `const config = ${JSON.stringify(OXLINT_CONFIG)};
+const ceilings = process.env["${name}"] === "ignore"
   ? []
   : [{ files: ["src/big.ts"], rules: { "max-lines": ["error", { max: 30 }] } }];
 export default { ...config, overrides: [...config.overrides, ...ceilings] };
 `,
-        "src/big.ts": `${fn("big", 5)}${filler(8)}`,
-      });
+          "src/big.ts": `${fn("big", 5)}${filler(8)}`,
+        });
 
-      const { exitCode, output } = run("check", "--base", "main");
+        const { exitCode, output } = run("check", "--base", "main");
 
-      expect(exitCode).toBe(1);
-      expect(output).toContain("(base: 15; now: 16)");
-    });
+        expect(exitCode).toBe(1);
+        expect(output).toContain("(base: 15; now: 16)");
+      },
+    );
 
     it("closes the complexity loophole: a new complex function fails, splitting passes", () => {
       // Adds a function at 4 (1 over) beside the one at 6: the file max holds, the excess grows.
