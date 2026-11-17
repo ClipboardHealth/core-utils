@@ -15,7 +15,7 @@
     "@ts-rest/nest": "3.52.1",
     "qs": "6.17.1",
     "reflect-metadata": "0.2.2",
-    "zod": "3.25.76"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@nestjs/testing": "11.2.8",

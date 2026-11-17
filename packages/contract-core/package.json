@@ -43,9 +43,9 @@
   },
   "devDependencies": {
     "@clipboard-health/testing-core": "2.13.17",
-    "zod": "3.25.76"
+    "zod": "4.6.6"
   },
   "peerDependencies": {
-    "zod": "^3"
+    "zod": "^4.6.6"
   }
 }
