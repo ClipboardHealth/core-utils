@@ -139,6 +139,30 @@ describe("createLintCeilingOverrides", () => {
     ]);
   });
 
+  it("strips a leading ./ from patterns and keeps slashless ones root-only, as Oxlint does", () => {
+    const overrides = (params: { excludeFiles?: string[]; files: string[] }): unknown =>
+      overridesFor({
+        config: {
+          overrides: [{ ...params, rules: { "max-lines": "off" } }],
+          rules: { "max-lines": "error" },
+        },
+        rules: { "max-lines": { "legacy.ts": 400, "src/legacy.ts": 400 } },
+      });
+    const ceiling = (file: string): unknown => ({
+      files: [`./${file}`],
+      rules: { "max-lines": ["error", { max: 400 }] },
+    });
+
+    expect(overrides({ excludeFiles: ["./src/legacy.ts"], files: ["**/*.ts"] })).toStrictEqual([
+      ceiling("src/legacy.ts"),
+    ]);
+    expect(overrides({ excludeFiles: ["./legacy.ts"], files: ["**/*.ts"] })).toStrictEqual([
+      ceiling("legacy.ts"),
+    ]);
+    expect(overrides({ files: ["./legacy.ts"] })).toStrictEqual([ceiling("src/legacy.ts")]);
+    expect(overrides({ files: ["./src/**"] })).toStrictEqual([ceiling("legacy.ts")]);
+  });
+
   it("escapes glob metacharacters in paths", () => {
     expect(
       overridesFor({
