@@ -47,6 +47,7 @@ const QUERY_METHODS = new Set([
   "findOneAndRemove",
   "findOneAndReplace",
   "findOneAndUpdate",
+  "match",
   "replaceOne",
   "updateMany",
   "updateOne",
@@ -400,7 +401,8 @@ const rule = defineRule({
       }
     }
 
-    function inFilter(start: ESTree.Node, depth: number): boolean {
+    /** `objectAlias`: `start` references a variable initialized with an object literal. */
+    function inFilter(start: ESTree.Node, depth: number, objectAlias = false): boolean {
       let child: ESTree.Node = start;
       let parent = child.parent as ESTree.Node | null | undefined;
       while (parent) {
@@ -415,9 +417,10 @@ const rule = defineRule({
           }
         } else if (parent.type === "CallExpression") {
           const name = calleeName(parent.callee);
+          const argument: ESTree.Node = child;
           return (
-            child.type === "ObjectExpression" &&
-            parent.arguments.includes(child) &&
+            (child.type === "ObjectExpression" || (objectAlias && child.type === "Identifier")) &&
+            (parent.arguments as ESTree.Node[]).includes(argument) &&
             name !== undefined &&
             QUERY_METHODS.has(name)
           );
@@ -453,7 +456,12 @@ const rule = defineRule({
         .some((variable) =>
           variable.references.some(
             (reference) =>
-              reference.identifier !== declarator.id && inFilter(reference.identifier, depth + 1),
+              reference.identifier !== declarator.id &&
+              inFilter(
+                reference.identifier,
+                depth + 1,
+                declarator.init?.type === "ObjectExpression",
+              ),
           ),
         );
     }
@@ -535,22 +543,22 @@ const rule = defineRule({
           }
         }
 
-        const counted = reports.filter(
-          (report) => !disabledLines.has(report.node.loc.start.line),
-        ).length;
+        const excepted = reports.filter((report) => disabledLines.has(report.node.loc.start.line));
+        const counted = reports.length - excepted.length;
         const baseline =
           allowed > 0
             ? ` This file's known-violations count is ${allowed}; it now has ${counted}.`
             : "";
-        if (counted > allowed) {
-          for (const report of reports) {
-            context.report({
-              node: report.node,
-              messageId: report.messageId,
-              data: { baseline },
-            });
-          }
-        } else if (counted < allowed) {
+        // Excepted reports are always emitted so their disable directives count as used.
+        for (const report of counted > allowed ? reports : excepted) {
+          context.report({
+            node: report.node,
+            messageId: report.messageId,
+            data: { baseline },
+          });
+        }
+
+        if (counted < allowed) {
           context.report({
             node,
             messageId: "staleBaseline",

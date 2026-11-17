@@ -1,8 +1,19 @@
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { RuleTester } from "oxlint/plugins-dev";
 
 import rule from "./index";
+
+const WORKSPACE_ROOT = path.resolve(__dirname, "../../../../../..");
+const PLUGIN = path.join(WORKSPACE_ROOT, "dist/packages/oxlint-plugin/src/index.js");
+const OXLINT_CLI = path.join(
+  path.dirname(createRequire(__filename).resolve("oxlint/package.json")),
+  "bin/oxlint",
+);
 
 RuleTester.describe = (name, run) => {
   describe(name, () => {
@@ -61,21 +72,16 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       code: "routes.register({ path: /users/i });",
     },
     {
+      name: "regex variable passed to String.prototype.match",
+      code: "const pattern = /abc/i; const found = value.match(pattern);",
+    },
+    {
       name: "variable never used in a filter",
       code: "const matcher = /abc/i; if (matcher.test(value)) { await User.find({ email }); }",
     },
     {
       name: "case-insensitive RegExp from a runtime value used in memory",
       code: 'const cleaned = text.replace(new RegExp(escapeRegExp(word), "gi"), "");',
-    },
-    {
-      name: "inline exception in a file at its known-violations count",
-      cwd,
-      filename,
-      options: [{ knownViolations: { "src/users/user.repository.ts": 1 } }],
-      code: `await User.find({ name: { $regex: search, $options: "i" } });
-        // oxlint-disable-next-line @clipboard-health/no-unindexable-mongo-regex -- Admin search over a small collection
-        await Tag.find({ name: { $regex: search, $options: "i" } });`,
     },
     {
       name: "file within its known-violations count",
@@ -160,6 +166,16 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       errors: [{ messageId: "unanchored" }],
     },
     {
+      name: "filter object held in an untyped variable",
+      code: "const query = { name: /smith/i }; await User.find(query);",
+      errors: [{ messageId: "caseInsensitive" }],
+    },
+    {
+      name: "aggregate builder match stage",
+      code: "await User.aggregate().match({ email: /example/ });",
+      errors: [{ messageId: "unanchored" }],
+    },
+    {
       name: "multiline flag lets ^ match after any newline",
       code: "await User.find({ name: /^smith/m });",
       errors: [{ messageId: "unanchored" }],
@@ -173,6 +189,17 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       name: "concatenated pattern with optional whitespace after the anchor",
       code: 'await User.find({ email: { $regex: "^\\\\s*" + escapeRegExp(email) } });',
       errors: [{ messageId: "noLiteralPrefix" }],
+    },
+    {
+      name: "inline exception in a file at its known-violations count",
+      cwd,
+      filename,
+      options: [{ knownViolations: { "src/users/user.repository.ts": 1 } }],
+      code: `await User.find({ name: { $regex: search, $options: "i" } });
+        // oxlint-disable-next-line @clipboard-health/no-unindexable-mongo-regex -- Admin search over a small collection
+        await Tag.find({ name: { $regex: search, $options: "i" } });`,
+      // The directive suppresses this report in oxlint; RuleTester does not apply directives.
+      errors: [{ messageId: "caseInsensitive", line: 3 }],
     },
     {
       name: "file over its known-violations count",
@@ -192,4 +219,35 @@ ruleTester.run("no-unindexable-mongo-regex", rule, {
       errors: [{ messageId: "staleBaseline" }],
     },
   ],
+});
+
+describe("no-unindexable-mongo-regex inline exceptions in oxlint", () => {
+  it("uses the disable directive instead of reporting it as unused", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "no-unindexable-mongo-regex-"));
+    try {
+      writeFileSync(
+        path.join(directory, ".oxlintrc.json"),
+        JSON.stringify({
+          jsPlugins: [{ name: "@clipboard-health", specifier: PLUGIN }],
+          rules: { "@clipboard-health/no-unindexable-mongo-regex": "error" },
+        }),
+      );
+      writeFileSync(
+        path.join(directory, "repository.ts"),
+        `// oxlint-disable-next-line @clipboard-health/no-unindexable-mongo-regex -- Admin search over a small collection
+await Tag.find({ name: { $regex: search, $options: "i" } });
+`,
+      );
+
+      const result = spawnSync(
+        process.execPath,
+        [OXLINT_CLI, "--report-unused-disable-directives-severity", "error", "repository.ts"],
+        { cwd: directory, encoding: "utf8" },
+      );
+
+      expect({ status: result.status, stdout: result.stdout }).toMatchObject({ status: 0 });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });
