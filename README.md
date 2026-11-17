@@ -39,6 +39,7 @@
 - [playwright-flake-linter](./packages/playwright-flake-linter/README.md): Shared configurable checks for Playwright flake anti-patterns.
 - [playwright-reporter-llm](./packages/playwright-reporter-llm/README.md): Playwright reporter that outputs structured JSON for LLM agents. Minimal console output, flat schema, easy to filter to failures.
 - [playwright-toolkit](./packages/playwright-toolkit/README.md): Shared anti-flake primitives for Clipboard Health Playwright suites.
+- [removed-env-vars](./packages/removed-env-vars/README.md): CI check that fails when a change stops setting an environment variable in ECS task-definition templates while code still reads it.
 - [rules-engine](./packages/rules-engine/README.md): A pure functional rules engine to keep logic-dense code simple, reliable, understandable, and explainable.
 - [testing-core](./packages/testing-core/README.md): TypeScript-friendly testing utilities.
 - [usa-states](./packages/usa-states/README.md): Canonical US state and territory list, StateCode and StateName types, and name/code normalizers.

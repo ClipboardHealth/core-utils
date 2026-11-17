@@ -73,6 +73,9 @@
     },
     {
       "path": "./packages/oxlint-plugin"
+    },
+    {
+      "path": "./packages/removed-env-vars"
     }
   ]
 }

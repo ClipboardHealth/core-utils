@@ -31,6 +31,7 @@
         "./packages/playwright-reporter-llm/src/index.ts"
       ],
       "@clipboard-health/playwright-toolkit": ["./packages/playwright-toolkit/src/index.ts"],
+      "@clipboard-health/removed-env-vars": ["./packages/removed-env-vars/src/index.ts"],
       "@clipboard-health/rules-engine": ["./packages/rules-engine/src/index.ts"],
       "@clipboard-health/testing-core": ["./packages/testing-core/src/index.ts"],
       "@clipboard-health/usa-states": ["./packages/usa-states/src/index.ts"],

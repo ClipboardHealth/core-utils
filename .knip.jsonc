@@ -84,5 +84,8 @@
     "packages/playwright-flake-linter": {
       "entry": ["src/bin/cli.ts", "src/index.ts"],
     },
+    "packages/removed-env-vars": {
+      "entry": ["src/bin/cli.ts", "src/index.ts"],
+    },
   },
 }

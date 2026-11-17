@@ -1,0 +1,29 @@
+{
+  "name": "removed-env-vars",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/removed-env-vars/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "dependsOn": ["prepare-build-package", "^build"],
+      "inputs": ["packageBuild", "^production"],
+      "outputs": ["{workspaceRoot}/dist/packages/removed-env-vars"],
+      "options": {
+        "forwardAllArgs": false
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "options": {
+        "configFile": "packages/removed-env-vars/vitest.config.ts"
+      }
+    },
+    "prepare-build-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "env -u NO_COLOR node --import tsx scripts/prepareTsgoPackage.mts packages/removed-env-vars"
+      }
+    }
+  }
+}

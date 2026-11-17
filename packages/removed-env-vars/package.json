@@ -1,0 +1,31 @@
+{
+  "name": "@clipboard-health/removed-env-vars",
+  "version": "0.0.0",
+  "description": "CI check that fails when a change stops setting an environment variable in ECS task-definition templates while code still reads it.",
+  "keywords": [
+    "ci",
+    "ecs",
+    "environment-variables",
+    "lint"
+  ],
+  "bugs": "https://github.com/ClipboardHealth/core-utils/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClipboardHealth/core-utils.git",
+    "directory": "packages/removed-env-vars"
+  },
+  "bin": {
+    "removed-env-vars": "./src/bin/cli.js"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "tslib": "2.8.1",
+    "typescript": "6.0.3"
+  }
+}
