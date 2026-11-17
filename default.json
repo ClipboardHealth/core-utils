@@ -128,7 +128,7 @@
       "allowedVersions": "<12.0.0"
     },
     {
-      "description": "Hold zod below v4 until ts-rest is migrated off across repos. Multiple zod majors in one dependency tree do not work together and have broken frontend consumers before.",
+      "description": "Hold direct zod bumps below v4 until ts-rest is migrated off across repos. Multiple zod majors in one dependency tree do not work together and have broken frontend consumers before.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["zod"],
       "allowedVersions": "<4.0.0"
