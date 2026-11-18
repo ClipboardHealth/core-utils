@@ -134,7 +134,10 @@ jobs:
           git commit -m "chore(release): sync package versions [skip actions]" --no-verify
           if ! git push --no-verify; then
             git fetch --quiet origin main
-            if git merge-base --is-ancestor FETCH_HEAD HEAD; then
+            # Exit status 1 alone means main moved; 0 means it didn't, and anything else is an error.
+            ancestor_status=0
+            git merge-base --is-ancestor FETCH_HEAD HEAD || ancestor_status=$?
+            if [ "$ancestor_status" -ne 1 ]; then
               exit 1
             fi
             echo "::warning::main moved during this run, so the package version sync wasn't pushed. The next main run syncs them."

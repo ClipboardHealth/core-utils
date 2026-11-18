@@ -186,6 +186,19 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
   }
 }
 
+function logReleaseTagRecovery(tags: readonly string[]): void {
+  console.error(
+    [
+      "Release tagging or push failed, and the push is atomic, so nothing was pushed or published.",
+      "If one of these tags already exists, a re-run computes the same version and fails the same way:",
+      ...tags.map((tag) => `  ${tag}`),
+      "Check with `git ls-remote --tags origin <tag>`, which commit the tag points at, and whether that",
+      "version is on npm. Then remove the stray tag or land a commit that moves the project past it, and",
+      "re-run the workflow.",
+    ].join("\n"),
+  );
+}
+
 function appendGitHubOutput(line: string): void {
   const outputPath = process.env.GITHUB_OUTPUT;
   if (outputPath) {
@@ -259,11 +272,18 @@ async function main(): Promise<void> {
       stdio: "inherit",
     });
 
-    for (const tag of tags) {
-      execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
+    let pushResult: ReturnType<typeof pushRelease>;
+    try {
+      for (const tag of tags) {
+        execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
+      }
+
+      pushResult = pushRelease({ cwd: process.cwd(), remote: "origin", branch: "main", tags });
+    } catch (error) {
+      logReleaseTagRecovery(tags);
+      throw error;
     }
 
-    const pushResult = pushRelease({ cwd: process.cwd(), remote: "origin", branch: "main", tags });
     if (pushResult === "superseded") {
       // Fail before publishing: these versions came from history that is no longer main's tip. The
       // workflow starts a fresh CI run on main, which recomputes versions from current history.

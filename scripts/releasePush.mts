@@ -33,11 +33,20 @@ export function pushRelease(input: {
     );
     return "pushed";
   } catch (error) {
-    execFileSync("git", ["fetch", "--quiet", "--no-tags", remote, branch], {
-      cwd,
-      stdio: "inherit",
-    });
-    if (isAncestor({ cwd, ancestor: "FETCH_HEAD", descendant: "HEAD" })) {
+    let branchMoved: boolean;
+    try {
+      execFileSync("git", ["fetch", "--quiet", "--no-tags", remote, branch], {
+        cwd,
+        stdio: "inherit",
+      });
+      branchMoved = !isAncestor({ cwd, ancestor: "FETCH_HEAD", descendant: "HEAD" });
+    } catch (checkError) {
+      // Without a reliable answer, report the push failure itself rather than the check's.
+      console.error(`Could not check whether ${remote}/${branch} moved: ${String(checkError)}`);
+      throw error;
+    }
+
+    if (!branchMoved) {
       throw error;
     }
 
@@ -52,7 +61,16 @@ function isAncestor(input: { cwd: string; ancestor: string; descendant: string }
       stdio: "ignore",
     });
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    // Exit status 1 means "not an ancestor"; anything else is a failed check.
+    if (isExecError(error) && error.status === 1) {
+      return false;
+    }
+
+    throw error;
   }
+}
+
+function isExecError(error: unknown): error is { status: number | null } {
+  return typeof error === "object" && error !== null && "status" in error;
 }

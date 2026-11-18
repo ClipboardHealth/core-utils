@@ -103,6 +103,8 @@ void describe("pushRelease", () => {
 
   void it("rethrows a push failure when main has not moved", () => {
     prepareRelease();
+    // Pin the hooks directory so a global core.hooksPath can't disable this hook.
+    git(remote, "config", "core.hooksPath", path.join(remote, "hooks"));
     const hook = path.join(remote, "hooks", "pre-receive");
     writeFileSync(hook, "#!/bin/sh\necho 'protected branch' >&2\nexit 1\n");
     chmodSync(hook, 0o755);
