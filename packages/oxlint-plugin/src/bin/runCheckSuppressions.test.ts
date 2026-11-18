@@ -265,6 +265,18 @@ describe("runCheckSuppressions", () => {
     expect(output).not.toContain("generated/skipped.ts");
   });
 
+  it("passes when every changed JavaScript file is ignored by the repository", () => {
+    writeFiles({
+      ".oxlintrc.json": JSON.stringify({ ignorePatterns: ["generated/**"] }),
+      "generated/worker.js": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+    });
+
+    const { exitCode, output } = check();
+
+    expect(exitCode).toBe(0);
+    expect(output).toContain("no violations");
+  });
+
   function check(options: { args?: string[]; env?: Record<string, string> } = {}): {
     exitCode: number;
     output: string;
