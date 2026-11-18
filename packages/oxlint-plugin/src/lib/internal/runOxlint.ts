@@ -36,9 +36,18 @@ export function runOxlint(params: { args: readonly string[]; cwd: string; oxlint
     );
   }
 
-  const report: unknown = JSON.parse(result.stdout);
+  // Oxlint prefixes its JSON with this notice when every explicit path is ignored.
+  const noFilesNotice = "No files found to lint. Please check your paths and ignore patterns.\n";
+  const hasNoFilesNotice = result.stdout.startsWith(noFilesNotice);
+  const report: unknown = JSON.parse(
+    hasNoFilesNotice ? result.stdout.slice(noFilesNotice.length) : result.stdout,
+  );
   if (!isPlainObject(report) || !Array.isArray(report["diagnostics"])) {
     throw new TypeError(`oxlint returned an unexpected JSON report.\n${result.stdout}`);
+  }
+
+  if (hasNoFilesNotice && (report["number_of_files"] !== 0 || report["diagnostics"].length !== 0)) {
+    throw new TypeError(`oxlint returned an inconsistent no-files report.\n${result.stdout}`);
   }
 
   return { diagnostics: report["diagnostics"].map((value) => toDiagnostic({ value })) };
