@@ -16,6 +16,7 @@ import { releaseChangelog, releaseVersion } from "nx/release";
 const MAX_RETRY_COUNT = 3;
 const INITIAL_BACKOFF_MILLISECONDS = 1000;
 const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
+const VERSION_PLANS_DIRECTORY = ".nx/version-plans";
 
 const { values: flags } = parseArgs({
   options: {
@@ -183,6 +184,23 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
   }
 }
 
+function stageDeletedVersionPlans(): void {
+  const deletedPlans = execFileSync(
+    "git",
+    ["ls-files", "--deleted", "-z", "--", VERSION_PLANS_DIRECTORY],
+    { encoding: "utf8" },
+  )
+    .split("\0")
+    .filter(Boolean);
+
+  if (deletedPlans.length === 0) {
+    return;
+  }
+
+  execFileSync("git", ["rm", "--cached", "--quiet", "--", ...deletedPlans], { stdio: "inherit" });
+  log(`  Staged ${deletedPlans.length} consumed version plan(s) for removal`);
+}
+
 async function main(): Promise<void> {
   // Phase 1: Version bumping
   log("Phase 1: Bumping versions...");
@@ -222,6 +240,13 @@ async function main(): Promise<void> {
     gitPush: false,
     createRelease: false,
   });
+
+  // releaseChangelog deletes consumed version plans but stages them only when it also changed a
+  // changelog file, and project changelog files are off. Stage the deletions so the release commit
+  // removes the plans; a plan left behind would apply its bump again on the next release.
+  if (!isDryRun) {
+    stageDeletedVersionPlans();
+  }
 
   // Phase 3: Git commit, tag, push
   log("Phase 3: Git commit, tag, push...");
