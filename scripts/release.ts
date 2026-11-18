@@ -9,9 +9,12 @@
  * @see https://nx.dev/recipes/nx-release/programmatic-api
  */
 import { execFileSync } from "node:child_process";
+import { appendFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 
 import { releaseChangelog, releaseVersion } from "nx/release";
+
+import { pushRelease } from "./releasePush.mts";
 
 const MAX_RETRY_COUNT = 3;
 const INITIAL_BACKOFF_MILLISECONDS = 1000;
@@ -184,6 +187,26 @@ async function createGitHubRelease(request: GitHubReleaseRequest): Promise<void>
   }
 }
 
+function logReleaseTagRecovery(tags: readonly string[]): void {
+  console.error(
+    [
+      "Release tagging or push failed, and the push is atomic, so nothing was pushed or published.",
+      "If one of these tags already exists, a re-run computes the same version and fails the same way:",
+      ...tags.map((tag) => `  ${tag}`),
+      "Check with `git ls-remote --tags origin <tag>`, which commit the tag points at, and whether that",
+      "version is on npm. Then remove the stray tag or land a commit that moves the project past it, and",
+      "re-run the workflow.",
+    ].join("\n"),
+  );
+}
+
+function appendGitHubOutput(line: string): void {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (outputPath) {
+    appendFileSync(outputPath, `${line}\n`);
+  }
+}
+
 function stageDeletedVersionPlans(): void {
   const deletedPlans = execFileSync(
     "git",
@@ -199,6 +222,27 @@ function stageDeletedVersionPlans(): void {
 
   execFileSync("git", ["rm", "--cached", "--quiet", "--", ...deletedPlans], { stdio: "inherit" });
   log(`  Staged ${deletedPlans.length} consumed version plan(s) for removal`);
+}
+
+function commitTagAndPush(
+  commitMessages: readonly string[],
+  tags: readonly string[],
+): ReturnType<typeof pushRelease> {
+  const messageArgs = commitMessages.flatMap((msg) => ["--message", msg]);
+  execFileSync("git", ["commit", "--allow-empty", ...messageArgs, "--no-verify"], {
+    stdio: "inherit",
+  });
+
+  try {
+    for (const tag of tags) {
+      execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
+    }
+
+    return pushRelease({ cwd: process.cwd(), remote: "origin", branch: "main", tags });
+  } catch (error) {
+    logReleaseTagRecovery(tags);
+    throw error;
+  }
 }
 
 async function main(): Promise<void> {
@@ -267,20 +311,17 @@ async function main(): Promise<void> {
     for (const tag of tags) {
       log(`    ${tag}`);
     }
-    log("  [dry-run] Would push with --follow-tags --no-verify --atomic");
+    log("  [dry-run] Would push HEAD to origin main and the tags above with --no-verify --atomic");
   } else {
-    const messageArgs = commitMessages.flatMap((msg) => ["--message", msg]);
-    execFileSync("git", ["commit", "--allow-empty", ...messageArgs, "--no-verify"], {
-      stdio: "inherit",
-    });
-
-    for (const tag of tags) {
-      execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
+    const pushResult = commitTagAndPush(commitMessages, tags);
+    if (pushResult === "superseded") {
+      // Fail before publishing: these versions came from history that is no longer main's tip. The
+      // workflow starts a fresh CI run on main, which recomputes versions from current history.
+      console.error("main moved during the release; nothing was pushed or published.");
+      appendGitHubOutput("superseded=true");
+      process.exitCode = 1;
+      return;
     }
-
-    execFileSync("git", ["push", "--follow-tags", "--no-verify", "--atomic"], {
-      stdio: "inherit",
-    });
   }
 
   // Phase 4: GitHub releases with retry

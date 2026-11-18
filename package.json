@@ -24,6 +24,7 @@
     "markdown:lint": "markdownlint-cli2 \"**/*.md\"",
     "postinstall": "node --run sync-ai-rules",
     "prepare": "husky",
+    "scripts:test": "node --test scripts/*.test.mts",
     "sync-ai-rules": "npm exec --yes --package=@clipboard-health/engineering-practices@latest -- engineering-practices-sync common --exclude common/featureFlags || true",
     "syncpack:lint": "syncpack lint",
     "verify": "node scripts/verifyAll.mts"

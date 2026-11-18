@@ -4,9 +4,14 @@ on:
   push:
     branches: [main, "renovate/**"]
   pull_request:
+  # Recovery: restart-release dispatches this when main moves during a release. Also usable by hand.
+  workflow_dispatch:
 
+# On main, queue instead of cancelling: a run cancelled after its release push and before
+# `nx release publish` leaves tags whose versions never reach npm, and the next run sees nothing to
+# bump. GitHub keeps only the newest pending run, which releases everything on main.
 concurrency:
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
 
 # Adapted from https://github.com/nrwl/ci/blob/v0.14.0/.github/workflows/nx-cloud-main.yml
@@ -61,6 +66,7 @@ jobs:
     # two with one name. Deploy-only re-runs reuse this output, so they find the original artifact.
     outputs:
       pages-artifact: github-pages-${{ github.run_attempt }}
+      superseded: ${{ steps.release.outputs.superseded }}
     steps:
       - id: token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
@@ -102,6 +108,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
           NX_RELEASE: true
+        id: release
         # Version package.json files at project roots
         run: npx tsx scripts/release.ts
         # Run a build so package.json files in dist directories pick up new versions
@@ -115,18 +122,45 @@ jobs:
         run: npx nx release publish
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
-        # Commit mismatched package.json versions and package-lock.json changes, if any
+        # Commit mismatched package.json versions and package-lock.json changes, if any. Main runs
+        # aren't cancelled, so main may have moved since checkout; the next main run syncs then.
         run: |
-          npx syncpack fix &&
-          npm install &&
-          git add package.json packages/*/package.json package-lock.json &&
-          git diff --staged --quiet || git commit -m "chore(release): sync package versions [skip actions]" --no-verify &&
-          git push --no-verify
+          npx syncpack fix
+          npm install
+          git add package.json packages/*/package.json package-lock.json
+          if git diff --staged --quiet; then
+            exit 0
+          fi
+          git commit -m "chore(release): sync package versions [skip actions]" --no-verify
+          if ! git push --no-verify; then
+            git fetch --quiet origin main
+            # Exit status 1 alone means main moved; 0 means it didn't, and anything else is an error.
+            ancestor_status=0
+            git merge-base --is-ancestor FETCH_HEAD HEAD || ancestor_status=$?
+            if [ "$ancestor_status" -ne 1 ]; then
+              exit 1
+            fi
+            echo "::warning::main moved during this run, so the package version sync wasn't pushed. The next main run syncs them."
+          fi
       - run: node --run docs
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           name: github-pages-${{ github.run_attempt }}
           path: docs
+
+  # release.ts found main moved before its push, so that run pushed and published nothing. A merge
+  # whose message contains a skip keyword starts no CI run of its own, so start one here.
+  restart-release:
+    needs: [main]
+    if: failure() && needs.main.outputs.superseded == 'true'
+    permissions:
+      actions: write
+    runs-on: [self-hosted, cb-ephemeral-2-cores]
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref main
 
   deploy-docs:
     needs: [main]
