@@ -48,7 +48,7 @@
       "pinDigests": false
     },
     {
-      "description": "Do not require Minimum Release Age for internal GitHub Actions and reusable workflows. Minimum Release Age exists to give a compromised, malicious, or broken third-party release time to be noticed and yanked before it reaches us. A ClipboardHealth release is our own code -- authored in this org, reviewed in its own PR, gated by its own CI, and released by us -- so the hold buys no additional scrutiny; it only delays propagating our own changes to every repo by a week, on every release. This is the same first-party distinction the pinDigests rule above already makes for the same package set. Third-party actions are untouched: actions/* and everything else keep both SHA pinning and the 7-day hold.",
+      "description": "Do not require Minimum Release Age for internal GitHub Actions and reusable workflows. Minimum Release Age exists to give a compromised, malicious, or broken third-party release time to be noticed and yanked before it reaches us. A ClipboardHealth release is our own code -- authored in this org, reviewed in its own PR, gated by its own CI, and released by us -- so the hold buys no additional scrutiny; it only delays propagating our own changes to every repo by a week, on every release. This is the same first-party distinction the pinDigests rule above already makes for the same package set. Third-party actions are untouched: actions/* and everything else keep both SHA pinning and the 7-day hold on version and digest updates.",
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["/^ClipboardHealth\\//i"],
       "minimumReleaseAge": null
