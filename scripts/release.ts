@@ -19,6 +19,7 @@ import { pushRelease } from "./releasePush.mts";
 const MAX_RETRY_COUNT = 3;
 const INITIAL_BACKOFF_MILLISECONDS = 1000;
 const RETRYABLE_STATUS_CODES = new Set([500, 502, 503, 504]);
+const VERSION_PLANS_DIRECTORY = ".nx/version-plans";
 
 const { values: flags } = parseArgs({
   options: {
@@ -206,6 +207,44 @@ function appendGitHubOutput(line: string): void {
   }
 }
 
+function stageDeletedVersionPlans(): void {
+  const deletedPlans = execFileSync(
+    "git",
+    ["ls-files", "--deleted", "-z", "--", VERSION_PLANS_DIRECTORY],
+    { encoding: "utf8" },
+  )
+    .split("\0")
+    .filter(Boolean);
+
+  if (deletedPlans.length === 0) {
+    return;
+  }
+
+  execFileSync("git", ["rm", "--cached", "--quiet", "--", ...deletedPlans], { stdio: "inherit" });
+  log(`  Staged ${deletedPlans.length} consumed version plan(s) for removal`);
+}
+
+function commitTagAndPush(
+  commitMessages: readonly string[],
+  tags: readonly string[],
+): ReturnType<typeof pushRelease> {
+  const messageArgs = commitMessages.flatMap((msg) => ["--message", msg]);
+  execFileSync("git", ["commit", "--allow-empty", ...messageArgs, "--no-verify"], {
+    stdio: "inherit",
+  });
+
+  try {
+    for (const tag of tags) {
+      execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
+    }
+
+    return pushRelease({ cwd: process.cwd(), remote: "origin", branch: "main", tags });
+  } catch (error) {
+    logReleaseTagRecovery(tags);
+    throw error;
+  }
+}
+
 async function main(): Promise<void> {
   // Phase 1: Version bumping
   log("Phase 1: Bumping versions...");
@@ -246,6 +285,13 @@ async function main(): Promise<void> {
     createRelease: false,
   });
 
+  // releaseChangelog deletes consumed version plans but stages them only when it also changed a
+  // changelog file, and project changelog files are off. Stage the deletions so the release commit
+  // removes the plans; a plan left behind would apply its bump again on the next release.
+  if (!isDryRun) {
+    stageDeletedVersionPlans();
+  }
+
   // Phase 3: Git commit, tag, push
   log("Phase 3: Git commit, tag, push...");
 
@@ -267,23 +313,7 @@ async function main(): Promise<void> {
     }
     log("  [dry-run] Would push HEAD to origin main and the tags above with --no-verify --atomic");
   } else {
-    const messageArgs = commitMessages.flatMap((msg) => ["--message", msg]);
-    execFileSync("git", ["commit", "--allow-empty", ...messageArgs, "--no-verify"], {
-      stdio: "inherit",
-    });
-
-    let pushResult: ReturnType<typeof pushRelease>;
-    try {
-      for (const tag of tags) {
-        execFileSync("git", ["tag", "-a", tag, "-m", tag], { stdio: "inherit" });
-      }
-
-      pushResult = pushRelease({ cwd: process.cwd(), remote: "origin", branch: "main", tags });
-    } catch (error) {
-      logReleaseTagRecovery(tags);
-      throw error;
-    }
-
+    const pushResult = commitTagAndPush(commitMessages, tags);
     if (pushResult === "superseded") {
       // Fail before publishing: these versions came from history that is no longer main's tip. The
       // workflow starts a fresh CI run on main, which recomputes versions from current history.
