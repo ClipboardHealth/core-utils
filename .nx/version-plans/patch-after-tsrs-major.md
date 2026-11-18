@@ -23,4 +23,4 @@ usa-states: patch
 util-ts: patch
 ---
 
-Release dependency and tooling updates merged since the last publish, including dotenv 18.0.10 in `config`. No API changes.
+Patch release after the tsrs change (#1024). `config` picks up dotenv 18.0.10. For the other packages, this release has no code changes: it moves each release tag past #1024, so later releases stop treating #1024's breaking change as theirs.
