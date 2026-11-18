@@ -89,7 +89,6 @@
     },
     "projects": ["packages/*", "!packages/example-*"],
     "projectsRelationship": "independent",
-    "versionPlans": true,
     "version": {
       "conventionalCommits": true,
       "fallbackCurrentVersionResolver": "disk",
