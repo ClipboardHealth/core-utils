@@ -23,4 +23,4 @@ usa-states: patch
 util-ts: patch
 ---
 
-Patch release after the tsrs change (#1024). `config` picks up dotenv 18.0.10. For the other packages, this release has no code changes: it moves each release tag past #1024, so later releases stop treating #1024's breaking change as theirs.
+Patch release after the tsrs change (#1024). `config` picks up dotenv 18.0.10, and `playwright-flake-linter` picks up its TypeScript 6.0.3 dependency. For the other packages, this release has no code changes: it moves each release tag past #1024, so later releases stop treating #1024's breaking change as theirs.
