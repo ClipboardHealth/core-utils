@@ -1,11 +1,11 @@
 name: Setup Node environment
 description: |
   Set up Node.js and install dependencies.
-  Mirrors ClipboardHealth/action-build-nodejs@v4 for use in public repos
+  Mirrors ClipboardHealth/action-build-nodejs@v5 for use in public repos
   that cannot reference internal GitHub Actions.
 
   - Validates repo configuration;
-  - Sets up Node.js from .nvmrc;
+  - Installs Node.js and npm from mise.toml;
   - Aligns npm version with engines.npm;
   - Caches ~/.npm (download cache);
   - Runs `npm ci` for deterministic installs.
@@ -29,8 +29,8 @@ runs:
       run: |
         set -euo pipefail
 
-        if [ ! -f .nvmrc ]; then
-          echo "Expected a repo-root .nvmrc, but none was found." >&2
+        if [ ! -f mise.toml ]; then
+          echo "Expected a repo-root mise.toml, but none was found." >&2
           exit 1
         fi
 
@@ -54,14 +54,13 @@ runs:
           exit 1
         fi
 
-    - name: Setup Node
-      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+    - name: Install tools from mise.toml
+      uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
       with:
-        node-version-file: .nvmrc
-        check-latest: true
-        package-manager-cache: false
+        version: 2026.11.0
+        install_args: node npm
       env:
-        NPM_TOKEN: ${{ inputs.npm_token }}
+        MISE_USE_VERSIONS_HOST: "false"
 
     - name: Validate engines field
       shell: bash
@@ -149,9 +148,9 @@ runs:
       id: npm-cache
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-npm-${{ hashFiles('mise.toml') }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-npm-${{ hashFiles('.nvmrc') }}-
+          ${{ runner.os }}-npm-${{ hashFiles('mise.toml') }}-
 
     - name: Start services and install dependencies
       shell: bash
