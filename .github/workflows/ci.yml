@@ -122,13 +122,23 @@ jobs:
         run: npx nx release publish
       - env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
-        # Commit mismatched package.json versions and package-lock.json changes, if any
+        # Commit mismatched package.json versions and package-lock.json changes, if any. Main runs
+        # aren't cancelled, so main may have moved since checkout; the next main run syncs then.
         run: |
-          npx syncpack fix &&
-          npm install &&
-          git add package.json packages/*/package.json package-lock.json &&
-          git diff --staged --quiet || git commit -m "chore(release): sync package versions [skip actions]" --no-verify &&
-          git push --no-verify
+          npx syncpack fix
+          npm install
+          git add package.json packages/*/package.json package-lock.json
+          if git diff --staged --quiet; then
+            exit 0
+          fi
+          git commit -m "chore(release): sync package versions [skip actions]" --no-verify
+          if ! git push --no-verify; then
+            git fetch --quiet origin main
+            if git merge-base --is-ancestor FETCH_HEAD HEAD; then
+              exit 1
+            fi
+            echo "::warning::main moved during this run, so the package version sync wasn't pushed. The next main run syncs them."
+          fi
       - run: node --run docs
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
