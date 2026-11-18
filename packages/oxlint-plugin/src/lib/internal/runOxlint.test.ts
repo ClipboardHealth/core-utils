@@ -44,11 +44,11 @@ describe("runOxlint reports", () => {
         output: NOTICE + JSON.stringify({ diagnostics: [], number_of_files: 1 }),
         status: 1,
       }),
-    ).toThrow();
+    ).toThrow("oxlint returned an inconsistent no-files report");
   });
 
   it("rejects arbitrary non-JSON output", () => {
-    expect(report({ output: "unexpected tool output", status: 0 })).toThrow();
+    expect(report({ output: "unexpected tool output", status: 0 })).toThrow(/Unexpected token/);
   });
 
   it("rejects tool failures even when their output resembles an empty report", () => {

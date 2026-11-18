@@ -46,7 +46,7 @@ export function runOxlint(params: { args: readonly string[]; cwd: string; oxlint
     throw new TypeError(`oxlint returned an unexpected JSON report.\n${result.stdout}`);
   }
 
-  if (hasNoFilesNotice && (report["number_of_files"] !== 0 || report["diagnostics"].length !== 0)) {
+  if (hasNoFilesNotice && (report["number_of_files"] !== 0 || report["diagnostics"].length > 0)) {
     throw new TypeError(`oxlint returned an inconsistent no-files report.\n${result.stdout}`);
   }
 
