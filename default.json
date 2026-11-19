@@ -125,10 +125,10 @@
       "allowedVersions": "<4.0.0"
     },
     {
-      "description": "Never move a zod 3 dependency to zod 4, including vulnerability fixes. Renovate appends its vulnerability-alert rules after ours with force.enabled, so they override both the allowedVersions hold above and the major-update rule, and opened zod 3 to 4 [security] PRs. ignoreDeps is checked after every package rule and is not overridden by force, so it holds for vulnerability fixes too. The regex matchCurrentVersion compares the locked version or the declared range before lookup, so zod 4 dependencies are not ignored. ignoreDeps matches the dependency name, so npm aliases of zod 3 (zod-v3) are listed too. This also stops zod 3 patch updates; zod 3 vulnerabilities need a manual fix.",
+      "description": "Never move a zod 3 dependency to zod 4, including vulnerability fixes. Renovate appends its vulnerability-alert rules after ours with force.enabled, so they override both the allowedVersions hold above and the major-update rule, and opened zod 3 to 4 [security] PRs. ignoreDeps is checked after every package rule and is not overridden by force, so it holds for vulnerability fixes too. The regex matchCurrentVersion compares the locked version or the declared range before lookup, so zod 4 dependencies are not ignored. ignoreDeps matches the dependency name, so npm aliases of zod 3 (zod-v3) are listed too. This also stops zod 3 minor and patch updates; zod 3 vulnerabilities need a manual fix.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["zod"],
-      "matchCurrentVersion": "/^[~^]?3\\./",
+      "matchCurrentVersion": "/^(?:[~^]|>=?\\s*)?3(?:\\.|\\s|$)/",
       "ignoreDeps": ["zod", "zod-v3"]
     },
     {
