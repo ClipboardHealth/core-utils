@@ -191,7 +191,7 @@
       "commitMessageTopic": "{{depName}}"
     },
     {
-      "description": "Re-assert 7 days for npm. config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule pins npm to 3 days; preset rules resolve before ours and override the top-level minimumReleaseAge, so npm needs this to reach 7 days.",
+      "description": "Re-assert 7 days for every package from the npm registry, not only the npm CLI. config:best-practices pulls in security:minimumReleaseAgeNpm, whose packageRule pins the npm datasource to 3 days; preset rules resolve before ours and override the top-level minimumReleaseAge, so npm-registry packages need this to reach 7 days.",
       "matchDatasources": ["npm"],
       "minimumReleaseAge": "7 days"
     },
