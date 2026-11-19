@@ -146,7 +146,7 @@
       "internalChecksFilter": "none"
     },
     {
-      "description": "Bump every npm CLI pin (mise.toml, engines.npm, packageManager) in one PR, opened only once the release is 7 days old. The npm CLI comes from the npm registry, so it gets the same supply-chain wait as other packages. The strict filter holds the branch until then, instead of opening a PR early whose pending stability check can be merged past. Environments that enforce npm's min-release-age, such as Dispatch agent pods, cannot install a younger npm, so a repository pinned to one fails npm ci with EBADENGINE. Vulnerability fixes for npm still open right away, because vulnerability alerts bypass minimumReleaseAge.",
+      "description": "Bump every npm CLI pin (mise.toml, engines.npm, packageManager) in one PR, opened only once the release is 7 days old. The npm CLI comes from the npm registry, so it gets the same supply-chain wait as other packages. The strict filter holds the branch until then, instead of opening a PR early whose pending stability check can be merged past. Vulnerability fixes for npm still open right away, because vulnerability alerts bypass minimumReleaseAge.",
       "groupName": "npm",
       "groupSlug": "npm",
       "matchPackageNames": ["npm"],
