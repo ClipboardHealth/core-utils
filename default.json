@@ -125,6 +125,13 @@
       "allowedVersions": "<4.0.0"
     },
     {
+      "description": "Never move a zod 3 dependency to zod 4, including vulnerability fixes. Renovate appends its vulnerability-alert rules after ours with force.enabled, so they override both the allowedVersions hold above and the major-update rule, and opened zod 3 to 4 [security] PRs. ignoreDeps is checked after every package rule and is not overridden by force, so it holds for vulnerability fixes too. The regex matchCurrentVersion compares the locked version or the declared range before lookup, so repositories already on zod 4 keep their updates. This also stops zod 3 patch updates; zod 3 vulnerabilities need a manual fix.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["zod"],
+      "matchCurrentVersion": "/^[~^]?3\\./",
+      "ignoreDeps": ["zod"]
+    },
+    {
       "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches and minors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, and minors follow the normal schedule and automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors still wait their 7 days, but through the status check rather than by delaying the branch.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
