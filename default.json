@@ -132,19 +132,26 @@
       "ignoreDeps": ["zod", "zod-v3"]
     },
     {
-      "description": "Bump every Node and npm pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines, packageManager, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart, and leave npm in mise.toml disagreeing with engines.npm. Patches and minors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, and minors follow the normal schedule and automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors still wait their 7 days, but through the status check rather than by delaying the branch.",
+      "description": "Bump every Node pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines.node, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart. The npm CLI has its own group below. Patches and minors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, and minors follow the normal schedule and automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors still wait their 7 days, but through the status check rather than by delaying the branch.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
       "matchPackageNames": [
         "node",
         "actions/node-versions",
-        "npm",
         "docker.io/node",
         "docker.io/library/node",
         "library/node",
         "public.ecr.aws/docker/library/node"
       ],
       "internalChecksFilter": "none"
+    },
+    {
+      "description": "Bump every npm CLI pin (mise.toml, engines.npm, packageManager) in one PR, opened only once the release is 7 days old. The npm CLI comes from the npm registry, so it gets the same supply-chain wait as other packages. The strict filter holds the branch until then, instead of opening a PR early whose pending stability check can be merged past. Environments that enforce npm's min-release-age, such as Dispatch agent pods, cannot install a younger npm, so a repository pinned to one fails npm ci with EBADENGINE. Vulnerability fixes for npm still open right away, because vulnerability alerts bypass minimumReleaseAge.",
+      "groupName": "npm",
+      "groupSlug": "npm",
+      "matchPackageNames": ["npm"],
+      "internalChecksFilter": "strict",
+      "minimumReleaseAge": "7 days"
     },
     {
       "description": "Keep @types/node out of the Node.js group and disabled. Renovate takes a grouped branch's schedule and release age from its first update, so a @types/node bump in the group would put Node patches back on the 7-day, weekday path.",
@@ -259,11 +266,10 @@
       ]
     },
     {
-      "description": "Ship Node and npm patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official images time to publish the matching tag, so the group bumps the Dockerfile with the other pins. The Node.js group rule holds the branch until every pin reaches this age. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
+      "description": "Ship Node patch releases as soon as CI is green. Node security fixes ship as patch releases, so waiting 7 days and for the weekday schedule would leave known vulnerabilities in production. Patches carry no API changes, which is what makes the shorter age acceptable. One day, not zero, gives the official images time to publish the matching tag, so the group bumps the Dockerfile with the other pins. The Node.js group rule holds the branch until every pin reaches this age. A high prPriority lets them go ahead of other branches waiting on the concurrency limits.",
       "matchPackageNames": [
         "node",
         "actions/node-versions",
-        "npm",
         "docker.io/node",
         "docker.io/library/node",
         "library/node",
