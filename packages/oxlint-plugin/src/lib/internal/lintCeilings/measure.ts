@@ -81,7 +81,7 @@ export function measureFiles(params: {
   }
 }
 
-/** Lints the whole repository, honoring its `ignorePatterns`, and measures `ruleNames`. */
+/** Lints the whole lint root, honoring its `ignorePatterns`, and measures `ruleNames`. */
 export function measureRepository(params: {
   printedConfig: Record<string, unknown>;
   root: string;
