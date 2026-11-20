@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { git } from "./changedLines";
 
-/** The files Oxlint looks for in its working directory, as `oxlint --help` lists them. */
+/** The configuration files Oxlint discovers in its working directory. */
 const OXLINT_CONFIG_FILES = [
   ".oxlintrc.json",
   ".oxlintrc.jsonc",
