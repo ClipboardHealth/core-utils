@@ -120,6 +120,12 @@ It compares the working tree, including uncommitted and untracked files, and res
 repository's Oxlint `ignorePatterns`. It exits 1 on a violation. In GitHub Actions, check out with
 `fetch-depth: 0` so it can find the merge base.
 
+Both CLIs run from the lint root: the nearest directory from the working directory up to the Git top
+level that holds an Oxlint configuration (`.oxlintrc.json`, `.oxlintrc.jsonc`, `oxlint.config.ts` or
+`oxlint.config.mts`), else the top level. They resolve Oxlint and read its configuration there and
+check only files under it, with paths relative to it. So in a monorepo whose packages each install
+and configure Oxlint, run them from the package, as its npm scripts do.
+
 ## `cb-lint-ceilings`
 
 Checks, tightens and generates `lint-ceilings.json`, the per-file upper bounds for count rules such

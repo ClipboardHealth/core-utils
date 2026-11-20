@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 
 import { git, resolveMergeBase } from "../lib/internal/changedLines";
 import { isPlainObject } from "../lib/internal/json";
+import { resolveLintRoot } from "../lib/internal/lintRoot";
 import { CEILING_RULES, isCeilingRule } from "../lib/internal/lintCeilings/ceilingRules";
 import {
   LEGACY_LINT_CEILINGS_ENV,
@@ -79,7 +80,7 @@ export function runLintCeilings(params: CliParams): { exitCode: number } {
     return { exitCode: 2 };
   }
 
-  const root = git({ args: ["rev-parse", "--show-toplevel"], cwd }).trim();
+  const root = resolveLintRoot({ cwd });
   const context: Context = { env, root, write };
   switch (command) {
     case "check": {
@@ -166,7 +167,7 @@ function check(params: { allowIncreases: boolean; base: string | undefined; cont
     const printedConfig = printDefaults({ env, root });
     baseMeasurements = measureFiles({
       files: toMeasure.map((file) => ({
-        content: git({ args: ["show", `${base}:${file.basePath}`], cwd: root }),
+        content: git({ args: ["show", `${base}:./${file.basePath}`], cwd: root }),
         path: file.basePath,
       })),
       oxlintFrom: root,
@@ -367,7 +368,7 @@ function readBaseCeilings(params: { base: string; root: string }): LintCeilings 
   const { base, root } = params;
   let text: string;
   try {
-    text = git({ args: ["show", `${base}:${LINT_CEILINGS_FILE}`], cwd: root });
+    text = git({ args: ["show", `${base}:./${LINT_CEILINGS_FILE}`], cwd: root });
   } catch {
     return { rules: {}, version: 1 };
   }
@@ -375,10 +376,21 @@ function readBaseCeilings(params: { base: string; root: string }): LintCeilings 
   return parseLintCeilings({ value: JSON.parse(text) });
 }
 
-/** Files changed between `base` and the working tree, following renames. */
+/**
+ * Files under `root` changed between `base` and the working tree, following renames, with paths
+ * relative to `root`.
+ */
 function readChangedFiles(params: { base: string; root: string }): ChangedFile[] {
   const fields = git({
-    args: ["diff", "--name-status", "-z", "--find-renames", "--no-ext-diff", params.base],
+    args: [
+      "diff",
+      "--name-status",
+      "-z",
+      "--find-renames",
+      "--no-ext-diff",
+      "--relative",
+      params.base,
+    ],
     cwd: params.root,
   }).split("\0");
   const changed: ChangedFile[] = [];

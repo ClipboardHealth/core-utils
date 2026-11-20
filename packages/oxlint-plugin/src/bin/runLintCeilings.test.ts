@@ -313,6 +313,68 @@ export default { ...config, overrides: [...config.overrides, ...ceilings] };
     });
   });
 
+  describe("in a package below the Git top level with its own Oxlint and configuration", () => {
+    let workerPackage: string;
+
+    beforeEach(() => {
+      // Oxlint is installed only in each package, as in a monorepo whose apps install their own.
+      rmSync(path.join(repository, "node_modules"));
+      writeFiles({
+        "apps/worker/.oxlintrc.json": JSON.stringify(OXLINT_CONFIG),
+        "apps/worker/package.json": '{ "private": true }\n',
+        "apps/worker/src/big.ts": `${fn("big", 5)}${filler(7)}`,
+        "apps/worker/src/small.ts": filler(2),
+      });
+      workerPackage = path.join(repository, "apps/worker");
+      symlinkSync(
+        path.join(WORKSPACE_ROOT, "node_modules"),
+        path.join(workerPackage, "node_modules"),
+      );
+    });
+
+    it("measures the package's files with paths relative to it", () => {
+      expect(runIn(workerPackage, "init")).toStrictEqual({
+        exitCode: 0,
+        output: "cb-lint-ceilings: wrote 2 entries to lint-ceilings.json.\n",
+      });
+      expect(
+        JSON.parse(readFileSync(path.join(workerPackage, "lint-ceilings.json"), "utf8")),
+      ).toStrictEqual({
+        rules: { complexity: { "src/big.ts": 6 }, "max-lines": { "src/big.ts": 15 } },
+        version: 1,
+      });
+    });
+
+    it("checks only the package's changed files against its own ceilings", () => {
+      runIn(workerPackage, "init");
+      commit("base");
+      writeFiles({
+        "apps/worker/src/big.ts": `${fn("big", 5)}${filler(8)}`,
+        // Grows past its root ceiling, which another configuration owns.
+        "src/big.ts": `${fn("big", 5)}${filler(9)}`,
+      });
+
+      const { exitCode, output } = runIn(workerPackage, "check", "--base", "main");
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain(
+        "src/big.ts is listed in lint-ceilings.json for max-lines: it may not grow (base: 15; now: 16). Shrink or split it.",
+      );
+      expect(output).toContain("cb-lint-ceilings: 1 increase(s).");
+    });
+
+    it("ignores changes outside the package", () => {
+      runIn(workerPackage, "init");
+      commit("base");
+      writeFiles({ "src/big.ts": `${fn("big", 5)}${filler(9)}` });
+
+      expect(runIn(workerPackage, "check", "--base", "main")).toStrictEqual({
+        exitCode: 0,
+        output: "cb-lint-ceilings: checked 0 changed listed file(s); nothing grew.\n",
+      });
+    });
+  });
+
   it("rejects unknown commands and misplaced options", () => {
     expect(run("format").exitCode).toBe(2);
     expect(run("tighten", "--base", "main").exitCode).toBe(2);
@@ -325,13 +387,23 @@ export default { ...config, overrides: [...config.overrides, ...ceilings] };
     exitCode: number;
     output: string;
   } {
+    return runIn(repository, ...args);
+  }
+
+  function runIn(
+    cwd: string,
+    ...args: Array<string | Record<string, string>>
+  ): {
+    exitCode: number;
+    output: string;
+  } {
     const [first] = args;
     const env = typeof first === "object" ? first : {};
     const cliArgs = args.filter((arg): arg is string => typeof arg === "string");
     let output = "";
     const { exitCode } = runLintCeilings({
       args: cliArgs,
-      cwd: repository,
+      cwd,
       env: { PATH: process.env["PATH"], ...env },
       write: (text) => {
         output += text;
