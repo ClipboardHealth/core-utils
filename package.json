@@ -60,7 +60,7 @@
     "lint-staged": "17.6.0",
     "markdownlint-cli2": "0.24.0",
     "nx": "23.2.1",
-    "oxfmt": "0.76.0",
+    "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
     "promptfoo": "0.125.1",
     "syncpack": "15.3.3",
