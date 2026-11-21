@@ -181,6 +181,12 @@
       "automerge": false
     },
     {
+      "description": "Do not open @tsconfig/node* replacements, such as @tsconfig/node24 to @tsconfig/node26. config:best-practices extends replacements:tsconfig-bases-node, which raises each Node major as a replacement update, so the major-update rule above does not catch it. Moving to a new Node major's compiler preset is a migration the owning team takes with the runtime upgrade. Minor and patch updates of the current preset still open.",
+      "matchPackageNames": ["@tsconfig/node**"],
+      "matchUpdateTypes": ["replacement"],
+      "enabled": false
+    },
+    {
       "enabled": false,
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@typescript-eslint\\//", "/^eslint/"]
