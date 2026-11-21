@@ -130,20 +130,13 @@ interface ContractImport {
   source: string;
 }
 
-// Producer-owned response schemas: ts-rest-era `*ResponseSchema` exports, oRPC-era `*OutputSchema`
-// exports, and contract-core's shared error schemas.
-function isNamedContractResponseSchema(name: string): boolean {
-  return name.endsWith("ResponseSchema") || name.endsWith("OutputSchema");
-}
-
-function isContractCoreResponseSchema(name: string, source: string): boolean {
-  return source === CONTRACT_CORE_PACKAGE && CONTRACT_CORE_RESPONSE_SCHEMA_NAMES.has(name);
-}
-
+// Producer-owned response schemas exported by a contract package: ts-rest-era `*ResponseSchema`,
+// oRPC-era `*OutputSchema`, and contract-core's shared error schemas.
 function isContractImportResponseSchema({ importedName, source }: ContractImport): boolean {
   return (
-    isNamedContractResponseSchema(importedName) ||
-    isContractCoreResponseSchema(importedName, source)
+    importedName.endsWith("ResponseSchema") ||
+    importedName.endsWith("OutputSchema") ||
+    (source === CONTRACT_CORE_PACKAGE && CONTRACT_CORE_RESPONSE_SCHEMA_NAMES.has(importedName))
   );
 }
 
@@ -223,7 +216,8 @@ const rule: Rule = {
       return variable !== undefined && contractImports.has(variable);
     }
 
-    function isContractCoreNamespaceMember(member: ESTree.MemberExpression, name: string): boolean {
+    // `import * as schemas from "@clipboard-health/contract-x"; schemas.GetXOutputSchema`
+    function isContractNamespaceExport(member: ESTree.MemberExpression, name: string): boolean {
       if (member.object.type !== "Identifier") {
         return false;
       }
@@ -231,7 +225,7 @@ const rule: Rule = {
       const namespaceImport = namespace ? contractImports.get(namespace) : undefined;
       return (
         namespaceImport?.importedName === "*" &&
-        isContractCoreResponseSchema(name, namespaceImport.source)
+        isContractImportResponseSchema({ importedName: name, source: namespaceImport.source })
       );
     }
 
@@ -254,12 +248,12 @@ const rule: Rule = {
         selectedName === "outputSchema" &&
         current.object.type === "MemberExpression" &&
         propertyName(current.object) === "~orpc";
-      if (selectedOrpcOutputSchema || isNamedContractResponseSchema(selectedName)) {
+      if (selectedOrpcOutputSchema || selectedName.endsWith("ResponseSchema")) {
         const root = rootIdentifier(current);
         return root !== undefined && isContractRoot(root);
       }
 
-      return isContractCoreNamespaceMember(current, selectedName);
+      return isContractNamespaceExport(current, selectedName);
     }
 
     function isContractResponseSchema(

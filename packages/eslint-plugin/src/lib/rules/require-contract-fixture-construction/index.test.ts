@@ -276,5 +276,18 @@ ruleTester.run("require-contract-fixture-construction", rule as never, {
         { messageId: "parseMock" },
       ],
     },
+    {
+      name: "rejects *OutputSchema and apiErrors nested below a namespace export",
+      filename: mocksFile,
+      code: `
+        import { featureContract } from "@clipboard-health/contract-feature";
+        import * as featureSchemas from "@clipboard-health/contract-feature";
+        import * as contractCore from "@clipboard-health/contract-core";
+        export const mockNestedOutput = featureContract.get.body.shape.UserOutputSchema.parse({});
+        export const mockNamespaceNested = featureSchemas.CreateFeatureInputSchema.shape.ItemOutputSchema.parse({});
+        export const mockNestedErrors = contractCore.errors.apiErrors.parse({ errors: [] });
+      `,
+      errors: [{ messageId: "parseMock" }, { messageId: "parseMock" }, { messageId: "parseMock" }],
+    },
   ],
 });
