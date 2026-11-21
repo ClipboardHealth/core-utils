@@ -57,7 +57,7 @@ runs:
     - name: Install tools from mise.toml
       uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
       with:
-        version: 2026.11.0
+        version: 2026.11.8
         install_args: node npm
       env:
         MISE_USE_VERSIONS_HOST: "false"
