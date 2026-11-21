@@ -3,6 +3,9 @@ import type { ESTree, Rule, Variable } from "@oxlint/plugins";
 import { findVariable as findVariableInScope } from "../../internal/findVariable";
 
 const CONTRACT_PACKAGE_PREFIX = "@clipboard-health/contract-";
+const CONTRACT_CORE_PACKAGE = "@clipboard-health/contract-core";
+// Shared error-response schemas that contracts reference directly in their response maps.
+const CONTRACT_CORE_RESPONSE_SCHEMA_NAMES = new Set(["apiErrors"]);
 const MOCKS_FILE_PATTERN = /\/(?:testUtils|test-utils)\/mocks\.[cm]?[jt]sx?$/u;
 const MOCK_NAME_PATTERN = /mock/iu;
 const MUTATING_METHOD_NAMES = new Set([
@@ -122,6 +125,28 @@ function isFixtureValue(name: string, node: ESTree.Node | undefined): boolean {
   );
 }
 
+interface ContractImport {
+  importedName: string;
+  source: string;
+}
+
+// Producer-owned response schemas: ts-rest-era `*ResponseSchema` exports, oRPC-era `*OutputSchema`
+// exports, and contract-core's shared error schemas.
+function isNamedContractResponseSchema(name: string): boolean {
+  return name.endsWith("ResponseSchema") || name.endsWith("OutputSchema");
+}
+
+function isContractCoreResponseSchema(name: string, source: string): boolean {
+  return source === CONTRACT_CORE_PACKAGE && CONTRACT_CORE_RESPONSE_SCHEMA_NAMES.has(name);
+}
+
+function isContractImportResponseSchema({ importedName, source }: ContractImport): boolean {
+  return (
+    isNamedContractResponseSchema(importedName) ||
+    isContractCoreResponseSchema(importedName, source)
+  );
+}
+
 function importName(specifier: ESTree.ImportDeclarationSpecifier): string {
   if (specifier.type === "ImportSpecifier") {
     return specifier.imported.type === "Identifier"
@@ -151,7 +176,7 @@ const rule: Rule = {
     const isMocksFile = MOCKS_FILE_PATTERN.test(filename);
     const isPlaywrightFile = filename.includes("/playwright/");
     const isTestUtilsFile = /\/(?:testUtils|test-utils)\//u.test(filename);
-    const contractImports = new Map<Variable, string>();
+    const contractImports = new Map<Variable, ContractImport>();
     const fixtureBuilderFactoryImports = new Set<Variable>();
     const oneShotBuilderImports = new Set<Variable>();
     const httpResponseImports = new Set<Variable>();
@@ -198,35 +223,19 @@ const rule: Rule = {
       return variable !== undefined && contractImports.has(variable);
     }
 
-    function isContractResponseSchema(
-      node: ESTree.Node | undefined,
-      seen = new Set<Variable>(),
-    ): boolean {
-      const current = unwrap(node);
-      if (!current) {
+    function isContractCoreNamespaceMember(member: ESTree.MemberExpression, name: string): boolean {
+      if (member.object.type !== "Identifier") {
         return false;
       }
+      const namespace = variableFor(member.object);
+      const namespaceImport = namespace ? contractImports.get(namespace) : undefined;
+      return (
+        namespaceImport?.importedName === "*" &&
+        isContractCoreResponseSchema(name, namespaceImport.source)
+      );
+    }
 
-      if (current.type === "Identifier") {
-        const variable = variableFor(current);
-        if (!variable) {
-          return false;
-        }
-        const importedName = contractImports.get(variable);
-        if (importedName !== undefined) {
-          return importedName.endsWith("ResponseSchema");
-        }
-        if (seen.has(variable)) {
-          return false;
-        }
-        seen.add(variable);
-        return isContractResponseSchema(variableInitializers.get(variable), seen);
-      }
-
-      if (current.type !== "MemberExpression") {
-        return false;
-      }
-
+    function isContractMemberResponseSchema(current: ESTree.MemberExpression): boolean {
       const selectedFromResponses =
         current.computed &&
         current.object.type === "MemberExpression" &&
@@ -236,18 +245,48 @@ const rule: Rule = {
         return root !== undefined && isContractRoot(root);
       }
 
+      const selectedName = propertyName(current);
+      if (selectedName === undefined) {
+        return false;
+      }
       // oRPC's counterpart to a ts-rest route's response schema.
       const selectedOrpcOutputSchema =
-        propertyName(current) === "outputSchema" &&
+        selectedName === "outputSchema" &&
         current.object.type === "MemberExpression" &&
         propertyName(current.object) === "~orpc";
-      const selectedNamedSchema = propertyName(current)?.endsWith("ResponseSchema") === true;
-      if (selectedOrpcOutputSchema || selectedNamedSchema) {
+      if (selectedOrpcOutputSchema || isNamedContractResponseSchema(selectedName)) {
         const root = rootIdentifier(current);
         return root !== undefined && isContractRoot(root);
       }
 
-      return false;
+      return isContractCoreNamespaceMember(current, selectedName);
+    }
+
+    function isContractResponseSchema(
+      node: ESTree.Node | undefined,
+      seen = new Set<Variable>(),
+    ): boolean {
+      const current = unwrap(node);
+      if (current?.type === "MemberExpression") {
+        return isContractMemberResponseSchema(current);
+      }
+      if (current?.type !== "Identifier") {
+        return false;
+      }
+
+      const variable = variableFor(current);
+      if (!variable) {
+        return false;
+      }
+      const contractImport = contractImports.get(variable);
+      if (contractImport !== undefined) {
+        return isContractImportResponseSchema(contractImport);
+      }
+      if (seen.has(variable)) {
+        return false;
+      }
+      seen.add(variable);
+      return isContractResponseSchema(variableInitializers.get(variable), seen);
     }
 
     function hasContractSchemaOption(call: ESTree.CallExpression): boolean {
@@ -554,7 +593,7 @@ const rule: Rule = {
           }
           const importedName = importName(specifier);
           if (source.startsWith(CONTRACT_PACKAGE_PREFIX)) {
-            contractImports.set(variable, importedName);
+            contractImports.set(variable, { importedName, source });
           }
           if (
             (source === "@clipboard-health/testing-core" ||

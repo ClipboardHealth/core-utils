@@ -48,7 +48,8 @@ were parsed.
 
 It recognizes these response schemas:
 
-- exports named `*ResponseSchema`;
+- exports named `*ResponseSchema` or `*OutputSchema`, imported directly or through a namespace;
+- `apiErrors` from `@clipboard-health/contract-core`;
 - a ts-rest route's response map, `contract.x.responses[status]`;
 - an oRPC procedure's output schema, `contract.x["~orpc"].outputSchema`.
 
