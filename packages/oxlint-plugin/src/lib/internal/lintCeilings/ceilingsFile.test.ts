@@ -43,7 +43,7 @@ describe("parseLintCeilings", () => {
         '- "version" must be 1.',
         '- Unknown top-level key "extra".',
         '- "rules.complexity" path "./src/a.ts" must be normalized: no "./", "../" or empty segments.',
-        '- "rules.complexity" path "/abs.ts" must be relative to the repository root and use forward slashes.',
+        '- "rules.complexity" path "/abs.ts" must be relative to the directory that holds lint-ceilings.json and use forward slashes.',
         '- "rules.complexity.src/b.ts" must be a positive integer.',
         '- "rules.complexity.src/c.ts" must be a positive integer.',
         '- Unsupported rule "eslint/max-lines". Use one of: complexity, import/max-dependencies, max-depth, max-lines, max-lines-per-function, max-nested-callbacks, max-params, max-statements.',

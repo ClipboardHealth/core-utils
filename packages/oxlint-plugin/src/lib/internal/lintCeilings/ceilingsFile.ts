@@ -3,7 +3,10 @@ import { CEILING_RULES, isCeilingRule } from "./ceilingRules";
 
 export const LINT_CEILINGS_FILE = "lint-ceilings.json";
 
-/** Per-file upper bounds, keyed by canonical Oxlint rule name, then repository-relative path. */
+/**
+ * Per-file upper bounds, keyed by canonical Oxlint rule name, then path relative to the directory
+ * that holds lint-ceilings.json.
+ */
 export interface LintCeilings {
   rules: Record<string, Record<string, number>>;
   version: 1;
@@ -122,7 +125,7 @@ function checkPath(params: { file: string }): string | undefined {
   }
 
   if (file.startsWith("/") || file.includes("\\")) {
-    return "must be relative to the repository root and use forward slashes.";
+    return "must be relative to the directory that holds lint-ceilings.json and use forward slashes.";
   }
 
   const segments = file.split("/");

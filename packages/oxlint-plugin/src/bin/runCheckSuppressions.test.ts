@@ -277,14 +277,82 @@ describe("runCheckSuppressions", () => {
     expect(output).toContain("no violations");
   });
 
-  function check(options: { args?: string[]; env?: Record<string, string> } = {}): {
+  describe("from a directory below the Git top level", () => {
+    it("lints from the top level when no configuration sits between them", () => {
+      writeFiles({ "src/added.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n" });
+
+      const { exitCode, output } = check({ cwd: path.join(repository, "src") });
+
+      expect(exitCode).toBe(1);
+      expect(output).toContain("src/added.ts:1:");
+    });
+
+    describe("in a package with its own Oxlint and configuration", () => {
+      beforeEach(() => {
+        // Oxlint is installed only in the package, as in a monorepo whose apps install their own.
+        rmSync(path.join(repository, "node_modules"));
+        writeFiles({
+          "apps/worker/.oxlintrc.json": JSON.stringify({ ignorePatterns: ["generated/**"] }),
+          "apps/worker/package.json": '{ "private": true }\n',
+          "apps/worker/src/existing.ts": "export const value = 1;\n",
+        });
+        symlinkSync(
+          path.join(WORKSPACE_ROOT, "node_modules"),
+          path.join(repository, "apps/worker/node_modules"),
+        );
+        git("add", "--all");
+        commit("package");
+        git("branch", "--force", "base");
+      });
+
+      it("resolves Oxlint and its configuration from the package and checks only the package's files", () => {
+        writeFiles({
+          "apps/worker/generated/skipped.ts":
+            "// oxlint-disable-next-line no-console\nconst value = ;\n",
+          "apps/worker/src/existing.ts":
+            "export const value = 1;\n// oxlint-disable-next-line no-console -- ditto\nconsole.log(value);\n",
+          "apps/worker/src/untracked.ts":
+            "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+          "apps/workplace/src/other.ts":
+            "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+          "src/root.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+        });
+        git("add", "apps/worker/generated", "apps/workplace", "src/root.ts");
+
+        const { exitCode, output } = check({ cwd: path.join(repository, "apps/worker") });
+
+        expect(exitCode).toBe(1);
+        expect(output).toContain('src/existing.ts:2: Reason "ditto" is too generic.');
+        expect(output).toContain("src/untracked.ts:1:");
+        expect(output).toContain("2 new or changed suppression(s)");
+        expect(output).not.toContain("generated/skipped.ts");
+        expect(output).not.toContain("other.ts");
+        expect(output).not.toContain("root.ts");
+      });
+
+      it("passes when only files outside the package change", () => {
+        writeFiles({
+          "apps/workplace/src/other.ts":
+            "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+          "src/root.ts": "// oxlint-disable-next-line no-console\nconsole.log(1);\n",
+        });
+
+        expect(check({ cwd: path.join(repository, "apps/worker/src") })).toStrictEqual({
+          exitCode: 0,
+          output: "cb-check-suppressions: no changed JavaScript or TypeScript files.\n",
+        });
+      });
+    });
+  });
+
+  function check(options: { args?: string[]; cwd?: string; env?: Record<string, string> } = {}): {
     exitCode: number;
     output: string;
   } {
     let output = "";
     const { exitCode } = runCheckSuppressions({
       args: options.args ?? ["--base", "base"],
-      cwd: repository,
+      cwd: options.cwd ?? repository,
       env: options.env ?? {},
       pluginSpecifier: PLUGIN,
       write: (text) => {
