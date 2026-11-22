@@ -181,6 +181,12 @@
       "automerge": false
     },
     {
+      "description": "Do not open @tsconfig/node* replacements, such as @tsconfig/node24 to @tsconfig/node26. config:best-practices extends replacements:tsconfig-bases-node, which raises each Node major as a replacement update, so the major-update rule above does not catch it. Moving to a new Node major's compiler preset is a migration the owning team takes with the runtime upgrade. Minor and patch updates of the current preset still open.",
+      "matchPackageNames": ["@tsconfig/node**"],
+      "matchUpdateTypes": ["replacement"],
+      "enabled": false
+    },
+    {
       "enabled": false,
       "matchManagers": ["npm"],
       "matchPackageNames": ["/^@typescript-eslint\\//", "/^eslint/"]
@@ -301,5 +307,11 @@
   "prConcurrentLimit": 15,
   "prHourlyLimit": 5,
   "separateMinorPatch": true,
-  "osvVulnerabilityAlerts": true
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "description": "Put patch and minor vulnerability fixes for devDependencies on one shared branch, so a repository gets one PR for them instead of one per package. They ship nothing to production and already automerge. Every other vulnerability fix, including runtime dependencies and any major, keeps its own branch, so one risky fix does not hold back the rest. Renovate forces this vulnerabilityAlerts config over packageRules, including groupName, so the grouping has to come from the branch topic here: updates with the same branch name share a branch. The shared branch is titled by its first package, so its commit action names the group. The topic is left alone, so other fixes keep their manager's wording, such as \"module x\" for Go or \"x action\" for GitHub Actions; vulnerability fixes are always patch, minor or major updates, whose action is \"Update\". commitBodyTable lists each package a vulnerability commit changes.",
+    "branchTopic": "{{#if (and (equals depType 'devDependencies') (or (equals updateType 'patch') (equals updateType 'minor')))}}dev-dependencies-vulnerabilities{{else}}{{{datasource}}}-{{{depNameSanitized}}}-vulnerability{{/if}}",
+    "commitMessageAction": "{{#if (and (equals depType 'devDependencies') (or (equals updateType 'patch') (equals updateType 'minor')))}}Update devDependencies vulnerability fixes, including{{else}}Update{{/if}}",
+    "commitBodyTable": true
+  }
 }
