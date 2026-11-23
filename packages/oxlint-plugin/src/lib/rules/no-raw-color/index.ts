@@ -101,8 +101,12 @@ function isModuleSpecifier(node: ESTree.Node): boolean {
     case "ImportDeclaration":
     case "ExportNamedDeclaration":
     case "ExportAllDeclaration":
-    case "ImportExpression": {
+    case "ImportExpression":
+    case "TSImportType": {
       return parent.source === node;
+    }
+    case "TSExternalModuleReference": {
+      return parent.expression === node;
     }
     default: {
       return false;

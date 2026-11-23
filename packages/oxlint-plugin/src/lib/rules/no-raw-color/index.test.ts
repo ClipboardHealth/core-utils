@@ -44,6 +44,8 @@ ruleTester.run("no-raw-color", rule, {
     { name: "export all specifier", code: 'export * from "#abc";' },
     { name: "dynamic import specifier", code: 'const module = import("#abc");' },
     { name: "dynamic import template specifier", code: "const module = import(`#abc`);" },
+    { name: "import type specifier", code: 'type Theme = import("#abc").Theme;' },
+    { name: "import require specifier", code: 'import theme = require("#abc");' },
     { name: "identifier", code: "const rgb = 1; const fff = rgb;" },
     { name: "comments", code: "// color: #fff, rgb(0, 0, 0)\n/* hsl(0, 0%, 0%) */\nconst x = 1;" },
     { name: "regex literal", code: "const pattern = /#fff|rgb\\(/;" },
