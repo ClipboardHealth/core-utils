@@ -16,6 +16,10 @@
       "rules": { "clipboard/no-cross-contract-imports": "error" }
     },
     {
+      "files": ["contract-package/raw-color.ts"],
+      "rules": { "clipboard/no-raw-color": "error" }
+    },
+    {
       "files": ["contract-package/packages/contract-fixture/src/example.spec.ts"],
       "rules": { "clipboard/no-tests-in-contract-packages": "error" }
     },
