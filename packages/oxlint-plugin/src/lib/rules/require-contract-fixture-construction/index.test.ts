@@ -123,6 +123,31 @@ ruleTester.run("require-contract-fixture-construction", rule, {
         export const handler = http.get("/feature", () => HttpResponse.json(payload));
       `,
     },
+    {
+      name: "accepts imported and namespaced *OutputSchema exports",
+      filename: handlersFile,
+      code: `
+        import { GetFeatureOutputSchema } from "@clipboard-health/contract-feature";
+        import * as featureSchemas from "@clipboard-health/contract-feature";
+        import { HttpResponse } from "msw";
+        export const mockFeature = GetFeatureOutputSchema.parse({ id: "feature" });
+        const payload = featureSchemas.ListFeaturesOutputSchema.parse([]);
+        export const handler = http.get("/feature", () => HttpResponse.json(payload));
+      `,
+    },
+    {
+      name: "accepts contract-core apiErrors through named and namespace imports",
+      filename: handlersFile,
+      code: `
+        import { apiErrors } from "@clipboard-health/contract-core";
+        import * as contractCore from "@clipboard-health/contract-core";
+        import { HttpResponse } from "msw";
+        const named = apiErrors.parse({ errors: [] });
+        const namespaced = contractCore.apiErrors.parse({ errors: [] });
+        export const first = http.get("/a", () => HttpResponse.json(named, { status: 400 }));
+        export const second = http.get("/b", () => HttpResponse.json(namespaced, { status: 404 }));
+      `,
+    },
   ],
   invalid: [
     {
@@ -270,6 +295,40 @@ ruleTester.run("require-contract-fixture-construction", rule, {
       filename: mocksFile,
       code: `export function makeFixture() { return { id: "feature" }; }`,
       errors: [{ messageId: "parseMock" }],
+    },
+    {
+      name: "rejects apiErrors outside contract-core and non-output schema names",
+      filename: mocksFile,
+      code: `
+        import { apiErrors } from "@clipboard-health/contract-feature";
+        import { CreateFeatureInputSchema } from "@clipboard-health/contract-feature";
+        import * as contractCore from "@clipboard-health/contract-core";
+        import { z } from "zod";
+        const LocalOutputSchema = z.object({ id: z.string() });
+        export const mockFeatureErrors = apiErrors.parse({ errors: [] });
+        export const mockInput = CreateFeatureInputSchema.parse({ id: "feature" });
+        export const mockLocal = LocalOutputSchema.parse({ id: "feature" });
+        export const mockCoreOther = contractCore.apiError.parse({ code: "x" });
+      `,
+      errors: [
+        { messageId: "parseMock" },
+        { messageId: "parseMock" },
+        { messageId: "parseMock" },
+        { messageId: "parseMock" },
+      ],
+    },
+    {
+      name: "rejects *OutputSchema and apiErrors nested below a namespace export",
+      filename: mocksFile,
+      code: `
+        import { featureContract } from "@clipboard-health/contract-feature";
+        import * as featureSchemas from "@clipboard-health/contract-feature";
+        import * as contractCore from "@clipboard-health/contract-core";
+        export const mockNestedOutput = featureContract.get.body.shape.UserOutputSchema.parse({});
+        export const mockNamespaceNested = featureSchemas.CreateFeatureInputSchema.shape.ItemOutputSchema.parse({});
+        export const mockNestedErrors = contractCore.errors.apiErrors.parse({ errors: [] });
+      `,
+      errors: [{ messageId: "parseMock" }, { messageId: "parseMock" }, { messageId: "parseMock" }],
     },
   ],
 });
