@@ -12,7 +12,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
-import { git, readChangedLines, resolveMergeBase } from "../lib/internal/changedLines";
+import { readChangedLines, resolveMergeBase } from "../lib/internal/changedLines";
+import { resolveLintRoot } from "../lib/internal/lintRoot";
 import { type OxlintDiagnostic, readIgnorePatterns, runOxlint } from "../lib/internal/runOxlint";
 import { isPlainObject } from "../lib/internal/json";
 import { withTemporaryFile } from "../lib/internal/temporaryFile";
@@ -56,7 +57,7 @@ export function runCheckSuppressions(params: RunCheckSuppressionsParams): { exit
     return { exitCode: 2 };
   }
 
-  const root = git({ args: ["rev-parse", "--show-toplevel"], cwd }).trim();
+  const root = resolveLintRoot({ cwd });
   const mergeBase = resolveMergeBase({ base, cwd: root, eventPath: env["GITHUB_EVENT_PATH"] });
   const changed = readChangedLines({ cwd: root, include: LINTABLE_FILE, mergeBase });
   // Oxlint skips a dangling or directory symlink that the diff lists; copying one would throw.

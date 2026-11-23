@@ -327,8 +327,10 @@ the merge conflicts of exact-count baselines.
   `max-statements`. Aliases such as `eslint/max-lines` are rejected. JavaScript plugin rules
   aren't supported yet: `oxlint --print-config` omits their options, so the CLI can't measure
   them against the configured default.
-- Paths are relative to the repository root. For per-function rules such as `complexity`, the
-  value is the file's largest function value, because Oxlint overrides apply to whole files.
+- Paths are relative to the directory that holds `lint-ceilings.json` and `oxlint.config.ts`: the
+  repository root, or the package in a monorepo whose packages each configure Oxlint. For
+  per-function rules such as `complexity`, the value is the file's largest function value,
+  because Oxlint overrides apply to whole files.
 - The layout is canonical: rules and paths sorted, a blank line between entries. `init` and
   `tighten` write it, and `check` fails on any other layout.
 
@@ -350,7 +352,7 @@ applies the last matching override, so a ceiling listed before a later glob over
 higher `max-lines` for test files, would be ignored. Each ceiling override also carries the severity and
 options the file otherwise gets, such as `skipComments`, because an override replaces a rule's
 options. It skips files where the rule is off, so a ceiling never turns a rule back on. The factory
-assumes `oxlint.config.ts` and `lint-ceilings.json` both sit in the repository root.
+assumes `oxlint.config.ts` and `lint-ceilings.json` sit in the same directory.
 
 ### Commands
 

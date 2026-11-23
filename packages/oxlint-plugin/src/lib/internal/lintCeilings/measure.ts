@@ -81,15 +81,15 @@ export function measureFiles(params: {
   }
 }
 
-/** Lints the whole repository, honoring its `ignorePatterns`, and measures `ruleNames`. */
+/** Lints the whole lint root, honoring its `ignorePatterns`, and measures `ruleNames`. */
 export function measureRepository(params: {
   printedConfig: Record<string, unknown>;
   root: string;
   ruleNames: readonly string[];
 }): Measurements {
   const { printedConfig, root, ruleNames } = params;
-  // The configuration sits in the repository root so its `ignorePatterns` and override globs
-  // resolve as the repository's own do.
+  // The configuration sits in the lint root so its `ignorePatterns` and override globs resolve as
+  // the lint root's own configuration does.
   const configPath = path.join(root, `.cb-lint-ceilings-${randomBytes(6).toString("hex")}.json`);
   const { diagnostics } = withTemporaryFile({
     content: JSON.stringify(

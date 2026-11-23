@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 import { isPlainObject } from "./json";
 
-/** Line numbers (1-based) that are new or changed in each file, keyed by repository-relative path. */
+/** Line numbers (1-based) that are new or changed in each file, keyed by path relative to `cwd`. */
 export type ChangedLines = Map<string, Set<number>>;
 
 export function git(params: { args: readonly string[]; cwd: string }): string {
@@ -37,8 +37,8 @@ export function resolveMergeBase(params: {
 }
 
 /**
- * Compares the working tree, including uncommitted and untracked files, with `mergeBase`, and
- * returns the changed lines of files whose path matches `include`.
+ * Compares the working tree under `cwd`, including uncommitted and untracked files, with
+ * `mergeBase`, and returns the changed lines of files whose path matches `include`.
  */
 export function readChangedLines(params: {
   cwd: string;
@@ -60,6 +60,8 @@ export function readChangedLines(params: {
       "--dst-prefix=b/",
       "--find-renames",
       "--diff-filter=AMR",
+      // Only files under `cwd`, with paths relative to it, as `ls-files` lists untracked files.
+      "--relative",
       mergeBase,
     ],
     cwd,
