@@ -46,7 +46,7 @@
     "@swc/core": "1.16.22",
     "@swc/helpers": "0.5.24",
     "@tsconfig/node26": "26.0.2",
-    "@tsconfig/strictest": "2.0.8",
+    "@tsconfig/strictest": "2.0.9",
     "@types/node": "26.6.5",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "5.1.0",
