@@ -78,9 +78,10 @@ static parts of template literals, including tagged templates such as `` css`col
   whitespace or one of `:;,()`, so URL fragments (`/page#abc`) and headings (`# Title`) pass
 - `rgb(`, `rgba(`, `hsl(` and `hsla(`, in any case and with optional whitespace before `(`
 
-Each color is a separate report, so `"linear-gradient(#000, #fff, #ccc)"` reports three. Named
-colors such as `red` or `transparent`, JSX text, comments and import or export specifiers are not
-checked. Scope theme files out with `overrides` or `ignorePatterns`. Disable a single exception
+Each color is a separate report at its own line and column, so `"linear-gradient(#000, #fff, #ccc)"`
+reports three, and a disable comment above one line of a multi-line `` css`...` `` block covers only
+that line. Named colors such as `red` or `transparent`, JSX text, comments and import or export
+specifiers are not checked. Scope theme files out with `overrides` or `ignorePatterns`. Disable a single exception
 with a reason that says why it needs a raw color:
 
 ```ts

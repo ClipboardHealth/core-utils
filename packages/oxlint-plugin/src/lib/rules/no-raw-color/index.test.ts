@@ -53,7 +53,7 @@ ruleTester.run("no-raw-color", rule, {
     {
       name: "three-digit hex",
       code: 'const color = "#fff";',
-      errors: [{ ...rawColor("#fff"), line: 1, column: 15 }],
+      errors: [{ ...rawColor("#fff"), line: 1, column: 16 }],
     },
     {
       name: "four-digit hex",
@@ -108,17 +108,24 @@ ruleTester.run("no-raw-color", rule, {
     {
       name: "colors inside linear-gradient",
       code: 'const background = "linear-gradient(#000, #fff, #ccc)";',
-      errors: [rawColor("#000"), rawColor("#fff"), rawColor("#ccc")],
+      errors: [
+        { ...rawColor("#000"), line: 1, column: 37 },
+        { ...rawColor("#fff"), line: 1, column: 43 },
+        { ...rawColor("#ccc"), line: 1, column: 49 },
+      ],
     },
     {
       name: "hex and color function in one string",
       code: 'const background = "linear-gradient(rgb(0, 0, 0), #fff)";',
-      errors: [rawColor("#fff"), rawColor("rgb(")],
+      errors: [
+        { ...rawColor("rgb("), line: 1, column: 37 },
+        { ...rawColor("#fff"), line: 1, column: 51 },
+      ],
     },
     {
       name: "JSX attribute",
       code: 'const icon = <path fill="#000" />;',
-      errors: [{ ...rawColor("#000"), line: 1, column: 25 }],
+      errors: [{ ...rawColor("#000"), line: 1, column: 26 }],
     },
     {
       name: "sx prop",
@@ -133,7 +140,7 @@ ruleTester.run("no-raw-color", rule, {
     {
       name: "template literal with substitutions",
       code: `const border = \`\${width}px solid #ccc\`;`,
-      errors: [rawColor("#ccc")],
+      errors: [{ ...rawColor("#ccc"), line: 1, column: 34 }],
     },
     {
       name: "tagged template",
@@ -148,14 +155,24 @@ ruleTester.run("no-raw-color", rule, {
   background: rgba(0, 0, 0, 0.5);
 \`;`,
       errors: [
-        { ...rawColor("#fff"), line: 1, column: 19 },
-        { ...rawColor("rgba("), line: 1, column: 19 },
+        { ...rawColor("#fff"), line: 2, column: 10 },
+        { ...rawColor("rgba("), line: 4, column: 15 },
       ],
     },
     {
       name: "object property value on a later line",
       code: 'const theme = {\n  primary: "#123456",\n};',
-      errors: [{ ...rawColor("#123456"), line: 2, column: 12 }],
+      errors: [{ ...rawColor("#123456"), line: 2, column: 13 }],
+    },
+    {
+      name: "string with an escape sequence reports at the literal",
+      code: 'const color = "\\t#fff";',
+      errors: [{ ...rawColor("#fff"), line: 1, column: 15 }],
+    },
+    {
+      name: "template with an escape sequence reports at the template",
+      code: "const color = `\\t#fff`;",
+      errors: [{ ...rawColor("#fff"), line: 1, column: 15 }],
     },
   ],
 });

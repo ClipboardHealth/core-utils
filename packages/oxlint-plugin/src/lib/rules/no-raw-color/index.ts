@@ -4,7 +4,8 @@
  * Reports hex colors (`#fff`, `#ffff`, `#ffffff`, `#ffffff80`) and the start of `rgb()`, `rgba()`,
  * `hsl()` and `hsla()` calls in string literals, including JSX attribute values, and in each static
  * part of a template literal, including tagged templates such as `` css`color: #fff;` ``. Each
- * match is a separate report on the literal that holds it.
+ * match is a separate report at the match's own position, so a disable comment covers only the
+ * line it precedes. A string with escape sequences is reported at the literal instead.
  *
  * A hex color must start the string or follow whitespace or one of `:;,()`, so URL fragments
  * (`/page#abc`), markdown headings (`# Title`) and text such as `ticket #123x` don't match. CSS
@@ -12,6 +13,22 @@
  * subpath import such as `"#abc"` passes.
  */
 import { defineRule, type ESTree } from "@oxlint/plugins";
+
+const HEX_COLOR_PATTERN = /(?<=^|[\s:;,()])#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
+const COLOR_FUNCTION_PATTERN = /\b(?:rgba?|hsla?)\s*\(/gi;
+const OPENING_DELIMITER_LENGTH = 1;
+
+interface RawColorMatch {
+  color: string;
+  index: number;
+}
+
+interface StringSource {
+  node: ESTree.Node;
+  value: string;
+  raw: string | undefined;
+  rawStart: number;
+}
 
 const rule = defineRule({
   meta: {
@@ -26,9 +43,18 @@ const rule = defineRule({
     },
   },
   create(context) {
-    function reportColors(node: ESTree.Node, text: string): void {
-      for (const color of findRawColors(text)) {
-        context.report({ node, messageId: "rawColor", data: { color } });
+    function reportColors({ node, value, raw, rawStart }: StringSource): void {
+      const hasExactOffsets = value === raw;
+      for (const { color, index } of findRawColors(value)) {
+        const location = hasExactOffsets
+          ? {
+              loc: {
+                start: context.sourceCode.getLocFromIndex(rawStart + index),
+                end: context.sourceCode.getLocFromIndex(rawStart + index + color.length),
+              },
+            }
+          : { node };
+        context.report({ ...location, messageId: "rawColor", data: { color } });
       }
     }
 
@@ -38,7 +64,12 @@ const rule = defineRule({
           return;
         }
 
-        reportColors(node, node.value);
+        reportColors({
+          node,
+          value: node.value,
+          raw: node.raw?.slice(1, -1),
+          rawStart: node.start + OPENING_DELIMITER_LENGTH,
+        });
       },
       TemplateLiteral(node) {
         if (isModuleSpecifier(node)) {
@@ -46,22 +77,22 @@ const rule = defineRule({
         }
 
         for (const quasi of node.quasis) {
-          reportColors(node, quasi.value.cooked ?? quasi.value.raw);
+          reportColors({
+            node,
+            value: quasi.value.cooked ?? quasi.value.raw,
+            raw: quasi.value.raw,
+            rawStart: quasi.start + OPENING_DELIMITER_LENGTH,
+          });
         }
       },
     };
   },
 });
 
-function findRawColors(text: string): string[] {
-  // Created per call: global regexes keep `lastIndex` between uses.
-  const hexColorPattern = /(?<=^|[\s:;,()])#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
-  const colorFunctionPattern = /\b(?:rgba?|hsla?)\s*\(/gi;
-
-  return [
-    ...Array.from(text.matchAll(hexColorPattern), ([match]) => match),
-    ...Array.from(text.matchAll(colorFunctionPattern), ([match]) => match),
-  ];
+function findRawColors(text: string): RawColorMatch[] {
+  return [...text.matchAll(HEX_COLOR_PATTERN), ...text.matchAll(COLOR_FUNCTION_PATTERN)].map(
+    (match) => ({ color: match[0], index: match.index }),
+  );
 }
 
 function isModuleSpecifier(node: ESTree.Node): boolean {
