@@ -162,6 +162,14 @@ ruleTester.run("no-raw-color", rule, {
       ],
     },
     {
+      name: "colors in a template with CRLF line endings",
+      code: `const styles = css\`\r\n  color: #fff;\r\n  margin: \${margin}px;\r\n  background: rgba(0, 0, 0, 0.5);\r\n\`;`,
+      errors: [
+        { ...rawColor("#fff"), line: 2, column: 10 },
+        { ...rawColor("rgba("), line: 4, column: 15 },
+      ],
+    },
+    {
       name: "object property value on a later line",
       code: 'const theme = {\n  primary: "#123456",\n};',
       errors: [{ ...rawColor("#123456"), line: 2, column: 13 }],

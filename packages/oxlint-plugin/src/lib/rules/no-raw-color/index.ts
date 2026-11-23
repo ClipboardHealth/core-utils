@@ -17,6 +17,8 @@ import { defineRule, type ESTree } from "@oxlint/plugins";
 const HEX_COLOR_PATTERN = /(?<=^|[\s:;,()])#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
 const COLOR_FUNCTION_PATTERN = /\b(?:rgba?|hsla?)\s*\(/gi;
 const OPENING_DELIMITER_LENGTH = 1;
+const TEMPLATE_TAIL_CLOSING_LENGTH = "`".length;
+const TEMPLATE_SPAN_CLOSING_LENGTH = "${".length;
 
 interface RawColorMatch {
   color: string;
@@ -44,8 +46,8 @@ const rule = defineRule({
   },
   create(context) {
     function reportColors({ node, value, raw, rawStart }: StringSource): void {
-      const hasExactOffsets = value === raw;
-      for (const { color, index } of findRawColors(value)) {
+      const hasExactOffsets = raw !== undefined && normalizeLineEndings(raw) === value;
+      for (const { color, index } of findRawColors(hasExactOffsets ? raw : value)) {
         const location = hasExactOffsets
           ? {
               loc: {
@@ -77,11 +79,14 @@ const rule = defineRule({
         }
 
         for (const quasi of node.quasis) {
+          const rawStart = quasi.start + OPENING_DELIMITER_LENGTH;
+          const rawEnd =
+            quasi.end - (quasi.tail ? TEMPLATE_TAIL_CLOSING_LENGTH : TEMPLATE_SPAN_CLOSING_LENGTH);
           reportColors({
             node,
             value: quasi.value.cooked ?? quasi.value.raw,
-            raw: quasi.value.raw,
-            rawStart: quasi.start + OPENING_DELIMITER_LENGTH,
+            raw: context.sourceCode.text.slice(rawStart, rawEnd),
+            rawStart,
           });
         }
       },
@@ -93,6 +98,10 @@ function findRawColors(text: string): RawColorMatch[] {
   return [...text.matchAll(HEX_COLOR_PATTERN), ...text.matchAll(COLOR_FUNCTION_PATTERN)].map(
     (match) => ({ color: match[0], index: match.index }),
   );
+}
+
+function normalizeLineEndings(text: string): string {
+  return text.replaceAll(/\r\n?/g, "\n");
 }
 
 function isModuleSpecifier(node: ESTree.Node): boolean {
