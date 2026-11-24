@@ -4,6 +4,7 @@ import noAmbiguousPositionalParameters from "./lib/rules/no-ambiguous-positional
 import noCrossContractImports from "./lib/rules/no-cross-contract-imports";
 import noEmptyBooleanCall from "./lib/rules/no-empty-boolean-call";
 import noParallelMongoSessionOps from "./lib/rules/no-parallel-mongo-session-ops";
+import noRawColor from "./lib/rules/no-raw-color";
 import noTestsInContractPackages from "./lib/rules/no-tests-in-contract-packages";
 import noUnindexableMongoRegex from "./lib/rules/no-unindexable-mongo-regex";
 import requireContractFixtureConstruction from "./lib/rules/require-contract-fixture-construction";
@@ -21,6 +22,7 @@ export const rules = {
   "no-empty-boolean-call": noEmptyBooleanCall,
   "no-cross-contract-imports": noCrossContractImports,
   "no-parallel-mongo-session-ops": noParallelMongoSessionOps,
+  "no-raw-color": noRawColor,
   "no-tests-in-contract-packages": noTestsInContractPackages,
   "no-unindexable-mongo-regex": noUnindexableMongoRegex,
   "require-contract-fixture-construction": requireContractFixtureConstruction,

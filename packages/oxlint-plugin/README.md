@@ -16,6 +16,7 @@ ESLint.
 - `no-empty-boolean-call`
 - `no-cross-contract-imports`
 - `no-parallel-mongo-session-ops`
+- `no-raw-color`
 - `no-tests-in-contract-packages`
 - `no-unindexable-mongo-regex`
 - `require-contract-fixture-construction`
@@ -68,6 +69,23 @@ the count:
   "error",
   { knownViolations: { "src/users/user.repository.ts": 2 } },
 ],
+```
+
+`no-raw-color` is opt-in. It reports raw colors in string literals, JSX attribute values, and the
+static parts of template literals, including tagged templates such as `` css`color: #fff;` ``:
+
+- hex colors with 3, 4, 6 or 8 digits (`#fff`, `#ffffff80`) at the start of the string or after
+  whitespace or one of `:;,()`, so URL fragments (`/page#abc`) and headings (`# Title`) pass
+- `rgb(`, `rgba(`, `hsl(` and `hsla(`, in any case and with optional whitespace before `(`
+
+Each color is a separate report at its own line and column, so `"linear-gradient(#000, #fff, #ccc)"`
+reports three, and a disable comment above one line of a multi-line `` css`...` `` block covers only
+that line. Named colors such as `red` or `transparent`, JSX text, comments and import or export
+specifiers are not checked. Scope theme files out with `overrides` or `ignorePatterns`. Disable a single exception
+with a reason that says why it needs a raw color:
+
+```ts
+// oxlint-disable-next-line @clipboard-health/no-raw-color -- <reason>
 ```
 
 `require-to-declared-error` is opt-in while services adopt oRPC. In a handler passed to oRPC's

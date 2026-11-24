@@ -9,6 +9,7 @@ describe("oxlint plugin", () => {
       "no-empty-boolean-call",
       "no-cross-contract-imports",
       "no-parallel-mongo-session-ops",
+      "no-raw-color",
       "no-tests-in-contract-packages",
       "no-unindexable-mongo-regex",
       "require-contract-fixture-construction",
