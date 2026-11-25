@@ -2,7 +2,7 @@
 
 Shared anti-flake primitives for Clipboard Health Playwright suites.
 
-The package owns retry policy, APM correlation, shared admin-token caching, deployed-asset checks, JSON response lifetime capture, Mailpit polling, Cognito login diagnostics, and setup retry classification. Consuming repositories keep only configuration and domain-specific matching.
+The package owns retry policy, APM correlation, shared admin-token caching, deployed-asset checks, JSON response lifetime capture, Cognito login diagnostics, and setup retry classification. Consuming repositories keep only configuration and domain-specific matching.
 
 ## Install
 
@@ -14,17 +14,16 @@ npm install --save-dev @clipboard-health/playwright-toolkit
 
 ## API map
 
-| Local capability                        | Package replacement                                                                      |
-| --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `retryWithBail`                         | `runWithRetry({ mode: { kind: "classified", ... } })`                                    |
-| `retryUntilPassOrTimeout`               | `runWithRetry({ mode: { kind: "poll", ... } })`                                          |
-| Copy-pasted traceparent page fixture    | `createTraceparentFixtures()`                                                            |
-| Admin token promise cache and file lock | `generateAdminAuthToken()` or `getOrCreateAdminAuthToken()`                              |
-| Deployed frontend/mobile asset loops    | `verifyDeployedAssets()` and `waitForDeployedAssets()`                                   |
-| Deferred Playwright JSON response reads | `waitForParsedJsonResponse()`                                                            |
-| Mailpit search/fetch loops              | `createMailpitClient()`, `fetchMagicLinkFromMailpit()`, `fetchEmailOtpCodeFromMailpit()` |
-| Cognito OTP redirect debugging          | `fillOtpAndWaitForCognitoRedirect()`                                                     |
-| Setup HTTP and identity retry checks    | `classifySetupRetry()` and `isRetryableHttpStatus()`                                     |
+| Local capability                        | Package replacement                                         |
+| --------------------------------------- | ----------------------------------------------------------- |
+| `retryWithBail`                         | `runWithRetry({ mode: { kind: "classified", ... } })`       |
+| `retryUntilPassOrTimeout`               | `runWithRetry({ mode: { kind: "poll", ... } })`             |
+| Copy-pasted traceparent page fixture    | `createTraceparentFixtures()`                               |
+| Admin token promise cache and file lock | `generateAdminAuthToken()` or `getOrCreateAdminAuthToken()` |
+| Deployed frontend/mobile asset loops    | `verifyDeployedAssets()` and `waitForDeployedAssets()`      |
+| Deferred Playwright JSON response reads | `waitForParsedJsonResponse()`                               |
+| Cognito OTP redirect debugging          | `fillOtpAndWaitForCognitoRedirect()`                        |
+| Setup HTTP and identity retry checks    | `classifySetupRetry()` and `isRetryableHttpStatus()`        |
 
 ## Retry contract
 
@@ -257,39 +256,6 @@ const report = await waitForDeployedAssets({
 HTTP `408`, `425`, `429`, and `5xx` responses are transient for asset delivery. Content-type mismatches and failed custom validators are deterministic unless the validator returns `isTransient: true`.
 
 Use `validateResponse` for repository-specific checks such as `build-info.json` commit matching. The verifier does not consume a successful response body before calling the wrapper, so the callback can read it directly.
-
-## Mailpit
-
-Create a client from repository configuration, then use the typed pollers:
-
-```typescript
-const mailpit = createMailpitClient({
-  password: process.env.MAILPIT_PASSWORD ?? "",
-});
-
-const code = await fetchEmailOtpCodeFromMailpit({
-  client: mailpit,
-  email,
-  sentAfter: codeRequestedAt,
-  excludeCodes: [previousCode],
-});
-
-await page.getByLabel("Verification Code").fill(code.value);
-```
-
-The pollers search newest-first, tolerate incomplete dates in search results, fetch at most three candidates per probe, and retry Mailpit network errors, `404`, `408`, `429`, and `5xx`. They return both the extracted value and source message ID.
-
-Timeout errors and successful results include polling diagnostics. These distinguish transient
-search errors from message-fetch errors and count skips of cached extraction misses. The first
-three extraction misses across the entire wait carry only a SHA-256 message-ID hash, content
-channel, combined Text/HTML character-count bucket, candidate age at fetch, and OTP shape.
-Shape classification observes the documented four-plus-four OTP format; it does not select a
-value or change the parser. `other` means the built-in OTP parser recognized a value that the
-caller’s extractor did not select. Samples contain no raw message fields or extracted secrets.
-The error retains this evidence for Playwright reports without a separate logging hook.
-
-Misses remain cached by message ID, and the default wait remains 60 seconds. These diagnostics
-help classify a future failure; they do not establish why a historical message failed extraction.
 
 ## Cognito OTP and login diagnostics
 
