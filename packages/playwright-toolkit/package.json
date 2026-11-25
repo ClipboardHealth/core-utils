@@ -6,7 +6,6 @@
     "cognito",
     "e2e",
     "flaky-tests",
-    "mailpit",
     "playwright",
     "retry",
     "testing",
