@@ -7,6 +7,7 @@
     ":preserveSemverRanges"
   ],
   "schedule": ["* 0-3 * * 2-5"],
+  "addLabels": ["renovate"],
   "platformAutomerge": true,
   "automergeType": "pr",
   "automergeSchedule": ["* 7-23 * * 1", "* * * * 2-4", "* 0-19 * * 5"],
@@ -57,6 +58,11 @@
     {
       "matchDepTypes": ["peerDependencies"],
       "rangeStrategy": "widen"
+    },
+    {
+      "description": "Put every minor, patch and digest update in a repository on one branch, so it gets one PR for routine updates instead of one per package. Every group below overrides this one for its packages, because a later packageRule wins. Vulnerability fixes stay out, because vulnerabilityAlerts forces groupName off and sets its own branch topic. Majors stay disabled. Renovate automerges a grouped PR only when every update in it automerges; minor, patch and digest updates all automerge under the rule further down, for runtime dependencies and devDependencies alike, so the group automerges. Any packageRule that turns automerge off or requires approval for one member applies to the whole group, and one failing update holds the whole group. An update whose release has not reached its release age stays off the branch until it does, so it does not hold back the others. separateMinorPatch is left at its default, off, so minors and patches share this branch.",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "non-major dependencies"
     },
     {
       "groupName": "Clipboard Health",
@@ -133,7 +139,7 @@
       "ignoreDeps": ["zod", "zod-v3"]
     },
     {
-      "description": "Bump every Node pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines.node, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart. The npm CLI has its own group below. Patches and minors each get their own grouped PR, because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, and minors follow the normal schedule and automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors still wait their 7 days, but through the status check rather than by delaying the branch.",
+      "description": "Bump every Node pin in a repository in one PR: mise.toml, .nvmrc, .node-version, .tool-versions, engines.node, actions/setup-node and official Node images. Separate PRs would let the runtime in CI, Docker and local tooling drift apart. The npm CLI has its own group below. Patches and minors each get their own grouped PR (separateMinorPatch, which is off by default), because Renovate applies the first update's schedule and release age to the whole branch: patches take the fast path below, and minors follow the normal schedule and automerge. internalChecksFilter none makes every pin take the newest release and keeps pins that have not reached their release age in the branch, where they hold its stability check and automerge, instead of dropping them. Under the default strict filter, the ECR mirror, which has no release timestamps, would take a release that the timestamped pins are still waiting on, so its Dockerfile could merge alone or on a different version. Renovate reads this setting before it classifies the update type, so it cannot be limited to patches. Minors still wait their 7 days, but through the status check rather than by delaying the branch.",
       "groupName": "Node.js",
       "groupSlug": "nodejs",
       "matchPackageNames": [
@@ -144,15 +150,17 @@
         "library/node",
         "public.ecr.aws/docker/library/node"
       ],
-      "internalChecksFilter": "none"
+      "internalChecksFilter": "none",
+      "separateMinorPatch": true
     },
     {
-      "description": "Bump every npm CLI pin (mise.toml, engines.npm, packageManager) in one PR, opened only once the release is 7 days old. The npm CLI comes from the npm registry, so it gets the same supply-chain wait as other packages. The strict filter holds the branch until then, instead of opening a PR early whose pending stability check can be merged past. Vulnerability fixes for npm still open right away, because vulnerability alerts bypass minimumReleaseAge.",
+      "description": "Bump every npm CLI pin (mise.toml, engines.npm, packageManager) in one PR, opened only once the release is 7 days old. The npm CLI comes from the npm registry, so it gets the same supply-chain wait as other packages. The strict filter holds the branch until then, instead of opening a PR early whose pending stability check can be merged past. Vulnerability fixes for npm still open right away, because vulnerability alerts bypass minimumReleaseAge. Patches and minors get separate PRs.",
       "groupName": "npm",
       "groupSlug": "npm",
       "matchPackageNames": ["npm"],
       "internalChecksFilter": "strict",
-      "minimumReleaseAge": "7 days"
+      "minimumReleaseAge": "7 days",
+      "separateMinorPatch": true
     },
     {
       "description": "Keep @types/node out of the Node.js group and disabled. Renovate takes a grouped branch's schedule and release age from its first update, so a @types/node bump in the group would put Node patches back on the 7-day, weekday path.",
@@ -176,7 +184,7 @@
       "matchDepTypes": ["devDependencies"]
     },
     {
-      "description": "Do not open major updates. A major can change APIs and needs a planned migration, so it is raised by the owning team when they choose to take it, not by Renovate. Vulnerability fixes that need a major still open, because vulnerabilityAlerts forces them on, except zod 3 (see the zod rule above); automerge stays off so a person reviews them.",
+      "description": "Do not open major updates. A major can change APIs and needs a planned migration, so it is raised by the owning team when they choose to take it, not by Renovate. Vulnerability fixes that need a major still open, because vulnerabilityAlerts forces them on, except zod 3 (see the zod rule above); automerge stays off so a person reviews them. dependencyDashboardApproval cannot hold only these back: Renovate forces the whole vulnerabilityAlerts object over packageRules, and its default sets dependencyDashboardApproval to false, so a packageRule setting it to true for vulnerability majors has no effect. Setting it in vulnerabilityAlerts would hold every vulnerability fix, including the patch and minor fixes that automerge today.",
       "matchUpdateTypes": ["major"],
       "enabled": false,
       "automerge": false
@@ -268,7 +276,7 @@
       "prPriority": 10
     },
     {
-      "description": "Give the one-time digest pin of Node images its own branch. In the Node.js group it would share the minor branch, turn off that branch's automerge until someone merged the pin, and lend the branch its unaged release age.",
+      "description": "Give the one-time digest pin of Node images its own branch, behind Dependency Dashboard approval. In the Node.js group it would share the minor branch, turn off that branch's automerge until someone merged the pin, and lend the branch its unaged release age. The pin does not automerge, so it would sit in review queues until a person merged it; approval keeps it on the dashboard until someone asks for it.",
       "matchPackageNames": [
         "node",
         "docker.io/node",
@@ -278,16 +286,16 @@
       ],
       "matchUpdateTypes": ["pinDigest"],
       "groupName": "Node.js image digests",
-      "groupSlug": "nodejs-pin"
+      "groupSlug": "nodejs-pin",
+      "dependencyDashboardApproval": true
     }
   ],
   "prBodyTemplate": "{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
   "prConcurrentLimit": 15,
   "prHourlyLimit": 5,
-  "separateMinorPatch": true,
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
-    "description": "Put patch and minor vulnerability fixes for devDependencies on one shared branch, so a repository gets one PR for them instead of one per package. They ship nothing to production and already automerge. Every other vulnerability fix, including runtime dependencies and any major, keeps its own branch, so one risky fix does not hold back the rest. Renovate forces this vulnerabilityAlerts config over packageRules, including groupName, so the grouping has to come from the branch topic here: updates with the same branch name share a branch. The shared branch is titled by its first package, so its commit action names the group. The topic is left alone, so other fixes keep their manager's wording, such as \"module x\" for Go or \"x action\" for GitHub Actions; vulnerability fixes are always patch, minor or major updates, whose action is \"Update\". commitBodyTable lists each package a vulnerability commit changes.",
+    "description": "Vulnerability fixes carry both labels: :enableVulnerabilityAlertsWithLabel(SECURITY) replaces their labels with SECURITY, and the top-level addLabels still adds renovate, because Renovate merges addLabels with labels and this object does not set addLabels. Put patch and minor vulnerability fixes for devDependencies on one shared branch, so a repository gets one PR for them instead of one per package. They ship nothing to production and already automerge. Every other vulnerability fix, including runtime dependencies and any major, keeps its own branch, so one risky fix does not hold back the rest. Renovate forces this vulnerabilityAlerts config over packageRules, including groupName, so the grouping has to come from the branch topic here: updates with the same branch name share a branch. The shared branch is titled by its first package, so its commit action names the group. The topic is left alone, so other fixes keep their manager's wording, such as \"module x\" for Go or \"x action\" for GitHub Actions; vulnerability fixes are always patch, minor or major updates, whose action is \"Update\". commitBodyTable lists each package a vulnerability commit changes.",
     "semanticCommitType": "fix",
     "branchTopic": "{{#if (and (equals depType 'devDependencies') (or (equals updateType 'patch') (equals updateType 'minor')))}}dev-dependencies-vulnerabilities{{else}}{{{datasource}}}-{{{depNameSanitized}}}-vulnerability{{/if}}",
     "commitMessageAction": "{{#if (and (equals depType 'devDependencies') (or (equals updateType 'patch') (equals updateType 'minor')))}}Update devDependencies vulnerability fixes, including{{else}}Update{{/if}}",
