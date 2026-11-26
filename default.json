@@ -236,32 +236,14 @@
       "enabled": false
     },
     {
-      "description": "Terraform provider, module, and runtime updates need compatibility assessment and plans against existing state before merging.",
-      "matchManagers": ["terraform", "terragrunt"],
-      "matchDepTypes": [
-        "provider",
-        "required_provider",
-        "required_version",
-        "module",
-        "tfe_workspace",
-        "github",
-        "gitTags",
-        "terragrunt"
-      ],
-      "automerge": false,
-      "automergeType": "pr"
-    },
-    {
-      "description": "Terraform CLI versions need compatibility assessment, including version files and tool-version managers.",
+      "description": "Terraform CLI versions need compatibility assessment, including version files and tool-version managers. Minor and patch updates automerge like any other once Preflight approves them from the plans their CI ran against existing state.",
       "matchPackageNames": ["hashicorp/terraform"],
-      "automerge": false,
-      "automergeType": "pr",
       "prBodyNotes": [
         "Validate Terraform CLI compatibility by running the affected plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
       ]
     },
     {
-      "description": "Include existing-state plan guidance on Terraform and Terragrunt updates, including lockfile maintenance.",
+      "description": "Include existing-state plan guidance on Terraform and Terragrunt updates, including lockfile maintenance. Provider, module and runtime updates automerge under the minor, patch and digest rule: Preflight reads each root's plan from the head's plan job logs and approves only at low risk, and majors stay disabled.",
       "matchManagers": ["terraform", "terragrunt", "terraform-version"],
       "prBodyNotes": [
         "Validate the resolved versions and migration requirements, then run the affected Terraform plans against existing state, including plan JSON generation. Skipped plans do not establish compatibility."
