@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@clipboard-health/oxlint-plugin": "1.14.1",
-    "@oxlint/plugins": "1.93.0",
+    "@oxlint/plugins": "1.94.0",
     "tslib": "2.8.1"
   },
   "devDependencies": {
