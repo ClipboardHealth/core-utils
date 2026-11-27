@@ -133,7 +133,10 @@ function measurementConfig(params: {
   };
 }
 
-/** Keeps `ruleNames`, converting printed `["deny", [options]]` back to `["error", options]`. */
+/**
+ * Keeps `ruleNames`, converting printed `["deny", [options]]`, or `["deny", options]` from Oxlint
+ * 1.94 on, back to `["error", options]`.
+ */
 function pickRules(params: {
   ruleNames: readonly string[];
   rules: unknown;
@@ -149,7 +152,8 @@ function pickRules(params: {
     if (value !== undefined) {
       const [severity, options]: unknown[] = Array.isArray(value) ? value : [value];
       const inputSeverity = severity === "deny" ? "error" : severity === "allow" ? "off" : severity;
-      picked[ruleName] = Array.isArray(options) ? [inputSeverity, ...options] : inputSeverity;
+      const optionList = Array.isArray(options) ? options : options === undefined ? [] : [options];
+      picked[ruleName] = optionList.length === 0 ? inputSeverity : [inputSeverity, ...optionList];
     }
   }
 
